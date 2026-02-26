@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — ÉNA</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
+      <h2>ÉNA</h2>
+      <p class="sidebar-subtitle">École nationale d'aérotechnique</p>
+      <nav class="sidebar-nav">
+        <div class="sidebar-etape-header" onclick="toggleEtape('etape5')">
+          <span class="sidebar-etape-label">Étape 5</span>
+          <span class="etape-arrow" id="arrow-etape5">▾</span>
+        </div>
+        <ul class="sidebar-subnav" id="list-etape5">
+          <li><a href="#" class="sidebar-sublink active" onclick="afficherCours('E04', this); return false;">Communications numériques</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherCours('E14', this); return false;">Systèmes avioniques modernes</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherCours('E24', this); return false;">Installations avioniques</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherCours('E06', this); return false;">Contrôles électriques de servitudes</a></li>
+        </ul>
+
+        <div class="sidebar-etape-header locked" onclick="toggleEtape('etape6')">
+          <span class="sidebar-etape-label muted">🔒 Étape 6</span>
+          <span class="etape-arrow muted" id="arrow-etape6">▾</span>
+        </div>
+        <ul class="sidebar-subnav muted collapsed" id="list-etape6">
+          <li><a href="#" class="sidebar-sublink muted">Contrôles de vols automatisés</a></li>
+          <li><a href="#" class="sidebar-sublink muted">Systèmes à impulsions</a></li>
+          <li><a href="#" class="sidebar-sublink muted">Systèmes de propulsion</a></li>
+          <li><a href="#" class="sidebar-sublink muted">Dépannages électriques et avioniques</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Contenu principal -->
+    <main class="page-content">
+
+      <!-- Communications numériques -->
+      <div class="cours-view" id="cours-E04">
+        <div class="cours-header">
+          <span class="cours-code">280-E04-EM</span>
+          <h1 class="cours-titre">Communications numériques et réseautique des systèmes d'aéronefs</h1>
+          <button class="modalite-toggle" onclick="toggleModalite('E04')">⇄</button>
+          <span class="cours-info">60h · <span class="modalite" id="mod-E04">En présence</span></span>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📅 Calendrier & échéances</h3>
+            <button class="btn-ajouter" onclick="ajouterEcheance('E04')">+ Ajouter</button>
+          </div>
+          <table class="calendar-table">
+            <thead>
+              <tr>
+                <th style="width:2rem"></th>
+                <th>Date</th>
+                <th>Description</th>
+                <th style="width:5rem"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-E04"></tbody>
+          </table>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📚 Notes & documents</h3>
+            <button class="btn-ajouter" onclick="ajouterNote('E04')">+ Ajouter</button>
+          </div>
+          <div class="notes-container" id="notes-container-E04"></div>
+        </div>
+      </div>
+
+      <!-- Systèmes avioniques modernes -->
+      <div class="cours-view hidden" id="cours-E14">
+        <div class="cours-header">
+          <span class="cours-code">280-E14-EM</span>
+          <h1 class="cours-titre">Systèmes avioniques modernes d'aéronefs</h1>
+          <button class="modalite-toggle" onclick="toggleModalite('E14')">⇄</button>
+          <span class="cours-info">60h · <span class="modalite" id="mod-E14">Hybride</span></span>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📅 Calendrier & échéances</h3>
+            <button class="btn-ajouter" onclick="ajouterEcheance('E14')">+ Ajouter</button>
+          </div>
+          <table class="calendar-table">
+            <thead>
+              <tr>
+                <th style="width:2rem"></th>
+                <th>Date</th>
+                <th>Description</th>
+                <th style="width:5rem"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-E14"></tbody>
+          </table>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📚 Notes & documents</h3>
+            <button class="btn-ajouter" onclick="ajouterNote('E14')">+ Ajouter</button>
+          </div>
+          <div class="notes-container" id="notes-container-E14"></div>
+        </div>
+      </div>
+
+      <!-- Installations avioniques -->
+      <div class="cours-view hidden" id="cours-E24">
+        <div class="cours-header">
+          <span class="cours-code">280-E24-EM</span>
+          <h1 class="cours-titre">Installations avioniques</h1>
+          <button class="modalite-toggle" onclick="toggleModalite('E24')">⇄</button>
+          <span class="cours-info">60h · <span class="modalite" id="mod-E24">En présence</span></span>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📅 Calendrier & échéances</h3>
+            <button class="btn-ajouter" onclick="ajouterEcheance('E24')">+ Ajouter</button>
+          </div>
+          <table class="calendar-table">
+            <thead>
+              <tr>
+                <th style="width:2rem"></th>
+                <th>Date</th>
+                <th>Description</th>
+                <th style="width:5rem"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-E24"></tbody>
+          </table>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📚 Notes & documents</h3>
+            <button class="btn-ajouter" onclick="ajouterNote('E24')">+ Ajouter</button>
+          </div>
+          <div class="notes-container" id="notes-container-E24"></div>
+        </div>
+      </div>
+
+      <!-- Contrôles électriques de servitudes -->
+      <div class="cours-view hidden" id="cours-E06">
+        <div class="cours-header">
+          <span class="cours-code">280-E06-EM</span>
+          <h1 class="cours-titre">Contrôles électriques de servitudes d'aéronefs</h1>
+          <button class="modalite-toggle" onclick="toggleModalite('E06')">⇄</button>
+          <span class="cours-info">90h · <span class="modalite" id="mod-E06">En présence</span></span>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📅 Calendrier & échéances</h3>
+            <button class="btn-ajouter" onclick="ajouterEcheance('E06')">+ Ajouter</button>
+          </div>
+          <table class="calendar-table">
+            <thead>
+              <tr>
+                <th style="width:2rem"></th>
+                <th>Date</th>
+                <th>Description</th>
+                <th style="width:5rem"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-E06"></tbody>
+          </table>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>📚 Notes & documents</h3>
+            <button class="btn-ajouter" onclick="ajouterNote('E06')">+ Ajouter</button>
+          </div>
+          <div class="notes-container" id="notes-container-E06"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal échéance -->
+  <div class="modal-overlay hidden" id="modal-echeance">
+    <div class="modal-box">
+      <h3 id="modal-titre">Nouvelle échéance</h3>
+      <label>Date</label>
+      <input type="date" id="modal-date" />
+      <label>Description</label>
+      <input type="text" id="modal-desc" placeholder="Ex: Travail pratique #1" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalEcheance()">Annuler</button>
+        <button class="btn-save" id="modal-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal note -->
+  <div class="modal-overlay hidden" id="modal-note">
+    <div class="modal-box">
+      <h3 id="modal-note-titre-label">Nouvelle note</h3>
+      <label>Titre</label>
+      <input type="text" id="modal-note-titre" placeholder="Ex: Chapitre 1 — Protocoles réseau" />
+      <label>Type</label>
+      <select id="modal-note-type" onchange="updateModalNoteType()">
+        <option value="texte">📝 Note texte</option>
+        <option value="pdf">📎 Fichier PDF</option>
+        <option value="lien">🔗 Lien</option>
+        <option value="reference">🌐 Site de référence</option>
+      </select>
+      <label id="modal-note-contenu-label">Contenu</label>
+      <textarea id="modal-note-contenu" rows="6" placeholder="Écris tes notes ici..."></textarea>
+      <div id="modal-note-nom-group" class="hidden">
+        <label>Nom affiché</label>
+        <input type="text" id="modal-note-nom" placeholder="Ex: Notes du cours 3" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalNote()">Annuler</button>
+        <button class="btn-save" id="modal-note-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="ena.js"></script>
+</body>
+</html>

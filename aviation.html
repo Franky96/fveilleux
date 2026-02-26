@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Aviation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-container">
+
+    <aside class="sidebar">
+      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
+      <h2>Aviation</h2>
+      <p class="sidebar-subtitle">Outils et références aéronautiques</p>
+      <nav class="sidebar-nav">
+
+        <div class="sidebar-etape-header" onclick="afficherSection('traducteur-metar', this)"><span class="sidebar-etape-label" id="label-metar">METAR</span></div>
+
+        <div class="sidebar-etape-header" onclick="toggleEtape('aeronefs')">
+          <span class="sidebar-etape-label">Aéronefs</span>
+          <span class="etape-arrow" id="arrow-aeronefs">▸</span>
+        </div>
+        <ul class="sidebar-subnav collapsed" id="list-aeronefs">
+
+          <li class="sidebar-groupe" onclick="toggleEtape('bombardier')">
+            <span class="sidebar-groupe-label">Bombardier</span>
+            <span class="etape-arrow" id="arrow-bombardier">▸</span>
+          </li>
+          <ul class="sidebar-subnav collapsed" id="list-bombardier">
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('cl415', this); return false;">CL-415</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('cl600', this); return false;">CL-600</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('dash8', this); return false;">Dash 8</a></li>
+          </ul>
+
+          <li class="sidebar-groupe" onclick="toggleEtape('cessna')">
+            <span class="sidebar-groupe-label">Cessna</span>
+            <span class="etape-arrow" id="arrow-cessna">▸</span>
+          </li>
+          <ul class="sidebar-subnav collapsed" id="list-cessna">
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c150', this); return false;">Série 150</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c170', this); return false;">Série 170</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c172', this); return false;">Série 172</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c337', this); return false;">Série 337</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c421', this); return false;">Série 421</a></li>
+          </ul>
+
+          <li class="sidebar-groupe" onclick="toggleEtape('learjet')">
+            <span class="sidebar-groupe-label">Learjet</span>
+            <span class="etape-arrow" id="arrow-learjet">▸</span>
+          </li>
+          <ul class="sidebar-subnav collapsed" id="list-learjet">
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('learjet36', this); return false;">Learjet 36</a></li>
+          </ul>
+
+          <li class="sidebar-groupe" onclick="toggleEtape('piper')">
+            <span class="sidebar-groupe-label">Piper</span>
+            <span class="etape-arrow" id="arrow-piper">▸</span>
+          </li>
+          <ul class="sidebar-subnav collapsed" id="list-piper">
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('aztec', this); return false;">Aztec PA-23</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('cherokee', this); return false;">Cherokee PA-28</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('navajo', this); return false;">Navajo PA-31</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('tomahawk', this); return false;">Tomahawk PA-38</a></li>
+          </ul>
+
+          <li class="sidebar-groupe" onclick="toggleEtape('autres-avions')">
+            <span class="sidebar-groupe-label">Autres</span>
+            <span class="etape-arrow" id="arrow-autres-avions">▸</span>
+          </li>
+          <ul class="sidebar-subnav collapsed" id="list-autres-avions">
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('sr22', this); return false;">Cirrus SR22</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('falcon20', this); return false;">Falcon 20</a></li>
+            <li><a href="#" class="sidebar-sublink" onclick="afficherSection('do328', this); return false;">Dornier DO-328</a></li>
+          </ul>
+
+        </ul>
+
+        <div class="sidebar-etape-header" onclick="afficherSection('autres', this)"><span class="sidebar-etape-label" id="label-autres">Autres</span></div>
+
+      </nav>
+    </aside>
+
+    <main class="page-content">
+
+      <div class="section-view" id="traducteur-metar">
+        <div class="cours-header">
+          <h1 class="cours-titre">Traducteur METAR</h1>
+          <span class="cours-info">Décodeur de messages météorologiques d'aérodrome</span>
+        </div>
+        <div class="content-block">
+          <h3>Entrer un METAR</h3>
+          <div class="metar-input-group">
+            <input type="text" id="metar-input" placeholder="Ex: CYUL 251900Z 27015KT 9999 FEW030 BKN250 12/05 A2992" />
+            <button class="btn-decoder" onclick="decoderMETAR()">Décoder</button>
+          </div>
+          <p class="metar-exemple" onclick="chargerExemple()">Charger un exemple</p>
+        </div>
+        <div class="content-block" id="metar-resultat-block" style="display:none;">
+          <h3>Résultat décodé</h3>
+          <div class="metar-raw" id="metar-raw"></div>
+          <div class="metar-grid" id="metar-grid"></div>
+        </div>
+      </div>
+
+      <div class="section-view hidden" id="cl415">
+        <div class="cours-header"><span class="cours-code">Bombardier</span><h1 class="cours-titre">CL-415</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1LvhG0yUoZcdLXZym3j7sljdhGIsXn3rG?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="cl600">
+        <div class="cours-header"><span class="cours-code">Bombardier</span><h1 class="cours-titre">CL-600</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1GYUUNWK7Fl_siJgvBWZxYpvIGlYmcBla?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="dash8">
+        <div class="cours-header"><span class="cours-code">Bombardier</span><h1 class="cours-titre">Dash 8</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1x72mxLDIbbYQ8H3qVrvYO2fDRdYYkP5K?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="c150">
+        <div class="cours-header"><span class="cours-code">Cessna</span><h1 class="cours-titre">Série 150</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1cNxIW8Cmeut964qsqUOq5ygy8KLDsoIc?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="c170">
+        <div class="cours-header"><span class="cours-code">Cessna</span><h1 class="cours-titre">Série 170</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1ipZj-sKWDKFaTQ-yzhlCdh61zJH1P5lg?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="c172">
+        <div class="cours-header"><span class="cours-code">Cessna</span><h1 class="cours-titre">Série 172</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1Xc4XVpZ2401WtJKNao-Ed13jSG_ggOw2?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="c337">
+        <div class="cours-header"><span class="cours-code">Cessna</span><h1 class="cours-titre">Série 337</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1FIH5FLugGCKuTS5zprRXdpDvpPbbQY23?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="c421">
+        <div class="cours-header"><span class="cours-code">Cessna</span><h1 class="cours-titre">Série 421</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1tHvyWzDH5C9QTBLdWxYzSV_Bcpd2UTJR?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="learjet36">
+        <div class="cours-header"><span class="cours-code">Learjet</span><h1 class="cours-titre">Learjet 36</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1WXjMyQanShjxy-FAgMyC86V35SJ7toCo?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="aztec">
+        <div class="cours-header"><span class="cours-code">Piper</span><h1 class="cours-titre">Aztec PA-23-250</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/10t3PO0KebyPzL7zMwjJNaI_QUmq_l5tg?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="cherokee">
+        <div class="cours-header"><span class="cours-code">Piper</span><h1 class="cours-titre">Cherokee PA-28-140</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1ZZz2t2iON_zXqEOWYwezW5XBQX0GT4-9?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="navajo">
+        <div class="cours-header"><span class="cours-code">Piper</span><h1 class="cours-titre">Navajo PA-31</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1XU_tQF6keVniXdwG0nps16GWKJ3TFi6g?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="tomahawk">
+        <div class="cours-header"><span class="cours-code">Piper</span><h1 class="cours-titre">Tomahawk PA-38-112</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1p0kE8OpFJAJVbbkYh2_JlzeOm8utEN53?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="sr22">
+        <div class="cours-header"><span class="cours-code">Cirrus</span><h1 class="cours-titre">SR22</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1EOlNR2TW1M1C0zXbj9YKAL1HnWL9eVJh?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="falcon20">
+        <div class="cours-header"><span class="cours-code">Dassault</span><h1 class="cours-titre">Falcon 20</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1fucBa6rnNk5n0njyZb7q_3XzTus_hOMm?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="do328">
+        <div class="cours-header"><span class="cours-code">Dornier</span><h1 class="cours-titre">DO-328</h1></div>
+        <div class="content-block"><h3>Documentation</h3><a href="https://drive.google.com/drive/folders/1VkwvBTfK5CKFgbnwn5MYiDGBUm_BIHkf?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a></div>
+      </div>
+
+      <div class="section-view hidden" id="autres">
+        <div class="cours-header">
+          <h1 class="cours-titre">Autres</h1>
+          <span class="cours-info">Notes, liens et références</span>
+        </div>
+        <div class="content-block">
+          <div class="calendrier-header">
+            <h3>Notes & documents</h3>
+            <button class="btn-ajouter" onclick="ajouterNote('aviation-autres')">+ Ajouter</button>
+          </div>
+          <div class="notes-container" id="notes-container-aviation-autres"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-note">
+    <div class="modal-box">
+      <h3 id="modal-note-titre-label">Nouvelle note</h3>
+      <label>Titre</label>
+      <input type="text" id="modal-note-titre" placeholder="Ex: Site de météo aviation" />
+      <label>Type</label>
+      <select id="modal-note-type" onchange="updateModalNoteType()">
+        <option value="texte">📝 Note texte</option>
+        <option value="pdf">📎 Fichier PDF</option>
+        <option value="lien">🔗 Lien</option>
+        <option value="reference">🌐 Site de référence</option>
+      </select>
+      <label id="modal-note-contenu-label">Contenu</label>
+      <textarea id="modal-note-contenu" rows="6" placeholder="Écris tes notes ici..."></textarea>
+      <div id="modal-note-nom-group" class="hidden">
+        <label>Nom affiché</label>
+        <input type="text" id="modal-note-nom" placeholder="Ex: Nav Canada" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalNote()">Annuler</button>
+        <button class="btn-save" id="modal-note-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="aviation.js"></script>
+</body>
+</html>

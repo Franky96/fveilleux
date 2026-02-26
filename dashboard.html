@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Accueil</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Vérification immédiate — avant tout rendu
+    if (!sessionStorage.getItem('loggedIn')) {
+      document.location.href = 'index.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <header>
+      <h1>Outils de Frank</h1>
+      <p class="subtitle">Bienvenue, Francis 👋</p>
+      <button id="logoutBtn">Déconnexion</button>
+    </header>
+
+    <main>
+      <p class="welcome-text">
+        Les Outils
+      </p>
+
+      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+        <a href="ena.html" class="menu-card" data-section="ena">
+          <span class="icon">🛠️</span>
+          <h2>ÉNA</h2>
+          <p>École nationale d'aérotechnique</p>
+        </a>
+        <a href="aviation.html" class="menu-card" data-section="aviation">
+          <span class="icon">✈️</span>
+          <h2>Aviation</h2>
+          <p>Information sur les aéronefs</p>
+        </a>
+        <a href="bieres.html" class="menu-card" data-section="bieres">
+          <span class="icon">🍺</span>
+          <h2>Bières</h2>
+          <p>Vive la zythologie</p>
+        </a>
+        <a href="scifi.html" class="menu-card" data-section="scifi">
+          <span class="icon">🚀</span>
+          <h2>Science-Fiction</h2>
+          <p>Archives galactiques</p>
+        </a>
+        <a href="hockey.html" class="menu-card" data-section="hockey">
+          <span class="icon">🏒</span>
+          <h2>Hockey</h2>
+          <p>Statistiques LNH</p>
+        </a>
+      </nav>
+    </main>
+
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+
+</body>
+</html>

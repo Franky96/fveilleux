@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Administration</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .perms-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      background: #f5f2eb;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #d5d0c8;
+    }
+    .perm-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #1a1a1a;
+      font-size: 0.9rem;
+    }
+    .perm-item input {
+      width: auto;
+      margin: 0;
+      accent-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+
+    <aside class="sidebar" style="border-right-color: #c0392b;">
+      <a href="dashboard.html" class="back-btn" style="color:#e74c3c;">&#8592; Accueil</a>
+      <h2 style="color:#e74c3c;">Admin</h2>
+      <p class="sidebar-subtitle">Centre de contrôle</p>
+    </aside>
+
+    <main class="page-content">
+      <div class="admin-header">
+        <div>
+          <h1 style="color: #c0392b; margin-bottom:0.5rem;">Gestion des utilisateurs</h1>
+          <p style="color: #888078;">Ajoute, modifie ou supprime des accès au portail.</p>
+        </div>
+        <button class="btn-ajouter" onclick="ouvrirModalUser()" style="background:#e74c3c; color:white; border:none;">+ Nouvel utilisateur</button>
+      </div>
+
+      <div class="content-block">
+        <table class="calendar-table">
+          <thead>
+            <tr>
+              <th>Identifiant</th>
+              <th>Nom affiché</th>
+              <th>Rôle</th>
+              <th>Permissions</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-user">
+    <div class="modal-box">
+      <h3 id="modal-user-titre" style="color: #c0392b;">Nouvel utilisateur</h3>
+      
+      <label>Identifiant de connexion (sans espace)</label>
+      <input type="text" id="user-id" placeholder="Ex: jean123" />
+      
+      <label>Mot de passe</label>
+      <input type="text" id="user-pass" placeholder="Ex: secret456" />
+
+      <label>Nom affiché (Prénom)</label>
+      <input type="text" id="user-name" placeholder="Ex: Jean" />
+
+      <label>Rôle</label>
+      <select id="user-role">
+        <option value="user">Utilisateur standard</option>
+        <option value="admin">Administrateur</option>
+      </select>
+
+      <label style="margin-top:0.5rem;">Permissions d'accès</label>
+      <div class="perms-grid">
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="ena"> ÉNA</label>
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="aeronefs"> Aéronefs</label>
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="aviation"> Aviation</label>
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="bieres"> Bières</label>
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="scifi"> Sci-Fi</label>
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="hockey"> Hockey</label>
+        <label class="perm-item"><input type="checkbox" class="chk-perm" value="admin"> Administration</label>
+      </div>
+
+      <div class="modal-actions" style="margin-top:1.5rem;">
+        <button class="btn-cancel" onclick="fermerModalUser()">Annuler</button>
+        <button class="btn-save" style="background:#c0392b;" onclick="sauvegarderUser()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

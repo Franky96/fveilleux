@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Outils de Frank — Bière</title>
+ <link rel="stylesheet" href="style.css">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+ <style>
+ :root {
+ --bg: #8b4a00;
+ --bg2: #0e0e0e;
+ --bg3: #181818;
+ --border: #2e2e2e;
+ --border-hi: #6a5020;
+ --amber: #d4892a;
+ --amber-hi: #f0a83a;
+ --cream: #f0e6cc;
+ --cream-dim: #b8a888;
+ --muted: #7a7060;
+ --lager-col: #4ab8d4;
+ --ale-col: #d4892a;
+ --spon-col: #a860c8;
+ --overlay: rgba(0, 0, 0, 0.88);
+ }
+
+ body, .dashboard-container, .dashboard-container main { background: var(--bg) !important; }
+ body { 
+     font-family: 'Source Sans 3', sans-serif; 
+     font-size: 1.2em; 
+     display: block !important;
+ }
+
+ .biere-page { max-width: 900px; margin: 0 auto; padding-bottom: 4rem; }
+
+ .biere-intro {
+ text-align: center;
+ color: var(--muted);
+ font-size: 0.88rem;
+ font-weight: 300;
+ letter-spacing: 0.04em;
+ margin-bottom: 2.5rem;
+ }
+
+ /* Section collapsable */
+ .biere-section { margin-bottom: 0.75rem; border-radius: 10px; overflow: hidden; }
+
+ .sec-toggle {
+ width: 100%;
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ padding: 1rem 1.4rem;
+ border: 1px solid var(--border);
+ background: var(--bg2);
+ cursor: pointer;
+ text-align: left;
+ border-radius: 10px;
+ transition: background 0.2s;
+ }
+ .biere-section.open .sec-toggle { border-radius: 10px 10px 0 0; }
+ .sec-toggle:hover { background: var(--bg3); }
+ .sec-toggle.lager { border-left: 3px solid var(--lager-col); }
+ .sec-toggle.ale { border-left: 3px solid var(--ale-col); }
+ .sec-toggle.spontanee { border-left: 3px solid var(--spon-col); }
+
+ .sec-icone { font-size: 1.5rem; flex-shrink: 0; }
+ .sec-info { flex: 1; }
+ .sec-titre { font-family: Arial, sans-serif; font-size: 1rem; margin-bottom: 0.15rem; }
+ .lager .sec-titre { color: var(--lager-col); }
+ .ale .sec-titre { color: var(--ale-col); }
+ .spontanee .sec-titre { color: var(--spon-col); }
+ .sec-sub { color: var(--muted); font-size: 0.75rem; font-weight: 300; margin: 0; }
+
+ .sec-badge { font-size: 0.68rem; font-weight: 600; padding: 0.18rem 0.6rem; border-radius: 8px; flex-shrink: 0; }
+ .lager .sec-badge { background: #0e2a34; color: var(--lager-col); }
+ .ale .sec-badge { background: #2e1e06; color: var(--ale-col); }
+ .spontanee .sec-badge { background: #200a30; color: var(--spon-col); }
+
+ .sec-chevron { color: var(--muted); font-size: 0.75rem; transition: transform 0.25s; flex-shrink: 0; }
+ .biere-section.open .sec-chevron { transform: rotate(180deg); }
+
+ .sec-body {
+ display: none;
+ background: var(--bg2);
+ border: 1px solid var(--border);
+ border-top: none;
+ border-radius: 0 0 10px 10px;
+ padding: 1.25rem;
+ }
+ .biere-section.open .sec-body { display: block; }
+
+ .biere-groupe + .biere-groupe { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+ .groupe-titre {
+ font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em;
+ color: var(--muted); margin-bottom: 0.85rem;
+ display: flex; align-items: center; gap: 0.5rem;
+ }
+ .groupe-titre::after { content:''; flex:1; height:1px; background: var(--border); }
+
+ /* Grille */
+ .biere-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; }
+
+ /* Carte */
+ .biere-carte {
+ background: var(--bg3);
+ border: 1px solid var(--border);
+ border-radius: 8px;
+ padding: 0.9rem;
+ cursor: pointer;
+ transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+ position: relative;
+ overflow: hidden;
+ display: flex;
+ flex-direction: column;
+ }
+ .biere-carte::before {
+ content: '';
+ position: absolute; top: 0; left: 0; right: 0; height: 2px;
+ background: linear-gradient(90deg, transparent, var(--amber), transparent);
+ opacity: 0; transition: opacity 0.2s;
+ }
+ .biere-carte:hover { border-color: var(--border-hi); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+ .biere-carte:hover::before { opacity: 1; }
+
+ .carte-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+ .carte-emoji { font-size: 1.3rem; flex-shrink: 0; }
+ .carte-nom { font-family: Arial, sans-serif; font-size: 0.95rem; color: var(--cream); margin: 0; }
+
+ .carte-desc-courte {
+ font-size: 0.78rem; color: var(--cream-dim); line-height: 1.45; margin: 0 0 0.6rem;
+ display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+ }
+
+ .carte-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.6rem; }
+ .pill { font-size: 0.65rem; padding: 0.12rem 0.45rem; border-radius: 6px; background: var(--bg2); border: 1px solid var(--border); color: var(--muted); }
+ .pill strong { color: var(--cream-dim); }
+
+ .carte-verre-mini {
+ display: flex; align-items: center; gap: 0.4rem;
+ font-size: 0.72rem; color: var(--amber);
+ border-top: 1px solid var(--border); padding-top: 0.5rem; margin-top: auto;
+ }
+ .carte-hint { font-size: 0.62rem; color: var(--muted); text-align: right; margin-top: 0.35rem; letter-spacing: 0.03em; }
+
+ /* MODAL */
+ .biere-modal-overlay {
+ display: none; position: fixed; inset: 0;
+ background: var(--overlay); z-index: 1000;
+ align-items: center; justify-content: center;
+ padding: 1.5rem; backdrop-filter: blur(4px);
+ }
+ .biere-modal-overlay.active { display: flex; }
+
+ .biere-modal {
+ background: var(--bg2);
+ border: 1px solid var(--border-hi);
+ border-radius: 14px;
+ width: 100%; max-width: 680px; max-height: 88vh;
+ overflow-y: auto; position: relative;
+ animation: modalIn 0.2s ease-out;
+ box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+ }
+ @keyframes modalIn {
+ from { opacity: 0; transform: scale(0.95) translateY(10px); }
+ to { opacity: 1; transform: scale(1) translateY(0); }
+ }
+
+ .modal-close {
+ position: absolute; top: 1rem; right: 1rem;
+ background: var(--bg3); border: 1px solid var(--border);
+ color: var(--muted); width: 2rem; height: 2rem;
+ border-radius: 50%; cursor: pointer; font-size: 1rem;
+ display: flex; align-items: center; justify-content: center;
+ transition: border-color 0.15s, color 0.15s; z-index: 2;
+ }
+ .modal-close:hover { border-color: var(--amber); color: var(--amber); }
+
+ .modal-top {
+ padding: 2rem 2rem 1.25rem;
+ border-bottom: 1px solid var(--border);
+ }
+ .modal-badge {
+ display: inline-block; font-size: 0.65rem; font-weight: 600;
+ text-transform: uppercase; letter-spacing: 0.06em;
+ padding: 0.15rem 0.55rem; border-radius: 6px; margin-bottom: 0.6rem;
+ }
+ .modal-badge.ale { background: #2e1e06; color: var(--ale-col); }
+ .modal-badge.lager { background: #0e2a34; color: var(--lager-col); }
+ .modal-badge.spontanee { background: #200a30; color: var(--spon-col); }
+
+ .modal-titre { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--cream); margin: 0 0 0.75rem; line-height: 1.2; }
+ .modal-desc { font-size: 0.88rem; color: var(--cream-dim); line-height: 1.6; margin: 0; font-weight: 300; }
+
+ .modal-infos {
+ display: grid; grid-template-columns: repeat(2, 1fr);
+ gap: 0.5rem; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border);
+ }
+ .modal-info-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 0.6rem 0.85rem; }
+ .modal-info-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin-bottom: 0.15rem; }
+ .modal-info-val { font-size: 0.9rem; font-weight: 600; color: var(--cream); }
+
+ .modal-verre {
+ padding: 1.25rem 2rem;
+ display: flex; gap: 1.5rem; align-items: center;
+ border-bottom: 1px solid var(--border);
+ }
+ .modal-verre-svg { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+ .verre-svg-label { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
+ .modal-verre-texte { flex: 1; }
+ .modal-verre-titre { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--amber-hi); margin-bottom: 0.35rem; }
+ .modal-verre-note { font-size: 0.82rem; color: var(--cream-dim); line-height: 1.5; font-weight: 300; }
+
+ .modal-exemples { padding: 1rem 2rem 1.5rem; }
+ .modal-exemples-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+ .modal-exemples-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+ .ex-tag { font-size: 0.75rem; background: var(--bg3); border: 1px solid var(--border); color: var(--cream-dim); padding: 0.2rem 0.6rem; border-radius: 6px; }
+
+ .verre-svg { display: block; }
+ </style>
+</head>
+<body>
+ <div class="dashboard-container">
+ <header>
+ <h1 style="color:#000000 !important;">Bière</h1>
+ <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+ </header>
+
+ <main>
+      <div class="biere-page">
+ 
+ <div class="biere-section open" id="sec-lager">
+ <button class="sec-toggle lager" onclick="toggleSection('sec-lager')">
+ <span class="sec-icone"></span>
+ <div class="sec-info">
+ <div class="sec-titre">Fermentation basse — Lager</div>
+ <p class="sec-sub">Levures au froid · Bières claires, nettes et désaltérantes · 80–90% de la production mondiale</p>
+ </div>
+ <span class="sec-badge">2 styles</span>
+ <span class="sec-chevron">▼</span>
+ </button>
+ <div class="sec-body">
+ <div class="biere-groupe">
+ <div class="biere-grille">
+ <div class="biere-carte" onclick="ouvrirModal('lager-pils')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Lager / Pilsner</h3></div>
+ <p class="carte-desc-courte">La plus consommée au monde. Claire, dorée, légèrement houblonnée et désaltérante.</p>
+ <div class="carte-pills"><span class="pill"><strong>4–5%</strong></span><span class="pill">Blonde pâle</span><span class="pill">Légère</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><path d="M3 1h8l-1 10H4L3 1z" stroke="#d4892a" stroke-width="1.2"/><line x1="4" y1="11" x2="10" y2="11" stroke="#d4892a" stroke-width="1"/><line x1="5" y1="11" x2="5" y2="17" stroke="#d4892a" stroke-width="1"/><line x1="9" y1="11" x2="9" y2="17" stroke="#d4892a" stroke-width="1"/><line x1="5" y1="17" x2="9" y2="17" stroke="#d4892a" stroke-width="1.2"/></svg>
+ Chope / Verre Pilsner
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('marzen')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Märzen / Bock</h3></div>
+ <p class="carte-desc-courte">Bières allemandes maltées et plus fortes. La bière traditionnelle de l'Oktoberfest.</p>
+ <div class="carte-pills"><span class="pill"><strong>5.5–7.5%</strong></span><span class="pill">Ambrée</span><span class="pill">Légère</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><path d="M2 1h10l-1.5 10H3.5L2 1z" stroke="#d4892a" stroke-width="1.2"/><path d="M3.5 11 Q7 13 10.5 11" stroke="#d4892a" stroke-width="0.8"/></svg>
+ Grande chope bavaroise
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="biere-section open" id="sec-ale">
+ <button class="sec-toggle ale" onclick="toggleSection('sec-ale')">
+ <span class="sec-icone"></span>
+ <div class="sec-info">
+ <div class="sec-titre">Fermentation haute — Ale</div>
+ <p class="sec-sub">Levures à ~20°C · Bières expressives, fruitées et complexes · Famille la plus diversifiée</p>
+ </div>
+ <span class="sec-badge">9 styles</span>
+ <span class="sec-chevron">▼</span>
+ </button>
+ <div class="sec-body">
+ <div class="biere-groupe">
+ <div class="groupe-titre"> Blondes &amp; Houblonnées</div>
+ <div class="biere-grille">
+ <div class="biere-carte" onclick="ouvrirModal('pale-ale')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Pale Ale / APA</h3></div>
+ <p class="carte-desc-courte">Équilibrée entre malt et houblon. L'APA américaine est plus houblonnée avec des notes d'agrumes.</p>
+ <div class="carte-pills"><span class="pill"><strong>4–6%</strong></span><span class="pill">Dorée</span><span class="pill">Modérée</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><rect x="2" y="1" width="10" height="12" rx="1" stroke="#d4892a" stroke-width="1.2"/><path d="M2 13 Q1 16 3 17h8 Q13 16 12 13" stroke="#d4892a" stroke-width="1"/></svg>
+ Pinte Nonic
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('ipa')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">IPA</h3></div>
+ <p class="carte-desc-courte">Reine du craft beer. Fortement houblonnée, amère, arômes d'agrumes ou de fruits tropicaux.</p>
+ <div class="carte-pills"><span class="pill"><strong>5.5–7.5%</strong></span><span class="pill">Dorée</span><span class="pill">Élevée</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="20" viewBox="0 0 14 20" fill="none"><path d="M4 1 Q2 8 3 12 Q4 16 7 17 Q10 16 11 12 Q12 8 10 1z" stroke="#d4892a" stroke-width="1.2"/><line x1="7" y1="17" x2="7" y2="19" stroke="#d4892a" stroke-width="1.2"/><line x1="5" y1="19" x2="9" y2="19" stroke="#d4892a" stroke-width="1.2"/></svg>
+ Verre Tulipe
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ </div>
+ </div>
+
+ <div class="biere-groupe">
+              <div class="groupe-titre"> Bières de blé</div>
+ <div class="biere-grille">
+ <div class="biere-carte" onclick="ouvrirModal('hefeweizen')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Hefeweizen</h3></div>
+ <p class="carte-desc-courte">Bière bavaroise trouble et mousseuse. Arômes de banane et clou de girofle venant de la levure.</p>
+ <div class="carte-pills"><span class="pill"><strong>4.5–5.5%</strong></span><span class="pill">Blonde trouble</span><span class="pill">Faible</span></div>
+ <div class="carte-verre-mini">
+ <svg width="12" height="20" viewBox="0 0 12 20" fill="none"><path d="M4 1 Q2 6 2 10 Q2 16 4 18h4 Q10 16 10 10 Q10 6 8 1z" stroke="#d4892a" stroke-width="1.2"/></svg>
+ Verre Weizen
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('witbier')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Witbier</h3></div>
+ <p class="carte-desc-courte">Blanche belge épicée à la coriandre et zeste d'orange. Légère, fruitée, idéale en terrasse.</p>
+ <div class="carte-pills"><span class="pill"><strong>4.5–5.5%</strong></span><span class="pill">Blanche</span><span class="pill">Faible</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><path d="M3 2h8l-0.5 3 Q11 8 11 12 Q10 16 7 17 Q4 16 3 12 Q3 8 3.5 5z" stroke="#d4892a" stroke-width="1.2"/></svg>
+ Verre Witbier
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ </div>
+ </div>
+
+ <div class="biere-groupe">
+              <div class="groupe-titre"> Belges &amp; Abbaye</div>
+ <div class="biere-grille">
+ <div class="biere-carte" onclick="ouvrirModal('triple')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Triple belge</h3></div>
+ <p class="carte-desc-courte">Forte dorée trappiste. Arômes de fruits mûrs et épices, chaleur alcoolisée bien intégrée.</p>
+ <div class="carte-pills"><span class="pill"><strong>7.5–10%</strong></span><span class="pill">Dorée</span><span class="pill">Légère</span></div>
+ <div class="carte-verre-mini">
+ <svg width="16" height="20" viewBox="0 0 16 20" fill="none"><path d="M3 6 Q2 4 4 3h8 Q12 4 13 6 Q14 10 11 15 Q10 17 8 17 Q6 17 5 15 Q2 10 3 6z" stroke="#d4892a" stroke-width="1.2"/><line x1="8" y1="17" x2="8" y2="19" stroke="#d4892a" stroke-width="1.5"/><path d="M5 19h6" stroke="#d4892a" stroke-width="1.5"/></svg>
+ Calice belge
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('dubbel')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Dubbel belge</h3></div>
+ <p class="carte-desc-courte">Trappiste brune riche. Notes de raisins secs, pruneaux et caramel. Enveloppante et chaleureuse.</p>
+ <div class="carte-pills"><span class="pill"><strong>6–8%</strong></span><span class="pill">Brune ambrée</span><span class="pill">Légère</span></div>
+ <div class="carte-verre-mini">
+ <svg width="16" height="20" viewBox="0 0 16 20" fill="none"><path d="M3 6 Q2 4 4 3h8 Q12 4 13 6 Q14 10 11 15 Q10 17 8 17 Q6 17 5 15 Q2 10 3 6z" stroke="#d4892a" stroke-width="1.2"/><line x1="8" y1="17" x2="8" y2="19" stroke="#d4892a" stroke-width="1.5"/><path d="M5 19h6" stroke="#d4892a" stroke-width="1.5"/></svg>
+ Calice belge
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('saison')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Saison</h3></div>
+ <p class="carte-desc-courte">Bière de ferme belge. Sèche, épicée, légèrement acidulée. Chaque brasseur crée sa propre signature.</p>
+ <div class="carte-pills"><span class="pill"><strong>5–8%</strong></span><span class="pill">Blonde ambrée</span><span class="pill">Modérée</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="20" viewBox="0 0 14 20" fill="none"><path d="M4 1 Q2 8 3 12 Q4 16 7 17 Q10 16 11 12 Q12 8 10 1z" stroke="#d4892a" stroke-width="1.2"/><line x1="7" y1="17" x2="7" y2="19" stroke="#d4892a" stroke-width="1.2"/><line x1="5" y1="19" x2="9" y2="19" stroke="#d4892a" stroke-width="1.2"/></svg>
+ Verre Tulipe
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ </div>
+ </div>
+
+ <div class="biere-groupe">
+              <div class="groupe-titre"> Brunes &amp; Foncées</div>
+ <div class="biere-grille">
+ <div class="biere-carte" onclick="ouvrirModal('stout')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Stout</h3></div>
+ <p class="carte-desc-courte">Noire à mousse crémeuse. Café torréfié, cacao et caramel. De la légère Guinness à l'Imperial puissante.</p>
+ <div class="carte-pills"><span class="pill"><strong>4–12%</strong></span><span class="pill">Noire</span><span class="pill">Modérée–élevée</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><rect x="2" y="1" width="10" height="12" rx="1" stroke="#d4892a" stroke-width="1.2"/><path d="M2 13 Q1 16 3 17h8 Q13 16 12 13" stroke="#d4892a" stroke-width="1"/></svg>
+ Pinte irlandaise
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('porter')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Porter</h3></div>
+ <p class="carte-desc-courte">Cousin plus léger du Stout. Chocolat, café et caramel, avec plus de place pour le houblon.</p>
+ <div class="carte-pills"><span class="pill"><strong>4.5–7%</strong></span><span class="pill">Brun foncé</span><span class="pill">Modérée</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><rect x="2" y="1" width="10" height="12" rx="1" stroke="#d4892a" stroke-width="1.2"/><path d="M2 13 Q1 16 3 17h8 Q13 16 12 13" stroke="#d4892a" stroke-width="1"/></svg>
+ Pinte Nonic
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('amber')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Amber / Brown Ale</h3></div>
+ <p class="carte-desc-courte">Entre la pale ale et la brune. Notes de caramel et noix. Accessible et polyvalente.</p>
+ <div class="carte-pills"><span class="pill"><strong>4.5–6%</strong></span><span class="pill">Ambrée</span><span class="pill">Légère</span></div>
+ <div class="carte-verre-mini">
+ <svg width="14" height="18" viewBox="0 0 14 18" fill="none"><rect x="2" y="1" width="10" height="12" rx="1" stroke="#d4892a" stroke-width="1.2"/><path d="M2 13 Q1 16 3 17h8 Q13 16 12 13" stroke="#d4892a" stroke-width="1"/></svg>
+ Pinte Nonic
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="biere-section open" id="sec-spon">
+ <button class="sec-toggle spontanee" onclick="toggleSection('sec-spon')">
+ <span class="sec-icone"></span>
+ <div class="sec-info">
+ <div class="sec-titre">Fermentation spontanée &amp; Bières acides</div>
+ <p class="sec-sub">Levures sauvages de l'air · Quasi exclusivement belges · Acides et complexes</p>
+ </div>
+ <span class="sec-badge">3 styles</span>
+ <span class="sec-chevron">▼</span>
+ </button>
+ <div class="sec-body">
+ <div class="biere-groupe">
+ <div class="biere-grille">
+ <div class="biere-carte" onclick="ouvrirModal('lambic')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Lambic / Gueuze</h3></div>
+ <p class="carte-desc-courte">Fermentée sans levure ajoutée. Acide, sèche, unique. La Gueuze assemble plusieurs lambics vieillis.</p>
+ <div class="carte-pills"><span class="pill"><strong>5–8%</strong></span><span class="pill">Blonde trouble</span><span class="pill">Très acide</span></div>
+ <div class="carte-verre-mini">
+ <svg width="10" height="20" viewBox="0 0 10 20" fill="none"><path d="M2 1h6v15H2z" stroke="#d4892a" stroke-width="1.2"/><path d="M2 16 Q1 18 2 19h6 Q7 18 8 16" stroke="#d4892a" stroke-width="1"/><line x1="5" y1="19" x2="5" y2="20" stroke="#d4892a" stroke-width="1.5"/></svg>
+ Flûte
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('kriek')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Kriek / Framboise</h3></div>
+ <p class="carte-desc-courte">Lambic macéré avec cerises ou framboises. Sèche, acidulée et fruitée en version traditionnelle.</p>
+ <div class="carte-pills"><span class="pill"><strong>4–7%</strong></span><span class="pill">Rouge rubis</span><span class="pill">Acide-fruité</span></div>
+ <div class="carte-verre-mini">
+ <svg width="10" height="20" viewBox="0 0 10 20" fill="none"><path d="M2 1h6v15H2z" stroke="#d4892a" stroke-width="1.2"/><path d="M2 16 Q1 18 2 19h6 Q7 18 8 16" stroke="#d4892a" stroke-width="1"/><line x1="5" y1="19" x2="5" y2="20" stroke="#d4892a" stroke-width="1.5"/></svg>
+ Flûte
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ <div class="biere-carte" onclick="ouvrirModal('sour')">
+ <div class="carte-header"><span class="carte-emoji"></span><h3 class="carte-nom">Sour Ale / Berliner</h3></div>
+ <p class="carte-desc-courte">Bières acides modernes. La Berliner Weisse est légère et citronnée. Les Sours craft sont très créatives.</p>
+ <div class="carte-pills"><span class="pill"><strong>3–6%</strong></span><span class="pill">Blonde à rosée</span><span class="pill">Acide</span></div>
+ <div class="carte-verre-mini">
+ <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><ellipse cx="9" cy="7" rx="7" ry="5" stroke="#d4892a" stroke-width="1.2"/><line x1="9" y1="12" x2="9" y2="14" stroke="#d4892a" stroke-width="1.5"/></svg>
+ Bol à pied
+ </div>
+ <div class="carte-hint">Cliquer pour détails →</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+      </div>
+    </main> </div>
+
+ <div class="biere-modal-overlay" id="modal-overlay" onclick="fermerModalSiOverlay(event)">
+ <div class="biere-modal" id="modal-content">
+ <button class="modal-close" onclick="fermerModal()">X</button>
+ <div id="modal-inner"></div>
+ </div>
+ </div>
+
+<script>
+ const bieres = {
+ 'lager-pils': {
+ nom: 'Lager / Pilsner', emoji: '', type: 'lager', badge: 'Fermentation basse',
+ desc: 'La bière la plus consommée au monde. Claire, dorée, légèrement houblonnée et parfaitement désaltérante. La Pilsner, née à Plzeň (Tchéquie) en 1842, est sa version la plus aromatique grâce au houblon Saaz aux notes épicées. Rafraîchissante et polyvalente.',
+ alc: '4–5%', couleur: 'Blonde pâle et limpide', amertume: 'Légère à modérée', origine: 'Allemagne · Tchéquie',
+ verre: 'Chope ou verre Pilsner', verre_type: 'chope',
+ verre_note: 'La chope conserve la fraîcheur plus longtemps. Le verre Pilsner effilé met en valeur la robe dorée et maintient la mousse blanche.',
+ exemples: ['Heineken', 'Stella Artois', 'Pilsner Urquell', 'Budvar', 'Carlsberg']
+ },
+ 'marzen': {
+ nom: 'Märzen / Bock', emoji: '', type: 'lager', badge: 'Fermentation basse',
+ desc: 'Bières allemandes plus fortes et riches en malts. La Märzen est ambrée et ronde, traditionnellement brassée en mars et servie à l\'Oktoberfest de Munich. La Bock est encore plus riche et légèrement sucrée, avec des notes de pain et de caramel.',
+ alc: '5.5–7.5%', couleur: 'Ambrée à brune', amertume: 'Légère', origine: 'Allemagne (Bavière)',
+ verre: 'Grande chope bavaroise', verre_type: 'chope',
+ verre_note: 'La grande chope d\'un litre est la tradition absolue à l\'Oktoberfest. Pour mieux apprécier les arômes maltés, un verre tulipe fonctionne très bien.',
+ exemples: ['Paulaner Märzen', 'Ayinger Celebrator', 'Hofbräu Oktoberfest', 'Spaten Oktoberfest']
+ },
+ 'pale-ale': {
+ nom: 'Pale Ale / APA', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'La Pale Ale est bien équilibrée entre malt et houblon. La version anglaise (Bitter) est plus terreuse et maltée. La version américaine — l\'APA — est plus houblonnée avec des notes d\'agrumes et de pin. Une excellente porte d\'entrée vers les bières artisanales.',
+ alc: '4–6%', couleur: 'Dorée à ambrée', amertume: 'Modérée', origine: 'Angleterre · USA',
+ verre: 'Pinte Nonic', verre_type: 'pinte',
+ verre_note: 'La pinte Nonic, légèrement évasée en haut, est le verre à ale par excellence. Son renflement empêche les verres d\'adhérer entre eux et améliore la prise en main.',
+ exemples: ['Sierra Nevada Pale Ale', 'Bass Ale', 'Belhaven Best', 'Fuller\'s London Pride']
+ },
+ 'ipa': {
+ nom: 'IPA — India Pale Ale', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Reine incontestée du mouvement craft beer. Fortement houblonnée, amère, avec des arômes intenses : résine et pin (IPA classique), agrumes et fruits tropicaux (IPA modernes), ou juteuse et trouble (NEIPA). Développée en Angleterre au XIXe siècle pour survivre au long voyage vers l\'Inde.',
+ alc: '5.5–7.5%', couleur: 'Dorée à cuivrée (trouble pour NEIPA)', amertume: 'Élevée', origine: 'Angleterre · USA',
+ verre: 'Verre Tulipe', verre_type: 'tulipe',
+ verre_note: 'Le verre tulipe, évasé au milieu et resserré en haut, concentre les arômes de houblon au nez. Le bord légèrement évasé libère une bouffée aromatique à chaque gorgée.',
+ exemples: ['Dogfish Head 60 Minute IPA', 'Goose Island IPA', 'Dieu du Ciel!', 'Stone IPA']
+ },
+ 'hefeweizen': {
+ nom: 'Hefeweizen', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Bière de blé bavaroise non filtrée, trouble et extrêmement mousseuse. Ses arômes caractéristiques de banane et de clou de girofle viennent entièrement de la levure — pas d\'ajout d\'épices. Légère, rafraîchissante et très désaltérante.',
+ alc: '4.5–5.5%', couleur: 'Blonde trouble, robe voilée', amertume: 'Faible', origine: 'Allemagne (Bavière)',
+ verre: 'Grand verre Weizen', verre_type: 'weizen',
+ verre_note: 'Le grand verre en forme de vase de 50 cl est absolument obligatoire. Sa base étroite s\'élargit vers le haut pour accueillir la mousse généreuse et libérer les arômes de banane.',
+ exemples: ['Erdinger Weissbier', 'Paulaner Hefe-Weißbier', 'Weihenstephaner', 'Franziskaner']
+ },
+ 'witbier': {
+ nom: 'Witbier (Blanche belge)', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Bière de blé belge épicée à la coriandre et au zeste d\'orange. Plus légère et fruitée que la Hefeweizen, sans les notes de banane. Trouble, pâle et très désaltérante — parfaite en terrasse par temps chaud.',
+ alc: '4.5–5.5%', couleur: 'Blanche trouble, très pâle', amertume: 'Faible', origine: 'Belgique',
+ verre: 'Verre Witbier hexagonal', verre_type: 'witbier',
+ verre_note: 'Le verre hexagonal belge légèrement évasé est traditionnel pour la Witbier. Sa forme distinctive met en valeur la robe blanche et la mousse fine.',
+ exemples: ['Hoegaarden', 'Blanche de Chambly', 'Blue Moon', 'Allagash White']
+ },
+ 'triple': {
+ nom: 'Triple belge', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Bière forte dorée d\'inspiration trappiste. Malgré sa couleur blonde, c\'est une bière puissante et complexe avec des arômes de fruits mûrs (poire, abricot), d\'épices, de miel et une chaleur alcoolisée bien intégrée. Brassée par les moines trappistes depuis des siècles.',
+ alc: '7.5–10%', couleur: 'Dorée brillante', amertume: 'Légère', origine: 'Belgique',
+ verre: 'Calice / Gobelet belge', verre_type: 'calice',
+ verre_note: 'Le calice à pied large est traditionnel pour toutes les bières belges fortes. Sa forme ronde concentre les arômes complexes et ralentit la dégustation — ce qui est sage vu l\'alcool.',
+ exemples: ['Westmalle Triple', 'Chimay Triple (Blanche)', 'La Fin du Monde (Unibroue)', 'Tripel Karmeliet']
+ },
+ 'dubbel': {
+ nom: 'Dubbel belge', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Bière trappiste brune riche en malts caramélisés. Notes de raisins secs, pruneaux, figues, caramel et légères épices. Moins forte que la Triple mais plus enveloppante et chaleureuse. Accord parfait avec les fromages affinés.',
+ alc: '6–8%', couleur: 'Brune ambrée profonde', amertume: 'Légère à modérée', origine: 'Belgique',
+ verre: 'Calice / Gobelet belge', verre_type: 'calice',
+ verre_note: 'Le calice belge à pied large est parfait pour apprécier la complexité maltée de la Dubbel. Il permet aussi d\'admirer la belle couleur acajou.',
+ exemples: ['Westmalle Dubbel', 'Chimay Rouge', 'Maudite (Unibroue)', 'Rochefort 8']
+ },
+ 'saison': {
+ nom: 'Saison / Farmhouse Ale', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Bière rustique historiquement brassée pour les travailleurs agricoles belges pendant l\'hiver, pour être bue aux champs en été. Sèche, épicée, légèrement fruitée et acidulée. Très variable selon le brasseur.',
+ alc: '5–8%', couleur: 'Blonde à ambrée', amertume: 'Modérée', origine: 'Belgique · France du Nord',
+ verre: 'Verre Tulipe', verre_type: 'tulipe',
+ verre_note: 'Le verre tulipe capture parfaitement les arômes épicés, fruités et levurés complexes de la Saison. Idéal pour une dégustation attentive.',
+ exemples: ['Saison Dupont', 'Fantôme', 'Dieu du Ciel! Saison', 'Ommegang Hennepin']
+ },
+ 'stout': {
+ nom: 'Stout', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Bière noire par excellence, reconnaissable à sa mousse crémeuse et dense. Arômes profonds de café torréfié, cacao et caramel. L\'Irish Dry Stout (Guinness) est sèche et légère. L\'Oatmeal Stout est plus douce. L\'Imperial Stout est puissante et très complexe.',
+ alc: '4–12% selon le style', couleur: 'Brun foncé à noir opaque', amertume: 'Modérée à élevée', origine: 'Irlande · Angleterre',
+ verre: 'Pinte irlandaise (Tulip Pint)', verre_type: 'pinte',
+ verre_note: 'La pinte irlandaise droite est parfaite pour la Guinness et les Dry Stouts. Pour les Imperial Stouts, un verre tulipe ou un snifter permet de mieux apprécier les arômes.',
+ exemples: ['Guinness Draught', 'Left Hand Milk Stout', 'Péché Mortel (Dieu du Ciel!)', 'North Coast Old Rasputin']
+ },
+ 'porter': {
+ nom: 'Porter', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Cousin plus léger du Stout, le Porter est brun à noir avec des notes de chocolat, café et caramel. Moins amer et souvent plus fruité, il donne plus de place au houblon pour s\'exprimer. Historiquement la bière des porteurs de Londres au XVIIIe siècle.',
+ alc: '4.5–7%', couleur: 'Brun foncé', amertume: 'Modérée', origine: 'Angleterre',
+ verre: 'Pinte Nonic', verre_type: 'pinte',
+ verre_note: 'La pinte standard est idéale pour le Porter. Un verre tulipe peut aussi concentrer les arômes torréfiés pour une dégustation plus attentive.',
+ exemples: ['Anchor Porter', 'Fuller\'s London Porter', 'Baltika 6', 'Deschutes Black Butte Porter']
+ },
+ 'amber': {
+ nom: 'Amber Ale / Brown Ale', emoji: '', type: 'ale', badge: 'Fermentation haute',
+ desc: 'Style situé entre la Pale Ale et les bières brunes. L\'Amber Ale américaine a des notes de caramel, pain grillé et noix. La Brown Ale anglaise est plus douce, légèrement chocolatée et très accessible. Deux styles polyvalents et faciles à apprécier.',
+ alc: '4.5–6%', couleur: 'Ambrée à brun cuivré', amertume: 'Légère à modérée', origine: 'USA · Angleterre',
+ verre: 'Pinte Nonic', verre_type: 'pinte',
+ verre_note: 'La pinte classique est parfaite — elle met en valeur la belle couleur ambrée et convient à une dégustation décontractée.',
+ exemples: ['Fat Tire Amber Ale', 'Newcastle Brown Ale', 'Rickard\'s Red', 'Samuel Smith Nut Brown Ale']
+ },
+ 'lambic': {
+ nom: 'Lambic / Gueuze', emoji: '', type: 'spontanee', badge: 'Fermentation spontanée',
+ desc: 'Bière unique au monde, brassée exclusivement dans la région bruxelloise. Aucune levure n\'est ajoutée — les micro-organismes sauvages présents dans l\'air font tout le travail. Acide, sèche et d\'une complexité extraordinaire. La Gueuze assemble des lambics de 1, 2 et 3 ans pour créer une bière pétillante comme un champagne.',
+ alc: '5–8%', couleur: 'Blonde trouble', amertume: 'Nulle (très acide)', origine: 'Belgique · Bruxelles',
+ verre: 'Flûte à champagne', verre_type: 'flute',
+ verre_note: 'La flûte met en valeur les bulles fines et la robe dorée de la Gueuze. Le verre Lambic traditionnel belge, une petite tulipe basse, est aussi très authentique.',
+ exemples: ['Cantillon Gueuze', 'Boon Oude Gueuze', '3 Fonteinen', 'Girardin Gueuze']
+ },
+ 'kriek': {
+ nom: 'Kriek / Framboise', emoji: '', type: 'spontanee', badge: 'Fermentation spontanée',
+ desc: 'Lambic macéré pendant des mois avec des cerises entières (Kriek) ou des framboises. La version traditionnelle est sèche, acidulée et offre une vraie saveur de fruit complexe. Les versions modernes industrielles sont souvent plus sucrées et accessibles.',
+ alc: '4–7%', couleur: 'Rouge rubis à rose vif', amertume: 'Nulle (acide et fruité)', origine: 'Belgique',
+ verre: 'Flûte / Tulipe basse', verre_type: 'flute',
+ verre_note: 'La flûte met en valeur la magnifique couleur rouge et les bulles. Le verre tulipe bas traditionnel belge est tout aussi approprié.',
+ exemples: ['Cantillon Kriek 100% Lambic', 'Lindemans Framboise', 'Boon Kriek', 'Girardin Kriek']
+ },
+ 'sour': {
+ nom: 'Sour Ale / Berliner Weisse', emoji: '', type: 'spontanee', badge: 'Acide · Fermentation mixte',
+ desc: 'Bières acides modernes utilisant levures et bactéries lactiques. La Berliner Weisse est légère, citronnée et très rafraîchissante. Les Sour Ales craft modernes (Kettle Sour, Gose) peuvent être très fruitées, créatives et surprenantes.',
+ alc: '3–6%', couleur: 'Blonde pâle à rosée', amertume: 'Nulle (acidité dominante)', origine: 'Allemagne · mondial',
+ verre: 'Bol à pied / Verre ballon', verre_type: 'bol',
+ verre_note: 'La Berliner Weisse se boit traditionnellement dans un grand bol à pied — parfois avec un sirop de framboise. Le verre ballon convient bien aux Sours craft plus complexes.',
+ exemples: ['Dogfish Head SeaQuench Ale', 'Almanac Sour', 'Cascade Sang Royal', 'Westbrook Gose']
+ }
+ };
+
+ // SVG des verres dessinés à la main
+ const verresSVG = {
+ chope: `<svg class="verre-svg" width="90" height="115" viewBox="0 0 90 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M18 10 Q16 8 15 10 L10 85 Q10 92 18 95 L52 95 Q60 92 60 85 L55 10 Q54 8 52 10 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M60 30 Q78 30 78 52 Q78 74 60 74" fill="none" stroke="#d4892a" stroke-width="2"/>
+ <path d="M18 28 L55 28 L52 85 Q52 90 45 92 L25 92 Q18 90 18 85 Z" fill="#d4892a" opacity="0.15"/>
+ <path d="M15 10 Q20 4 26 8 Q32 3 38 7 Q44 2 50 6 Q55 3 57 10" fill="#f0e6cc" opacity="0.3" stroke="#f0e6cc" stroke-width="1"/>
+ <line x1="22" y1="30" x2="20" y2="80" stroke="#d4892a" stroke-width="0.7" opacity="0.4"/>
+ <ellipse cx="35" cy="100" rx="18" ry="3" fill="#d4892a" opacity="0.15"/>
+ </svg>`,
+
+ pinte: `<svg class="verre-svg" width="72" height="118" viewBox="0 0 72 118" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M22 8 L18 58 Q17 68 20 76 Q22 84 28 88 L44 88 Q50 84 52 76 Q55 68 54 58 L50 8 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M18 60 Q16 65 18 70 L54 70 Q56 65 54 60" fill="none" stroke="#d4892a" stroke-width="1" opacity="0.5"/>
+ <path d="M22 25 L50 25 L54 58 Q54 68 52 74 Q50 82 44 85 L28 85 Q22 82 20 74 Q18 68 18 58 Z" fill="#8a4010" opacity="0.18"/>
+ <path d="M22 8 Q27 2 33 5 Q38 0 44 4 Q48 1 51 8" fill="#f0e6cc" opacity="0.35" stroke="#f0e6cc" stroke-width="1"/>
+ <line x1="27" y1="27" x2="25" y2="70" stroke="#d4892a" stroke-width="0.7" opacity="0.3"/>
+ <path d="M28 88 Q25 93 25 100 L47 100 Q47 93 44 88" fill="#b06820" opacity="0.25" stroke="#d4892a" stroke-width="1"/>
+ </svg>`,
+
+ tulipe: `<svg class="verre-svg" width="74" height="122" viewBox="0 0 74 122" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M24 8 Q18 20 16 38 Q14 52 20 62 Q24 68 37 70 Q50 68 54 62 Q60 52 58 38 Q56 20 50 8 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M26 26 Q20 40 19 54 Q20 62 30 66 Q37 68 37 68 Q44 65 55 61 Q59 52 58 38 Q56 28 50 22 Z" fill="#c87818" opacity="0.18"/>
+ <path d="M24 8 Q29 2 36 5 Q41 0 47 4 Q51 2 50 8" fill="#f0e6cc" opacity="0.35" stroke="#f0e6cc" stroke-width="1"/>
+ <line x1="37" y1="70" x2="37" y2="102" stroke="#d4892a" stroke-width="2"/>
+ <ellipse cx="37" cy="105" rx="14" ry="4" fill="none" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M23 30 Q21 46 23 60" stroke="#d4892a" stroke-width="0.7" opacity="0.35"/>
+ </svg>`,
+
+ weizen: `<svg class="verre-svg" width="62" height="128" viewBox="0 0 62 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M22 5 Q20 30 18 55 Q17 78 18 92 Q20 102 27 105 L35 105 Q42 102 44 92 Q45 78 44 55 Q42 30 40 5 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M22 22 Q20 48 19 68 Q18 85 20 94 Q22 101 28 103 L34 103 Q40 101 42 94 Q44 85 43 68 Q42 48 40 22 Z" fill="#d4a028" opacity="0.17"/>
+ <path d="M22 5 Q25 0 31 3 Q35 0 38 3 Q41 1 41 5" fill="#f0e6cc" opacity="0.45" stroke="#f0e6cc" stroke-width="1.2"/>
+ <path d="M21 8 Q26 5 31 7 Q35 5 40 7" fill="none" stroke="#f0e6cc" stroke-width="0.8" opacity="0.35"/>
+ <line x1="26" y1="25" x2="25" y2="90" stroke="#d4892a" stroke-width="0.7" opacity="0.3"/>
+ </svg>`,
+
+ witbier: `<svg class="verre-svg" width="74" height="118" viewBox="0 0 74 118" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M20 8 Q18 16 17 42 Q16 68 18 84 Q20 94 28 97 L46 97 Q54 94 56 84 Q58 68 57 42 Q56 16 54 8 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M21 26 Q19 52 18 74 Q19 88 26 93 L48 93 Q55 88 56 74 Q55 52 53 26 Z" fill="#e8dcc0" opacity="0.12"/>
+ <path d="M20 8 Q26 2 33 6 Q38 1 45 5 Q51 2 54 8" fill="#f0e6cc" opacity="0.4" stroke="#f0e6cc" stroke-width="1"/>
+ <path d="M28 97 L26 108 L48 108 L46 97" fill="#b06820" opacity="0.2" stroke="#d4892a" stroke-width="1"/>
+ </svg>`,
+
+ calice: `<svg class="verre-svg" width="86" height="124" viewBox="0 0 86 124" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M20 10 Q10 18 8 36 Q7 52 12 64 Q18 78 30 86 Q35 88 43 89 Q51 88 56 86 Q68 78 74 64 Q79 52 78 36 Q76 18 66 10 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M23 28 Q13 40 12 55 Q13 68 22 78 Q30 86 43 87 Q56 86 64 78 Q73 68 74 55 Q73 40 63 28 Z" fill="#d4892a" opacity="0.15"/>
+ <path d="M20 10 Q27 4 34 8 Q39 3 45 7 Q51 3 57 7 Q63 4 66 10" fill="#f0e6cc" opacity="0.35" stroke="#f0e6cc" stroke-width="1"/>
+ <line x1="43" y1="89" x2="43" y2="110" stroke="#d4892a" stroke-width="2.5"/>
+ <ellipse cx="43" cy="114" rx="19" ry="5" fill="none" stroke="#d4892a" stroke-width="1.8"/>
+ <path d="M15 32 Q11 50 13 66" stroke="#d4892a" stroke-width="0.8" opacity="0.3"/>
+ </svg>`,
+
+ flute: `<svg class="verre-svg" width="44" height="128" viewBox="0 0 44 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M13 6 Q12 26 12 58 Q12 82 14 94 Q16 100 22 101 Q28 100 30 94 Q32 82 32 58 Q32 26 31 6 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.3"/>
+ <path d="M14 22 Q13 52 13 78 Q14 90 19 98 L25 98 Q30 90 31 78 Q31 52 30 22 Z" fill="#f0c040" opacity="0.12"/>
+ <line x1="18" y1="24" x2="18" y2="90" stroke="#d4892a" stroke-width="0.5" stroke-dasharray="2,4" opacity="0.5"/>
+ <line x1="23" y1="28" x2="23" y2="92" stroke="#d4892a" stroke-width="0.4" stroke-dasharray="2,5" opacity="0.4"/>
+ <path d="M13 6 Q17 1 22 4 Q27 0 32 5" fill="#f0e6cc" opacity="0.35" stroke="#f0e6cc" stroke-width="1"/>
+ <line x1="22" y1="101" x2="22" y2="118" stroke="#d4892a" stroke-width="1.8"/>
+ <ellipse cx="22" cy="122" rx="11" ry="3.5" fill="none" stroke="#d4892a" stroke-width="1.3"/>
+ </svg>`,
+
+ bol: `<svg class="verre-svg" width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <path d="M10 22 Q8 16 12 12 Q22 8 50 8 Q78 8 88 12 Q92 16 90 22 Q86 44 82 58 Q74 72 60 77 Q55 79 50 79 Q45 79 40 77 Q26 72 18 58 Q14 44 10 22 Z" fill="#2a1a08" stroke="#d4892a" stroke-width="1.5"/>
+ <path d="M15 28 Q14 44 18 58 Q26 70 38 74 Q43 76 50 76 Q57 76 62 74 Q74 70 82 58 Q86 44 85 28 Z" fill="#f04880" opacity="0.12"/>
+ <ellipse cx="50" cy="18" rx="38" ry="9" fill="#f0e6cc" opacity="0.12" stroke="#f0e6cc" stroke-width="0.8"/>
+ <line x1="50" y1="79" x2="50" y2="92" stroke="#d4892a" stroke-width="2.5"/>
+ <ellipse cx="50" cy="96" rx="23" ry="5" fill="none" stroke="#d4892a" stroke-width="1.8"/>
+ </svg>`
+ };
+
+ function toggleSection(id) {
+ document.getElementById(id).classList.toggle('open');
+ }
+
+ function ouvrirModal(id) {
+ const b = bieres[id];
+ if (!b) return;
+ const svg = verresSVG[b.verre_type] || '';
+ document.getElementById('modal-inner').innerHTML = `
+ <div class="modal-top">
+ <span class="modal-badge ${b.type}">${b.badge}</span>
+ <h2 class="modal-titre">${b.emoji} ${b.nom}</h2>
+ <p class="modal-desc">${b.desc}</p>
+ </div>
+ <div class="modal-infos">
+ <div class="modal-info-item"><span class="modal-info-label">Alcool</span><span class="modal-info-val">${b.alc}</span></div>
+ <div class="modal-info-item"><span class="modal-info-label">Couleur</span><span class="modal-info-val">${b.couleur}</span></div>
+ <div class="modal-info-item"><span class="modal-info-label">Amertume</span><span class="modal-info-val">${b.amertume}</span></div>
+ <div class="modal-info-item"><span class="modal-info-label">Origine</span><span class="modal-info-val">${b.origine}</span></div>
+ </div>
+ <div class="modal-verre">
+ <div class="modal-verre-svg">${svg}<span class="verre-svg-label">${b.verre}</span></div>
+ <div class="modal-verre-texte">
+ <div class="modal-verre-titre">Verre recommandé</div>
+ <p class="modal-verre-note">${b.verre_note}</p>
+ </div>
+ </div>
+ <div class="modal-exemples">
+ <div class="modal-exemples-label">Exemples à essayer</div>
+ <div class="modal-exemples-list">${b.exemples.map(e => `<span class="ex-tag">${e}</span>`).join('')}</div>
+ </div>`;
+ document.getElementById('modal-overlay').classList.add('active');
+ document.body.style.overflow = 'hidden';
+ }
+
+ function fermerModal() {
+ document.getElementById('modal-overlay').classList.remove('active');
+ document.body.style.overflow = '';
+ }
+
+ function fermerModalSiOverlay(e) {
+ if (e.target === document.getElementById('modal-overlay')) fermerModal();
+ }
+
+ document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerModal(); });
+ 
+    // Fun Facts colonnes laterales
+    (function() {
+      // Tableau de gauche grandement enrichi
+      var FG=[
+        ["Le savais-tu ?","La bière est la 3e boisson la plus consommée au monde après l'eau et le thé."],
+        ["Fermentation","La levure est un champignon microscopique qui transforme les sucres en alcool et CO2."],
+        ["Reinheitsgebot","La loi bavaroise de pureté de 1516 stipule que la bière ne doit contenir que de l'eau, de l'orge et du houblon (la levure était encore inconnue)."],
+        ["Record","La Westvleteren 12, brassée par des moines belges, est souvent considérée comme la meilleure bière au monde."],
+        ["Zythologie","Du grec zythos (vin d'orge) et logos (étude) : c'est l'étude scientifique et historique de la bière."],
+        ["L'Antiquité","La plus vieille recette de bière découverte a plus de 4000 ans, rédigée par les Sumériens sous forme de poème."],
+        ["Monnaie d'échange","Les bâtisseurs des pyramides d'Égypte étaient payés en partie avec environ 4 à 5 litres de bière par jour."],
+        ["Espace","L'orge de la bière 'Sapporo Space Barley' a été cultivé à partir de graines ayant passé 5 mois dans la Station Spatiale Internationale."],
+        ["Peur","La cenosillicaphobie est le nom scientifique donné à la peur irrationnelle de voir son verre de bière vide."],
+        ["Température","Contrairement aux croyances, seules les Lagers se boivent très froides (4-7°C). Les Ales complexes libèrent mieux leurs arômes entre 10 et 14°C."],
+        ["Lumière","Les bouteilles brunes protègent beaucoup mieux la bière des rayons UV que les vertes. Les UV dégradent le houblon et donnent un goût de 'mouffette'."],
+        ["Présidence","Barack Obama fut le tout premier président à brasser sa propre bière directement à la Maison Blanche (la White House Honey Ale)."],
+        ["Tchéquie","La République tchèque détient le record mondial absolu de consommation de bière par habitant depuis des décennies (environ 140 litres par an)."]
+      ];
+      
+      // Tableau de droite grandement enrichi
+      var FD=[
+        ["Le houblon","C'est une plante grimpante de la même famille que le chanvre et le cannabis. Seule la fleur femelle est utilisée en brasserie."],
+        ["Lambic","Cette bière de fermentation spontanée n'est brassée presque exclusivement que dans la vallée de la Senne, près de Bruxelles."],
+        ["Le verre","Le choix du verre est crucial : un verre tulipe refermé vers le haut concentre jusqu'à 30% plus d'arômes qu'une pinte standard."],
+        ["Moines","Seulement 14 abbayes dans le monde (dont la majorité en Belgique) ont le droit d'utiliser le label Authentic Trappist Product."],
+        ["IBU","C'est l'International Bitterness Unit. Une Lager tourne autour de 10-20 IBU, tandis qu'une grosse Double IPA peut dépasser les 100 IBU."],
+        ["Extrême","La brasserie écossaise Brewmeister a créé la 'Snake Venom', considérée comme la bière la plus forte du monde avec 67.5% d'alcool."],
+        ["Santé publique","Au Moyen-Âge, la bière était souvent plus sûre à boire que l'eau des puits, car le processus d'ébullition tuait les bactéries dangereuses."],
+        ["Marée brune","En 1814, une cuve géante s'est rompue à Londres, libérant une véritable vague de 1.4 million de litres de bière qui a détruit plusieurs maisons."],
+        ["Viking","Dans la mythologie nordique, les guerriers du Valhalla se nourrissent du lait de la chèvre géante Heidrun... dont les mamelles coulent de la bière à volonté."],
+        ["George Washington","Le premier président américain était un grand amateur et avait sa propre petite brasserie sur son domaine de Mount Vernon."],
+        ["Mousse","Le col de mousse n'est pas qu'esthétique : il forme un couvercle qui protège la bière de l'oxydation de l'air et libère progressivement les arômes volatils."],
+        ["Biéroduc","Pour éviter les camions dans son centre historique, la ville de Bruges a construit un véritable pipeline souterrain de 3 km pour transporter sa bière."],
+        ["Bulle d'or","La toute première bière blonde et limpide (la Pilsner) n'a été inventée qu'en 1842. Avant cela, presque la totalité des bières étaient troubles et sombres."]
+      ];
+      
+      function mkC(d){return d.map(function(f){return'<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(212,137,42,0.5);border-radius:10px;padding:1rem;margin-bottom:1rem;box-shadow: 0 4px 12px rgba(0,0,0,0.3);"><div style="font-size:0.8rem;text-transform:uppercase;color:#d4892a;font-weight:bold;margin-bottom:0.4rem;letter-spacing:0.05em;">'+f[0]+'</div><p style="font-size:0.95rem;color:#e0d0b0;line-height:1.5;margin:0;">'+f[1]+'</p></div>';}).join('');}
+      
+      function mk(id,d,s){
+        var e=document.createElement('div');
+        e.id=id;
+        e.innerHTML=mkC(d);
+        e.style.cssText='position:absolute;top:135px;width:250px;z-index:999;flex-direction:column;display:none;';
+        e.style[s]='1rem';
+        document.body.appendChild(e);
+        return e;
+      }
+      
+      function mb(tid,s){var b=document.createElement('button');b.innerHTML='?';b.style.cssText='position:fixed;bottom:1.5rem;width:48px;height:48px;border-radius:50%;background:#d4892a;border:none;color:#000;font-size:1.2rem;font-weight:bold;cursor:pointer;z-index:9999;display:none;align-items:center;justify-content:center;padding:0;box-shadow: 0 4px 10px rgba(0,0,0,0.5);';b.style[s]='1.5rem';b.onclick=function(){var d=document.getElementById(tid);d.style.display=d.style.display==='flex'?'none':'flex';};document.body.appendChild(b);return b;}
+      
+      function md(id,d,s){var e=document.createElement('div');e.id=id;e.innerHTML=mkC(d);e.style.cssText='position:fixed;bottom:5.5rem;width:260px;max-height:50vh;overflow-y:auto;background:#111;border:1px solid rgba(212,137,42,0.6);border-radius:12px;padding:1rem;flex-direction:column;display:none;z-index:9998;box-shadow: 0 10px 25px rgba(0,0,0,0.8);';e.style[s]='1rem';document.body.appendChild(e);return e;}
+      
+      var cG=mk('ffCG',FG,'left'),cD=mk('ffCD',FD,'right');
+      var bG=mb('ffDrwG','left'),bD=mb('ffDrwD','right');
+      md('ffDrwG',FG,'left');md('ffDrwD',FD,'right');
+      
+      function pos(){
+        var W=window.innerWidth,m=(W-Math.min(900,W-64))/2;
+        if(m>270){
+          cG.style.display='flex';
+          cD.style.display='flex';
+          cG.style.left=Math.max(16,m-266)+'px';
+          cD.style.right=Math.max(16,m-266)+'px';
+          cD.style.left='auto';
+          bG.style.display='none';
+          bD.style.display='none';
+          document.getElementById('ffDrwG').style.display='none';
+          document.getElementById('ffDrwD').style.display='none';
+        } else {
+          cG.style.display='none';
+          cD.style.display='none';
+          bG.style.display='flex';
+          bD.style.display='flex';
+        }
+      }
+      pos();window.addEventListener('resize',pos);
+    })();
+ </script>
+</body>
+</html>

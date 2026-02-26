@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Science-Fiction</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Surcharge du fond clair par défaut pour un mode espace */
+    .page-content.scifi-content {
+      background: #050805 !important;
+      color: #f0ede6 !important;
+    }
+
+    /* En-tête des franchises */
+    .scifi-header {
+      padding: 2.5rem 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #2a3a2a;
+    }
+    
+    .scifi-header-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .scifi-title {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+
+    .scifi-subtitle {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      font-style: italic;
+    }
+
+    /* Grille de contenu */
+    .scifi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .scifi-card {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .scifi-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .scifi-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid #2a3a2a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .scifi-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .scifi-list li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .scifi-list li:last-child {
+      border-bottom: none;
+    }
+
+    .scifi-tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .scifi-text {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #a89f94;
+    }
+
+    /* --- THEMES SPECIFIQUES --- */
+    
+    /* STARGATE (Bleu) */
+    .stargate-theme .scifi-header { background: radial-gradient(circle at right, #1a3a5a, #0f1a0f); border-color: #2980b9; }
+    .stargate-theme h3 { color: #5dade2; }
+    .stargate-theme .scifi-card:hover { border-color: #5dade2; box-shadow: 0 10px 20px rgba(93, 173, 226, 0.1); }
+    .stargate-theme .scifi-tag { background: #0b1a2a; color: #5dade2; border: 1px solid #2980b9; }
+
+    /* STAR TREK (Jaune/Or) */
+    .startrek-theme .scifi-header { background: radial-gradient(circle at right, #4a3a0a, #0f1a0f); border-color: #d4ac0d; }
+    .startrek-theme h3 { color: #f4d03f; }
+    .startrek-theme .scifi-card:hover { border-color: #f4d03f; box-shadow: 0 10px 20px rgba(244, 208, 63, 0.1); }
+    .startrek-theme .scifi-tag { background: #2a2005; color: #f4d03f; border: 1px solid #d4ac0d; }
+
+    /* STAR WARS (Rouge/Sith) */
+    .starwars-theme .scifi-header { background: radial-gradient(circle at right, #4a1515, #0f1a0f); border-color: #c0392b; }
+    .starwars-theme h3 { color: #e74c3c; }
+    .starwars-theme .scifi-card:hover { border-color: #e74c3c; box-shadow: 0 10px 20px rgba(231, 76, 60, 0.1); }
+    .starwars-theme .scifi-tag { background: #2a0a0a; color: #e74c3c; border: 1px solid #c0392b; }
+
+  </style>
+</head>
+<body>
+  <div class="page-container">
+
+    <aside class="sidebar">
+      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
+      <h2>Sci-Fi</h2>
+      <p class="sidebar-subtitle">Archives galactiques</p>
+      
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-sublink active" onclick="afficherSection('stargate', this); return false;" style="font-size:1.05rem; padding:0.6rem;">🌌 Stargate</a>
+        <a href="#" class="sidebar-sublink" onclick="afficherSection('startrek', this); return false;" style="font-size:1.05rem; padding:0.6rem;">🖖 Star Trek</a>
+        <a href="#" class="sidebar-sublink" onclick="afficherSection('starwars', this); return false;" style="font-size:1.05rem; padding:0.6rem;">⚔️ Star Wars</a>
+      </nav>
+    </aside>
+
+    <main class="page-content scifi-content">
+
+      <div class="section-view stargate-theme" id="stargate">
+        <div class="scifi-header">
+          <div class="scifi-header-content">
+            <h1 class="scifi-title">Stargate</h1>
+            <p class="scifi-subtitle">« Chevron 7... enclenché ! »</p>
+          </div>
+        </div>
+
+        <div class="scifi-grid">
+          <div class="scifi-card">
+            <h3>📺 Ordre de visionnement</h3>
+            <ul class="scifi-list">
+              <li>Stargate (Le Film) <span class="scifi-tag">1994</span></li>
+              <li>Stargate SG-1 <span class="scifi-tag">10 Saisons</span></li>
+              <li>Stargate Atlantis <span class="scifi-tag">5 Saisons</span></li>
+              <li>Stargate: L'Arche de Vérité <span class="scifi-tag">Film (2008)</span></li>
+              <li>Stargate: Continuum <span class="scifi-tag">Film (2008)</span></li>
+              <li>Stargate Universe <span class="scifi-tag">2 Saisons</span></li>
+            </ul>
+          </div>
+
+          <div class="scifi-card">
+            <h3>👽 Races Principales</h3>
+            <ul class="scifi-list">
+              <li>Les Tau'ri <span>(Humains de la Terre)</span></li>
+              <li>Les Goa'uld <span>(Parasites symbiotiques)</span></li>
+              <li>Les Asgards <span>(Alliés technologiquement avancés)</span></li>
+              <li>Les Jaffa <span>(Incubateurs / Guerriers)</span></li>
+              <li>Les Wraiths <span>(Vampires de Pégase)</span></li>
+              <li>Les Réplicateurs <span>(Machines araignées)</span></li>
+            </ul>
+          </div>
+
+          <div class="scifi-card">
+            <h3>📖 Lexique de base</h3>
+            <p class="scifi-text">
+              <strong>Chappa'ai :</strong> Le nom donné à la Porte des Étoiles par les peuples de la galaxie.<br><br>
+              <strong>Zat'nik'tel (Zat) :</strong> Arme de poing Goa'uld. 1 tir étourdit, 2 tirs tuent, 3 tirs désintègrent.<br><br>
+              <strong>DHD :</strong> Dial-Home Device. Le pupitre de commande permettant d'entrer les coordonnées de la porte.<br><br>
+              <strong>Naquadah :</strong> Minerai extrêmement rare et puissant servant de base à la technologie Goa'uld et à la Porte elle-même.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-view startrek-theme hidden" id="startrek">
+        <div class="scifi-header">
+          <div class="scifi-header-content">
+            <h1 class="scifi-title">Star Trek</h1>
+            <p class="scifi-subtitle">« Espace, frontière de l'infini... »</p>
+          </div>
+        </div>
+
+        <div class="scifi-grid">
+          <div class="scifi-card">
+            <h3>🚀 Les Séries Classiques</h3>
+            <ul class="scifi-list">
+              <li>The Original Series (TOS) <span class="scifi-tag">1966-1969</span></li>
+              <li>The Next Generation (TNG) <span class="scifi-tag">1987-1994</span></li>
+              <li>Deep Space Nine (DS9) <span class="scifi-tag">1993-1999</span></li>
+              <li>Voyager (VOY) <span class="scifi-tag">1995-2001</span></li>
+              <li>Enterprise (ENT) <span class="scifi-tag">2001-2005</span></li>
+            </ul>
+          </div>
+
+          <div class="scifi-card">
+            <h3>⭐ Capitaines Légendaires</h3>
+            <ul class="scifi-list">
+              <li>James T. Kirk <span class="scifi-tag">USS Enterprise</span></li>
+              <li>Jean-Luc Picard <span class="scifi-tag">USS Enterprise-D</span></li>
+              <li>Benjamin Sisko <span class="scifi-tag">Deep Space Nine</span></li>
+              <li>Kathryn Janeway <span class="scifi-tag">USS Voyager</span></li>
+              <li>Jonathan Archer <span class="scifi-tag">Enterprise NX-01</span></li>
+            </ul>
+          </div>
+
+          <div class="scifi-card">
+            <h3>📜 La Directive Première</h3>
+            <p class="scifi-text">
+              Règle générale numéro 1 de Starfleet : 
+              <br><br>
+              <em>« Aucun membre de Starfleet ne peut s'ingérer dans le développement normal et sain d'une société ou d'une culture extraterrestre. »</em>
+              <br><br>
+              Elle interdit de fournir des technologies avancées ou d'interférer avec les affaires internes des planètes qui n'ont pas encore découvert la distorsion (Warp).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-view starwars-theme hidden" id="starwars">
+        <div class="scifi-header">
+          <div class="scifi-header-content">
+            <h1 class="scifi-title">Star Wars</h1>
+            <p class="scifi-subtitle">« Il y a bien longtemps, dans une galaxie très lointaine... »</p>
+          </div>
+        </div>
+
+        <div class="scifi-grid">
+          <div class="scifi-card">
+            <h3>🎬 La Saga Skywalker</h3>
+            <ul class="scifi-list">
+              <li><strong>Prélogie</strong> <span class="scifi-tag">Épisodes I, II, III</span></li>
+              <li>La Menace Fantôme <span>(1999)</span></li>
+              <li>L'Attaque des Clones <span>(2002)</span></li>
+              <li>La Revanche des Sith <span>(2005)</span></li>
+              <li style="margin-top:10px;"><strong>Originale</strong> <span class="scifi-tag">Épisodes IV, V, VI</span></li>
+              <li>Un Nouvel Espoir <span>(1977)</span></li>
+              <li>L'Empire Contre-Attaque <span>(1980)</span></li>
+              <li>Le Retour du Jedi <span>(1983)</span></li>
+            </ul>
+          </div>
+
+          <div class="scifi-card">
+            <h3>⚖️ Les Codes de la Force</h3>
+            <p class="scifi-text" style="color: #6a9a6a; margin-bottom: 1rem;">
+              <strong>Le Code Jedi (Ordre)</strong><br>
+              Il n'y a pas d'émotion, il y a la paix.<br>
+              Il n'y a pas d'ignorance, il y a la connaissance.<br>
+              Il n'y a pas de passion, il y a la sérénité.<br>
+              Il n'y a pas de chaos, il y a l'harmonie.<br>
+              Il n'y a pas de mort, il y a la Force.
+            </p>
+            <p class="scifi-text" style="color: #e74c3c;">
+              <strong>Le Code Sith (Chaos)</strong><br>
+              La paix est un mensonge, il n'y a que la passion.<br>
+              Par la passion, j'ai la puissance.<br>
+              Par la puissance, j'ai le pouvoir.<br>
+              Par le pouvoir, j'ai la victoire.<br>
+              Par la victoire, mes chaînes se brisent.<br>
+              La Force me libérera.
+            </p>
+          </div>
+
+          <div class="scifi-card">
+            <h3>🛸 Vaisseaux Mythiques</h3>
+            <ul class="scifi-list">
+              <li>Faucon Millenium <span class="scifi-tag">Cargo Corellien</span></li>
+              <li>X-Wing T-65 <span class="scifi-tag">Chasseur Stellaire</span></li>
+              <li>TIE Fighter <span class="scifi-tag">Chasseur Impérial</span></li>
+              <li>Star Destroyer <span class="scifi-tag">Croiseur Impérial</span></li>
+              <li>Slave I <span class="scifi-tag">Vaisseau de Boba Fett</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="scifi.js"></script>
+</body>
+</html>

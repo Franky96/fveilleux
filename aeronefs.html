@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Aéronefs</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
+      <h2>Aéronefs</h2>
+      <p class="sidebar-subtitle">Documentation technique</p>
+      <nav class="sidebar-nav">
+
+        <div class="sidebar-etape-header" onclick="toggleEtape('bombardier')">
+          <span class="sidebar-etape-label">Bombardier</span>
+          <span class="etape-arrow" id="arrow-bombardier">▾</span>
+        </div>
+        <ul class="sidebar-subnav" id="list-bombardier">
+          <li><a href="#" class="sidebar-sublink active" onclick="afficherSection('cl415', this); return false;">CL-415</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('cl600', this); return false;">CL-600</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('dash8', this); return false;">Dash 8</a></li>
+        </ul>
+
+        <div class="sidebar-etape-header" onclick="toggleEtape('cessna')">
+          <span class="sidebar-etape-label">Cessna</span>
+          <span class="etape-arrow" id="arrow-cessna">▾</span>
+        </div>
+        <ul class="sidebar-subnav" id="list-cessna">
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c150', this); return false;">Série 150</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c170', this); return false;">Série 170</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c172', this); return false;">Série 172</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c337', this); return false;">Série 337</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('c421', this); return false;">Série 421</a></li>
+        </ul>
+
+        <div class="sidebar-etape-header" onclick="toggleEtape('learjet')">
+          <span class="sidebar-etape-label">Learjet</span>
+          <span class="etape-arrow" id="arrow-learjet">▾</span>
+        </div>
+        <ul class="sidebar-subnav" id="list-learjet">
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('learjet36', this); return false;">Learjet 36</a></li>
+        </ul>
+
+        <div class="sidebar-etape-header" onclick="toggleEtape('piper')">
+          <span class="sidebar-etape-label">Piper</span>
+          <span class="etape-arrow" id="arrow-piper">▾</span>
+        </div>
+        <ul class="sidebar-subnav" id="list-piper">
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('aztec', this); return false;">Aztec PA-23</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('cherokee', this); return false;">Cherokee PA-28</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('navajo', this); return false;">Navajo PA-31</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('tomahawk', this); return false;">Tomahawk PA-38</a></li>
+        </ul>
+
+        <div class="sidebar-etape-header" onclick="toggleEtape('autres')">
+          <span class="sidebar-etape-label">Autres</span>
+          <span class="etape-arrow" id="arrow-autres">▾</span>
+        </div>
+        <ul class="sidebar-subnav" id="list-autres">
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('sr22', this); return false;">Cirrus SR22</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('falcon20', this); return false;">Falcon 20</a></li>
+          <li><a href="#" class="sidebar-sublink" onclick="afficherSection('do328', this); return false;">Dornier DO-328</a></li>
+        </ul>
+
+      </nav>
+    </aside>
+
+    <!-- Contenu principal -->
+    <main class="page-content">
+
+      <!-- CL-415 -->
+      <div class="section-view" id="cl415">
+        <div class="cours-header">
+          <span class="cours-code">Bombardier</span>
+          <h1 class="cours-titre">CL-415</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1LvhG0yUoZcdLXZym3j7sljdhGIsXn3rG?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- CL-600 -->
+      <div class="section-view hidden" id="cl600">
+        <div class="cours-header">
+          <span class="cours-code">Bombardier</span>
+          <h1 class="cours-titre">CL-600</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1GYUUNWK7Fl_siJgvBWZxYpvIGlYmcBla?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Dash 8 -->
+      <div class="section-view hidden" id="dash8">
+        <div class="cours-header">
+          <span class="cours-code">Bombardier</span>
+          <h1 class="cours-titre">Dash 8</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1x72mxLDIbbYQ8H3qVrvYO2fDRdYYkP5K?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Cessna 150 -->
+      <div class="section-view hidden" id="c150">
+        <div class="cours-header">
+          <span class="cours-code">Cessna</span>
+          <h1 class="cours-titre">Série 150</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1cNxIW8Cmeut964qsqUOq5ygy8KLDsoIc?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Cessna 170 -->
+      <div class="section-view hidden" id="c170">
+        <div class="cours-header">
+          <span class="cours-code">Cessna</span>
+          <h1 class="cours-titre">Série 170</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1ipZj-sKWDKFaTQ-yzhlCdh61zJH1P5lg?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Cessna 172 -->
+      <div class="section-view hidden" id="c172">
+        <div class="cours-header">
+          <span class="cours-code">Cessna</span>
+          <h1 class="cours-titre">Série 172</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1Xc4XVpZ2401WtJKNao-Ed13jSG_ggOw2?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Cessna 337 -->
+      <div class="section-view hidden" id="c337">
+        <div class="cours-header">
+          <span class="cours-code">Cessna</span>
+          <h1 class="cours-titre">Série 337</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1FIH5FLugGCKuTS5zprRXdpDvpPbbQY23?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Cessna 421 -->
+      <div class="section-view hidden" id="c421">
+        <div class="cours-header">
+          <span class="cours-code">Cessna</span>
+          <h1 class="cours-titre">Série 421</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1tHvyWzDH5C9QTBLdWxYzSV_Bcpd2UTJR?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Learjet 36 -->
+      <div class="section-view hidden" id="learjet36">
+        <div class="cours-header">
+          <span class="cours-code">Learjet</span>
+          <h1 class="cours-titre">Learjet 36</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1WXjMyQanShjxy-FAgMyC86V35SJ7toCo?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Aztec -->
+      <div class="section-view hidden" id="aztec">
+        <div class="cours-header">
+          <span class="cours-code">Piper</span>
+          <h1 class="cours-titre">Aztec PA-23-250</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/10t3PO0KebyPzL7zMwjJNaI_QUmq_l5tg?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Cherokee -->
+      <div class="section-view hidden" id="cherokee">
+        <div class="cours-header">
+          <span class="cours-code">Piper</span>
+          <h1 class="cours-titre">Cherokee PA-28-140</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1ZZz2t2iON_zXqEOWYwezW5XBQX0GT4-9?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Navajo -->
+      <div class="section-view hidden" id="navajo">
+        <div class="cours-header">
+          <span class="cours-code">Piper</span>
+          <h1 class="cours-titre">Navajo PA-31</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1XU_tQF6keVniXdwG0nps16GWKJ3TFi6g?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Tomahawk -->
+      <div class="section-view hidden" id="tomahawk">
+        <div class="cours-header">
+          <span class="cours-code">Piper</span>
+          <h1 class="cours-titre">Tomahawk PA-38-112</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1p0kE8OpFJAJVbbkYh2_JlzeOm8utEN53?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- SR22 -->
+      <div class="section-view hidden" id="sr22">
+        <div class="cours-header">
+          <span class="cours-code">Cirrus</span>
+          <h1 class="cours-titre">SR22</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1EOlNR2TW1M1C0zXbj9YKAL1HnWL9eVJh?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- Falcon 20 -->
+      <div class="section-view hidden" id="falcon20">
+        <div class="cours-header">
+          <span class="cours-code">Dassault</span>
+          <h1 class="cours-titre">Falcon 20</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1fucBa6rnNk5n0njyZb7q_3XzTus_hOMm?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+      <!-- DO-328 -->
+      <div class="section-view hidden" id="do328">
+        <div class="cours-header">
+          <span class="cours-code">Dornier</span>
+          <h1 class="cours-titre">DO-328</h1>
+        </div>
+        <div class="content-block">
+          <h3>📁 Documentation</h3>
+          <a href="https://drive.google.com/drive/folders/1VkwvBTfK5CKFgbnwn5MYiDGBUm_BIHkf?usp=drive_link" target="_blank" class="drive-btn">Ouvrir le dossier Google Drive</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="aeronefs.js"></script>
+</body>
+</html>
