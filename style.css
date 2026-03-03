@@ -1362,3 +1362,75 @@ header .subtitle {
   border-radius: 6px;
   white-space: nowrap;
 }
+
+/* === NOUVELLE MISE EN PAGE HOCKEY === */
+.hockey-wide-container {
+  max-width: 1200px;
+  width: 95%;
+  margin: 0 auto;
+}
+
+.stats-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.stats-colonne {
+  display: flex;
+  flex-direction: column;
+}
+
+.contrats-section {
+  margin-top: 2rem;
+  background: #0f150f;
+  border: 1px solid #2a3a2a;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.contrats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.contrat-card {
+  background: #162216;
+  border: 1px solid #3a4a3a;
+  padding: 1.2rem;
+  border-radius: 6px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.contrat-card:hover {
+  border-color: #d4892a;
+  transform: translateY(-2px);
+}
+
+/* Ajustement des boutons de recherche pour matcher avec le style sombre */
+.hockey-resultats-liste button {
+  background: #0f1a0f;
+  color: #f0ede6;
+  border: 1px solid #2a3a2a;
+  text-align: left;
+  padding: 0.8rem 1.2rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.hockey-resultats-liste button:hover {
+  background: #1a2e1a;
+  border-color: #80cc80;
+  transform: translateX(5px);
+}
+
+/* Sur les téléphones, on empile les colonnes au lieu de les mettre côte à côte */
+@media (max-width: 768px) {
+  .stats-split {
+    grid-template-columns: 1fr;
+  }
+}

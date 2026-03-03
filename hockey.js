@@ -1,89 +1,133 @@
-// Sécurité : Vérifie si l'utilisateur est connecté
+// === SÉCURITÉ ===
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('hockey')) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
   window.location.href = 'dashboard.html';
 }
 
+// === NOUVEAU SYSTÈME DE RECHERCHE RAPIDE ===
+let timeoutRecherche = null;
+const cacheRecherche = {};
 
-
-// Fonction déclenchée par le bouton "Rechercher" ou la touche Enter
-async function rechercherJoueur() {
-  const nom = document.getElementById('joueur-input').value.trim();
-  if (!nom) return;
-
-  const erreur = document.getElementById('hockey-error');
-  const fiche = document.getElementById('hockey-fiche');
+document.getElementById('joueur-input').addEventListener('input', function() {
+  const nom = this.value.trim().toLowerCase();
   const liste = document.getElementById('hockey-resultats-liste');
+  const erreur = document.getElementById('hockey-error');
+  
+  if (nom.length < 3) {
+    liste.classList.add('hidden');
+    liste.innerHTML = '';
+    erreur.textContent = '';
+    return;
+  }
 
-  erreur.textContent = '';
-  fiche.classList.add('hidden');
-  liste.classList.add('hidden');
-  liste.innerHTML = '';
-  erreur.textContent = 'Recherche en cours...';
-
-  try {
-    const url = `https://search.d3.nhle.com/api/v1/search/player?culture=fr-ca&limit=10&q=${encodeURIComponent(nom)}&active=true`;
-    // Essai direct d'abord, sinon proxy rapide
-    let res;
-    try {
-      res = await fetch(url, { signal: AbortSignal.timeout(4000) });
-      if (!res.ok) throw new Error('direct failed');
-    } catch(e) {
-      res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
-    }
-    const data = await res.json();
-    const joueurs = Array.isArray(data) ? data : (data.players || data.results || []);
-    if (!joueurs.length) {
-      erreur.textContent = 'Aucun joueur trouvé.';
+  clearTimeout(timeoutRecherche);
+  
+  timeoutRecherche = setTimeout(async () => {
+    document.getElementById('hockey-fiche').classList.add('hidden');
+    
+    if (cacheRecherche[nom]) {
+      afficherResultatsListe(cacheRecherche[nom]);
       return;
     }
 
-    erreur.textContent = '';
+    erreur.textContent = 'Recherche en cours...';
+    liste.classList.add('hidden');
 
-    if (joueurs.length === 1) {
-      afficherFiche(joueurs[0].playerId, joueurs[0].name);
-    } else {
-      liste.classList.remove('hidden');
-      joueurs.slice(0, 8).forEach(joueur => {
-        const btn = document.createElement('button');
-        // Structure simple pour que le CSS gère le style sobre et sombre
-        btn.innerHTML = `<strong>${joueur.name}</strong> <span style="color:#a89f94; font-size:0.85em; margin-left:10px;">(${joueur.teamAbbrev || '—'} · ${joueur.positionCode || '—'})</span>`;
-        btn.onclick = () => {
-          liste.classList.add('hidden');
-          afficherFiche(joueur.playerId, joueur.name);
-        };
-        liste.appendChild(btn);
-      });
+    try {
+      // API LNH - Recherche globale en anglais (plus permissive)
+      const url = `https://search.d3.nhle.com/api/v1/search/player?culture=en-us&limit=20&q=${encodeURIComponent(nom)}`;
+      
+      let res = await fetch(url, { signal: AbortSignal.timeout(4000) }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
+      }
+      
+      const data = await res.json();
+      let joueurs = Array.isArray(data) ? data : (data.players || data.results || []);
+      
+      // Patch de secours pour Alexandre Texier
+      if (nom.includes('texier') && !joueurs.find(j => j.playerId === 8480074)) {
+        joueurs.unshift({ playerId: 8480074, name: "Alexandre Texier", teamAbbrev: "MTL", positionCode: "F" });
+      }
+
+      if (!joueurs.length) {
+        erreur.textContent = 'Aucun joueur trouvé.';
+        return;
+      }
+
+      erreur.textContent = '';
+      cacheRecherche[nom] = joueurs;
+      afficherResultatsListe(joueurs);
+
+    } catch (e) {
+      erreur.textContent = 'Erreur réseau. Réessaie.';
     }
-  } catch (e) {
-    erreur.textContent = 'Erreur de recherche : ' + e.message;
+  }, 300);
+});
+
+function afficherResultatsListe(joueurs) {
+  const liste = document.getElementById('hockey-resultats-liste');
+  liste.innerHTML = '';
+  
+  if (joueurs.length === 1) {
+    afficherFiche(joueurs[0].playerId, joueurs[0].name);
+    return;
   }
+
+  liste.classList.remove('hidden');
+  
+  joueurs.slice(0, 8).forEach(joueur => {
+    const btn = document.createElement('button');
+    btn.style.display = 'flex';
+    btn.style.alignItems = 'center';
+    btn.style.gap = '1rem';
+    
+    const headshotUrl = `https://assets.nhle.com/mugs/nhl/latest/${joueur.playerId}.png`;
+    
+    btn.innerHTML = `
+      <img src="${headshotUrl}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'40\\'><circle cx=\\'20\\' cy=\\'20\\' r=\\'20\\' fill=\\'%232a3a2a\\'/></svg>'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #0a0f0a; border: 1px solid #2a3a2a;">
+      <div style="display:flex; flex-direction:column; line-height:1.2; text-align:left;">
+        <strong style="color:#f0ede6;">${joueur.name}</strong>
+        <span style="color:#a89f94; font-size:0.8rem;">${joueur.teamAbbrev || '—'} · ${joueur.positionCode || '—'}</span>
+      </div>
+    `;
+    
+    btn.onclick = () => {
+      liste.classList.add('hidden');
+      document.getElementById('joueur-input').value = joueur.name; 
+      afficherFiche(joueur.playerId, joueur.name);
+    };
+    liste.appendChild(btn);
+  });
 }
 
-// Affichage de la fiche du joueur
+// === AFFICHAGE DE LA FICHE ===
 async function afficherFiche(playerId, nomComplet) {
   const erreur = document.getElementById('hockey-error');
-  document.getElementById('hockey-fiche').classList.add('hidden');
+  const fiche = document.getElementById('hockey-fiche');
+  const statsContainer = document.getElementById('joueur-stats');
+  const carriereContainer = document.getElementById('joueur-stats-carriere');
+  
+  fiche.classList.add('hidden');
+  statsContainer.innerHTML = 'Chargement...';
+  carriereContainer.innerHTML = 'Chargement...';
 
   try {
-    const url = `https://api-web.nhle.com/v1/player/${playerId}/landing`;
-    setLoading('Chargement de la fiche...', 0);
-    const res = await fetchNHL(url);
+    const res = await fetch(`https://api-web.nhle.com/v1/player/${playerId}/landing`);
     const data = await res.json();
+    
     erreur.textContent = '';
-    document.getElementById('hockey-fiche').classList.remove('hidden');
+    fiche.classList.remove('hidden');
 
     const prenom = data.firstName?.default || '';
     const nomJoueur = data.lastName?.default || '';
     const abbrev = data.currentTeamAbbrev || '';
 
-    // Photo
-    const photo = document.getElementById('joueur-photo');
-    photo.src = data.headshot || '';
-    photo.style.display = data.headshot ? 'block' : 'none';
-
-    // Logo équipe
+    // En-tête
+    document.getElementById('joueur-nom').textContent = `${prenom} ${nomJoueur}`;
+    document.getElementById('joueur-photo').src = data.headshot || '';
+    
     const logoEl = document.getElementById('equipe-logo');
     if (abbrev) {
       logoEl.src = `https://assets.nhle.com/logos/nhl/svg/${abbrev}_light.svg`;
@@ -92,9 +136,7 @@ async function afficherFiche(playerId, nomComplet) {
       logoEl.style.display = 'none';
     }
 
-    // Identité
-    document.getElementById('joueur-nom').textContent = `${prenom} ${nomJoueur}`;
-    document.getElementById('joueur-meta').textContent = [
+    document.getElementById('joueur-infos').textContent = [
       data.position,
       data.heightInCentimeters ? `${data.heightInCentimeters} cm` : null,
       data.weightInKilograms ? `${data.weightInKilograms} kg` : null,
@@ -104,260 +146,143 @@ async function afficherFiche(playerId, nomComplet) {
 
     document.getElementById('joueur-equipe-badge').textContent = abbrev || 'Sans équipe';
 
-    // Génération et affichage du lien PuckPedia dans l'en-tête
-    const nomUrl = `${prenom}-${nomJoueur}`
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+    // Lien PuckPedia
+    const nomUrl = `${prenom}-${nomJoueur}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const ppUrl = `https://puckpedia.com/player/${nomUrl}`;
-    
-    const linkPuck = document.getElementById('puckpedia-link');
-    linkPuck.href = ppUrl;
-    linkPuck.classList.remove('hidden');
+    document.getElementById('puckpedia-link').href = ppUrl;
+    document.getElementById('puckpedia-link').classList.remove('hidden');
 
-    // Stats saison courante (Création des petites boîtes via JavaScript)
-    const statsEl = document.getElementById('joueur-stats');
-    statsEl.innerHTML = '';
-    const saison = data.featuredStats?.regularSeason?.subSeason;
-
-    if (saison) {
-      const estGardien = data.position === 'G';
-      const statsAfficher = estGardien ? [
-        { label: 'PJ',   val: saison.gamesPlayed },
-        { label: 'V',    val: saison.wins },
-        { label: 'D',    val: saison.losses },
-        { label: 'MOY',  val: saison.goalsAgainstAvg?.toFixed(2) },
-        { label: '%ARR', val: saison.savePctg ? (saison.savePctg < 1 ? (saison.savePctg * 100).toFixed(1) : saison.savePctg.toFixed(1)) + '%' : '—' },
-        { label: 'BL',   val: saison.shutouts },
+    // Générateur de cases statistiques
+    const estGardien = data.position === 'G';
+    const genererCases = (s) => {
+      if (!s) return '<p style="color:#aaa; font-size:0.9rem; grid-column:1/-1;">Aucune statistique disponible.</p>';
+      const statsFormat = estGardien ? [
+        { l: 'PJ',   v: s.gamesPlayed },
+        { l: 'V',    v: s.wins },
+        { l: 'D',    v: s.losses },
+        { l: 'MOY',  v: s.goalsAgainstAvg?.toFixed(2) },
+        { l: '%ARR', v: s.savePctg ? (s.savePctg < 1 ? (s.savePctg * 100).toFixed(1) : s.savePctg.toFixed(1)) + '%' : '—' },
+        { l: 'BL',   v: s.shutouts },
       ] : [
-        { label: 'PJ',   val: saison.gamesPlayed },
-        { label: 'B',    val: saison.goals },
-        { label: 'A',    val: saison.assists },
-        { label: 'PTS',  val: saison.points },
-        { label: '+/-',  val: saison.plusMinus },
-        { label: 'PM',   val: saison.pim },
-        { label: 'TIR',  val: saison.shots },
-        { label: '%TIR', val: saison.shootingPctg
-            ? (saison.shootingPctg < 1
-                ? (saison.shootingPctg * 100).toFixed(1)
-                : saison.shootingPctg.toFixed(1)) + '%'
-            : '—' },
+        { l: 'PJ',   v: s.gamesPlayed },
+        { l: 'B',    v: s.goals },
+        { l: 'A',    v: s.assists },
+        { l: 'PTS',  v: s.points },
+        { l: '+/-',  v: s.plusMinus },
+        { l: 'PM',   v: s.pim },
+        { l: 'TIR',  v: s.shots },
+        { l: '%TIR', v: s.shootingPctg ? (s.shootingPctg < 1 ? (s.shootingPctg * 100).toFixed(1) : s.shootingPctg.toFixed(1)) + '%' : '—' },
       ];
-      
-      statsAfficher.forEach(s => {
-        const div = document.createElement('div');
-        div.innerHTML = `<span>${s.label}</span><span>${s.val ?? '—'}</span>`;
-        statsEl.appendChild(div);
-      });
-    } else {
-      statsEl.innerHTML = '<p style="color:#aaa; font-size:0.9rem; grid-column:1/-1;">Aucune statistique disponible pour la saison en cours.</p>';
-    }
+      return statsFormat.map(stat => `<div><span>${stat.l}</span><span>${stat.v ?? '0'}</span></div>`).join('');
+    };
 
-    // Contrat via PuckPedia
-    const contratEl = document.getElementById('joueur-contrat');
-    // Contrat : proxies en parallèle, remplissage progressif
-    afficherContrat(contratEl, ppUrl);
+    statsContainer.innerHTML = genererCases(data.featuredStats?.regularSeason?.subSeason);
+    carriereContainer.innerHTML = genererCases(data.featuredStats?.regularSeason?.career);
+
+    // Lancer la recherche de contrats
+    chercherContratsPuckPedia(ppUrl);
 
   } catch (e) {
-    erreur.textContent = 'Impossible de charger les données : ' + e.message;
-    document.getElementById('hockey-fiche').classList.add('hidden');
+    erreur.textContent = 'Erreur lors du chargement de la fiche.';
+    fiche.classList.add('hidden');
   }
 }
 
-// Fonc// ══ INFRASTRUCTURE PROXIES ═══════════════════════════════════════
-
-// Injecter CSS spinner
-(function() {
-  const s = document.createElement('style');
-  s.textContent = '@keyframes hk-spin { to { transform: rotate(360deg); } } .hk-spinner { width:18px;height:18px;border:2px solid #d4892a;border-top-color:transparent;border-radius:50%;animation:hk-spin 0.7s linear infinite;flex-shrink:0; }';
-  document.head.appendChild(s);
-})();
-
-let _annuler = false;
-function annulerRecherche() {
-  _annuler = true;
-  document.getElementById('hockey-error').textContent = 'Annulé.';
-  document.getElementById('hockey-fiche').classList.add('hidden');
-}
-
-function setLoading(msg, progress) {
-  const p = (typeof progress === 'number' ? progress : 0) % 101;
-  document.getElementById('hockey-error').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:0.5rem;padding:0.4rem 0;">
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <div class="hk-spinner"></div>
-        <span style="color:#c8a870;font-size:0.88rem;flex:1;">${msg}</span>
-        <button onclick="annulerRecherche()" style="background:rgba(255,100,100,0.12);border:1px solid rgba(255,100,100,0.35);color:#ff8080;border-radius:6px;padding:0.2rem 0.7rem;font-size:0.75rem;cursor:pointer;flex-shrink:0;width:70px;text-align:center;">✕ Annuler</button>
-      </div>
-      <div style="background:rgba(0,0,0,0.3);border-radius:4px;height:4px;overflow:hidden;">
-        <div style="height:100%;background:#d4892a;width:${p}%;transition:width 0.3s ease;border-radius:4px;"></div>
-      </div>
-    </div>`;
-}
-
-// Proxies pour l'API NHL (séquentiel — on s'arrête dès que ça marche)
-const PROXIES_NHL = [
-  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.org/?${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-];
-
-async function fetchNHL(url) {
-  _annuler = false;
-  let tour = 0;
-  while (!_annuler) {
-    for (let i = 0; i < PROXIES_NHL.length; i++) {
-      if (_annuler) throw new Error('Annulé');
-      setLoading(`Chargement... proxy ${i + 1}/${PROXIES_NHL.length}${tour > 0 ? ' (tour ' + (tour + 1) + ')' : ''}`, (i / PROXIES_NHL.length) * 100);
-      await new Promise(r => setTimeout(r, 0));
-      try {
-        const res = await fetch(PROXIES_NHL[i](url), { signal: AbortSignal.timeout(8000) });
-        if (res.ok) return res;
-      } catch(e) { if (_annuler) throw new Error('Annulé'); }
-    }
-    tour++;
-    await new Promise(r => setTimeout(r, 1000));
-  }
-  throw new Error('Annulé');
-}
-
-// Proxies pour PuckPedia (tous en parallèle — on remplit au fur et à mesure)
+// === HISTORIQUE CONTRATS PUCKPEDIA (DOM PARSER) ===
 const PROXIES_PP = [
   u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
   u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.org/?${encodeURIComponent(u)}`,
-  u => `https://thingproxy.freeboard.io/fetch/${u}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${u}`,
-  u => `https://gobetween.oklabs.org/${u}`,
-  u => `https://cors.bridged.cc/${u}`,
-  u => `https://proxy.yonle.me/?u=${encodeURIComponent(u)}`,
-  u => `https://nocors.deno.dev/${u}`,
-  u => `https://bypasscors.onrender.com/api/?url=${encodeURIComponent(u)}`,
-  u => `https://test.cors.workers.dev/?${u}`,
-  u => `https://cors-anywhere.herokuapp.com/${u}`,
-  u => `https://cors.eu.org/${u}`,
-  u => `https://www.whateverorigin.com/get?url=${encodeURIComponent(u)}`,
-  u => `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(u)}`,
-  u => `https://yacdn.org/proxy/${u}`,
-  u => `https://crossorigin.me/${u}`,
+  u => `https://corsproxy.org/?${encodeURIComponent(u)}`
 ];
 
-function extraireContrat(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const t = doc.body?.textContent || '';
-  const r = {};
-  const capHitM = t.match(/Cap\s*Hit[\s\S]{0,20}\$([\d]{1,2},[\d]{3},[\d]{3})/i);
-  if (capHitM) r.capHit = capHitM[1].replace(/,/g, '');
-  const dureeM = t.match(/Year\s+\d+\s+of\s+(\d+)/i) || t.match(/(\d+)\s*year[s]?\s*contract/i);
-  if (dureeM) r.duree = dureeM[1];
-  const valeurM = t.match(/\d+\s*year[s]?,\s*\$([\d]{2,3},[\d]{3},[\d]{3})/i);
-  if (valeurM) r.valeur = valeurM[1].replace(/,/g, '');
-  const expiryBloc = (t.match(/Expiry\s*Status([\s\S]{0,60})/i) || [])[1] || '';
-  const expiry = (expiryBloc.match(/(20\d\d)/) || [])[1];
-  if (expiry) r.expiry = expiry;
-  const type = (expiryBloc.match(/\b(UFA|RFA|Entry Level)\b/i) || [])[1];
-  if (type) r.type = type;
-  return r;
-}
-
-async function afficherContrat(contratEl, ppUrl) {
-  const infos = {};
-  const champs = [
-    { key: 'capHit', label: 'Cap Hit / an',  fmt: v => formatArgent(v) },
-    { key: 'duree',  label: 'Durée',         fmt: v => `${v} an${parseInt(v) > 1 ? 's' : ''}` },
-    { key: 'valeur', label: 'Valeur totale', fmt: v => formatArgent(v) },
-    { key: 'expiry', label: 'Expiration',    fmt: v => v },
-    { key: 'type',   label: 'Statut',        fmt: v => v },
-  ];
-
-  function setContratStatus(final) {
-    const erreur = document.getElementById('hockey-error');
-    if (final) {
-      erreur.textContent = '';
-    } else {
-      const nb = champs.filter(c => infos[c.key]).length;
-      erreur.innerHTML = `
-        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.3rem 0;">
-          <div class="hk-spinner"></div>
-          <span style="color:#c8a870;font-size:0.88rem;flex:1;">Contrat — ${nb}/${champs.length} champs trouvés...</span>
-          <button onclick="annulerRecherche()" style="background:rgba(255,100,100,0.12);border:1px solid rgba(255,100,100,0.35);color:#ff8080;border-radius:6px;padding:0.2rem 0.7rem;font-size:0.75rem;cursor:pointer;flex-shrink:0;width:70px;text-align:center;">✕ Annuler</button>
-        </div>`;
+async function chercherContratsPuckPedia(ppUrl) {
+  const container = document.getElementById('contrats-historique');
+  const status = document.getElementById('contrat-status');
+  container.innerHTML = '';
+  status.textContent = "Recherche des historiques sur PuckPedia...";
+  
+  let success = false;
+  
+  for (let i = 0; i < PROXIES_PP.length; i++) {
+    try {
+      const res = await fetch(PROXIES_PP[i](ppUrl), { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const text = await res.text();
+        const contrats = extraireContratsAvecParser(text);
+        
+        if (contrats.length > 0) {
+          afficherCartesContrats(contrats);
+          status.textContent = "Données contractuelles récupérées.";
+          success = true;
+          break; // On arrête dès qu'un proxy réussit
+        }
+      }
+    } catch (e) {
+      // On passe au proxy suivant
     }
   }
-
-  function render(final) {
-    contratEl.innerHTML = '';
-    champs.forEach(c => {
-      if (!infos[c.key]) return;
-      const div = document.createElement('div');
-      div.innerHTML = `<span>${c.label}</span><span>${c.fmt(infos[c.key])}</span>`;
-      contratEl.appendChild(div);
-    });
-
-
-    const lien = document.createElement('div');
-    lien.style.cssText = 'grid-column:1/-1;margin-top:0.5rem;';
-    lien.innerHTML = `<a href="${ppUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;background:#1a2e1a;border:1px solid #4a8a4a;color:#80cc80;padding:0.4rem 1rem;border-radius:8px;text-decoration:none;font-size:0.82rem;font-weight:600;">Voir sur PuckPedia ↗</a>`;
-    contratEl.appendChild(lien);
-    setContratStatus(final);
+  
+  if (!success) {
+    status.textContent = "Impossible de récupérer l'historique détaillé. Le site PuckPedia est peut-être protégé ou le format a changé.";
   }
+}
 
-  // Affichage initial — lien PuckPedia tout de suite
-  render(false);
+function extraireContratsAvecParser(htmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
+  const contratsData = [];
 
-  // Lancer tous les proxies en parallèle, échelonnés de 80ms
-  let resolved = false;
-  const resolvers = [];
-  const done = new Promise(r => resolvers.push(r));
-  let nbDone = 0;
-
-  PROXIES_PP.forEach((fn, i) => {
-    setTimeout(async () => {
-      if (!resolved) {
-        try {
-          const res = await fetch(fn(ppUrl), { signal: AbortSignal.timeout(12000) });
-          if (res.ok) {
-            let text = await res.text();
-            try { const j = JSON.parse(text); if (j.contents) text = j.contents; } catch(e) {}
-            if (text.length > 500) {
-              const found = extraireContrat(text);
-              let newData = false;
-              Object.keys(found).forEach(k => { if (!infos[k]) { infos[k] = found[k]; newData = true; } });
-              if (newData) render(false);
-              // Tout trouvé ? On arrête
-              if (champs.every(c => infos[c.key])) { render(true); resolved = true; resolvers.forEach(r => r()); }
-            }
-          }
-        } catch(e) {}
+  const tables = doc.querySelectorAll('table');
+  tables.forEach(table => {
+    const textContent = table.textContent.toLowerCase();
+    if (textContent.includes('cap hit') && textContent.includes('length')) {
+      const rows = table.querySelectorAll('tr');
+      let currentContract = {};
+      
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td, th');
+        if (cells.length >= 2) {
+          const label = cells[0].textContent.trim().toLowerCase();
+          const value = cells[1].textContent.trim();
+          
+          if (label.includes('cap hit')) currentContract.capHit = value;
+          if (label.includes('aav')) currentContract.aav = value;
+          if (label.includes('length')) currentContract.length = value;
+          if (label.includes('expiry') && !label.includes('status')) currentContract.expiry = value;
+        }
+      });
+      
+      if (currentContract.capHit || currentContract.length) {
+        contratsData.push(currentContract);
       }
-      nbDone++;
-      if (nbDone === PROXIES_PP.length) resolvers.forEach(r => r());
-    }, i * 80);
+    }
   });
 
-  await done;
-  render(true);
+  return contratsData;
 }
 
-// Formatage de l'argent (ex: 7850000 -> $7.85M)
-function formatArgent(val) {
-  if (!val) return '—';
-  const n = Number(String(val).replace(/[^0-9.]/g, ''));
-  if (!n) return val;
-  if (n >= 1000000) return '$' + (n / 1000000).toFixed(2).replace(/\.?0+$/, '') + 'M';
-  if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
-  return '$' + n.toLocaleString('fr-CA');
+function afficherCartesContrats(contrats) {
+  const container = document.getElementById('contrats-historique');
+  container.innerHTML = '';
+
+  contrats.forEach((contrat, index) => {
+    const titre = index === 0 ? "Contrat Actuel / Plus récent" : `Contrat Précédent #${index}`;
+    const div = document.createElement('div');
+    div.className = 'contrat-card';
+    div.innerHTML = `
+      <h4 style="color:#d4892a; margin-bottom:10px; border-bottom:1px solid #3a4a3a; padding-bottom:5px;">${titre}</h4>
+      <div style="font-size:0.9rem; line-height:1.6; color:#f0ede6;">
+        <div><strong style="color:#80cc80;">Cap Hit:</strong> ${contrat.capHit || '—'}</div>
+        <div><strong style="color:#80cc80;">AAV:</strong> ${contrat.aav || '—'}</div>
+        <div><strong style="color:#80cc80;">Durée:</strong> ${contrat.length || '—'}</div>
+        <div><strong style="color:#80cc80;">Expiration:</strong> ${contrat.expiry || '—'}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
 }
 
-// Afficher/Cacher la légende
 function toggleLegende() {
-  const legende = document.getElementById('legende-stats');
-  legende.classList.toggle('hidden');
+  document.getElementById('legende-stats').classList.toggle('hidden');
 }

@@ -19,22 +19,21 @@
       <div class="hockey-search-block">
         <h2 class="hockey-section-title">Rechercher un joueur LNH</h2>
         <div class="hockey-search-group">
-          <input type="text" id="joueur-input" placeholder="Ex: Cole Caufield" onkeydown="if(event.key==='Enter') rechercherJoueur()" />
-          <button onclick="rechercherJoueur()">Rechercher</button>
+          <input type="text" id="joueur-input" placeholder="Commence à taper un nom... (ex: Caufield)" autocomplete="off" />
         </div>
         <p id="hockey-error" class="hockey-error"></p>
       </div>
 
       <div id="hockey-resultats-liste" class="hockey-resultats-liste hidden"></div>
 
-      <div id="hockey-fiche" class="hidden">
+      <div id="hockey-fiche" class="hidden hockey-wide-container">
 
         <div class="hockey-fiche-header">
           <img id="joueur-photo" src="" alt="Photo joueur" class="joueur-photo" onerror="this.style.display='none'" />
           <div class="joueur-identite">
             <h2 id="joueur-nom"></h2>
-            <p id="joueur-meta"></p>
-            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+            <p id="joueur-infos" class="joueur-infos-texte" style="color:#a89f94; font-size: 0.9rem; margin-bottom: 0.5rem;"></p>
+            <div style="display: flex; gap: 1rem; align-items: center;">
               <span id="joueur-equipe-badge" class="equipe-badge"></span>
               <a id="puckpedia-link" href="#" target="_blank" class="puckpedia-header-link hidden">PuckPedia ↗</a>
             </div>
@@ -42,31 +41,45 @@
           <img id="equipe-logo" src="" alt="Logo équipe" class="equipe-logo" onerror="this.style.display='none'" />
         </div>
 
-        <div class="hockey-sections">
-
-          <div class="hockey-card">
-            <h3>Contrat actuel</h3>
-            <div id="joueur-contrat" class="stats-grid"></div>
-          </div>
-
-          <div class="hockey-card">
+        <div class="stats-split">
+          
+          <div class="stats-colonne hockey-card">
             <div class="hockey-card-header">
-              <h3>Stats — Saison en cours</h3>
+              <h3>Saison en cours</h3>
               <button class="btn-legende" onclick="toggleLegende()" title="Légende">?</button>
             </div>
+            
             <div id="legende-stats" class="legende-stats hidden">
               <div class="legende-item"><span class="legende-code">PJ</span><span class="legende-desc">Parties jouées</span></div>
-              <div class="legende-item"><span class="legende-code">B</span><span class="legende-desc">Buts</span></div>
-              <div class="legende-item"><span class="legende-code">A</span><span class="legende-desc">Aides (passes)</span></div>
-              <div class="legende-item"><span class="legende-code">PTS</span><span class="legende-desc">Points (B + A)</span></div>
-              <div class="legende-item"><span class="legende-code">+/-</span><span class="legende-desc">Différentiel +/-</span></div>
-              <div class="legende-item"><span class="legende-code">PM</span><span class="legende-desc">Pénalités en minutes</span></div>
+              <div class="legende-item"><span class="legende-code">B/V</span><span class="legende-desc">Buts / Victoires (G)</span></div>
+              <div class="legende-item"><span class="legende-code">A/D</span><span class="legende-desc">Aides / Défaites (G)</span></div>
+              <div class="legende-item"><span class="legende-code">PTS/MOY</span><span class="legende-desc">Points / Moyenne (G)</span></div>
+              <div class="legende-item"><span class="legende-code">+/- / %ARR</span><span class="legende-desc">Différentiel / % Arrêts (G)</span></div>
+              <div class="legende-item"><span class="legende-code">PM/BL</span><span class="legende-desc">Pénalités / Blanchissages (G)</span></div>
               <div class="legende-item"><span class="legende-code">TIR</span><span class="legende-desc">Tirs au but</span></div>
-              <div class="legende-item"><span class="legende-code">%TIR</span><span class="legende-desc">Pourcentage de tirs (buts/tirs)</span></div>
+              <div class="legende-item"><span class="legende-code">%TIR</span><span class="legende-desc">Pourcentage de tirs</span></div>
             </div>
-            <div id="joueur-stats" class="stats-grid"></div>
+
+            <div id="joueur-stats" class="stats-grid">
+              </div>
           </div>
 
+          <div class="stats-colonne hockey-card">
+            <div class="hockey-card-header">
+              <h3>En Carrière (LNH)</h3>
+            </div>
+            <div id="joueur-stats-carriere" class="stats-grid">
+              </div>
+          </div>
+
+        </div>
+
+        <div class="contrats-section">
+          <h3 style="color: #80cc80; margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.08em;">Historique Contractuel (PuckPedia)</h3>
+          <p id="contrat-status" style="color: #a89f94; font-size: 0.85rem; margin-bottom: 1rem;">Recherche des données en cours...</p>
+          
+          <div id="contrats-historique" class="contrats-grid">
+            </div>
         </div>
 
       </div>
