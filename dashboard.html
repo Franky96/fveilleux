@@ -6,7 +6,6 @@
   <title>Outils de Frank — Accueil</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    // Vérification immédiate — avant tout rendu
     if (!sessionStorage.getItem('loggedIn')) {
       document.location.href = 'index.html';
     }
@@ -18,7 +17,16 @@
     <header>
       <h1>Outils de Frank</h1>
       <p class="subtitle">Bienvenue, Francis 👋</p>
-      <button id="logoutBtn">Déconnexion</button>
+      
+      <div style="display: flex; justify-content: center; gap: 1rem;">
+        
+        <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" style="display: none; align-items: center; gap: 0.5rem; text-decoration: none; background: #162216; color: #60b8c8; border: 1px solid #2a3a2a; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.borderColor='#60b8c8'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='#2a3a2a'; this.style.transform='translateY(0)';">
+          <span>✉️</span> Webmail
+        </a>
+        
+        <button id="logoutBtn" style="margin-bottom: 0;">Déconnexion</button>
+        
+      </div>
     </header>
 
     <main>
@@ -27,36 +35,43 @@
       </p>
 
       <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+        
         <a href="ena.html" class="menu-card" data-section="ena">
           <span class="icon">🛠️</span>
           <h2>ÉNA</h2>
           <p>École nationale d'aérotechnique</p>
         </a>
+        
         <a href="aviation.html" class="menu-card" data-section="aviation">
           <span class="icon">✈️</span>
           <h2>Aviation</h2>
-          <p>Information sur les aéronefs</p>
+          <p>Outils, météo et aéronefs</p>
         </a>
+        
         <a href="bieres.html" class="menu-card" data-section="bieres">
           <span class="icon">🍺</span>
           <h2>Bières</h2>
           <p>Vive la zythologie</p>
         </a>
+        
         <a href="scifi.html" class="menu-card" data-section="scifi">
           <span class="icon">🚀</span>
           <h2>Science-Fiction</h2>
           <p>Archives galactiques</p>
         </a>
+        
         <a href="hockey.html" class="menu-card" data-section="hockey">
           <span class="icon">🏒</span>
           <h2>Hockey</h2>
           <p>Statistiques LNH</p>
         </a>
+        
         <a href="liens.html" class="menu-card" data-section="liens">
           <span class="icon">🌍</span>
           <h2>Liens utiles</h2>
           <p>Ressources et favoris</p>
         </a>
+
       </nav>
     </main>
 

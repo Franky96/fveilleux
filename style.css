@@ -1434,3 +1434,33 @@ header .subtitle {
     grid-template-columns: 1fr;
   }
 }
+
+/* === ANIMATION DE CHARGEMENT (SPINNER) === */
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #162216; /* Couleur de fond (vert très foncé) */
+  border-top: 4px solid #d4892a; /* Couleur d'accent (Ambre) */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-text {
+  color: #a89f94;
+  font-size: 0.95rem;
+  font-style: italic;
+}

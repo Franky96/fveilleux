@@ -15,11 +15,14 @@ if (inputJoueur) {
     const nom = this.value.trim().toLowerCase();
     const liste = document.getElementById('hockey-resultats-liste');
     const erreur = document.getElementById('hockey-error');
+    const spinner = document.getElementById('loading-spinner');
+    const spinnerMsg = document.getElementById('spinner-message');
     
     if (nom.length < 3) {
       liste.classList.add('hidden');
       liste.innerHTML = '';
       if(erreur) erreur.textContent = '';
+      if(spinner) spinner.classList.add('hidden');
       return;
     }
 
@@ -27,20 +30,24 @@ if (inputJoueur) {
     
     timeoutRecherche = setTimeout(async () => {
       document.getElementById('hockey-fiche').classList.add('hidden');
+      liste.classList.add('hidden');
       
       if (cacheRecherche[nom]) {
         afficherResultatsListe(cacheRecherche[nom]);
         return;
       }
 
-      if(erreur) erreur.textContent = 'Recherche en cours...';
-      liste.classList.add('hidden');
+      if(erreur) erreur.textContent = '';
+      // On affiche le spinner d'animation !
+      if(spinner) {
+          spinnerMsg.textContent = "Recherche des joueurs dans la base de données...";
+          spinner.classList.remove('hidden');
+      }
 
       try {
         const url = `https://search.d3.nhle.com/api/v1/search/player?culture=en-us&limit=20&q=${encodeURIComponent(nom)}`;
         
         let data = null;
-        // Cascade blindée pour la recherche LNH
         const proxies = [
           () => fetch(url),
           () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
@@ -54,7 +61,6 @@ if (inputJoueur) {
                 if (res.ok) {
                     let json = await res.json();
                     if (json && json.contents) json = JSON.parse(json.contents);
-                    // Validation stricte de la réponse
                     if (json && (json.players || Array.isArray(json))) {
                         data = json;
                         break;
@@ -63,11 +69,13 @@ if (inputJoueur) {
             } catch(e) {}
         }
 
+        // On cache le spinner une fois la recherche terminée
+        if(spinner) spinner.classList.add('hidden');
+
         if (!data) throw new Error('API introuvable');
 
         let joueurs = Array.isArray(data) ? data : (data.players || data.results || []);
         
-        // Patch d'urgence pour Alexandre Texier
         if (nom.includes('texier') && !joueurs.find(j => j.playerId === 8480074)) {
           joueurs.unshift({ playerId: 8480074, name: "Alexandre Texier", teamAbbrev: "MTL", positionCode: "F" });
         }
@@ -77,14 +85,14 @@ if (inputJoueur) {
           return;
         }
 
-        if(erreur) erreur.textContent = '';
         cacheRecherche[nom] = joueurs;
         afficherResultatsListe(joueurs);
 
       } catch (e) {
+        if(spinner) spinner.classList.add('hidden');
         if(erreur) erreur.textContent = 'Erreur réseau ou proxy bloqué.';
       }
-    }, 300);
+    }, 400); // J'ai augmenté légèrement le délai à 400ms pour éviter les flashs d'animation
   });
 }
 
@@ -125,20 +133,26 @@ function afficherResultatsListe(joueurs) {
   });
 }
 
-// === AFFICHAGE DE LA FICHE STATISTIQUES LNH ===
+// === AFFICHAGE DE LA FICHE ===
 async function afficherFiche(playerId, nomComplet) {
   const erreur = document.getElementById('hockey-error');
   const fiche = document.getElementById('hockey-fiche');
   const statsContainer = document.getElementById('joueur-stats');
   const carriereContainer = document.getElementById('joueur-stats-carriere');
+  const spinner = document.getElementById('loading-spinner');
+  const spinnerMsg = document.getElementById('spinner-message');
   
   fiche.classList.add('hidden');
-  if (statsContainer) statsContainer.innerHTML = 'Chargement...';
-  if (carriereContainer) carriereContainer.innerHTML = 'Chargement...';
+  if(erreur) erreur.textContent = '';
+  
+  // On affiche le spinner pour le chargement de la fiche !
+  if(spinner) {
+      spinnerMsg.textContent = "Chargement des statistiques de " + nomComplet + "...";
+      spinner.classList.remove('hidden');
+  }
 
   try {
     const url = `https://api-web.nhle.com/v1/player/${playerId}/landing`;
-    
     let data = null;
     const proxies = [
       () => fetch(url),
@@ -154,7 +168,6 @@ async function afficherFiche(playerId, nomComplet) {
           let text = await res.text();
           let json = JSON.parse(text);
           if (json && json.contents) json = JSON.parse(json.contents);
-          
           if (json && (json.firstName || json.lastName)) {
             data = json;
             break; 
@@ -163,11 +176,11 @@ async function afficherFiche(playerId, nomComplet) {
       } catch(e) { } 
     }
 
-    if (!data) {
-        throw new Error("Impossible de télécharger les statistiques (proxies bloqués).");
-    }
+    // Le chargement est fini, on cache le spinner
+    if(spinner) spinner.classList.add('hidden');
+
+    if (!data) throw new Error("Statistiques inaccessibles.");
     
-    if(erreur) erreur.textContent = '';
     fiche.classList.remove('hidden');
 
     const prenom = data.firstName?.default || '';
@@ -207,16 +220,16 @@ async function afficherFiche(playerId, nomComplet) {
     const badge = document.getElementById('joueur-equipe-badge');
     if(badge) badge.textContent = abbrev || 'Sans équipe';
 
-    // Création du lien PuckPedia
     const nomUrl = `${prenom}-${nomJoueur}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const ppUrl = `https://puckpedia.com/player/${nomUrl}`;
+    const cwUrl = `https://capwages.com/players/${nomUrl}`;
+    
     const pLink = document.getElementById('puckpedia-link');
     if (pLink) {
         pLink.href = ppUrl;
         pLink.classList.remove('hidden');
     }
 
-    // Affichage des grilles de statistiques
     const estGardien = data.position === 'G';
     const genererCases = (s) => {
       if (!s) return '<p style="color:#aaa; font-size:0.9rem; grid-column:1/-1;">Aucune statistique disponible.</p>';
@@ -259,71 +272,91 @@ async function afficherFiche(playerId, nomComplet) {
         carriereContainer.innerHTML = genererCases(data.featuredStats?.regularSeason?.career);
     }
 
-    // Lancement de l'extracteur de contrats
-    chercherContratsPuckPedia(ppUrl);
+    chercherContrats(ppUrl, cwUrl);
 
   } catch (e) {
+    if(spinner) spinner.classList.add('hidden');
     if(erreur) erreur.textContent = "Erreur lors du chargement de la fiche.";
     fiche.classList.add('hidden');
   }
 }
 
-// === CŒUR DE L'AMÉLIORATION : EXTRACTEUR PUCKPEDIA BLINDÉ ===
-const PROXIES_PP = [
+// === EXTRACTEUR DE CONTRATS MULTI-SOURCES (CAPWAGES + PUCKPEDIA) ===
+const PROXIES_CONTRATS = [
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
   u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
   u => `https://corsproxy.org/?${encodeURIComponent(u)}`
 ];
 
-async function chercherContratsPuckPedia(ppUrl) {
+async function chercherContrats(ppUrl, cwUrl) {
   const container = document.getElementById('contrats-historique') || document.getElementById('joueur-contrat');
   const status = document.getElementById('contrat-status');
   if (!container) return;
   
   container.innerHTML = '';
-  if (status) status.textContent = "Recherche des historiques sur PuckPedia...";
+  if (status) status.textContent = "Recherche sur CapWages et PuckPedia en cours...";
   
-  let success = false;
+  let contrats = [];
   
-  for (let i = 0; i < PROXIES_PP.length; i++) {
+  for (let i = 0; i < PROXIES_CONTRATS.length; i++) {
     try {
-      const res = await fetch(PROXIES_PP[i](ppUrl), { signal: AbortSignal.timeout(8000) });
+      const res = await fetch(PROXIES_CONTRATS[i](cwUrl), { signal: AbortSignal.timeout(6000) });
       if (res.ok) {
         let text = await res.text();
-        
-        // Déballage proxy si nécessaire
-        if (text.includes('"contents"')) {
-            try { const j = JSON.parse(text); text = j.contents || text; } catch(e){}
-        }
-        
-        // Protection anti-robot : Si Cloudflare bloque, on passe au proxy suivant
-        if (text.includes('Just a moment...') || text.includes('Cloudflare') || text.includes('DDoS protection')) continue;
-
-        const contrats = extraireContratsAvecParser(text);
-        if (contrats.length > 0) {
-          afficherCartesContrats(contrats, container);
-          if (status) status.textContent = "Données contractuelles récupérées avec succès.";
-          success = true;
-          break; 
+        if (text.includes('"contents"')) { try { const j = JSON.parse(text); text = j.contents || text; } catch(e){} }
+        if (!text.includes('Just a moment...') && !text.includes('Cloudflare') && !text.includes('DDoS protection')) {
+          contrats = extraireContrats(text);
+          if (contrats.length > 0) break;
         }
       }
     } catch (e) {}
   }
+
+  if (contrats.length === 0) {
+    for (let i = 0; i < PROXIES_CONTRATS.length; i++) {
+      try {
+        const res = await fetch(PROXIES_CONTRATS[i](ppUrl), { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          let text = await res.text();
+          if (text.includes('"contents"')) { try { const j = JSON.parse(text); text = j.contents || text; } catch(e){} }
+          if (!text.includes('Just a moment...') && !text.includes('Cloudflare') && !text.includes('DDoS protection')) {
+            contrats = extraireContrats(text);
+            if (contrats.length > 0) break;
+          }
+        }
+      } catch (e) {}
+    }
+  }
   
-  if (!success && status) {
-    status.textContent = "Impossible de récupérer l'historique détaillé. (PuckPedia bloque la lecture automatisée).";
+  if (contrats.length > 0) {
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
+    container.style.gap = '1.5rem';
+    afficherCartesContrats(contrats, container);
+    if (status) status.textContent = "Données contractuelles récupérées avec succès.";
+  } else {
+    if (status) status.textContent = "Les sites bloquent la lecture automatisée (Anti-Robot). Voici les liens directs :";
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.gap = '1.5rem';
+    container.innerHTML = `
+      <a href="${cwUrl}" target="_blank" style="flex:1; min-width:200px; text-align:center; background:#162216; border:1px solid #3a4a3a; padding:1.5rem; border-radius:8px; text-decoration:none; color:#60b8c8; font-weight:bold; transition:transform 0.2s, border-color 0.2s;" onmouseover="this.style.borderColor='#d4892a'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#3a4a3a'; this.style.transform='translateY(0)'">
+        <span style="font-size:2rem; display:block; margin-bottom:0.5rem;">💰</span>
+        Ouvrir CapWages
+      </a>
+      <a href="${ppUrl}" target="_blank" style="flex:1; min-width:200px; text-align:center; background:#162216; border:1px solid #3a4a3a; padding:1.5rem; border-radius:8px; text-decoration:none; color:#80cc80; font-weight:bold; transition:transform 0.2s, border-color 0.2s;" onmouseover="this.style.borderColor='#d4892a'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#3a4a3a'; this.style.transform='translateY(0)'">
+        <span style="font-size:2rem; display:block; margin-bottom:0.5rem;">🏒</span>
+        Ouvrir PuckPedia
+      </a>
+    `;
   }
 }
 
-// Extracteur par Expressions Régulières universel (Agnostique au code HTML)
-function extraireContratsAvecParser(htmlText) {
+function extraireContrats(htmlText) {
   const contratsData = [];
-
-  // 1. On détruit toutes les balises HTML pour ne garder que le texte pur !
   const textWithoutTags = htmlText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
-  // 2. Expressions régulières pour trouver les valeurs collées aux mots clés
   const regexCapHit = /Cap Hit\s*[:]?\s*(\$[0-9,.]+[MK]?)/gi;
   const regexLength = /(?:Length|Term)\s*[:]?\s*([0-9]+\s*Years?)/gi;
   const regexExpiry = /Expiry\s*[:]?\s*([0-9]{4}(?:\s*(?:UFA|RFA))?)/gi;
@@ -334,17 +367,21 @@ function extraireContratsAvecParser(htmlText) {
   let expirys = [...textWithoutTags.matchAll(regexExpiry)].map(m => m[1]);
   let aavs = [...textWithoutTags.matchAll(regexAAV)].map(m => m[1]);
 
-  // 3. Assemblage des cartes de contrats
   for (let i = 0; i < capHits.length; i++) {
-    // Pour éviter d'afficher le même contrat en double (PuckPedia les affiche souvent en version Mobile ET Desktop)
     if (!contratsData.find(c => c.capHit === capHits[i] && c.length === (lengths[i] || '—'))) {
-        contratsData.push({
-            capHit: capHits[i],
-            aav: aavs[i] || capHits[i],
-            length: lengths[i] || '—',
-            expiry: expirys[i] || '—'
-        });
+        contratsData.push({ capHit: capHits[i], aav: aavs[i] || capHits[i], length: lengths[i] || '—', expiry: expirys[i] || '—' });
     }
+  }
+
+  if (contratsData.length === 0) {
+      const matchPhrase = textWithoutTags.match(/signed a (\d+)\s*year,\s*(\$[0-9,.]+)\s*contract.*cap hit of\s*(\$[0-9,.]+)/i);
+      if (matchPhrase) {
+          let capVal = matchPhrase[3];
+          if (capVal.match(/^\$\d+$/)) {
+              capVal = "$" + parseInt(capVal.substring(1)).toLocaleString('en-US');
+          }
+          contratsData.push({ capHit: capVal, aav: capVal, length: matchPhrase[1] + ' Years', expiry: '—' });
+      }
   }
 
   return contratsData;
@@ -352,10 +389,6 @@ function extraireContratsAvecParser(htmlText) {
 
 function afficherCartesContrats(contrats, container) {
   container.innerHTML = '';
-  container.style.display = 'grid';
-  container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
-  container.style.gap = '1.5rem';
-
   contrats.forEach((contrat, index) => {
     const titre = index === 0 ? "Contrat Actuel / Plus récent" : `Contrat Précédent #${index}`;
     const div = document.createElement('div');

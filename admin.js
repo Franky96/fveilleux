@@ -25,11 +25,32 @@ function chargerUtilisateurs() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  Object.keys(usersData).forEach(id => {
-    const u = usersData[id];
+  // 1. Transformer l'objet Firebase en tableau
+  const listeBrute = Object.keys(usersData).map(id => {
+    return { id: id, ...usersData[id] };
+  });
+
+  // 2. Séparer en deux listes distinctes
+  const admins = listeBrute.filter(u => u.role === 'admin');
+  const normaux = listeBrute.filter(u => u.role !== 'admin');
+
+  // 3. Fonction de tri alphabétique (de A à Z)
+  const triAlphabetique = (a, b) => {
+    const nomA = (a.nom || '').toLowerCase();
+    const nomB = (b.nom || '').toLowerCase();
+    return nomA.localeCompare(nomB);
+  };
+
+  // On trie les deux listes
+  admins.sort(triAlphabetique);
+  normaux.sort(triAlphabetique);
+
+  // 4. Fonction pour générer la ligne d'un utilisateur (avec ton style original)
+  const ajouterLigne = (u) => {
+    const id = u.id;
     const tr = document.createElement('tr');
     
-    const permsHtml = u.permissions.map(p => 
+    const permsHtml = (u.permissions || []).map(p => 
       `<span style="background:#e0ddd6; color:#555; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; margin-right:4px;">${p}</span>`
     ).join('');
 
@@ -42,13 +63,37 @@ function chargerUtilisateurs() {
       <td>${u.nom}</td>
       <td>${roleHtml}</td>
       <td>${permsHtml}</td>
-      <td style="text-align:right;">
-        <button class="btn-edit" onclick="editerUser('${id}')">✏️</button>
-        ${id === 'frank' ? '' : `<button class="btn-delete" onclick="supprimerUser('${id}')">🗑️</button>`}
+      <td style="text-align:right; white-space:nowrap;">
+        <button onclick="editerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#d4892a; border:1px solid #d4892a; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem; transition:0.2s;" onmouseover="this.style.background='#d4892a'; this.style.color='#111';" onmouseout="this.style.background='#162216'; this.style.color='#d4892a';">Modifier</button>
+        ${id === 'frank' ? '' : `<button onclick="supprimerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#c0392b; border:1px solid #c0392b; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#c0392b'; this.style.color='#fff';" onmouseout="this.style.background='#162216'; this.style.color='#c0392b';">Supprimer</button>`}
       </td>
     `;
     tbody.appendChild(tr);
-  });
+  };
+
+  // 5. Affichage de la section ADMINISTRATEURS
+  if (admins.length > 0) {
+    const trSeparateurAdmins = document.createElement('tr');
+    trSeparateurAdmins.innerHTML = `
+      <td colspan="5" style="padding-top: 1rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #c0392b; border-bottom: 2px solid #c0392b; letter-spacing: 0.05em;">
+        <strong>Administrateurs</strong>
+      </td>
+    `;
+    tbody.appendChild(trSeparateurAdmins);
+    admins.forEach(ajouterLigne);
+  }
+
+  // 6. Affichage de la section UTILISATEURS (avec un espace au-dessus pour bien séparer)
+  if (normaux.length > 0) {
+    const trSeparateurNormaux = document.createElement('tr');
+    trSeparateurNormaux.innerHTML = `
+      <td colspan="5" style="padding-top: 2.5rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #3a7a3a; border-bottom: 2px solid #3a7a3a; letter-spacing: 0.05em;">
+        <strong>Utilisateurs</strong>
+      </td>
+    `;
+    tbody.appendChild(trSeparateurNormaux);
+    normaux.forEach(ajouterLigne);
+  }
 }
 
 window.ouvrirModalUser = function() {

@@ -10,6 +10,12 @@ const aviationDocRef = doc(db, "donnees", "aviation_global");
 let aviationData = { 'aviation-autres': { notes: [] } };
 
 document.addEventListener('DOMContentLoaded', function() {
+  // NOUVEAU : Afficher le bouton UNIQUEMENT si l'utilisateur a la permission
+  if (permissions.includes('aeronefs')) {
+    const btnAero = document.getElementById('btn-aeronefs');
+    if (btnAero) btnAero.style.display = 'flex';
+  }
+  
   onSnapshot(aviationDocRef, (docSnap) => {
     if (docSnap.exists()) {
       aviationData = { ...aviationData, ...docSnap.data() };
