@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Liens utiles</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-container">
+
+    <aside class="sidebar">
+      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
+      <h2>Liens utiles</h2>
+      <p class="sidebar-subtitle">Mes sites favoris</p>
+      
+      <div class="calendrier-header" style="margin-top: 1rem;">
+        <h3 style="color:#888078; font-size:0.85rem; text-transform:uppercase;">Catégories</h3>
+      </div>
+      <nav class="sidebar-nav" id="categories-nav">
+        </nav>
+      <button class="btn-ajouter" onclick="ouvrirModalCat()" style="margin-top: 1rem; width: 100%; background: transparent;">+ Nv. Catégorie</button>
+    </aside>
+
+    <main class="page-content">
+      <div class="cours-header">
+        <h1 class="cours-titre" id="titre-categorie">Toutes les catégories</h1>
+        <button class="btn-ajouter" onclick="ouvrirModalLien()">+ Ajouter un lien</button>
+      </div>
+
+      <div class="content-block">
+        <div class="notes-container" id="liens-container">
+          </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-lien">
+    <div class="modal-box">
+      <h3 id="modal-lien-titre-label">Nouveau lien</h3>
+      <label>Nom du site</label>
+      <input type="text" id="modal-lien-nom" placeholder="Ex: Firebase Console" />
+      
+      <label>URL (Adresse web)</label>
+      <input type="text" id="modal-lien-url" placeholder="Ex: https://..." />
+      
+      <label>Catégorie</label>
+      <select id="modal-lien-cat"></select>
+      
+      <label>Description courte (Optionnel)</label>
+      <input type="text" id="modal-lien-desc" placeholder="Ex: Base de données du projet" />
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalLien()">Annuler</button>
+        <button class="btn-save" id="modal-lien-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-cat">
+    <div class="modal-box">
+      <h3>Nouvelle catégorie</h3>
+      <label>Nom de la catégorie</label>
+      <input type="text" id="modal-cat-nom" placeholder="Ex: Développement" />
+      
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalCat()">Annuler</button>
+        <button class="btn-save" onclick="sauvegarderCat()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="liens.js"></script>
+</body>
+</html>

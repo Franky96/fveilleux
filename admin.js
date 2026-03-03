@@ -89,8 +89,18 @@ window.sauvegarderUser = async function() {
 
   if (!editModeId && usersData[id]) { alert("Identifiant déjà pris !"); return; }
 
-  usersData[editModeId || id] = { motDePasse: pass, nom: nom, role: role, permissions: perms };
+  const targetId = editModeId || id;
+  usersData[targetId] = { motDePasse: pass, nom: nom, role: role, permissions: perms };
+  
   await setDoc(usersRef, usersData); // Envoi au Cloud
+
+  // NOUVEAU : Si on modifie notre propre compte, on met à jour la session immédiatement !
+  if (targetId === sessionStorage.getItem('userId')) {
+    sessionStorage.setItem('userPermissions', JSON.stringify(perms));
+    sessionStorage.setItem('userRole', role);
+    sessionStorage.setItem('userName', nom);
+  }
+
   window.fermerModalUser();
 };
 
