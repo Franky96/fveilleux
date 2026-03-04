@@ -497,6 +497,12 @@ header .subtitle {
   color: #80cc80;
 }
 
+.sidebar-sublink.active {
+  background: #1a2e1a;
+  color: #80cc80;
+  font-weight: bold;
+}
+
 .sidebar-subnav.muted .sidebar-sublink {
   color: #3a3a3a;
 }
@@ -1463,4 +1469,164 @@ header .subtitle {
   color: #a89f94;
   font-size: 0.95rem;
   font-style: italic;
+}
+
+/* === FILMS & SÉRIES === */
+
+.films-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem 0.5rem;
+}
+
+.film-stat-badge {
+  background: #f0ede6;
+  border: 1px solid #d5d0c8;
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.films-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.film-card {
+  background: #fff;
+  border: 1px solid #d5d0c8;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.film-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.film-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.film-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.film-badge {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.badge-a-voir {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+.badge-en-cours {
+  background: #cce5ff;
+  color: #004085;
+  border: 1px solid #60b8c8;
+}
+
+.badge-vu {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #80cc80;
+}
+
+.film-type-badge {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  background: #ede8f5;
+  color: #5a3e8a;
+  border: 1px solid #c080c8;
+  font-weight: bold;
+}
+
+.film-type-badge.serie {
+  background: #fff0e0;
+  color: #7a4400;
+  border: 1px solid #d4892a;
+}
+
+.film-titre {
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.film-infos {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.film-genre {
+  font-size: 0.8rem;
+  color: #555;
+  background: #f0ede6;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+}
+
+.film-annee {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.film-etoiles {
+  font-size: 1rem;
+  color: #d4892a;
+  letter-spacing: 2px;
+}
+
+.film-commentaire {
+  font-size: 0.85rem;
+  color: #666;
+  border-top: 1px solid #e8e4dc;
+  padding-top: 0.5rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Étoiles dans le modal */
+.etoiles-input {
+  display: flex;
+  gap: 0.3rem;
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.etoile {
+  color: #d5d0c8;
+  transition: color 0.15s;
+  user-select: none;
+}
+
+.etoile.etoile-active {
+  color: #d4892a;
+}
+
+.etoile.etoile-survol {
+  color: #e8a84a;
 }
