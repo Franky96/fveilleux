@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Films & Séries</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-container">
+
+    <aside class="sidebar">
+      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
+      <h2>Films & Séries</h2>
+      <p class="sidebar-subtitle">Ma liste de visionnement</p>
+
+      <div class="calendrier-header" style="margin-top: 1rem;">
+        <h3 style="color:#888078; font-size:0.85rem; text-transform:uppercase;">Type</h3>
+      </div>
+      <nav class="sidebar-nav" id="type-nav"></nav>
+
+      <div class="calendrier-header" style="margin-top: 1.5rem;">
+        <h3 style="color:#888078; font-size:0.85rem; text-transform:uppercase;">Statut</h3>
+      </div>
+      <nav class="sidebar-nav" id="statut-nav"></nav>
+    </aside>
+
+    <main class="page-content">
+      <div class="cours-header">
+        <h1 class="cours-titre" id="titre-section">Tous</h1>
+        <button class="btn-ajouter" onclick="ouvrirModal()">+ Ajouter</button>
+      </div>
+
+      <div class="content-block">
+        <div id="films-stats" class="films-stats"></div>
+        <div class="films-grid" id="films-container"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Ajout / Modification -->
+  <div class="modal-overlay hidden" id="modal-film">
+    <div class="modal-box">
+      <h3 id="modal-titre-label">Nouveau titre</h3>
+
+      <label>Titre</label>
+      <input type="text" id="modal-titre" placeholder="Ex: Inception" />
+
+      <label>Type</label>
+      <select id="modal-type">
+        <option value="film">🎬 Film</option>
+        <option value="serie">📺 Série</option>
+      </select>
+
+      <label>Genre</label>
+      <input type="text" id="modal-genre" placeholder="Ex: Science-Fiction, Thriller…" />
+
+      <label>Année</label>
+      <input type="number" id="modal-annee" placeholder="Ex: 2010" min="1900" max="2099" />
+
+      <label>Statut</label>
+      <select id="modal-statut">
+        <option value="a_voir">⏳ À voir</option>
+        <option value="en_cours">▶️ En cours</option>
+        <option value="vu">✅ Vu</option>
+      </select>
+
+      <label>Note (sur 5)</label>
+      <div class="etoiles-input" id="etoiles-input">
+        <span class="etoile" data-val="1">★</span>
+        <span class="etoile" data-val="2">★</span>
+        <span class="etoile" data-val="3">★</span>
+        <span class="etoile" data-val="4">★</span>
+        <span class="etoile" data-val="5">★</span>
+      </div>
+      <input type="hidden" id="modal-note" value="0" />
+
+      <label>Commentaire (optionnel)</label>
+      <textarea id="modal-commentaire" placeholder="Tes impressions…" rows="3"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModal()">Annuler</button>
+        <button class="btn-save" id="modal-save-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="films.js"></script>
+</body>
+</html>
