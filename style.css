@@ -1811,25 +1811,69 @@ body.films-page .film-stat-badge {
 /* --- Grille de cartes --- */
 body.films-page .films-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 0.9rem;
   padding: 0;
+}
+
+/* --- Sections Films / Séries --- */
+.films-section-block {
+  margin-bottom: 2rem;
+}
+
+.films-section-subhead {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #39d353;
+  padding: 0.4rem 1.5rem 0.6rem;
+  border-bottom: 1px solid #1a2a1a;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+/* --- Cartes style poster --- */
+body.films-page .films-grid {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 }
 
 body.films-page .film-card {
   background: #141414;
   border: 1px solid #232323;
   border-radius: 10px;
-  padding: 1rem 1.1rem;
+  padding: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 body.films-page .film-card:hover {
   border-color: #2a4a2a;
-  box-shadow: 0 0 12px rgba(57, 211, 83, 0.08);
+  box-shadow: 0 0 16px rgba(57, 211, 83, 0.12);
+}
+
+.film-poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  display: block;
+}
+
+.film-poster-placeholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: #0f0f0f;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #2a2a2a;
+}
+
+.film-card-body {
+  padding: 0.65rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
 }
 
 body.films-page .film-titre {
