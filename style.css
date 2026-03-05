@@ -2106,3 +2106,230 @@ body.films-page .etoile.etoile-survol {
   opacity: 1;
   color: #e05555;
 }
+
+/* ===== MODAL DÉTAIL FILM / SÉRIE ===== */
+.film-card {
+  cursor: pointer;
+}
+
+.modal-detail-box {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #333 #111;
+}
+
+.modal-detail-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #444;
+  color: #aaa;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modal-detail-close:hover {
+  background: #333;
+  color: #fff;
+}
+
+.modal-detail-content {
+  display: flex;
+  align-items: stretch;
+}
+
+.modal-detail-left {
+  flex-shrink: 0;
+  width: 230px;
+}
+
+.modal-detail-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 16px 0 0 0;
+  min-height: 300px;
+}
+
+.modal-detail-poster-placeholder {
+  width: 100%;
+  min-height: 300px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  border-radius: 16px 0 0 0;
+}
+
+.modal-detail-right {
+  flex: 1;
+  padding: 1.75rem 1.75rem 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.modal-detail-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-detail-titre {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #f0ede6;
+  line-height: 1.2;
+  font-family: 'Playfair Display', serif;
+  margin: 0;
+}
+
+.modal-detail-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #aaa;
+  font-size: 0.88rem;
+}
+
+.modal-detail-meta .sep {
+  color: #444;
+  user-select: none;
+}
+
+.modal-detail-meta .film-genre {
+  background: #222;
+  color: #bbb;
+  border-radius: 6px;
+}
+
+.modal-detail-people {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #222;
+}
+
+.detail-people-row {
+  font-size: 0.84rem;
+  color: #bbb;
+  line-height: 1.5;
+}
+
+.detail-role {
+  color: #555;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 0.5rem;
+}
+
+.modal-detail-synopsis {
+  font-size: 0.88rem;
+  color: #aaa;
+  line-height: 1.65;
+  border-top: 1px solid #222;
+  padding-top: 0.65rem;
+  margin: 0;
+}
+
+.modal-detail-commentaire {
+  font-size: 0.84rem;
+  color: #777;
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid #333;
+}
+
+.modal-detail-actions {
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.btn-detail-edit {
+  background: #0f2a0f;
+  border: 1px solid #39d353;
+  color: #39d353;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.btn-detail-edit:hover {
+  background: #1a4a1a;
+}
+
+.modal-detail-trailer {
+  padding: 0 1.5rem 1.5rem;
+  border-top: 1px solid #1e1e1e;
+  margin-top: 0.25rem;
+}
+
+.modal-detail-trailer-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #555;
+  padding: 0.9rem 0 0.6rem;
+}
+
+.modal-detail-iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  border: none;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .modal-detail-content {
+    flex-direction: column;
+  }
+  .modal-detail-left {
+    width: 100%;
+  }
+  .modal-detail-poster {
+    border-radius: 16px 16px 0 0;
+    max-height: 260px;
+    min-height: unset;
+    object-position: top;
+  }
+  .modal-detail-poster-placeholder {
+    border-radius: 16px 16px 0 0;
+    min-height: 180px;
+  }
+  .modal-detail-right {
+    padding: 1.25rem;
+  }
+  .modal-detail-titre {
+    font-size: 1.3rem;
+  }
+}
