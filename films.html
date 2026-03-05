@@ -6,41 +6,34 @@
   <title>Outils de Frank — Films & Séries</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="page-container">
+<body class="films-page">
 
-    <aside class="sidebar">
-      <a href="dashboard.html" class="back-btn">&#8592; Accueil</a>
-      <h2>Films & Séries</h2>
-      <p class="sidebar-subtitle">Ma liste de visionnement</p>
+  <!-- Barre de navigation supérieure -->
+  <nav class="films-topbar">
+    <div class="films-topbar-left">
+      <a href="dashboard.html" class="films-back-btn">&#8592; Accueil</a>
+      <span class="films-topbar-title">Films & Séries</span>
+    </div>
+    <div class="films-topbar-filters">
+      <nav id="type-nav" class="films-filter-nav"></nav>
+      <div class="films-filter-sep"></div>
+      <nav id="statut-nav" class="films-filter-nav"></nav>
+    </div>
+    <button class="films-add-btn" onclick="ouvrirModal()">+ Ajouter</button>
+  </nav>
 
-      <div class="calendrier-header" style="margin-top: 1rem;">
-        <h3 style="color:#888078; font-size:0.85rem; text-transform:uppercase;">Type</h3>
-      </div>
-      <nav class="sidebar-nav" id="type-nav"></nav>
-
-      <div class="calendrier-header" style="margin-top: 1.5rem;">
-        <h3 style="color:#888078; font-size:0.85rem; text-transform:uppercase;">Statut</h3>
-      </div>
-      <nav class="sidebar-nav" id="statut-nav"></nav>
-    </aside>
-
-    <main class="page-content">
-      <div class="cours-header">
-        <h1 class="cours-titre" id="titre-section">Tous</h1>
-        <button class="btn-ajouter" onclick="ouvrirModal()">+ Ajouter</button>
-      </div>
-
-      <div class="content-block">
-        <div id="films-stats" class="films-stats"></div>
-        <div class="films-grid" id="films-container"></div>
-      </div>
-    </main>
-  </div>
+  <!-- Contenu principal -->
+  <main class="films-main">
+    <div class="films-main-header">
+      <h1 class="films-section-titre" id="titre-section">Tous</h1>
+      <div id="films-stats" class="films-stats"></div>
+    </div>
+    <div class="films-grid" id="films-container"></div>
+  </main>
 
   <!-- Modal Ajout / Modification -->
   <div class="modal-overlay hidden" id="modal-film">
-    <div class="modal-box">
+    <div class="modal-box films-modal-box">
       <h3 id="modal-titre-label">Nouveau titre</h3>
 
       <label>Titre</label>
