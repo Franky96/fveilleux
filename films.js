@@ -195,7 +195,7 @@ function creerCarteFilm(item, vraiIndex) {
         ${item.genre ? `<span class="film-genre">${item.genre}</span>` : ''}
         ${item.annee ? `<span class="film-annee">${item.annee}</span>` : ''}
       </div>
-      ${item.statut === 'vu' ? `<div class="film-etoiles" title="${item.note || 0}/5">${etoiles}</div>` : ''}
+      ${item.statut === 'vu' && item.note > 0 ? `<div class="film-etoiles" title="${item.note}/5">${etoiles}</div>` : ''}
       ${item.commentaire ? `<p class="film-commentaire">${item.commentaire}</p>` : ''}
     </div>
   `;
