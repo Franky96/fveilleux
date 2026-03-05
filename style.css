@@ -1641,7 +1641,7 @@ body.films-page {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  font-family: 'Lora', Georgia, serif;
+  font-family: 'Roboto', Arial, sans-serif;
   /* Annule le centrage vertical global */
   display: block;
   align-items: unset;
@@ -1693,7 +1693,7 @@ body.films-page button {
 .films-topbar-title {
   font-size: 1rem;
   font-weight: 700;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Roboto', Arial, sans-serif;
   color: #39d353;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -1784,7 +1784,7 @@ body.films-page button {
 .films-section-titre {
   font-size: 1.3rem;
   font-weight: 700;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Roboto', Arial, sans-serif;
   color: #39d353;
   margin: 0;
 }
@@ -1833,7 +1833,7 @@ body.films-page .film-card:hover {
 body.films-page .film-titre {
   font-size: 1.05rem;
   font-weight: 600;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Roboto', Arial, sans-serif;
   color: #e0e0e0;
   line-height: 1.3;
 }
