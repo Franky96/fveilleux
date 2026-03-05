@@ -15,10 +15,40 @@ let noteSelectionnee = 0;
 
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', () => {
+  const donneesDemo = {
+    items: [
+      { titre: "Inception", type: "film", genre: "Sci-Fi", annee: 2010, statut: "vu", note: 5, commentaire: "Chef-d'œuvre de Nolan" },
+      { titre: "Interstellar", type: "film", genre: "Sci-Fi", annee: 2014, statut: "vu", note: 5, commentaire: "" },
+      { titre: "The Dark Knight", type: "film", genre: "Action", annee: 2008, statut: "vu", note: 5, commentaire: "Le meilleur Batman" },
+      { titre: "Dune", type: "film", genre: "Sci-Fi", annee: 2021, statut: "vu", note: 4, commentaire: "" },
+      { titre: "Oppenheimer", type: "film", genre: "Drame", annee: 2023, statut: "vu", note: 4, commentaire: "" },
+      { titre: "Avatar: La Voie de l'eau", type: "film", genre: "Sci-Fi", annee: 2022, statut: "vu", note: 3, commentaire: "Visuellement impressionnant" },
+      { titre: "Top Gun: Maverick", type: "film", genre: "Action", annee: 2022, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Le Comte de Monte-Cristo", type: "film", genre: "Aventure", annee: 2024, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Killers of the Flower Moon", type: "film", genre: "Drame", annee: 2023, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Poor Things", type: "film", genre: "Drame", annee: 2023, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Breaking Bad", type: "serie", genre: "Drame", annee: 2008, statut: "vu", note: 5, commentaire: "La meilleure série de tous les temps" },
+      { titre: "Game of Thrones", type: "serie", genre: "Fantasy", annee: 2011, statut: "vu", note: 4, commentaire: "Saisons 1-6 excellentes" },
+      { titre: "Stranger Things", type: "serie", genre: "Sci-Fi", annee: 2016, statut: "en_cours", note: 0, commentaire: "Saison 4 en cours" },
+      { titre: "The Last of Us", type: "serie", genre: "Drame", annee: 2023, statut: "vu", note: 5, commentaire: "" },
+      { titre: "The Bear", type: "serie", genre: "Drame", annee: 2022, statut: "en_cours", note: 0, commentaire: "Saison 3 à terminer" },
+      { titre: "Shogun", type: "serie", genre: "Historique", annee: 2024, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Severance", type: "serie", genre: "Sci-Fi", annee: 2022, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Succession", type: "serie", genre: "Drame", annee: 2018, statut: "vu", note: 5, commentaire: "" },
+      { titre: "The White Lotus", type: "serie", genre: "Drame", annee: 2021, statut: "a_voir", note: 0, commentaire: "" },
+      { titre: "Andor", type: "serie", genre: "Sci-Fi", annee: 2022, statut: "a_voir", note: 0, commentaire: "" },
+    ]
+  };
+
   onSnapshot(filmsDocRef, (docSnap) => {
     if (docSnap.exists()) {
       filmsData = { items: [], ...docSnap.data() };
+      if (filmsData.items.length === 0) {
+        filmsData = donneesDemo;
+        setDoc(filmsDocRef, filmsData);
+      }
     } else {
+      filmsData = donneesDemo;
       setDoc(filmsDocRef, filmsData);
     }
     afficherFiltresType();
