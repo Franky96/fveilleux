@@ -29,7 +29,14 @@
       <h1 class="films-section-titre" id="titre-section">Tous</h1>
       <div id="films-stats" class="films-stats"></div>
     </div>
-    <div class="films-grid" id="films-container"></div>
+    <div id="section-films" class="films-section-block">
+      <h2 class="films-section-subhead">🎬 Films</h2>
+      <div class="films-grid" id="grid-films"></div>
+    </div>
+    <div id="section-series" class="films-section-block">
+      <h2 class="films-section-subhead">📺 Séries</h2>
+      <div class="films-grid" id="grid-series"></div>
+    </div>
   </main>
 
   <!-- Modal Ajout / Modification -->
@@ -39,6 +46,9 @@
 
       <label>Titre</label>
       <input type="text" id="modal-titre" placeholder="Ex: Inception" />
+
+      <label>Image (URL du poster)</label>
+      <input type="url" id="modal-image" placeholder="https://image.tmdb.org/t/p/w300/..." />
 
       <label>Type</label>
       <select id="modal-type">
