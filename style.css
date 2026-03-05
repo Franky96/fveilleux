@@ -2088,3 +2088,21 @@ body.films-page .etoile.etoile-active {
 body.films-page .etoile.etoile-survol {
   color: #6fcf6f;
 }
+
+.btn-reset-note {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #888;
+  padding: 0 0.3rem;
+  margin-left: 0.25rem;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+  align-self: center;
+}
+
+.btn-reset-note:hover {
+  opacity: 1;
+  color: #e05555;
+}
