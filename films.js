@@ -101,6 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
       mettreAJourEtoiles(noteSelectionnee, false);
     });
   });
+
+  document.getElementById('btn-reset-note').addEventListener('click', () => {
+    noteSelectionnee = 0;
+    document.getElementById('modal-note').value = 0;
+    mettreAJourEtoiles(0);
+  });
 });
 
 function mettreAJourEtoiles(valeur, survol = false) {
