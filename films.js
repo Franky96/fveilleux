@@ -16,26 +16,26 @@ let noteSelectionnee = 0;
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', () => {
   const imageParTitre = {
-    "Inception":                  "https://image.tmdb.org/t/p/w300/oYuLELStVZZR1L4LTqFPwJu7qMU.jpg",
+    "Inception":                  "https://image.tmdb.org/t/p/w300/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
     "Interstellar":               "https://image.tmdb.org/t/p/w300/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
     "The Dark Knight":            "https://image.tmdb.org/t/p/w300/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    "Dune":                       "https://image.tmdb.org/t/p/w300/d5NXSklpcvzeUdOqJNJmwMH2Bcc.jpg",
+    "Dune":                       "https://image.tmdb.org/t/p/w300/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
     "Oppenheimer":                "https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-    "Avatar: La Voie de l'eau":   "https://image.tmdb.org/t/p/w300/t6HIqrRAclMCA60NsSbj6kqg5P1.jpg",
+    "Avatar: La Voie de l'eau":   "https://image.tmdb.org/t/p/w300/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
     "Top Gun: Maverick":          "https://image.tmdb.org/t/p/w300/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-    "Le Comte de Monte-Cristo":   "https://image.tmdb.org/t/p/w300/cuyNdIFBkFwpqLcQKe4bfkc5LxA.jpg",
-    "Killers of the Flower Moon": "https://image.tmdb.org/t/p/w300/dB6Sea7LOaGfkTe5alEhFY2n5aX.jpg",
-    "Poor Things":                "https://image.tmdb.org/t/p/w300/kCGlIMHnOm8JPXIbpGgrqK5D7u8CY.jpg",
-    "Breaking Bad":               "https://image.tmdb.org/t/p/w300/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+    "Le Comte de Monte-Cristo":   "https://image.tmdb.org/t/p/w300/sAT1P3FGhtJ68anUyJScnMu8t1l.jpg",
+    "Killers of the Flower Moon": "https://image.tmdb.org/t/p/w300/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
+    "Poor Things":                "https://image.tmdb.org/t/p/w300/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
+    "Breaking Bad":               "https://image.tmdb.org/t/p/w300/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
     "Game of Thrones":            "https://image.tmdb.org/t/p/w300/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
-    "Stranger Things":            "https://image.tmdb.org/t/p/w300/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-    "The Last of Us":             "https://image.tmdb.org/t/p/w300/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg",
-    "The Bear":                   "https://image.tmdb.org/t/p/w300/sHm9vfNwOSMBCMJJuoWOtWUXKTi.jpg",
+    "Stranger Things":            "https://image.tmdb.org/t/p/w300/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg",
+    "The Last of Us":             "https://image.tmdb.org/t/p/w300/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg",
+    "The Bear":                   "https://image.tmdb.org/t/p/w300/eKfVzzEazSIjJMrw9ADa2x8ksLz.jpg",
     "Shogun":                     "https://image.tmdb.org/t/p/w300/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg",
-    "Severance":                  "https://image.tmdb.org/t/p/w300/7p4KALqYzEuTR7n8T7P9Z7Kfr6B.jpg",
-    "Succession":                 "https://image.tmdb.org/t/p/w300/e2X8jBCHxMuJOIAiTIb5R9GGdVY.jpg",
-    "The White Lotus":            "https://image.tmdb.org/t/p/w300/oSSCdETHXxAqFGMm1r9kSa9CQBT.jpg",
-    "Andor":                      "https://image.tmdb.org/t/p/w300/59SVNwLfoMnZPPB6ukW6dlPxAdI.jpg",
+    "Severance":                  "https://image.tmdb.org/t/p/w300/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+    "Succession":                 "https://image.tmdb.org/t/p/w300/z0XiwdrCQ9yVIr4O0pxzaAYRxdW.jpg",
+    "The White Lotus":            "https://image.tmdb.org/t/p/w300/gbSaK9v1CbcYH1ISgbM7XObD2dW.jpg",
+    "Andor":                      "https://image.tmdb.org/t/p/w300/khZqmwHQicTYoS7Flreb9EddFZC.jpg",
   };
 
   const donneesDemo = {
@@ -69,9 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (filmsData.items.length === 0) {
         filmsData = donneesDemo;
         setDoc(filmsDocRef, filmsData);
-      } else if (!filmsData.items.some(i => 'image' in i)) {
-        // Migration : ajout des URLs d'images aux items existants
-        filmsData.items = filmsData.items.map(i => ({ ...i, image: imageParTitre[i.titre] || "" }));
+      } else if (!filmsData.dataVersion || filmsData.dataVersion < 2) {
+        // Migration v2 : correction des URLs d'images
+        filmsData.items = filmsData.items.map(i => ({
+          ...i,
+          image: imageParTitre[i.titre] !== undefined ? imageParTitre[i.titre] : (i.image || ""),
+        }));
+        filmsData.dataVersion = 2;
         setDoc(filmsDocRef, filmsData);
       }
     } else {
