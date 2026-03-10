@@ -445,7 +445,7 @@ header .subtitle {
 
 .cours-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 1rem;
   margin-bottom: 1.2rem;
   flex-wrap: wrap;
@@ -592,6 +592,149 @@ header .subtitle {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+/* Bouton + dans l'en-tête de cours */
+.btn-ajouter-module {
+  margin-left: auto;
+  background: #3a7a3a;
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-ajouter-module:hover {
+  background: #2a5a2a;
+  transform: scale(1.1);
+}
+
+/* Menu flottant d'ajout */
+.menu-ajout {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #d5d0c8;
+  border-radius: 10px;
+  padding: 0.4rem;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 160px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+}
+
+.menu-ajout.hidden {
+  display: none;
+}
+
+.menu-ajout-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.menu-ajout-item:hover {
+  background: #f0ede6;
+}
+
+.menu-ajout-icone {
+  font-size: 1rem;
+}
+
+/* Conteneur de sections modulaires */
+.sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-bottom: 1rem;
+}
+
+.sections-empty {
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.88rem;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+}
+
+/* Bloc Division (séparateur titré) */
+.bloc-division {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.bloc-division-ligne {
+  flex: 1;
+  height: 1px;
+  background: #d5d0c8;
+}
+
+.bloc-division-titre {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #3a7a3a;
+  white-space: nowrap;
+}
+
+.bloc-actions {
+  display: flex;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+/* Bloc Échéance */
+.bloc-echeance {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid #d5d0c8;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.bloc-echeance.echeance-complete .echeance-date,
+.bloc-echeance.echeance-complete .echeance-desc {
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+.echeance-date {
+  color: #888078;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  min-width: 6.5rem;
+}
+
+.echeance-desc {
+  flex: 1;
+  color: #1a1a1a;
 }
 
 .btn-ajouter {
