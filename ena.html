@@ -42,146 +42,74 @@
     <!-- Contenu principal -->
     <main class="page-content">
 
-      <!-- Communications numériques -->
       <div class="cours-view" id="cours-E04">
         <div class="cours-header">
           <span class="cours-code">280-E04-EM</span>
           <h1 class="cours-titre">Communications numériques et réseautique des systèmes d'aéronefs</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E04')">⇄</button>
           <span class="cours-info">60h · <span class="modalite" id="mod-E04">En présence</span></span>
+          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E04', this)" title="Ajouter un bloc">+</button>
         </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📅 Calendrier & échéances</h3>
-            <button class="btn-ajouter" onclick="ajouterEcheance('E04')">+ Ajouter</button>
-          </div>
-          <table class="calendar-table">
-            <thead>
-              <tr>
-                <th style="width:2rem"></th>
-                <th>Date</th>
-                <th>Description</th>
-                <th style="width:5rem"></th>
-              </tr>
-            </thead>
-            <tbody id="tbody-E04"></tbody>
-          </table>
-        </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📚 Notes & documents</h3>
-            <button class="btn-ajouter" onclick="ajouterNote('E04')">+ Ajouter</button>
-          </div>
-          <div class="notes-container" id="notes-container-E04"></div>
-        </div>
+        <div class="sections-container" id="sections-E04"></div>
       </div>
 
-      <!-- Systèmes avioniques modernes -->
       <div class="cours-view hidden" id="cours-E14">
         <div class="cours-header">
           <span class="cours-code">280-E14-EM</span>
           <h1 class="cours-titre">Systèmes avioniques modernes d'aéronefs</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E14')">⇄</button>
           <span class="cours-info">60h · <span class="modalite" id="mod-E14">Hybride</span></span>
+          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E14', this)" title="Ajouter un bloc">+</button>
         </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📅 Calendrier & échéances</h3>
-            <button class="btn-ajouter" onclick="ajouterEcheance('E14')">+ Ajouter</button>
-          </div>
-          <table class="calendar-table">
-            <thead>
-              <tr>
-                <th style="width:2rem"></th>
-                <th>Date</th>
-                <th>Description</th>
-                <th style="width:5rem"></th>
-              </tr>
-            </thead>
-            <tbody id="tbody-E14"></tbody>
-          </table>
-        </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📚 Notes & documents</h3>
-            <button class="btn-ajouter" onclick="ajouterNote('E14')">+ Ajouter</button>
-          </div>
-          <div class="notes-container" id="notes-container-E14"></div>
-        </div>
+        <div class="sections-container" id="sections-E14"></div>
       </div>
 
-      <!-- Installations avioniques -->
       <div class="cours-view hidden" id="cours-E24">
         <div class="cours-header">
           <span class="cours-code">280-E24-EM</span>
           <h1 class="cours-titre">Installations avioniques</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E24')">⇄</button>
           <span class="cours-info">60h · <span class="modalite" id="mod-E24">En présence</span></span>
+          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E24', this)" title="Ajouter un bloc">+</button>
         </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📅 Calendrier & échéances</h3>
-            <button class="btn-ajouter" onclick="ajouterEcheance('E24')">+ Ajouter</button>
-          </div>
-          <table class="calendar-table">
-            <thead>
-              <tr>
-                <th style="width:2rem"></th>
-                <th>Date</th>
-                <th>Description</th>
-                <th style="width:5rem"></th>
-              </tr>
-            </thead>
-            <tbody id="tbody-E24"></tbody>
-          </table>
-        </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📚 Notes & documents</h3>
-            <button class="btn-ajouter" onclick="ajouterNote('E24')">+ Ajouter</button>
-          </div>
-          <div class="notes-container" id="notes-container-E24"></div>
-        </div>
+        <div class="sections-container" id="sections-E24"></div>
       </div>
 
-      <!-- Contrôles électriques de servitudes -->
       <div class="cours-view hidden" id="cours-E06">
         <div class="cours-header">
           <span class="cours-code">280-E06-EM</span>
           <h1 class="cours-titre">Contrôles électriques de servitudes d'aéronefs</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E06')">⇄</button>
           <span class="cours-info">90h · <span class="modalite" id="mod-E06">En présence</span></span>
+          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E06', this)" title="Ajouter un bloc">+</button>
         </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📅 Calendrier & échéances</h3>
-            <button class="btn-ajouter" onclick="ajouterEcheance('E06')">+ Ajouter</button>
-          </div>
-          <table class="calendar-table">
-            <thead>
-              <tr>
-                <th style="width:2rem"></th>
-                <th>Date</th>
-                <th>Description</th>
-                <th style="width:5rem"></th>
-              </tr>
-            </thead>
-            <tbody id="tbody-E06"></tbody>
-          </table>
-        </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>📚 Notes & documents</h3>
-            <button class="btn-ajouter" onclick="ajouterNote('E06')">+ Ajouter</button>
-          </div>
-          <div class="notes-container" id="notes-container-E06"></div>
-        </div>
+        <div class="sections-container" id="sections-E06"></div>
       </div>
 
     </main>
   </div>
 
-  <!-- Modal échéance -->
+  <!-- Menu flottant d'ajout -->
+  <div class="menu-ajout hidden" id="menu-ajout">
+    <button class="menu-ajout-item" onclick="choisirTypeModule('division')"><span class="menu-ajout-icone">▬</span> Division</button>
+    <button class="menu-ajout-item" onclick="choisirTypeModule('echeance')"><span class="menu-ajout-icone">📅</span> Échéance</button>
+    <button class="menu-ajout-item" onclick="choisirTypeModule('note')"><span class="menu-ajout-icone">📚</span> Note</button>
+  </div>
+
+  <!-- Modal Division -->
+  <div class="modal-overlay hidden" id="modal-division">
+    <div class="modal-box">
+      <h3 id="modal-division-titre-label">Nouvelle division</h3>
+      <label>Titre</label>
+      <input type="text" id="modal-division-titre" placeholder="Ex: Semaine 1, Examen final…" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalDivision()">Annuler</button>
+        <button class="btn-save" id="modal-division-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Échéance -->
   <div class="modal-overlay hidden" id="modal-echeance">
     <div class="modal-box">
       <h3 id="modal-titre">Nouvelle échéance</h3>
@@ -196,7 +124,7 @@
     </div>
   </div>
 
-  <!-- Modal note -->
+  <!-- Modal Note -->
   <div class="modal-overlay hidden" id="modal-note">
     <div class="modal-box">
       <h3 id="modal-note-titre-label">Nouvelle note</h3>
