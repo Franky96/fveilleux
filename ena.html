@@ -48,7 +48,7 @@
           <h1 class="cours-titre">Communications numériques et réseautique des systèmes d'aéronefs</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E04')">⇄</button>
           <span class="cours-info">60h · <span class="modalite" id="mod-E04">En présence</span></span>
-          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E04', this)" title="Ajouter un bloc">+</button>
+          <button class="btn-ajouter-module" onclick="ouvrirModalGroupe('E04', null, null)" title="Nouveau groupe">+</button>
         </div>
         <div class="sections-container" id="sections-E04"></div>
       </div>
@@ -59,7 +59,7 @@
           <h1 class="cours-titre">Systèmes avioniques modernes d'aéronefs</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E14')">⇄</button>
           <span class="cours-info">60h · <span class="modalite" id="mod-E14">Hybride</span></span>
-          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E14', this)" title="Ajouter un bloc">+</button>
+          <button class="btn-ajouter-module" onclick="ouvrirModalGroupe('E14', null, null)" title="Nouveau groupe">+</button>
         </div>
         <div class="sections-container" id="sections-E14"></div>
       </div>
@@ -70,7 +70,7 @@
           <h1 class="cours-titre">Installations avioniques</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E24')">⇄</button>
           <span class="cours-info">60h · <span class="modalite" id="mod-E24">En présence</span></span>
-          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E24', this)" title="Ajouter un bloc">+</button>
+          <button class="btn-ajouter-module" onclick="ouvrirModalGroupe('E24', null, null)" title="Nouveau groupe">+</button>
         </div>
         <div class="sections-container" id="sections-E24"></div>
       </div>
@@ -81,7 +81,7 @@
           <h1 class="cours-titre">Contrôles électriques de servitudes d'aéronefs</h1>
           <button class="modalite-toggle" onclick="toggleModalite('E06')">⇄</button>
           <span class="cours-info">90h · <span class="modalite" id="mod-E06">En présence</span></span>
-          <button class="btn-ajouter-module" onclick="ouvrirMenuAjout('E06', this)" title="Ajouter un bloc">+</button>
+          <button class="btn-ajouter-module" onclick="ouvrirModalGroupe('E06', null, null)" title="Nouveau groupe">+</button>
         </div>
         <div class="sections-container" id="sections-E06"></div>
       </div>
@@ -89,22 +89,21 @@
     </main>
   </div>
 
-  <!-- Menu flottant d'ajout -->
-  <div class="menu-ajout hidden" id="menu-ajout">
-    <button class="menu-ajout-item" onclick="choisirTypeModule('division')"><span class="menu-ajout-icone">▬</span> Division</button>
-    <button class="menu-ajout-item" onclick="choisirTypeModule('echeance')"><span class="menu-ajout-icone">📅</span> Échéance</button>
-    <button class="menu-ajout-item" onclick="choisirTypeModule('note')"><span class="menu-ajout-icone">📚</span> Note</button>
+  <!-- Menu flottant : ajouter un item dans un groupe -->
+  <div class="menu-ajout hidden" id="menu-ajout-item">
+    <button class="menu-ajout-item" onclick="choisirTypeItem('echeance')"><span class="menu-ajout-icone">📅</span> Échéance</button>
+    <button class="menu-ajout-item" onclick="choisirTypeItem('note')"><span class="menu-ajout-icone">📚</span> Note</button>
   </div>
 
-  <!-- Modal Division -->
-  <div class="modal-overlay hidden" id="modal-division">
+  <!-- Modal Groupe (créer / renommer) -->
+  <div class="modal-overlay hidden" id="modal-groupe">
     <div class="modal-box">
-      <h3 id="modal-division-titre-label">Nouvelle division</h3>
-      <label>Titre</label>
-      <input type="text" id="modal-division-titre" placeholder="Ex: Semaine 1, Examen final…" />
+      <h3 id="modal-groupe-titre-label">Nouveau groupe</h3>
+      <label>Nom du groupe</label>
+      <input type="text" id="modal-groupe-titre" placeholder="Ex: Travaux pratiques, Examens, Semaine 1…" />
       <div class="modal-actions">
-        <button class="btn-cancel" onclick="fermerModalDivision()">Annuler</button>
-        <button class="btn-save" id="modal-division-save">Enregistrer</button>
+        <button class="btn-cancel" onclick="fermerModalGroupe()">Annuler</button>
+        <button class="btn-save" id="modal-groupe-save">Enregistrer</button>
       </div>
     </div>
   </div>

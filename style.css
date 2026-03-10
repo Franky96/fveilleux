@@ -618,7 +618,7 @@ header .subtitle {
   transform: scale(1.1);
 }
 
-/* Menu flottant d'ajout */
+/* Menu flottant */
 .menu-ajout {
   position: fixed;
   background: #fff;
@@ -629,13 +629,11 @@ header .subtitle {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  min-width: 160px;
+  min-width: 150px;
   box-shadow: 0 6px 24px rgba(0,0,0,0.14);
 }
 
-.menu-ajout.hidden {
-  display: none;
-}
+.menu-ajout.hidden { display: none; }
 
 .menu-ajout-item {
   display: flex;
@@ -653,19 +651,14 @@ header .subtitle {
   width: 100%;
 }
 
-.menu-ajout-item:hover {
-  background: #f0ede6;
-}
+.menu-ajout-item:hover { background: #f0ede6; }
+.menu-ajout-icone { font-size: 1rem; }
 
-.menu-ajout-icone {
-  font-size: 1rem;
-}
-
-/* Conteneur de sections modulaires */
+/* Conteneur de groupes */
 .sections-container {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 1rem;
   padding-bottom: 1rem;
 }
 
@@ -677,28 +670,116 @@ header .subtitle {
   text-align: center;
 }
 
-/* Bloc Division (séparateur titré) */
-.bloc-division {
+/* Carte de groupe */
+.groupe-card {
+  border: 1px solid #d5d0c8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.groupe-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  background: #f0ede6;
+  border-bottom: 1px solid #d5d0c8;
+}
+
+.groupe-titre {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.groupe-count {
+  font-size: 0.75rem;
+  color: #aaa;
+  white-space: nowrap;
+}
+
+.groupe-progress {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #3a7a3a;
+  background: #e8f5e8;
+  border: 1px solid #b8d8b8;
+  border-radius: 10px;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+}
+
+.groupe-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.btn-ajouter-dans-groupe {
+  background: #3a7a3a;
+  border: none;
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-ajouter-dans-groupe:hover { background: #2a5a2a; }
+
+/* Items dans un groupe */
+.groupe-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupe-empty {
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.85rem;
+  padding: 0.9rem 1rem;
+  text-align: center;
+}
+
+/* Bloc Échéance */
+.bloc-echeance {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0 0.3rem;
-  margin-top: 0.4rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f0ede6;
+  font-size: 0.9rem;
+  background: #fff;
 }
 
-.bloc-division-ligne {
-  flex: 1;
-  height: 1px;
-  background: #d5d0c8;
+.bloc-echeance:last-child { border-bottom: none; }
+
+.bloc-echeance.echeance-complete .echeance-date,
+.bloc-echeance.echeance-complete .echeance-desc {
+  text-decoration: line-through;
+  color: #bbb;
 }
 
-.bloc-division-titre {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: #3a7a3a;
+.echeance-date {
+  color: #888078;
   white-space: nowrap;
+  font-size: 0.82rem;
+  min-width: 7rem;
+}
+
+.echeance-desc {
+  flex: 1;
+  color: #1a1a1a;
 }
 
 .bloc-actions {
@@ -707,35 +788,15 @@ header .subtitle {
   flex-shrink: 0;
 }
 
-/* Bloc Échéance */
-.bloc-echeance {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: #fff;
-  border: 1px solid #d5d0c8;
-  border-radius: 8px;
-  padding: 0.6rem 0.9rem;
-  font-size: 0.9rem;
+/* Note card dans un groupe */
+.groupe-items .note-card {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid #f0ede6;
+  background: #faf9f6;
 }
 
-.bloc-echeance.echeance-complete .echeance-date,
-.bloc-echeance.echeance-complete .echeance-desc {
-  text-decoration: line-through;
-  color: #aaa;
-}
-
-.echeance-date {
-  color: #888078;
-  white-space: nowrap;
-  font-size: 0.82rem;
-  min-width: 6.5rem;
-}
-
-.echeance-desc {
-  flex: 1;
-  color: #1a1a1a;
-}
+.groupe-items .note-card:last-child { border-bottom: none; }
 
 .btn-ajouter {
   background: #e8f5e8;
