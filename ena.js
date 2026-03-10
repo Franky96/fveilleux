@@ -9,13 +9,14 @@ if (!sessionStorage.getItem('loggedIn') || !permissions.includes('ena')) {
 const enaDocRef = doc(db, "donnees", "ena_global");
 
 let enaData = {
-  'E04': { sections: [], modalite: 'En présence' },
-  'E14': { sections: [], modalite: 'Hybride' },
-  'E24': { sections: [], modalite: 'En présence' },
-  'E06': { sections: [], modalite: 'En présence' }
+  'E04': { groupes: [], modalite: 'En présence' },
+  'E14': { groupes: [], modalite: 'Hybride' },
+  'E24': { groupes: [], modalite: 'En présence' },
+  'E06': { groupes: [], modalite: 'En présence' }
 };
 
 let menuCoursId = null;
+let menuGroupeIndex = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   onSnapshot(enaDocRef, (docSnap) => {
@@ -24,21 +25,25 @@ document.addEventListener('DOMContentLoaded', () => {
       ['E04', 'E14', 'E24', 'E06'].forEach(id => {
         const cours = data[id];
         if (!cours) return;
-        // Migration: ancien format avait echeances[] + notes[], nouveau = sections[]
-        if (!cours.sections) {
-          cours.sections = [];
-          if (cours.echeances && cours.echeances.length > 0) {
-            cours.sections.push({ type: 'division', titre: 'Échéances' });
-            cours.echeances.forEach(e => cours.sections.push({
-              type: 'echeance', date: e.date, description: e.description, complete: e.complete || false
-            }));
+        // Migration : ancien format echeances[] + notes[]
+        if (!cours.sections && !cours.groupes) {
+          cours.groupes = [];
+          if (cours.echeances?.length > 0) {
+            cours.groupes.push({
+              titre: 'Échéances',
+              items: cours.echeances.map(e => ({ type: 'echeance', date: e.date, description: e.description, complete: e.complete || false }))
+            });
           }
-          if (cours.notes && cours.notes.length > 0) {
-            cours.sections.push({ type: 'division', titre: 'Notes' });
-            cours.notes.forEach(n => cours.sections.push({
-              type: 'note', titre: n.titre, type_note: n.type || 'texte', contenu: n.contenu, nom: n.nom || ''
-            }));
+          if (cours.notes?.length > 0) {
+            cours.groupes.push({
+              titre: 'Notes',
+              items: cours.notes.map(n => ({ type: 'note', titre: n.titre, type_note: n.type || 'texte', contenu: n.contenu, nom: n.nom || '' }))
+            });
           }
+        }
+        // Migration : format plat sections[]
+        if (cours.sections && !cours.groupes) {
+          cours.groupes = migrerSections(cours.sections);
         }
         enaData[id] = { ...enaData[id], ...cours };
       });
@@ -49,20 +54,40 @@ document.addEventListener('DOMContentLoaded', () => {
     ['E04', 'E14', 'E24', 'E06'].forEach(id => {
       if (enaData[id]) {
         appliquerModalite(id, enaData[id].modalite);
-        chargerSections(id);
+        chargerGroupes(id);
       }
     });
   });
 
-  // Fermer le menu en cliquant ailleurs
+  // Fermer le menu item en cliquant ailleurs
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.btn-ajouter-module') && !e.target.closest('#menu-ajout')) {
-      document.getElementById('menu-ajout').classList.add('hidden');
+    if (!e.target.closest('.btn-ajouter-dans-groupe') && !e.target.closest('#menu-ajout-item')) {
+      document.getElementById('menu-ajout-item').classList.add('hidden');
     }
   });
 
   window.afficherCours('E04', document.querySelector('.sidebar-sublink'));
 });
+
+function migrerSections(sections) {
+  const groupes = [];
+  let groupActuel = null;
+  for (const bloc of sections) {
+    if (bloc.type === 'division') {
+      if (groupActuel) groupes.push(groupActuel);
+      groupActuel = { titre: bloc.titre, items: [] };
+    } else {
+      if (!groupActuel) groupActuel = { titre: 'Général', items: [] };
+      if (bloc.type === 'echeance') {
+        groupActuel.items.push({ type: 'echeance', date: bloc.date, description: bloc.description, complete: bloc.complete || false });
+      } else if (bloc.type === 'note') {
+        groupActuel.items.push({ type: 'note', titre: bloc.titre, type_note: bloc.type_note || 'texte', contenu: bloc.contenu, nom: bloc.nom || '' });
+      }
+    }
+  }
+  if (groupActuel) groupes.push(groupActuel);
+  return groupes;
+}
 
 // === NAVIGATION ===
 
@@ -93,79 +118,80 @@ function appliquerModalite(id, valeur) {
   el.className = 'modalite ' + (valeur === 'Hybride' ? 'hybride' : 'presence');
 }
 
-// === MENU FLOTTANT ===
+// === RENDU ===
 
-window.ouvrirMenuAjout = function(coursId, btn) {
-  menuCoursId = coursId;
-  const menu = document.getElementById('menu-ajout');
-  menu.classList.remove('hidden');
-  const rect = btn.getBoundingClientRect();
-  // Positionner à droite du bouton, aligné à droite
-  menu.style.top = (rect.bottom + 6) + 'px';
-  menu.style.left = (rect.right - menu.offsetWidth) + 'px';
-};
-
-window.choisirTypeModule = function(type) {
-  document.getElementById('menu-ajout').classList.add('hidden');
-  if (type === 'division') ouvrirModalDivision(menuCoursId, null, null);
-  if (type === 'echeance') ouvrirModalEcheance(menuCoursId, null, null);
-  if (type === 'note') ouvrirModalNote(menuCoursId, null, null);
-};
-
-// === RENDU DES SECTIONS ===
-
-function chargerSections(coursId) {
-  const sections = enaData[coursId].sections || [];
+function chargerGroupes(coursId) {
+  const groupes = enaData[coursId].groupes || [];
   const container = document.getElementById('sections-' + coursId);
   if (!container) return;
   container.innerHTML = '';
-  if (sections.length === 0) {
-    container.innerHTML = `<p class="sections-empty">Aucun contenu pour l'instant — clique sur <strong>+</strong> pour ajouter une division, une échéance ou une note.</p>`;
+  if (groupes.length === 0) {
+    container.innerHTML = `<p class="sections-empty">Aucun groupe — clique sur <strong>+</strong> pour en créer un.</p>`;
     return;
   }
-  sections.forEach((bloc, index) => {
-    if (bloc.type === 'division') container.appendChild(creerBlocDivision(coursId, bloc, index));
-    else if (bloc.type === 'echeance') container.appendChild(creerBlocEcheance(coursId, bloc, index));
-    else if (bloc.type === 'note') container.appendChild(creerBlocNote(coursId, bloc, index));
-  });
+  groupes.forEach((groupe, gIndex) => container.appendChild(creerCarteGroupe(coursId, groupe, gIndex)));
 }
 
-function creerBlocDivision(coursId, bloc, index) {
-  const div = document.createElement('div');
-  div.className = 'bloc-division';
-  div.innerHTML = `
-    <span class="bloc-division-ligne"></span>
-    <span class="bloc-division-titre">${bloc.titre}</span>
-    <span class="bloc-division-ligne"></span>
-    <div class="bloc-actions">
-      <button class="btn-edit" onclick="editerBloc('${coursId}', ${index})">✏️</button>
-      <button class="btn-delete" onclick="supprimerBloc('${coursId}', ${index})">🗑️</button>
+function creerCarteGroupe(coursId, groupe, gIndex) {
+  const card = document.createElement('div');
+  card.className = 'groupe-card';
+
+  const items = groupe.items || [];
+  const nbDone = items.filter(i => i.type === 'echeance' && i.complete).length;
+  const nbEch = items.filter(i => i.type === 'echeance').length;
+
+  const header = document.createElement('div');
+  header.className = 'groupe-header';
+  header.innerHTML = `
+    <span class="groupe-titre">${groupe.titre}</span>
+    ${nbEch > 0 ? `<span class="groupe-progress">${nbDone}/${nbEch}</span>` : ''}
+    <span class="groupe-count">${items.length} élément${items.length !== 1 ? 's' : ''}</span>
+    <div class="groupe-header-actions">
+      <button class="btn-ajouter-dans-groupe" onclick="ouvrirMenuItem('${coursId}', ${gIndex}, this)" title="Ajouter dans ce groupe">+</button>
+      <button class="btn-edit" onclick="modifierGroupe('${coursId}', ${gIndex})">✏️</button>
+      <button class="btn-delete" onclick="supprimerGroupe('${coursId}', ${gIndex})">🗑️</button>
     </div>
   `;
-  return div;
+
+  const itemsDiv = document.createElement('div');
+  itemsDiv.className = 'groupe-items';
+
+  if (items.length === 0) {
+    itemsDiv.innerHTML = `<p class="groupe-empty">Aucun élément — clique sur <strong>+</strong> pour en ajouter.</p>`;
+  } else {
+    items.forEach((item, iIndex) => {
+      if (item.type === 'echeance') itemsDiv.appendChild(creerBlocEcheance(coursId, gIndex, item, iIndex));
+      else if (item.type === 'note') itemsDiv.appendChild(creerBlocNote(coursId, gIndex, item, iIndex));
+    });
+  }
+
+  card.appendChild(header);
+  card.appendChild(itemsDiv);
+  return card;
 }
 
-function creerBlocEcheance(coursId, e, index) {
+function creerBlocEcheance(coursId, gIndex, e, iIndex) {
   const div = document.createElement('div');
   div.className = 'bloc-echeance' + (e.complete ? ' echeance-complete' : '');
-  const dateFormatee = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+  const dateFormatee = e.date
+    ? new Date(e.date + 'T00:00:00').toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' })
+    : '—';
   div.innerHTML = `
-    <input type="checkbox" class="echeance-check" ${e.complete ? 'checked' : ''} onchange="toggleComplete('${coursId}', ${index}, this)">
+    <input type="checkbox" class="echeance-check" ${e.complete ? 'checked' : ''} onchange="toggleComplete('${coursId}', ${gIndex}, ${iIndex}, this)">
     <span class="echeance-date">${dateFormatee}</span>
     <span class="echeance-desc">${e.description}</span>
     <div class="bloc-actions">
-      <button class="btn-edit" onclick="editerBloc('${coursId}', ${index})">✏️</button>
-      <button class="btn-delete" onclick="supprimerBloc('${coursId}', ${index})">🗑️</button>
+      <button class="btn-edit" onclick="editerItem('${coursId}', ${gIndex}, ${iIndex})">✏️</button>
+      <button class="btn-delete" onclick="supprimerItem('${coursId}', ${gIndex}, ${iIndex})">🗑️</button>
     </div>
   `;
   return div;
 }
 
-function creerBlocNote(coursId, note, index) {
+function creerBlocNote(coursId, gIndex, note, iIndex) {
   const div = document.createElement('div');
   div.className = 'note-card note-type-' + (note.type_note || 'texte');
   const icones = { texte: '📝', pdf: '📎', lien: '🔗', reference: '🌐' };
-  const icone = icones[note.type_note] || '📝';
   let contenu = '';
   if (note.type_note === 'texte') {
     contenu = `<p class="note-contenu">${note.contenu.replace(/\n/g, '<br>')}</p>`;
@@ -175,11 +201,11 @@ function creerBlocNote(coursId, note, index) {
   }
   div.innerHTML = `
     <div class="note-card-header">
-      <span class="note-icone">${icone}</span>
+      <span class="note-icone">${icones[note.type_note] || '📝'}</span>
       <span class="note-titre">${note.titre}</span>
       <div class="note-actions">
-        <button class="btn-edit" onclick="editerBloc('${coursId}', ${index})">✏️</button>
-        <button class="btn-delete" onclick="supprimerBloc('${coursId}', ${index})">🗑️</button>
+        <button class="btn-edit" onclick="editerItem('${coursId}', ${gIndex}, ${iIndex})">✏️</button>
+        <button class="btn-delete" onclick="supprimerItem('${coursId}', ${gIndex}, ${iIndex})">🗑️</button>
       </div>
     </div>
     ${contenu}
@@ -187,53 +213,84 @@ function creerBlocNote(coursId, note, index) {
   return div;
 }
 
-// === ACTIONS ===
+// === MENU ITEM DANS UN GROUPE ===
 
-window.editerBloc = function(coursId, index) {
-  const bloc = enaData[coursId].sections[index];
-  if (bloc.type === 'division') ouvrirModalDivision(coursId, bloc, index);
-  else if (bloc.type === 'echeance') ouvrirModalEcheance(coursId, bloc, index);
-  else if (bloc.type === 'note') ouvrirModalNote(coursId, bloc, index);
+window.ouvrirMenuItem = function(coursId, gIndex, btn) {
+  menuCoursId = coursId;
+  menuGroupeIndex = gIndex;
+  const menu = document.getElementById('menu-ajout-item');
+  menu.classList.remove('hidden');
+  const rect = btn.getBoundingClientRect();
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.left = (rect.right - menu.offsetWidth) + 'px';
 };
 
-window.supprimerBloc = function(coursId, index) {
-  if (!confirm('Supprimer ce bloc ?')) return;
-  enaData[coursId].sections.splice(index, 1);
-  setDoc(enaDocRef, enaData);
+window.choisirTypeItem = function(type) {
+  document.getElementById('menu-ajout-item').classList.add('hidden');
+  if (type === 'echeance') ouvrirModalEcheance(menuCoursId, menuGroupeIndex, null, null);
+  if (type === 'note') ouvrirModalNote(menuCoursId, menuGroupeIndex, null, null);
 };
 
-window.toggleComplete = function(coursId, index, checkbox) {
-  enaData[coursId].sections[index].complete = checkbox.checked;
-  setDoc(enaDocRef, enaData);
-};
+// === MODAL GROUPE ===
 
-// === MODAL DIVISION ===
+window.ouvrirModalGroupe = function(coursId, groupe, gIndex) {
+  document.getElementById('modal-groupe-titre-label').textContent = groupe ? 'Renommer le groupe' : 'Nouveau groupe';
+  document.getElementById('modal-groupe-titre').value = groupe ? groupe.titre : '';
+  document.getElementById('modal-groupe').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-groupe-titre').focus(), 50);
 
-function ouvrirModalDivision(coursId, bloc, index) {
-  document.getElementById('modal-division-titre-label').textContent = bloc ? 'Modifier la division' : 'Nouvelle division';
-  document.getElementById('modal-division-titre').value = bloc ? bloc.titre : '';
-  document.getElementById('modal-division').classList.remove('hidden');
-  document.getElementById('modal-division-titre').focus();
-
-  document.getElementById('modal-division-save').onclick = function() {
-    const titre = document.getElementById('modal-division-titre').value.trim();
+  document.getElementById('modal-groupe-save').onclick = function() {
+    const titre = document.getElementById('modal-groupe-titre').value.trim();
     if (!titre) return;
-    const nouvSection = { type: 'division', titre };
-    if (index !== null) enaData[coursId].sections[index] = nouvSection;
-    else enaData[coursId].sections.push(nouvSection);
+    if (!enaData[coursId].groupes) enaData[coursId].groupes = [];
+    if (gIndex !== null) {
+      enaData[coursId].groupes[gIndex].titre = titre;
+    } else {
+      enaData[coursId].groupes.push({ titre, items: [] });
+    }
     setDoc(enaDocRef, enaData);
-    window.fermerModalDivision();
+    window.fermerModalGroupe();
   };
-}
+};
 
-window.fermerModalDivision = function() {
-  document.getElementById('modal-division').classList.add('hidden');
+window.fermerModalGroupe = function() {
+  document.getElementById('modal-groupe').classList.add('hidden');
+};
+
+window.modifierGroupe = function(coursId, gIndex) {
+  ouvrirModalGroupe(coursId, enaData[coursId].groupes[gIndex], gIndex);
+};
+
+window.supprimerGroupe = function(coursId, gIndex) {
+  const g = enaData[coursId].groupes[gIndex];
+  if (!confirm(`Supprimer le groupe "${g.titre}" et tout son contenu ?`)) return;
+  enaData[coursId].groupes.splice(gIndex, 1);
+  setDoc(enaDocRef, enaData);
+};
+
+// === ACTIONS ITEMS ===
+
+window.editerItem = function(coursId, gIndex, iIndex) {
+  const item = enaData[coursId].groupes[gIndex].items[iIndex];
+  if (item.type === 'echeance') ouvrirModalEcheance(coursId, gIndex, item, iIndex);
+  else if (item.type === 'note') ouvrirModalNote(coursId, gIndex, item, iIndex);
+};
+
+window.supprimerItem = function(coursId, gIndex, iIndex) {
+  if (!confirm('Supprimer cet élément ?')) return;
+  enaData[coursId].groupes[gIndex].items.splice(iIndex, 1);
+  setDoc(enaDocRef, enaData);
+};
+
+window.toggleComplete = function(coursId, gIndex, iIndex, checkbox) {
+  enaData[coursId].groupes[gIndex].items[iIndex].complete = checkbox.checked;
+  setDoc(enaDocRef, enaData);
 };
 
 // === MODAL ÉCHÉANCE ===
 
-function ouvrirModalEcheance(coursId, echeance, index) {
-  document.getElementById('modal-titre').textContent = echeance ? 'Modifier l\'échéance' : 'Nouvelle échéance';
+function ouvrirModalEcheance(coursId, gIndex, echeance, iIndex) {
+  document.getElementById('modal-titre').textContent = echeance ? "Modifier l'échéance" : 'Nouvelle échéance';
   document.getElementById('modal-date').value = echeance ? echeance.date : '';
   document.getElementById('modal-desc').value = echeance ? echeance.description : '';
   document.getElementById('modal-echeance').classList.remove('hidden');
@@ -242,9 +299,9 @@ function ouvrirModalEcheance(coursId, echeance, index) {
     const date = document.getElementById('modal-date').value.trim();
     const description = document.getElementById('modal-desc').value.trim();
     if (!date || !description) return;
-    const nouvSection = { type: 'echeance', date, description, complete: echeance ? echeance.complete : false };
-    if (index !== null) enaData[coursId].sections[index] = nouvSection;
-    else enaData[coursId].sections.push(nouvSection);
+    const item = { type: 'echeance', date, description, complete: echeance ? echeance.complete : false };
+    if (iIndex !== null) enaData[coursId].groupes[gIndex].items[iIndex] = item;
+    else enaData[coursId].groupes[gIndex].items.push(item);
     setDoc(enaDocRef, enaData);
     window.fermerModalEcheance();
   };
@@ -256,7 +313,7 @@ window.fermerModalEcheance = function() {
 
 // === MODAL NOTE ===
 
-function ouvrirModalNote(coursId, note, index) {
+function ouvrirModalNote(coursId, gIndex, note, iIndex) {
   document.getElementById('modal-note-titre-label').textContent = note ? 'Modifier la note' : 'Nouvelle note';
   document.getElementById('modal-note-titre').value = note ? note.titre : '';
   document.getElementById('modal-note-type').value = note ? (note.type_note || 'texte') : 'texte';
@@ -271,9 +328,9 @@ function ouvrirModalNote(coursId, note, index) {
     const contenu = document.getElementById('modal-note-contenu').value.trim();
     const nom = document.getElementById('modal-note-nom').value.trim();
     if (!titre || !contenu) return;
-    const nouvSection = { type: 'note', titre, type_note, contenu, nom };
-    if (index !== null) enaData[coursId].sections[index] = nouvSection;
-    else enaData[coursId].sections.push(nouvSection);
+    const item = { type: 'note', titre, type_note, contenu, nom };
+    if (iIndex !== null) enaData[coursId].groupes[gIndex].items[iIndex] = item;
+    else enaData[coursId].groupes[gIndex].items.push(item);
     setDoc(enaDocRef, enaData);
     window.fermerModalNote();
   };
