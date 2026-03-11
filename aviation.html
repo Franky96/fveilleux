@@ -61,19 +61,33 @@
         <div class="cours-header">
           <h1 class="cours-titre">Notes générales</h1>
           <span class="cours-info">Notes, liens et références d'aviation</span>
+          <button class="btn-ajouter-module" onclick="ouvrirModalGroupe(this)" title="Nouveau groupe">+</button>
         </div>
-        <div class="content-block">
-          <div class="calendrier-header">
-            <h3>Notes & documents</h3>
-            <button class="btn-ajouter" onclick="ajouterNote('aviation-autres')">+ Ajouter</button>
-          </div>
-          <div class="notes-container" id="notes-container-aviation-autres"></div>
-        </div>
+        <div class="sections-container" id="sections-aviation-autres"></div>
       </div>
 
     </main>
   </div>
 
+  <!-- Menu flottant : ajouter une note dans un groupe -->
+  <div class="menu-ajout hidden" id="menu-ajout-item">
+    <button class="menu-ajout-item" onclick="choisirTypeItem('note')"><span class="menu-ajout-icone">📚</span> Note</button>
+  </div>
+
+  <!-- Modal Groupe -->
+  <div class="modal-overlay hidden" id="modal-groupe">
+    <div class="modal-box">
+      <h3 id="modal-groupe-titre-label">Nouveau groupe</h3>
+      <label>Nom du groupe</label>
+      <input type="text" id="modal-groupe-titre" placeholder="Ex: Météo, Navigation, Réglementation…" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalGroupe()">Annuler</button>
+        <button class="btn-save" id="modal-groupe-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Note -->
   <div class="modal-overlay hidden" id="modal-note">
     <div class="modal-box">
       <h3 id="modal-note-titre-label">Nouvelle note</h3>

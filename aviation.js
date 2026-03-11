@@ -7,7 +7,8 @@ if (!sessionStorage.getItem('loggedIn') || !permissions.includes('aviation')) {
 }
 
 const aviationDocRef = doc(db, "donnees", "aviation_global");
-let aviationData = { 'aviation-autres': { notes: [] } };
+let aviationData = { 'aviation-autres': { groupes: [] } };
+let menuGroupeIndex = null;
 
 document.addEventListener('DOMContentLoaded', function() {
   // NOUVEAU : Afficher le bouton UNIQUEMENT si l'utilisateur a la permission
@@ -18,12 +19,28 @@ document.addEventListener('DOMContentLoaded', function() {
   
   onSnapshot(aviationDocRef, (docSnap) => {
     if (docSnap.exists()) {
-      aviationData = { ...aviationData, ...docSnap.data() };
+      const data = docSnap.data();
+      // Migration : ancien format notes[]
+      if (data['aviation-autres'] && !data['aviation-autres'].groupes) {
+        const notes = data['aviation-autres'].notes || [];
+        data['aviation-autres'].groupes = notes.length > 0
+          ? [{ titre: 'Notes', items: notes.map(n => ({ type: 'note', titre: n.titre, type_note: n.type || 'texte', contenu: n.contenu, nom: n.nom || '' })) }]
+          : [];
+      }
+      aviationData = { ...aviationData, ...data };
     } else {
       setDoc(aviationDocRef, aviationData);
     }
-    chargerNotes('aviation-autres');
+    chargerGroupes();
   });
+
+  // Fermer le menu en cliquant ailleurs
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.btn-ajouter-dans-groupe') && !e.target.closest('#menu-ajout-item')) {
+      document.getElementById('menu-ajout-item').classList.add('hidden');
+    }
+  });
+
   window.afficherSection('traducteur-metar', document.querySelector('.sidebar-link'));
 });
 
@@ -167,71 +184,162 @@ function afficherResultat(raw, result, alerteDegivrage) {
   document.getElementById('metar-grid').innerHTML = html;
 }
 
-// ===== NOTES CONNECTÉES AU CLOUD =====
-function chargerNotes(sectionId) {
-  const notes = aviationData[sectionId]?.notes || [];
-  const container = document.getElementById('notes-container-' + sectionId);
+// ===== GROUPES DE NOTES =====
+
+function chargerGroupes() {
+  const groupes = aviationData['aviation-autres']?.groupes || [];
+  const container = document.getElementById('sections-aviation-autres');
   if (!container) return;
   container.innerHTML = '';
-  if (notes.length === 0) {
-    container.innerHTML = `<p class="notes-empty">Aucune note pour l'instant.</p>`;
+  if (groupes.length === 0) {
+    container.innerHTML = `<p class="sections-empty">Aucun groupe — clique sur <strong>+</strong> pour en créer un.</p>`;
     return;
   }
-  notes.forEach((note, index) => container.appendChild(creerCarteNote(sectionId, note, index)));
+  groupes.forEach((groupe, gIndex) => container.appendChild(creerCarteGroupe(groupe, gIndex)));
 }
 
-function creerCarteNote(sectionId, note, index) {
+function creerCarteGroupe(groupe, gIndex) {
+  const card = document.createElement('div');
+  card.className = 'groupe-card';
+  const items = groupe.items || [];
+
+  const header = document.createElement('div');
+  header.className = 'groupe-header';
+  header.innerHTML = `
+    <span class="groupe-titre">${groupe.titre}</span>
+    <span class="groupe-count">${items.length} élément${items.length !== 1 ? 's' : ''}</span>
+    <div class="groupe-header-actions">
+      <button class="btn-ajouter-dans-groupe" onclick="ouvrirMenuItem(${gIndex}, this)" title="Ajouter dans ce groupe">+</button>
+      <button class="btn-edit" onclick="modifierGroupe(${gIndex})">✏️</button>
+      <button class="btn-delete" onclick="supprimerGroupe(${gIndex})">🗑️</button>
+    </div>
+  `;
+
+  const itemsDiv = document.createElement('div');
+  itemsDiv.className = 'groupe-items';
+  if (items.length === 0) {
+    itemsDiv.innerHTML = `<p class="groupe-empty">Aucun élément — clique sur <strong>+</strong> pour en ajouter.</p>`;
+  } else {
+    items.forEach((item, iIndex) => itemsDiv.appendChild(creerBlocNote(gIndex, item, iIndex)));
+  }
+
+  card.appendChild(header);
+  card.appendChild(itemsDiv);
+  return card;
+}
+
+function creerBlocNote(gIndex, note, iIndex) {
   const div = document.createElement('div');
-  div.className = 'note-card note-type-' + note.type;
-  let icone = note.type === 'texte' ? '📝' : note.type === 'pdf' ? '📎' : note.type === 'lien' ? '🔗' : '🌐';
+  div.className = 'note-card note-type-' + (note.type_note || 'texte');
+  const icones = { texte: '📝', pdf: '📎', lien: '🔗', reference: '🌐' };
   let contenu = '';
-  if (note.type === 'texte') contenu = `<p class="note-contenu">${note.contenu.replace(/\n/g, '<br>')}</p>`;
-  else {
+  if (note.type_note === 'texte') {
+    contenu = `<p class="note-contenu">${note.contenu.replace(/\n/g, '<br>')}</p>`;
+  } else {
     const url = note.contenu.startsWith('http') ? note.contenu : 'https://' + note.contenu;
-    contenu = `<a href="${url}" target="_blank" class="note-lien">${note.type === 'pdf' ? '📄 ' : ''}${note.nom || note.contenu}</a>`;
+    contenu = `<a href="${url}" target="_blank" class="note-lien">${note.type_note === 'pdf' ? '📄 ' : ''}${note.nom || note.contenu}</a>`;
   }
   div.innerHTML = `
     <div class="note-card-header">
-      <span class="note-icone">${icone}</span><span class="note-titre">${note.titre}</span>
+      <span class="note-icone">${icones[note.type_note] || '📝'}</span>
+      <span class="note-titre">${note.titre}</span>
       <div class="note-actions">
-        <button class="btn-edit" onclick="editerNote('${sectionId}', ${index})">✏️</button>
-        <button class="btn-delete" onclick="supprimerNote('${sectionId}', ${index})">🗑️</button>
+        <button class="btn-edit" onclick="editerItem(${gIndex}, ${iIndex})">✏️</button>
+        <button class="btn-delete" onclick="supprimerItem(${gIndex}, ${iIndex})">🗑️</button>
       </div>
     </div>${contenu}`;
   return div;
 }
 
-window.ajouterNote = function(sectionId) { ouvrirModalNote(sectionId, null, null); };
-window.editerNote = function(sectionId, index) { ouvrirModalNote(sectionId, aviationData[sectionId].notes[index], index); };
-window.supprimerNote = function(sectionId, index) {
-  if (!confirm('Supprimer cette note ?')) return;
-  aviationData[sectionId].notes.splice(index, 1);
-  setDoc(aviationDocRef, aviationData); // Envoi au cloud
+// === MENU ITEM ===
+
+window.ouvrirMenuItem = function(gIndex, btn) {
+  menuGroupeIndex = gIndex;
+  const menu = document.getElementById('menu-ajout-item');
+  menu.classList.remove('hidden');
+  const rect = btn.getBoundingClientRect();
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.left = (rect.right - menu.offsetWidth) + 'px';
 };
 
-function ouvrirModalNote(sectionId, note, index) {
-  const modal = document.getElementById('modal-note');
+window.choisirTypeItem = function(type) {
+  document.getElementById('menu-ajout-item').classList.add('hidden');
+  if (type === 'note') ouvrirModalNote(menuGroupeIndex, null, null);
+};
+
+// === MODAL GROUPE ===
+
+window.ouvrirModalGroupe = function(btnOrIndex, groupe, gIndex) {
+  // Appelé depuis le + du header (btn) ou depuis modifierGroupe (index)
+  document.getElementById('modal-groupe-titre-label').textContent = groupe ? 'Renommer le groupe' : 'Nouveau groupe';
+  document.getElementById('modal-groupe-titre').value = groupe ? groupe.titre : '';
+  document.getElementById('modal-groupe').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-groupe-titre').focus(), 50);
+
+  document.getElementById('modal-groupe-save').onclick = function() {
+    const titre = document.getElementById('modal-groupe-titre').value.trim();
+    if (!titre) return;
+    if (!aviationData['aviation-autres'].groupes) aviationData['aviation-autres'].groupes = [];
+    if (gIndex !== undefined && gIndex !== null) {
+      aviationData['aviation-autres'].groupes[gIndex].titre = titre;
+    } else {
+      aviationData['aviation-autres'].groupes.push({ titre, items: [] });
+    }
+    setDoc(aviationDocRef, aviationData);
+    window.fermerModalGroupe();
+  };
+};
+
+window.fermerModalGroupe = function() {
+  document.getElementById('modal-groupe').classList.add('hidden');
+};
+
+window.modifierGroupe = function(gIndex) {
+  const groupe = aviationData['aviation-autres'].groupes[gIndex];
+  window.ouvrirModalGroupe(null, groupe, gIndex);
+};
+
+window.supprimerGroupe = function(gIndex) {
+  const g = aviationData['aviation-autres'].groupes[gIndex];
+  if (!confirm(`Supprimer le groupe "${g.titre}" et tout son contenu ?`)) return;
+  aviationData['aviation-autres'].groupes.splice(gIndex, 1);
+  setDoc(aviationDocRef, aviationData);
+};
+
+// === ACTIONS ITEMS ===
+
+window.editerItem = function(gIndex, iIndex) {
+  const item = aviationData['aviation-autres'].groupes[gIndex].items[iIndex];
+  ouvrirModalNote(gIndex, item, iIndex);
+};
+
+window.supprimerItem = function(gIndex, iIndex) {
+  if (!confirm('Supprimer cette note ?')) return;
+  aviationData['aviation-autres'].groupes[gIndex].items.splice(iIndex, 1);
+  setDoc(aviationDocRef, aviationData);
+};
+
+// === MODAL NOTE ===
+
+function ouvrirModalNote(gIndex, note, iIndex) {
   document.getElementById('modal-note-titre-label').textContent = note ? 'Modifier la note' : 'Nouvelle note';
   document.getElementById('modal-note-titre').value = note ? note.titre : '';
-  document.getElementById('modal-note-type').value = note ? note.type : 'texte';
+  document.getElementById('modal-note-type').value = note ? (note.type_note || 'texte') : 'texte';
   document.getElementById('modal-note-contenu').value = note ? note.contenu : '';
   document.getElementById('modal-note-nom').value = note ? (note.nom || '') : '';
   window.updateModalNoteType();
-  modal.classList.remove('hidden');
+  document.getElementById('modal-note').classList.remove('hidden');
 
   document.getElementById('modal-note-save').onclick = function() {
     const titre = document.getElementById('modal-note-titre').value.trim();
-    const type = document.getElementById('modal-note-type').value;
+    const type_note = document.getElementById('modal-note-type').value;
     const contenu = document.getElementById('modal-note-contenu').value.trim();
     const nom = document.getElementById('modal-note-nom').value.trim();
     if (!titre || !contenu) return;
-
-    if (!aviationData[sectionId]) aviationData[sectionId] = { notes: [] };
-    
-    if (index !== null) aviationData[sectionId].notes[index] = { titre, type, contenu, nom };
-    else aviationData[sectionId].notes.push({ titre, type, contenu, nom });
-
-    setDoc(aviationDocRef, aviationData); // Envoi au cloud
+    const item = { type: 'note', titre, type_note, contenu, nom };
+    if (iIndex !== null) aviationData['aviation-autres'].groupes[gIndex].items[iIndex] = item;
+    else aviationData['aviation-autres'].groupes[gIndex].items.push(item);
+    setDoc(aviationDocRef, aviationData);
     window.fermerModalNote();
   };
 }
@@ -242,9 +350,16 @@ window.updateModalNoteType = function() {
   const contenu = document.getElementById('modal-note-contenu');
   const nomGroup = document.getElementById('modal-note-nom-group');
   if (type === 'texte') {
-    contenuLabel.textContent = 'Contenu'; nomGroup.classList.add('hidden');
+    contenuLabel.textContent = 'Contenu';
+    contenu.placeholder = 'Écris tes notes ici...';
+    contenu.rows = 6;
+    nomGroup.classList.add('hidden');
   } else {
-    contenuLabel.textContent = 'URL'; nomGroup.classList.remove('hidden');
+    contenuLabel.textContent = 'URL';
+    contenu.placeholder = 'Ex: https://...';
+    contenu.rows = 2;
+    nomGroup.classList.remove('hidden');
   }
 };
+
 window.fermerModalNote = function() { document.getElementById('modal-note').classList.add('hidden'); };
