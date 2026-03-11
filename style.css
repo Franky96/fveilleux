@@ -819,6 +819,7 @@ header .subtitle {
   width: 1rem;
   height: 1rem;
   padding: 0;
+  margin: 0;
   cursor: pointer;
   accent-color: #3a7a3a;
   flex-shrink: 0;
