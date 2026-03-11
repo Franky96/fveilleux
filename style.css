@@ -818,8 +818,11 @@ header .subtitle {
 .echeance-check {
   width: 1rem;
   height: 1rem;
+  padding: 0;
   cursor: pointer;
   accent-color: #3a7a3a;
+  flex-shrink: 0;
+  align-self: center;
 }
 
 .echeance-complete td {
