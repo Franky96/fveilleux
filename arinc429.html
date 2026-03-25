@@ -198,127 +198,6 @@
       border-radius: 3px;
     }
 
-    /* ── Fields grid ── */
-    .fields-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .field-card {
-      background: #0f1a0f;
-      border: 1px solid #2a3a2a;
-      border-radius: 10px;
-      padding: 1rem 1.1rem;
-    }
-    .field-name {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07rem;
-      color: #a89f94;
-      margin-bottom: 0.4rem;
-    }
-    .field-value {
-      font-size: 1.25rem;
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-    }
-    .field-sub {
-      font-size: 0.72rem;
-      color: #7a7a6a;
-      margin-top: 0.25rem;
-    }
-    .field-label  .field-value { color: #f59e0b; }
-    .field-sdi    .field-value { color: #60b8c8; }
-    .field-data   .field-value { color: #80cc80; }
-    .field-ssm    .field-value { color: #c084fc; }
-    .field-parity .field-value { color: #ff6b6b; }
-
-    /* ── Interp tabs ── */
-    .interp-tabs {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .interp-tab {
-      padding: 0.35rem 1.1rem;
-      border-radius: 6px;
-      border: 1px solid #2a3a2a;
-      background: #0a0f0a;
-      color: #a89f94;
-      cursor: pointer;
-      font-size: 0.88rem;
-      width: auto;
-      margin-bottom: 0;
-      transition: all 0.2s;
-    }
-    .interp-tab.active { background: #80cc80; color: #0a0f0a; border-color: #80cc80; font-weight: bold; }
-    .interp-tab:hover:not(.active) { border-color: #80cc80; color: #80cc80; }
-
-    .interp-content { display: none; }
-    .interp-content.active { display: block; }
-
-    .interp-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: 0.55rem 0;
-      border-bottom: 1px solid #162216;
-      gap: 1rem;
-    }
-    .interp-row:last-child { border-bottom: none; }
-    .interp-key { color: #a89f94; font-size: 0.88rem; flex-shrink: 0; }
-    .interp-val {
-      font-family: 'Courier New', monospace;
-      color: #80cc80;
-      font-size: 0.95rem;
-      text-align: right;
-      word-break: break-all;
-    }
-
-    /* ── Ref table ── */
-    #ref-search {
-      width: 100%;
-      max-width: 360px;
-      font-size: 0.9rem;
-      padding: 0.5rem 0.9rem;
-      margin-bottom: 1rem;
-    }
-    .ref-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.87rem;
-    }
-    .ref-table th {
-      text-align: left;
-      padding: 0.45rem 0.75rem;
-      color: #a89f94;
-      border-bottom: 1px solid #2a3a2a;
-      font-weight: 500;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06rem;
-    }
-    .ref-table td {
-      padding: 0.45rem 0.75rem;
-      border-bottom: 1px solid #111a11;
-    }
-    .ref-table tr:hover td { background: #162216; }
-    .ref-table tr.highlighted td { background: rgba(128,204,128,0.12); }
-
-    .label-octal { font-family: 'Courier New', monospace; color: #f59e0b; font-weight: bold; }
-    .label-hex   { font-family: 'Courier New', monospace; color: #60b8c8; font-size: 0.85rem; }
-    .label-enc {
-      display: inline-block;
-      padding: 0.1rem 0.45rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: bold;
-    }
-    .enc-bnr { background: rgba(128,204,128,0.2); color: #80cc80; }
-    .enc-bcd { background: rgba(96,184,200,0.2);  color: #60b8c8; }
-    .enc-dis { background: rgba(192,132,252,0.2); color: #c084fc; }
-
     .placeholder-msg {
       color: #556655;
       font-size: 0.9rem;
@@ -327,9 +206,151 @@
       text-align: center;
     }
 
-    /* parity error color override */
-    .parity-err { color: #ff6b6b !important; }
-    .parity-ok  { color: #80cc80 !important; }
+    /* ── Label banner ── */
+    .label-banner {
+      background: #0b1520;
+      border: 1px solid #1a3a5a;
+      border-left: 4px solid #f59e0b;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .label-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .label-oct-box {
+      background: #f59e0b;
+      color: #0a0f0a;
+      font-family: 'Courier New', monospace;
+      font-size: 1.3rem;
+      font-weight: bold;
+      padding: 0.4rem 0.7rem;
+      border-radius: 8px;
+      min-width: 3rem;
+      text-align: center;
+    }
+    .label-banner-name {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: #f0ede6;
+    }
+    .label-banner-sub {
+      font-size: 0.78rem;
+      color: #556680;
+      margin-top: 0.2rem;
+    }
+    .label-banner-value {
+      font-family: 'Courier New', monospace;
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #60b8c8;
+      white-space: nowrap;
+    }
+
+    /* ── 3-panel detail grid ── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-panel {
+      background: #0b1520;
+      border: 1px solid #1a2a3a;
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+    }
+    .detail-panel-title {
+      font-size: 0.78rem;
+      font-weight: bold;
+      letter-spacing: 0.08rem;
+      text-transform: uppercase;
+      color: #a89f94;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid #1a2a3a;
+      padding-bottom: 0.6rem;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-red   { background: #ff6b6b; box-shadow: 0 0 5px #ff6b6b88; }
+    .dot-green { background: #80cc80; box-shadow: 0 0 5px #80cc8088; }
+    .dot-blue  { background: #60b8c8; box-shadow: 0 0 5px #60b8c888; }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #0f1a28;
+      gap: 1rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key {
+      color: #6a7a8a;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+    }
+    .detail-val {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #c8c4bc;
+      text-align: right;
+      word-break: break-all;
+    }
+    .detail-val.ok    { color: #80cc80; font-weight: bold; }
+    .detail-val.err   { color: #ff6b6b; font-weight: bold; }
+    .detail-val.accent { color: #f59e0b; }
+    .detail-val.dim   { color: #556680; font-size: 0.82rem; font-family: inherit; }
+
+    /* ── Octal digit boxes (label panel) ── */
+    .label-octal-display {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin: 0.8rem 0 1rem;
+    }
+    .octal-digit-box {
+      border: 2px solid #60b8c8;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      min-width: 60px;
+    }
+    .octal-digit-box.mid  { border-color: #80cc80; }
+    .octal-digit-box.lsb  { border-color: #f59e0b; }
+    .octal-digit {
+      display: block;
+      font-family: 'Courier New', monospace;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #60b8c8;
+    }
+    .octal-digit-box.mid  .octal-digit { color: #80cc80; }
+    .octal-digit-box.lsb  .octal-digit { color: #f59e0b; }
+    .octal-digit-sub {
+      font-size: 0.65rem;
+      color: #556680;
+      margin-top: 0.2rem;
+    }
+
+    /* parity badges */
+    .parity-ok  { color: #80cc80 !important; font-weight: bold; }
+    .parity-err { color: #ff6b6b !important; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -382,113 +403,110 @@
       </div>
     </div>
 
-    <!-- ── Fields ── -->
-    <div class="fields-grid" id="decoded-fields" style="display:none;">
-      <div class="field-card field-parity">
-        <div class="field-name">Parité (bit 32)</div>
-        <div class="field-value" id="field-parity-val">—</div>
-        <div class="field-sub" id="field-parity-sub">—</div>
+    <!-- ── Label banner ── -->
+    <div class="label-banner" id="label-banner" style="display:none;">
+      <div class="label-banner-left">
+        <div class="label-oct-box" id="banner-oct">000</div>
+        <div>
+          <div class="label-banner-name" id="banner-name">—</div>
+          <div class="label-banner-sub" id="banner-sub">—</div>
+        </div>
       </div>
-      <div class="field-card field-ssm">
-        <div class="field-name">SSM (bits 30-31)</div>
-        <div class="field-value" id="field-ssm-val">—</div>
-        <div class="field-sub" id="field-ssm-sub">—</div>
-      </div>
-      <div class="field-card field-data">
-        <div class="field-name">Données (bits 11-29)</div>
-        <div class="field-value" id="field-data-val">—</div>
-        <div class="field-sub" id="field-data-sub">19 bits</div>
-      </div>
-      <div class="field-card field-sdi">
-        <div class="field-name">SDI (bits 9-10)</div>
-        <div class="field-value" id="field-sdi-val">—</div>
-        <div class="field-sub" id="field-sdi-sub">—</div>
-      </div>
-      <div class="field-card field-label">
-        <div class="field-name">Étiquette (Label)</div>
-        <div class="field-value" id="field-label-val">—</div>
-        <div class="field-sub" id="field-label-sub">octal</div>
-      </div>
+      <div class="label-banner-value" id="banner-value">—</div>
     </div>
 
-    <!-- ── Interpretation ── -->
-    <div class="panel" id="interp-section" style="display:none;">
-      <h2>Interprétation des données (bits 11-29)</h2>
-      <div class="interp-tabs">
-        <button class="interp-tab active" onclick="switchTab('bnr')">BNR</button>
-        <button class="interp-tab" onclick="switchTab('bcd')">BCD</button>
-        <button class="interp-tab" onclick="switchTab('dis')">Discret</button>
-      </div>
+    <!-- ── 3-panel detail ── -->
+    <div class="detail-grid" id="detail-grid" style="display:none;">
 
-      <!-- BNR -->
-      <div class="interp-content active" id="tab-bnr">
-        <div class="interp-row">
-          <span class="interp-key">Bits (binaire)</span>
-          <span class="interp-val" id="bnr-bits">—</span>
+      <!-- STATUS / CONTROLE -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-red"></span> STATUS / CONTROLE</div>
+        <div class="detail-row">
+          <span class="detail-key">Parity (Bit 32)</span>
+          <span class="detail-val" id="d-parity">—</span>
         </div>
-        <div class="interp-row">
-          <span class="interp-key">Valeur brute (unsigned)</span>
-          <span class="interp-val" id="bnr-unsigned">—</span>
+        <div class="detail-row">
+          <span class="detail-key">SSM (Bits 30-31)</span>
+          <span class="detail-val" id="d-ssm">—</span>
         </div>
-        <div class="interp-row">
-          <span class="interp-key">Valeur signée (complément à 2, 19 bits)</span>
-          <span class="interp-val" id="bnr-signed">—</span>
+        <div class="detail-row">
+          <span class="detail-key">Signification SSM</span>
+          <span class="detail-val dim" id="d-ssm-sig">—</span>
         </div>
-        <div class="interp-row">
-          <span class="interp-key">Valeur résolue (LSB = 2⁻¹⁰, exemple)</span>
-          <span class="interp-val" id="bnr-resolved">—</span>
+        <div class="detail-row">
+          <span class="detail-key">SDI (Bits 9-10)</span>
+          <span class="detail-val" id="d-sdi">—</span>
         </div>
-      </div>
-
-      <!-- BCD -->
-      <div class="interp-content" id="tab-bcd">
-        <div class="interp-row">
-          <span class="interp-key">Bits (binaire)</span>
-          <span class="interp-val" id="bcd-bits">—</span>
-        </div>
-        <div class="interp-row">
-          <span class="interp-key">Groupes BCD (4 bits chacun)</span>
-          <span class="interp-val" id="bcd-groups">—</span>
-        </div>
-        <div class="interp-row">
-          <span class="interp-key">Valeur décimale reconstituée</span>
-          <span class="interp-val" id="bcd-value">—</span>
+        <div class="detail-row">
+          <span class="detail-key">Source / Dest</span>
+          <span class="detail-val dim" id="d-sdi-desc">—</span>
         </div>
       </div>
 
-      <!-- Discrete -->
-      <div class="interp-content" id="tab-dis">
-        <div class="interp-row">
-          <span class="interp-key">Bits (binaire)</span>
-          <span class="interp-val" id="dis-bits">—</span>
+      <!-- DATA BITS 11-29 -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-green"></span> DATA (BITS 11-29)</div>
+        <div class="detail-row">
+          <span class="detail-key">Binaire (19 bits)</span>
+          <span class="detail-val" id="d-data-bin">—</span>
         </div>
-        <div class="interp-row">
-          <span class="interp-key">Valeur hexadécimale</span>
-          <span class="interp-val" id="dis-hex">—</span>
+        <div class="detail-row">
+          <span class="detail-key">Décimal</span>
+          <span class="detail-val" id="d-data-dec">—</span>
         </div>
-        <div class="interp-row">
-          <span class="interp-key">Valeur décimale</span>
-          <span class="interp-val" id="dis-dec">—</span>
+        <div class="detail-row">
+          <span class="detail-key">Hexadécimal</span>
+          <span class="detail-val" id="d-data-hex">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Décodage</span>
+          <span class="detail-val accent" id="d-data-decoded">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Format</span>
+          <span class="detail-val dim" id="d-data-format">—</span>
         </div>
       </div>
-    </div>
 
-    <!-- ── Label reference ── -->
-    <div class="panel">
-      <h2>Table de référence des étiquettes</h2>
-      <input type="text" id="ref-search" placeholder="Rechercher label, paramètre…" oninput="filtrerLabels()" />
-      <table class="ref-table">
-        <thead>
-          <tr>
-            <th>Label (octal)</th>
-            <th>Label (hex)</th>
-            <th>Encodage</th>
-            <th>Paramètre</th>
-            <th>Unité</th>
-          </tr>
-        </thead>
-        <tbody id="ref-tbody"></tbody>
-      </table>
+      <!-- LABEL BITS 1-8 -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-blue"></span> LABEL (BITS 1-8)</div>
+        <div class="label-octal-display">
+          <div class="octal-digit-box">
+            <span class="octal-digit" id="d-label-msb">0</span>
+            <div class="octal-digit-sub">MSB</div>
+          </div>
+          <div class="octal-digit-box mid">
+            <span class="octal-digit" id="d-label-med">0</span>
+            <div class="octal-digit-sub">MED</div>
+          </div>
+          <div class="octal-digit-box lsb">
+            <span class="octal-digit" id="d-label-lsb">0</span>
+            <div class="octal-digit-sub">LSB</div>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Octal</span>
+          <span class="detail-val" id="d-label-oct">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Décimal</span>
+          <span class="detail-val" id="d-label-dec">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Hex</span>
+          <span class="detail-val" id="d-label-hex">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Binaire</span>
+          <span class="detail-val" id="d-label-bin">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Nom</span>
+          <span class="detail-val accent" id="d-label-name">—</span>
+        </div>
+      </div>
+
     </div>
 
   </div>
