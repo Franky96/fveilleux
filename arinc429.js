@@ -258,11 +258,46 @@ LABELS.forEach(l => {
 //        bits 18-15 = d1 (4 bits, 0-9)
 //        bits 14-11 = d0 (4 bits, 0-9)   [LSB digit]
 //      value = (d4×10000 + d3×1000 + d2×100 + d1×10 + d0) / 10^decimals
+//
+// Special flags:
+//   maskD0    – force d0=0 (bits 14-11 contain discrete data, not BCD)
+//   bcdDigits – use only top N digits (3 = d4+d3+d2 only, force d1=d0=0)
+//   halfBit   – ARINC bit number whose value × halfStep is added to result
+//   halfStep  – value added per halfBit (e.g. 0.5 kHz for ADF, 0.05 MHz for DME)
+//   squawk    – decode as 4-digit octal transponder squawk code (031)
+
+// SSM descriptions by label type (BIT31, BIT30 → index 0-3)
+const SSM_TABLES = {
+  radio: ['Normal (NML)',          'No Computed Data (NCD)', 'Functional Test (FT)', 'Undefined'],
+  bcd:   ['Normal + (N,E,R,TO,↑)', 'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal − (S,W,L,FROM,↓)'],
+  bnr:   ['Failure Warning (FW)',  'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal (NML)'],
+  dis:   ['Normal (NML)',          'No Computed Data (NCD)', 'Functional Test (FT)', 'Failure Warning (FW)'],
+  maint: ['Failure Warning (FW)', 'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal (NML)'],
+};
+
+// SDI descriptions by label type (bits 10-9 → index 0-3)
+const SDI_TABLES = {
+  radio: ['TOUS',        'Système #1', 'Système #2', 'Système #3'],
+  other: ['Non utilisé', 'Système #1', 'Système #2', 'Système #3'],
+};
+
+function getLabelSsmType(labelInfo) {
+  if (!labelInfo) return 'bcd';
+  const oct = parseInt(labelInfo.oct, 8);
+  if (oct >= 0o030 && oct <= 0o037) return 'radio';
+  if ((oct >= 0o155 && oct <= 0o161) || (oct >= 0o350 && oct <= 0o354)) return 'maint';
+  if (oct >= 0o270 && oct <= 0o276) return 'dis';
+  if (labelInfo.enc === 'BNR') return 'bnr';
+  return 'bcd';
+}
+
 const DECODE_META = {
   // ── BCD labels ────────────────────────────────────
-  '001': { decimals: 0 },  // Distance to Go (nm)
-  '002': { decimals: 1 },  // Time to Go (min)
-  '003': { decimals: 1 },  // Cross Track Distance (nm)
+  // decimals = PAD_nibbles + physical_decimal_places
+  // e.g. 4 sig digits + 1 PAD nibble + 0.1 resolution → 1+1 = decimals:2
+  '001': { decimals: 1 },  // Distance to Go (NM)     – 5 digits, 0.1 NM res
+  '002': { decimals: 2 },  // Time to Go (min)         – 4 digits + PAD, 0.1 min res
+  '003': { decimals: 2 },  // Cross Track Distance (NM)– 4 digits + PAD, 0.1 NM res
   '004': { decimals: 0 },  // Runway Distance to Go (ft)
   '010': { decimals: 4 },  // Present Position - Latitude (deg DDMM.mmmm)
   '011': { decimals: 4 },  // Present Position - Longitude (deg DDDMM.mmmm)
@@ -273,40 +308,42 @@ const DECODE_META = {
   '016': { decimals: 1 },  // Wind Direction - True (deg)
   '017': { decimals: 1 },  // Selected Runway Heading (deg)
   '020': { decimals: 0 },  // Selected Vertical Speed (ft/min)
-  '021': { decimals: 2 },  // Selected EPR
+  '021': { decimals: 1 },  // N1 Selected / EPR        – 4 digits + PAD, 1 RPM res
   '022': { decimals: 3 },  // Selected Mach
-  '023': { decimals: 1 },  // Selected Heading (deg)
-  '024': { decimals: 1 },  // Selected Course #1 (deg)
+  '023': { decimals: 2 },  // Selected Heading (deg)   – 3 digits + 2 PAD, 1° res
+  '024': { decimals: 2 },  // Selected Course #1 (deg) – 3 digits + 2 PAD, 1° res
   '025': { decimals: 0 },  // Selected Altitude (ft)
-  '026': { decimals: 0 },  // Selected Airspeed (kt)
-  '027': { decimals: 1 },  // Selected Course #2 (deg)
-  '030': { decimals: 3, implicit: 100 },  // VHF COM Frequency (MHz) – 118–137, hundreds implicit
-  '032': { decimals: 1 },                 // ADF Frequency (kHz) – 190.0–1799.5
-  '033': { decimals: 3, implicit: 100 },  // ILS Frequency (MHz) – 108–112, hundreds implicit
-  '034': { decimals: 3, implicit: 100 },  // VOR/ILS Frequency (MHz) – 108–118, hundreds implicit
-  '035': { decimals: 3, implicit: 100 },  // DME Frequency (MHz), hundreds implicit
-  '036': { decimals: 3, implicit: 100 },  // MLS Frequency (MHz), hundreds implicit
+  '026': { decimals: 2 },  // Selected Airspeed (kt)   – 3 digits + 2 PAD, 1 kt res
+  '027': { decimals: 2 },  // Selected Course #2 (deg) – 3 digits + 2 PAD, 1° res
+  // ── Radio frequency labels (SSM: 00=NML, 01=NCD, 10=FT, 11=Undef) ──
+  '030': { decimals: 3, implicit: 100 },  // VHF COM (MHz) – 118-137, centaine implicite
+  '031': { squawk: true },                // Code Transpondeur (ABCD octal)
+  '032': { decimals: 1, maskD0: true, halfBit: 14, halfStep: 0.5 },  // ADF (kHz) – bit14=0.5kHz
+  '033': { decimals: 3, implicit: 100, maskD0: true },  // ILS (MHz) – bits12-11=CAT (ignorés)
+  '034': { decimals: 3, implicit: 100 },  // VOR/ILS (MHz) – bit15=mode inclus dans BCD
+  '035': { decimals: 3, implicit: 100, bcdDigits: 3, halfBit: 18, halfStep: 0.05 },  // DME (MHz)
+  '036': { decimals: 3, implicit: 100 },  // MLS Frequency (MHz)
   '037': { decimals: 3 },  // HF COM Frequency (MHz)
   '041': { decimals: 4 },  // Set Latitude
   '042': { decimals: 4 },  // Set Longitude
   '043': { decimals: 1 },  // Set Magnetic Heading (deg)
   '044': { decimals: 1 },  // True Heading (deg)
   '045': { decimals: 0 },  // Minimum Airspeed (kt)
-  '056': { decimals: 0 },  // ETA (hr:min encoded as HHMM)
+  '056': { decimals: 0 },  // ETA (HHMM)
   '065': { decimals: 0 },  // Gross Weight (100 lb)
   '066': { decimals: 1 },  // Longitudinal CG (% MAC)
   '067': { decimals: 1 },  // Lateral CG (% MAC)
-  '125': { decimals: 0 },  // UTC (hr:min encoded as HHMM)
+  '125': { decimals: 1 },  // UTC/GMT (H:min)           – 5 digits, 0.1 H/min res
   '145': { decimals: 0 },  // TACAN Control (channel)
   '170': { decimals: 0 },  // Decision Height Selected (ft)
   '200': { decimals: 1 },  // Drift Angle (deg)
   '201': { decimals: 1 },  // DME Distance (nm)
-  '230': { decimals: 0 },  // True Airspeed (kt)
+  '230': { decimals: 2 },  // True Airspeed (kt)        – 3 digits + 2 PAD, 1 kt res
   '231': { decimals: 1 },  // Total Air Temperature (°C)
   '232': { decimals: 0 },  // Altitude Rate (ft/min)
   '233': { decimals: 1 },  // Static Air Temperature (°C)
   '234': { decimals: 2 },  // Baro Correction (mb)
-  '235': { decimals: 2 },  // Baro Correction (inHg)
+  '235': { decimals: 3 },  // Baro Correction (inHg)    – 5 digits, 0.001 inHg res
   '260': { decimals: 0 },  // Date/Flight Leg
   '261': { decimals: 0 },  // Flight Number
 
@@ -397,7 +434,7 @@ function decodeData(word, labelInfo) {
   }
 
   // ── BCD ──────────────────────────────────────────
-  if (labelInfo.enc === 'BCD' && meta.decimals !== undefined) {
+  if (labelInfo.enc === 'BCD' && (meta.decimals !== undefined || meta.squawk)) {
     // 5-digit BCD, MSB-first in bits 29-11:
     //   d4 (3 bits) = bits 29-27 → data19 bits 18-16
     //   d3 (4 bits) = bits 26-23 → data19 bits 15-12
@@ -407,16 +444,36 @@ function decodeData(word, labelInfo) {
     const d4 = (data19 >> 16) & 0x7;
     const d3 = (data19 >> 12) & 0xF;
     const d2 = (data19 >> 8)  & 0xF;
-    const d1 = (data19 >> 4)  & 0xF;
-    const d0 =  data19        & 0xF;
+    // bcdDigits:3 → only d4/d3/d2 are BCD; maskD0/bcdDigits → force lower digits to 0
+    const d1 = (meta.bcdDigits === 3) ? 0 : ((data19 >> 4) & 0xF);
+    const d0 = (meta.bcdDigits === 3 || meta.maskD0) ? 0 : (data19 & 0xF);
+
+    // ── Squawk (label 031): 4-digit octal transponder code ──
+    if (meta.squawk) {
+      // Codes A-D each 0-7; validate all ≤7
+      if (d4 > 7 || d3 > 7 || d2 > 7 || d1 > 7) return null;
+      return `${d4}${d3}${d2}${d1}`;
+    }
 
     // Reject invalid BCD digits (>9 means binary garbage)
     if (d3 > 9 || d2 > 9 || d1 > 9 || d0 > 9) return null;
 
     const raw = d4 * 10000 + d3 * 1000 + d2 * 100 + d1 * 10 + d0;
     const base = meta.implicit || 0;
-    const value = base + raw / Math.pow(10, meta.decimals);
-    return value.toFixed(meta.decimals);
+    let value = base + raw / Math.pow(10, meta.decimals);
+
+    // halfBit: one discrete bit that adds halfStep to the frequency
+    if (meta.halfBit !== undefined) {
+      value += getBit(word, meta.halfBit) * meta.halfStep;
+    }
+
+    // Auto-choose display decimals: enough for halfStep precision
+    let dp = meta.decimals;
+    if (meta.halfStep !== undefined) {
+      const halfDp = Math.max(0, -Math.floor(Math.log10(meta.halfStep)));
+      dp = Math.max(dp, halfDp);
+    }
+    return value.toFixed(dp);
   }
 
   return null;
@@ -508,9 +565,10 @@ function renderFields(word) {
 
   // ── SDI (bits 9-10) ──
   const sdi = (word >> 8) & 0x3;
-  const sdiDescs = ['Toutes stations / non utilisé', 'SDI #1', 'SDI #2', 'SDI #3'];
+  const ssmType = getLabelSsmType(labelInfo);
+  const sdiTable = (ssmType === 'radio') ? SDI_TABLES.radio : SDI_TABLES.other;
   document.getElementById('d-sdi').textContent = sdi.toString(2).padStart(2, '0');
-  document.getElementById('d-sdi-desc').textContent = sdiDescs[sdi];
+  document.getElementById('d-sdi-desc').textContent = sdiTable[sdi];
 
   // ── Data (bits 11-29, 19 bits) ──
   const data19 = (word >> 10) & 0x7FFFF;
@@ -527,15 +585,10 @@ function renderFields(word) {
 
   // ── SSM (bits 30-31) ──
   const ssm = (word >> 29) & 0x3;
-  const ssmDescs = {
-    '00': 'Failure Warning / Plus',
-    '01': 'No Computed Data / North / East / Right',
-    '10': 'Functional Test / South / West / Left',
-    '11': 'Normal Operation / Minus',
-  };
   const ssmBin = ssm.toString(2).padStart(2, '0');
+  const ssmDesc = (SSM_TABLES[ssmType] || SSM_TABLES.bcd)[ssm];
   document.getElementById('d-ssm').textContent = ssmBin;
-  document.getElementById('d-ssm-sig').textContent = ssmDescs[ssmBin];
+  document.getElementById('d-ssm-sig').textContent = ssmDesc;
 
   // ── Parity (bit 32) — odd parity ──
   const ones = popCount(word);
