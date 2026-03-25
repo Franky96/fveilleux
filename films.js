@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     "Oppenheimer":                "https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
     "Avatar: La Voie de l'eau":   "https://image.tmdb.org/t/p/w300/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
     "Top Gun: Maverick":          "https://image.tmdb.org/t/p/w300/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-    "Le Comte de Monte-Cristo":   "https://image.tmdb.org/t/p/w300/sAT1P3FGhtJ68anUyJScnMu8t1l.jpg",
     "Killers of the Flower Moon": "https://image.tmdb.org/t/p/w300/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
     "Poor Things":                "https://image.tmdb.org/t/p/w300/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
     "Breaking Bad":               "https://image.tmdb.org/t/p/w300/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
@@ -48,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
       { titre: "Oppenheimer", type: "film", genre: "Drame", annee: 2023, statut: "vu", note: 4, commentaire: "", image: imageParTitre["Oppenheimer"], realisateur: "Christopher Nolan", acteurs: "Cillian Murphy, Emily Blunt, Matt Damon", synopsis: "L'histoire du physicien J. Robert Oppenheimer et de son rôle crucial dans le développement de la première bombe atomique.", duree: 181, trailer_youtube: "uYPbbksJxIg" },
       { titre: "Avatar: La Voie de l'eau", type: "film", genre: "Sci-Fi", annee: 2022, statut: "vu", note: 3, commentaire: "Visuellement impressionnant", image: imageParTitre["Avatar: La Voie de l'eau"], realisateur: "James Cameron", acteurs: "Sam Worthington, Zoe Saldana, Sigourney Weaver", synopsis: "Jake Sully et Neytiri ont fondé une famille sur Pandora. Menacés par le retour des humains, ils fuient vers les tribus marines des îles.", duree: 192, trailer_youtube: "a8Gx8wiNbs8" },
       { titre: "Top Gun: Maverick", type: "film", genre: "Action", annee: 2022, statut: "a_voir", note: 0, commentaire: "", image: imageParTitre["Top Gun: Maverick"], realisateur: "Joseph Kosinski", acteurs: "Tom Cruise, Miles Teller, Jennifer Connelly", synopsis: "Après plus de 30 ans de carrière, Pete Mitchell est toujours pilote de chasse et doit entraîner les meilleurs diplômés de Top Gun pour une mission périlleuse.", duree: 130, trailer_youtube: "giXco2jaZ_4" },
-      { titre: "Le Comte de Monte-Cristo", type: "film", genre: "Aventure", annee: 2024, statut: "a_voir", note: 0, commentaire: "", image: imageParTitre["Le Comte de Monte-Cristo"], realisateur: "Matthieu Delaporte, Alexandre de la Patellière", acteurs: "Pierre Niney, Anaïs Demoustier, Bastien Bouillon", synopsis: "Edmond Dantès, trahi et emprisonné injustement, s'évade et revient sous une nouvelle identité pour se venger de ceux qui l'ont condamné.", duree: 178, trailer_youtube: "8Q6y1waxlTY" },
       { titre: "Killers of the Flower Moon", type: "film", genre: "Drame", annee: 2023, statut: "a_voir", note: 0, commentaire: "", image: imageParTitre["Killers of the Flower Moon"], realisateur: "Martin Scorsese", acteurs: "Leonardo DiCaprio, Robert De Niro, Lily Gladstone", synopsis: "L'histoire vraie d'une série de meurtres orchestrés contre des membres de la nation Osage dans l'Oklahoma des années 1920, après la découverte de pétrole sur leurs terres.", duree: 206, trailer_youtube: "EP34Yoxs3FQ" },
       { titre: "Poor Things", type: "film", genre: "Drame", annee: 2023, statut: "a_voir", note: 0, commentaire: "", image: imageParTitre["Poor Things"], realisateur: "Yorgos Lanthimos", acteurs: "Emma Stone, Mark Ruffalo, Willem Dafoe", synopsis: "L'incroyable odyssée de Bella Baxter, une jeune femme ramenée à la vie par le brillant mais excentrique Dr Godwin Baxter, qui part à la découverte du monde.", duree: 141, trailer_youtube: "RlbR5N6veqw" },
       { titre: "Breaking Bad", type: "serie", genre: "Drame", annee: 2008, statut: "vu", note: 5, commentaire: "La meilleure série de tous les temps", image: imageParTitre["Breaking Bad"], realisateur: "Vince Gilligan", acteurs: "Bryan Cranston, Aaron Paul, Anna Gunn", synopsis: "Walter White, professeur de chimie atteint d'un cancer, se lance dans la fabrication de méthamphétamine avec un ancien élève pour assurer l'avenir de sa famille.", nb_saisons: 5, trailer_youtube: "" },
@@ -82,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Migration v3 : ajout des bandes-annonces manquantes
         const trailersManquants = {
           "Interstellar":            "YF1eYbfbH5k",
-          "Le Comte de Monte-Cristo": "8Q6y1waxlTY",
           "The Bear":                "iN9Yu9lrssg",
           "Severance":               "xEQP4VVuyrY",
           "Succession":              "OzYxJV_rmE8",

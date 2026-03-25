@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Décodeur ARINC 429 — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if (!sessionStorage.getItem('loggedIn')) {
+      document.location.href = 'index.html';
+    }
+  </script>
+  <style>
+    body {
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .arinc-container {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+      color: #f0ede6;
+      width: 100%;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #80cc80;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 1; }
+
+    .arinc-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .arinc-header h1 {
+      font-size: 2rem;
+      color: #80cc80;
+      margin-bottom: 0.3rem;
+    }
+    .arinc-header p {
+      color: #a89f94;
+      font-size: 0.95rem;
+    }
+
+    /* ── Input ── */
+    .input-section {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .hex-label {
+      color: #a89f94;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+    .hex-prefix {
+      color: #80cc80;
+      font-size: 1.2rem;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+    #hex-input {
+      font-family: 'Courier New', monospace;
+      font-size: 1.4rem;
+      letter-spacing: 0.15rem;
+      text-transform: uppercase;
+      background: #0a0f0a;
+      border: 1px solid #2a3a2a;
+      border-radius: 8px;
+      color: #f0ede6;
+      padding: 0.55rem 1rem;
+      width: 220px;
+      margin-bottom: 0;
+    }
+    #hex-input:focus { border-color: #80cc80; outline: none; }
+    #decode-btn {
+      width: auto;
+      padding: 0.6rem 1.6rem;
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+    .error-msg {
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      min-height: 1.2rem;
+    }
+
+    /* ── Bit display ── */
+    .panel {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel h2 {
+      color: #80cc80;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1rem;
+    }
+
+    .bit-display {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+    .bit-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .bit-num {
+      font-size: 0.58rem;
+      color: #556655;
+      font-family: 'Courier New', monospace;
+    }
+    .bit-cell {
+      width: 28px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      transition: filter 0.1s, transform 0.1s;
+      border: 2px solid transparent;
+    }
+    .bit-cell:hover { filter: brightness(1.4); transform: scale(1.12); }
+
+    .bit-parity { background: rgba(255,107,107,0.18); color: #ff6b6b; border-color: rgba(255,107,107,0.6); }
+    .bit-ssm    { background: rgba(192,132,252,0.18); color: #c084fc; border-color: rgba(192,132,252,0.6); }
+    .bit-data   { background: rgba(128,204,128,0.18); color: #80cc80; border-color: rgba(128,204,128,0.6); }
+    .bit-sdi    { background: rgba(96,184,200,0.18);  color: #60b8c8; border-color: rgba(96,184,200,0.6); }
+    .bit-label  { background: rgba(245,158,11,0.18);  color: #f59e0b; border-color: rgba(245,158,11,0.6); }
+
+    .legend {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+      justify-content: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: #c8c4bc;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* ── Fields grid ── */
+    .fields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .field-card {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .field-name {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07rem;
+      color: #a89f94;
+      margin-bottom: 0.4rem;
+    }
+    .field-value {
+      font-size: 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+    .field-sub {
+      font-size: 0.72rem;
+      color: #7a7a6a;
+      margin-top: 0.25rem;
+    }
+    .field-label  .field-value { color: #f59e0b; }
+    .field-sdi    .field-value { color: #60b8c8; }
+    .field-data   .field-value { color: #80cc80; }
+    .field-ssm    .field-value { color: #c084fc; }
+    .field-parity .field-value { color: #ff6b6b; }
+
+    /* ── Interp tabs ── */
+    .interp-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .interp-tab {
+      padding: 0.35rem 1.1rem;
+      border-radius: 6px;
+      border: 1px solid #2a3a2a;
+      background: #0a0f0a;
+      color: #a89f94;
+      cursor: pointer;
+      font-size: 0.88rem;
+      width: auto;
+      margin-bottom: 0;
+      transition: all 0.2s;
+    }
+    .interp-tab.active { background: #80cc80; color: #0a0f0a; border-color: #80cc80; font-weight: bold; }
+    .interp-tab:hover:not(.active) { border-color: #80cc80; color: #80cc80; }
+
+    .interp-content { display: none; }
+    .interp-content.active { display: block; }
+
+    .interp-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid #162216;
+      gap: 1rem;
+    }
+    .interp-row:last-child { border-bottom: none; }
+    .interp-key { color: #a89f94; font-size: 0.88rem; flex-shrink: 0; }
+    .interp-val {
+      font-family: 'Courier New', monospace;
+      color: #80cc80;
+      font-size: 0.95rem;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* ── Ref table ── */
+    #ref-search {
+      width: 100%;
+      max-width: 360px;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.87rem;
+    }
+    .ref-table th {
+      text-align: left;
+      padding: 0.45rem 0.75rem;
+      color: #a89f94;
+      border-bottom: 1px solid #2a3a2a;
+      font-weight: 500;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06rem;
+    }
+    .ref-table td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid #111a11;
+    }
+    .ref-table tr:hover td { background: #162216; }
+    .ref-table tr.highlighted td { background: rgba(128,204,128,0.12); }
+
+    .label-octal { font-family: 'Courier New', monospace; color: #f59e0b; font-weight: bold; }
+    .label-hex   { font-family: 'Courier New', monospace; color: #60b8c8; font-size: 0.85rem; }
+    .label-enc {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .enc-bnr { background: rgba(128,204,128,0.2); color: #80cc80; }
+    .enc-bcd { background: rgba(96,184,200,0.2);  color: #60b8c8; }
+    .enc-dis { background: rgba(192,132,252,0.2); color: #c084fc; }
+
+    .placeholder-msg {
+      color: #556655;
+      font-size: 0.9rem;
+      padding: 1.5rem;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* parity error color override */
+    .parity-err { color: #ff6b6b !important; }
+    .parity-ok  { color: #80cc80 !important; }
+  </style>
+</head>
+<body>
+  <div class="arinc-container">
+
+    <a href="dashboard.html" class="back-link">&#8592; Accueil</a>
+
+    <div class="arinc-header">
+      <h1>Décodeur ARINC 429</h1>
+      <p>Décodage d'un mot de données 32 bits selon le standard ARINC 429</p>
+    </div>
+
+    <!-- ── Input ── -->
+    <div class="input-section">
+      <div class="input-row">
+        <span class="hex-label">Mot hexadécimal :</span>
+        <span class="hex-prefix">0x</span>
+        <input type="text" id="hex-input" placeholder="00000000" maxlength="8"
+               spellcheck="false" autocomplete="off" />
+        <button id="decode-btn" onclick="decodeFromInput()">Décoder</button>
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- ── Bits ── -->
+    <div class="panel">
+      <h2>Représentation binaire — 32 bits</h2>
+      <div class="bit-display" id="bit-display">
+        <div class="placeholder-msg">Entrez un mot hexadécimal pour commencer</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#ff6b6b"></div>
+          <span>Parité — bit 32</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#c084fc"></div>
+          <span>SSM — bits 30-31</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#80cc80"></div>
+          <span>Données — bits 11-29</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#60b8c8"></div>
+          <span>SDI — bits 9-10</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#f59e0b"></div>
+          <span>Étiquette — bits 1-8</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Fields ── -->
+    <div class="fields-grid" id="decoded-fields" style="display:none;">
+      <div class="field-card field-label">
+        <div class="field-name">Étiquette (Label)</div>
+        <div class="field-value" id="field-label-val">—</div>
+        <div class="field-sub" id="field-label-sub">octal</div>
+      </div>
+      <div class="field-card field-sdi">
+        <div class="field-name">SDI (bits 9-10)</div>
+        <div class="field-value" id="field-sdi-val">—</div>
+        <div class="field-sub" id="field-sdi-sub">—</div>
+      </div>
+      <div class="field-card field-data">
+        <div class="field-name">Données (bits 11-29)</div>
+        <div class="field-value" id="field-data-val">—</div>
+        <div class="field-sub" id="field-data-sub">19 bits</div>
+      </div>
+      <div class="field-card field-ssm">
+        <div class="field-name">SSM (bits 30-31)</div>
+        <div class="field-value" id="field-ssm-val">—</div>
+        <div class="field-sub" id="field-ssm-sub">—</div>
+      </div>
+      <div class="field-card field-parity">
+        <div class="field-name">Parité (bit 32)</div>
+        <div class="field-value" id="field-parity-val">—</div>
+        <div class="field-sub" id="field-parity-sub">—</div>
+      </div>
+    </div>
+
+    <!-- ── Interpretation ── -->
+    <div class="panel" id="interp-section" style="display:none;">
+      <h2>Interprétation des données (bits 11-29)</h2>
+      <div class="interp-tabs">
+        <button class="interp-tab active" onclick="switchTab('bnr')">BNR</button>
+        <button class="interp-tab" onclick="switchTab('bcd')">BCD</button>
+        <button class="interp-tab" onclick="switchTab('dis')">Discret</button>
+      </div>
+
+      <!-- BNR -->
+      <div class="interp-content active" id="tab-bnr">
+        <div class="interp-row">
+          <span class="interp-key">Bits (binaire)</span>
+          <span class="interp-val" id="bnr-bits">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Valeur brute (unsigned)</span>
+          <span class="interp-val" id="bnr-unsigned">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Valeur signée (complément à 2, 19 bits)</span>
+          <span class="interp-val" id="bnr-signed">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Valeur résolue (LSB = 2⁻¹⁰, exemple)</span>
+          <span class="interp-val" id="bnr-resolved">—</span>
+        </div>
+      </div>
+
+      <!-- BCD -->
+      <div class="interp-content" id="tab-bcd">
+        <div class="interp-row">
+          <span class="interp-key">Bits (binaire)</span>
+          <span class="interp-val" id="bcd-bits">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Groupes BCD (4 bits chacun)</span>
+          <span class="interp-val" id="bcd-groups">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Valeur décimale reconstituée</span>
+          <span class="interp-val" id="bcd-value">—</span>
+        </div>
+      </div>
+
+      <!-- Discrete -->
+      <div class="interp-content" id="tab-dis">
+        <div class="interp-row">
+          <span class="interp-key">Bits (binaire)</span>
+          <span class="interp-val" id="dis-bits">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Valeur hexadécimale</span>
+          <span class="interp-val" id="dis-hex">—</span>
+        </div>
+        <div class="interp-row">
+          <span class="interp-key">Valeur décimale</span>
+          <span class="interp-val" id="dis-dec">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Label reference ── -->
+    <div class="panel">
+      <h2>Table de référence des étiquettes</h2>
+      <input type="text" id="ref-search" placeholder="Rechercher label, paramètre…" oninput="filtrerLabels()" />
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Label (octal)</th>
+            <th>Label (hex)</th>
+            <th>Encodage</th>
+            <th>Paramètre</th>
+            <th>Unité</th>
+          </tr>
+        </thead>
+        <tbody id="ref-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script src="arinc429.js"></script>
+</body>
+</html>
