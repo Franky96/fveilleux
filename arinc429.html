@@ -155,8 +155,8 @@
       font-family: 'Courier New', monospace;
     }
     .bit-cell {
-      width: 28px;
-      height: 32px;
+      width: 36px;
+      height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -383,30 +383,30 @@
 
     <!-- ── Fields ── -->
     <div class="fields-grid" id="decoded-fields" style="display:none;">
-      <div class="field-card field-label">
-        <div class="field-name">Étiquette (Label)</div>
-        <div class="field-value" id="field-label-val">—</div>
-        <div class="field-sub" id="field-label-sub">octal</div>
-      </div>
-      <div class="field-card field-sdi">
-        <div class="field-name">SDI (bits 9-10)</div>
-        <div class="field-value" id="field-sdi-val">—</div>
-        <div class="field-sub" id="field-sdi-sub">—</div>
-      </div>
-      <div class="field-card field-data">
-        <div class="field-name">Données (bits 11-29)</div>
-        <div class="field-value" id="field-data-val">—</div>
-        <div class="field-sub" id="field-data-sub">19 bits</div>
+      <div class="field-card field-parity">
+        <div class="field-name">Parité (bit 32)</div>
+        <div class="field-value" id="field-parity-val">—</div>
+        <div class="field-sub" id="field-parity-sub">—</div>
       </div>
       <div class="field-card field-ssm">
         <div class="field-name">SSM (bits 30-31)</div>
         <div class="field-value" id="field-ssm-val">—</div>
         <div class="field-sub" id="field-ssm-sub">—</div>
       </div>
-      <div class="field-card field-parity">
-        <div class="field-name">Parité (bit 32)</div>
-        <div class="field-value" id="field-parity-val">—</div>
-        <div class="field-sub" id="field-parity-sub">—</div>
+      <div class="field-card field-data">
+        <div class="field-name">Données (bits 11-29)</div>
+        <div class="field-value" id="field-data-val">—</div>
+        <div class="field-sub" id="field-data-sub">19 bits</div>
+      </div>
+      <div class="field-card field-sdi">
+        <div class="field-name">SDI (bits 9-10)</div>
+        <div class="field-value" id="field-sdi-val">—</div>
+        <div class="field-sub" id="field-sdi-sub">—</div>
+      </div>
+      <div class="field-card field-label">
+        <div class="field-name">Étiquette (Label)</div>
+        <div class="field-value" id="field-label-val">—</div>
+        <div class="field-sub" id="field-label-sub">octal</div>
       </div>
     </div>
 
