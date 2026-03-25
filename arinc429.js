@@ -199,8 +199,6 @@ function renderFields(word) {
     : `Label ${labelOct} (octal) | ${labelHex}`;
   document.getElementById('banner-value').textContent = '—';
 
-  document.getElementById('label-banner').style.display = 'flex';
-  document.getElementById('detail-grid').style.display = 'grid';
 }
 
 // ── Actions ─────────────────────────────────────────
@@ -235,3 +233,8 @@ function toggleBit(bitNum) {
 document.getElementById('hex-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') decodeFromInput();
 });
+
+// Afficher les panneaux avec tous les bits à zéro au chargement
+currentWord = 0;
+renderBits(currentWord);
+renderFields(currentWord);
