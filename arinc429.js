@@ -280,12 +280,12 @@ const DECODE_META = {
   '025': { decimals: 0 },  // Selected Altitude (ft)
   '026': { decimals: 0 },  // Selected Airspeed (kt)
   '027': { decimals: 1 },  // Selected Course #2 (deg)
-  '030': { decimals: 2 },  // VHF COM Frequency (MHz) – 118.00–136.97
-  '032': { decimals: 1 },  // ADF Frequency (kHz) – 190.0–1799.5
-  '033': { decimals: 2 },  // ILS Frequency (MHz) – 108.10–111.95
-  '034': { decimals: 2 },  // VOR/ILS Frequency (MHz) – 108.00–117.95
-  '035': { decimals: 2 },  // DME Frequency (MHz)
-  '036': { decimals: 3 },  // MLS Frequency (MHz)
+  '030': { decimals: 3, implicit: 100 },  // VHF COM Frequency (MHz) – 118–137, hundreds implicit
+  '032': { decimals: 1 },                 // ADF Frequency (kHz) – 190.0–1799.5
+  '033': { decimals: 3, implicit: 100 },  // ILS Frequency (MHz) – 108–112, hundreds implicit
+  '034': { decimals: 3, implicit: 100 },  // VOR/ILS Frequency (MHz) – 108–118, hundreds implicit
+  '035': { decimals: 3, implicit: 100 },  // DME Frequency (MHz), hundreds implicit
+  '036': { decimals: 3, implicit: 100 },  // MLS Frequency (MHz), hundreds implicit
   '037': { decimals: 3 },  // HF COM Frequency (MHz)
   '041': { decimals: 4 },  // Set Latitude
   '042': { decimals: 4 },  // Set Longitude
@@ -414,7 +414,8 @@ function decodeData(word, labelInfo) {
     if (d3 > 9 || d2 > 9 || d1 > 9 || d0 > 9) return null;
 
     const raw = d4 * 10000 + d3 * 1000 + d2 * 100 + d1 * 10 + d0;
-    const value = raw / Math.pow(10, meta.decimals);
+    const base = meta.implicit || 0;
+    const value = base + raw / Math.pow(10, meta.decimals);
     return value.toFixed(meta.decimals);
   }
 
@@ -549,7 +550,9 @@ function renderFields(word) {
   document.getElementById('banner-sub').textContent = labelInfo
     ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
-  document.getElementById('banner-value').textContent = '—';
+  document.getElementById('banner-value').textContent = decoded !== null
+    ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
+    : '—';
 
 }
 
