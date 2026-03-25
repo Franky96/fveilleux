@@ -142,90 +142,65 @@ function renderFields(word) {
   const labelRaw = word & 0xFF;
   const labelVal = reverseBits8(labelRaw);
   const labelOct = labelVal.toString(8).padStart(3, '0');
-  const labelHex = labelVal.toString(16).toUpperCase().padStart(2, '0');
-  document.getElementById('field-label-val').textContent = labelOct;
-  document.getElementById('field-label-sub').textContent = `octal · 0x${labelHex} · ${labelRaw.toString(2).padStart(8,'0')} (brut)`;
+  const labelHex = '0x' + labelVal.toString(16).toUpperCase().padStart(2, '0');
+  const labelDec = labelVal;
+  const labelBin = labelVal.toString(2).padStart(8, '0');
+  const labelInfo = LABELS.find(l => l.oct === labelOct);
+
+  document.getElementById('d-label-oct').textContent = labelOct;
+  document.getElementById('d-label-dec').textContent = labelDec;
+  document.getElementById('d-label-hex').textContent = labelHex;
+  document.getElementById('d-label-bin').textContent = labelBin;
+  document.getElementById('d-label-name').textContent = labelInfo ? labelInfo.param : '—';
+  document.getElementById('d-label-msb').textContent = labelOct[0];
+  document.getElementById('d-label-med').textContent = labelOct[1];
+  document.getElementById('d-label-lsb').textContent = labelOct[2];
 
   // ── SDI (bits 9-10) ──
   const sdi = (word >> 8) & 0x3;
-  const sdiDesc = [
-    'Toutes stations / non utilisé',
-    'Station 1',
-    'Station 2',
-    'Station 3',
-  ];
-  document.getElementById('field-sdi-val').textContent = sdi.toString(2).padStart(2, '0');
-  document.getElementById('field-sdi-sub').textContent = sdiDesc[sdi];
+  const sdiDescs = ['Toutes stations / non utilisé', 'SDI #1', 'SDI #2', 'SDI #3'];
+  document.getElementById('d-sdi').textContent = sdi.toString(2).padStart(2, '0');
+  document.getElementById('d-sdi-desc').textContent = sdiDescs[sdi];
 
   // ── Data (bits 11-29, 19 bits) ──
   const data19 = (word >> 10) & 0x7FFFF;
-  document.getElementById('field-data-val').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
-  document.getElementById('field-data-sub').textContent = data19.toString(2).padStart(19, '0');
+  const dataBin = data19.toString(2).padStart(19, '0');
+  const dataBinGrouped = dataBin.replace(/(.{4})/g, '$1 ').trim();
+  document.getElementById('d-data-bin').textContent = dataBinGrouped;
+  document.getElementById('d-data-dec').textContent = data19;
+  document.getElementById('d-data-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
+  document.getElementById('d-data-decoded').textContent = '—';
+  document.getElementById('d-data-format').textContent = labelInfo ? labelInfo.enc : '—';
 
   // ── SSM (bits 30-31) ──
   const ssm = (word >> 29) & 0x3;
-  const ssmDesc = {
+  const ssmDescs = {
     '00': 'Failure Warning / Plus',
-    '01': 'No Computed Data / North / East / Right / To',
-    '10': 'Functional Test / South / West / Left / From',
+    '01': 'No Computed Data / North / East / Right',
+    '10': 'Functional Test / South / West / Left',
     '11': 'Normal Operation / Minus',
   };
   const ssmBin = ssm.toString(2).padStart(2, '0');
-  document.getElementById('field-ssm-val').textContent = ssmBin;
-  document.getElementById('field-ssm-sub').textContent = ssmDesc[ssmBin];
+  document.getElementById('d-ssm').textContent = ssmBin;
+  document.getElementById('d-ssm-sig').textContent = ssmDescs[ssmBin];
 
   // ── Parity (bit 32) — odd parity ──
-  const parity = (word >>> 31) & 1;
   const ones = popCount(word);
   const parityOk = (ones % 2 === 1);
-  const parityEl = document.getElementById('field-parity-val');
-  parityEl.textContent = parity;
-  parityEl.className = 'field-value ' + (parityOk ? 'parity-ok' : 'parity-err');
-  document.getElementById('field-parity-sub').textContent = parityOk ? '✓ Parité impaire OK' : '✗ Erreur de parité';
+  const parityEl = document.getElementById('d-parity');
+  parityEl.textContent = parityOk ? 'Odd Parity OK' : 'Erreur de parité';
+  parityEl.className = 'detail-val ' + (parityOk ? 'ok' : 'err');
 
-  document.getElementById('decoded-fields').style.display = 'grid';
-  document.getElementById('interp-section').style.display = 'block';
-}
+  // ── Banner ──
+  document.getElementById('banner-oct').textContent = labelOct;
+  document.getElementById('banner-name').textContent = labelInfo ? labelInfo.param : 'Label inconnu';
+  document.getElementById('banner-sub').textContent = labelInfo
+    ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
+    : `Label ${labelOct} (octal) | ${labelHex}`;
+  document.getElementById('banner-value').textContent = '—';
 
-function renderInterp(word) {
-  const data19 = (word >> 10) & 0x7FFFF;
-  const dataBin = data19.toString(2).padStart(19, '0');
-
-  // BNR
-  document.getElementById('bnr-bits').textContent = dataBin;
-  document.getElementById('bnr-unsigned').textContent = data19;
-  const signed = (data19 & (1 << 18)) ? data19 - (1 << 19) : data19;
-  document.getElementById('bnr-signed').textContent = signed;
-  document.getElementById('bnr-resolved').textContent = (signed / (1 << 10)).toFixed(6);
-
-  // BCD — 4 groups of 4 bits + 3 remaining = 4+4+4+4+3
-  document.getElementById('bcd-bits').textContent = dataBin;
-  const groups = [];
-  for (let i = 0; i < 19; i += 4) groups.push(dataBin.substring(i, Math.min(i + 4, 19)));
-  document.getElementById('bcd-groups').textContent = groups.join(' | ');
-  let bcdStr = '';
-  let bcdValid = true;
-  groups.forEach(g => {
-    const d = parseInt(g, 2);
-    if (g.length === 4 && d > 9) bcdValid = false;
-    bcdStr += g.length < 4 ? `(${d})` : d.toString();
-  });
-  document.getElementById('bcd-value').textContent = bcdValid ? bcdStr : bcdStr + '  ⚠ chiffre > 9 invalide';
-
-  // Discrete
-  document.getElementById('dis-bits').textContent = dataBin;
-  document.getElementById('dis-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
-  document.getElementById('dis-dec').textContent = data19;
-}
-
-function highlightRefTable(word) {
-  const labelOct = reverseBits8(word & 0xFF).toString(8).padStart(3, '0');
-  document.querySelectorAll('#ref-tbody tr').forEach(row => {
-    row.classList.toggle('highlighted', row.dataset.oct === labelOct);
-    if (row.dataset.oct === labelOct) {
-      row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  });
+  document.getElementById('label-banner').style.display = 'flex';
+  document.getElementById('detail-grid').style.display = 'grid';
 }
 
 // ── Actions ─────────────────────────────────────────
@@ -235,7 +210,7 @@ function decodeFromInput() {
   const errEl = document.getElementById('error-msg');
 
   if (!/^[0-9A-Fa-f]{1,8}$/.test(raw)) {
-    errEl.textContent = 'Valeur invalide — entrez 1 à 8 chiffres hexadécimaux (ex : A0001234)';
+    errEl.textContent = 'Valeur invalide — entrez 1 à 8 chiffres hexadécimaux';
     return;
   }
   errEl.textContent = '';
@@ -243,8 +218,6 @@ function decodeFromInput() {
   currentWord = parseInt(raw.padStart(8, '0'), 16) >>> 0;
   renderBits(currentWord);
   renderFields(currentWord);
-  renderInterp(currentWord);
-  highlightRefTable(currentWord);
 }
 
 function toggleBit(bitNum) {
@@ -255,42 +228,6 @@ function toggleBit(bitNum) {
     currentWord.toString(16).toUpperCase().padStart(8, '0');
   renderBits(currentWord);
   renderFields(currentWord);
-  renderInterp(currentWord);
-  highlightRefTable(currentWord);
-}
-
-function switchTab(tab) {
-  document.querySelectorAll('.interp-tab').forEach((btn, i) => {
-    btn.classList.toggle('active', ['bnr', 'bcd', 'dis'][i] === tab);
-  });
-  document.querySelectorAll('.interp-content').forEach(el => {
-    el.classList.toggle('active', el.id === `tab-${tab}`);
-  });
-}
-
-function filtrerLabels() {
-  const q = document.getElementById('ref-search').value.toLowerCase();
-  document.querySelectorAll('#ref-tbody tr').forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-
-// ── Build reference table ────────────────────────────
-
-function buildRefTable() {
-  const tbody = document.getElementById('ref-tbody');
-  const encClass = { BNR: 'enc-bnr', BCD: 'enc-bcd', DIS: 'enc-dis' };
-  LABELS.forEach(l => {
-    const tr = document.createElement('tr');
-    tr.dataset.oct = l.oct;
-    tr.innerHTML =
-      `<td><span class="label-octal">${l.oct}</span></td>` +
-      `<td><span class="label-hex">0x${l.hex}</span></td>` +
-      `<td><span class="label-enc ${encClass[l.enc] || ''}">${l.enc}</span></td>` +
-      `<td>${l.param}</td>` +
-      `<td>${l.unit}</td>`;
-    tbody.appendChild(tr);
-  });
 }
 
 // ── Init ─────────────────────────────────────────────
@@ -298,5 +235,3 @@ function buildRefTable() {
 document.getElementById('hex-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') decodeFromInput();
 });
-
-buildRefTable();
