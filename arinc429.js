@@ -188,7 +188,7 @@ function renderFields(word) {
   const ones = popCount(word);
   const parityOk = (ones % 2 === 1);
   const parityEl = document.getElementById('d-parity');
-  parityEl.textContent = parityOk ? 'Odd Parity OK' : 'Erreur de parité';
+  parityEl.textContent = parityOk ? 'Odd Parity OK' : 'Odd Parity Error';
   parityEl.className = 'detail-val ' + (parityOk ? 'ok' : 'err');
 
   // ── Banner ──
