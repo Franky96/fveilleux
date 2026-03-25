@@ -243,6 +243,184 @@ LABELS.forEach(l => {
   l.dec = dec;
 });
 
+// ── Decode metadata ─────────────────────────────────
+// Source: ARINC 429 Part 1-17 Attachment 2 (BNR/BCD data standards)
+//
+// BNR: { msb: <value represented when ONLY bit 28 is set, in engineering units> }
+//      Sign-magnitude format: bit 29 = sign, bits 28-11 = 18-bit magnitude
+//      Exception: ssmSign:true → sign derived from SSM (01=+/N/E, 10=-/S/W)
+//
+// BCD: { decimals: <decimal places to apply to the 5-digit BCD integer> }
+//      5-digit BCD packed MSB-first in bits 29-11:
+//        bits 29-27 = d4 (3 bits, 0-7)
+//        bits 26-23 = d3 (4 bits, 0-9)
+//        bits 22-19 = d2 (4 bits, 0-9)
+//        bits 18-15 = d1 (4 bits, 0-9)
+//        bits 14-11 = d0 (4 bits, 0-9)   [LSB digit]
+//      value = (d4×10000 + d3×1000 + d2×100 + d1×10 + d0) / 10^decimals
+const DECODE_META = {
+  // ── BCD labels ────────────────────────────────────
+  '001': { decimals: 0 },  // Distance to Go (nm)
+  '002': { decimals: 1 },  // Time to Go (min)
+  '003': { decimals: 1 },  // Cross Track Distance (nm)
+  '004': { decimals: 0 },  // Runway Distance to Go (ft)
+  '010': { decimals: 4 },  // Present Position - Latitude (deg DDMM.mmmm)
+  '011': { decimals: 4 },  // Present Position - Longitude (deg DDDMM.mmmm)
+  '012': { decimals: 0 },  // Ground Speed (kt)
+  '013': { decimals: 1 },  // Track Angle - True (deg)
+  '014': { decimals: 1 },  // Magnetic Heading (deg)
+  '015': { decimals: 0 },  // Wind Speed (kt)
+  '016': { decimals: 1 },  // Wind Direction - True (deg)
+  '017': { decimals: 1 },  // Selected Runway Heading (deg)
+  '020': { decimals: 0 },  // Selected Vertical Speed (ft/min)
+  '021': { decimals: 2 },  // Selected EPR
+  '022': { decimals: 3 },  // Selected Mach
+  '023': { decimals: 1 },  // Selected Heading (deg)
+  '024': { decimals: 1 },  // Selected Course #1 (deg)
+  '025': { decimals: 0 },  // Selected Altitude (ft)
+  '026': { decimals: 0 },  // Selected Airspeed (kt)
+  '027': { decimals: 1 },  // Selected Course #2 (deg)
+  '030': { decimals: 2 },  // VHF COM Frequency (MHz) – 118.00–136.97
+  '032': { decimals: 1 },  // ADF Frequency (kHz) – 190.0–1799.5
+  '033': { decimals: 2 },  // ILS Frequency (MHz) – 108.10–111.95
+  '034': { decimals: 2 },  // VOR/ILS Frequency (MHz) – 108.00–117.95
+  '035': { decimals: 2 },  // DME Frequency (MHz)
+  '036': { decimals: 3 },  // MLS Frequency (MHz)
+  '037': { decimals: 3 },  // HF COM Frequency (MHz)
+  '041': { decimals: 4 },  // Set Latitude
+  '042': { decimals: 4 },  // Set Longitude
+  '043': { decimals: 1 },  // Set Magnetic Heading (deg)
+  '044': { decimals: 1 },  // True Heading (deg)
+  '045': { decimals: 0 },  // Minimum Airspeed (kt)
+  '056': { decimals: 0 },  // ETA (hr:min encoded as HHMM)
+  '065': { decimals: 0 },  // Gross Weight (100 lb)
+  '066': { decimals: 1 },  // Longitudinal CG (% MAC)
+  '067': { decimals: 1 },  // Lateral CG (% MAC)
+  '125': { decimals: 0 },  // UTC (hr:min encoded as HHMM)
+  '145': { decimals: 0 },  // TACAN Control (channel)
+  '170': { decimals: 0 },  // Decision Height Selected (ft)
+  '200': { decimals: 1 },  // Drift Angle (deg)
+  '201': { decimals: 1 },  // DME Distance (nm)
+  '230': { decimals: 0 },  // True Airspeed (kt)
+  '231': { decimals: 1 },  // Total Air Temperature (°C)
+  '232': { decimals: 0 },  // Altitude Rate (ft/min)
+  '233': { decimals: 1 },  // Static Air Temperature (°C)
+  '234': { decimals: 2 },  // Baro Correction (mb)
+  '235': { decimals: 2 },  // Baro Correction (inHg)
+  '260': { decimals: 0 },  // Date/Flight Leg
+  '261': { decimals: 0 },  // Flight Number
+
+  // ── BNR labels ────────────────────────────────────
+  '052': { msb: 128    },  '053': { msb: 128    },  '054': { msb: 128    },
+  '070': { msb: 512    },  '071': { msb: 512    },  '072': { msb: 512    },
+  '073': { msb: 512    },  '074': { msb: 262144  },  '075': { msb: 262144  },
+  '076': { msb: 131072  },  '077': { msb: 64     },
+  '100': { msb: 180    },  '101': { msb: 180    },  '102': { msb: 131072  },
+  '103': { msb: 512    },  '104': { msb: 16384   },  '105': { msb: 180    },
+  '106': { msb: 4      },  '107': { msb: 131072  },  '110': { msb: 180    },
+  '111': { msb: 180    },  '112': { msb: 32768   },  '114': { msb: 180    },
+  '115': { msb: 180    },  '116': { msb: 64      },  '117': { msb: 2500   },
+  '120': { msb: 512    },  '121': { msb: 90      },  '122': { msb: 90     },
+  '123': { msb: 128    },  '126': { msb: 32768   },  '127': { msb: 131072  },
+  '130': { msb: 512    },  '131': { msb: 131072  },  '132': { msb: 180    },
+  '133': { msb: 180    },  '134': { msb: 180     },  '135': { msb: 16     },
+  '140': { msb: 90     },  '141': { msb: 90      },  '142': { msb: 256    },
+  '143': { msb: 90     },  '144': { msb: 2048    },
+  '150': { msb: 43200  },  '151': { msb: 180     },  '152': { msb: 1024   },
+  '153': { msb: 131072  },  '154': { msb: 180    },
+  '162': { msb: 180    },  '164': { msb: 2500    },  '165': { msb: 16384  },
+  '166': { msb: 1024   },  '167': { msb: 128     },  '171': { msb: 32     },
+  '173': { msb: 0.4    },  '174': { msb: 0.4     },  '175': { msb: 512    },
+  '176': { msb: 4      },  '177': { msb: 131072  },
+  '202': { msb: 2048   },  '203': { msb: 131072  },  '204': { msb: 131072  },
+  '205': { msb: 4      },  '206': { msb: 1024    },  '207': { msb: 1024   },
+  '210': { msb: 1024   },  '211': { msb: 512     },  '212': { msb: 16384  },
+  '213': { msb: 512    },  '215': { msb: 1024    },  '217': { msb: 16384  },
+  '220': { msb: 131072  },  '221': { msb: 90     },  '222': { msb: 180    },
+  '225': { msb: 1024   },
+  '241': { msb: 512    },  '242': { msb: 2048    },  '244': { msb: 131072  },
+  '245': { msb: 512    },  '246': { msb: 128     },  '247': { msb: 262144  },
+  '250': { msb: 128    },  '251': { msb: 2048    },  '252': { msb: 1024   },
+  '253': { msb: 128    },  '254': { msb: 128     },  '255': { msb: 128    },
+  '256': { msb: 1024   },  '257': { msb: 1024    },
+  '262': { msb: 65536  },  '263': { msb: 512     },  '264': { msb: 128    },
+  '265': { msb: 512    },  '267': { msb: 512     },
+  '310': { msb: 90,    ssmSign: true },  // Latitude  (SSM 01=N, 10=S)
+  '311': { msb: 180,   ssmSign: true },  // Longitude (SSM 01=E, 10=W)
+  '312': { msb: 2048   },  '313': { msb: 180    },  '314': { msb: 180    },
+  '315': { msb: 1024   },  '316': { msb: 180    },  '317': { msb: 180    },
+  '320': { msb: 180    },  '321': { msb: 90     },  '322': { msb: 90     },
+  '323': { msb: 4      },  '324': { msb: 90     },  '325': { msb: 180    },
+  '326': { msb: 128    },  '327': { msb: 128    },
+  '330': { msb: 128    },  '331': { msb: 4      },  '332': { msb: 4      },
+  '333': { msb: 4      },  '334': { msb: 180    },  '335': { msb: 8      },
+  '336': { msb: 128    },  '337': { msb: 128    },
+  '340': { msb: 8      },  '341': { msb: 128    },  '342': { msb: 128    },
+  '343': { msb: 128    },  '344': { msb: 128    },  '345': { msb: 1024   },
+  '346': { msb: 128    },  '347': { msb: 131072  },
+  '360': { msb: 16384  },  '361': { msb: 131072  },  '362': { msb: 4      },
+  '363': { msb: 4      },  '364': { msb: 4      },  '365': { msb: 16384  },
+  '366': { msb: 1024   },  '367': { msb: 1024   },  '370': { msb: 131072  },
+  '372': { msb: 180    },  '373': { msb: 1024   },  '374': { msb: 1024   },
+  '375': { msb: 4      },  '376': { msb: 4      },
+};
+
+// Decode the data field (bits 11-29) according to the label's encoding
+// Returns a formatted string, or null if no metadata / invalid data.
+function decodeData(word, labelInfo) {
+  if (!labelInfo) return null;
+  const meta = DECODE_META[labelInfo.oct];
+  if (!meta) return null;
+
+  // data19: bits 29-11 of the word mapped to bit positions 18-0
+  const data19 = (word >> 10) & 0x7FFFF;
+
+  // ── BNR (sign-magnitude) ──────────────────────────
+  if (labelInfo.enc === 'BNR' && meta.msb !== undefined) {
+    const ssm = (word >> 29) & 0x3;
+    let sign;
+    if (meta.ssmSign) {
+      // SSM 01 = N/E/Right (+), SSM 10 = S/W/Left (-)
+      sign = (ssm === 0b10) ? 1 : 0;
+    } else {
+      // Bit 29 of word = bit 18 of data19 = sign bit
+      sign = (data19 >> 18) & 1;
+    }
+    // Bits 28-11 of word = bits 17-0 of data19 = 18-bit magnitude
+    const magnitude = data19 & 0x3FFFF;
+    // Resolution: bit 28 represents meta.msb, so LSB = meta.msb / 2^17
+    const resolution = meta.msb / 131072;
+    const value = (sign ? -1 : 1) * magnitude * resolution;
+    // Choose decimal places based on resolution magnitude
+    const dp = resolution >= 10 ? 1 : resolution >= 1 ? 2 : resolution >= 0.01 ? 3 : 5;
+    return (sign ? '−' : '') + Math.abs(value).toFixed(dp);
+  }
+
+  // ── BCD ──────────────────────────────────────────
+  if (labelInfo.enc === 'BCD' && meta.decimals !== undefined) {
+    // 5-digit BCD, MSB-first in bits 29-11:
+    //   d4 (3 bits) = bits 29-27 → data19 bits 18-16
+    //   d3 (4 bits) = bits 26-23 → data19 bits 15-12
+    //   d2 (4 bits) = bits 22-19 → data19 bits 11-8
+    //   d1 (4 bits) = bits 18-15 → data19 bits 7-4
+    //   d0 (4 bits) = bits 14-11 → data19 bits 3-0
+    const d4 = (data19 >> 16) & 0x7;
+    const d3 = (data19 >> 12) & 0xF;
+    const d2 = (data19 >> 8)  & 0xF;
+    const d1 = (data19 >> 4)  & 0xF;
+    const d0 =  data19        & 0xF;
+
+    // Reject invalid BCD digits (>9 means binary garbage)
+    if (d3 > 9 || d2 > 9 || d1 > 9 || d0 > 9) return null;
+
+    const raw = d4 * 10000 + d3 * 1000 + d2 * 100 + d1 * 10 + d0;
+    const value = raw / Math.pow(10, meta.decimals);
+    return value.toFixed(meta.decimals);
+  }
+
+  return null;
+}
+
 // ── Bit helpers ─────────────────────────────────────
 
 // ARINC 429: bit 1 = LSB (rightmost), bit 32 = MSB (leftmost)
@@ -340,7 +518,10 @@ function renderFields(word) {
   document.getElementById('d-data-bin').textContent = dataBinGrouped;
   document.getElementById('d-data-dec').textContent = data19;
   document.getElementById('d-data-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
-  document.getElementById('d-data-decoded').textContent = '—';
+  const decoded = decodeData(word, labelInfo);
+  document.getElementById('d-data-decoded').textContent = decoded !== null
+    ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
+    : '—';
   document.getElementById('d-data-format').textContent = labelInfo ? labelInfo.enc : '—';
 
   // ── SSM (bits 30-31) ──
