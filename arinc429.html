@@ -151,9 +151,12 @@
       gap: 3px;
     }
     .bit-num {
-      font-size: clamp(0.38rem, 0.9vw, 0.58rem);
-      color: #556655;
+      font-size: clamp(0.5rem, 1.4vw, 0.8rem);
+      color: #8aaa8a;
       font-family: 'Courier New', monospace;
+    }
+    @media (max-width: 600px) {
+      .bit-num { display: none; }
     }
     .bit-cell {
       width: 100%;
