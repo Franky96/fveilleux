@@ -290,6 +290,7 @@ function getLabelSsmType(labelInfo) {
   if ((oct >= 0o155 && oct <= 0o161) || (oct >= 0o350 && oct <= 0o354)) return 'maint';
   if (oct >= 0o270 && oct <= 0o276) return 'dis';
   if (labelInfo.enc === 'BNR') return 'bnr';
+  if (labelInfo.enc === 'DIS') return 'dis';
   return 'bcd';
 }
 
