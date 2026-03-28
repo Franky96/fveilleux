@@ -137,14 +137,12 @@
     }
 
     .bit-display {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(32, 1fr);
       gap: 3px;
       overflow-x: hidden;
-      padding-bottom: 0.5rem;
     }
     .bit-wrapper {
-      flex: 1 1 0;
-      min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -180,6 +178,38 @@
     .bit-data   { background: rgba(128,204,128,0.18); color: #80cc80; border-color: rgba(128,204,128,0.6); }
     .bit-sdi    { background: rgba(96,184,200,0.18);  color: #60b8c8; border-color: rgba(96,184,200,0.6); }
     .bit-label  { background: rgba(245,158,11,0.18);  color: #f59e0b; border-color: rgba(245,158,11,0.6); }
+
+    /* ── Field map ── */
+    .field-map {
+      display: grid;
+      grid-template-columns: repeat(32, 1fr);
+      gap: 3px;
+      margin-top: 4px;
+      margin-bottom: 0.6rem;
+    }
+    .fmap-seg {
+      height: 1.3rem;
+      font-size: clamp(0.38rem, 0.9vw, 0.58rem);
+      font-family: 'Courier New', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      border: 1px solid;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .fmap-parity { background: rgba(255,107,107,0.25); color: #ff6b6b; border-color: rgba(255,107,107,0.5); }
+    .fmap-ssm    { background: rgba(192,132,252,0.25); color: #c084fc; border-color: rgba(192,132,252,0.5); }
+    .fmap-sdi    { background: rgba(96,184,200,0.25);  color: #60b8c8; border-color: rgba(96,184,200,0.5); }
+    .fmap-label  { background: rgba(245,158,11,0.25);  color: #f59e0b; border-color: rgba(245,158,11,0.5); }
+    .fmap-bcd    { background: rgba(128,204,128,0.20); color: #80cc80; border-color: rgba(128,204,128,0.4); }
+    .fmap-freq   { background: rgba(128,204,128,0.20); color: #80cc80; border-color: rgba(128,204,128,0.4); }
+    .fmap-bnr    { background: rgba(128,204,128,0.15); color: #6ab86a; border-color: rgba(128,204,128,0.3); }
+    .fmap-sign   { background: rgba(255,107,107,0.20); color: #ff6b6b; border-color: rgba(255,107,107,0.4); }
+    .fmap-dis    { background: rgba(251,191,36,0.20);  color: #fbbf24; border-color: rgba(251,191,36,0.4); }
+    .fmap-pad    { background: rgba(60,60,60,0.30);    color: #444;    border-color: rgba(80,80,80,0.4); }
+    @media (max-width: 600px) { .field-map { display: none; } }
 
     .legend {
       display: flex;
@@ -472,8 +502,9 @@
     <div class="panel">
       <h2>Représentation binaire — 32 bits</h2>
       <div class="bit-display" id="bit-display">
-        <div class="placeholder-msg">Entrez un mot hexadécimal pour commencer</div>
+        <div class="placeholder-msg" style="grid-column:1/-1">Entrez un mot hexadécimal pour commencer</div>
       </div>
+      <div class="field-map" id="field-map"></div>
       <div class="legend">
         <div class="legend-item">
           <div class="legend-dot" style="background:#ff6b6b"></div>
