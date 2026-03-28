@@ -727,17 +727,25 @@ function renderFields(word) {
     return 'ssm-normal'; // Normal NML, Normal+, Normal−
   }
 
-  document.getElementById('d-ssm').textContent = ssmBin;
-  document.getElementById('d-ssm-type').textContent = ssmType.toUpperCase();
-
-  // Populate SSM reference table
-  document.getElementById('ssm-ref-title').textContent = `Référentiel SSM (${ssmType.toUpperCase()}) :`;
-  for (let i = 0; i < 4; i++) {
-    const desc = ssmTable[i];
-    document.getElementById(`ssm-ref-desc-${i}`).textContent = desc;
-    const row = document.getElementById(`ssm-ref-${i}`);
-    const cat = ssmCatClass(desc);
-    row.className = `ssm-ref-row ${cat}${i === ssm ? ' ssm-active' : ''}`;
+  if (word === 0) {
+    document.getElementById('d-ssm').textContent = '—';
+    document.getElementById('d-ssm-type').textContent = '—';
+    document.getElementById('ssm-ref-title').textContent = '— saisir un mot hex —';
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`ssm-ref-desc-${i}`).textContent = '';
+      document.getElementById(`ssm-ref-${i}`).className = 'ssm-ref-row ssm-undef';
+    }
+  } else {
+    document.getElementById('d-ssm').textContent = ssmBin;
+    document.getElementById('d-ssm-type').textContent = ssmType.toUpperCase();
+    document.getElementById('ssm-ref-title').textContent = `Référentiel SSM (${ssmType.toUpperCase()}) :`;
+    for (let i = 0; i < 4; i++) {
+      const desc = ssmTable[i];
+      document.getElementById(`ssm-ref-desc-${i}`).textContent = desc;
+      const row = document.getElementById(`ssm-ref-${i}`);
+      const cat = ssmCatClass(desc);
+      row.className = `ssm-ref-row ${cat}${i === ssm ? ' ssm-active' : ''}`;
+    }
   }
 
   // ── Parity (bit 32) — odd parity ──
