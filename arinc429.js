@@ -600,9 +600,6 @@ function renderFields(word) {
 
   document.getElementById('d-ssm').textContent = ssmBin;
   document.getElementById('d-ssm-type').textContent = ssmType.toUpperCase();
-  const sigEl = document.getElementById('d-ssm-sig');
-  sigEl.textContent = ssmDesc;
-  sigEl.className = `detail-val ssm-sig-${ssmCatClass(ssmDesc).replace('ssm-', '')}`;
 
   // Populate SSM reference table
   document.getElementById('ssm-ref-title').textContent = `Référentiel SSM (${ssmType.toUpperCase()}) :`;
