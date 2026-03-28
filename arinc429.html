@@ -285,10 +285,23 @@
       border-bottom: 1px solid #222222;
       padding-bottom: 0.6rem;
     }
+    .status-sub-row {
+      display: flex;
+      gap: 0;
+      margin-top: 0.7rem;
+      min-height: 0;
+    }
     .detail-subsection {
-      margin-top: 0.8rem;
-      padding-top: 0.5rem;
-      border-top: 1px solid #1c2a1c;
+      flex: 1;
+      padding-top: 0.4rem;
+      min-width: 0;
+    }
+    .detail-subsection.ssm-col {
+      padding-right: 0.8rem;
+      border-right: 1px solid #1c2a1c;
+    }
+    .detail-subsection.sdi-col {
+      padding-left: 0.8rem;
     }
     .detail-subsection-title {
       font-size: 0.68rem;
@@ -297,6 +310,27 @@
       text-transform: uppercase;
       color: #4a6a4a;
       margin-bottom: 0.5rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #1c2a1c;
+    }
+    .detail-subsection .detail-row {
+      flex-direction: column;
+      gap: 0.1rem;
+      padding: 0.25rem 0;
+      border-bottom: none;
+    }
+    .detail-subsection .detail-key {
+      font-size: 0.68rem;
+    }
+    .detail-subsection .detail-val {
+      font-size: 0.82rem;
+    }
+    .detail-subsection .ssm-ref-block {
+      margin: 0.3rem 0 0 0;
+      padding: 0.3rem 0 0.2rem 0.5rem;
+    }
+    .detail-subsection .ssm-ref-row {
+      font-size: 0.75rem;
     }
     .dot {
       width: 8px; height: 8px;
@@ -486,53 +520,58 @@
           <span class="detail-val" id="d-parity">—</span>
         </div>
 
-        <!-- SSM subsection -->
-        <div class="detail-subsection">
-          <div class="detail-subsection-title">SSM — Bits 30-31</div>
-          <div class="detail-row">
-            <span class="detail-key">Valeur</span>
-            <span class="detail-val" id="d-ssm">—</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-key">Table</span>
-            <span class="detail-val dim" id="d-ssm-type">—</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-key">Signification</span>
-            <span class="detail-val ssm-sig-val" id="d-ssm-sig">—</span>
-          </div>
-          <div class="ssm-ref-block">
-            <div class="ssm-ref-title" id="ssm-ref-title">Référentiel SSM :</div>
-            <div class="ssm-ref-row" id="ssm-ref-0">
-              <span class="ssm-ref-code">00</span>
-              <span id="ssm-ref-desc-0">—</span>
-            </div>
-            <div class="ssm-ref-row" id="ssm-ref-1">
-              <span class="ssm-ref-code">01</span>
-              <span id="ssm-ref-desc-1">—</span>
-            </div>
-            <div class="ssm-ref-row" id="ssm-ref-2">
-              <span class="ssm-ref-code">10</span>
-              <span id="ssm-ref-desc-2">—</span>
-            </div>
-            <div class="ssm-ref-row" id="ssm-ref-3">
-              <span class="ssm-ref-code">11</span>
-              <span id="ssm-ref-desc-3">—</span>
-            </div>
-          </div>
-        </div>
+        <!-- SSM + SDI side by side -->
+        <div class="status-sub-row">
 
-        <!-- SDI subsection -->
-        <div class="detail-subsection">
-          <div class="detail-subsection-title">SDI — Bits 9-10</div>
-          <div class="detail-row">
-            <span class="detail-key">Valeur</span>
-            <span class="detail-val" id="d-sdi">—</span>
+          <!-- SSM — left column -->
+          <div class="detail-subsection ssm-col">
+            <div class="detail-subsection-title">SSM — Bits 30-31</div>
+            <div class="detail-row">
+              <span class="detail-key">Valeur</span>
+              <span class="detail-val" id="d-ssm">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Table</span>
+              <span class="detail-val dim" id="d-ssm-type">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Signification</span>
+              <span class="detail-val ssm-sig-val" id="d-ssm-sig">—</span>
+            </div>
+            <div class="ssm-ref-block">
+              <div class="ssm-ref-title" id="ssm-ref-title">Référentiel :</div>
+              <div class="ssm-ref-row" id="ssm-ref-0">
+                <span class="ssm-ref-code">00</span>
+                <span id="ssm-ref-desc-0">—</span>
+              </div>
+              <div class="ssm-ref-row" id="ssm-ref-1">
+                <span class="ssm-ref-code">01</span>
+                <span id="ssm-ref-desc-1">—</span>
+              </div>
+              <div class="ssm-ref-row" id="ssm-ref-2">
+                <span class="ssm-ref-code">10</span>
+                <span id="ssm-ref-desc-2">—</span>
+              </div>
+              <div class="ssm-ref-row" id="ssm-ref-3">
+                <span class="ssm-ref-code">11</span>
+                <span id="ssm-ref-desc-3">—</span>
+              </div>
+            </div>
           </div>
-          <div class="detail-row">
-            <span class="detail-key">Source / Dest</span>
-            <span class="detail-val dim" id="d-sdi-desc">—</span>
+
+          <!-- SDI — right column -->
+          <div class="detail-subsection sdi-col">
+            <div class="detail-subsection-title">SDI — Bits 9-10</div>
+            <div class="detail-row">
+              <span class="detail-key">Valeur</span>
+              <span class="detail-val" id="d-sdi">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Source / Dest</span>
+              <span class="detail-val dim" id="d-sdi-desc">—</span>
+            </div>
           </div>
+
         </div>
       </div>
 
