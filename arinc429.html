@@ -320,6 +320,40 @@
     .detail-val.accent { color: #f59e0b; }
     .detail-val.dim   { color: #556680; font-size: 0.82rem; font-family: inherit; }
 
+    /* ── SSM reference table ── */
+    .ssm-ref-block {
+      margin: 0.4rem 0 0.2rem 0;
+      padding: 0.4rem 0.6rem 0.3rem 0.8rem;
+      border-left: 2px solid #1e2e1e;
+    }
+    .ssm-ref-title {
+      color: #4a5a4a;
+      font-size: 0.72rem;
+      margin-bottom: 0.3rem;
+      font-family: inherit;
+    }
+    .ssm-ref-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.08rem 0;
+      color: #3a4e3a;
+      font-size: 0.8rem;
+      transition: color 0.2s;
+    }
+    .ssm-ref-row.ssm-active {
+      color: #ff6b6b;
+      font-weight: bold;
+    }
+    .ssm-ref-code {
+      font-family: 'Courier New', monospace;
+      min-width: 2.2rem;
+    }
+    .detail-val.ssm-sig-val {
+      color: #f0ede6;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+
     /* ── Octal digit boxes (label panel) ── */
     .label-octal-display {
       display: flex;
@@ -433,8 +467,32 @@
           <span class="detail-val" id="d-ssm">—</span>
         </div>
         <div class="detail-row">
-          <span class="detail-key">Signification SSM</span>
-          <span class="detail-val dim" id="d-ssm-sig">—</span>
+          <span class="detail-key">Table SSM</span>
+          <span class="detail-val dim" id="d-ssm-type">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Signification</span>
+          <span class="detail-val ssm-sig-val" id="d-ssm-sig">—</span>
+        </div>
+        <!-- SSM reference table -->
+        <div class="ssm-ref-block">
+          <div class="ssm-ref-title" id="ssm-ref-title">Référentiel SSM :</div>
+          <div class="ssm-ref-row" id="ssm-ref-0">
+            <span class="ssm-ref-code">00</span>
+            <span id="ssm-ref-desc-0">—</span>
+          </div>
+          <div class="ssm-ref-row" id="ssm-ref-1">
+            <span class="ssm-ref-code">01</span>
+            <span id="ssm-ref-desc-1">—</span>
+          </div>
+          <div class="ssm-ref-row" id="ssm-ref-2">
+            <span class="ssm-ref-code">10</span>
+            <span id="ssm-ref-desc-2">—</span>
+          </div>
+          <div class="ssm-ref-row" id="ssm-ref-3">
+            <span class="ssm-ref-code">11</span>
+            <span id="ssm-ref-desc-3">—</span>
+          </div>
         </div>
         <div class="detail-row">
           <span class="detail-key">SDI (Bits 9-10)</span>

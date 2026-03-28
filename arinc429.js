@@ -586,9 +586,18 @@ function renderFields(word) {
   // ── SSM (bits 30-31) ──
   const ssm = (word >> 29) & 0x3;
   const ssmBin = ssm.toString(2).padStart(2, '0');
-  const ssmDesc = (SSM_TABLES[ssmType] || SSM_TABLES.bcd)[ssm];
+  const ssmTable = SSM_TABLES[ssmType] || SSM_TABLES.bcd;
+  const ssmDesc = ssmTable[ssm];
   document.getElementById('d-ssm').textContent = ssmBin;
+  document.getElementById('d-ssm-type').textContent = ssmType.toUpperCase();
   document.getElementById('d-ssm-sig').textContent = ssmDesc;
+  // Populate SSM reference table
+  document.getElementById('ssm-ref-title').textContent = `Référentiel SSM (${ssmType.toUpperCase()}) :`;
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`ssm-ref-desc-${i}`).textContent = ssmTable[i];
+    const row = document.getElementById(`ssm-ref-${i}`);
+    row.classList.toggle('ssm-active', i === ssm);
+  }
 
   // ── Parity (bit 32) — odd parity ──
   const ones = popCount(word);
