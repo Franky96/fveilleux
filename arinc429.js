@@ -588,15 +588,30 @@ function renderFields(word) {
   const ssmBin = ssm.toString(2).padStart(2, '0');
   const ssmTable = SSM_TABLES[ssmType] || SSM_TABLES.bcd;
   const ssmDesc = ssmTable[ssm];
+
+  function ssmCatClass(desc) {
+    if (!desc || desc === '—') return 'ssm-undef';
+    if (desc.includes('FW') || desc.includes('Failure Warning')) return 'ssm-fw';
+    if (desc.includes('NCD') || desc.includes('No Computed'))    return 'ssm-ncd';
+    if (desc.includes('FT') || desc.includes('Functional Test')) return 'ssm-ft';
+    if (desc.includes('Undefined'))                               return 'ssm-undef';
+    return 'ssm-normal'; // Normal NML, Normal+, Normal−
+  }
+
   document.getElementById('d-ssm').textContent = ssmBin;
   document.getElementById('d-ssm-type').textContent = ssmType.toUpperCase();
-  document.getElementById('d-ssm-sig').textContent = ssmDesc;
+  const sigEl = document.getElementById('d-ssm-sig');
+  sigEl.textContent = ssmDesc;
+  sigEl.className = `detail-val ssm-sig-${ssmCatClass(ssmDesc).replace('ssm-', '')}`;
+
   // Populate SSM reference table
   document.getElementById('ssm-ref-title').textContent = `Référentiel SSM (${ssmType.toUpperCase()}) :`;
   for (let i = 0; i < 4; i++) {
-    document.getElementById(`ssm-ref-desc-${i}`).textContent = ssmTable[i];
+    const desc = ssmTable[i];
+    document.getElementById(`ssm-ref-desc-${i}`).textContent = desc;
     const row = document.getElementById(`ssm-ref-${i}`);
-    row.classList.toggle('ssm-active', i === ssm);
+    const cat = ssmCatClass(desc);
+    row.className = `ssm-ref-row ${cat}${i === ssm ? ' ssm-active' : ''}`;
   }
 
   // ── Parity (bit 32) — odd parity ──

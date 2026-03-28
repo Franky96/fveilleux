@@ -336,23 +336,31 @@
       display: flex;
       justify-content: space-between;
       padding: 0.08rem 0;
-      color: #3a4e3a;
       font-size: 0.8rem;
-      transition: color 0.2s;
+      transition: color 0.15s;
     }
-    .ssm-ref-row.ssm-active {
-      color: #ff6b6b;
-      font-weight: bold;
-    }
+    /* inactive (dimmed) colors */
+    .ssm-ref-row.ssm-fw     { color: #5a2a2a; }
+    .ssm-ref-row.ssm-normal { color: #2a5a2a; }
+    .ssm-ref-row.ssm-ft     { color: #2a4a5a; }
+    .ssm-ref-row.ssm-ncd    { color: #5a4a1a; }
+    .ssm-ref-row.ssm-undef  { color: #3a3a3a; }
+    /* active (bright + bold) */
+    .ssm-ref-row.ssm-fw.ssm-active     { color: #ff6b6b; font-weight: bold; }
+    .ssm-ref-row.ssm-normal.ssm-active { color: #80cc80; font-weight: bold; }
+    .ssm-ref-row.ssm-ft.ssm-active     { color: #60b8c8; font-weight: bold; }
+    .ssm-ref-row.ssm-ncd.ssm-active    { color: #f59e0b; font-weight: bold; }
+    .ssm-ref-row.ssm-undef.ssm-active  { color: #888888; font-weight: bold; }
     .ssm-ref-code {
       font-family: 'Courier New', monospace;
       min-width: 2.2rem;
     }
-    .detail-val.ssm-sig-val {
-      color: #f0ede6;
-      font-weight: bold;
-      font-family: 'Courier New', monospace;
-    }
+    /* Signification field colors */
+    .detail-val.ssm-sig-fw     { color: #ff6b6b; font-weight: bold; font-family: 'Courier New', monospace; }
+    .detail-val.ssm-sig-normal { color: #80cc80; font-weight: bold; font-family: 'Courier New', monospace; }
+    .detail-val.ssm-sig-ft     { color: #60b8c8; font-weight: bold; font-family: 'Courier New', monospace; }
+    .detail-val.ssm-sig-ncd    { color: #f59e0b; font-weight: bold; font-family: 'Courier New', monospace; }
+    .detail-val.ssm-sig-undef  { color: #888888; font-weight: bold; font-family: 'Courier New', monospace; }
 
     /* ── Octal digit boxes (label panel) ── */
     .label-octal-display {
