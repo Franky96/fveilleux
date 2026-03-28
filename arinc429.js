@@ -571,7 +571,7 @@ function getDataFieldSegments(oct, enc, meta, unit) {
     { span:4, label:'0.001MHz', cls:'fmap-freq' },
   ];
   if (oct === '010') return [
-    { span:1, label:'+100°', cls:'fmap-bcd' },
+    { span:1, label:'100°', cls:'fmap-bcd' },
     { span:4, label:"10°",  cls:'fmap-bcd'  },
     { span:4, label:"1°",   cls:'fmap-bcd'  },
     { span:4, label:"10'",  cls:'fmap-bcd'  },
