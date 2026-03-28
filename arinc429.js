@@ -22,6 +22,8 @@ const LABELS = [
   { oct: '002', enc: 'BCD', param: 'Time to Go',                        unit: 'min' },
   { oct: '003', enc: 'BCD', param: 'Cross Track Distance',              unit: 'nm' },
   { oct: '004', enc: 'BCD', param: 'Runway Distance to Go',             unit: 'ft' },
+  { oct: '005', enc: 'DIS', param: 'Engine Discrete',                   unit: '' },
+  { oct: '006', enc: 'DIS', param: 'Engine Discrete',                   unit: '' },
   { oct: '010', enc: 'BCD', param: 'Present Position - Latitude',       unit: 'deg:min' },
   { oct: '011', enc: 'BCD', param: 'Present Position - Longitude',      unit: 'deg:min' },
   { oct: '012', enc: 'BCD', param: 'Ground Speed',                      unit: 'kt' },
