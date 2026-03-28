@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RONA — Santé &amp; Sécurité</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Layout mobile-first ── */
+    body { align-items: flex-start; }
+
+    .rona-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 0 6rem 0;
+      background: #0a0f0a;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .rona-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #0f1a0f;
+      border-bottom: 1px solid #2a3a2a;
+      padding: 0.9rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .rona-topbar a {
+      color: #80cc80;
+      text-decoration: none;
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: 0.3rem;
+    }
+    .rona-topbar h1 {
+      font-size: 1.1rem;
+      color: #f0ede6;
+      margin: 0;
+      flex: 1;
+    }
+    .rona-topbar span {
+      font-size: 0.75rem;
+      color: #a89f94;
+    }
+
+    /* ── Trousse card ── */
+    .trousse-card {
+      margin: 0.75rem 0.75rem 0;
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .trousse-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .trousse-header:active { background: #162216; }
+    .trousse-icon { font-size: 1.5rem; }
+    .trousse-info { flex: 1; }
+    .trousse-nom { font-weight: bold; font-size: 1rem; color: #f0ede6; }
+    .trousse-lieu { font-size: 0.8rem; color: #888078; margin-top: 0.1rem; }
+    .trousse-badge {
+      background: #c0392b;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      min-width: 1.6rem;
+      text-align: center;
+    }
+    .trousse-badge.ok { background: #2a5a2a; color: #80cc80; }
+    .trousse-arrow { color: #555; font-size: 0.9rem; transition: transform 0.2s; }
+    .trousse-card.open .trousse-arrow { transform: rotate(90deg); }
+
+    /* ── Items list ── */
+    .trousse-items { display: none; border-top: 1px solid #2a3a2a; }
+    .trousse-card.open .trousse-items { display: block; }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #1a2a1a;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-check {
+      width: 1.6rem;
+      height: 1.6rem;
+      min-width: 1.6rem;
+      border-radius: 50%;
+      border: 2px solid #2a5a2a;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .item-check.checked { background: #2a5a2a; border-color: #80cc80; color: #80cc80; }
+    .item-nom { flex: 1; font-size: 0.95rem; color: #f0ede6; }
+    .item-nom.checked { color: #555; text-decoration: line-through; }
+    .item-qte {
+      font-size: 0.8rem;
+      color: #c0392b;
+      font-weight: bold;
+      background: #2a1010;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+    }
+    .item-qte.ok { color: #80cc80; background: #0a1f0a; }
+    .item-del {
+      color: #444;
+      font-size: 1.1rem;
+      padding: 0.3rem;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .item-del:active { color: #c0392b; }
+
+    /* ── Ajouter item (inline) ── */
+    .add-item-row {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      background: #0a0f0a;
+      border-top: 1px solid #1a2a1a;
+    }
+    .add-item-row input {
+      flex: 1;
+      margin: 0;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 8px;
+    }
+    .add-item-row input.qte-input { width: 4.5rem; flex: none; }
+    .add-item-row button {
+      width: auto;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      border-radius: 8px;
+    }
+
+    /* ── Trousse actions ── */
+    .trousse-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem 0.75rem;
+    }
+    .btn-del-trousse {
+      width: auto;
+      background: transparent;
+      color: #c0392b;
+      border: 1px solid #c0392b;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8rem;
+      border-radius: 8px;
+    }
+    .btn-del-trousse:hover { background: #c0392b; color: #fff; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      background: #80cc80;
+      color: #0a0f0a;
+      font-size: 1.8rem;
+      font-weight: bold;
+      border: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 200;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .fab:active { transform: scale(0.92); }
+    .fab:hover { background: #60aa60; }
+
+    /* ── Modal ── */
+    .modal-overlay { z-index: 300; }
+    .modal-box input { margin-bottom: 0.75rem; }
+    .modal-box label { font-size: 0.85rem; color: #a89f94; margin-bottom: 0.3rem; display: block; }
+
+    /* ── Empty state ── */
+    .rona-empty {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: #555;
+      font-size: 0.95rem;
+    }
+    .rona-empty span { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="rona-container">
+
+    <div class="rona-topbar">
+      <a href="dashboard.html">&#8592;</a>
+      <h1>🩺 Santé &amp; Sécurité</h1>
+      <span id="topbar-stat"></span>
+    </div>
+
+    <div id="trousses-container"></div>
+
+  </div>
+
+  <!-- FAB : nouvelle trousse -->
+  <button class="fab" onclick="ouvrirModalTrousse()" title="Nouvelle trousse">+</button>
+
+  <!-- Modal nouvelle trousse -->
+  <div class="modal-overlay hidden" id="modal-trousse">
+    <div class="modal-box">
+      <h3 id="modal-trousse-titre">Nouvelle trousse</h3>
+      <label>Nom de la trousse</label>
+      <input type="text" id="trousse-nom" placeholder="Ex: Trousse Atelier A" />
+      <label>Emplacement</label>
+      <input type="text" id="trousse-lieu" placeholder="Ex: Allée 3, bureau, etc." />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalTrousse()">Annuler</button>
+        <button class="btn-save" id="trousse-save-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="rona.js"></script>
+</body>
+</html>
