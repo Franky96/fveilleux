@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let docSnap = await getDoc(usersRef);
       if (!docSnap.exists()) {
         const defaultUsers = {
-          "frank": { motDePasse: "Biere42", nom: "Francis", role: "admin", permissions: ["ena", "aviation", "bieres", "scifi", "hockey", "admin", "aeronefs"] },
+          "frank": { motDePasse: "Biere42", nom: "Francis", role: "admin", permissions: ["ena", "aviation", "bieres", "scifi", "hockey", "admin", "aeronefs", "films", "liens"] },
           "visiteur": { motDePasse: "invite", nom: "Ami(e)", role: "user", permissions: ["bieres", "hockey"] },
           "ecole": { motDePasse: "prof123", nom: "Professeur", role: "user", permissions: ["ena", "aviation"] }
         };
