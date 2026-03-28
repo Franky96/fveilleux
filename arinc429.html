@@ -400,7 +400,16 @@
     .ssm-ref-row.ssm-undef.ssm-active  { color: #888888; font-weight: bold; }
     .ssm-ref-code {
       font-family: 'Courier New', monospace;
-      min-width: 2.2rem;
+      min-width: 1.8rem;
+      flex-shrink: 0;
+      text-align: left;
+    }
+    .ssm-ref-desc {
+      flex: 1;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     /* Signification field colors */
     .detail-val.ssm-sig-fw     { color: #ff6b6b; font-weight: bold; font-family: 'Courier New', monospace; }
@@ -542,19 +551,19 @@
               <div class="ssm-ref-title" id="ssm-ref-title">Référentiel :</div>
               <div class="ssm-ref-row" id="ssm-ref-0">
                 <span class="ssm-ref-code">00</span>
-                <span id="ssm-ref-desc-0">—</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-0">—</span>
               </div>
               <div class="ssm-ref-row" id="ssm-ref-1">
                 <span class="ssm-ref-code">01</span>
-                <span id="ssm-ref-desc-1">—</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-1">—</span>
               </div>
               <div class="ssm-ref-row" id="ssm-ref-2">
                 <span class="ssm-ref-code">10</span>
-                <span id="ssm-ref-desc-2">—</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-2">—</span>
               </div>
               <div class="ssm-ref-row" id="ssm-ref-3">
                 <span class="ssm-ref-code">11</span>
-                <span id="ssm-ref-desc-3">—</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-3">—</span>
               </div>
             </div>
           </div>
