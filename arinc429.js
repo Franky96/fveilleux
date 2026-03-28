@@ -728,7 +728,7 @@ function renderFields(word) {
     return 'ssm-normal'; // Normal NML, Normal+, Normal−
   }
 
-  if (word === 0) {
+  if (word === 0 || (labelInfo && labelInfo.param === 'Spare')) {
     document.getElementById('d-ssm').textContent = '—';
     document.getElementById('d-ssm-type').textContent = '—';
     document.getElementById('ssm-ref-title').textContent = '— saisir un mot hex —';
