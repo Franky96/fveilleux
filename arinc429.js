@@ -507,7 +507,7 @@ function popCount(n) {
 
 // ── Field map ────────────────────────────────────────
 
-function getDataFieldSegments(oct, enc, meta) {
+function getDataFieldSegments(oct, enc, meta, unit) {
   // Label-specific
   if (oct === '030') return [
     { span:3, label:'10MHz',    cls:'fmap-freq' },
@@ -567,6 +567,23 @@ function getDataFieldSegments(oct, enc, meta) {
     { span:4, label:'0.001MHz', cls:'fmap-freq' },
   ];
   // Generic by encoding
+  if (enc === 'BCD' && meta && meta.decimals !== undefined) {
+    const dec = meta.decimals;
+    const spans = [3, 4, 4, 4, 4];   // d4..d0
+    return [4, 3, 2, 1, 0].map((d, i) => {
+      const exp   = d - dec;
+      const isDis = meta.maskD0 && d === 0;
+      const isPad = (meta.bcdDigits === 3 && d <= 1) || (isDis);
+      let label;
+      if (unit) {
+        const n = exp >= 0 ? Math.pow(10, exp) : (1 / Math.pow(10, -exp)).toFixed(-exp);
+        label = `${n}${unit}`;
+      } else {
+        label = isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
+      }
+      return { span: spans[i], label, cls: isDis ? 'fmap-dis' : isPad ? 'fmap-pad' : 'fmap-bcd' };
+    });
+  }
   if (enc === 'BCD') {
     const isPad1 = meta && (meta.bcdDigits === 3 || meta.maskD0);
     const isPad2 = meta && meta.bcdDigits === 3;
@@ -591,13 +608,14 @@ function getDataFieldSegments(oct, enc, meta) {
 function renderFieldMap(labelInfo, meta) {
   const container = document.getElementById('field-map');
   container.innerHTML = '';
-  const oct = labelInfo ? labelInfo.oct : null;
-  const enc = labelInfo ? labelInfo.enc : null;
+  const oct  = labelInfo ? labelInfo.oct  : null;
+  const enc  = labelInfo ? labelInfo.enc  : null;
+  const unit = labelInfo ? labelInfo.unit : null;
 
   const segs = [
     { span:1, label:'P',     cls:'fmap-parity' },
     { span:2, label:'SSM',   cls:'fmap-ssm'    },
-    ...getDataFieldSegments(oct, enc, meta),
+    ...getDataFieldSegments(oct, enc, meta, unit),
     { span:2, label:'SDI',   cls:'fmap-sdi'    },
     { span:8, label:'LABEL', cls:'fmap-label'  },
   ];
