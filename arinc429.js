@@ -570,6 +570,14 @@ function getDataFieldSegments(oct, enc, meta, unit) {
     { span:4, label:'0.01MHz',  cls:'fmap-freq' },
     { span:4, label:'0.001MHz', cls:'fmap-freq' },
   ];
+  if (oct === '010') return [
+    { span:1, label:'N/S',  cls:'fmap-sign' },
+    { span:4, label:"10°",  cls:'fmap-bcd'  },
+    { span:4, label:"1°",   cls:'fmap-bcd'  },
+    { span:4, label:"10'",  cls:'fmap-bcd'  },
+    { span:4, label:"1'",   cls:'fmap-bcd'  },
+    { span:4, label:"0.1'", cls:'fmap-bcd'  },
+  ];
   // Generic by encoding
   if (enc === 'BCD' && meta && meta.decimals !== undefined) {
     const dec = meta.decimals;
@@ -616,11 +624,13 @@ function renderFieldMap(labelInfo, meta) {
   const enc  = labelInfo ? labelInfo.enc  : null;
   const unit = labelInfo ? labelInfo.unit : null;
 
+  const datasegs = getDataFieldSegments(oct, enc, meta, unit);
+  const dataSpan = datasegs.reduce((s, x) => s + x.span, 0);
   const segs = [
     { span:1, label:'P',     cls:'fmap-parity' },
     { span:2, label:'SSM',   cls:'fmap-ssm'    },
-    ...getDataFieldSegments(oct, enc, meta, unit),
-    { span:2, label:'SDI',   cls:'fmap-sdi'    },
+    ...datasegs,
+    ...(dataSpan <= 19 ? [{ span:2, label:'SDI', cls:'fmap-sdi' }] : []),
     { span:8, label:'LABEL', cls:'fmap-label'  },
   ];
 
