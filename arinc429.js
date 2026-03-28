@@ -277,8 +277,8 @@ const SSM_TABLES = {
 
 // SDI descriptions by label type (bits 10-9 → index 0-3)
 const SDI_TABLES = {
-  radio: ['TOUS',        'Système #1', 'Système #2', 'Système #3'],
-  other: ['Non utilisé', 'Système #1', 'Système #2', 'Système #3'],
+  tous:  ['Tous / Système #4', 'Système #1', 'Système #2', 'Système #3'],
+  other: ['Non utilisé',       'Système #1', 'Système #2', 'Système #3'],
 };
 
 function getLabelSsmType(labelInfo) {
@@ -566,7 +566,7 @@ function renderFields(word) {
   // ── SDI (bits 9-10) ──
   const sdi = (word >> 8) & 0x3;
   const ssmType = getLabelSsmType(labelInfo);
-  const sdiTable = (ssmType === 'radio') ? SDI_TABLES.radio : SDI_TABLES.other;
+  const sdiTable = ['radio', 'dis', 'bnr'].includes(ssmType) ? SDI_TABLES.tous : SDI_TABLES.other;
   document.getElementById('d-sdi').textContent = sdi.toString(2).padStart(2, '0');
   document.getElementById('d-sdi-desc').textContent = sdiTable[sdi];
 
