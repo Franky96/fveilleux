@@ -505,6 +505,112 @@ function popCount(n) {
   return c;
 }
 
+// ── Field map ────────────────────────────────────────
+
+function getDataFieldSegments(oct, enc, meta) {
+  // Label-specific
+  if (oct === '030') return [
+    { span:3, label:'10MHz',    cls:'fmap-freq' },
+    { span:4, label:'1MHz',     cls:'fmap-freq' },
+    { span:4, label:'0.1MHz',  cls:'fmap-freq' },
+    { span:4, label:'0.01MHz', cls:'fmap-freq' },
+    { span:4, label:'0.001MHz',cls:'fmap-freq' },
+  ];
+  if (oct === '031') return [
+    { span:3, label:'A',    cls:'fmap-bcd' },
+    { span:3, label:'B',    cls:'fmap-bcd' },
+    { span:3, label:'C',    cls:'fmap-bcd' },
+    { span:3, label:'D',    cls:'fmap-bcd' },
+    { span:7, label:'CTRL', cls:'fmap-dis' },
+  ];
+  if (oct === '032') return [
+    { span:3, label:'1000kHz',cls:'fmap-freq' },
+    { span:4, label:'100kHz', cls:'fmap-freq' },
+    { span:4, label:'10kHz',  cls:'fmap-freq' },
+    { span:4, label:'1kHz',   cls:'fmap-freq' },
+    { span:1, label:'½kHz',  cls:'fmap-freq' },
+    { span:1, label:'SP',     cls:'fmap-pad'  },
+    { span:1, label:'ANT',    cls:'fmap-dis'  },
+    { span:1, label:'BFO',    cls:'fmap-dis'  },
+  ];
+  if (oct === '033') return [
+    { span:3, label:'10MHz',   cls:'fmap-freq' },
+    { span:4, label:'1MHz',    cls:'fmap-freq' },
+    { span:4, label:'0.1MHz',  cls:'fmap-freq' },
+    { span:4, label:'0.01MHz', cls:'fmap-freq' },
+    { span:2, label:'SP',      cls:'fmap-pad'  },
+    { span:2, label:'CAT',     cls:'fmap-dis'  },
+  ];
+  if (oct === '034') return [
+    { span:3, label:'10MHz',   cls:'fmap-freq' },
+    { span:4, label:'1MHz',    cls:'fmap-freq' },
+    { span:4, label:'0.1MHz',  cls:'fmap-freq' },
+    { span:4, label:'0.01MHz', cls:'fmap-freq' },
+    { span:1, label:'ILS',     cls:'fmap-dis'  },
+    { span:3, label:'SP',      cls:'fmap-pad'  },
+  ];
+  if (oct === '035') return [
+    { span:3, label:'10MHz',  cls:'fmap-freq' },
+    { span:4, label:'1MHz',   cls:'fmap-freq' },
+    { span:4, label:'0.1MHz', cls:'fmap-freq' },
+    { span:1, label:'.05M',   cls:'fmap-freq' },
+    { span:1, label:'ID',     cls:'fmap-dis'  },
+    { span:1, label:'IDd',    cls:'fmap-dis'  },
+    { span:2, label:'FLG',    cls:'fmap-dis'  },
+    { span:3, label:'MODE',   cls:'fmap-dis'  },
+  ];
+  if (oct === '036') return [
+    { span:3, label:'10MHz',    cls:'fmap-freq' },
+    { span:4, label:'1MHz',     cls:'fmap-freq' },
+    { span:4, label:'0.1MHz',   cls:'fmap-freq' },
+    { span:4, label:'0.01MHz',  cls:'fmap-freq' },
+    { span:4, label:'0.001MHz', cls:'fmap-freq' },
+  ];
+  // Generic by encoding
+  if (enc === 'BCD') {
+    const isPad1 = meta && (meta.bcdDigits === 3 || meta.maskD0);
+    const isPad2 = meta && meta.bcdDigits === 3;
+    return [
+      { span:3, label:'d4', cls:'fmap-bcd' },
+      { span:4, label:'d3', cls:'fmap-bcd' },
+      { span:4, label:'d2', cls:'fmap-bcd' },
+      { span:4, label: isPad2 ? 'PAD' : 'd1', cls: isPad2 ? 'fmap-pad' : 'fmap-bcd' },
+      { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
+    ];
+  }
+  if (enc === 'BNR') return [
+    { span:1,  label:'sgn',  cls:'fmap-sign' },
+    { span:18, label:'data', cls:'fmap-bnr'  },
+  ];
+  if (enc === 'DIS') return [
+    { span:19, label:'discrets 11-29', cls:'fmap-dis' },
+  ];
+  return [{ span:19, label:'DATA', cls:'fmap-bnr' }];
+}
+
+function renderFieldMap(labelInfo, meta) {
+  const container = document.getElementById('field-map');
+  container.innerHTML = '';
+  const oct = labelInfo ? labelInfo.oct : null;
+  const enc = labelInfo ? labelInfo.enc : null;
+
+  const segs = [
+    { span:1, label:'P',     cls:'fmap-parity' },
+    { span:2, label:'SSM',   cls:'fmap-ssm'    },
+    ...getDataFieldSegments(oct, enc, meta),
+    { span:2, label:'SDI',   cls:'fmap-sdi'    },
+    { span:8, label:'LABEL', cls:'fmap-label'  },
+  ];
+
+  for (const s of segs) {
+    const el = document.createElement('div');
+    el.className = `fmap-seg ${s.cls}`;
+    el.style.gridColumn = `span ${s.span}`;
+    el.textContent = s.label;
+    container.appendChild(el);
+  }
+}
+
 function getBitClass(bitNum) {
   if (bitNum === 32)                    return 'bit-parity';
   if (bitNum >= 30 && bitNum <= 31)     return 'bit-ssm';
@@ -553,6 +659,8 @@ function renderFields(word) {
   const labelDec = labelVal;
   const labelBin = labelVal.toString(2).padStart(8, '0');
   const labelInfo = LABELS.find(l => l.oct === labelOct);
+  const meta = DECODE_META[labelOct];
+  renderFieldMap(labelInfo, meta);
 
   document.getElementById('d-label-oct').textContent = labelOct;
   document.getElementById('d-label-dec').textContent = labelDec;
