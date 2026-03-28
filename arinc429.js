@@ -416,6 +416,21 @@ function decodeData(word, labelInfo) {
   // data19: bits 29-11 of the word mapped to bit positions 18-0
   const data19 = (word >> 10) & 0x7FFFF;
 
+  // ── Label 010 : latitude BCD (bit29=+100°, 5 groupes×4 bits, SDI inclus) ──
+  if (labelInfo.oct === '010') {
+    const bit29  = (word >> 28) & 1;
+    const data20 = (word >> 8)  & 0xFFFFF;   // bits 28-9 du mot (20 bits)
+    const tDeg = (data20 >> 16) & 0xF;
+    const uDeg = (data20 >> 12) & 0xF;
+    const tMin = (data20 >> 8)  & 0xF;
+    const uMin = (data20 >> 4)  & 0xF;
+    const dMin =  data20        & 0xF;
+    if (tDeg > 9 || uDeg > 9 || tMin > 5 || uMin > 9 || dMin > 9) return null;
+    const deg = bit29 * 100 + tDeg * 10 + uDeg;
+    const min = tMin * 10 + uMin + dMin * 0.1;
+    return `${deg}°${min.toFixed(1)}'`;
+  }
+
   // ── BNR (sign-magnitude) ──────────────────────────
   if (labelInfo.enc === 'BNR' && meta.msb !== undefined) {
     const ssm = (word >> 29) & 0x3;
@@ -772,9 +787,17 @@ function renderFields(word) {
   document.getElementById('banner-sub').textContent = labelInfo
     ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
-  document.getElementById('banner-value').textContent = decoded !== null
-    ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
-    : '—';
+  const bannerEl = document.getElementById('banner-value');
+  if (labelInfo && labelInfo.oct === '010' && decoded !== null) {
+    const ns = ssm === 0b00 ? 'N' : ssm === 0b11 ? 'S' : null;
+    bannerEl.innerHTML = ns
+      ? `<span style="color:#4fc3f7;font-weight:bold">${ns}</span> ${decoded}`
+      : decoded;
+  } else {
+    bannerEl.textContent = decoded !== null
+      ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
+      : '—';
+  }
 
 }
 
