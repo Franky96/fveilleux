@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chargerGroupes(id);
       }
     });
+  }, (err) => {
+    console.error('Firebase ENA error:', err);
+    afficherErreurFirebase(err.code);
   });
 
   // Fermer le menu item en cliquant ailleurs
@@ -68,6 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.afficherCours('E04', document.querySelector('.sidebar-sublink'));
 });
+
+function afficherErreurFirebase(code) {
+  if (document.getElementById('firebase-err-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'firebase-err-banner';
+  banner.style.cssText = 'background:#c0392b;color:#fff;padding:0.8rem 1rem;text-align:center;font-weight:bold;font-size:0.9rem;position:sticky;top:0;z-index:9999;';
+  banner.textContent = `⚠️ Erreur Firebase (${code}) — Les règles de sécurité sont expirées. Mets-les à jour dans la console Firebase.`;
+  document.body.prepend(banner);
+}
 
 function migrerSections(sections) {
   const groupes = [];
