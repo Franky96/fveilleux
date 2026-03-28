@@ -269,7 +269,7 @@ LABELS.forEach(l => {
 // SSM descriptions by label type (BIT31, BIT30 → index 0-3)
 const SSM_TABLES = {
   radio: ['Normal (NML)',          'No Computed Data (NCD)', 'Functional Test (FT)', 'Undefined'],
-  bcd:   ['Normal + (N,E,R,TO,↑)', 'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal − (S,W,L,FROM,↓)'],
+  bcd:   ['+, N, E, R, TO, ↑',  'No Computed Data (NCD)', 'Functional Test (FT)', '−, S, W, L, FROM, ↓'],
   bnr:   ['Failure Warning (FW)',  'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal (NML)'],
   dis:   ['Normal (NML)',          'No Computed Data (NCD)', 'Functional Test (FT)', 'Failure Warning (FW)'],
   maint: ['Failure Warning (FW)', 'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal (NML)'],
