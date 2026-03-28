@@ -302,7 +302,7 @@ const DECODE_META = {
   '010': { decimals: 4 },  // Present Position - Latitude (deg DDMM.mmmm)
   '011': { decimals: 4 },  // Present Position - Longitude (deg DDDMM.mmmm)
   '012': { decimals: 0 },  // Ground Speed (kt)
-  '013': { decimals: 1 },  // Track Angle - True (deg)
+  '013': { decimals: 2 },  // Track Angle - True (deg)
   '014': { decimals: 1 },  // Magnetic Heading (deg)
   '015': { decimals: 0 },  // Wind Speed (kt)
   '016': { decimals: 1 },  // Wind Direction - True (deg)
@@ -337,13 +337,13 @@ const DECODE_META = {
   '145': { decimals: 0 },  // TACAN Control (channel)
   '170': { decimals: 0 },  // Decision Height Selected (ft)
   '200': { decimals: 1 },  // Drift Angle (deg)
-  '201': { decimals: 1 },  // DME Distance (nm)
+  '201': { decimals: 2 },  // DME Distance (nm)
   '230': { decimals: 2 },  // True Airspeed (kt)        – 3 digits + 2 PAD, 1 kt res
   '231': { decimals: 1 },  // Total Air Temperature (°C)
   '232': { decimals: 0 },  // Altitude Rate (ft/min)
   '233': { decimals: 1 },  // Static Air Temperature (°C)
   '234': { decimals: 2 },  // Baro Correction (mb)
-  '235': { decimals: 3 },  // Baro Correction (inHg)    – 5 digits, 0.001 inHg res
+  '235': { decimals: 2 },  // Baro Correction (inHg)    – 4 digits, 0.01 inHg res
   '260': { decimals: 0 },  // Date/Flight Leg
   '261': { decimals: 0 },  // Flight Number
 
