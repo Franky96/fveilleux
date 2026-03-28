@@ -6,176 +6,242 @@ if (!sessionStorage.getItem('loggedIn') || !permissions.includes('rona')) {
   window.location.href = 'dashboard.html';
 }
 
+// ── Liste de référence RONA ───────────────────────────
+// qtés : [petite, moyenne, grande, perso]  (null = non requis)
+const ITEMS = [
+  { id:'01', court:'Bandages adhésifs',
+    long:'Bandages adhésifs, stériles, de tailles assorties (bande standard, grand, bout du doigt, jointure, grande plaque)',
+    qte:{ petite:25, moyenne:50, grande:100, perso:16 } },
+  { id:'02', court:'Bandage élastique 5,1 cm',
+    long:'Bandages élastiques, longueur non étirée, emballés individuellement, 5,1 cm × 1,8 m (2 po × 2 verges)',
+    qte:{ petite:1, moyenne:2, grande:4, perso:1 } },
+  { id:'03', court:'Bandage élastique 7,6 cm',
+    long:'Bandages élastiques, longueur non étirée, emballés individuellement, 7,6 cm × 1,8 m (3 po × 2 verges)',
+    qte:{ petite:1, moyenne:2, grande:4, perso:null } },
+  { id:'04', court:'Ciseaux à bandage',
+    long:'Ciseaux à bandage en acier inoxydable (avec pointe en angle, arrondie), minimum 14 cm (5,5 po)',
+    qte:{ petite:1, moyenne:1, grande:1, perso:null } },
+  { id:'05', court:'Compresses de gaze 7,6 cm',
+    long:'Compresses de gaze, stériles, emballées individuellement, 7,6 cm × 7,6 cm (3 po × 3 po)',
+    qte:{ petite:12, moyenne:24, grande:48, perso:6 } },
+  { id:'06', court:'Compresses compressives 10,2 cm',
+    long:'Compresses ou pansements compressifs avec attaches, stériles, 10,2 cm × 10,2 cm (4 po × 4 po)',
+    qte:{ petite:2, moyenne:4, grande:8, perso:2 } },
+  { id:'07', court:'Écharpe triangulaire',
+    long:'Écharpe triangulaire, coton, avec 2 épingles de sécurité, 101,6 cm × 101,6 cm × 142,2 cm',
+    qte:{ petite:2, moyenne:4, grande:8, perso:1 } },
+  { id:'08', court:'Lingettes antiseptiques',
+    long:'Lingettes de nettoyage des plaies, antiseptiques, emballées individuellement',
+    qte:{ petite:25, moyenne:50, grande:100, perso:6 } },
+  { id:'09', court:'Pince à écharde',
+    long:'Pince à écharde ou pince à épiler (pointe fine, acier inoxydable, minimum 11,4 cm (4,5 po))',
+    qte:{ petite:1, moyenne:1, grande:1, perso:1 } },
+  { id:'10', court:'Ruban adhésif (diachylon)',
+    long:'Ruban adhésif (diachylon), 2,5 cm (1 po) – en mètre',
+    qte:{ petite:2.3, moyenne:4.6, grande:9.1, perso:2.3 } },
+  { id:'11', court:'Dispositif RCP',
+    long:'Dispositif de barrière pour réanimation cardio-pulmonaire (RCP), avec clapet unidirectionnel',
+    qte:{ petite:1, moyenne:1, grande:1, perso:null } },
+  { id:'12', court:'Gants d\'examen (paires)',
+    long:'Gants d\'examen, jetables de qualité médicale, taille unique, sans latex, sans poudre (nombre de paires)',
+    qte:{ petite:4, moyenne:8, grande:16, perso:2 } },
+  { id:'13', court:'Compresses abdominales',
+    long:'Compresses abdominales, stériles, emballées individuellement, 12,7 cm × 22,9 cm (5 po × 9 po)',
+    qte:{ petite:1, moyenne:2, grande:2, perso:null } },
+  { id:'14', court:'Couverture de secours',
+    long:'Couverture de secours, en aluminium, en polyester non extensible, minimum 132 cm × 213 cm (52 po × 84 po)',
+    qte:{ petite:1, moyenne:1, grande:1, perso:null } },
+  { id:'15', court:'Lingettes mains / peau',
+    long:'Lingettes de nettoyage des mains et de la peau, emballées individuellement (ou équivalent)',
+    qte:{ petite:6, moyenne:12, grande:24, perso:4 } },
+  { id:'16', court:'Onguents antibiotiques',
+    long:'Onguents antibiotiques, topiques, à usage unique',
+    qte:{ petite:6, moyenne:12, grande:24, perso:2 } },
+  { id:'17', court:'Sac déchets biomédicaux',
+    long:'Sac pour le recueil de déchets biomédicaux, à usage unique',
+    qte:{ petite:1, moyenne:2, grande:2, perso:1 } },
+  { id:'18', court:'Liste du contenu',
+    long:'Liste du contenu de la trousse',
+    qte:{ petite:1, moyenne:1, grande:1, perso:1 } },
+];
+
+// ── Firebase ──────────────────────────────────────────
 const ronaDocRef = doc(db, "donnees", "rona_global");
-let ronaData = { trousses: [] };
-
-// ── Helpers ──────────────────────────────────────────
-
-function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-function sauvegarder() {
-  setDoc(ronaDocRef, ronaData);
-}
-
-// ── Init ─────────────────────────────────────────────
+let ronaData = { locations: [] };
+let locationActive = null;  // id de la location sélectionnée
+let itemEnCours = null;     // item ouvert dans le modal
 
 document.addEventListener('DOMContentLoaded', () => {
   onSnapshot(ronaDocRef, (snap) => {
     if (snap.exists()) {
       ronaData = snap.data();
-      if (!ronaData.trousses) ronaData.trousses = [];
+      if (!ronaData.locations) ronaData.locations = [];
     } else {
       setDoc(ronaDocRef, ronaData);
     }
-    render();
+    renderLocationSelect();
+    renderGrille();
   }, (err) => {
-    console.error('Firebase RONA error:', err);
+    console.error('Firebase RONA:', err);
     afficherErreurFirebase(err.code);
   });
 });
 
-// ── Rendu ─────────────────────────────────────────────
+function sauvegarder() { setDoc(ronaDocRef, ronaData); }
 
-function render() {
-  const container = document.getElementById('trousses-container');
-  const trousses = ronaData.trousses;
+// ── Sélection emplacement ─────────────────────────────
 
-  // Stat globale dans la topbar
-  const totalManquants = trousses.reduce((n, t) =>
-    n + (t.items || []).filter(i => !i.complet).length, 0);
-  document.getElementById('topbar-stat').textContent =
-    totalManquants > 0 ? `${totalManquants} manquant${totalManquants > 1 ? 's' : ''}` : '';
+function renderLocationSelect() {
+  const sel = document.getElementById('location-select');
+  const val = sel.value || locationActive;
+  sel.innerHTML = '<option value="">— choisir un emplacement —</option>';
+  (ronaData.locations || []).forEach(loc => {
+    const opt = document.createElement('option');
+    opt.value = loc.id;
+    opt.textContent = `${loc.nom} (${labelType(loc.type)})`;
+    sel.appendChild(opt);
+  });
+  if (val) sel.value = val;
+  locationActive = sel.value || null;
+}
 
-  if (trousses.length === 0) {
-    container.innerHTML = `
-      <div class="rona-empty">
-        <span>👷‍♂️</span>
-        Aucune trousse — appuie sur <strong>+</strong> pour en ajouter une.
-      </div>`;
+function labelType(t) {
+  return { petite:'Petite', moyenne:'Moyenne', grande:'Grande', perso:'Perso' }[t] || t;
+}
+
+window.changerLocation = function() {
+  locationActive = document.getElementById('location-select').value || null;
+  renderGrille();
+};
+
+// ── Grille des articles ───────────────────────────────
+
+function renderGrille() {
+  const grid = document.getElementById('items-grid');
+  const statusBar = document.getElementById('status-bar');
+
+  if (!locationActive) {
+    grid.innerHTML = `<div class="rona-empty" style="grid-column:span 2">
+      <span>👷‍♂️</span>Choisis un emplacement ci-dessus, ou crée-en un avec <strong>+</strong>.
+    </div>`;
+    statusBar.style.display = 'none';
     return;
   }
 
-  // Mémoriser quelles trousses sont ouvertes
-  const ouvertes = new Set(
-    [...container.querySelectorAll('.trousse-card.open')].map(el => el.dataset.id)
-  );
+  const loc = ronaData.locations.find(l => l.id === locationActive);
+  if (!loc) return;
+  const manquants = loc.manquants || {};
 
-  container.innerHTML = '';
+  // Filtrer les items pertinents pour ce type (qte non null)
+  const itemsActifs = ITEMS.filter(it => it.qte[loc.type] !== null);
+  const nbManquants = itemsActifs.filter(it => manquants[it.id] > 0).length;
 
-  trousses.forEach((trousse, tIdx) => {
-    const items = trousse.items || [];
-    const nbManquants = items.filter(i => !i.complet).length;
-    const isOpen = ouvertes.has(trousse.id);
+  // Statut
+  statusBar.style.display = 'flex';
+  const countEl = document.getElementById('status-count');
+  if (nbManquants === 0) {
+    countEl.textContent = '✓ Tout complet';
+    countEl.className = 'status-count ok';
+  } else {
+    countEl.textContent = `${nbManquants} article${nbManquants > 1 ? 's' : ''} manquant${nbManquants > 1 ? 's' : ''}`;
+    countEl.className = 'status-count alert';
+  }
+
+  grid.innerHTML = '';
+  itemsActifs.forEach(item => {
+    const total = item.qte[loc.type];
+    const qteManquante = manquants[item.id] || 0;
+    const present = total - qteManquante;
+    const estManquant = qteManquante > 0;
 
     const card = document.createElement('div');
-    card.className = 'trousse-card' + (isOpen ? ' open' : '');
-    card.dataset.id = trousse.id;
-
+    card.className = 'item-card' + (estManquant ? ' manquant' : '');
+    card.onclick = () => ouvrirModalItem(item, loc);
     card.innerHTML = `
-      <div class="trousse-header" onclick="toggleTrousse(this)">
-        <span class="trousse-icon">👷‍♂️</span>
-        <div class="trousse-info">
-          <div class="trousse-nom">${trousse.nom}</div>
-          ${trousse.lieu ? `<div class="trousse-lieu">📍 ${trousse.lieu}</div>` : ''}
-        </div>
-        <span class="trousse-badge ${nbManquants === 0 ? 'ok' : ''}">${nbManquants === 0 ? '✓' : nbManquants}</span>
-        <span class="trousse-arrow">▶</span>
-      </div>
-      <div class="trousse-items">
-        ${items.length === 0
-          ? `<div style="padding:0.75rem 1rem; color:#555; font-size:0.9rem;">Aucun item manquant — ajoute-en un ci-dessous.</div>`
-          : items.map((item, iIdx) => `
-            <div class="item-row">
-              <div class="item-check ${item.complet ? 'checked' : ''}"
-                   onclick="toggleItem(${tIdx}, ${iIdx})">
-                ${item.complet ? '✓' : ''}
-              </div>
-              <span class="item-nom ${item.complet ? 'checked' : ''}">${item.nom}</span>
-              ${item.qte ? `<span class="item-qte ${item.complet ? 'ok' : ''}">×${item.qte}</span>` : ''}
-              <span class="item-del" onclick="supprimerItem(${tIdx}, ${iIdx})">✕</span>
-            </div>`).join('')
-        }
-        <div class="add-item-row">
-          <input type="text" id="new-item-nom-${tIdx}" placeholder="Article manquant…"
-                 onkeydown="if(event.key==='Enter') ajouterItem(${tIdx})">
-          <input type="text" class="qte-input" id="new-item-qte-${tIdx}" placeholder="Qté"
-                 onkeydown="if(event.key==='Enter') ajouterItem(${tIdx})">
-          <button onclick="ajouterItem(${tIdx})">+</button>
-        </div>
-        <div class="trousse-actions">
-          <button class="btn-del-trousse" onclick="supprimerTrousse(${tIdx})">🗑 Supprimer la trousse</button>
-        </div>
-      </div>`;
-
-    container.appendChild(card);
+      <span class="item-fraction">${present}/${total}</span>
+      <span class="item-nom">${item.court}</span>
+      ${estManquant ? `<span class="item-manquant-label">manque : ${qteManquante}</span>` : ''}
+    `;
+    grid.appendChild(card);
   });
 }
 
-// ── Actions ───────────────────────────────────────────
+// ── Modal article ─────────────────────────────────────
 
-window.toggleTrousse = function(header) {
-  header.closest('.trousse-card').classList.toggle('open');
+function ouvrirModalItem(item, loc) {
+  itemEnCours = { item, loc };
+  const total = item.qte[loc.type];
+  const manquants = loc.manquants || {};
+  const actuel = manquants[item.id] || 0;
+
+  document.getElementById('modal-item-nom').textContent = item.court;
+  document.getElementById('modal-item-total').textContent = item.long;
+  document.getElementById('modal-qte').value = actuel > 0 ? actuel : '';
+  document.getElementById('modal-qte').max = total;
+  document.getElementById('modal-item').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-qte').focus(), 100);
+}
+
+window.fermerModalItem = function() {
+  document.getElementById('modal-item').classList.add('hidden');
+  itemEnCours = null;
 };
 
-window.toggleItem = function(tIdx, iIdx) {
-  const item = ronaData.trousses[tIdx].items[iIdx];
-  item.complet = !item.complet;
+window.sauvegarderManquant = function() {
+  if (!itemEnCours) return;
+  const { item, loc } = itemEnCours;
+  const val = parseInt(document.getElementById('modal-qte').value) || 0;
+  const total = item.qte[loc.type];
+  const qte = Math.min(val, total);
+  if (!loc.manquants) loc.manquants = {};
+  if (qte <= 0) {
+    delete loc.manquants[item.id];
+  } else {
+    loc.manquants[item.id] = qte;
+  }
   sauvegarder();
-  render();
+  fermerModalItem();
 };
 
-window.ajouterItem = function(tIdx) {
-  const nomEl = document.getElementById(`new-item-nom-${tIdx}`);
-  const qteEl = document.getElementById(`new-item-qte-${tIdx}`);
-  const nom = nomEl.value.trim();
+window.marquerComplet = function() {
+  if (!itemEnCours) return;
+  const { item, loc } = itemEnCours;
+  if (loc.manquants) delete loc.manquants[item.id];
+  sauvegarder();
+  fermerModalItem();
+};
+
+window.toutMarquerComplet = function() {
+  const loc = ronaData.locations.find(l => l.id === locationActive);
+  if (!loc) return;
+  loc.manquants = {};
+  sauvegarder();
+};
+
+// ── Modal emplacement ─────────────────────────────────
+
+window.ouvrirModalLocation = function() {
+  document.getElementById('location-nom').value = '';
+  document.getElementById('location-type').value = 'moyenne';
+  document.getElementById('modal-location-titre').textContent = 'Nouvel emplacement';
+  document.getElementById('modal-location').classList.remove('hidden');
+  setTimeout(() => document.getElementById('location-nom').focus(), 50);
+  document.getElementById('location-save-btn').onclick = sauvegarderLocation;
+};
+
+window.fermerModalLocation = function() {
+  document.getElementById('modal-location').classList.add('hidden');
+};
+
+function sauvegarderLocation() {
+  const nom = document.getElementById('location-nom').value.trim();
+  const type = document.getElementById('location-type').value;
   if (!nom) return;
-  if (!ronaData.trousses[tIdx].items) ronaData.trousses[tIdx].items = [];
-  ronaData.trousses[tIdx].items.push({ id: uid(), nom, qte: qteEl.value.trim(), complet: false });
+  const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  ronaData.locations.push({ id, nom, type, manquants: {} });
+  locationActive = id;
   sauvegarder();
-  render();
-  // Rouvrir la carte après render
-  const cards = document.querySelectorAll('.trousse-card');
-  if (cards[tIdx]) cards[tIdx].classList.add('open');
-};
-
-window.supprimerItem = function(tIdx, iIdx) {
-  ronaData.trousses[tIdx].items.splice(iIdx, 1);
-  sauvegarder();
-  render();
-  const cards = document.querySelectorAll('.trousse-card');
-  if (cards[tIdx]) cards[tIdx].classList.add('open');
-};
-
-window.supprimerTrousse = function(tIdx) {
-  const nom = ronaData.trousses[tIdx].nom;
-  if (!confirm(`Supprimer la trousse "${nom}" ?`)) return;
-  ronaData.trousses.splice(tIdx, 1);
-  sauvegarder();
-};
-
-// ── Modal trousse ─────────────────────────────────────
-
-window.ouvrirModalTrousse = function() {
-  document.getElementById('trousse-nom').value = '';
-  document.getElementById('trousse-lieu').value = '';
-  document.getElementById('modal-trousse').classList.remove('hidden');
-  setTimeout(() => document.getElementById('trousse-nom').focus(), 50);
-  document.getElementById('trousse-save-btn').onclick = sauvegarderTrousse;
-};
-
-window.fermerModalTrousse = function() {
-  document.getElementById('modal-trousse').classList.add('hidden');
-};
-
-function sauvegarderTrousse() {
-  const nom = document.getElementById('trousse-nom').value.trim();
-  const lieu = document.getElementById('trousse-lieu').value.trim();
-  if (!nom) return;
-  ronaData.trousses.push({ id: uid(), nom, lieu, items: [] });
-  sauvegarder();
-  fermerModalTrousse();
+  fermerModalLocation();
 }
 
 // ── Erreur Firebase ───────────────────────────────────

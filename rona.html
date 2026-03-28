@@ -6,16 +6,15 @@
   <title>RONA — Santé &amp; Sécurité</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ── Layout mobile-first ── */
     body { align-items: flex-start; }
 
     .rona-container {
       width: 100%;
       max-width: 600px;
       margin: 0 auto;
-      padding: 0 0 6rem 0;
       background: #0a0f0a;
       min-height: 100vh;
+      padding-bottom: 4rem;
     }
 
     /* ── Top bar ── */
@@ -25,7 +24,7 @@
       z-index: 100;
       background: #0f1a0f;
       border-bottom: 1px solid #2a3a2a;
-      padding: 0.9rem 1rem;
+      padding: 0.75rem 1rem;
       display: flex;
       align-items: center;
       gap: 0.75rem;
@@ -34,216 +33,247 @@
       color: #80cc80;
       text-decoration: none;
       font-size: 1.3rem;
-      line-height: 1;
       padding: 0.3rem;
     }
     .rona-topbar h1 {
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #f0ede6;
       margin: 0;
       flex: 1;
     }
-    .rona-topbar span {
-      font-size: 0.75rem;
-      color: #a89f94;
-    }
 
-    /* ── Trousse card ── */
-    .trousse-card {
-      margin: 0.75rem 0.75rem 0;
-      background: #0f1a0f;
-      border: 1px solid #2a3a2a;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .trousse-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1rem;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-    .trousse-header:active { background: #162216; }
-    .trousse-icon { font-size: 1.5rem; }
-    .trousse-info { flex: 1; }
-    .trousse-nom { font-weight: bold; font-size: 1rem; color: #f0ede6; }
-    .trousse-lieu { font-size: 0.8rem; color: #888078; margin-top: 0.1rem; }
-    .trousse-badge {
-      background: #c0392b;
-      color: #fff;
-      font-size: 0.75rem;
-      font-weight: bold;
-      padding: 0.2rem 0.55rem;
-      border-radius: 20px;
-      min-width: 1.6rem;
-      text-align: center;
-    }
-    .trousse-badge.ok { background: #2a5a2a; color: #80cc80; }
-    .trousse-arrow { color: #555; font-size: 0.9rem; transition: transform 0.2s; }
-    .trousse-card.open .trousse-arrow { transform: rotate(90deg); }
-
-    /* ── Items list ── */
-    .trousse-items { display: none; border-top: 1px solid #2a3a2a; }
-    .trousse-card.open .trousse-items { display: block; }
-
-    .item-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid #1a2a1a;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .item-row:last-child { border-bottom: none; }
-    .item-check {
-      width: 1.6rem;
-      height: 1.6rem;
-      min-width: 1.6rem;
-      border-radius: 50%;
-      border: 2px solid #2a5a2a;
-      background: transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .item-check.checked { background: #2a5a2a; border-color: #80cc80; color: #80cc80; }
-    .item-nom { flex: 1; font-size: 0.95rem; color: #f0ede6; }
-    .item-nom.checked { color: #555; text-decoration: line-through; }
-    .item-qte {
-      font-size: 0.8rem;
-      color: #c0392b;
-      font-weight: bold;
-      background: #2a1010;
-      padding: 0.15rem 0.5rem;
-      border-radius: 6px;
-    }
-    .item-qte.ok { color: #80cc80; background: #0a1f0a; }
-    .item-del {
-      color: #444;
-      font-size: 1.1rem;
-      padding: 0.3rem;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .item-del:active { color: #c0392b; }
-
-    /* ── Ajouter item (inline) ── */
-    .add-item-row {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.6rem 0.75rem;
+    /* ── Sélection emplacement ── */
+    .location-bar {
+      padding: 0.75rem 1rem;
       background: #0a0f0a;
-      border-top: 1px solid #1a2a1a;
+      border-bottom: 1px solid #1a2a1a;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
-    .add-item-row input {
+    .location-bar label {
+      font-size: 0.8rem;
+      color: #a89f94;
+      white-space: nowrap;
+    }
+    .location-select {
       flex: 1;
-      margin: 0;
-      padding: 0.6rem 0.75rem;
-      font-size: 0.9rem;
       background: #0f1a0f;
       border: 1px solid #2a3a2a;
       border-radius: 8px;
-    }
-    .add-item-row input.qte-input { width: 4.5rem; flex: none; }
-    .add-item-row button {
+      color: #f0ede6;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.95rem;
+      outline: none;
       width: auto;
-      padding: 0.6rem 1rem;
-      font-size: 0.9rem;
-      border-radius: 8px;
+      margin: 0;
     }
-
-    /* ── Trousse actions ── */
-    .trousse-actions {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem 0.75rem;
-    }
-    .btn-del-trousse {
+    .location-select:focus { border-color: #80cc80; }
+    .btn-add-location {
       width: auto;
       background: transparent;
-      color: #c0392b;
-      border: 1px solid #c0392b;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
+      border: 1px solid #2a3a2a;
+      color: #80cc80;
+      padding: 0.5rem 0.75rem;
       border-radius: 8px;
-    }
-    .btn-del-trousse:hover { background: #c0392b; color: #fff; }
-
-    /* ── FAB ── */
-    .fab {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      width: 3.5rem;
-      height: 3.5rem;
-      border-radius: 50%;
-      background: #80cc80;
-      color: #0a0f0a;
-      font-size: 1.8rem;
+      font-size: 0.9rem;
       font-weight: bold;
-      border: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+
+    /* ── Barre de statut ── */
+    .status-bar {
+      padding: 0.5rem 1rem;
+      background: #0a0f0a;
       display: flex;
       align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 200;
-      transition: background 0.2s, transform 0.1s;
+      justify-content: space-between;
+      border-bottom: 1px solid #1a2a1a;
     }
-    .fab:active { transform: scale(0.92); }
-    .fab:hover { background: #60aa60; }
+    .status-bar span { font-size: 0.8rem; color: #a89f94; }
+    .status-count { font-weight: bold; }
+    .status-count.alert { color: #c0392b; }
+    .status-count.ok { color: #80cc80; }
+    .btn-reset-all {
+      width: auto;
+      background: transparent;
+      border: 1px solid #2a3a2a;
+      color: #a89f94;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
 
-    /* ── Modal ── */
+    /* ── Grille d'articles ── */
+    .items-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    /* ── Carte article ── */
+    .item-card {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      position: relative;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.15s;
+      min-height: 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .item-card.manquant {
+      border-color: #c0392b;
+      background: #1a0808;
+    }
+    .item-card:active { opacity: 0.85; }
+
+    /* fraction en haut à gauche */
+    .item-fraction {
+      position: absolute;
+      top: 0.45rem;
+      left: 0.6rem;
+      font-size: 0.7rem;
+      color: #555;
+      font-weight: bold;
+    }
+    .item-card.manquant .item-fraction { color: #c0392b; }
+
+    /* nom de l'article */
+    .item-nom {
+      font-size: 0.85rem;
+      color: #f0ede6;
+      margin-top: 1.2rem;
+      line-height: 1.3;
+    }
+
+    /* quantité manquante en bas */
+    .item-manquant-label {
+      font-size: 0.75rem;
+      color: #c0392b;
+      font-weight: bold;
+      margin-top: 0.35rem;
+    }
+
+    /* ── Modal saisie quantité manquante ── */
     .modal-overlay { z-index: 300; }
+    #modal-item .modal-box { max-width: 320px; margin: auto; }
+    #modal-item-nom {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #f0ede6;
+      margin-bottom: 1rem;
+    }
+    #modal-item .modal-box label {
+      font-size: 0.85rem;
+      color: #a89f94;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    #modal-qte {
+      font-size: 1.4rem;
+      text-align: center;
+      padding: 0.75rem;
+    }
+    .qty-hint {
+      font-size: 0.75rem;
+      color: #555;
+      text-align: center;
+      margin-top: 0.3rem;
+    }
+    .btn-marquer-ok {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #2a5a2a;
+      color: #80cc80;
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    /* ── Modal emplacement ── */
     .modal-box input { margin-bottom: 0.75rem; }
     .modal-box label { font-size: 0.85rem; color: #a89f94; margin-bottom: 0.3rem; display: block; }
 
-    /* ── Empty state ── */
+    /* ── État vide ── */
     .rona-empty {
       text-align: center;
       padding: 3rem 2rem;
       color: #555;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
     .rona-empty span { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
   </style>
 </head>
 <body>
-  <div class="rona-container">
+<div class="rona-container">
 
-    <div class="rona-topbar">
-      <a href="dashboard.html">&#8592;</a>
-      <h1>👷‍♂️ Santé &amp; Sécurité</h1>
-      <span id="topbar-stat"></span>
-    </div>
-
-    <div id="trousses-container"></div>
-
+  <div class="rona-topbar">
+    <a href="dashboard.html">&#8592;</a>
+    <h1>👷‍♂️ Santé &amp; Sécurité — RONA</h1>
   </div>
 
-  <!-- FAB : nouvelle trousse -->
-  <button class="fab" onclick="ouvrirModalTrousse()" title="Nouvelle trousse">+</button>
-
-  <!-- Modal nouvelle trousse -->
-  <div class="modal-overlay hidden" id="modal-trousse">
-    <div class="modal-box">
-      <h3 id="modal-trousse-titre">Nouvelle trousse</h3>
-      <label>Nom de la trousse</label>
-      <input type="text" id="trousse-nom" placeholder="Ex: Trousse Atelier A" />
-      <label>Emplacement</label>
-      <input type="text" id="trousse-lieu" placeholder="Ex: Allée 3, bureau, etc." />
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="fermerModalTrousse()">Annuler</button>
-        <button class="btn-save" id="trousse-save-btn">Enregistrer</button>
-      </div>
-    </div>
+  <!-- Sélection emplacement -->
+  <div class="location-bar">
+    <label>📍 Emplacement</label>
+    <select class="location-select" id="location-select" onchange="changerLocation()">
+      <option value="">— choisir —</option>
+    </select>
+    <button class="btn-add-location" onclick="ouvrirModalLocation()">+</button>
   </div>
 
-  <script type="module" src="rona.js"></script>
+  <!-- Barre de statut -->
+  <div class="status-bar" id="status-bar" style="display:none;">
+    <span>Articles : <span class="status-count" id="status-count"></span></span>
+    <button class="btn-reset-all" onclick="toutMarquerComplet()">✓ Tout complet</button>
+  </div>
+
+  <!-- Grille -->
+  <div class="items-grid" id="items-grid"></div>
+
+</div>
+
+<!-- Modal : saisie quantité manquante -->
+<div class="modal-overlay hidden" id="modal-item">
+  <div class="modal-box">
+    <h3 id="modal-item-nom"></h3>
+    <p id="modal-item-total" style="font-size:0.8rem; color:#a89f94; margin-bottom:1rem;"></p>
+    <label>Quantité manquante</label>
+    <input type="number" id="modal-qte" min="1" placeholder="ex: 3" inputmode="numeric">
+    <p class="qty-hint">Laisser vide = article entièrement manquant</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fermerModalItem()">Annuler</button>
+      <button class="btn-save" onclick="sauvegarderManquant()">Enregistrer</button>
+    </div>
+    <button class="btn-marquer-ok" onclick="marquerComplet()">✓ Marquer comme complet</button>
+  </div>
+</div>
+
+<!-- Modal : nouvel emplacement -->
+<div class="modal-overlay hidden" id="modal-location">
+  <div class="modal-box">
+    <h3 id="modal-location-titre">Nouvel emplacement</h3>
+    <label>Nom de l'emplacement</label>
+    <input type="text" id="location-nom" placeholder="Ex: Atelier A, Bureau, Entrepôt…" />
+    <label>Taille de trousse</label>
+    <select id="location-type" style="width:100%;margin-bottom:0.75rem;background:#0a0f0a;border:1px solid #2a3a2a;border-radius:8px;color:#f0ede6;padding:0.65rem 0.75rem;font-size:0.95rem;">
+      <option value="petite">Petite (25 associés et -)</option>
+      <option value="moyenne" selected>Moyenne (26 à 50)</option>
+      <option value="grande">Grande (51 et +)</option>
+      <option value="perso">Personnelle</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fermerModalLocation()">Annuler</button>
+      <button class="btn-save" id="location-save-btn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="rona.js"></script>
 </body>
 </html>
