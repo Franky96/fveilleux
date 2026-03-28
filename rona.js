@@ -51,7 +51,7 @@ function render() {
   if (trousses.length === 0) {
     container.innerHTML = `
       <div class="rona-empty">
-        <span>🩺</span>
+        <span>👷‍♂️</span>
         Aucune trousse — appuie sur <strong>+</strong> pour en ajouter une.
       </div>`;
     return;
@@ -75,7 +75,7 @@ function render() {
 
     card.innerHTML = `
       <div class="trousse-header" onclick="toggleTrousse(this)">
-        <span class="trousse-icon">🩺</span>
+        <span class="trousse-icon">👷‍♂️</span>
         <div class="trousse-info">
           <div class="trousse-nom">${trousse.nom}</div>
           ${trousse.lieu ? `<div class="trousse-lieu">📍 ${trousse.lieu}</div>` : ''}
