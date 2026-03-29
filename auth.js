@@ -53,8 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
           sessionStorage.setItem('userName', utilisateurs[user].nom);
           sessionStorage.setItem('userRole', utilisateurs[user].role);
           sessionStorage.setItem('userPermissions', JSON.stringify(utilisateurs[user].permissions));
-          
-          window.location.href = 'dashboard.html';
+          const pageAccueil = utilisateurs[user].pageAccueil || 'dashboard.html';
+          sessionStorage.setItem('pageAccueil', pageAccueil);
+
+          window.location.href = pageAccueil;
         } else {
           errorMsg.textContent = "Nom d'utilisateur ou mot de passe incorrect.";
           errorMsg.style.color = "#ff6b6b";
