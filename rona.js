@@ -10,58 +10,58 @@ if (!sessionStorage.getItem('loggedIn') || !permissions.includes('rona')) {
 const ITEMS = [
   { id:'01', court:'Bandages adhésifs',
     long:'Bandages adhésifs, stériles, de tailles assorties (bande standard, grand, bout du doigt, jointure, grande plaque)',
-    qte: 25 },
+    qte: 25, qteMoy: 50, qteGrd: 75 },
   { id:'02', court:'Bandage élastique 5,1 cm',
     long:'Bandages élastiques, longueur non étirée, emballés individuellement, 5,1 cm × 1,8 m (2 po × 2 verges)',
-    qte: 1 },
+    qte: 1, qteMoy: 2, qteGrd: 3 },
   { id:'03', court:'Bandage élastique 7,6 cm',
     long:'Bandages élastiques, longueur non étirée, emballés individuellement, 7,6 cm × 1,8 m (3 po × 2 verges)',
-    qte: 1 },
+    qte: 1, qteMoy: 2, qteGrd: 3 },
   { id:'04', court:'Ciseaux à bandage',
     long:'Ciseaux à bandage en acier inoxydable (avec pointe en angle, arrondie), minimum 14 cm (5,5 po)',
-    qte: 1 },
+    qte: 1, qteMoy: 1, qteGrd: 1 },
   { id:'05', court:'Compresses de gaze 7,6 cm',
     long:'Compresses de gaze, stériles, emballées individuellement, 7,6 cm × 7,6 cm (3 po × 3 po)',
-    qte: 12 },
+    qte: 12, qteMoy: 25, qteGrd: 36 },
   { id:'06', court:'Compresses compressives 10,2 cm',
     long:'Compresses ou pansements compressifs avec attaches, stériles, 10,2 cm × 10,2 cm (4 po × 4 po)',
-    qte: 2 },
+    qte: 2, qteMoy: 4, qteGrd: 6 },
   { id:'07', court:'Écharpe triangulaire',
     long:'Écharpe triangulaire, coton, avec 2 épingles de sécurité, 101,6 cm × 101,6 cm × 142,2 cm',
-    qte: 2 },
+    qte: 2, qteMoy: 4, qteGrd: 6 },
   { id:'08', court:'Lingettes antiseptiques',
     long:'Lingettes de nettoyage des plaies, antiseptiques, emballées individuellement',
-    qte: 25 },
+    qte: 25, qteMoy: 50, qteGrd: 75 },
   { id:'09', court:'Pince à écharde',
     long:'Pince à écharde ou pince à épiler (pointe fine, acier inoxydable, minimum 11,4 cm (4,5 po))',
-    qte: 1 },
+    qte: 1, qteMoy: 1, qteGrd: 1 },
   { id:'10', court:'Ruban adhésif (diachylon)',
     long:'Ruban adhésif (diachylon), 2,5 cm (1 po) – en mètre',
-    qte: 2.3 },
+    qte: 2.3, qteMoy: 4.6, qteGrd: 6.9 },
   { id:'11', court:'Dispositif RCP',
     long:'Dispositif de barrière pour réanimation cardio-pulmonaire (RCP), avec clapet unidirectionnel',
-    qte: 1 },
+    qte: 1, qteMoy: 1, qteGrd: 1 },
   { id:'12', court:"Gants d'examen (paires)",
     long:"Gants d'examen, jetables de qualité médicale, taille unique, sans latex, sans poudre (nombre de paires)",
-    qte: 4 },
+    qte: 4, qteMoy: 8, qteGrd: 12 },
   { id:'13', court:'Compresses abdominales',
     long:'Compresses abdominales, stériles, emballées individuellement, 12,7 cm × 22,9 cm (5 po × 9 po)',
-    qte: 1 },
+    qte: 1, qteMoy: 2, qteGrd: 3 },
   { id:'14', court:'Couverture de secours',
     long:'Couverture de secours, en aluminium, en polyester non extensible, minimum 132 cm × 213 cm (52 po × 84 po)',
-    qte: 1 },
+    qte: 1, qteMoy: 1, qteGrd: 2 },
   { id:'15', court:'Lingettes mains / peau',
     long:'Lingettes de nettoyage des mains et de la peau, emballées individuellement (ou équivalent)',
-    qte: 6 },
+    qte: 6, qteMoy: 12, qteGrd: 18 },
   { id:'16', court:'Onguents antibiotiques',
     long:'Onguents antibiotiques, topiques, à usage unique',
-    qte: 6 },
+    qte: 6, qteMoy: 12, qteGrd: 18 },
   { id:'17', court:'Sac déchets biomédicaux',
     long:'Sac pour le recueil de déchets biomédicaux, à usage unique',
-    qte: 1 },
+    qte: 1, qteMoy: 1, qteGrd: 2 },
   { id:'18', court:'Liste du contenu',
     long:'Liste du contenu de la trousse',
-    qte: 1 },
+    qte: 1, qteMoy: 1, qteGrd: 1 },
 ];
 
 // ── Firebase ──────────────────────────────────────────
@@ -259,56 +259,198 @@ window.genererPDF = function() {
   const date = new Date().toLocaleDateString('fr-CA');
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
 
-  // En-tête
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RONA — Santé & Sécurité', 14, 18);
+  const PW   = 215.9;
+  const ml   = 10;
+  const usable = PW - ml * 2; // 195.9 mm
 
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Emplacement : ${loc.nom}`, 14, 27);
-  doc.text(`Date : ${date}`, 14, 34);
+  // Column widths: description | Petite | Moyenne | Grande | Perso | Commande
+  const cDesc = 104;
+  const cQte  = 16;        // × 4 = 64 mm
+  const cCmd  = usable - cDesc - cQte * 4; // ~27.9 mm
 
-  // Tableau
-  const rows = ITEMS.map(item => {
-    const estManquant = item.id in manquants;
-    const qteManquante = manquants[item.id] || 0;
-    const present = item.qte - qteManquante;
-    return {
-      data: [item.long, item.qte, estManquant ? present : item.qte, estManquant ? qteManquante : ''],
-      manquant: estManquant,
-    };
-  });
+  // Left-edge x per column
+  const cx = [
+    ml,
+    ml + cDesc,
+    ml + cDesc + cQte,
+    ml + cDesc + cQte * 2,
+    ml + cDesc + cQte * 3,
+    ml + cDesc + cQte * 4,
+  ];
+  const cw = [cDesc, cQte, cQte, cQte, cQte, cCmd];
 
-  doc.autoTable({
-    startY: 40,
-    head: [['Article', 'Requis', 'En stock', 'À commander']],
-    body: rows.map(r => r.data),
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [30, 60, 30], textColor: 255, fontStyle: 'bold' },
-    columnStyles: {
-      0: { cellWidth: 110 },
-      1: { cellWidth: 18, halign: 'center' },
-      2: { cellWidth: 22, halign: 'center' },
-      3: { cellWidth: 25, halign: 'center' },
-    },
-    didParseCell: (data) => {
-      if (data.section === 'body' && rows[data.row.index]?.manquant) {
-        data.cell.styles.fillColor = [45, 10, 10];
-        data.cell.styles.textColor = [220, 80, 80];
-        if (data.column.index === 3) {
-          data.cell.styles.fontStyle = 'bold';
+  // ── RONA logo (red rectangle + white text) ──
+  pdf.setFillColor(196, 18, 27);
+  pdf.rect(ml, 8, 26, 11, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(15);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('RONA', ml + 13, 16, { align: 'center' });
+
+  // ── Title block ──
+  pdf.setTextColor(0, 130, 120);
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Contenu minimal des trousses de premiers soins', ml + 29, 13);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(70, 70, 70);
+  pdf.text('Règlement sur les premiers secours et premiers soins — LSST, article 256', ml + 29, 18);
+
+  // ── Form fields ──
+  let fy = 27;
+  pdf.setFontSize(8.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(0, 0, 0);
+  pdf.setDrawColor(0);
+  pdf.setLineWidth(0.3);
+
+  pdf.text('Inspection faite par :', ml, fy);
+  pdf.line(ml + 42, fy + 0.5, ml + 105, fy + 0.5);
+
+  pdf.text('Emplacement :', ml + 108, fy);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(loc.nom, ml + 131, fy);
+
+  fy += 7;
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Date :', ml, fy);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(date, ml + 13, fy);
+
+  // ── Table ──
+  const rh  = 7.8;   // data row height
+  const hrh = 13;    // header row height
+  let ty = fy + 7;
+
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.35);
+
+  // ── Header row ──
+  for (let i = 0; i < 6; i++) {
+    pdf.rect(cx[i], ty, cw[i], hrh);
+  }
+
+  // Diagonal in col 0 header (bottom-left → top-right)
+  pdf.setLineWidth(0.25);
+  pdf.setDrawColor(0);
+  pdf.line(cx[0], ty + hrh, cx[0] + cDesc, ty);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 0, 0);
+  pdf.text('Articles obligatoires', cx[0] + 2, ty + hrh - 2.5);
+  pdf.text('Taille de trousse', cx[0] + cDesc - 2, ty + 4.5, { align: 'right' });
+
+  // Qty column headers
+  const hdrTop    = ['Petite',   'Moyenne',  'Grande',   'Perso'];
+  const hdrBottom = ['25 et -',  '26 à 50',  '51 et +',  ''];
+  pdf.setFontSize(6.5);
+  pdf.setLineWidth(0.35);
+  pdf.setDrawColor(0);
+  for (let i = 1; i <= 4; i++) {
+    const midX = cx[i] + cw[i] / 2;
+    pdf.text(hdrTop[i - 1], midX, ty + hrh / 2 - 0.5, { align: 'center' });
+    if (hdrBottom[i - 1]) {
+      pdf.text(hdrBottom[i - 1], midX, ty + hrh / 2 + 4, { align: 'center' });
+    }
+  }
+
+  // Commande header
+  const cmdMidX = cx[5] + cw[5] / 2;
+  pdf.text('Commande', cmdMidX, ty + hrh / 2 + 1, { align: 'center' });
+
+  ty += hrh;
+
+  // ── Data rows ──
+  ITEMS.forEach((item, idx) => {
+    const estManquant  = item.id in manquants;
+    const qteManquante = estManquant ? (manquants[item.id] || 0) : 0;
+    const present      = item.qte - qteManquante;
+
+    // Row shading
+    pdf.setLineWidth(0);
+    if (estManquant && qteManquante > 0) {
+      pdf.setFillColor(255, 238, 238);
+      pdf.rect(ml, ty, usable, rh, 'F');
+    } else if (idx % 2 === 1) {
+      pdf.setFillColor(246, 246, 246);
+      pdf.rect(ml, ty, usable, rh, 'F');
+    }
+
+    // Cell borders
+    pdf.setDrawColor(0);
+    pdf.setLineWidth(0.3);
+    for (let i = 0; i < 6; i++) {
+      pdf.rect(cx[i], ty, cw[i], rh);
+    }
+
+    // Description text (single line, truncated)
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(6.5);
+    pdf.setTextColor(0, 0, 0);
+    const descLines = pdf.splitTextToSize(item.long, cDesc - 3);
+    pdf.text(descLines[0], cx[0] + 1.5, ty + rh / 2 + 2.2);
+
+    // Qty cells with diagonal
+    const sizes = [item.qte, item.qteMoy, item.qteGrd, null];
+    for (let i = 1; i <= 4; i++) {
+      const cellX  = cx[i];
+      const cellW  = cw[i];
+      const reqQte = sizes[i - 1];
+
+      // Diagonal line bottom-left → top-right
+      pdf.setDrawColor(160, 160, 160);
+      pdf.setLineWidth(0.2);
+      pdf.line(cellX, ty + rh, cellX + cellW, ty);
+      pdf.setDrawColor(0);
+      pdf.setLineWidth(0.3);
+
+      if (reqQte !== null) {
+        // Top-left of diagonal: actual present qty (Petite col only)
+        if (i === 1) {
+          pdf.setFont('helvetica', estManquant && qteManquante > 0 ? 'bold' : 'normal');
+          pdf.setFontSize(6.5);
+          pdf.setTextColor(estManquant && qteManquante > 0 ? 180 : 0, 0, 0);
+          pdf.text(String(present), cellX + cellW * 0.26, ty + rh * 0.40);
         }
+        // Bottom-right of diagonal: required qty
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(5.5);
+        pdf.setTextColor(90, 90, 90);
+        pdf.text(String(reqQte), cellX + cellW * 0.76, ty + rh * 0.86);
       }
-    },
-    alternateRowStyles: { fillColor: [15, 25, 15] },
-    tableLineColor: [42, 58, 42],
-    tableLineWidth: 0.2,
+    }
+
+    // Commande column: only fill if items are missing
+    if (estManquant && qteManquante > 0) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(180, 0, 0);
+      pdf.text(String(qteManquante), cx[5] + cw[5] / 2, ty + rh / 2 + 2.2, { align: 'center' });
+    }
+
+    ty += rh;
   });
 
-  doc.save(`RONA_SS_${loc.nom.replace(/\s+/g, '_')}_${date}.pdf`);
+  // Heavy bottom border
+  pdf.setLineWidth(0.6);
+  pdf.line(ml, ty, ml + usable, ty);
+
+  // ── Footer ──
+  ty += 5;
+  pdf.setLineWidth(0.3);
+  pdf.line(ml, ty - 2, ml + usable, ty - 2);
+  pdf.setFontSize(6.5);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(80, 80, 80);
+  pdf.text(
+    'Petite : Pour 25 travailleurs et moins  |  Moyenne : Pour 26 à 50 travailleurs  |  Grande : Pour 51 travailleurs et plus',
+    ml, ty + 1
+  );
+
+  pdf.save(`RONA_SS_${loc.nom.replace(/\s+/g, '_')}_${date}.pdf`);
 };
 
 // ── Erreur Firebase ───────────────────────────────────
