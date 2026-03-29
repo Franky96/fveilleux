@@ -200,7 +200,7 @@ function renderGrille() {
 
 function toggleManquant(item, loc, row, chk, qteInput) {
   if (!loc.manquants) loc.manquants = {};
-  const estManquant = !!loc.manquants[item.id];
+  const estManquant = item.id in loc.manquants;
   if (estManquant) {
     // Remettre complet
     delete loc.manquants[item.id];
