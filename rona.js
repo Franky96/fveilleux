@@ -68,8 +68,8 @@ const ITEMS = [
 const ronaDocRef = doc(db, "donnees", "rona_global");
 
 const EMPLACEMENTS_DEFAUT = [
-  'Réception', 'Cour à bois', 'Plomberie', 'Location',
-  'Peinture', 'Infirmerie', 'Comptoir retour', 'Salle de coupe',
+  'Comptoir retour', 'Cour à bois', 'Infirmerie', 'Location',
+  'Peinture', 'Plomberie', 'Réception', 'Salle de coupe',
 ];
 
 let ronaData = { locations: [] };
