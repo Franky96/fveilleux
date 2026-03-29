@@ -298,8 +298,7 @@ window.genererPDF = async function() {
 
   // Colonnes (x depuis la gauche de la page, en pts)
   // Petite : 306.7 → 402.2 pt   |   Commande : 537.1 → ~594 pt
-  const petiteWriteX    = 312;  // coin supérieur-gauche de la cellule Petite (au-dessus de /)
-  const commandeCenterX = 548;  // centre de la colonne Commande (proche du bord gauche)
+  const petiteWriteX = 312;  // coin supérieur-gauche de la cellule Petite (au-dessus de /)
 
   ITEMS.forEach((item, idx) => {
     if (idx >= rowTops.length) return;
@@ -324,11 +323,11 @@ window.genererPDF = async function() {
     });
 
     // Quantité à commander (col Commande, seulement si manquant)
+    // x=539 = aligné à gauche, juste après le séparateur Perso/Commande (537.1pt)
     if (isMissing) {
       const qStr = String(qteManquante);
-      const tw   = fontBold.widthOfTextAtSize(qStr, 9);
       page.drawText(qStr, {
-        x: commandeCenterX - tw / 2,
+        x: 539,
         y: rowTop - rowHeight / 2 - 4,
         size: 9,
         font: fontBold,
