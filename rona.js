@@ -74,7 +74,6 @@ const EMPLACEMENTS_DEFAUT = [
 
 let ronaData = { locations: [] };
 let locationActive = null;
-let itemEnCours = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   onSnapshot(ronaDocRef, (snap) => {
@@ -163,56 +162,76 @@ function renderGrille() {
     const present = item.qte - qteManquante;
     const estManquant = qteManquante > 0;
 
-    const card = document.createElement('div');
-    card.className = 'item-card' + (estManquant ? ' manquant' : '');
-    card.onclick = () => ouvrirModalItem(item, loc);
-    card.innerHTML = `
-      <span class="item-fraction">${present}/${item.qte}</span>
-      <span class="item-nom">${item.court}</span>
-      ${estManquant ? `<span class="item-manquant-label">manque : ${qteManquante}</span>` : ''}
-    `;
-    grid.appendChild(card);
+    const row = document.createElement('div');
+    row.className = 'item-row' + (estManquant ? ' manquant' : '');
+
+    // Checkbox
+    const chk = document.createElement('div');
+    chk.className = 'item-chk' + (estManquant ? ' checked' : '');
+    chk.textContent = estManquant ? '✕' : '';
+    chk.onclick = () => toggleManquant(item, loc, row, chk, qteInput);
+
+    // Info
+    const info = document.createElement('div');
+    info.className = 'item-info';
+    info.innerHTML = `<div class="item-nom">${item.court}</div>
+                      <div class="item-fraction">${present}/${item.qte}</div>`;
+
+    // Champ quantité
+    const qteInput = document.createElement('input');
+    qteInput.type = 'number';
+    qteInput.inputMode = 'numeric';
+    qteInput.className = 'item-qte-input';
+    qteInput.min = 1;
+    qteInput.max = item.qte;
+    qteInput.placeholder = '?';
+    if (estManquant) qteInput.value = qteManquante;
+    qteInput.onchange = () => mettreAJourQte(item, loc, qteInput, info);
+    qteInput.onblur  = () => mettreAJourQte(item, loc, qteInput, info);
+
+    row.appendChild(chk);
+    row.appendChild(info);
+    row.appendChild(qteInput);
+    grid.appendChild(row);
   });
 }
 
-// ── Modal article ─────────────────────────────────────
+// ── Interactions inline ───────────────────────────────
 
-function ouvrirModalItem(item, loc) {
-  itemEnCours = { item, loc };
-  const actuel = (loc.manquants || {})[item.id] || 0;
-
-  document.getElementById('modal-item-nom').textContent = item.court;
-  document.getElementById('modal-item-total').textContent = item.long;
-  document.getElementById('modal-qte').value = actuel > 0 ? actuel : '';
-  document.getElementById('modal-qte').max = item.qte;
-  document.getElementById('modal-item').classList.remove('hidden');
-  setTimeout(() => document.getElementById('modal-qte').focus(), 100);
+function toggleManquant(item, loc, row, chk, qteInput) {
+  if (!loc.manquants) loc.manquants = {};
+  const estManquant = !!loc.manquants[item.id];
+  if (estManquant) {
+    // Remettre complet
+    delete loc.manquants[item.id];
+    row.classList.remove('manquant');
+    chk.classList.remove('checked');
+    chk.textContent = '';
+    qteInput.value = '';
+    qteInput.style.display = 'none';
+    row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
+  } else {
+    // Marquer manquant
+    loc.manquants[item.id] = item.qte; // tout manquant par défaut
+    row.classList.add('manquant');
+    chk.classList.add('checked');
+    chk.textContent = '✕';
+    qteInput.value = '';
+    qteInput.style.display = 'block';
+    row.querySelector('.item-fraction').textContent = `0/${item.qte}`;
+    setTimeout(() => qteInput.focus(), 50);
+  }
+  sauvegarder();
 }
 
-window.fermerModalItem = function() {
-  document.getElementById('modal-item').classList.add('hidden');
-  itemEnCours = null;
-};
-
-window.sauvegarderManquant = function() {
-  if (!itemEnCours) return;
-  const { item, loc } = itemEnCours;
-  const val = parseInt(document.getElementById('modal-qte').value) || 0;
-  const qte = Math.min(val, item.qte);
+function mettreAJourQte(item, loc, qteInput, info) {
   if (!loc.manquants) loc.manquants = {};
-  if (qte <= 0) delete loc.manquants[item.id];
-  else loc.manquants[item.id] = qte;
+  const val = Math.min(parseInt(qteInput.value) || item.qte, item.qte);
+  loc.manquants[item.id] = val;
+  const present = item.qte - val;
+  info.querySelector('.item-fraction').textContent = `${present}/${item.qte}`;
   sauvegarder();
-  fermerModalItem();
-};
-
-window.marquerComplet = function() {
-  if (!itemEnCours) return;
-  const { item, loc } = itemEnCours;
-  if (loc.manquants) delete loc.manquants[item.id];
-  sauvegarder();
-  fermerModalItem();
-};
+}
 
 window.toutMarquerComplet = function() {
   const loc = ronaData.locations.find(l => l.id === locationActive);
