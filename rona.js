@@ -111,7 +111,8 @@ function renderLocationSelect() {
   const sel = document.getElementById('location-select');
   const val = sel.value || locationActive;
   sel.innerHTML = '<option value="">— choisir un emplacement —</option>';
-  (ronaData.locations || []).forEach(loc => {
+  const sorted = [...(ronaData.locations || [])].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  sorted.forEach(loc => {
     const opt = document.createElement('option');
     opt.value = loc.id;
     opt.textContent = loc.nom;
