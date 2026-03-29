@@ -212,13 +212,13 @@ function toggleManquant(item, loc, row, chk, qteInput) {
     row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
   } else {
     // Marquer manquant
-    loc.manquants[item.id] = item.qte; // tout manquant par défaut
+    loc.manquants[item.id] = 0;
     row.classList.add('manquant');
     chk.classList.add('checked');
     chk.textContent = '✕';
     qteInput.value = '';
     qteInput.style.display = 'block';
-    row.querySelector('.item-fraction').textContent = `0/${item.qte}`;
+    row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
     setTimeout(() => qteInput.focus(), 50);
   }
   sauvegarder();
