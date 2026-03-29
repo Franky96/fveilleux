@@ -134,7 +134,7 @@ function renderGrille() {
   const statusBar = document.getElementById('status-bar');
 
   if (!locationActive) {
-    grid.innerHTML = `<div class="rona-empty" style="grid-column:span 2">
+    grid.innerHTML = `<div class="rona-empty">
       <span>👷‍♂️</span>Choisis un emplacement ci-dessus, ou crée-en un avec <strong>+</strong>.
     </div>`;
     statusBar.style.display = 'none';
