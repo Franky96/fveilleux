@@ -104,6 +104,7 @@ window.ouvrirModalUser = function() {
   document.getElementById('user-pass').value = '';
   document.getElementById('user-name').value = '';
   document.getElementById('user-role').value = 'user';
+  document.getElementById('user-accueil').value = 'dashboard.html';
   document.querySelectorAll('.chk-perm').forEach(chk => chk.checked = false);
   document.getElementById('modal-user').classList.remove('hidden');
 };
@@ -113,10 +114,11 @@ window.editerUser = function(id) {
   editModeId = id;
   document.getElementById('modal-user-titre').textContent = `Modifier ${id}`;
   document.getElementById('user-id').value = id;
-  document.getElementById('user-id').disabled = true; 
+  document.getElementById('user-id').disabled = true;
   document.getElementById('user-pass').value = u.motDePasse;
   document.getElementById('user-name').value = u.nom;
   document.getElementById('user-role').value = u.role;
+  document.getElementById('user-accueil').value = u.pageAccueil || 'dashboard.html';
   document.querySelectorAll('.chk-perm').forEach(chk => { chk.checked = u.permissions.includes(chk.value); });
   document.getElementById('modal-user').classList.remove('hidden');
 };
@@ -131,19 +133,21 @@ window.sauvegarderUser = async function() {
 
   const perms = [];
   document.querySelectorAll('.chk-perm:checked').forEach(chk => perms.push(chk.value));
+  const pageAccueil = document.getElementById('user-accueil').value;
 
   if (!editModeId && usersData[id]) { alert("Identifiant déjà pris !"); return; }
 
   const targetId = editModeId || id;
-  usersData[targetId] = { motDePasse: pass, nom: nom, role: role, permissions: perms };
-  
-  await setDoc(usersRef, usersData); // Envoi au Cloud
+  usersData[targetId] = { motDePasse: pass, nom: nom, role: role, permissions: perms, pageAccueil };
 
-  // NOUVEAU : Si on modifie notre propre compte, on met à jour la session immédiatement !
+  await setDoc(usersRef, usersData);
+
+  // Si on modifie notre propre compte, on met à jour la session immédiatement
   if (targetId === sessionStorage.getItem('userId')) {
     sessionStorage.setItem('userPermissions', JSON.stringify(perms));
     sessionStorage.setItem('userRole', role);
     sessionStorage.setItem('userName', nom);
+    sessionStorage.setItem('pageAccueil', pageAccueil);
   }
 
   window.fermerModalUser();
