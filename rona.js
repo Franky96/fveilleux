@@ -67,9 +67,15 @@ const ITEMS = [
 
 // ── Firebase ──────────────────────────────────────────
 const ronaDocRef = doc(db, "donnees", "rona_global");
+
+const EMPLACEMENTS_DEFAUT = [
+  'Réception', 'Cour à bois', 'Plomberie', 'Location',
+  'Peinture', 'Infirmerie', 'Comptoir retour', 'Salle de coupe',
+];
+
 let ronaData = { locations: [] };
-let locationActive = null;  // id de la location sélectionnée
-let itemEnCours = null;     // item ouvert dans le modal
+let locationActive = null;
+let itemEnCours = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   onSnapshot(ronaDocRef, (snap) => {
@@ -77,6 +83,19 @@ document.addEventListener('DOMContentLoaded', () => {
       ronaData = snap.data();
       if (!ronaData.locations) ronaData.locations = [];
     } else {
+      // Première utilisation : créer les emplacements par défaut
+      ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+        nom, type: 'moyenne', manquants: {}
+      }));
+      setDoc(ronaDocRef, ronaData);
+    }
+    // Migration : ajouter les emplacements manquants si la liste est vide
+    if (ronaData.locations.length === 0) {
+      ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+        nom, type: 'moyenne', manquants: {}
+      }));
       setDoc(ronaDocRef, ronaData);
     }
     renderLocationSelect();
