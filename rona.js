@@ -131,12 +131,15 @@ window.changerLocation = function() {
 function renderGrille() {
   const grid = document.getElementById('items-grid');
 
+  const btnPdf = document.getElementById('btn-pdf-container');
   if (!locationActive) {
     grid.innerHTML = `<div class="rona-empty">
       <span>👷‍♂️</span>Choisis un emplacement ci-dessus, ou crée-en un avec <strong>+</strong>.
     </div>`;
+    btnPdf.style.display = 'none';
     return;
   }
+  btnPdf.style.display = 'block';
 
   const loc = ronaData.locations.find(l => l.id === locationActive);
   if (!loc) return;
@@ -246,6 +249,67 @@ function sauvegarderLocation() {
   sauvegarder();
   fermerModalLocation();
 }
+
+// ── Génération PDF ────────────────────────────────────
+
+window.genererPDF = function() {
+  const loc = ronaData.locations.find(l => l.id === locationActive);
+  if (!loc) return;
+  const manquants = loc.manquants || {};
+  const date = new Date().toLocaleDateString('fr-CA');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+
+  // En-tête
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RONA — Santé & Sécurité', 14, 18);
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Emplacement : ${loc.nom}`, 14, 27);
+  doc.text(`Date : ${date}`, 14, 34);
+
+  // Tableau
+  const rows = ITEMS.map(item => {
+    const estManquant = item.id in manquants;
+    const qteManquante = manquants[item.id] || 0;
+    const present = item.qte - qteManquante;
+    return {
+      data: [item.long, item.qte, estManquant ? present : item.qte, estManquant ? qteManquante : ''],
+      manquant: estManquant,
+    };
+  });
+
+  doc.autoTable({
+    startY: 40,
+    head: [['Article', 'Requis', 'En stock', 'À commander']],
+    body: rows.map(r => r.data),
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [30, 60, 30], textColor: 255, fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 110 },
+      1: { cellWidth: 18, halign: 'center' },
+      2: { cellWidth: 22, halign: 'center' },
+      3: { cellWidth: 25, halign: 'center' },
+    },
+    didParseCell: (data) => {
+      if (data.section === 'body' && rows[data.row.index]?.manquant) {
+        data.cell.styles.fillColor = [45, 10, 10];
+        data.cell.styles.textColor = [220, 80, 80];
+        if (data.column.index === 3) {
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    },
+    alternateRowStyles: { fillColor: [15, 25, 15] },
+    tableLineColor: [42, 58, 42],
+    tableLineWidth: 0.2,
+  });
+
+  doc.save(`RONA_SS_${loc.nom.replace(/\s+/g, '_')}_${date}.pdf`);
+};
 
 // ── Erreur Firebase ───────────────────────────────────
 
