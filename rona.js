@@ -144,7 +144,7 @@ function renderGrille() {
   if (!loc) return;
   const manquants = loc.manquants || {};
 
-  const nbManquants = ITEMS.filter(it => manquants[it.id] > 0).length;
+  const nbManquants = ITEMS.filter(it => it.id in manquants).length;
 
   statusBar.style.display = 'flex';
   const countEl = document.getElementById('status-count');
@@ -158,9 +158,9 @@ function renderGrille() {
 
   grid.innerHTML = '';
   ITEMS.forEach(item => {
+    const estManquant = item.id in manquants;
     const qteManquante = manquants[item.id] || 0;
     const present = item.qte - qteManquante;
-    const estManquant = qteManquante > 0;
 
     const row = document.createElement('div');
     row.className = 'item-row' + (estManquant ? ' manquant' : '');
@@ -211,8 +211,8 @@ function toggleManquant(item, loc, row, chk, qteInput) {
     qteInput.style.display = 'none';
     row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
   } else {
-    // Marquer manquant
-    loc.manquants[item.id] = 0;
+    // Marquer manquant (null = coché sans quantité encore saisie)
+    loc.manquants[item.id] = null;
     row.classList.add('manquant');
     chk.classList.add('checked');
     chk.textContent = '✕';
@@ -226,10 +226,15 @@ function toggleManquant(item, loc, row, chk, qteInput) {
 
 function mettreAJourQte(item, loc, qteInput, info) {
   if (!loc.manquants) loc.manquants = {};
-  const val = Math.min(parseInt(qteInput.value) || item.qte, item.qte);
-  loc.manquants[item.id] = val;
-  const present = item.qte - val;
-  info.querySelector('.item-fraction').textContent = `${present}/${item.qte}`;
+  const val = parseInt(qteInput.value);
+  if (!isNaN(val) && val > 0) {
+    loc.manquants[item.id] = Math.min(val, item.qte);
+    const present = item.qte - loc.manquants[item.id];
+    info.querySelector('.item-fraction').textContent = `${present}/${item.qte}`;
+  } else {
+    loc.manquants[item.id] = null; // coché mais sans quantité
+    info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
+  }
   sauvegarder();
 }
 
