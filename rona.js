@@ -323,11 +323,12 @@ window.genererPDF = async function() {
     });
 
     // Quantité à commander (col Commande, seulement si manquant)
-    // x=539 = aligné à gauche, juste après le séparateur Perso/Commande (537.1pt)
+    // Colonne Commande = 480.5→537.1pt ; centre ≈ 509pt
     if (isMissing) {
       const qStr = String(qteManquante);
+      const tw   = fontBold.widthOfTextAtSize(qStr, 9);
       page.drawText(qStr, {
-        x: 539,
+        x: 508.8 - tw / 2,
         y: rowTop - rowHeight / 2 - 4,
         size: 9,
         font: fontBold,
