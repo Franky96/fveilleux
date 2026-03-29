@@ -282,25 +282,24 @@ window.genererPDF = async function() {
 
   // ── Champs du formulaire ──────────────────────────────
   // Emplacement (sur la ligne pointillée après "Emplacement :")
-  page.drawText(loc.nom, { x: 440, y: 641, size: 9, font: fontBold, color: black });
+  page.drawText(loc.nom, { x: 440, y: 668, size: 9, font: fontBold, color: black });
 
   // Date (sur la ligne après "Date :")
-  page.drawText(date, { x: 130, y: 609, size: 9, font: fontBold, color: black });
+  page.drawText(date, { x: 130, y: 641, size: 9, font: fontBold, color: black });
 
   // ── Rangées du tableau ────────────────────────────────
   // Positions y (depuis le bas de la page, en pts) du bord supérieur de chaque rangée
-  // Mesurées pixel-à-pixel depuis le PDF rendu à 150 DPI
-  // Ligne séparatrice basse du tableau (107.0 pt) n'est PAS une rangée
+  // Ligne du haut du tableau de données = 593.0 pt
   const rowTops = [
-    567.8, 543.1, 518.2, 493.2, 468.2, 443.0, 418.6, 393.6,
-    368.4, 343.2, 318.5, 293.3, 268.8, 243.8, 218.9, 193.9,
-    169.0, 144.0,
+    593.0, 567.8, 543.1, 518.2, 493.2, 468.2, 443.0, 418.6,
+    393.6, 368.4, 343.2, 318.5, 293.3, 268.8, 243.8, 218.9,
+    193.9, 169.0,
   ];
 
   // Colonnes (x depuis la gauche de la page, en pts)
   // Petite : 306.7 → 402.2 pt   |   Commande : 537.1 → ~594 pt
   const petiteWriteX    = 312;  // coin supérieur-gauche de la cellule Petite (au-dessus de /)
-  const commandeCenterX = 555;  // centre de la colonne Commande
+  const commandeCenterX = 548;  // centre de la colonne Commande (proche du bord gauche)
 
   ITEMS.forEach((item, idx) => {
     if (idx >= rowTops.length) return;
