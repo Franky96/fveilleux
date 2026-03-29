@@ -54,13 +54,24 @@ function chargerUtilisateurs() {
       `<span style="background:#e0ddd6; color:#555; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; margin-right:4px;">${p}</span>`
     ).join('');
 
-    const roleHtml = u.role === 'admin' 
-      ? `<span style="color:#c0392b; font-weight:bold;">Admin</span>` 
+    const roleHtml = u.role === 'admin'
+      ? `<span style="color:#c0392b; font-weight:bold;">Admin</span>`
       : `<span style="color:#3a7a3a;">Utilisateur</span>`;
+
+    const PAGE_LABELS = {
+      'dashboard.html': '🏠 Accueil', 'rona.html': 'RONA S&S',
+      'aeronefs.html': 'Aéronefs',   'arinc429.html': 'ARINC 429',
+      'ena.html': 'ÉNA',             'aviation.html': 'Aviation',
+      'hockey.html': 'Hockey',       'liens.html': 'Liens utiles',
+      'films.html': 'Films & Séries','scifi.html': 'Sci-Fi',
+    };
+    const accueil = u.pageAccueil || 'dashboard.html';
+    const accueilHtml = `<span style="font-size:0.8rem; color:#888;">${PAGE_LABELS[accueil] || accueil}</span>`;
 
     tr.innerHTML = `
       <td style="font-family:monospace; font-weight:bold;">${id}</td>
       <td>${u.nom}</td>
+      <td>${accueilHtml}</td>
       <td>${roleHtml}</td>
       <td>${permsHtml}</td>
       <td style="text-align:right; white-space:nowrap;">
@@ -75,7 +86,7 @@ function chargerUtilisateurs() {
   if (admins.length > 0) {
     const trSeparateurAdmins = document.createElement('tr');
     trSeparateurAdmins.innerHTML = `
-      <td colspan="5" style="padding-top: 1rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #c0392b; border-bottom: 2px solid #c0392b; letter-spacing: 0.05em;">
+      <td colspan="6" style="padding-top: 1rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #c0392b; border-bottom: 2px solid #c0392b; letter-spacing: 0.05em;">
         <strong>Administrateurs</strong>
       </td>
     `;
@@ -87,7 +98,7 @@ function chargerUtilisateurs() {
   if (normaux.length > 0) {
     const trSeparateurNormaux = document.createElement('tr');
     trSeparateurNormaux.innerHTML = `
-      <td colspan="5" style="padding-top: 2.5rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #3a7a3a; border-bottom: 2px solid #3a7a3a; letter-spacing: 0.05em;">
+      <td colspan="6" style="padding-top: 2.5rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #3a7a3a; border-bottom: 2px solid #3a7a3a; letter-spacing: 0.05em;">
         <strong>Utilisateurs</strong>
       </td>
     `;
