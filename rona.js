@@ -130,31 +130,17 @@ window.changerLocation = function() {
 
 function renderGrille() {
   const grid = document.getElementById('items-grid');
-  const statusBar = document.getElementById('status-bar');
 
   if (!locationActive) {
     grid.innerHTML = `<div class="rona-empty">
       <span>👷‍♂️</span>Choisis un emplacement ci-dessus, ou crée-en un avec <strong>+</strong>.
     </div>`;
-    statusBar.style.display = 'none';
     return;
   }
 
   const loc = ronaData.locations.find(l => l.id === locationActive);
   if (!loc) return;
   const manquants = loc.manquants || {};
-
-  const nbManquants = ITEMS.filter(it => it.id in manquants).length;
-
-  statusBar.style.display = 'flex';
-  const countEl = document.getElementById('status-count');
-  if (nbManquants === 0) {
-    countEl.textContent = '✓ Tout complet';
-    countEl.className = 'status-count ok';
-  } else {
-    countEl.textContent = `${nbManquants} article${nbManquants > 1 ? 's' : ''} manquant${nbManquants > 1 ? 's' : ''}`;
-    countEl.className = 'status-count alert';
-  }
 
   grid.innerHTML = '';
   ITEMS.forEach(item => {
@@ -237,13 +223,6 @@ function mettreAJourQte(item, loc, qteInput, info) {
   }
   sauvegarder();
 }
-
-window.toutMarquerComplet = function() {
-  const loc = ronaData.locations.find(l => l.id === locationActive);
-  if (!loc) return;
-  loc.manquants = {};
-  sauvegarder();
-};
 
 // ── Modal emplacement ─────────────────────────────────
 
