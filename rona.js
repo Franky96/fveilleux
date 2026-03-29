@@ -6,63 +6,62 @@ if (!sessionStorage.getItem('loggedIn') || !permissions.includes('rona')) {
   window.location.href = 'dashboard.html';
 }
 
-// ── Liste de référence RONA ───────────────────────────
-// qtés : [petite, moyenne, grande, perso]  (null = non requis)
+// ── Liste de référence RONA (trousse petite) ──────────
 const ITEMS = [
   { id:'01', court:'Bandages adhésifs',
     long:'Bandages adhésifs, stériles, de tailles assorties (bande standard, grand, bout du doigt, jointure, grande plaque)',
-    qte:{ petite:25, moyenne:50, grande:100, perso:16 } },
+    qte: 25 },
   { id:'02', court:'Bandage élastique 5,1 cm',
     long:'Bandages élastiques, longueur non étirée, emballés individuellement, 5,1 cm × 1,8 m (2 po × 2 verges)',
-    qte:{ petite:1, moyenne:2, grande:4, perso:1 } },
+    qte: 1 },
   { id:'03', court:'Bandage élastique 7,6 cm',
     long:'Bandages élastiques, longueur non étirée, emballés individuellement, 7,6 cm × 1,8 m (3 po × 2 verges)',
-    qte:{ petite:1, moyenne:2, grande:4, perso:null } },
+    qte: 1 },
   { id:'04', court:'Ciseaux à bandage',
     long:'Ciseaux à bandage en acier inoxydable (avec pointe en angle, arrondie), minimum 14 cm (5,5 po)',
-    qte:{ petite:1, moyenne:1, grande:1, perso:null } },
+    qte: 1 },
   { id:'05', court:'Compresses de gaze 7,6 cm',
     long:'Compresses de gaze, stériles, emballées individuellement, 7,6 cm × 7,6 cm (3 po × 3 po)',
-    qte:{ petite:12, moyenne:24, grande:48, perso:6 } },
+    qte: 12 },
   { id:'06', court:'Compresses compressives 10,2 cm',
     long:'Compresses ou pansements compressifs avec attaches, stériles, 10,2 cm × 10,2 cm (4 po × 4 po)',
-    qte:{ petite:2, moyenne:4, grande:8, perso:2 } },
+    qte: 2 },
   { id:'07', court:'Écharpe triangulaire',
     long:'Écharpe triangulaire, coton, avec 2 épingles de sécurité, 101,6 cm × 101,6 cm × 142,2 cm',
-    qte:{ petite:2, moyenne:4, grande:8, perso:1 } },
+    qte: 2 },
   { id:'08', court:'Lingettes antiseptiques',
     long:'Lingettes de nettoyage des plaies, antiseptiques, emballées individuellement',
-    qte:{ petite:25, moyenne:50, grande:100, perso:6 } },
+    qte: 25 },
   { id:'09', court:'Pince à écharde',
     long:'Pince à écharde ou pince à épiler (pointe fine, acier inoxydable, minimum 11,4 cm (4,5 po))',
-    qte:{ petite:1, moyenne:1, grande:1, perso:1 } },
+    qte: 1 },
   { id:'10', court:'Ruban adhésif (diachylon)',
     long:'Ruban adhésif (diachylon), 2,5 cm (1 po) – en mètre',
-    qte:{ petite:2.3, moyenne:4.6, grande:9.1, perso:2.3 } },
+    qte: 2.3 },
   { id:'11', court:'Dispositif RCP',
     long:'Dispositif de barrière pour réanimation cardio-pulmonaire (RCP), avec clapet unidirectionnel',
-    qte:{ petite:1, moyenne:1, grande:1, perso:null } },
-  { id:'12', court:'Gants d\'examen (paires)',
-    long:'Gants d\'examen, jetables de qualité médicale, taille unique, sans latex, sans poudre (nombre de paires)',
-    qte:{ petite:4, moyenne:8, grande:16, perso:2 } },
+    qte: 1 },
+  { id:'12', court:"Gants d'examen (paires)",
+    long:"Gants d'examen, jetables de qualité médicale, taille unique, sans latex, sans poudre (nombre de paires)",
+    qte: 4 },
   { id:'13', court:'Compresses abdominales',
     long:'Compresses abdominales, stériles, emballées individuellement, 12,7 cm × 22,9 cm (5 po × 9 po)',
-    qte:{ petite:1, moyenne:2, grande:2, perso:null } },
+    qte: 1 },
   { id:'14', court:'Couverture de secours',
     long:'Couverture de secours, en aluminium, en polyester non extensible, minimum 132 cm × 213 cm (52 po × 84 po)',
-    qte:{ petite:1, moyenne:1, grande:1, perso:null } },
+    qte: 1 },
   { id:'15', court:'Lingettes mains / peau',
     long:'Lingettes de nettoyage des mains et de la peau, emballées individuellement (ou équivalent)',
-    qte:{ petite:6, moyenne:12, grande:24, perso:4 } },
+    qte: 6 },
   { id:'16', court:'Onguents antibiotiques',
     long:'Onguents antibiotiques, topiques, à usage unique',
-    qte:{ petite:6, moyenne:12, grande:24, perso:2 } },
+    qte: 6 },
   { id:'17', court:'Sac déchets biomédicaux',
     long:'Sac pour le recueil de déchets biomédicaux, à usage unique',
-    qte:{ petite:1, moyenne:2, grande:2, perso:1 } },
+    qte: 1 },
   { id:'18', court:'Liste du contenu',
     long:'Liste du contenu de la trousse',
-    qte:{ petite:1, moyenne:1, grande:1, perso:1 } },
+    qte: 1 },
 ];
 
 // ── Firebase ──────────────────────────────────────────
@@ -83,18 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ronaData = snap.data();
       if (!ronaData.locations) ronaData.locations = [];
     } else {
-      // Première utilisation : créer les emplacements par défaut
       ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
         id: Math.random().toString(36).slice(2) + Date.now().toString(36),
-        nom, type: 'moyenne', manquants: {}
+        nom, manquants: {}
       }));
       setDoc(ronaDocRef, ronaData);
     }
-    // Migration : ajouter les emplacements manquants si la liste est vide
     if (ronaData.locations.length === 0) {
       ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
         id: Math.random().toString(36).slice(2) + Date.now().toString(36),
-        nom, type: 'moyenne', manquants: {}
+        nom, manquants: {}
       }));
       setDoc(ronaDocRef, ronaData);
     }
@@ -117,15 +114,11 @@ function renderLocationSelect() {
   (ronaData.locations || []).forEach(loc => {
     const opt = document.createElement('option');
     opt.value = loc.id;
-    opt.textContent = `${loc.nom} (${labelType(loc.type)})`;
+    opt.textContent = loc.nom;
     sel.appendChild(opt);
   });
   if (val) sel.value = val;
   locationActive = sel.value || null;
-}
-
-function labelType(t) {
-  return { petite:'Petite', moyenne:'Moyenne', grande:'Grande', perso:'Perso' }[t] || t;
 }
 
 window.changerLocation = function() {
@@ -151,11 +144,8 @@ function renderGrille() {
   if (!loc) return;
   const manquants = loc.manquants || {};
 
-  // Filtrer les items pertinents pour ce type (qte non null)
-  const itemsActifs = ITEMS.filter(it => it.qte[loc.type] !== null);
-  const nbManquants = itemsActifs.filter(it => manquants[it.id] > 0).length;
+  const nbManquants = ITEMS.filter(it => manquants[it.id] > 0).length;
 
-  // Statut
   statusBar.style.display = 'flex';
   const countEl = document.getElementById('status-count');
   if (nbManquants === 0) {
@@ -167,17 +157,16 @@ function renderGrille() {
   }
 
   grid.innerHTML = '';
-  itemsActifs.forEach(item => {
-    const total = item.qte[loc.type];
+  ITEMS.forEach(item => {
     const qteManquante = manquants[item.id] || 0;
-    const present = total - qteManquante;
+    const present = item.qte - qteManquante;
     const estManquant = qteManquante > 0;
 
     const card = document.createElement('div');
     card.className = 'item-card' + (estManquant ? ' manquant' : '');
     card.onclick = () => ouvrirModalItem(item, loc);
     card.innerHTML = `
-      <span class="item-fraction">${present}/${total}</span>
+      <span class="item-fraction">${present}/${item.qte}</span>
       <span class="item-nom">${item.court}</span>
       ${estManquant ? `<span class="item-manquant-label">manque : ${qteManquante}</span>` : ''}
     `;
@@ -189,14 +178,12 @@ function renderGrille() {
 
 function ouvrirModalItem(item, loc) {
   itemEnCours = { item, loc };
-  const total = item.qte[loc.type];
-  const manquants = loc.manquants || {};
-  const actuel = manquants[item.id] || 0;
+  const actuel = (loc.manquants || {})[item.id] || 0;
 
   document.getElementById('modal-item-nom').textContent = item.court;
   document.getElementById('modal-item-total').textContent = item.long;
   document.getElementById('modal-qte').value = actuel > 0 ? actuel : '';
-  document.getElementById('modal-qte').max = total;
+  document.getElementById('modal-qte').max = item.qte;
   document.getElementById('modal-item').classList.remove('hidden');
   setTimeout(() => document.getElementById('modal-qte').focus(), 100);
 }
@@ -210,14 +197,10 @@ window.sauvegarderManquant = function() {
   if (!itemEnCours) return;
   const { item, loc } = itemEnCours;
   const val = parseInt(document.getElementById('modal-qte').value) || 0;
-  const total = item.qte[loc.type];
-  const qte = Math.min(val, total);
+  const qte = Math.min(val, item.qte);
   if (!loc.manquants) loc.manquants = {};
-  if (qte <= 0) {
-    delete loc.manquants[item.id];
-  } else {
-    loc.manquants[item.id] = qte;
-  }
+  if (qte <= 0) delete loc.manquants[item.id];
+  else loc.manquants[item.id] = qte;
   sauvegarder();
   fermerModalItem();
 };
@@ -241,8 +224,6 @@ window.toutMarquerComplet = function() {
 
 window.ouvrirModalLocation = function() {
   document.getElementById('location-nom').value = '';
-  document.getElementById('location-type').value = 'moyenne';
-  document.getElementById('modal-location-titre').textContent = 'Nouvel emplacement';
   document.getElementById('modal-location').classList.remove('hidden');
   setTimeout(() => document.getElementById('location-nom').focus(), 50);
   document.getElementById('location-save-btn').onclick = sauvegarderLocation;
@@ -254,10 +235,9 @@ window.fermerModalLocation = function() {
 
 function sauvegarderLocation() {
   const nom = document.getElementById('location-nom').value.trim();
-  const type = document.getElementById('location-type').value;
   if (!nom) return;
   const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  ronaData.locations.push({ id, nom, type, manquants: {} });
+  ronaData.locations.push({ id, nom, manquants: {} });
   locationActive = id;
   sauvegarder();
   fermerModalLocation();
