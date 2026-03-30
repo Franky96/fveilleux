@@ -788,7 +788,8 @@ function renderFields(word) {
   // ── Data (bits 11-29, 19 bits) ──
   const data19 = (word >> 10) & 0x7FFFF;
   const dataBin = data19.toString(2).padStart(19, '0');
-  const dataBinGrouped = dataBin.replace(/(.{4})/g, '$1 ').trim();
+  // Reversed (bit 11 à gauche, bit 29 à droite), groupes de 3
+  const dataBinGrouped = dataBin.split('').reverse().join('').replace(/(.{3})/g, '$1 ').trim();
   document.getElementById('d-data-bin').textContent = dataBinGrouped;
   document.getElementById('d-data-dec').textContent = data19;
   document.getElementById('d-data-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
