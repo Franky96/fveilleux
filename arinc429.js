@@ -311,13 +311,13 @@ const DECODE_META = {
   '015': { decimals: 2, padLow: 2 },  // Wind Speed (kt)            – 3 digits + 2 PAD, 1 kt res
   '016': { decimals: 2, padLow: 2 },  // Wind Direction - True (deg)– 3 digits + 2 PAD, 1° res
   '017': { decimals: 2, padLow: 1 },  // Selected Runway Heading    – 4 digits + PAD, 0.1° res
-  '020': { decimals: 0 },  // Selected Vertical Speed (ft/min)
-  '021': { decimals: 1 },  // N1 Selected / EPR        – 4 digits + PAD, 1 RPM res
-  '022': { decimals: 3 },  // Selected Mach
-  '023': { decimals: 2 },  // Selected Heading (deg)   – 3 digits + 2 PAD, 1° res
-  '024': { decimals: 2 },  // Selected Course #1 (deg) – 3 digits + 2 PAD, 1° res
-  '025': { decimals: 0 },  // Selected Altitude (ft)
-  '026': { decimals: 2 },  // Selected Airspeed (kt)   – 3 digits + 2 PAD, 1 kt res
+  '020': { decimals: 0, padLow: 1 },  // Selected Vertical Speed (ft/min) – 4 digits + PAD, 10 fpm res, ±SSM
+  '021': { decimals: 4, padLow: 2 },  // N1 Selected / EPR – d4=unités, d3=10ths, d2=100ths, 2 PAD
+  '022': { decimals: 4, padLow: 1 },  // Selected Mach     – d4=unités, d3=10ths, d2=100ths, d1=1000ths, PAD
+  '023': { decimals: 2, padLow: 2 },  // Selected Heading (deg)   – 3 digits + 2 PAD, 1° res
+  '024': { decimals: 2, padLow: 2 },  // Selected Course #1 (deg) – 3 digits + 2 PAD, 1° res
+  '025': { decimals: 0 },             // Selected Altitude (ft)   – 5 digits, tous utilisés, 1 ft res
+  '026': { decimals: 2, padLow: 2 },  // Selected Airspeed (kt)   – 3 digits + 2 PAD, 1 kt res
   '027': { decimals: 2 },  // Selected Course #2 (deg) – 3 digits + 2 PAD, 1° res
   // ── Radio frequency labels (SSM: 00=NML, 01=NCD, 10=FT, 11=Undef) ──
   '030': { decimals: 3, implicit: 100 },  // VHF COM (MHz) – 118-137, centaine implicite
@@ -812,7 +812,7 @@ function renderFields(word) {
     bannerEl.innerHTML = dir
       ? `<span style="color:#4fc3f7;font-weight:bold">${dir}</span> ${decoded}`
       : decoded;
-  } else if (labelInfo && labelInfo.oct === '001' && decoded !== null) {
+  } else if (labelInfo && ['001', '020'].includes(labelInfo.oct) && decoded !== null) {
     const sign = ssm === 0b00 ? '+' : ssm === 0b11 ? '−' : null;
     const signColor = ssm === 0b00 ? '#80cc80' : '#ff6b6b';
     const unit = labelInfo.unit ? ' ' + labelInfo.unit : '';
