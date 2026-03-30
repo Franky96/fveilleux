@@ -354,8 +354,8 @@ window.genererPDF = async function() {
     if (isMissing) {
       const qStr = String(qteManquante);
       const tw   = fontBold.widthOfTextAtSize(qStr, 9);
-      page.drawText(qStr, {
-        x: 508.8 - tw / 2,
+      page.drawText('Ajout: ' + qStr, {
+        x: 490 - tw / 2,
         y: rowTop - rowHeight / 2 - 4,
         size: 11,
         font: fontBold,
@@ -498,8 +498,8 @@ window.genererToutPDF = async function() {
       if (isMissing) {
         const qStr = String(qteManquante);
         const tw   = fontBold.widthOfTextAtSize(qStr, 9);
-        page.drawText(qStr, {
-          x: 508.8 - tw / 2,
+        page.drawText('Ajout: ' + qStr, {
+          x: 490 - tw / 2,
           y: rowTop - rowHeight / 2 - 4,
           size: 11,
           font: fontBold,
