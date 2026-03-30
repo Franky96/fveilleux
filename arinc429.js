@@ -300,7 +300,7 @@ const DECODE_META = {
   // decimals = PAD_nibbles + physical_decimal_places
   // e.g. 4 sig digits + 1 PAD nibble + 0.1 resolution → 1+1 = decimals:2
   '001': { decimals: 1 },  // Distance to Go (NM)     – 5 digits, 0.1 NM res
-  '002': { decimals: 2 },  // Time to Go (min)         – 4 digits + PAD, 0.1 min res
+  '002': { decimals: 2, padD0: true },  // Time to Go (min) – 4 digits + PAD, 0.1 min res
   '003': { decimals: 2 },  // Cross Track Distance (NM)– 4 digits + PAD, 0.1 NM res
   '004': { decimals: 0 },  // Runway Distance to Go (ft)
   '010': { decimals: 4 },  // Present Position - Latitude (deg DDMM.mmmm)
@@ -465,7 +465,7 @@ function decodeData(word, labelInfo) {
     const d2 = (data19 >> 8)  & 0xF;
     // bcdDigits:3 → only d4/d3/d2 are BCD; maskD0/bcdDigits → force lower digits to 0
     const d1 = (meta.bcdDigits === 3) ? 0 : ((data19 >> 4) & 0xF);
-    const d0 = (meta.bcdDigits === 3 || meta.maskD0) ? 0 : (data19 & 0xF);
+    const d0 = (meta.bcdDigits === 3 || meta.maskD0 || meta.padD0) ? 0 : (data19 & 0xF);
 
     // ── Squawk (label 031): 4-digit octal transponder code ──
     if (meta.squawk) {
@@ -487,7 +487,7 @@ function decodeData(word, labelInfo) {
     }
 
     // Auto-choose display decimals: enough for halfStep precision
-    let dp = meta.decimals;
+    let dp = meta.padD0 ? meta.decimals - 1 : meta.decimals;
     if (meta.halfStep !== undefined) {
       const halfDp = Math.max(0, -Math.floor(Math.log10(meta.halfStep)));
       dp = Math.max(dp, halfDp);
@@ -598,15 +598,16 @@ function getDataFieldSegments(oct, enc, meta, unit) {
     const dec = meta.decimals;
     const spans = [3, 4, 4, 4, 4];   // d4..d0
     return [4, 3, 2, 1, 0].map((d, i) => {
-      const exp   = d - dec;
-      const isDis = meta.maskD0 && d === 0;
-      const isPad = (meta.bcdDigits === 3 && d <= 1) || (isDis);
+      const exp     = d - dec;
+      const isDis   = meta.maskD0 && d === 0;
+      const isPadD0 = meta.padD0  && d === 0;
+      const isPad   = (meta.bcdDigits === 3 && d <= 1) || isDis || isPadD0;
       let label;
-      if (unit) {
+      if (unit && !isPad) {
         const n = exp >= 0 ? Math.pow(10, exp) : (1 / Math.pow(10, -exp)).toFixed(-exp);
         label = `${n}${unit}`;
       } else {
-        label = isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
+        label = isPadD0 ? 'padding' : isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
       }
       return { span: spans[i], label, cls: isDis ? 'fmap-dis' : isPad ? 'fmap-pad' : 'fmap-bcd' };
     });
@@ -672,10 +673,17 @@ function renderBits(word) {
   const container = document.getElementById('bit-display');
   container.innerHTML = '';
 
+  // Determine padding bits from the decoded label
+  const labelOct = reverseBits8(word & 0xFF).toString(8).padStart(3, '0');
+  const metaBits = DECODE_META[labelOct];
+  const padBits  = new Set();
+  if (metaBits && metaBits.padD0) { padBits.add(11); padBits.add(12); padBits.add(13); padBits.add(14); }
+
   // Display bit 32 (left) → bit 1 (right)
   for (let bitNum = 32; bitNum >= 1; bitNum--) {
-    const val = getBit(word, bitNum);
-    const cls = getBitClass(bitNum);
+    const isPad = padBits.has(bitNum);
+    const val   = getBit(word, bitNum);
+    const cls   = isPad ? 'bit-pad' : getBitClass(bitNum);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'bit-wrapper';
@@ -686,10 +694,10 @@ function renderBits(word) {
 
     const cell = document.createElement('div');
     cell.className = `bit-cell ${cls}`;
-    cell.textContent = val;
+    cell.textContent = isPad ? 'P' : val;
     cell.dataset.bit = bitNum;
-    cell.title = `Bit ${bitNum} — clic pour basculer`;
-    cell.addEventListener('click', () => toggleBit(bitNum));
+    cell.title = isPad ? `Bit ${bitNum} — padding (non utilisé)` : `Bit ${bitNum} — clic pour basculer`;
+    if (!isPad) cell.addEventListener('click', () => toggleBit(bitNum));
 
     wrapper.appendChild(numEl);
     wrapper.appendChild(cell);
