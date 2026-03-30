@@ -299,14 +299,14 @@ const DECODE_META = {
   // ── BCD labels ────────────────────────────────────
   // decimals = PAD_nibbles + physical_decimal_places
   // e.g. 4 sig digits + 1 PAD nibble + 0.1 resolution → 1+1 = decimals:2
-  '001': { decimals: 1 },  // Distance to Go (NM)     – 5 digits, 0.1 NM res
-  '002': { decimals: 2, padD0: true },  // Time to Go (min) – 4 digits + PAD, 0.1 min res
-  '003': { decimals: 2 },  // Cross Track Distance (NM)– 4 digits + PAD, 0.1 NM res
-  '004': { decimals: 0 },  // Runway Distance to Go (ft)
-  '010': { decimals: 4 },  // Present Position - Latitude (deg DDMM.mmmm)
-  '011': { decimals: 4 },  // Present Position - Longitude (deg DDDMM.mmmm)
-  '012': { decimals: 0 },  // Ground Speed (kt)
-  '013': { decimals: 2 },  // Track Angle - True (deg)
+  '001': { decimals: 1 },              // Distance to Go (NM)      – 5 digits, 0.1 NM res
+  '002': { decimals: 2, padLow: 1 },  // Time to Go (min)          – 4 digits + PAD, 0.1 min res
+  '003': { decimals: 2, padLow: 1 },  // Cross Track Distance (NM) – 4 digits + PAD, 0.1 NM res
+  '004': { decimals: 0, padLow: 2 },  // Runway Distance to Go (ft)– 3 digits + 2 PAD, 100 ft res
+  '010': { decimals: 4 },             // Present Position - Latitude  (deg DDMM.mmmm)
+  '011': { decimals: 4 },             // Present Position - Longitude (deg DDDMM.mmmm)
+  '012': { decimals: 0, padLow: 1 },  // Ground Speed (kt)         – 4 digits + PAD, 10 kt res
+  '013': { decimals: 2, padLow: 1 },  // Track Angle - True (deg)  – 4 digits + PAD, 0.1° res
   '014': { decimals: 1 },  // Magnetic Heading (deg)
   '015': { decimals: 0 },  // Wind Speed (kt)
   '016': { decimals: 1 },  // Wind Direction - True (deg)
@@ -416,8 +416,8 @@ function decodeData(word, labelInfo) {
   // data19: bits 29-11 of the word mapped to bit positions 18-0
   const data19 = (word >> 10) & 0x7FFFF;
 
-  // ── Label 010 : latitude BCD (bit29=+100°, 5 groupes×4 bits, SDI inclus) ──
-  if (labelInfo.oct === '010') {
+  // ── Labels 010/011 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
+  if (labelInfo.oct === '010' || labelInfo.oct === '011') {
     const bit29  = (word >> 28) & 1;
     const data20 = (word >> 8)  & 0xFFFFF;   // bits 28-9 du mot (20 bits)
     const tDeg = (data20 >> 16) & 0xF;
@@ -464,8 +464,9 @@ function decodeData(word, labelInfo) {
     const d3 = (data19 >> 12) & 0xF;
     const d2 = (data19 >> 8)  & 0xF;
     // bcdDigits:3 → only d4/d3/d2 are BCD; maskD0/bcdDigits → force lower digits to 0
-    const d1 = (meta.bcdDigits === 3) ? 0 : ((data19 >> 4) & 0xF);
-    const d0 = (meta.bcdDigits === 3 || meta.maskD0 || meta.padD0) ? 0 : (data19 & 0xF);
+    const padLow = meta.padLow || 0;
+    const d1 = (meta.bcdDigits === 3 || padLow >= 2) ? 0 : ((data19 >> 4) & 0xF);
+    const d0 = (meta.bcdDigits === 3 || meta.maskD0  || padLow >= 1) ? 0 : (data19 & 0xF);
 
     // ── Squawk (label 031): 4-digit octal transponder code ──
     if (meta.squawk) {
@@ -487,7 +488,8 @@ function decodeData(word, labelInfo) {
     }
 
     // Auto-choose display decimals: enough for halfStep precision
-    let dp = meta.padD0 ? meta.decimals - 1 : meta.decimals;
+    const padLowDp = meta.padLow || 0;
+    let dp = Math.max(0, meta.decimals - padLowDp);
     if (meta.halfStep !== undefined) {
       const halfDp = Math.max(0, -Math.floor(Math.log10(meta.halfStep)));
       dp = Math.max(dp, halfDp);
@@ -585,7 +587,7 @@ function getDataFieldSegments(oct, enc, meta, unit) {
     { span:4, label:'0.01MHz',  cls:'fmap-freq' },
     { span:4, label:'0.001MHz', cls:'fmap-freq' },
   ];
-  if (oct === '010') return [
+  if (oct === '010' || oct === '011') return [
     { span:1, label:'100°', cls:'fmap-bcd' },
     { span:4, label:"10°",  cls:'fmap-bcd'  },
     { span:4, label:"1°",   cls:'fmap-bcd'  },
@@ -597,17 +599,18 @@ function getDataFieldSegments(oct, enc, meta, unit) {
   if (enc === 'BCD' && meta && meta.decimals !== undefined) {
     const dec = meta.decimals;
     const spans = [3, 4, 4, 4, 4];   // d4..d0
+    const padLowSeg = meta ? (meta.padLow || 0) : 0;
     return [4, 3, 2, 1, 0].map((d, i) => {
-      const exp     = d - dec;
-      const isDis   = meta.maskD0 && d === 0;
-      const isPadD0 = meta.padD0  && d === 0;
-      const isPad   = (meta.bcdDigits === 3 && d <= 1) || isDis || isPadD0;
+      const exp    = d - dec;
+      const isDis  = meta && meta.maskD0 && d === 0;
+      const isPadL = d < padLowSeg;   // padLow:1 → d0; padLow:2 → d0+d1
+      const isPad  = (meta && meta.bcdDigits === 3 && d <= 1) || isDis || isPadL;
       let label;
       if (unit && !isPad) {
         const n = exp >= 0 ? Math.pow(10, exp) : (1 / Math.pow(10, -exp)).toFixed(-exp);
         label = `${n}${unit}`;
       } else {
-        label = isPadD0 ? 'padding' : isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
+        label = isPadL ? 'padding' : isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
       }
       return { span: spans[i], label, cls: isDis ? 'fmap-dis' : isPad ? 'fmap-pad' : 'fmap-bcd' };
     });
@@ -677,7 +680,9 @@ function renderBits(word) {
   const labelOct = reverseBits8(word & 0xFF).toString(8).padStart(3, '0');
   const metaBits = DECODE_META[labelOct];
   const padBits  = new Set();
-  if (metaBits && metaBits.padD0) { padBits.add(11); padBits.add(12); padBits.add(13); padBits.add(14); }
+  const padLowBits = metaBits ? (metaBits.padLow || 0) : 0;
+  if (padLowBits >= 1) { [11, 12, 13, 14].forEach(b => padBits.add(b)); }
+  if (padLowBits >= 2) { [15, 16, 17, 18].forEach(b => padBits.add(b)); }
 
   // Display bit 32 (left) → bit 1 (right)
   for (let bitNum = 32; bitNum >= 1; bitNum--) {
@@ -796,10 +801,12 @@ function renderFields(word) {
     ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
   const bannerEl = document.getElementById('banner-value');
-  if (labelInfo && labelInfo.oct === '010' && decoded !== null) {
-    const ns = ssm === 0b00 ? 'N' : ssm === 0b11 ? 'S' : null;
-    bannerEl.innerHTML = ns
-      ? `<span style="color:#4fc3f7;font-weight:bold">${ns}</span> ${decoded}`
+  if (labelInfo && (labelInfo.oct === '010' || labelInfo.oct === '011') && decoded !== null) {
+    const dir = labelInfo.oct === '010'
+      ? (ssm === 0b00 ? 'N' : ssm === 0b11 ? 'S' : null)
+      : (ssm === 0b00 ? 'E' : ssm === 0b11 ? 'W' : null);
+    bannerEl.innerHTML = dir
+      ? `<span style="color:#4fc3f7;font-weight:bold">${dir}</span> ${decoded}`
       : decoded;
   } else if (labelInfo && labelInfo.oct === '001' && decoded !== null) {
     const sign = ssm === 0b00 ? '+' : ssm === 0b11 ? '−' : null;
