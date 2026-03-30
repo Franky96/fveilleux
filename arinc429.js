@@ -551,7 +551,7 @@ function popCount(n) {
 
 // ── Field map ────────────────────────────────────────
 
-function getDataFieldSegments(oct, enc, meta, unit) {
+function getDataFieldSegments(oct, enc, meta, unit, word) {
   // Label-specific
   if (oct === '030') return [
     { span:3, label:'10MHz',    cls:'fmap-freq' },
@@ -573,16 +573,19 @@ function getDataFieldSegments(oct, enc, meta, unit) {
     { span:1, label:'CP',  cls:'fmap-dis' },  // bit 12 control panel
     { span:1, label:'ALT', cls:'fmap-dis' },  // bit 11 altitude report
   ];
-  if (oct === '032') return [
-    { span:3, label:'1000kHz',cls:'fmap-freq' },
-    { span:4, label:'100kHz', cls:'fmap-freq' },
-    { span:4, label:'10kHz',  cls:'fmap-freq' },
-    { span:4, label:'1kHz',   cls:'fmap-freq' },
-    { span:1, label:'½kHz',  cls:'fmap-freq' },
-    { span:1, label:'SP',     cls:'fmap-pad'  },
-    { span:1, label:'ANT',    cls:'fmap-dis'  },
-    { span:1, label:'BFO',    cls:'fmap-dis'  },
-  ];
+  if (oct === '032') {
+    const antMode = word ? getBit(word, 12) : 0;  // bit 12: 0=ADF, 1=ANT
+    return [
+      { span:3, label:'1000kHz', cls:'fmap-freq' },
+      { span:4, label:'100kHz',  cls:'fmap-freq' },
+      { span:4, label:'10kHz',   cls:'fmap-freq' },
+      { span:4, label:'1kHz',    cls:'fmap-freq' },
+      { span:1, label:'0.5kHz',  cls:'fmap-freq' },
+      { span:1, label:'SP',      cls:'fmap-pad'  },
+      { span:1, label: antMode ? 'ANT' : 'ADF', cls:'fmap-dis' },
+      { span:1, label:'BFO',     cls:'fmap-dis'  },
+    ];
+  }
   if (oct === '033') return [
     { span:3, label:'10MHz',   cls:'fmap-freq' },
     { span:4, label:'1MHz',    cls:'fmap-freq' },
@@ -665,14 +668,14 @@ function getDataFieldSegments(oct, enc, meta, unit) {
   return [{ span:19, label:'DATA', cls:'fmap-bnr' }];
 }
 
-function renderFieldMap(labelInfo, meta) {
+function renderFieldMap(labelInfo, meta, word) {
   const container = document.getElementById('field-map');
   container.innerHTML = '';
   const oct  = labelInfo ? labelInfo.oct  : null;
   const enc  = labelInfo ? labelInfo.enc  : null;
   const unit = labelInfo ? labelInfo.unit : null;
 
-  const datasegs = getDataFieldSegments(oct, enc, meta, unit);
+  const datasegs = getDataFieldSegments(oct, enc, meta, unit, word);
   const dataSpan = datasegs.reduce((s, x) => s + x.span, 0);
   const segs = [
     { span:1, label:'P',     cls:'fmap-parity' },
@@ -764,7 +767,7 @@ function renderFields(word) {
   const labelBin = labelVal.toString(2).padStart(8, '0');
   const labelInfo = LABELS.find(l => l.oct === labelOct);
   const meta = DECODE_META[labelOct];
-  renderFieldMap(labelInfo, meta);
+  renderFieldMap(labelInfo, meta, word);
 
   document.getElementById('d-label-oct').textContent = labelOct;
   document.getElementById('d-label-dec').textContent = labelDec;
