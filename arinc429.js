@@ -580,7 +580,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'100kHz',  cls:'fmap-freq' },
       { span:4, label:'10kHz',   cls:'fmap-freq' },
       { span:4, label:'1kHz',    cls:'fmap-freq' },
-      { span:1, label:'0.5kHz',  cls:'fmap-freq' },
+      { span:1, label:'0.5',     cls:'fmap-freq' },
       { span:1, label:'SP',      cls:'fmap-pad'  },
       { span:1, label: antMode ? 'ANT' : 'ADF', cls:'fmap-dis' },
       { span:1, label:'BFO',     cls:'fmap-dis'  },
