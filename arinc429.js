@@ -321,8 +321,28 @@ const DECODE_META = {
   '027': { decimals: 2, padLow: 2 },  // Selected Course #2 (deg) – 3 digits + 2 PAD, 1° res
   // ── Radio frequency labels (SSM: 00=NML, 01=NCD, 10=FT, 11=Undef) ──
   '030': { decimals: 3, implicit: 100 },  // VHF COM (MHz) – 118-137, centaine implicite
-  '031': { transponder: true },           // Transponder – squawk ABCD + discrets bits 11-17
-  '032': { decimals: 1, maskD0: true, halfBit: 14, halfStep: 0.5 },  // ADF (kHz) – bit14=0.5kHz
+  '031': { transponder: true,
+    discBits: [11,12,13,14,15,16,17],
+    bitDescs: {
+      11: 'Altitude Report — 0=ON  1=OFF',
+      12: 'Control Panel (CP)',
+      13: 'Ident — 0=OFF  1=ON',
+      14: 'Alt Data Source — 0=#1  1=#2',
+      15: 'Control Panel (CP)',
+      16: 'Control Panel (CP)',
+      17: 'Hijack Mode — 0=OFF  1=ON',
+    },
+  },
+  '032': { decimals: 1, maskD0: true, halfBit: 14, halfStep: 0.5,
+    discBits: [11, 12],
+    spareBits: [13],
+    bitDescs: {
+      11: 'BFO — 0=OFF  1=ON',
+      12: 'Mode — 0=ADF  1=ANT',
+      13: 'Spare (non utilisé)',
+      14: '+0.5 kHz — 0=non  1=oui',
+    },
+  },  // ADF (kHz) – bits 29-27=1000kHz, 26-23=100kHz, 22-19=10kHz, 18-15=1kHz, 14=0.5kHz
   '033': { decimals: 3, implicit: 100, maskD0: true },  // ILS (MHz) – bits12-11=CAT (ignorés)
   '034': { decimals: 3, implicit: 100 },  // VOR/ILS (MHz) – bit15=mode inclus dans BCD
   '035': { decimals: 3, implicit: 100, bcdDigits: 3, halfBit: 18, halfStep: 0.05 },  // DME (MHz)
@@ -697,18 +717,10 @@ function renderBits(word) {
   const dataBits = new Set();
   if (labelOct === '010' || labelOct === '011') { dataBits.add(9); dataBits.add(10); }
 
-  // For label 031, bits 11-17 are discrete (teal), bits 18-29 are squawk data (green)
-  const disBits = new Set();
-  if (labelOct === '031') { for (let b = 11; b <= 17; b++) disBits.add(b); }
-  const DIS_DESC_031 = {
-    11: 'Altitude Report — 0=ON  1=OFF',
-    12: 'Control Panel (CP)',
-    13: 'Ident — 0=OFF  1=ON',
-    14: 'Alt Data Source — 0=#1  1=#2',
-    15: 'Control Panel (CP)',
-    16: 'Control Panel (CP)',
-    17: 'Hijack Mode — 0=OFF  1=ON',
-  };
+  // Discrete bits (teal) and bit descriptions from DECODE_META
+  const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
+  const bitDescs = (metaBits && metaBits.bitDescs) || {};
+  if (metaBits && metaBits.spareBits) metaBits.spareBits.forEach(b => padBits.add(b));
 
   // Display bit 32 (left) → bit 1 (right)
   for (let bitNum = 32; bitNum >= 1; bitNum--) {
@@ -731,8 +743,8 @@ function renderBits(word) {
     cell.className = `bit-cell ${cls}`;
     cell.textContent = isPad ? 'P' : val;
     cell.dataset.bit = bitNum;
-    cell.title = isPad ? `Bit ${bitNum} — padding (non utilisé)`
-               : isDis ? `Bit ${bitNum} — ${DIS_DESC_031[bitNum]}`
+    cell.title = isPad ? `Bit ${bitNum} — ${bitDescs[bitNum] || 'padding (non utilisé)'}`
+               : bitDescs[bitNum] ? `Bit ${bitNum} — ${bitDescs[bitNum]}`
                : `Bit ${bitNum} — clic pour basculer`;
     if (!isPad) cell.addEventListener('click', () => toggleBit(bitNum));
 
