@@ -305,12 +305,12 @@ const DECODE_META = {
   '004': { decimals: 0, padLow: 2 },  // Runway Distance to Go (ft)– 3 digits + 2 PAD, 100 ft res
   '010': { decimals: 4 },             // Present Position - Latitude  (deg DDMM.mmmm)
   '011': { decimals: 4 },             // Present Position - Longitude (deg DDDMM.mmmm)
-  '012': { decimals: 0, padLow: 1 },  // Ground Speed (kt)         – 4 digits + PAD, 10 kt res
-  '013': { decimals: 2, padLow: 1 },  // Track Angle - True (deg)  – 4 digits + PAD, 0.1° res
-  '014': { decimals: 1 },  // Magnetic Heading (deg)
-  '015': { decimals: 0 },  // Wind Speed (kt)
-  '016': { decimals: 1 },  // Wind Direction - True (deg)
-  '017': { decimals: 1 },  // Selected Runway Heading (deg)
+  '012': { decimals: 1, padLow: 1 },  // Ground Speed (kt)          – 4 digits + PAD, 1 kt res (d4=1000s)
+  '013': { decimals: 2, padLow: 1 },  // Track Angle - True (deg)   – 4 digits + PAD, 0.1° res
+  '014': { decimals: 2, padLow: 1 },  // Magnetic Heading (deg)     – 4 digits + PAD, 0.1° res
+  '015': { decimals: 2, padLow: 2 },  // Wind Speed (kt)            – 3 digits + 2 PAD, 1 kt res
+  '016': { decimals: 2, padLow: 2 },  // Wind Direction - True (deg)– 3 digits + 2 PAD, 1° res
+  '017': { decimals: 2, padLow: 1 },  // Selected Runway Heading    – 4 digits + PAD, 0.1° res
   '020': { decimals: 0 },  // Selected Vertical Speed (ft/min)
   '021': { decimals: 1 },  // N1 Selected / EPR        – 4 digits + PAD, 1 RPM res
   '022': { decimals: 3 },  // Selected Mach
@@ -676,7 +676,7 @@ function renderBits(word) {
   const container = document.getElementById('bit-display');
   container.innerHTML = '';
 
-  // Determine padding bits from the decoded label
+  // Determine padding bits and data-override bits from the decoded label
   const labelOct = reverseBits8(word & 0xFF).toString(8).padStart(3, '0');
   const metaBits = DECODE_META[labelOct];
   const padBits  = new Set();
@@ -684,11 +684,15 @@ function renderBits(word) {
   if (padLowBits >= 1) { [11, 12, 13, 14].forEach(b => padBits.add(b)); }
   if (padLowBits >= 2) { [15, 16, 17, 18].forEach(b => padBits.add(b)); }
 
+  // For labels 010/011, bits 9-10 carry data (dMin), not SDI
+  const dataBits = new Set();
+  if (labelOct === '010' || labelOct === '011') { dataBits.add(9); dataBits.add(10); }
+
   // Display bit 32 (left) → bit 1 (right)
   for (let bitNum = 32; bitNum >= 1; bitNum--) {
     const isPad = padBits.has(bitNum);
     const val   = getBit(word, bitNum);
-    const cls   = isPad ? 'bit-pad' : getBitClass(bitNum);
+    const cls   = isPad ? 'bit-pad' : dataBits.has(bitNum) ? 'bit-data' : getBitClass(bitNum);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'bit-wrapper';
