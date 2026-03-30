@@ -793,6 +793,13 @@ function renderFields(word) {
     bannerEl.innerHTML = ns
       ? `<span style="color:#4fc3f7;font-weight:bold">${ns}</span> ${decoded}`
       : decoded;
+  } else if (labelInfo && labelInfo.oct === '001' && decoded !== null) {
+    const sign = ssm === 0b00 ? '+' : ssm === 0b11 ? '−' : null;
+    const signColor = ssm === 0b00 ? '#80cc80' : '#ff6b6b';
+    const unit = labelInfo.unit ? ' ' + labelInfo.unit : '';
+    bannerEl.innerHTML = sign
+      ? `<span style="color:${signColor};font-weight:bold">${sign}</span>${decoded}${unit}`
+      : decoded + unit;
   } else {
     bannerEl.textContent = decoded !== null
       ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
