@@ -311,17 +311,17 @@ const DECODE_META = {
   '015': { decimals: 2, padLow: 2 },  // Wind Speed (kt)            – 3 digits + 2 PAD, 1 kt res
   '016': { decimals: 2, padLow: 2 },  // Wind Direction - True (deg)– 3 digits + 2 PAD, 1° res
   '017': { decimals: 2, padLow: 1 },  // Selected Runway Heading    – 4 digits + PAD, 0.1° res
-  '020': { decimals: 0, padLow: 1 },  // Selected Vertical Speed (ft/min) – 4 digits + PAD, 10 fpm res, ±SSM
+  '020': { decimals: 1, padLow: 1 },  // Selected Vertical Speed (ft/min) – d4=1000s,d3=100s,d2=10s,d1=1s,d0=PAD
   '021': { decimals: 4, padLow: 2 },  // N1 Selected / EPR – d4=unités, d3=10ths, d2=100ths, 2 PAD
   '022': { decimals: 4, padLow: 1 },  // Selected Mach     – d4=unités, d3=10ths, d2=100ths, d1=1000ths, PAD
   '023': { decimals: 2, padLow: 2 },  // Selected Heading (deg)   – 3 digits + 2 PAD, 1° res
   '024': { decimals: 2, padLow: 2 },  // Selected Course #1 (deg) – 3 digits + 2 PAD, 1° res
   '025': { decimals: 0 },             // Selected Altitude (ft)   – 5 digits, tous utilisés, 1 ft res
   '026': { decimals: 2, padLow: 2 },  // Selected Airspeed (kt)   – 3 digits + 2 PAD, 1 kt res
-  '027': { decimals: 2 },  // Selected Course #2 (deg) – 3 digits + 2 PAD, 1° res
+  '027': { decimals: 2, padLow: 2 },  // Selected Course #2 (deg) – 3 digits + 2 PAD, 1° res
   // ── Radio frequency labels (SSM: 00=NML, 01=NCD, 10=FT, 11=Undef) ──
   '030': { decimals: 3, implicit: 100 },  // VHF COM (MHz) – 118-137, centaine implicite
-  '031': { squawk: true },                // Code Transpondeur (ABCD octal)
+  '031': { transponder: true },           // Transponder – squawk ABCD + discrets bits 11-17
   '032': { decimals: 1, maskD0: true, halfBit: 14, halfStep: 0.5 },  // ADF (kHz) – bit14=0.5kHz
   '033': { decimals: 3, implicit: 100, maskD0: true },  // ILS (MHz) – bits12-11=CAT (ignorés)
   '034': { decimals: 3, implicit: 100 },  // VOR/ILS (MHz) – bit15=mode inclus dans BCD
@@ -417,6 +417,16 @@ function decodeData(word, labelInfo) {
   const data19 = (word >> 10) & 0x7FFFF;
 
   // ── Labels 010/011 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
+  // ── Label 031 : Transponder — squawk ABCD (3 bits/digit) + discrets ──
+  if (labelInfo.oct === '031') {
+    const dA = (word >> 26) & 0x7;  // bits 29-27
+    const dB = (word >> 23) & 0x7;  // bits 26-24
+    const dC = (word >> 20) & 0x7;  // bits 23-21
+    const dD = (word >> 17) & 0x7;  // bits 20-18
+    return `${dA}${dB}${dC}${dD}`;
+  }
+
+  // ── Labels 010/011 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
   if (labelInfo.oct === '010' || labelInfo.oct === '011') {
     const bit29  = (word >> 28) & 1;
     const data20 = (word >> 8)  & 0xFFFFF;   // bits 28-9 du mot (20 bits)
@@ -453,7 +463,7 @@ function decodeData(word, labelInfo) {
   }
 
   // ── BCD ──────────────────────────────────────────
-  if (labelInfo.enc === 'BCD' && (meta.decimals !== undefined || meta.squawk)) {
+  if (labelInfo.enc === 'BCD' && meta.decimals !== undefined) {
     // 5-digit BCD, MSB-first in bits 29-11:
     //   d4 (3 bits) = bits 29-27 → data19 bits 18-16
     //   d3 (4 bits) = bits 26-23 → data19 bits 15-12
@@ -467,13 +477,6 @@ function decodeData(word, labelInfo) {
     const padLow = meta.padLow || 0;
     const d1 = (meta.bcdDigits === 3 || padLow >= 2) ? 0 : ((data19 >> 4) & 0xF);
     const d0 = (meta.bcdDigits === 3 || meta.maskD0  || padLow >= 1) ? 0 : (data19 & 0xF);
-
-    // ── Squawk (label 031): 4-digit octal transponder code ──
-    if (meta.squawk) {
-      // Codes A-D each 0-7; validate all ≤7
-      if (d4 > 7 || d3 > 7 || d2 > 7 || d1 > 7) return null;
-      return `${d4}${d3}${d2}${d1}`;
-    }
 
     // Reject invalid BCD digits (>9 means binary garbage)
     if (d3 > 9 || d2 > 9 || d1 > 9 || d0 > 9) return null;
@@ -538,11 +541,17 @@ function getDataFieldSegments(oct, enc, meta, unit) {
     { span:4, label:'0.001MHz',cls:'fmap-freq' },
   ];
   if (oct === '031') return [
-    { span:3, label:'A',    cls:'fmap-bcd' },
-    { span:3, label:'B',    cls:'fmap-bcd' },
-    { span:3, label:'C',    cls:'fmap-bcd' },
-    { span:3, label:'D',    cls:'fmap-bcd' },
-    { span:7, label:'CTRL', cls:'fmap-dis' },
+    { span:3, label:'A',   cls:'fmap-bcd' },  // bits 29-27 squawk digit A
+    { span:3, label:'B',   cls:'fmap-bcd' },  // bits 26-24 squawk digit B
+    { span:3, label:'C',   cls:'fmap-bcd' },  // bits 23-21 squawk digit C
+    { span:3, label:'D',   cls:'fmap-bcd' },  // bits 20-18 squawk digit D
+    { span:1, label:'HJK', cls:'fmap-dis' },  // bit 17 hijack
+    { span:1, label:'CP',  cls:'fmap-dis' },  // bit 16 control panel
+    { span:1, label:'CP',  cls:'fmap-dis' },  // bit 15 control panel
+    { span:1, label:'SRC', cls:'fmap-dis' },  // bit 14 alt data source
+    { span:1, label:'IDT', cls:'fmap-dis' },  // bit 13 ident
+    { span:1, label:'CP',  cls:'fmap-dis' },  // bit 12 control panel
+    { span:1, label:'ALT', cls:'fmap-dis' },  // bit 11 altitude report
   ];
   if (oct === '032') return [
     { span:3, label:'1000kHz',cls:'fmap-freq' },
@@ -688,11 +697,28 @@ function renderBits(word) {
   const dataBits = new Set();
   if (labelOct === '010' || labelOct === '011') { dataBits.add(9); dataBits.add(10); }
 
+  // For label 031, bits 11-17 are discrete (teal), bits 18-29 are squawk data (green)
+  const disBits = new Set();
+  if (labelOct === '031') { for (let b = 11; b <= 17; b++) disBits.add(b); }
+  const DIS_DESC_031 = {
+    11: 'Altitude Report — 0=ON  1=OFF',
+    12: 'Control Panel (CP)',
+    13: 'Ident — 0=OFF  1=ON',
+    14: 'Alt Data Source — 0=#1  1=#2',
+    15: 'Control Panel (CP)',
+    16: 'Control Panel (CP)',
+    17: 'Hijack Mode — 0=OFF  1=ON',
+  };
+
   // Display bit 32 (left) → bit 1 (right)
   for (let bitNum = 32; bitNum >= 1; bitNum--) {
     const isPad = padBits.has(bitNum);
+    const isDis = disBits.has(bitNum);
     const val   = getBit(word, bitNum);
-    const cls   = isPad ? 'bit-pad' : dataBits.has(bitNum) ? 'bit-data' : getBitClass(bitNum);
+    const cls   = isPad ? 'bit-pad'
+                : dataBits.has(bitNum) ? 'bit-data'
+                : isDis ? 'bit-sdi'
+                : getBitClass(bitNum);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'bit-wrapper';
@@ -705,7 +731,9 @@ function renderBits(word) {
     cell.className = `bit-cell ${cls}`;
     cell.textContent = isPad ? 'P' : val;
     cell.dataset.bit = bitNum;
-    cell.title = isPad ? `Bit ${bitNum} — padding (non utilisé)` : `Bit ${bitNum} — clic pour basculer`;
+    cell.title = isPad ? `Bit ${bitNum} — padding (non utilisé)`
+               : isDis ? `Bit ${bitNum} — ${DIS_DESC_031[bitNum]}`
+               : `Bit ${bitNum} — clic pour basculer`;
     if (!isPad) cell.addEventListener('click', () => toggleBit(bitNum));
 
     wrapper.appendChild(numEl);
