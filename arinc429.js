@@ -873,6 +873,14 @@ function renderFields(word) {
 
 // ── Actions ─────────────────────────────────────────
 
+function resetToZero() {
+  document.getElementById('hex-input').value = '00000000';
+  document.getElementById('error-msg').textContent = '';
+  currentWord = 0;
+  renderBits(currentWord);
+  renderFields(currentWord);
+}
+
 function decodeFromInput() {
   const raw = document.getElementById('hex-input').value.trim().replace(/^0x/i, '');
   const errEl = document.getElementById('error-msg');
