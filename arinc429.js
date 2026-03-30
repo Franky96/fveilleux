@@ -343,9 +343,34 @@ const DECODE_META = {
       14: '+0.5 kHz — 0=non  1=oui',
     },
   },  // ADF (kHz) – bits 29-27=1000kHz, 26-23=100kHz, 22-19=10kHz, 18-15=1kHz, 14=0.5kHz
-  '033': { decimals: 3, implicit: 100, maskD0: true },  // ILS (MHz) – bits12-11=CAT (ignorés)
-  '034': { decimals: 3, implicit: 100 },  // VOR/ILS (MHz) – bit15=mode inclus dans BCD
-  '035': { decimals: 3, implicit: 100, bcdDigits: 3, halfBit: 18, halfStep: 0.05 },  // DME (MHz)
+  '033': { decimals: 3, implicit: 100, maskD0: true,
+    discBits: [11, 12], spareBits: [13, 14],
+    bitDescs: {
+      11: 'ILS CAT bit 0',
+      12: 'ILS CAT bit 1 — 00=Non  01=CAT I  10=CAT II  11=CAT III',
+      13: 'Spare', 14: 'Spare',
+    },
+  },
+  '034': { decimals: 3, implicit: 100, maskD0: true,
+    discBits: [14], spareBits: [11, 12, 13],
+    bitDescs: {
+      11: 'Spare', 12: 'Spare', 13: 'Spare',
+      14: 'Mode — 0=VOR  1=ILS',
+    },
+  },
+  '035': { decimals: 3, implicit: 100, bcdDigits: 3, halfBit: 18, halfStep: 0.05,
+    discBits: [11, 12, 13, 14, 15, 16, 17, 18],
+    bitDescs: {
+      11: 'DME Mode bit 0',
+      12: 'DME Mode bit 1',
+      13: 'DME Mode bit 2 — 000=STBY  001=NORM  010=TEST  011=SCAN  100=HELD',
+      14: 'Fréq Mode bit 0 — (15,14): 00=VOR  01=ILS  10=MLS  11=spare',
+      15: 'Fréq Mode bit 1 — (15,14): 00=VOR  01=ILS  10=MLS  11=spare',
+      16: 'Ident Display — 1=sortie BCD',
+      17: 'Ident Output — 1=générer',
+      18: '+0.05 MHz (VOR & ILS seulement)',
+    },
+  },
   '036': { decimals: 3, implicit: 100 },  // MLS Frequency (MHz)
   '037': { decimals: 3 },  // HF COM Frequency (MHz)
   '041': { decimals: 4 },  // Set Latitude
@@ -511,7 +536,7 @@ function decodeData(word, labelInfo) {
     }
 
     // Auto-choose display decimals: enough for halfStep precision
-    const padLowDp = meta.padLow || 0;
+    const padLowDp = (meta.padLow || 0) + (meta.maskD0 ? 1 : 0);
     let dp = Math.max(0, meta.decimals - padLowDp);
     if (meta.halfStep !== undefined) {
       const halfDp = Math.max(0, -Math.floor(Math.log10(meta.halfStep)));
@@ -586,32 +611,45 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:1, label:'BFO',     cls:'fmap-dis'  },
     ];
   }
-  if (oct === '033') return [
-    { span:3, label:'10MHz',   cls:'fmap-freq' },
-    { span:4, label:'1MHz',    cls:'fmap-freq' },
-    { span:4, label:'0.1MHz',  cls:'fmap-freq' },
-    { span:4, label:'0.01MHz', cls:'fmap-freq' },
-    { span:2, label:'SP',      cls:'fmap-pad'  },
-    { span:2, label:'CAT',     cls:'fmap-dis'  },
-  ];
-  if (oct === '034') return [
-    { span:3, label:'10MHz',   cls:'fmap-freq' },
-    { span:4, label:'1MHz',    cls:'fmap-freq' },
-    { span:4, label:'0.1MHz',  cls:'fmap-freq' },
-    { span:4, label:'0.01MHz', cls:'fmap-freq' },
-    { span:1, label:'ILS',     cls:'fmap-dis'  },
-    { span:3, label:'SP',      cls:'fmap-pad'  },
-  ];
-  if (oct === '035') return [
-    { span:3, label:'10MHz',  cls:'fmap-freq' },
-    { span:4, label:'1MHz',   cls:'fmap-freq' },
-    { span:4, label:'0.1MHz', cls:'fmap-freq' },
-    { span:1, label:'.05M',   cls:'fmap-freq' },
-    { span:1, label:'ID',     cls:'fmap-dis'  },
-    { span:1, label:'IDd',    cls:'fmap-dis'  },
-    { span:2, label:'FLG',    cls:'fmap-dis'  },
-    { span:3, label:'MODE',   cls:'fmap-dis'  },
-  ];
+  if (oct === '033') {
+    const cat = word ? ((word >> 10) & 0x3) : 0;  // bits 12-11
+    const catStr = ['Non', 'CAT I', 'CAT II', 'CAT III'][cat];
+    return [
+      { span:3, label:'10MHz',   cls:'fmap-freq' },
+      { span:4, label:'1MHz',    cls:'fmap-freq' },
+      { span:4, label:'0.1MHz',  cls:'fmap-freq' },
+      { span:4, label:'0.01MHz', cls:'fmap-freq' },
+      { span:2, label:'SP',      cls:'fmap-pad'  },
+      { span:2, label: catStr,   cls:'fmap-dis'  },
+    ];
+  }
+  if (oct === '034') {
+    const ilsMode = word ? getBit(word, 14) : 0;  // bit 14: 0=VOR, 1=ILS
+    return [
+      { span:3, label:'10MHz',                   cls:'fmap-freq' },
+      { span:4, label:'1MHz',                    cls:'fmap-freq' },
+      { span:4, label:'0.1MHz',                  cls:'fmap-freq' },
+      { span:4, label:'0.01MHz',                 cls:'fmap-freq' },
+      { span:1, label: ilsMode ? 'ILS' : 'VOR',  cls:'fmap-dis'  },
+      { span:3, label:'SP',                      cls:'fmap-pad'  },
+    ];
+  }
+  if (oct === '035') {
+    const freqMode = word ? ((word >> 13) & 0x3) : 0;  // bits 15-14
+    const dmeMode  = word ? ((word >> 10) & 0x7) : 0;  // bits 13-11
+    const freqStr  = ['VOR', 'ILS', 'MLS', 'SP'][freqMode];
+    const dmeStr   = ['STBY', 'NORM', 'TEST', 'SCAN', 'HELD', 'N/A', 'N/A', 'N/A'][dmeMode];
+    return [
+      { span:3, label:'10MHz',   cls:'fmap-freq' },
+      { span:4, label:'1MHz',    cls:'fmap-freq' },
+      { span:4, label:'0.1MHz',  cls:'fmap-freq' },
+      { span:1, label:'0.05',    cls:'fmap-freq' },
+      { span:1, label:'IDO',     cls:'fmap-dis'  },
+      { span:1, label:'IDD',     cls:'fmap-dis'  },
+      { span:2, label: freqStr,  cls:'fmap-dis'  },
+      { span:3, label: dmeStr,   cls:'fmap-dis'  },
+    ];
+  }
   if (oct === '036') return [
     { span:3, label:'10MHz',    cls:'fmap-freq' },
     { span:4, label:'1MHz',     cls:'fmap-freq' },
@@ -794,8 +832,22 @@ function renderFields(word) {
   document.getElementById('d-data-dec').textContent = data19;
   document.getElementById('d-data-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
   const decoded = decodeData(word, labelInfo);
+  let decodedExtra = '';
+  if (decoded !== null && labelInfo) {
+    if (labelInfo.oct === '033') {
+      const cat = (word >> 10) & 0x3;
+      decodedExtra = ' — ' + ['Non', 'CAT I', 'CAT II', 'CAT III'][cat];
+    } else if (labelInfo.oct === '034') {
+      decodedExtra = ' (' + (getBit(word, 14) ? 'ILS' : 'VOR') + ')';
+    } else if (labelInfo.oct === '035') {
+      const dme  = (word >> 10) & 0x7;
+      const freq = (word >> 13) & 0x3;
+      decodedExtra = ' — ' + ['STBY','NORM','TEST','SCAN','HELD','N/A','N/A','N/A'][dme]
+                   + ' / ' + ['VOR','ILS','MLS','spare'][freq];
+    }
+  }
   document.getElementById('d-data-decoded').textContent = decoded !== null
-    ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
+    ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
     : '—';
   document.getElementById('d-data-format').textContent = labelInfo ? labelInfo.enc : '—';
 
