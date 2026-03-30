@@ -2543,3 +2543,14 @@ body.films-page .etoile.etoile-survol {
     font-size: 1.3rem;
   }
 }
+
+.btn-annuler {
+  background: #c0392b !important;
+}
+
+.item-qte-label {
+  font-size: 1rem;
+  color: #f0ede6;
+  margin-right: 0.3rem;
+  display: none;
+}
