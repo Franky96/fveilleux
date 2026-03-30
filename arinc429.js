@@ -798,7 +798,7 @@ function renderFields(word) {
     const signColor = ssm === 0b00 ? '#80cc80' : '#ff6b6b';
     const unit = labelInfo.unit ? ' ' + labelInfo.unit : '';
     bannerEl.innerHTML = sign
-      ? `<span style="color:${signColor};font-weight:bold">${sign}</span>${decoded}${unit}`
+      ? `<span style="color:${signColor};font-weight:bold">${sign}</span> ${decoded}${unit}`
       : decoded + unit;
   } else {
     bannerEl.textContent = decoded !== null
