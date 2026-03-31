@@ -438,6 +438,21 @@
     .ssm-ref-row.ssm-ft.ssm-active     { color: #60b8c8; font-weight: bold; }
     .ssm-ref-row.ssm-ncd.ssm-active    { color: #f59e0b; font-weight: bold; }
     .ssm-ref-row.ssm-undef.ssm-active  { color: #888888; font-weight: bold; }
+
+    /* ── Config selector ── */
+    .config-select {
+      margin-top: 0.35rem;
+      background: #0f1a0f;
+      border: 1px solid #3a5a3a;
+      border-radius: 6px;
+      color: #80cc80;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .config-select:hover, .config-select:focus { border-color: #80cc80; }
     .ssm-ref-code {
       font-family: 'Courier New', monospace;
       min-width: 1.8rem;
@@ -547,6 +562,7 @@
         <div>
           <div class="label-banner-name" id="banner-name">—</div>
           <div class="label-banner-sub" id="banner-sub">—</div>
+          <div id="banner-config"></div>
         </div>
       </div>
       <div class="label-banner-value" id="banner-value">—</div>

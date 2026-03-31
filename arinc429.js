@@ -470,11 +470,45 @@ const DECODE_META = {
   '375': { msb: 4      },  '376': { msb: 4      },
 };
 
-// Decode the data field (bits 11-29) according to the label's encoding
+// ── Alternate label configurations ──────────────────────────────────────────
+// Each entry: array of extra configs. Index 0 in array = config slot 1 (slot 0
+// is always the default from LABELS / DECODE_META).
+const ALT_CONFIGS = {
+  '021': [
+    { param: 'N1 Sélectionné', unit: '%', enc: 'BCD', meta: { decimals: 1, padLow: 1 } },
+  ],
+};
+
+// Currently selected config slot per label (0 = default)
+const labelConfigIdx = {};
+
+function getActiveLabelConfig(oct) {
+  const base = LABELS.find(l => l.oct === oct);
+  const alts = ALT_CONFIGS[oct] || [];
+  const idx  = labelConfigIdx[oct] || 0;
+  if (idx === 0 || !alts[idx - 1]) {
+    return { labelInfo: base, meta: DECODE_META[oct] };
+  }
+  const alt = alts[idx - 1];
+  return {
+    labelInfo: { ...base, enc: alt.enc || (base && base.enc), param: alt.param, unit: alt.unit },
+    meta: alt.meta,
+  };
+}
+
+function switchLabelConfig(oct, idx) {
+  labelConfigIdx[oct] = parseInt(idx);
+  if (currentWord !== null) {
+    renderBits(currentWord);
+    renderFields(currentWord);
+  }
+}
+
+
 // Returns a formatted string, or null if no metadata / invalid data.
-function decodeData(word, labelInfo) {
+function decodeData(word, labelInfo, metaOverride) {
   if (!labelInfo) return null;
-  const meta = DECODE_META[labelInfo.oct];
+  const meta = metaOverride || DECODE_META[labelInfo.oct];
   if (!meta) return null;
 
   // data19: bits 29-11 of the word mapped to bit positions 18-0
@@ -830,7 +864,7 @@ function renderBits(word) {
 
   // Determine padding bits and data-override bits from the decoded label
   const labelOct = reverseBits8(word & 0xFF).toString(8).padStart(3, '0');
-  const metaBits = DECODE_META[labelOct];
+  const { meta: metaBits } = getActiveLabelConfig(labelOct);
   const padBits  = new Set();
   const padLowBits  = metaBits ? (metaBits.padLow  || 0) : 0;
   const padHighBits = metaBits ? (metaBits.padHigh || 0) : 0;
@@ -890,8 +924,7 @@ function renderFields(word) {
   const labelHex = '0x' + labelVal.toString(16).toUpperCase().padStart(2, '0');
   const labelDec = labelVal;
   const labelBin = labelVal.toString(2).padStart(8, '0');
-  const labelInfo = LABELS.find(l => l.oct === labelOct);
-  const meta = DECODE_META[labelOct];
+  const { labelInfo, meta } = getActiveLabelConfig(labelOct);
   renderFieldMap(labelInfo, meta, word);
 
   document.getElementById('d-label-oct').textContent = labelOct;
@@ -918,7 +951,7 @@ function renderFields(word) {
   document.getElementById('d-data-bin').textContent = dataBinGrouped;
   document.getElementById('d-data-dec').textContent = data19;
   document.getElementById('d-data-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
-  const decoded = decodeData(word, labelInfo);
+  const decoded = decodeData(word, labelInfo, meta);
   let decodedExtra = '';
   if (decoded !== null && labelInfo) {
     if (labelInfo.oct === '033') {
@@ -987,6 +1020,21 @@ function renderFields(word) {
   document.getElementById('banner-sub').textContent = labelInfo
     ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
+  // Config selector — show dropdown only when label has alternate configs
+  const bannerConfig = document.getElementById('banner-config');
+  const alts = ALT_CONFIGS[labelOct] || [];
+  if (alts.length > 0 && labelInfo) {
+    const baseLabel = LABELS.find(l => l.oct === labelOct);
+    const curIdx = labelConfigIdx[labelOct] || 0;
+    const opts = [
+      `<option value="0"${curIdx === 0 ? ' selected' : ''}>${baseLabel ? baseLabel.param : 'Config 1'}</option>`,
+      ...alts.map((a, i) => `<option value="${i + 1}"${curIdx === i + 1 ? ' selected' : ''}>${a.param}</option>`),
+    ].join('');
+    bannerConfig.innerHTML =
+      `<select class="config-select" onchange="switchLabelConfig('${labelOct}', this.value)">${opts}</select>`;
+  } else {
+    bannerConfig.innerHTML = '';
+  }
   const bannerEl = document.getElementById('banner-value');
   if (labelInfo && (labelInfo.oct === '010' || labelInfo.oct === '011' ||
                     labelInfo.oct === '041' || labelInfo.oct === '042') && decoded !== null) {
