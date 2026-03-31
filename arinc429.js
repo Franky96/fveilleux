@@ -56,10 +56,14 @@ const LABELS = [
   { oct: '045', enc: 'BCD', param: 'Minimum Airspeed',                  unit: 'kt' },
   { oct: '046', enc: 'BCD', param: 'BCD Data Word LSW',                 unit: '' },
   { oct: '047', enc: 'BCD', param: 'BCD Data Word MSW',                 unit: '' },
-  { oct: '052', enc: 'BNR', param: 'Body Pitch Acceleration',           unit: 'deg/s²' },
-  { oct: '053', enc: 'BNR', param: 'Body Roll Acceleration',            unit: 'deg/s²' },
-  { oct: '054', enc: 'BNR', param: 'Body Yaw Acceleration',             unit: 'deg/s²' },
+  { oct: '050', enc: 'DIS', param: 'Spare',                             unit: '' },
+  { oct: '051', enc: 'DIS', param: 'Spare',                             unit: '' },
+  { oct: '052', enc: 'BCD', param: 'Long. Zero Fuel CG',               unit: '%' },
+  { oct: '053', enc: 'BCD', param: 'Track Angle - Magnetic',           unit: 'deg' },
+  { oct: '054', enc: 'BNR', param: 'Zero Fuel Weight',                 unit: 'kg' },
+  { oct: '055', enc: 'DIS', param: 'Spare',                             unit: '' },
   { oct: '056', enc: 'BCD', param: 'Estimated Time of Arrival',         unit: 'hr:min' },
+  { oct: '057', enc: 'DIS', param: 'Spare',                             unit: '' },
   { oct: '065', enc: 'BCD', param: 'Gross Weight',                      unit: '100 lb' },
   { oct: '066', enc: 'BCD', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
   { oct: '067', enc: 'BCD', param: 'Lateral Center of Gravity',         unit: '% MAC' },
@@ -391,7 +395,9 @@ const DECODE_META = {
   '045': { decimals: 2, padLow: 1 },  // Minimum Airspeed (kt) – 4 digits, 0.1 kt res
   '046': { decimals: 1, padLow: 1, padHigh: 1 },  // BCD LSW – d3=3rd, d2=2nd, d1=LSD
   '047': { decimals: 1, padLow: 1, padHigh: 1 },  // BCD MSW – d3=MSD, d2=5th, d1=4th
-  '056': { decimals: 0 },  // ETA (HHMM)
+  '052': { decimals: 2 },              // Long. Zero Fuel CG (%) – 5 digits, 0.01% res
+  '053': { decimals: 2, padLow: 2 },  // Track Angle - Magnetic (deg) – same as 016
+  '056': { decimals: 1 },             // ETA – HH:MM.m, custom decoder
   '065': { decimals: 0 },  // Gross Weight (100 lb)
   '066': { decimals: 1 },  // Longitudinal CG (% MAC)
   '067': { decimals: 1 },  // Lateral CG (% MAC)
@@ -410,7 +416,7 @@ const DECODE_META = {
   '261': { decimals: 0 },  // Flight Number
 
   // ── BNR labels ────────────────────────────────────
-  '052': { msb: 128    },  '053': { msb: 128    },  '054': { msb: 128    },
+  '054': { msb: 131072  },  // Zero Fuel Weight (kg) – ±131,072 kg, 1 kg LSB
   '070': { msb: 512    },  '071': { msb: 512    },  '072': { msb: 512    },
   '073': { msb: 512    },  '074': { msb: 262144  },  '075': { msb: 262144  },
   '076': { msb: 131072  },  '077': { msb: 64     },
@@ -493,6 +499,20 @@ function decodeData(word, labelInfo) {
     if (d1 > 9 || d01 > 9 || d001 > 9) return null;
     const value = d10 * 10 + d1 + d01 * 0.1 + d001 * 0.001;
     return value.toFixed(3);
+  }
+
+  // ── Label 056 : ETA — HH:MM.m (d4=10h, d3=1h, d2=10mn, d1=1mn, d0=0.1mn) ──
+  if (labelInfo.oct === '056') {
+    const d4 = (data19 >> 16) & 0x7;
+    const d3 = (data19 >> 12) & 0xF;
+    const d2 = (data19 >> 8)  & 0xF;
+    const d1 = (data19 >> 4)  & 0xF;
+    const d0 =  data19        & 0xF;
+    if (d4 > 2 || d3 > 9 || d2 > 5 || d1 > 9 || d0 > 9) return null;
+    const hh = d4 * 10 + d3;
+    const mm = d2 * 10 + d1;
+    if (hh > 23 || mm > 59) return null;
+    return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}.${d0}`;
   }
 
   // ── Labels 010/011/041/042 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
@@ -696,6 +716,13 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:1, label:'WID',                  cls:'fmap-bcd'  },
     ];
   }
+  if (oct === '056') return [
+    { span:3, label:"10h",    cls:'fmap-bcd' },
+    { span:4, label:"1h",     cls:'fmap-bcd' },
+    { span:4, label:"10mn",   cls:'fmap-bcd' },
+    { span:4, label:"1mn",    cls:'fmap-bcd' },
+    { span:4, label:"0.1mn",  cls:'fmap-bcd' },
+  ];
   if (oct === '046') return [
     { span:3, label:'padding',   cls:'fmap-pad' },  // bits 29-27
     { span:4, label:'3rd digit', cls:'fmap-bcd' },  // bits 26-23
