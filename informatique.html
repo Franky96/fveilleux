@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Informatique</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _permsInfo = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsInfo.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <header>
+      <div style="display:flex; justify-content:center; margin-bottom:1rem;">
+        <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      </div>
+      <h1>Informatique</h1>
+      <p class="subtitle">Outils techniques</p>
+    </header>
+
+    <main>
+      <p class="welcome-text">Les Outils</p>
+
+      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+
+        <a href="arinc429.html" class="menu-card" data-section="arinc429">
+          <span class="icon">📡</span>
+          <h2>ARINC 429</h2>
+          <p>Décodeur de mots avioniques</p>
+        </a>
+
+      </nav>
+    </main>
+
+  </div>
+
+  <script src="informatique.js"></script>
+</body>
+</html>
