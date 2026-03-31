@@ -475,7 +475,7 @@ const DECODE_META = {
 // is always the default from LABELS / DECODE_META).
 const ALT_CONFIGS = {
   '021': [
-    { param: 'N1 Sélectionné', unit: '%', enc: 'BCD', meta: { decimals: 1, padLow: 1 } },
+    { param: 'N1 Sélectionné', unit: 'N1', enc: 'BCD', meta: { decimals: 1, padLow: 1 } },
   ],
 };
 
