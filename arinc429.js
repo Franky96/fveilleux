@@ -691,11 +691,25 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'0.1MHz',               cls:'fmap-freq' },
       { span:4, label:'0.001MHz',             cls:'fmap-freq' },
       { span:4, label:'SP',                   cls:'fmap-pad'  },
-      { span:1, label: ssbMode ? 'LSB' : 'USB', cls:'fmap-dis' },
-      { span:1, label: amMode  ? 'AM'  : 'SSB', cls:'fmap-dis' },
-      { span:1, label:'WID',                  cls:'fmap-dis'  },
+      { span:1, label: ssbMode ? 'LSB' : 'USB', cls:'fmap-bcd' },
+      { span:1, label: amMode  ? 'AM'  : 'SSB', cls:'fmap-bcd' },
+      { span:1, label:'WID',                  cls:'fmap-bcd'  },
     ];
   }
+  if (oct === '046') return [
+    { span:3, label:'padding',   cls:'fmap-pad' },  // bits 29-27
+    { span:4, label:'3rd digit', cls:'fmap-bcd' },  // bits 26-23
+    { span:4, label:'2nd digit', cls:'fmap-bcd' },  // bits 22-19
+    { span:4, label:'LSD',       cls:'fmap-bcd' },  // bits 18-15
+    { span:4, label:'padding',   cls:'fmap-pad' },  // bits 14-11
+  ];
+  if (oct === '047') return [
+    { span:3, label:'padding',   cls:'fmap-pad' },  // bits 29-27
+    { span:4, label:'MSD',       cls:'fmap-bcd' },  // bits 26-23
+    { span:4, label:'5th digit', cls:'fmap-bcd' },  // bits 22-19
+    { span:4, label:'4th digit', cls:'fmap-bcd' },  // bits 18-15
+    { span:4, label:'padding',   cls:'fmap-pad' },  // bits 14-11
+  ];
   if (oct === '010' || oct === '011' || oct === '041' || oct === '042') return [
     { span:1, label:'100°', cls:'fmap-bcd' },
     { span:4, label:"10°",  cls:'fmap-bcd'  },
@@ -798,9 +812,11 @@ function renderBits(word) {
   if (padHighBits >= 1) { [27, 28, 29].forEach(b => padBits.add(b)); }
 
   // For labels 010/011/041/042, bits 9-10 carry data (dMin), not SDI
+  // For label 037, bits 9-11 carry mode/ident data — show as green data bits
   const dataBits = new Set();
   if (labelOct === '010' || labelOct === '011' ||
       labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
+  if (labelOct === '037') { dataBits.add(9); dataBits.add(10); dataBits.add(11); }
 
   // Discrete bits (teal) and bit descriptions from DECODE_META
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
