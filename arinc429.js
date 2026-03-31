@@ -54,6 +54,8 @@ const LABELS = [
   { oct: '043', enc: 'BCD', param: 'Set Magnetic Heading',              unit: 'deg' },
   { oct: '044', enc: 'BCD', param: 'True Heading',                      unit: 'deg' },
   { oct: '045', enc: 'BCD', param: 'Minimum Airspeed',                  unit: 'kt' },
+  { oct: '046', enc: 'BCD', param: 'BCD Data Word LSW',                 unit: '' },
+  { oct: '047', enc: 'BCD', param: 'BCD Data Word MSW',                 unit: '' },
   { oct: '052', enc: 'BNR', param: 'Body Pitch Acceleration',           unit: 'deg/s²' },
   { oct: '053', enc: 'BNR', param: 'Body Roll Acceleration',            unit: 'deg/s²' },
   { oct: '054', enc: 'BNR', param: 'Body Yaw Acceleration',             unit: 'deg/s²' },
@@ -372,12 +374,23 @@ const DECODE_META = {
     },
   },
   '036': { decimals: 3, implicit: 100 },  // MLS Frequency (MHz)
-  '037': { decimals: 3 },  // HF COM Frequency (MHz)
-  '041': { decimals: 4 },  // Set Latitude
-  '042': { decimals: 4 },  // Set Longitude
-  '043': { decimals: 1 },  // Set Magnetic Heading (deg)
-  '044': { decimals: 1 },  // True Heading (deg)
-  '045': { decimals: 0 },  // Minimum Airspeed (kt)
+  '037': { hfCom: true,               // HF COM Frequency (MHz) – custom decode
+    discBits: [9, 10, 11],
+    spareBits: [12, 13, 14, 15],
+    bitDescs: {
+      9:  'Word Ident',
+      10: 'Mode — 0=SSB  1=AM',
+      11: 'Mode — 0=USB  1=LSB',
+      12: 'Spare', 13: 'Spare', 14: 'Spare', 15: 'Spare',
+    },
+  },
+  '041': { decimals: 4 },  // Set Latitude  (deg/min, same decode as 010)
+  '042': { decimals: 4 },  // Set Longitude (deg/min, same decode as 011)
+  '043': { decimals: 2, padLow: 2 },  // Set Magnetic Heading (deg) – 3 digits, 1° res
+  '044': { decimals: 2, padLow: 1 },  // True Heading (deg) – 4 digits, 0.1° res
+  '045': { decimals: 2, padLow: 1 },  // Minimum Airspeed (kt) – 4 digits, 0.1 kt res
+  '046': { decimals: 1, padLow: 1, padHigh: 1 },  // BCD LSW – d3=3rd, d2=2nd, d1=LSD
+  '047': { decimals: 1, padLow: 1, padHigh: 1 },  // BCD MSW – d3=MSD, d2=5th, d1=4th
   '056': { decimals: 0 },  // ETA (HHMM)
   '065': { decimals: 0 },  // Gross Weight (100 lb)
   '066': { decimals: 1 },  // Longitudinal CG (% MAC)
@@ -471,8 +484,20 @@ function decodeData(word, labelInfo) {
     return `${dA}${dB}${dC}${dD}`;
   }
 
-  // ── Labels 010/011 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
-  if (labelInfo.oct === '010' || labelInfo.oct === '011') {
+  // ── Label 037 : HF COM — 2-bit 10 MHz + 3 × 4-bit BCD groups ──
+  if (labelInfo.oct === '037') {
+    const d10 = (word >> 27) & 0x3;   // bits 29-28: 10 MHz (0-3 → 0,10,20,30 MHz)
+    const d1  = (word >> 23) & 0xF;   // bits 27-24: 1 MHz digit
+    const d01 = (word >> 19) & 0xF;   // bits 23-20: 0.1 MHz digit
+    const d001= (word >> 15) & 0xF;   // bits 19-16: 0.001 MHz digit
+    if (d1 > 9 || d01 > 9 || d001 > 9) return null;
+    const value = d10 * 10 + d1 + d01 * 0.1 + d001 * 0.001;
+    return value.toFixed(3);
+  }
+
+  // ── Labels 010/011/041/042 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
+  if (labelInfo.oct === '010' || labelInfo.oct === '011' ||
+      labelInfo.oct === '041' || labelInfo.oct === '042') {
     const bit29  = (word >> 28) & 1;
     const data20 = (word >> 8)  & 0xFFFFF;   // bits 28-9 du mot (20 bits)
     const tDeg = (data20 >> 16) & 0xF;
@@ -515,7 +540,7 @@ function decodeData(word, labelInfo) {
     //   d2 (4 bits) = bits 22-19 → data19 bits 11-8
     //   d1 (4 bits) = bits 18-15 → data19 bits 7-4
     //   d0 (4 bits) = bits 14-11 → data19 bits 3-0
-    const d4 = (data19 >> 16) & 0x7;
+    const d4 = (meta.padHigh >= 1) ? 0 : ((data19 >> 16) & 0x7);
     const d3 = (data19 >> 12) & 0xF;
     const d2 = (data19 >> 8)  & 0xF;
     // bcdDigits:3 → only d4/d3/d2 are BCD; maskD0/bcdDigits → force lower digits to 0
@@ -657,7 +682,21 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:4, label:'0.01MHz',  cls:'fmap-freq' },
     { span:4, label:'0.001MHz', cls:'fmap-freq' },
   ];
-  if (oct === '010' || oct === '011') return [
+  if (oct === '037') {
+    const ssbMode = word ? getBit(word, 11) : 0;  // bit 11: 0=USB, 1=LSB
+    const amMode  = word ? getBit(word, 10) : 0;  // bit 10: 0=SSB, 1=AM
+    return [
+      { span:2, label:'10MHz',                cls:'fmap-freq' },
+      { span:4, label:'1MHz',                 cls:'fmap-freq' },
+      { span:4, label:'0.1MHz',               cls:'fmap-freq' },
+      { span:4, label:'0.001MHz',             cls:'fmap-freq' },
+      { span:4, label:'SP',                   cls:'fmap-pad'  },
+      { span:1, label: ssbMode ? 'LSB' : 'USB', cls:'fmap-dis' },
+      { span:1, label: amMode  ? 'AM'  : 'SSB', cls:'fmap-dis' },
+      { span:1, label:'WID',                  cls:'fmap-dis'  },
+    ];
+  }
+  if (oct === '010' || oct === '011' || oct === '041' || oct === '042') return [
     { span:1, label:'100°', cls:'fmap-bcd' },
     { span:4, label:"10°",  cls:'fmap-bcd'  },
     { span:4, label:"1°",   cls:'fmap-bcd'  },
@@ -669,18 +708,20 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
   if (enc === 'BCD' && meta && meta.decimals !== undefined) {
     const dec = meta.decimals;
     const spans = [3, 4, 4, 4, 4];   // d4..d0
-    const padLowSeg = meta ? (meta.padLow || 0) : 0;
+    const padLowSeg  = meta ? (meta.padLow  || 0) : 0;
+    const padHighSeg = meta ? (meta.padHigh || 0) : 0;
     return [4, 3, 2, 1, 0].map((d, i) => {
       const exp    = d - dec;
       const isDis  = meta && meta.maskD0 && d === 0;
-      const isPadL = d < padLowSeg;   // padLow:1 → d0; padLow:2 → d0+d1
-      const isPad  = (meta && meta.bcdDigits === 3 && d <= 1) || isDis || isPadL;
+      const isPadL = d < padLowSeg;            // padLow:1 → d0; padLow:2 → d0+d1
+      const isPadH = d === 4 && padHighSeg >= 1;  // padHigh:1 → d4
+      const isPad  = (meta && meta.bcdDigits === 3 && d <= 1) || isDis || isPadL || isPadH;
       let label;
       if (unit && !isPad) {
         const n = exp >= 0 ? Math.pow(10, exp) : (1 / Math.pow(10, -exp)).toFixed(-exp);
         label = `${n}${unit}`;
       } else {
-        label = isPadL ? 'padding' : isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
+        label = (isPadL || isPadH) ? 'padding' : isPad ? (isDis ? 'DIS' : 'PAD') : `d${d}`;
       }
       return { span: spans[i], label, cls: isDis ? 'fmap-dis' : isPad ? 'fmap-pad' : 'fmap-bcd' };
     });
@@ -750,13 +791,16 @@ function renderBits(word) {
   const labelOct = reverseBits8(word & 0xFF).toString(8).padStart(3, '0');
   const metaBits = DECODE_META[labelOct];
   const padBits  = new Set();
-  const padLowBits = metaBits ? (metaBits.padLow || 0) : 0;
-  if (padLowBits >= 1) { [11, 12, 13, 14].forEach(b => padBits.add(b)); }
-  if (padLowBits >= 2) { [15, 16, 17, 18].forEach(b => padBits.add(b)); }
+  const padLowBits  = metaBits ? (metaBits.padLow  || 0) : 0;
+  const padHighBits = metaBits ? (metaBits.padHigh || 0) : 0;
+  if (padLowBits  >= 1) { [11, 12, 13, 14].forEach(b => padBits.add(b)); }
+  if (padLowBits  >= 2) { [15, 16, 17, 18].forEach(b => padBits.add(b)); }
+  if (padHighBits >= 1) { [27, 28, 29].forEach(b => padBits.add(b)); }
 
-  // For labels 010/011, bits 9-10 carry data (dMin), not SDI
+  // For labels 010/011/041/042, bits 9-10 carry data (dMin), not SDI
   const dataBits = new Set();
-  if (labelOct === '010' || labelOct === '011') { dataBits.add(9); dataBits.add(10); }
+  if (labelOct === '010' || labelOct === '011' ||
+      labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
 
   // Discrete bits (teal) and bit descriptions from DECODE_META
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
@@ -901,8 +945,10 @@ function renderFields(word) {
     ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
   const bannerEl = document.getElementById('banner-value');
-  if (labelInfo && (labelInfo.oct === '010' || labelInfo.oct === '011') && decoded !== null) {
-    const dir = labelInfo.oct === '010'
+  if (labelInfo && (labelInfo.oct === '010' || labelInfo.oct === '011' ||
+                    labelInfo.oct === '041' || labelInfo.oct === '042') && decoded !== null) {
+    const isLat = labelInfo.oct === '010' || labelInfo.oct === '041';
+    const dir = isLat
       ? (ssm === 0b00 ? 'N' : ssm === 0b11 ? 'S' : null)
       : (ssm === 0b00 ? 'E' : ssm === 0b11 ? 'W' : null);
     bannerEl.innerHTML = dir
