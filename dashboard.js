@@ -20,8 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const cards = document.querySelectorAll('.menu-card');
   
   cards.forEach(card => {
-    const section = card.getAttribute('data-section');
-    if (!permissions.includes(section)) {
+    const section  = card.getAttribute('data-section');
+    const archived = card.getAttribute('data-archive') === 'true';
+    // Archived cards are always hidden from the main dashboard
+    if (archived || (!permissions.includes(section) && role !== 'admin')) {
       card.style.display = 'none';
     }
   });
