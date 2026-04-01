@@ -1053,6 +1053,33 @@ header .subtitle {
 .hidden {
   display: none !important;
 }
+
+/* Wrapper pour les permissions avec overlay admin */
+.perms-wrap {
+  position: relative;
+}
+.perms-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 242, 235, 0.75);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  cursor: not-allowed;
+  backdrop-filter: blur(1px);
+}
+.perms-overlay span {
+  background: rgba(192, 57, 43, 0.1);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  color: #c0392b;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  font-style: italic;
+  pointer-events: none;
+}
 /* =============================
    SECTION BIÈRE
    ============================= */
@@ -2568,13 +2595,47 @@ body.films-page .etoile.etoile-survol {
   }
 }
 
-.btn-annuler {
-  background: #c0392b !important;
-}
+/* ==============================
+   MOBILE — Dashboard & Header
+   ============================== */
+@media (max-width: 600px) {
+  .dashboard-container {
+    padding: 1.25rem 1rem;
+  }
 
-.item-qte-label {
-  font-size: 1rem;
-  color: #f0ede6;
-  margin-right: 0.3rem;
-  display: none;
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+  }
+
+  header .subtitle {
+    font-size: 0.88rem;
+  }
+
+  header > div {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  #logoutBtn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  /* Archive button — plus discret sur mobile */
+  .archive-btn {
+    bottom: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.65rem;
+    color: #4a4a4a !important;
+    -webkit-tap-highlight-color: transparent;
+  }
 }

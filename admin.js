@@ -166,6 +166,15 @@ function chargerUtilisateurs() {
   }
 }
 
+function updatePermsOverlay() {
+  const isAdmin = document.getElementById('user-role').value === 'admin';
+  document.getElementById('perms-overlay').classList.toggle('hidden', !isAdmin);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('user-role').addEventListener('change', updatePermsOverlay);
+});
+
 window.ouvrirModalUser = function() {
   editModeId = null;
   document.getElementById('modal-user-titre').textContent = 'Nouvel utilisateur';
@@ -176,6 +185,7 @@ window.ouvrirModalUser = function() {
   document.getElementById('user-role').value = 'user';
   document.getElementById('user-accueil').value = 'dashboard.html';
   document.querySelectorAll('.chk-perm').forEach(chk => chk.checked = false);
+  updatePermsOverlay();
   document.getElementById('modal-user').classList.remove('hidden');
 };
 
@@ -190,6 +200,7 @@ window.editerUser = function(id) {
   document.getElementById('user-role').value = u.role;
   document.getElementById('user-accueil').value = u.pageAccueil || 'dashboard.html';
   document.querySelectorAll('.chk-perm').forEach(chk => { chk.checked = u.permissions.includes(chk.value); });
+  updatePermsOverlay();
   document.getElementById('modal-user').classList.remove('hidden');
 };
 
