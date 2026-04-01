@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Archives</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if (!sessionStorage.getItem('loggedIn')) {
+      window.location.href = 'index.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <header>
+      <div style="display:flex; justify-content:center; margin-bottom:1rem;">
+        <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      </div>
+      <h1>Archives</h1>
+      <p class="subtitle">Sections archivées</p>
+    </header>
+
+    <main>
+      <p class="welcome-text">Contenu archivé</p>
+
+      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+
+        <!-- Les sections archivées sont listées ici.
+             Pour archiver une section depuis le dashboard :
+               1. Ajouter data-archive="true" sur sa carte dans dashboard.html
+               2. Copier la carte ici dans ce menu-grid
+             Pour désarchiver : faire l'inverse. -->
+
+      </nav>
+
+      <p id="archive-empty" style="display:none; text-align:center; color:#3a3a3a;
+         font-style:italic; margin-top:3rem; font-size:0.9rem;">
+        Aucune section archivée.
+      </p>
+    </main>
+
+  </div>
+
+  <script src="archive.js"></script>
+</body>
+</html>
