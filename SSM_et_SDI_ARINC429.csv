@@ -1,0 +1,34 @@
+SSM fréquence radio,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,SDI fréquence radio,Unnamed: 8,Unnamed: 9
+BIT 31,BIT 30,Description,,,,,BIT 10,BIT 9,Destination / source
+0,0,Normal (NML),,,,,0,0,Tous / systeme #4
+0,1,No compute data (NCD),,,,,0,1,Systeme #1
+1,0,Functional test (FT),,,,,1,0,Systeme #2
+1,1,Undefine,,,,,1,1,Systeme #3
+,,,,,,,,,
+SSM Données discrètes,,,,,,,SDI Données discrètes,,
+BIT 31,BIT 30,Description,,,,,BIT 10,BIT 9,Destination / source
+0,0,Normal (NML),,,,,0,0,Tous / systeme #4
+0,1,No compute data (NCD),,,,,0,1,Systeme #1
+1,0,Functional test (FT),,,,,1,0,Systeme #2
+1,1,Failure Warning (FW),,,,,1,1,Systeme #3
+,,,,,,,,,
+SSM Message de maintenance,,,,,,,SDI Message de maintenance,,
+BIT 31,BIT 30,Description,,,,,BIT 10,BIT 9,Destination / source
+0,0,Failure Warning (FW),,,,,0,0,Not used
+0,1,No compute data (NCD),,,,,0,1,Systeme #1
+1,0,Functional test (FT),,,,,1,0,Systeme #2
+1,1,Normal (NML),,,,,1,1,Systeme #3
+,,,,,,,,,
+SSM Données BCD,,,,,,,SDI Données BCD,,
+BIT 31,BIT 30,Description,,,,,BIT 10,BIT 9,Destination / source
+0,0,"Normal (+, N, E, Right, TO, Above)",,,,,0,0,Not used
+0,1,No compute data (NCD),,,,,0,1,Systeme #1
+1,0,Functional test (FT),,,,,1,0,Systeme #2
+1,1,"Normal (-, S, W, Left, FROM, Below)",,,,,1,1,Systeme #3
+,,,,,,,,,
+SSM Données binaires,,,,Données binaires (bit de signe),,,SDI Données binaires,,
+BIT 31,BIT 30,Description,,BIT 29,Description,,BIT 10,BIT 9,Destination / source
+0,0,Failure Warning (FW),,0,"(+, N, E, Right, TO, Above)",,0,0,Tous / systeme #4
+0,1,No compute data (NCD),,1,"(-, S, W, Left, FROM, Below)",,0,1,Systeme #1
+1,0,Functional test (FT),,,,,1,0,Systeme #2
+1,1,Normal (NML),,,,,1,1,Systeme #3

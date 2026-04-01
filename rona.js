@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onSnapshot(ronaDocRef, (snap) => {
     if (snap.exists()) {
       ronaData = snap.data();
+      afficherCompletes();
       if (!ronaData.locations) ronaData.locations = [];
     } else {
       ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
@@ -103,7 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-function sauvegarder() { setDoc(ronaDocRef, ronaData); }
+function sauvegarder() { 
+  setDoc(ronaDocRef, ronaData); 
+  afficherCompletes();
+}
 
 // ── Sélection emplacement ─────────────────────────────
 
@@ -125,14 +129,23 @@ function renderLocationSelect() {
 window.changerLocation = function() {
   locationActive = document.getElementById('location-select').value || null;
   renderGrille();
+  // Mettre à jour le bouton OK/Annuler
+  const btn = document.getElementById('btn-ok');
+  if (btn && locationActive && ronaData.completes && ronaData.completes.includes(locationActive)) {
+    btn.textContent = 'Annuler';
+    btn.classList.add('btn-annuler');
+  } else if (btn) {
+    btn.textContent = 'OK';
+    btn.classList.remove('btn-annuler');
+  }
 };
 
 // ── Grille des articles ───────────────────────────────
 
 function renderGrille() {
   const grid = document.getElementById('items-grid');
-
   const btnPdf = document.getElementById('btn-pdf-container');
+
   if (!locationActive) {
     grid.innerHTML = `<div class="rona-empty">
       <span>👷‍♂️</span>Choisis un emplacement ci-dessus, ou crée-en un avec <strong>+</strong>.
@@ -140,7 +153,8 @@ function renderGrille() {
     btnPdf.style.display = 'none';
     return;
   }
-  btnPdf.style.display = 'block';
+  btnPdf.style.display = 'flex';
+  btnPdf.style.gap = '0.5rem';
 
   const loc = ronaData.locations.find(l => l.id === locationActive);
   if (!loc) return;
@@ -159,13 +173,19 @@ function renderGrille() {
     const chk = document.createElement('div');
     chk.className = 'item-chk' + (estManquant ? ' checked' : '');
     chk.textContent = estManquant ? '✕' : '';
-    chk.onclick = () => toggleManquant(item, loc, row, chk, qteInput);
+    chk.onclick = () => toggleManquant(item, loc, row, chk, qteInput, qteLabel);
 
     // Info
     const info = document.createElement('div');
     info.className = 'item-info';
     info.innerHTML = `<div class="item-nom">${item.court}</div>
                       <div class="item-fraction">${present}/${item.qte}</div>`;
+
+     // Label pour la quantité
+    const qteLabel = document.createElement('span');
+    qteLabel.textContent = 'à ajouter: ';
+    qteLabel.className = 'item-qte-label';
+    qteLabel.style.display = estManquant ? 'inline' : 'none';
 
     // Champ quantité
     const qteInput = document.createElement('input');
@@ -175,12 +195,13 @@ function renderGrille() {
     qteInput.min = 1;
     qteInput.max = item.qte;
     qteInput.placeholder = '?';
-    if (estManquant) qteInput.value = qteManquante;
+    if (estManquant && qteManquante > 0) qteInput.value = qteManquante;
     qteInput.onchange = () => mettreAJourQte(item, loc, qteInput, info);
     qteInput.onblur  = () => mettreAJourQte(item, loc, qteInput, info);
 
     row.appendChild(chk);
     row.appendChild(info);
+    row.appendChild(qteLabel);
     row.appendChild(qteInput);
     grid.appendChild(row);
   });
@@ -188,7 +209,7 @@ function renderGrille() {
 
 // ── Interactions inline ───────────────────────────────
 
-function toggleManquant(item, loc, row, chk, qteInput) {
+function toggleManquant(item, loc, row, chk, qteInput, qteLabel) {
   if (!loc.manquants) loc.manquants = {};
   const estManquant = item.id in loc.manquants;
   if (estManquant) {
@@ -199,6 +220,7 @@ function toggleManquant(item, loc, row, chk, qteInput) {
     chk.textContent = '';
     qteInput.value = '';
     qteInput.style.display = 'none';
+    qteLabel.style.display = 'none';
     row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
   } else {
     // Marquer manquant (null = coché sans quantité encore saisie)
@@ -208,6 +230,7 @@ function toggleManquant(item, loc, row, chk, qteInput) {
     chk.textContent = '✕';
     qteInput.value = '';
     qteInput.style.display = 'block';
+    qteLabel.style.display = 'inline';
     row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
     setTimeout(() => qteInput.focus(), 50);
   }
@@ -281,6 +304,10 @@ window.genererPDF = async function() {
   const red      = rgb(0.7, 0,   0);
 
   // ── Champs du formulaire ──────────────────────────────
+
+  // Nom (sur la ligne pointillée après "Nom :")
+  page.drawText('André Veilleux', { x: 200, y: 668, size: 9, font: fontBold, color: black });
+
   // Emplacement (sur la ligne pointillée après "Emplacement :")
   page.drawText(loc.nom, { x: 440, y: 668, size: 9, font: fontBold, color: black });
 
@@ -313,11 +340,11 @@ window.genererPDF = async function() {
     const isMissing    = estManquant && qteManquante > 0;
 
     // Quantité actuelle (en haut à gauche de la diagonale / dans la col Petite)
-    const writeY = rowTop - 8;
+    const writeY = rowTop - 12;
     page.drawText(String(present), {
       x: petiteWriteX,
       y: writeY,
-      size: 7,
+      size: 9,
       font: isMissing ? fontBold : fontNorm,
       color: isMissing ? red : black,
     });
@@ -327,10 +354,10 @@ window.genererPDF = async function() {
     if (isMissing) {
       const qStr = String(qteManquante);
       const tw   = fontBold.widthOfTextAtSize(qStr, 9);
-      page.drawText(qStr, {
-        x: 508.8 - tw / 2,
+      page.drawText('Ajout: ' + qStr, {
+        x: 490 - tw / 2,
         y: rowTop - rowHeight / 2 - 4,
-        size: 9,
+        size: 11,
         font: fontBold,
         color: red,
       });
@@ -338,14 +365,179 @@ window.genererPDF = async function() {
   });
 
   // ── Téléchargement ────────────────────────────────────
+  
+  pdfDoc.setTitle('');
+  pdfDoc.setAuthor('');
+  pdfDoc.setSubject('');
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `RONA_SS_${loc.nom.replace(/\s+/g, '_')}_${date}.pdf`;
+  a.download = `RONA - S&S - Complet_${date}.pdf`;
   a.click();
   URL.revokeObjectURL(url);
+};
+
+window.marquerComplete = function() {
+  if (!locationActive) return;
+  if (!ronaData.completes) ronaData.completes = [];
+
+  const dejaComplete = ronaData.completes.includes(locationActive);
+  const btn = document.getElementById('btn-ok');
+
+  if (dejaComplete) {
+    // Annuler
+    ronaData.completes = ronaData.completes.filter(id => id !== locationActive);
+    btn.textContent = 'OK';
+    btn.classList.remove('btn-annuler');
+  } else {
+    // Marquer complète
+    ronaData.completes.push(locationActive);
+    btn.textContent = 'Annuler';
+    btn.classList.add('btn-annuler');
+  }
+  sauvegarder();
+  afficherCompletes();
+};
+
+function afficherCompletes() {
+  const bar = document.getElementById('completes-bar');
+  if (!bar) return;
+  if (!ronaData.completes) ronaData.completes = [];
+  const count = ronaData.completes.length;
+  const total = ronaData.locations.length;
+  const compteur = `<span style="font-size:0.7rem;color:#555;margin-right:5px;">${count}/${total}</span>`;
+
+  const triees = ronaData.completes
+    .map(id => ronaData.locations.find(l => l.id === id))
+    .filter(loc => loc)
+    .sort((a, b) => a.nom.localeCompare(b.nom));
+
+  bar.innerHTML = compteur + triees.map(loc => {
+    return `<span style="background:#808080; color:#000; padding:0.25rem 0.6rem; border-radius:8px; font-size:0.8rem; font-weight:bold;">${loc.nom} ✅</span>`;
+  }).join('');
+}
+
+window.genererToutPDF = async function() {
+  if (!ronaData.locations || ronaData.locations.length === 0) {
+    alert('Aucun emplacement à exporter.');
+    return;
+  }
+
+  const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+  const date = new Date().toLocaleDateString('fr-CA');
+
+  // Charger le gabarit
+  let templateBytes;
+  try {
+    templateBytes = await fetch('liste_trousse.pdf').then(r => {
+      if (!r.ok) throw new Error(r.status);
+      return r.arrayBuffer();
+    });
+  } catch (e) {
+    alert('Impossible de charger liste_trousse.pdf : ' + e.message);
+    return;
+  }
+
+  // Document final qui recevra toutes les pages
+  const mergedPdf = await PDFDocument.create();
+
+  // Filtrer et trier les emplacements qui ont une étiquette "complète"
+  const locationsCompletes = ronaData.locations
+    .filter(loc => ronaData.completes && ronaData.completes.includes(loc.id))
+    .sort((a, b) => a.nom.localeCompare(b.nom));
+
+  let pagesAjoutees = 0;
+
+  for (const loc of locationsCompletes) {
+    const manquants = loc.manquants || {};
+
+    // Créer un PDF temporaire à partir du gabarit
+    const pdfDoc   = await PDFDocument.load(templateBytes);
+    const page     = pdfDoc.getPages()[0];
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontNorm = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const black    = rgb(0, 0, 0);
+    const red      = rgb(0.7, 0, 0);
+
+    // Nom + Emplacement + Date
+    page.drawText('André Veilleux', { x: 200, y: 668, size: 9, font: fontBold, color: black });
+    page.drawText(loc.nom, { x: 440, y: 668, size: 9, font: fontBold, color: black });
+    page.drawText(date, { x: 130, y: 641, size: 9, font: fontBold, color: black });
+
+    // Rangées
+    const rowTops = [
+      593.0, 567.8, 543.1, 518.2, 493.2, 468.2, 443.0, 418.6,
+      393.6, 368.4, 343.2, 318.5, 293.3, 268.8, 243.8, 218.9,
+      193.9, 169.0,
+    ];
+    const petiteWriteX = 312;
+
+    ITEMS.forEach((item, idx) => {
+      if (idx >= rowTops.length) return;
+
+      const rowTop    = rowTops[idx];
+      const nextTop   = rowTops[idx + 1] ?? (rowTop - 19);
+      const rowHeight = rowTop - nextTop;
+
+      const estManquant  = item.id in manquants;
+      const qteManquante = estManquant ? (manquants[item.id] || 0) : 0;
+      const present      = item.qte - qteManquante;
+      const isMissing    = estManquant && qteManquante > 0;
+
+      const writeY = rowTop - 12;
+      page.drawText(String(present), {
+        x: petiteWriteX,
+        y: writeY,
+        size: 9,
+        font: isMissing ? fontBold : fontNorm,
+        color: isMissing ? red : black,
+      });
+
+      if (isMissing) {
+        const qStr = String(qteManquante);
+        const tw   = fontBold.widthOfTextAtSize(qStr, 9);
+        page.drawText('Ajout: ' + qStr, {
+          x: 490 - tw / 2,
+          y: rowTop - rowHeight / 2 - 4,
+          size: 11,
+          font: fontBold,
+          color: red,
+        });
+      }
+    });
+
+    // Copier la page remplie dans le PDF fusionné
+    const [copiedPage] = await mergedPdf.copyPages(pdfDoc, [0]);
+    mergedPdf.addPage(copiedPage);
+    pagesAjoutees++;
+  }
+
+  if (pagesAjoutees === 0) {
+    alert('Aucune étiquette complète à exporter.');
+    return;
+  }
+
+  // Télécharger le PDF fusionné
+  const pdfBytes = await mergedPdf.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `RONA - S&S - Complet_${date}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+
+window.resetGlobal = function() {
+  if (!confirm('Faire un RESET GLOBAL ?')) return;
+  ronaData.locations.forEach(loc => loc.manquants = {});
+  ronaData.completes = [];
+  
+  sauvegarder();
+  afficherCompletes();
 };
 
 // ── Erreur Firebase ───────────────────────────────────

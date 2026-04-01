@@ -174,6 +174,16 @@
     }
     .item-row.manquant .item-qte-input { display: block; }
 
+    .item-qte-input::-webkit-inner-spin-button,
+    .item-qte-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    }
+
+.item-qte-input {
+  -moz-appearance: textfield;
+}
+
     /* ── Modal emplacement ── */
     .modal-overlay { z-index: 300; }
 
@@ -195,31 +205,30 @@
 <div class="rona-container">
 
   <div class="rona-topbar">
-    <a href="dashboard.html">&#8592;</a>
-    <h1>👷‍♂️ Santé &amp; Sécurité — RONA</h1>
-  </div>
+  <a href="dashboard.html">&#8592;</a>
+  <h1>👷‍♂️ Santé &amp; Sécurité — RONA</h1>
+  <button onclick="resetGlobal()" style="background:#c0392b; color:#fff; border:none; border-radius:8px; padding:0.4rem 0.75rem; font-size:0.75rem; font-weight:bold; white-space:nowrap; cursor:pointer; width: 100px;">Reset global</button>
+</div>
+
+
+  <div id="completes-bar" style="display:flex; flex-wrap:wrap; gap:0.4rem; padding:0.3rem 1rem;"></div>
 
   <!-- Sélection emplacement -->
   <div class="location-bar">
-    <label>📍 Emplacement</label>
-    <select class="location-select" id="location-select" onchange="changerLocation()">
-      <option value="">— choisir —</option>
-    </select>
-    <button class="btn-add-location" onclick="ouvrirModalLocation()">+</button>
-  </div>
+  <select class="location-select" id="location-select" onchange="changerLocation()">
+    <option value="">— choisir —</option>
+  </select>
+  <button class="btn-add-location" onclick="ouvrirModalLocation()">+</button>
+  <button class="btn-add-location" onclick="genererToutPDF()" style="font-size:0.7rem; padding:0.4rem 0.6rem;">📄 Tous les PDF</button>
+</div>
 
   <!-- Grille -->
   <div class="items-grid" id="items-grid"></div>
 
   <!-- Bouton PDF -->
-  <div id="btn-pdf-container" style="display:none; padding:1rem 0.75rem;">
-    <button id="btn-pdf" onclick="genererPDF()"
-      style="width:100%; background:#c0392b; color:#fff; border:none; border-radius:10px;
-             padding:1rem; font-size:1rem; font-weight:bold; cursor:pointer;">
-      📄 Générer le PDF
-    </button>
-  </div>
-
+<div id="btn-pdf-container" style="display:none; gap:0.5rem;">
+  <button onclick="genererPDF()" style="flex:1;">📄 Générer PDF</button>
+  <button id="btn-ok" onclick="marquerComplete()" style="flex:0.5; background:#27ae60; color:#fff; border:none; border-radius:10px; font-size:1rem; font-weight:bold; cursor:pointer;">OK ✅</button>
 </div>
 
 <!-- Modal : nouvel emplacement -->
@@ -235,6 +244,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script type="module" src="rona.js"></script>
 </body>
