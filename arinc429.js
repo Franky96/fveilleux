@@ -65,6 +65,7 @@ const LABELS = [
   { oct: '055', enc: 'DIS', param: 'Spare',                             unit: '' },
   { oct: '056', enc: 'BCD', param: 'Estimated Time of Arrival',         unit: 'hr:min' },
   { oct: '057', enc: 'DIS', param: 'Spare',                             unit: '' },
+  { oct: '060', enc: 'BCD', param: 'S/G Hardware Part Number',          unit: '' },
   { oct: '061', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
   { oct: '062', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
   { oct: '063', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
@@ -420,6 +421,21 @@ const DECODE_META = {
   '260': { decimals: 0 },  // Date/Flight Leg
   '261': { decimals: 0 },  // Flight Number
 
+  // S/G Hardware Part Number — BCD, 4 digits (bits 29-14), RESERVED bits 11-13
+  // SDI = Sequence ID: 01=First 3 digits, 10=Next 4 digits, 11=Last 3 digits
+  // Bits 13-12 = Position ID (Table 2): 00=Left, 10=CtrL, 11=CtrR, 01=Right
+  '060': {
+    partNum: true,
+    discBits: [11, 12, 13],
+    bitDescs: {
+      9:  'SDI bit 0 — Sequence ID (Table 1): 01=First 3 digits  10=Next 4  11=Last 3',
+      10: 'SDI bit 1 — Sequence ID (Table 1)',
+      11: 'RESERVED — 1=Own P/N  0=Other P/N',
+      12: 'RESERVED — Position ID bit 0 (Table 2): 00=Left  10=CtrL  11=CtrR  01=Right',
+      13: 'RESERVED — Position ID bit 1 (Table 2)',
+    },
+  },
+
   // ── BNR labels ────────────────────────────────────
   // ACMS Information — ISO #5 characters, no SDI, 3 chars × 7 bits per word
   '061': { iso5: ['Char 1 (src)', 'Char 2 (src)', 'Char 3 (src)'] },
@@ -573,6 +589,20 @@ function decodeData(word, labelInfo, metaOverride) {
     const deg = bit29 * 100 + tDeg * 10 + uDeg;
     const min = tMin * 10 + uMin + dMin * 0.1;
     return `${deg}°${min.toFixed(1)}'`;
+  }
+
+  // ── S/G Hardware Part Number (label 060) ─────────
+  if (meta.partNum) {
+    // BCD digits: bits 29-26=d4, 25-22=d3, 21-18=d2, 17-14=d1
+    const d4 = (word >> 25) & 0xF;
+    const d3 = (word >> 21) & 0xF;
+    const d2 = (word >> 17) & 0xF;
+    const d1 = (word >> 13) & 0xF;
+    const sdi = (word >> 8) & 0x3;  // bits 10-9
+    const seqLabel = ['—', 'Digits 1-3', 'Digits 4-7', 'Digits 8-10'][sdi];
+    const posId  = ((word >> 12) & 1) << 1 | ((word >> 11) & 1);
+    const posLabel = ['Left', 'Right', 'Center As Left', 'Center As Right'][posId];
+    return `${d4}${d3}${d2}${d1}  [${seqLabel} / ${posLabel}]`;
   }
 
   // ── ACMS — ISO #5 characters (labels 061-063) ────
@@ -833,6 +863,16 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
     ];
   }
+  // S/G Hardware Part Number: 4 BCD digits (bits 29-14) + RESERVED (13-11)
+  if (oct === '060') return [
+    { span:4, label:'d4',    cls:'fmap-bcd' },  // bits 29-26
+    { span:4, label:'d3',    cls:'fmap-bcd' },  // bits 25-22
+    { span:4, label:'d2',    cls:'fmap-bcd' },  // bits 21-18
+    { span:4, label:'d1',    cls:'fmap-bcd' },  // bits 17-14
+    { span:2, label:'PosID', cls:'fmap-dis' },  // bits 13-12
+    { span:1, label:'Own',   cls:'fmap-dis' },  // bit 11
+  ];
+
   // ACMS: 3 × 7-bit ISO #5 chars, no SDI (bits 9-10 are part of char 1)
   // dataSpan = 21 → SDI segment suppressed automatically
   if (oct === '061') return [
