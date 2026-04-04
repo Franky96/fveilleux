@@ -405,7 +405,7 @@ const DECODE_META = {
   '053': { decimals: 2, padLow: 2 },  // Track Angle - Magnetic (deg) – same as 016
   '056': { decimals: 1 },             // ETA – HH:MM.m, custom decoder
   '065': { decimals: 0, bcdScale: 100 },  // Gross Weight — BCD × 100 = lb
-  '066': { decimals: 1 },  // Longitudinal CG (% MAC)
+  '066': { decimals: 2 },  // Longitudinal CG (% MAC) — res 0.01%
   '067': { decimals: 1 },  // Lateral CG (% MAC)
   '125': { decimals: 1 },  // UTC/GMT (H:min)           – 5 digits, 0.1 H/min res
   '145': { decimals: 0 },  // TACAN Control (channel)
@@ -867,6 +867,15 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
     ];
   }
+  // Longitudinal CG (066) — BCD ÷ 100, res 0.01% MAC
+  if (oct === '066') return [
+    { span:3, label:'100%',   cls:'fmap-bcd' },
+    { span:4, label:'10%',    cls:'fmap-bcd' },
+    { span:4, label:'1%',     cls:'fmap-bcd' },
+    { span:4, label:'0.1%',   cls:'fmap-bcd' },
+    { span:4, label:'0.01%',  cls:'fmap-bcd' },
+  ];
+
   // Gross Weight (065) — BCD × 100 lb, étiquettes en valeur réelle
   if (oct === '065') return [
     { span:3, label:'1 000 000 lb', cls:'fmap-bcd' },
