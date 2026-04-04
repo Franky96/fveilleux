@@ -980,15 +980,23 @@ function renderBits(word) {
   const bitDescs = (metaBits && metaBits.bitDescs) || {};
   if (metaBits && metaBits.spareBits) metaBits.spareBits.forEach(b => padBits.add(b));
 
+  // Bit 29 = sign bit for standard BNR labels (not ssmSign, not iso5)
+  const { labelInfo: labelInfoBits } = getActiveLabelConfig(labelOct);
+  const isSignBit29 = labelInfoBits && labelInfoBits.enc === 'BNR'
+                   && metaBits && metaBits.msb !== undefined
+                   && !metaBits.ssmSign && !metaBits.iso5;
+
   // Display bit 32 (left) → bit 1 (right)
   for (let bitNum = 32; bitNum >= 1; bitNum--) {
-    const isPad = padBits.has(bitNum);
-    const isDis = disBits.has(bitNum);
-    const val   = getBit(word, bitNum);
-    const cls   = isPad ? 'bit-pad'
-                : dataBits.has(bitNum) ? 'bit-data'
-                : isDis ? 'bit-sdi'
-                : getBitClass(bitNum);
+    const isPad  = padBits.has(bitNum);
+    const isDis  = disBits.has(bitNum);
+    const isSign = isSignBit29 && bitNum === 29;
+    const val    = getBit(word, bitNum);
+    const cls    = isPad  ? 'bit-pad'
+                 : isSign ? 'bit-sign'
+                 : dataBits.has(bitNum) ? 'bit-data'
+                 : isDis  ? 'bit-sdi'
+                 : getBitClass(bitNum);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'bit-wrapper';
@@ -1001,7 +1009,8 @@ function renderBits(word) {
     cell.className = `bit-cell ${cls}`;
     cell.textContent = isPad ? 'P' : val;
     cell.dataset.bit = bitNum;
-    cell.title = isPad ? `Bit ${bitNum} — ${bitDescs[bitNum] || 'padding (non utilisé)'}`
+    cell.title = isPad  ? `Bit ${bitNum} — ${bitDescs[bitNum] || 'padding (non utilisé)'}`
+               : isSign ? `Bit 29 — Bit de signe (0 = +, 1 = −)`
                : bitDescs[bitNum] ? `Bit ${bitNum} — ${bitDescs[bitNum]}`
                : `Bit ${bitNum} — clic pour basculer`;
     if (!isPad) cell.addEventListener('click', () => toggleBit(bitNum));
