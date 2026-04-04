@@ -92,6 +92,7 @@ const LABELS = [
   { oct: '110', enc: 'BNR', param: 'Selected Course #2',                unit: 'deg' },
   { oct: '111', enc: 'BNR', param: 'GNSS Longitude',                    unit: 'deg' },
   { oct: '112', enc: 'BNR', param: 'Runway Length',                     unit: 'ft' },
+  { oct: '113', enc: 'BNR', param: 'Spare',                             unit: '' },
   { oct: '114', enc: 'BNR', param: 'Desired Track',                     unit: 'deg' },
   { oct: '115', enc: 'BNR', param: 'Waypoint Bearing',                  unit: 'deg' },
   { oct: '116', enc: 'BNR', param: 'Cross Track Distance',              unit: 'nm' },
@@ -482,9 +483,12 @@ const DECODE_META = {
   // Scale=±180, 12 sig bits (28→17), res=0.05 degree
   '110': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},
   // Scale=±180, 20 sig bits (28→9), res=0.000172 degree
-  '111': { msb: 90, spareBits:[], bnrDecimals:6},  
-  
-  '112': { msb: 32768   },  '114': { msb: 180    },
+  '111': { msb: 90, extendSdi: true, bnrDecimals:6},  
+  // Scale=20480, 11 sig bits (28→18), res=10 feet
+  '112': { msb: 10240, spareBits:[11,12,13,14,15,16,17], bnrDecimals:0},
+  // Scale=20480, 12 sig bits (28→17), res=0.05 Degree
+  '114': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
+
   '115': { msb: 180    },  '116': { msb: 64      },  '117': { msb: 2500   },
   '120': { msb: 512    },  '121': { msb: 90      },  '122': { msb: 90     },
   '123': { msb: 128    },  '126': { msb: 32768   },  '127': { msb: 131072  },
@@ -651,7 +655,7 @@ function decodeData(word, labelInfo, metaOverride) {
     return `"${toChar(c1)}${toChar(c2)}${toChar(c3)}"`;
   }
 
-  // ── BNR (sign-magnitude) ──────────────────────────
+    // ── BNR (sign-magnitude) ──────────────────────────
   if (labelInfo.enc === 'BNR' && meta.msb !== undefined) {
     const ssm = (word >> 29) & 0x3;
     let sign;
@@ -672,8 +676,14 @@ function decodeData(word, labelInfo, metaOverride) {
       }
     }
 
-    // Resolution: bit 28 represents meta.msb, so LSB = meta.msb / 2^17
-    const resolution = meta.msb / 131072;
+    // ──────────────── Extended SDI ───────────────────
+    if (meta.extendSdi) {
+      const sdiBits = (word >> 8) & 0x3;  // bits 9-10
+      magnitude = (magnitude << 2 ) | sdiBits;  // 20 bits
+      // bit 28 maintenant a la position de bit 19, résolution = meta.msb / 2^19
+    }
+
+    const resolution = meta.extendSdi ? meta.msb / 524288 : meta.msb / 131072;
     const value = (sign ? -1 : 1) * magnitude * resolution;
     // Choose decimal places — override with bnrDecimals if set
     const dp = meta.bnrDecimals !== undefined ? meta.bnrDecimals
@@ -947,13 +957,13 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:8,  label:'PAD',          cls:'fmap-pad'  },
   ];  
   // 11 sig bits (28→18), PAD 11-17  — Vref/V2/VR/V1/TargetAS
-  if (['070','071','072','073','077','103', '105'].includes(oct)) return [
+  if (['070','071','072','073','077','103','105','112'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
     { span:7,  label:'PAD',          cls:'fmap-pad'  },
   ];
   // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading
-  if (['100','101','106','110'].includes(oct)) return [
+  if (['100','101','106','110','114'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
     { span:6,  label:'PAD',          cls:'fmap-pad'  },
@@ -1067,7 +1077,8 @@ function renderBits(word) {
       labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
   if (labelOct === '037') { dataBits.add(9); dataBits.add(10); dataBits.add(11); }
   // ACMS labels — no SDI, bits 9-10 are part of char #1
-  if (labelOct === '061' || labelOct === '062' || labelOct === '063') {
+  // For label 111, bits 9-10 are part of the 20-bit BNR data field, not SDI
+  if (labelOct === '061' || labelOct === '062' || labelOct === '063' || labelOct === '111') {
     dataBits.add(9); dataBits.add(10);
   }
 
