@@ -49,6 +49,7 @@ const LABELS = [
   { oct: '035', enc: 'BCD', param: 'DME Frequency',                     unit: 'MHz' },
   { oct: '036', enc: 'BCD', param: 'MLS Frequency',                     unit: 'MHz' },
   { oct: '037', enc: 'BCD', param: 'HF COM Frequency',                  unit: 'MHz' },
+  { oct: '040', enc: 'DIS', param: 'Spare',                             unit: '' },
   { oct: '041', enc: 'BCD', param: 'Set Latitude',                      unit: 'deg/min' },
   { oct: '042', enc: 'BCD', param: 'Set Longitude',                     unit: 'deg/min' },
   { oct: '043', enc: 'BCD', param: 'Set Magnetic Heading',              unit: 'deg' },
@@ -64,6 +65,10 @@ const LABELS = [
   { oct: '055', enc: 'DIS', param: 'Spare',                             unit: '' },
   { oct: '056', enc: 'BCD', param: 'Estimated Time of Arrival',         unit: 'hr:min' },
   { oct: '057', enc: 'DIS', param: 'Spare',                             unit: '' },
+  { oct: '061', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
+  { oct: '062', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
+  { oct: '063', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
+  { oct: '064', enc: 'BNR', param: 'Tire Pressure (Nose)',              unit: 'PSIA' },
   { oct: '065', enc: 'BCD', param: 'Gross Weight',                      unit: '100 lb' },
   { oct: '066', enc: 'BCD', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
   { oct: '067', enc: 'BCD', param: 'Lateral Center of Gravity',         unit: '% MAC' },
@@ -416,7 +421,12 @@ const DECODE_META = {
   '261': { decimals: 0 },  // Flight Number
 
   // ── BNR labels ────────────────────────────────────
-  '054': { msb: 131072  },  // Zero Fuel Weight (kg) – ±131,072 kg, 1 kg LSB
+  // ACMS Information — ISO #5 characters, no SDI, 3 chars × 7 bits per word
+  '061': { iso5: ['Char 1 (src)', 'Char 2 (src)', 'Char 3 (src)'] },
+  '062': { iso5: ['Char 4 (src)', '(space)',       'Dest 1'      ] },
+  '063': { iso5: ['Dest 2',       'Dest 3',        'Dest 4'      ] },
+  '054': { msb: 327680 },  // Zero Fuel Weight (kg) – scale ±655360 kg, 15 sig bits, res 20 kg
+  '064': { msb: 512    },  // Tire Pressure Nose (PSIA) – scale 1024, 10 sig bits, res 1.0
   '070': { msb: 512    },  '071': { msb: 512    },  '072': { msb: 512    },
   '073': { msb: 512    },  '074': { msb: 262144  },  '075': { msb: 262144  },
   '076': { msb: 131072  },  '077': { msb: 64     },
@@ -563,6 +573,17 @@ function decodeData(word, labelInfo, metaOverride) {
     const deg = bit29 * 100 + tDeg * 10 + uDeg;
     const min = tMin * 10 + uMin + dMin * 0.1;
     return `${deg}°${min.toFixed(1)}'`;
+  }
+
+  // ── ACMS — ISO #5 characters (labels 061-063) ────
+  if (meta.iso5) {
+    const c1 = (word >> 8)  & 0x7F;  // bits 9-15
+    const c2 = (word >> 15) & 0x7F;  // bits 16-22
+    const c3 = (word >> 22) & 0x7F;  // bits 23-29
+    const toChar = v => (v >= 0x20 && v <= 0x7E)
+      ? String.fromCharCode(v)
+      : `[${v.toString(16).toUpperCase().padStart(2, '0')}]`;
+    return `"${toChar(c1)}${toChar(c2)}${toChar(c3)}"`;
   }
 
   // ── BNR (sign-magnitude) ──────────────────────────
@@ -812,6 +833,24 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
     ];
   }
+  // ACMS: 3 × 7-bit ISO #5 chars, no SDI (bits 9-10 are part of char 1)
+  // dataSpan = 21 → SDI segment suppressed automatically
+  if (oct === '061') return [
+    { span:7, label:'Char 3 (src)', cls:'fmap-bnr' },
+    { span:7, label:'Char 2 (src)', cls:'fmap-bnr' },
+    { span:7, label:'Char 1 (src)', cls:'fmap-bnr' },
+  ];
+  if (oct === '062') return [
+    { span:7, label:'Dest 1',       cls:'fmap-bnr' },
+    { span:7, label:'(space)',       cls:'fmap-pad' },
+    { span:7, label:'Char 4 (src)', cls:'fmap-bnr' },
+  ];
+  if (oct === '063') return [
+    { span:7, label:'Dest 4', cls:'fmap-bnr' },
+    { span:7, label:'Dest 3', cls:'fmap-bnr' },
+    { span:7, label:'Dest 2', cls:'fmap-bnr' },
+  ];
+
   if (enc === 'BNR') return [
     { span:1,  label:'sgn',  cls:'fmap-sign' },
     { span:18, label:'data', cls:'fmap-bnr'  },
@@ -878,6 +917,10 @@ function renderBits(word) {
   if (labelOct === '010' || labelOct === '011' ||
       labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
   if (labelOct === '037') { dataBits.add(9); dataBits.add(10); dataBits.add(11); }
+  // ACMS labels — no SDI, bits 9-10 are part of char #1
+  if (labelOct === '061' || labelOct === '062' || labelOct === '063') {
+    dataBits.add(9); dataBits.add(10);
+  }
 
   // Discrete bits (teal) and bit descriptions from DECODE_META
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
