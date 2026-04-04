@@ -867,6 +867,15 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
     ];
   }
+  // Gross Weight (065) — BCD × 100 lb, étiquettes en valeur réelle
+  if (oct === '065') return [
+    { span:3, label:'1 000 000 lb', cls:'fmap-bcd' },
+    { span:4, label:'100 000 lb',   cls:'fmap-bcd' },
+    { span:4, label:'10 000 lb',    cls:'fmap-bcd' },
+    { span:4, label:'1 000 lb',     cls:'fmap-bcd' },
+    { span:4, label:'100 lb',       cls:'fmap-bcd' },
+  ];
+
   // S/G Hardware Part Number: 4 BCD digits (bits 29-14) + RESERVED (13-11)
   if (oct === '060') return [
     { span:4, label:'d4',    cls:'fmap-bcd' },  // bits 29-26
