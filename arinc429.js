@@ -637,7 +637,13 @@ function decodeData(word, labelInfo, metaOverride) {
       sign = (data19 >> 18) & 1;
     }
     // Bits 28-11 of word = bits 17-0 of data19 = 18-bit magnitude
-    const magnitude = data19 & 0x3FFFF;
+    // Mask out any spareBits (sub-resolution padding) so they don't contribute noise
+    let magnitude = data19 & 0x3FFFF;
+    if (meta.spareBits) {
+      for (const b of meta.spareBits) {
+        if (b >= 11 && b <= 28) magnitude &= ~(1 << (b - 11));
+      }
+    }
     // Resolution: bit 28 represents meta.msb, so LSB = meta.msb / 2^17
     const resolution = meta.msb / 131072;
     const value = (sign ? -1 : 1) * magnitude * resolution;
