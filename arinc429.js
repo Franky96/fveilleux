@@ -70,7 +70,7 @@ const LABELS = [
   { oct: '062', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
   { oct: '063', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
   { oct: '064', enc: 'BNR', param: 'Tire Pressure (Nose)',              unit: 'PSIA' },
-  { oct: '065', enc: 'BCD', param: 'Gross Weight',                      unit: '100 lb' },
+  { oct: '065', enc: 'BCD', param: 'Gross Weight',                      unit: 'lb' },
   { oct: '066', enc: 'BCD', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
   { oct: '067', enc: 'BCD', param: 'Lateral Center of Gravity',         unit: '% MAC' },
   { oct: '070', enc: 'BNR', param: 'Reference Airspeed (Vref)',         unit: 'kt' },
@@ -404,7 +404,7 @@ const DECODE_META = {
   '052': { decimals: 2 },              // Long. Zero Fuel CG (%) – 5 digits, 0.01% res
   '053': { decimals: 2, padLow: 2 },  // Track Angle - Magnetic (deg) – same as 016
   '056': { decimals: 1 },             // ETA – HH:MM.m, custom decoder
-  '065': { decimals: 0 },  // Gross Weight (100 lb)
+  '065': { decimals: 0, bcdScale: 100 },  // Gross Weight — BCD × 100 = lb
   '066': { decimals: 1 },  // Longitudinal CG (% MAC)
   '067': { decimals: 1 },  // Lateral CG (% MAC)
   '125': { decimals: 1 },  // UTC/GMT (H:min)           – 5 digits, 0.1 H/min res
@@ -660,6 +660,9 @@ function decodeData(word, labelInfo, metaOverride) {
     const raw = d4 * 10000 + d3 * 1000 + d2 * 100 + d1 * 10 + d0;
     const base = meta.implicit || 0;
     let value = base + raw / Math.pow(10, meta.decimals);
+
+    // bcdScale: multiply result by a constant (e.g. ×100 when unit is "100 lb")
+    if (meta.bcdScale) value = value * meta.bcdScale;
 
     // halfBit: one discrete bit that adds halfStep to the frequency
     if (meta.halfBit !== undefined) {
