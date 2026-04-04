@@ -441,8 +441,8 @@ const DECODE_META = {
   '061': { iso5: ['Char 1 (src)', 'Char 2 (src)', 'Char 3 (src)'] },
   '062': { iso5: ['Char 4 (src)', '(space)',       'Dest 1'      ] },
   '063': { iso5: ['Dest 2',       'Dest 3',        'Dest 4'      ] },
-  '054': { msb: 327680 },  // Zero Fuel Weight (kg) – scale ±655360 kg, 15 sig bits, res 20 kg
-  '064': { msb: 512    },  // Tire Pressure Nose (PSIA) – scale 1024, 10 sig bits, res 1.0
+  '054': { msb: 327680, spareBits: [11, 12, 13], bnrDecimals: 0 },  // ZFW — 15 sig bits (28-14), bits 11-13 = PAD, res 20 kg
+  '064': { msb: 512,    spareBits: [11, 12, 13, 14, 15, 16, 17, 18], bnrDecimals: 0 },  // Tire Press — 10 sig bits (28-19), bits 11-18 = PAD, res 1 PSIA
   '070': { msb: 512    },  '071': { msb: 512    },  '072': { msb: 512    },
   '073': { msb: 512    },  '074': { msb: 262144  },  '075': { msb: 262144  },
   '076': { msb: 131072  },  '077': { msb: 64     },
@@ -632,8 +632,9 @@ function decodeData(word, labelInfo, metaOverride) {
     // Resolution: bit 28 represents meta.msb, so LSB = meta.msb / 2^17
     const resolution = meta.msb / 131072;
     const value = (sign ? -1 : 1) * magnitude * resolution;
-    // Choose decimal places based on resolution magnitude
-    const dp = resolution >= 10 ? 1 : resolution >= 1 ? 2 : resolution >= 0.01 ? 3 : 5;
+    // Choose decimal places — override with bnrDecimals if set
+    const dp = meta.bnrDecimals !== undefined ? meta.bnrDecimals
+             : resolution >= 10 ? 1 : resolution >= 1 ? 2 : resolution >= 0.01 ? 3 : 5;
     return (sign ? '−' : '') + Math.abs(value).toFixed(dp);
   }
 
@@ -871,6 +872,18 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:4, label:'d1',    cls:'fmap-bcd' },  // bits 17-14
     { span:2, label:'PosID', cls:'fmap-dis' },  // bits 13-12
     { span:1, label:'Own',   cls:'fmap-dis' },  // bit 11
+  ];
+
+  // BNR with sub-resolution padding bits at the low end
+  if (oct === '054') return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
+    { span:3,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  if (oct === '064') return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:10, label:'data (28→19)', cls:'fmap-bnr'  },
+    { span:8,  label:'PAD',          cls:'fmap-pad'  },
   ];
 
   // ACMS: 3 × 7-bit ISO #5 chars, no SDI (bits 9-10 are part of char 1)
