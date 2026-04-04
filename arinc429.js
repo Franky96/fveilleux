@@ -79,8 +79,8 @@ const LABELS = [
   { oct: '073', enc: 'BNR', param: 'V1',                                unit: 'kt' },
   { oct: '074', enc: 'BNR', param: 'Zero Fuel Weight',                  unit: 'lb' },
   { oct: '075', enc: 'BNR', param: 'Gross Weight',                      unit: 'lb' },
-  { oct: '076', enc: 'BNR', param: 'GNSS Altitude (MSL)',               unit: 'ft' },
-  { oct: '077', enc: 'BNR', param: 'Lateral Center of Gravity',         unit: '% MAC' },
+  { oct: '076', enc: 'BNR', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
+  { oct: '077', enc: 'BNR', param: 'Target Airspeed',                   unit: 'kt' },
   { oct: '100', enc: 'BNR', param: 'Selected Course #1',                unit: 'deg' },
   { oct: '101', enc: 'BNR', param: 'Selected Heading',                  unit: 'deg' },
   { oct: '102', enc: 'BNR', param: 'Selected Altitude',                 unit: 'ft' },
@@ -406,7 +406,7 @@ const DECODE_META = {
   '056': { decimals: 1 },             // ETA – HH:MM.m, custom decoder
   '065': { decimals: 0, bcdScale: 100 },  // Gross Weight — BCD × 100 = lb
   '066': { decimals: 2 },  // Longitudinal CG (% MAC) — res 0.01%
-  '067': { decimals: 1 },  // Lateral CG (% MAC)
+  '067': { decimals: 2 },  // Lateral CG (% MAC) — res 0.01%
   '125': { decimals: 1 },  // UTC/GMT (H:min)           – 5 digits, 0.1 H/min res
   '145': { decimals: 0 },  // TACAN Control (channel)
   '170': { decimals: 0 },  // Decision Height Selected (ft)
@@ -443,9 +443,18 @@ const DECODE_META = {
   '063': { iso5: ['Dest 2',       'Dest 3',        'Dest 4'      ] },
   '054': { msb: 327680, spareBits: [11, 12, 13], bnrDecimals: 0 },  // ZFW — 15 sig bits (28-14), bits 11-13 = PAD, res 20 kg
   '064': { msb: 512,    spareBits: [11, 12, 13, 14, 15, 16, 17, 18], bnrDecimals: 0 },  // Tire Press — 10 sig bits (28-19), bits 11-18 = PAD, res 1 PSIA
-  '070': { msb: 512    },  '071': { msb: 512    },  '072': { msb: 512    },
-  '073': { msb: 512    },  '074': { msb: 262144  },  '075': { msb: 262144  },
-  '076': { msb: 131072  },  '077': { msb: 64     },
+  // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
+  '070': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
+  '071': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
+  '072': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
+  '073': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
+  // Scale=1310720, 15 sig bits (28→14), res=40 lb, PAD bits 11-13
+  '074': { msb: 655360, spareBits:[11,12,13], bnrDecimals:0 },
+  '075': { msb: 655360, spareBits:[11,12,13], bnrDecimals:0 },
+  // Scale=163.84, 14 sig bits (28→15), res=0.01% MAC, PAD bits 11-14
+  '076': { msb: 81.92, spareBits:[11,12,13,14], bnrDecimals:2 },
+  // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
+  '077': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
   '100': { msb: 180    },  '101': { msb: 180    },  '102': { msb: 131072  },
   '103': { msb: 512    },  '104': { msb: 16384   },  '105': { msb: 180    },
   '106': { msb: 4      },  '107': { msb: 131072  },  '110': { msb: 180    },
@@ -867,8 +876,8 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
     ];
   }
-  // Longitudinal CG (066) — BCD ÷ 100, res 0.01% MAC
-  if (oct === '066') return [
+  // Longitudinal/Lateral CG (066, 067) — BCD ÷ 100, res 0.01% MAC
+  if (oct === '066' || oct === '067') return [
     { span:3, label:'100%',   cls:'fmap-bcd' },
     { span:4, label:'10%',    cls:'fmap-bcd' },
     { span:4, label:'1%',     cls:'fmap-bcd' },
@@ -896,11 +905,25 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
   ];
 
   // BNR with sub-resolution padding bits at the low end
-  if (oct === '054') return [
+  // 11 sig bits (28→18), PAD 11-17  — Vref/V2/VR/V1/TargetAS
+  if (['070','071','072','073','077'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
+    { span:7,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 15 sig bits (28→14), PAD 11-13  — ZFW/GW (054, 074, 075)
+  if (['054','074','075'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
     { span:3,  label:'PAD',          cls:'fmap-pad'  },
   ];
+  // 14 sig bits (28→15), PAD 11-14  — Long. CG (076)
+  if (oct === '076') return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
+    { span:4,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 10 sig bits (28→19), PAD 11-18  — Tire Pressure (064)
   if (oct === '064') return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:10, label:'data (28→19)', cls:'fmap-bnr'  },
