@@ -281,6 +281,7 @@ LABELS.forEach(l => {
 //   halfStep  – value added per halfBit (e.g. 0.5 kHz for ADF, 0.05 MHz for DME)
 //   squawk    – decode as 4-digit octal transponder squawk code (031)
 
+
 // SSM descriptions by label type (BIT31, BIT30 → index 0-3)
 const SSM_TABLES = {
   radio: ['Normal (NML)',          'No Computed Data (NCD)', 'Functional Test (FT)', 'Undefined'],
@@ -436,6 +437,14 @@ const DECODE_META = {
     },
   },
 
+
+
+
+
+
+
+
+
   // ── BNR labels ────────────────────────────────────
   // ACMS Information — ISO #5 characters, no SDI, 3 chars × 7 bits per word
   '061': { iso5: ['Char 1 (src)', 'Char 2 (src)', 'Char 3 (src)'] },
@@ -455,10 +464,27 @@ const DECODE_META = {
   '076': { msb: 81.92, spareBits:[11,12,13,14], bnrDecimals:2 },
   // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
   '077': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  '100': { msb: 180    },  '101': { msb: 180    },  '102': { msb: 131072  },
-  '103': { msb: 512    },  '104': { msb: 16384   },  '105': { msb: 180    },
-  '106': { msb: 4      },  '107': { msb: 131072  },  '110': { msb: 180    },
-  '111': { msb: 180    },  '112': { msb: 32768   },  '114': { msb: 180    },
+  // Scale=±180, 12 sig bits (28→17), res=0.05 degree
+  '100': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},
+  '101': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},  
+  // Scale=65536, 16 sig bits (28→13), res=1 feet
+  '102': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
+  // Scale=512, 11 sig bits (28→18), res=0.25 knots
+  '103': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2},  
+  // Scale=16384, 10 sig bits (28→19), res=16 ft/min
+  '104': { msb: 8192, spareBits:[11,12,13,14,15,16,17,18], bnrDecimals:0},  
+  // Scale=±180, 11 sig bits (28→18), res=0.1 Degree
+  '105': { msb: 90, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1},
+  // Scale=4096, 12 sig bits (28→17), res=1 Mach
+  '106': { msb: 2048, spareBits:[11,12,13,14,15,16], bnrDecimals:0},  
+  // Scale=65536, 16 sig bits (28→13), res=1 Mach
+  '107': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
+  // Scale=±180, 12 sig bits (28→17), res=0.05 degree
+  '110': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},
+  // Scale=±180, 20 sig bits (28→9), res=0.000172 degree
+  '111': { msb: 90, spareBits:[], bnrDecimals:6},  
+  
+  '112': { msb: 32768   },  '114': { msb: 180    },
   '115': { msb: 180    },  '116': { msb: 64      },  '117': { msb: 2500   },
   '120': { msb: 512    },  '121': { msb: 90      },  '122': { msb: 90     },
   '123': { msb: 128    },  '126': { msb: 32768   },  '127': { msb: 131072  },
@@ -636,6 +662,7 @@ function decodeData(word, labelInfo, metaOverride) {
       // Bit 29 of word = bit 18 of data19 = sign bit
       sign = (data19 >> 18) & 1;
     }
+    
     // Bits 28-11 of word = bits 17-0 of data19 = 18-bit magnitude
     // Mask out any spareBits (sub-resolution padding) so they don't contribute noise
     let magnitude = data19 & 0x3FFFF;
@@ -644,6 +671,7 @@ function decodeData(word, labelInfo, metaOverride) {
         if (b >= 11 && b <= 28) magnitude &= ~(1 << (b - 11));
       }
     }
+
     // Resolution: bit 28 represents meta.msb, so LSB = meta.msb / 2^17
     const resolution = meta.msb / 131072;
     const value = (sign ? -1 : 1) * magnitude * resolution;
@@ -882,6 +910,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label: isPad1 ? 'DIS' : 'd0', cls: isPad1 ? 'fmap-dis' : 'fmap-bcd' },
     ];
   }
+
   // Longitudinal/Lateral CG (066, 067) — BCD ÷ 100, res 0.01% MAC
   if (oct === '066' || oct === '067') return [
     { span:3, label:'100%',   cls:'fmap-bcd' },
@@ -911,17 +940,23 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
   ];
 
   // BNR with sub-resolution padding bits at the low end
+  // 10 sig bits (28→19), PAD 11-18  — Tire Pressure (064)
+  if (['064','104'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:10, label:'data (28→19)', cls:'fmap-bnr'  },
+    { span:8,  label:'PAD',          cls:'fmap-pad'  },
+  ];  
   // 11 sig bits (28→18), PAD 11-17  — Vref/V2/VR/V1/TargetAS
-  if (['070','071','072','073','077'].includes(oct)) return [
+  if (['070','071','072','073','077','103', '105'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
     { span:7,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 15 sig bits (28→14), PAD 11-13  — ZFW/GW (054, 074, 075)
-  if (['054','074','075'].includes(oct)) return [
+  // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading
+  if (['100','101','106','110'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
-    { span:3,  label:'PAD',          cls:'fmap-pad'  },
+    { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
+    { span:6,  label:'PAD',          cls:'fmap-pad'  },
   ];
   // 14 sig bits (28→15), PAD 11-14  — Long. CG (076)
   if (oct === '076') return [
@@ -929,11 +964,22 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
     { span:4,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 10 sig bits (28→19), PAD 11-18  — Tire Pressure (064)
-  if (oct === '064') return [
+  // 15 sig bits (28→14), PAD 11-13  — ZFW/GW (054, 074, 075)
+  if (['054','074','075'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:10, label:'data (28→19)', cls:'fmap-bnr'  },
-    { span:8,  label:'PAD',          cls:'fmap-pad'  },
+    { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
+    { span:3,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 16 sig bits (28→13), PAD 11-12 — selected altitude, Selected Cruise Altitude
+  if (['102','107'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:16, label:'data (28→13)', cls:'fmap-bnr'  },
+    { span:2,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 20 sig bits (28→9)
+  if (['111'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:20, label:'data (28→9)', cls:'fmap-bnr'  },
   ];
 
   // ACMS: 3 × 7-bit ISO #5 chars, no SDI (bits 9-10 are part of char 1)
