@@ -42,14 +42,21 @@
     /* Config panel */
     .enc-config {
       display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-      align-items: flex-end;
+      flex-direction: column;
+      gap: 1rem;
       background: #0f1a0f;
       border: 1px solid #2a3a2a;
       border-radius: 10px;
       padding: 1.2rem 1.5rem;
       margin-bottom: 1.5rem;
+      align-items: center;
+    }
+
+    .enc-config-fields {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .enc-config .cfg-group { display: flex; flex-direction: column; gap: 0.3rem; }
@@ -65,8 +72,17 @@
       width: 140px;
       outline: none;
       font-family: 'Courier New', monospace;
+      -moz-appearance: textfield;
     }
+    .enc-config input[type="number"]::-webkit-outer-spin-button,
+    .enc-config input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .enc-config input[type="number"]:focus { border-color: #80cc80; }
+
+    .enc-config-btns {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
 
     .btn-apply {
       background: #1a2a1a;
@@ -74,7 +90,7 @@
       border-radius: 6px;
       color: #80cc80;
       font-size: 0.85rem;
-      padding: 0.45rem 1.2rem;
+      padding: 0.4rem 1rem;
       cursor: pointer;
       transition: all 0.15s;
     }
@@ -86,7 +102,7 @@
       border-radius: 6px;
       color: #6a6a5a;
       font-size: 0.85rem;
-      padding: 0.45rem 1rem;
+      padding: 0.4rem 1rem;
       cursor: pointer;
       transition: all 0.15s;
     }
@@ -288,16 +304,20 @@
 
     <!-- Config -->
     <div class="enc-config">
-      <div class="cfg-group">
-        <label>VALEUR MAXIMALE (Scale)</label>
-        <input type="number" id="cfg-max" value="180" min="0" step="any">
+      <div class="enc-config-fields">
+        <div class="cfg-group">
+          <label>VALEUR MAXIMALE (Scale)</label>
+          <input type="number" id="cfg-max" value="180" min="0" step="any">
+        </div>
+        <div class="cfg-group">
+          <label>NOMBRE DE BITS (incluant le signe)</label>
+          <input type="number" id="cfg-bits" value="12" min="2" max="29">
+        </div>
       </div>
-      <div class="cfg-group">
-        <label>NOMBRE DE BITS (incluant le signe)</label>
-        <input type="number" id="cfg-bits" value="12" min="2" max="29">
+      <div class="enc-config-btns">
+        <button class="btn-apply" onclick="applyConfig()">Appliquer</button>
+        <button class="btn-reset" onclick="resetBits()">✕ Réinitialiser</button>
       </div>
-      <button class="btn-apply" onclick="applyConfig()">Appliquer</button>
-      <button class="btn-reset" onclick="resetBits()">✕ Réinitialiser</button>
     </div>
 
     <!-- Bit grid -->
