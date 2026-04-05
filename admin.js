@@ -250,6 +250,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function renderArchivedBadges() {
+  const container = document.getElementById('archived-badges');
+  if (!container) return;
+  container.innerHTML = '';
+  if (archivedSections.length === 0) {
+    container.innerHTML = '<span style="color:#555; font-size:0.8rem; font-style:italic;">Aucune section archivée</span>';
+    return;
+  }
+  // Aplatir toutes les sections (parents + enfants) pour trouver les labels
+  const allSections = [];
+  SECTIONS_ARCHIVABLES.forEach(s => {
+    allSections.push(s);
+    if (s.children) s.children.forEach(c => allSections.push(c));
+  });
+  archivedSections.forEach(key => {
+    const s = allSections.find(x => x.key === key);
+    const badge = document.createElement('span');
+    badge.style.cssText = 'background:#2a1a1a; color:#c07070; border:1px solid #5a2a2a; border-radius:4px; font-size:0.75rem; padding:0.15rem 0.5rem;';
+    badge.textContent = (s ? s.icon + ' ' + s.label : key);
+    container.appendChild(badge);
+  });
+}
+
 window.ouvrirModalUser = function() {
   editModeId = null;
   document.getElementById('modal-user-titre').textContent = 'Nouvel utilisateur';
@@ -261,6 +284,7 @@ window.ouvrirModalUser = function() {
   document.getElementById('user-accueil').value = 'dashboard.html';
   document.querySelectorAll('.chk-perm').forEach(chk => chk.checked = false);
   updatePermsOverlay();
+  renderArchivedBadges();
   document.getElementById('modal-user').classList.remove('hidden');
 };
 
@@ -283,6 +307,7 @@ window.editerUser = function(id) {
     parent.indeterminate = checkedCount > 0 && checkedCount < siblings.length;
   });
   updatePermsOverlay();
+  renderArchivedBadges();
   document.getElementById('modal-user').classList.remove('hidden');
 };
 
