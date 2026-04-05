@@ -119,13 +119,28 @@
       transition: border-color 0.2s;
     }
 
-    .conv-field:focus-within {
-      border-color: #80cc80;
-    }
+    .conv-field.error { border-color: #e05555 !important; }
 
-    .conv-field.error {
-      border-color: #e05555;
-    }
+    /* Per-base accent colors */
+    #field-dec { border-left: 3px solid #80cc80; }
+    #field-dec:focus-within { border-color: #80cc80; }
+    #field-dec .field-label { color: #80cc80; }
+    #field-dec .conv-input { color: #a8e6a8; }
+
+    #field-hex { border-left: 3px solid #fb923c; }
+    #field-hex:focus-within { border-color: #fb923c; }
+    #field-hex .field-label { color: #fb923c; }
+    #field-hex .conv-input { color: #fcd09a; }
+
+    #field-bin { border-left: 3px solid #7ab3cc; }
+    #field-bin:focus-within { border-color: #7ab3cc; }
+    #field-bin .field-label { color: #7ab3cc; }
+    #field-bin .conv-input { color: #b0d4e6; }
+
+    #field-oct { border-left: 3px solid #c8b84a; }
+    #field-oct:focus-within { border-color: #c8b84a; }
+    #field-oct .field-label { color: #c8b84a; }
+    #field-oct .conv-input { color: #e0d48a; }
 
     .field-header {
       display: flex;
@@ -139,11 +154,6 @@
       font-weight: 600;
       letter-spacing: 0.05em;
       color: #80cc80;
-    }
-
-    .field-base {
-      font-size: 0.75rem;
-      color: #a89f94;
     }
 
     .field-copy {
@@ -292,7 +302,6 @@
       <div class="conv-field" id="field-dec">
         <div class="field-header">
           <span class="field-label">DÉCIMAL</span>
-          <span class="field-base">Base 10</span>
           <button class="field-copy" onclick="copyField('dec')">Copier</button>
         </div>
         <input class="conv-input" id="input-dec" type="text" placeholder="0" spellcheck="false"
@@ -304,7 +313,6 @@
       <div class="conv-field" id="field-hex">
         <div class="field-header">
           <span class="field-label">HEXADÉCIMAL</span>
-          <span class="field-base">Base 16</span>
           <button class="field-copy" onclick="copyField('hex')">Copier</button>
         </div>
         <input class="conv-input" id="input-hex" type="text" placeholder="00000000" spellcheck="false"
@@ -317,7 +325,6 @@
       <div class="conv-field" id="field-bin">
         <div class="field-header">
           <span class="field-label">BINAIRE</span>
-          <span class="field-base">Base 2</span>
           <button class="field-copy" onclick="copyField('bin')">Copier</button>
         </div>
         <input class="conv-input" id="input-bin" type="text" placeholder="00000000 00000000 00000000 00000000"
@@ -330,7 +337,6 @@
       <div class="conv-field" id="field-oct">
         <div class="field-header">
           <span class="field-label">OCTAL</span>
-          <span class="field-base">Base 8</span>
           <button class="field-copy" onclick="copyField('oct')">Copier</button>
         </div>
         <input class="conv-input" id="input-oct" type="text" placeholder="00000000000" spellcheck="false"
