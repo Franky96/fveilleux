@@ -163,7 +163,4 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cfg-max').addEventListener('keydown',  e => { if (e.key === 'Enter') applyConfig(); });
   document.getElementById('cfg-bits').addEventListener('keydown', e => { if (e.key === 'Enter') applyConfig(); });
 
-  if (sessionStorage.getItem('userRole') !== 'admin') {
-    document.querySelector('[data-version-badge]')?.style.setProperty('display', 'none');
-  }
 });

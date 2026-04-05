@@ -1320,10 +1320,6 @@ document.getElementById('hex-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') decodeFromInput();
 });
 
-if (sessionStorage.getItem('userRole') !== 'admin') {
-  document.querySelector('[data-version-badge]')?.style.setProperty('display', 'none');
-}
-
 // Afficher les panneaux avec tous les bits à zéro au chargement
 currentWord = 0;
 renderBits(currentWord);
