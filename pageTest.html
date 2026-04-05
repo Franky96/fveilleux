@@ -3,6 +3,13 @@
     <head>
         <title>---Page de test---</title>
         <link rel="stylesheet" href="pageTest.css"/>
+        <script>
+          const _permsTest = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+          if (!sessionStorage.getItem('loggedIn') ||
+              (!_permsTest.includes('pageTest') && sessionStorage.getItem('userRole') !== 'admin')) {
+            window.location.href = 'dashboard.html';
+          }
+        </script>
     </head>
 
     <body>
