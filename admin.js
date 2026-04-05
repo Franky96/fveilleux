@@ -239,6 +239,7 @@ const PERMS_STRUCTURE = [
   { key: 'films',     label: 'Films & Séries' },
   { key: 'webmail',   label: 'Webmail' },
   { key: 'rona',      label: 'RONA S&S' },
+  { key: 'pageTest',  label: 'Page de tests' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'converter', label: 'Convertisseur' },
