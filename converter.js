@@ -150,21 +150,20 @@ function updateGroups(val, bits) {
   const hexG = document.getElementById('hex-groups');
   const binG  = document.getElementById('bin-groups');
 
-  if (bits === 0 || bits <= 8) {
-    hexG.innerHTML = '';
-    binG.innerHTML = '';
-    return;
-  }
+  // For unlimited, derive byte count from value
+  const effectiveBits = bits === 0
+    ? Math.max(8, Math.ceil((val === 0n ? 1 : val < 0n ? val.toString(2).length : val.toString(2).length) / 8) * 8)
+    : bits;
 
   // Show bit ranges for each byte
   let hexHTML = '';
   let binHTML = '';
-  const numBytes = bits / 8;
+  const numBytes = effectiveBits / 8;
   for (let i = numBytes - 1; i >= 0; i--) {
     const hi = (i + 1) * 8 - 1;
     const lo = i * 8;
     const byteVal = (val >> BigInt(lo)) & 0xFFn;
-    const mask = val < 0n ? ((val & ((1n << BigInt(bits)) - 1n)) >> BigInt(lo)) & 0xFFn : byteVal;
+    const mask = val < 0n ? ((val & ((1n << BigInt(effectiveBits)) - 1n)) >> BigInt(lo)) & 0xFFn : byteVal;
     hexHTML += `<div>bits ${hi}-${lo}<br><span>0x${mask.toString(16).toUpperCase().padStart(2,'0')}</span></div>`;
     binHTML += `<div>bits ${hi}-${lo}<br><span>${mask.toString(2).padStart(8,'0')}</span></div>`;
   }
