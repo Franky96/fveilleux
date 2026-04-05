@@ -9,7 +9,11 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'hockey',       icon: '🏒', label: 'Hockey'          },
   { key: 'liens',        icon: '🌍', label: 'Liens utiles'    },
   { key: 'films',        icon: '🎬', label: 'Films & Séries'  },
-  { key: 'informatique', icon: '💻', label: 'Informatique'    },
+  { key: 'informatique', icon: '💻', label: 'Informatique', children: [
+    { key: 'arinc429',  icon: '📡', label: 'ARINC 429'     },
+    { key: 'converter', icon: '🔢', label: 'Convertisseur'  },
+    { key: 'crypteur',  icon: '⚙️', label: 'Encodeur BNR'  },
+  ]},
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
 ];
 
@@ -22,40 +26,91 @@ onSnapshot(configRef, (snap) => {
   renderArchiveGrid();
 });
 
+function makeArchiveCard(s, isChild = false) {
+  const archived = archivedSections.includes(s.key);
+  const card = document.createElement('div');
+  card.style.cssText = [
+    'background:' + (archived ? '#1c0f0f' : '#0f1a0f'),
+    'border:1px solid ' + (archived ? '#6a2a2a' : '#2a4a2a'),
+    'border-radius:' + (isChild ? '8px' : '10px'),
+    'padding:' + (isChild ? '0.6rem 0.5rem' : '1rem 0.8rem'),
+    'cursor:pointer',
+    'transition:all 0.15s',
+    'text-align:center',
+    'user-select:none',
+  ].join(';');
+  card.innerHTML = `
+    <div style="font-size:${isChild ? '1.1rem' : '1.6rem'}; margin-bottom:0.3rem;">${s.icon}</div>
+    <div style="font-weight:bold; color:${archived ? '#c07070' : '#80cc80'}; font-size:${isChild ? '0.75rem' : '0.88rem'}; margin-bottom:0.25rem;">${s.label}</div>
+    <div style="font-size:0.65rem; color:${archived ? '#7a3a3a' : '#3a6a3a'}; letter-spacing:0.03rem;">
+      ${archived ? '📁 Archivé' : (isChild ? '✅ Visible' : '🏠 Dashboard')}
+    </div>`;
+  card.onmouseenter = () => { card.style.opacity = '0.75'; };
+  card.onmouseleave = () => { card.style.opacity = '1'; };
+  card.onclick = () => toggleArchive(s.key);
+  return card;
+}
+
 function renderArchiveGrid() {
   const grid = document.getElementById('archive-grid');
   if (!grid) return;
   grid.innerHTML = '';
   SECTIONS_ARCHIVABLES.forEach(s => {
-    const archived = archivedSections.includes(s.key);
-    const card = document.createElement('div');
-    card.style.cssText = [
-      'background:' + (archived ? '#1c0f0f' : '#0f1a0f'),
-      'border:1px solid ' + (archived ? '#6a2a2a' : '#2a4a2a'),
-      'border-radius:10px',
-      'padding:1rem 0.8rem',
-      'cursor:pointer',
-      'transition:all 0.15s',
-      'text-align:center',
-      'user-select:none',
-    ].join(';');
-    card.innerHTML = `
-      <div style="font-size:1.6rem; margin-bottom:0.4rem;">${s.icon}</div>
-      <div style="font-weight:bold; color:${archived ? '#c07070' : '#80cc80'}; font-size:0.88rem; margin-bottom:0.35rem;">${s.label}</div>
-      <div style="font-size:0.7rem; color:${archived ? '#7a3a3a' : '#3a6a3a'}; letter-spacing:0.03rem;">
-        ${archived ? '📁 Archivé' : '🏠 Dashboard'}
-      </div>`;
-    card.onmouseenter = () => { card.style.opacity = '0.75'; };
-    card.onmouseleave = () => { card.style.opacity = '1'; };
-    card.onclick = () => toggleArchive(s.key);
-    grid.appendChild(card);
+    if (s.children) {
+      // Groupe parent + enfants
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 0.75rem;';
+
+      const parentArchived = archivedSections.includes(s.key);
+      const parentCard = document.createElement('div');
+      parentCard.style.cssText = [
+        'background:' + (parentArchived ? '#1c0f0f' : '#0f1a0f'),
+        'border:2px solid ' + (parentArchived ? '#6a2a2a' : '#2a5a2a'),
+        'border-radius:10px',
+        'padding:1rem 0.8rem',
+        'cursor:pointer',
+        'transition:all 0.15s',
+        'text-align:center',
+        'user-select:none',
+      ].join(';');
+      parentCard.innerHTML = `
+        <div style="font-size:1.6rem; margin-bottom:0.4rem;">${s.icon}</div>
+        <div style="font-weight:bold; color:${parentArchived ? '#c07070' : '#80cc80'}; font-size:0.88rem; margin-bottom:0.35rem;">${s.label}</div>
+        <div style="font-size:0.7rem; color:${parentArchived ? '#7a3a3a' : '#3a6a3a'}; letter-spacing:0.03rem;">
+          ${parentArchived ? '📁 Archivé' : '🏠 Dashboard'}
+        </div>`;
+      parentCard.onmouseenter = () => { parentCard.style.opacity = '0.75'; };
+      parentCard.onmouseleave = () => { parentCard.style.opacity = '1'; };
+      parentCard.onclick = () => toggleArchive(s.key, s.children);
+      wrapper.appendChild(parentCard);
+
+      s.children.forEach(child => {
+        wrapper.appendChild(makeArchiveCard(child, true));
+      });
+
+      grid.appendChild(wrapper);
+    } else {
+      grid.appendChild(makeArchiveCard(s));
+    }
   });
 }
 
-window.toggleArchive = async function(key) {
+window.toggleArchive = async function(key, children = []) {
   const idx = archivedSections.indexOf(key);
-  if (idx === -1) archivedSections.push(key);
-  else archivedSections.splice(idx, 1);
+  if (idx === -1) {
+    // Archiver parent + enfants
+    archivedSections.push(key);
+    children.forEach(child => {
+      if (!archivedSections.includes(child.key)) archivedSections.push(child.key);
+    });
+  } else {
+    // Désarchiver parent + enfants
+    archivedSections.splice(idx, 1);
+    children.forEach(child => {
+      const ci = archivedSections.indexOf(child.key);
+      if (ci !== -1) archivedSections.splice(ci, 1);
+    });
+  }
   await setDoc(configRef, { archivedSections }, { merge: true });
 };
 
