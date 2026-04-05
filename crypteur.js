@@ -3,7 +3,7 @@
 let bitStates = {}; // bitNum → 0 or 1
 
 function getMax()  { return parseFloat(document.getElementById('cfg-max').value)  || 180; }
-function getNBits() { return Math.max(2, Math.min(29, parseInt(document.getElementById('cfg-bits').value) || 12)); }
+function getNBits() { return Math.max(2, Math.min(29, (parseInt(document.getElementById('cfg-bits').value) || 11) + 1)); }
 
 // Bit value for a data bit at position bitNum (bit 29 = sign, bit 28 = MSB = max/2)
 function bitValue(bitNum, maxVal, nBits) {
@@ -27,7 +27,7 @@ function getBitClass(bitNum, nBits) {
 
 function stepBits(delta) {
   const input = document.getElementById('cfg-bits');
-  const val = Math.max(2, Math.min(29, (parseInt(input.value) || 12) + delta));
+  const val = Math.max(1, Math.min(28, (parseInt(input.value) || 11) + delta));
   input.value = val;
   applyConfig();
 }
