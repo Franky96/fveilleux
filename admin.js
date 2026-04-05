@@ -24,6 +24,12 @@ let archivedSections = [];
 onSnapshot(configRef, (snap) => {
   archivedSections = snap.exists() ? (snap.data().archivedSections || []) : [];
   renderArchiveGrid();
+  // Re-rendre les permissions si le modal est ouvert
+  const modal = document.getElementById('modal-user');
+  if (modal && !modal.classList.contains('hidden')) {
+    const currentPerms = Array.from(document.querySelectorAll('.chk-perm:checked')).map(c => c.value);
+    renderPermsModal(currentPerms);
+  }
 });
 
 function makeArchiveCard(s, isChild = false) {
@@ -221,6 +227,126 @@ function chargerUtilisateurs() {
   }
 }
 
+// ── Structure des permissions ────────────────────────
+const PERMS_STRUCTURE = [
+  { key: 'ena',       label: 'ÉNA' },
+  { key: 'aeronefs',  label: 'Aéronefs' },
+  { key: 'aviation',  label: 'Aviation' },
+  { key: 'bieres',    label: 'Bières' },
+  { key: 'scifi',     label: 'Sci-Fi' },
+  { key: 'hockey',    label: 'Hockey' },
+  { key: 'liens',     label: 'Liens utiles' },
+  { key: 'films',     label: 'Films & Séries' },
+  { key: 'webmail',   label: 'Webmail' },
+  { key: 'rona',      label: 'RONA S&S' },
+  { key: 'informatique', label: 'Informatique', children: [
+    { key: 'arinc429',  label: 'ARINC 429' },
+    { key: 'converter', label: 'Convertisseur' },
+    { key: 'crypteur',  label: 'Encodeur BNR' },
+  ]},
+];
+
+function makePermLabel(key, label, isParent = false, parentKey = null) {
+  const lbl = document.createElement('label');
+  lbl.className = 'perm-item' + (isParent ? ' perm-parent' : '');
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.className = 'chk-perm' + (isParent ? ' chk-parent' : '') + (parentKey ? ' chk-child' : '');
+  input.value = key;
+  if (parentKey) input.dataset.parent = parentKey;
+  lbl.appendChild(input);
+  lbl.appendChild(document.createTextNode(' ' + label));
+  return lbl;
+}
+
+function renderPermsModal(currentPerms = []) {
+  const activeGrid = document.getElementById('perms-grid');
+  const archivedGrid = document.getElementById('archived-perms-grid');
+  const archivedSection = document.getElementById('archived-perms-section');
+  if (!activeGrid || !archivedGrid) return;
+
+  activeGrid.innerHTML = '';
+  archivedGrid.innerHTML = '';
+  let hasArchived = false;
+
+  PERMS_STRUCTURE.forEach(s => {
+    const isArchived = archivedSections.includes(s.key);
+
+    if (s.children) {
+      // Groupe parent + enfants
+      const group = document.createElement('div');
+      group.className = 'perm-group';
+      group.appendChild(makePermLabel(s.key, s.label, true, null));
+
+      const childrenDiv = document.createElement('div');
+      childrenDiv.className = 'perm-children';
+
+      s.children.forEach(child => {
+        const childArchived = archivedSections.includes(child.key);
+        if (childArchived && !isArchived) {
+          // Enfant archivé mais parent actif → enfant dans section archivée
+          archivedGrid.appendChild(makePermLabel(child.key, child.label + ' (Informatique)'));
+          hasArchived = true;
+        } else {
+          childrenDiv.appendChild(makePermLabel(child.key, child.label, false, s.key));
+        }
+      });
+
+      group.appendChild(childrenDiv);
+      if (isArchived) {
+        archivedGrid.appendChild(group);
+        hasArchived = true;
+      } else {
+        activeGrid.appendChild(group);
+      }
+    } else {
+      const lbl = makePermLabel(s.key, s.label);
+      if (isArchived) {
+        archivedGrid.appendChild(lbl);
+        hasArchived = true;
+      } else {
+        activeGrid.appendChild(lbl);
+      }
+    }
+  });
+
+  // Appliquer l'état coché
+  document.querySelectorAll('.chk-perm').forEach(chk => {
+    chk.checked = currentPerms.includes(chk.value);
+  });
+
+  // État indéterminé des parents
+  document.querySelectorAll('.chk-parent').forEach(parent => {
+    const siblings = Array.from(document.querySelectorAll(`.chk-child[data-parent="${parent.value}"]`));
+    if (siblings.length > 0) {
+      const n = siblings.filter(s => s.checked).length;
+      parent.checked = n === siblings.length;
+      parent.indeterminate = n > 0 && n < siblings.length;
+    }
+  });
+
+  // Attacher les listeners parent ↔ enfant
+  document.querySelectorAll('.chk-parent').forEach(parent => {
+    parent.addEventListener('change', () => {
+      document.querySelectorAll(`.chk-child[data-parent="${parent.value}"]`)
+        .forEach(child => child.checked = parent.checked);
+    });
+  });
+  document.querySelectorAll('.chk-child').forEach(child => {
+    child.addEventListener('change', () => {
+      const parentVal = child.dataset.parent;
+      const parent = document.querySelector(`.chk-parent[value="${parentVal}"]`);
+      if (!parent) return;
+      const siblings = Array.from(document.querySelectorAll(`.chk-child[data-parent="${parentVal}"]`));
+      const n = siblings.filter(s => s.checked).length;
+      parent.checked = n === siblings.length;
+      parent.indeterminate = n > 0 && n < siblings.length;
+    });
+  });
+
+  if (archivedSection) archivedSection.style.display = hasArchived ? 'block' : 'none';
+}
+
 function updatePermsOverlay() {
   const isAdmin = document.getElementById('user-role').value === 'admin';
   document.getElementById('perms-overlay').classList.toggle('hidden', !isAdmin);
@@ -228,50 +354,7 @@ function updatePermsOverlay() {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('user-role').addEventListener('change', updatePermsOverlay);
-
-  // Parent coche/décoche tous ses enfants
-  document.querySelectorAll('.chk-parent').forEach(parent => {
-    parent.addEventListener('change', () => {
-      document.querySelectorAll(`.chk-child[data-parent="${parent.value}"]`)
-        .forEach(child => child.checked = parent.checked);
-    });
-  });
-
-  // Enfant met à jour l'état du parent (coché / indéterminé / décoché)
-  document.querySelectorAll('.chk-child').forEach(child => {
-    child.addEventListener('change', () => {
-      const parentVal = child.dataset.parent;
-      const parent = document.querySelector(`.chk-parent[value="${parentVal}"]`);
-      const siblings = Array.from(document.querySelectorAll(`.chk-child[data-parent="${parentVal}"]`));
-      const checkedCount = siblings.filter(s => s.checked).length;
-      parent.checked = checkedCount === siblings.length;
-      parent.indeterminate = checkedCount > 0 && checkedCount < siblings.length;
-    });
-  });
 });
-
-function renderArchivedBadges() {
-  const container = document.getElementById('archived-badges');
-  if (!container) return;
-  container.innerHTML = '';
-  if (archivedSections.length === 0) {
-    container.innerHTML = '<span style="color:#555; font-size:0.8rem; font-style:italic;">Aucune section archivée</span>';
-    return;
-  }
-  // Aplatir toutes les sections (parents + enfants) pour trouver les labels
-  const allSections = [];
-  SECTIONS_ARCHIVABLES.forEach(s => {
-    allSections.push(s);
-    if (s.children) s.children.forEach(c => allSections.push(c));
-  });
-  archivedSections.forEach(key => {
-    const s = allSections.find(x => x.key === key);
-    const badge = document.createElement('span');
-    badge.style.cssText = 'background:#2a1a1a; color:#c07070; border:1px solid #5a2a2a; border-radius:4px; font-size:0.75rem; padding:0.15rem 0.5rem;';
-    badge.textContent = (s ? s.icon + ' ' + s.label : key);
-    container.appendChild(badge);
-  });
-}
 
 window.ouvrirModalUser = function() {
   editModeId = null;
@@ -282,9 +365,8 @@ window.ouvrirModalUser = function() {
   document.getElementById('user-name').value = '';
   document.getElementById('user-role').value = 'user';
   document.getElementById('user-accueil').value = 'dashboard.html';
-  document.querySelectorAll('.chk-perm').forEach(chk => chk.checked = false);
+  renderPermsModal([]);
   updatePermsOverlay();
-  renderArchivedBadges();
   document.getElementById('modal-user').classList.remove('hidden');
 };
 
@@ -298,16 +380,8 @@ window.editerUser = function(id) {
   document.getElementById('user-name').value = u.nom;
   document.getElementById('user-role').value = u.role;
   document.getElementById('user-accueil').value = u.pageAccueil || 'dashboard.html';
-  document.querySelectorAll('.chk-perm').forEach(chk => { chk.checked = u.permissions.includes(chk.value); });
-  // Mettre à jour l'état indéterminé des parents
-  document.querySelectorAll('.chk-parent').forEach(parent => {
-    const siblings = Array.from(document.querySelectorAll(`.chk-child[data-parent="${parent.value}"]`));
-    const checkedCount = siblings.filter(s => s.checked).length;
-    parent.checked = checkedCount === siblings.length;
-    parent.indeterminate = checkedCount > 0 && checkedCount < siblings.length;
-  });
+  renderPermsModal(u.permissions || []);
   updatePermsOverlay();
-  renderArchivedBadges();
   document.getElementById('modal-user').classList.remove('hidden');
 };
 
