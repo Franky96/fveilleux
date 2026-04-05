@@ -54,15 +54,22 @@
 
     .enc-config-fields {
       display: grid;
-      grid-template-columns: 140px 140px;
-      grid-template-rows: auto auto;
-      column-gap: 1.5rem;
-      row-gap: 0.3rem;
+      grid-template-columns: auto 140px;
+      row-gap: 0.7rem;
+      column-gap: 1.2rem;
       justify-content: center;
+      align-items: center;
     }
 
     .enc-config .cfg-group { display: contents; }
-    .enc-config label { font-size: 0.78rem; color: #a89f94; letter-spacing: 0.04em; align-self: end; }
+    .enc-config label { font-size: 0.78rem; color: #a89f94; letter-spacing: 0.04em; text-align: right; }
+
+    .enc-config-btns {
+      grid-column: 2;
+      display: flex;
+      gap: 0.5rem;
+      padding-top: 0.3rem;
+    }
 
     .enc-config input[type="number"] {
       background: #050a05;
@@ -366,10 +373,10 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="enc-config-btns">
-        <button class="btn-apply" onclick="applyConfig()">Appliquer</button>
-        <button class="btn-reset" onclick="resetBits()">✕ Réinitialiser</button>
+        <div class="enc-config-btns">
+          <button class="btn-apply" onclick="applyConfig()">Appliquer</button>
+          <button class="btn-reset" onclick="resetBits()">✕ Réinit.</button>
+        </div>
       </div>
     </div>
 
@@ -412,6 +419,6 @@
   </div>
 
   <script src="crypteur.js"></script>
-  <div style="position:fixed;bottom:1rem;right:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;">v3</div>
+  <div style="position:fixed;bottom:1rem;right:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;">v4</div>
 </body>
 </html>
