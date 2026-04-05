@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   inputs.bin = document.getElementById('input-bin');
   inputs.oct = document.getElementById('input-oct');
   updatePlaceholders();
+  updateGroups(0n, getBitWidth());
 });
 
 function updatePlaceholders() {
@@ -116,7 +117,7 @@ function convert(src) {
   if (raw.replace(/\s|-/g, '') === '') {
     // Empty — clear other fields
     Object.keys(inputs).forEach(k => { if (k !== src) inputs[k].value = ''; });
-    updateGroups(null, bits);
+    updateGroups(0n, bits);
     return;
   }
 
@@ -126,7 +127,7 @@ function convert(src) {
     document.getElementById('field-' + src).classList.add('error');
     inputs[src].classList.add('error');
     Object.keys(inputs).forEach(k => { if (k !== src) inputs[k].value = ''; });
-    updateGroups(null, bits);
+    updateGroups(0n, bits);
     return;
   }
 
@@ -149,7 +150,7 @@ function updateGroups(val, bits) {
   const hexG = document.getElementById('hex-groups');
   const binG  = document.getElementById('bin-groups');
 
-  if (val === null || bits === 0 || bits <= 8) {
+  if (bits === 0 || bits <= 8) {
     hexG.innerHTML = '';
     binG.innerHTML = '';
     return;
@@ -197,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePlaceholders();
     const active = Object.keys(inputs).find(k => inputs[k] && inputs[k].value !== '');
     if (active) convert(active);
+    else updateGroups(0n, getBitWidth());
   });
   document.getElementById('sign-mode').addEventListener('change', () => {
     const active = Object.keys(inputs).find(k => inputs[k] && inputs[k].value !== '');
