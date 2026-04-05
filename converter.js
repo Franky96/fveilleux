@@ -7,7 +7,23 @@ document.addEventListener('DOMContentLoaded', () => {
   inputs.hex = document.getElementById('input-hex');
   inputs.bin = document.getElementById('input-bin');
   inputs.oct = document.getElementById('input-oct');
+  updatePlaceholders();
 });
+
+function updatePlaceholders() {
+  const bits = getBitWidth();
+  inputs.dec.placeholder = '0';
+  if (bits === 0) {
+    inputs.hex.placeholder = '0';
+    inputs.bin.placeholder = '0';
+    inputs.oct.placeholder = '0';
+  } else {
+    inputs.hex.placeholder = formatHex(0n, bits);
+    inputs.bin.placeholder = formatBin(0n, bits);
+    const octLen = Math.ceil(bits / 3);
+    inputs.oct.placeholder = '0'.repeat(octLen);
+  }
+}
 
 function getBitWidth() {
   return parseInt(document.getElementById('bit-width').value);
@@ -178,6 +194,7 @@ function copyField(key) {
 // Re-convert when options change
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bit-width').addEventListener('change', () => {
+    updatePlaceholders();
     const active = Object.keys(inputs).find(k => inputs[k] && inputs[k].value !== '');
     if (active) convert(active);
   });
