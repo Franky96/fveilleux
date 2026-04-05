@@ -106,10 +106,12 @@
 
     /* Fields */
     .conv-fields {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
+
+    .conv-sep { display: none; }
 
     .conv-field {
       background: #0f1a0f;
@@ -262,7 +264,11 @@
 
     .quick-ref td:first-child { color: #80cc80; }
 
-    @media (max-width: 600px) {
+    #field-bin .conv-input { font-size: 0.85rem; }
+
+    @media (max-width: 700px) {
+      .conv-fields { grid-template-columns: 1fr; }
+      .conv-sep { display: block; }
       .conv-page { padding: 0 1rem 2rem; }
       .field-grouped { grid-template-columns: 1fr; }
     }
