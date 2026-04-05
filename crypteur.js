@@ -25,6 +25,13 @@ function getBitClass(bitNum, nBits) {
   return 'lo';
 }
 
+function stepBits(delta) {
+  const input = document.getElementById('cfg-bits');
+  const val = Math.max(2, Math.min(29, (parseInt(input.value) || 12) + delta));
+  input.value = val;
+  applyConfig();
+}
+
 function applyConfig() {
   bitStates = {};
   render();
