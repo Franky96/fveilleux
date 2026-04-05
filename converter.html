@@ -6,7 +6,9 @@
   <title>Convertisseur — Outils de Frank</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    if (!sessionStorage.getItem('loggedIn')) {
+    const _permsConv = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsConv.includes('converter') && !_permsConv.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
       document.location.href = 'index.html';
     }
   </script>

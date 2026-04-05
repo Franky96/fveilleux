@@ -173,6 +173,26 @@ function updatePermsOverlay() {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('user-role').addEventListener('change', updatePermsOverlay);
+
+  // Parent coche/décoche tous ses enfants
+  document.querySelectorAll('.chk-parent').forEach(parent => {
+    parent.addEventListener('change', () => {
+      document.querySelectorAll(`.chk-child[data-parent="${parent.value}"]`)
+        .forEach(child => child.checked = parent.checked);
+    });
+  });
+
+  // Enfant met à jour l'état du parent (coché / indéterminé / décoché)
+  document.querySelectorAll('.chk-child').forEach(child => {
+    child.addEventListener('change', () => {
+      const parentVal = child.dataset.parent;
+      const parent = document.querySelector(`.chk-parent[value="${parentVal}"]`);
+      const siblings = Array.from(document.querySelectorAll(`.chk-child[data-parent="${parentVal}"]`));
+      const checkedCount = siblings.filter(s => s.checked).length;
+      parent.checked = checkedCount === siblings.length;
+      parent.indeterminate = checkedCount > 0 && checkedCount < siblings.length;
+    });
+  });
 });
 
 window.ouvrirModalUser = function() {
@@ -200,6 +220,13 @@ window.editerUser = function(id) {
   document.getElementById('user-role').value = u.role;
   document.getElementById('user-accueil').value = u.pageAccueil || 'dashboard.html';
   document.querySelectorAll('.chk-perm').forEach(chk => { chk.checked = u.permissions.includes(chk.value); });
+  // Mettre à jour l'état indéterminé des parents
+  document.querySelectorAll('.chk-parent').forEach(parent => {
+    const siblings = Array.from(document.querySelectorAll(`.chk-child[data-parent="${parent.value}"]`));
+    const checkedCount = siblings.filter(s => s.checked).length;
+    parent.checked = checkedCount === siblings.length;
+    parent.indeterminate = checkedCount > 0 && checkedCount < siblings.length;
+  });
   updatePermsOverlay();
   document.getElementById('modal-user').classList.remove('hidden');
 };
