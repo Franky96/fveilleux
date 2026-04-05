@@ -1307,11 +1307,22 @@ function toggleBit(bitNum) {
   renderFields(currentWord);
 }
 
+// ── Strapping ─────────────────────────────────────────
+function setStrapping(pin, value, btn) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+
 // ── Init ─────────────────────────────────────────────
 
 document.getElementById('hex-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') decodeFromInput();
 });
+
+if (sessionStorage.getItem('userRole') !== 'admin') {
+  document.querySelector('[data-version-badge]')?.style.setProperty('display', 'none');
+}
 
 // Afficher les panneaux avec tous les bits à zéro au chargement
 currentWord = 0;

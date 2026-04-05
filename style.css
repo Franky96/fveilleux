@@ -2570,6 +2570,21 @@ body.films-page .etoile.etoile-survol {
   display: block;
 }
 
+.strap-btn {
+  background: #1a2a1a;
+  color: #556655;
+  border: 1px solid #2a3a2a;
+  cursor: pointer;
+  padding: 0.3rem 0.8rem;
+  height: 2.5rem;
+}
+.strap-btn.active {
+  background: #80cc80;
+  color: #0a0f0a;
+  border-color: #80cc80;
+  font-weight: bold;
+}
+
 @media (max-width: 640px) {
   .modal-detail-content {
     flex-direction: column;
