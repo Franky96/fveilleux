@@ -350,6 +350,7 @@ function renderPermsModal(currentPerms = []) {
 function updatePermsOverlay() {
   const isAdmin = document.getElementById('user-role').value === 'admin';
   document.getElementById('perms-overlay').classList.toggle('hidden', !isAdmin);
+  document.getElementById('archived-perms-overlay')?.classList.toggle('hidden', !isAdmin);
   if (isAdmin) {
     document.querySelectorAll('.chk-perm').forEach(chk => chk.checked = true);
   }
