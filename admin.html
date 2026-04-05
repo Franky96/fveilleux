@@ -34,6 +34,22 @@
       margin: 0;
       accent-color: #c0392b;
     }
+    .perm-group {
+      grid-column: 1 / -1;
+      border-top: 1px solid #d5d0c8;
+      padding-top: 0.5rem;
+      margin-top: 0.2rem;
+    }
+    .perm-parent {
+      font-weight: bold;
+    }
+    .perm-children {
+      display: flex;
+      gap: 0.5rem 1.5rem;
+      flex-wrap: wrap;
+      margin-left: 1.5rem;
+      margin-top: 0.4rem;
+    }
   </style>
 </head>
 <body>
@@ -136,9 +152,15 @@
           <label class="perm-item"><input type="checkbox" class="chk-perm" value="liens"> Liens utiles</label>
           <label class="perm-item"><input type="checkbox" class="chk-perm" value="films"> Films &amp; Séries</label>
           <label class="perm-item"><input type="checkbox" class="chk-perm" value="webmail"> Webmail</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="informatique"> Informatique</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="arinc429"> ARINC 429</label>
           <label class="perm-item"><input type="checkbox" class="chk-perm" value="rona"> RONA S&amp;S</label>
+          <div class="perm-group">
+            <label class="perm-item perm-parent"><input type="checkbox" class="chk-perm chk-parent" value="informatique"> Informatique</label>
+            <div class="perm-children">
+              <label class="perm-item"><input type="checkbox" class="chk-perm chk-child" data-parent="informatique" value="arinc429"> ARINC 429</label>
+              <label class="perm-item"><input type="checkbox" class="chk-perm chk-child" data-parent="informatique" value="converter"> Convertisseur</label>
+              <label class="perm-item"><input type="checkbox" class="chk-perm chk-child" data-parent="informatique" value="crypteur"> Encodeur BNR</label>
+            </div>
+          </div>
         </div>
       </div>
 

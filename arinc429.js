@@ -4,7 +4,7 @@
 // ----------------------------------------------------
 // Sécurité : vérifier la connexion et les permissions
 const _permsArinc = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || (!_permsArinc.includes('arinc429') && sessionStorage.getItem('userRole') !== 'admin')) {
+if (!sessionStorage.getItem('loggedIn') || (!_permsArinc.includes('arinc429') && !_permsArinc.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
   alert("Accès refusé.");
   window.location.href = 'dashboard.html';
 }
