@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convertisseur — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if (!sessionStorage.getItem('loggedIn')) {
+      document.location.href = 'index.html';
+    }
+  </script>
+  <style>
+    body {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .top-bar {
+      width: 100%;
+      background: #0a0f0a;
+      border-bottom: 2px solid #2a3a2a;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.7rem 1.5rem;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .top-bar a {
+      color: #80cc80;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .top-bar a:hover { text-decoration: underline; }
+
+    .top-bar h1 {
+      font-size: 1.1rem;
+      color: #80cc80;
+      margin: 0;
+      flex: 1;
+    }
+
+    .conv-page {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+      width: 100%;
+    }
+
+    .conv-title {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .conv-title h2 {
+      font-size: 1.6rem;
+      color: #80cc80;
+    }
+
+    .conv-title p {
+      color: #a89f94;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+    }
+
+    /* Options bar */
+    .conv-options {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .conv-options label {
+      color: #a89f94;
+      font-size: 0.85rem;
+    }
+
+    .conv-options select, .conv-options button {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      color: #f0ede6;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .conv-options select:focus { outline: none; border-color: #80cc80; }
+
+    .btn-clear {
+      margin-left: auto;
+      color: #a89f94 !important;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-clear:hover {
+      border-color: #e05555 !important;
+      color: #e05555 !important;
+    }
+
+    /* Fields */
+    .conv-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .conv-field {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      transition: border-color 0.2s;
+    }
+
+    .conv-field:focus-within {
+      border-color: #80cc80;
+    }
+
+    .conv-field.error {
+      border-color: #e05555;
+    }
+
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .field-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: #80cc80;
+    }
+
+    .field-base {
+      font-size: 0.75rem;
+      color: #a89f94;
+    }
+
+    .field-copy {
+      background: none;
+      border: 1px solid #2a3a2a;
+      border-radius: 4px;
+      color: #a89f94;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .field-copy:hover {
+      border-color: #80cc80;
+      color: #80cc80;
+    }
+
+    .field-copy.copied {
+      border-color: #80cc80;
+      color: #80cc80;
+    }
+
+    .conv-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #2a3a2a;
+      color: #f0ede6;
+      font-size: 1.15rem;
+      font-family: 'Courier New', monospace;
+      padding: 0.3rem 0;
+      outline: none;
+      letter-spacing: 0.05em;
+    }
+
+    .conv-input::placeholder { color: #3a4a3a; }
+
+    .conv-input.error { color: #e05555; }
+
+    .field-grouped {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      color: #a89f94;
+    }
+
+    .field-grouped span { font-family: 'Courier New', monospace; color: #c8c0b4; }
+
+    /* Separator */
+    .conv-sep {
+      text-align: center;
+      color: #3a4a3a;
+      font-size: 0.75rem;
+      margin: 0.25rem 0;
+      user-select: none;
+    }
+
+    /* Quick ref table */
+    .quick-ref {
+      margin-top: 2.5rem;
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .quick-ref h3 {
+      font-size: 0.85rem;
+      color: #80cc80;
+      padding: 0.8rem 1.2rem;
+      border-bottom: 1px solid #2a3a2a;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .quick-ref table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    .quick-ref th {
+      background: #0a0f0a;
+      color: #a89f94;
+      padding: 0.5rem 1rem;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+
+    .quick-ref td {
+      padding: 0.45rem 1rem;
+      color: #c8c0b4;
+      border-top: 1px solid #1a2a1a;
+    }
+
+    .quick-ref tr:hover td { background: #0a150a; }
+
+    .quick-ref td:first-child { color: #80cc80; }
+
+    @media (max-width: 600px) {
+      .conv-page { padding: 0 1rem 2rem; }
+      .field-grouped { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="informatique.html">&#8592; Informatique</a>
+    <h1>Convertisseur — Bases numériques</h1>
+  </div>
+
+  <div class="conv-page">
+
+    <div class="conv-title">
+      <h2>Convertisseur</h2>
+      <p>Conversion bidirectionnelle — Décimal · Binaire · Hexadécimal · Octal</p>
+    </div>
+
+    <div class="conv-options">
+      <label>Largeur :
+        <select id="bit-width">
+          <option value="8">8 bits</option>
+          <option value="16">16 bits</option>
+          <option value="32" selected>32 bits</option>
+          <option value="64">64 bits</option>
+          <option value="0">Illimité</option>
+        </select>
+      </label>
+      <label>
+        <select id="sign-mode">
+          <option value="unsigned">Non signé</option>
+          <option value="signed">Signé (complément à 2)</option>
+        </select>
+      </label>
+      <button class="btn-clear" onclick="clearAll()">✕ Effacer</button>
+    </div>
+
+    <div class="conv-fields">
+
+      <div class="conv-field" id="field-dec">
+        <div class="field-header">
+          <span class="field-label">DÉCIMAL</span>
+          <span class="field-base">Base 10</span>
+          <button class="field-copy" onclick="copyField('dec')">Copier</button>
+        </div>
+        <input class="conv-input" id="input-dec" type="text" placeholder="0" spellcheck="false"
+               oninput="convert('dec')">
+      </div>
+
+      <div class="conv-sep">⇅</div>
+
+      <div class="conv-field" id="field-hex">
+        <div class="field-header">
+          <span class="field-label">HEXADÉCIMAL</span>
+          <span class="field-base">Base 16</span>
+          <button class="field-copy" onclick="copyField('hex')">Copier</button>
+        </div>
+        <input class="conv-input" id="input-hex" type="text" placeholder="00000000" spellcheck="false"
+               oninput="convert('hex')">
+        <div class="field-grouped" id="hex-groups"></div>
+      </div>
+
+      <div class="conv-sep">⇅</div>
+
+      <div class="conv-field" id="field-bin">
+        <div class="field-header">
+          <span class="field-label">BINAIRE</span>
+          <span class="field-base">Base 2</span>
+          <button class="field-copy" onclick="copyField('bin')">Copier</button>
+        </div>
+        <input class="conv-input" id="input-bin" type="text" placeholder="00000000 00000000 00000000 00000000"
+               spellcheck="false" oninput="convert('bin')">
+        <div class="field-grouped" id="bin-groups"></div>
+      </div>
+
+      <div class="conv-sep">⇅</div>
+
+      <div class="conv-field" id="field-oct">
+        <div class="field-header">
+          <span class="field-label">OCTAL</span>
+          <span class="field-base">Base 8</span>
+          <button class="field-copy" onclick="copyField('oct')">Copier</button>
+        </div>
+        <input class="conv-input" id="input-oct" type="text" placeholder="00000000000" spellcheck="false"
+               oninput="convert('oct')">
+      </div>
+
+    </div>
+
+    <!-- Quick reference -->
+    <div class="quick-ref">
+      <h3>RÉFÉRENCE RAPIDE</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Décimal</th>
+            <th>Hex</th>
+            <th>Binaire</th>
+            <th>Octal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>0x00</td><td>0000 0000</td><td>000</td></tr>
+          <tr><td>1</td><td>0x01</td><td>0000 0001</td><td>001</td></tr>
+          <tr><td>2</td><td>0x02</td><td>0000 0010</td><td>002</td></tr>
+          <tr><td>4</td><td>0x04</td><td>0000 0100</td><td>004</td></tr>
+          <tr><td>8</td><td>0x08</td><td>0000 1000</td><td>010</td></tr>
+          <tr><td>15</td><td>0x0F</td><td>0000 1111</td><td>017</td></tr>
+          <tr><td>16</td><td>0x10</td><td>0001 0000</td><td>020</td></tr>
+          <tr><td>32</td><td>0x20</td><td>0010 0000</td><td>040</td></tr>
+          <tr><td>64</td><td>0x40</td><td>0100 0000</td><td>100</td></tr>
+          <tr><td>127</td><td>0x7F</td><td>0111 1111</td><td>177</td></tr>
+          <tr><td>128</td><td>0x80</td><td>1000 0000</td><td>200</td></tr>
+          <tr><td>255</td><td>0xFF</td><td>1111 1111</td><td>377</td></tr>
+          <tr><td>256</td><td>0x100</td><td>0001 0000 0000</td><td>400</td></tr>
+          <tr><td>1023</td><td>0x3FF</td><td>11 1111 1111</td><td>1777</td></tr>
+          <tr><td>1024</td><td>0x400</td><td>100 0000 0000</td><td>2000</td></tr>
+          <tr><td>65535</td><td>0xFFFF</td><td>1111 1111 1111 1111</td><td>177777</td></tr>
+          <tr><td>65536</td><td>0x10000</td><td>1 0000 0000 0000 0000</td><td>200000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script src="converter.js"></script>
+</body>
+</html>
