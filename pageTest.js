@@ -1,5 +1,5 @@
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('pageTest')) {
+if (!sessionStorage.getItem('loggedIn') || (!permissions.includes('pageTest') && sessionStorage.getItem('userRole') !== 'admin')) {
   alert("Accès refusé.");
   window.location.href = 'dashboard.html';
   throw new Error('Accès refusé');
