@@ -71,7 +71,7 @@ function render() {
   for (let b = 28; b >= lsbBit; b--) {
     if (bitStates[b]) magnitude += bitValue(b, maxVal, nBits);
   }
-  const value = sign ? -magnitude : magnitude;
+  const value = magnitude - (sign ? maxVal : 0);
 
   // Binary word (bits 29→lsbBit)
   const binStr = allBits.map(b => bitStates[b]).join('');
@@ -136,14 +136,16 @@ function render() {
     if (state) tr.classList.add('active-row');
     if (isSign) tr.classList.add('sign-row');
 
-    const role = isSign ? 'Bit de signe'
+    const role = isSign ? `Bit de signe (−${maxVal})`
                : `Bit ${bitNum} — ${bv >= 1 ? fmt(bv, lsb) : bv.toPrecision(4)}`;
 
     const contribStr = isSign
-      ? (state ? '−' : '+')
-      : (state ? (sign ? '−' : '+') + fmt(Math.abs(contrib), lsb) : '0');
+      ? (state ? `−${maxVal}` : '0')
+      : (state ? '+' + fmt(bv, lsb) : '0');
 
-    const tdClass = isSign ? '' : (contrib !== 0 ? (sign ? 'contrib neg' : 'contrib') : '');
+    const tdClass = isSign
+      ? (state ? 'contrib neg' : '')
+      : (state ? 'contrib' : '');
 
     tr.innerHTML = `
       <td>${bitNum}</td>
