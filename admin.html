@@ -142,41 +142,16 @@
         <div class="perms-overlay hidden" id="perms-overlay">
           <span>Accès complet — l'admin accède à tout par défaut</span>
         </div>
-        <div class="perms-grid">
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="ena"> ÉNA</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="aeronefs"> Aéronefs</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="aviation"> Aviation</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="bieres"> Bières</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="scifi"> Sci-Fi</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="hockey"> Hockey</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="liens"> Liens utiles</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="films"> Films &amp; Séries</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="webmail"> Webmail</label>
-          <label class="perm-item"><input type="checkbox" class="chk-perm" value="rona"> RONA S&amp;S</label>
-          <div class="perm-group">
-            <label class="perm-item perm-parent"><input type="checkbox" class="chk-perm chk-parent" value="informatique"> Informatique</label>
-            <div class="perm-children">
-              <label class="perm-item"><input type="checkbox" class="chk-perm chk-child" data-parent="informatique" value="arinc429"> ARINC 429</label>
-              <label class="perm-item"><input type="checkbox" class="chk-perm chk-child" data-parent="informatique" value="converter"> Convertisseur</label>
-              <label class="perm-item"><input type="checkbox" class="chk-perm chk-child" data-parent="informatique" value="crypteur"> Encodeur BNR</label>
-            </div>
-          </div>
+        <div class="perms-grid" id="perms-grid">
+          <!-- Généré dynamiquement par admin.js -->
         </div>
       </div>
 
-      <label style="margin-top:1rem;">Sections archivées</label>
-      <div id="archived-badges" style="
-        background:#1a1a1a;
-        border:1px solid #2a2a2a;
-        border-radius:8px;
-        padding:0.6rem 0.8rem;
-        min-height:2rem;
-        display:flex;
-        flex-wrap:wrap;
-        gap:0.4rem;
-        align-items:center;
-      ">
-        <!-- Généré par admin.js -->
+      <div id="archived-perms-section" style="display:none; margin-top:0.8rem;">
+        <label>Sections archivées</label>
+        <div class="perms-grid" id="archived-perms-grid" style="background:#1a0f0f; border-color:#3a1a1a;">
+          <!-- Généré dynamiquement par admin.js -->
+        </div>
       </div>
 
       <div class="modal-actions" style="margin-top:1.5rem;">
