@@ -38,7 +38,7 @@
       text-transform: uppercase; letter-spacing: 0.1rem; }
 
     /* Input row */
-    .input-row { display: flex; gap: 0.8rem; align-items: flex-end; flex-wrap: wrap; }
+    .input-row { display: flex; gap: 0.8rem; align-items: flex-end; flex-wrap: nowrap; }
     .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .input-group label { font-size: 0.78rem; color: #a89f94; }
     .ip-input {
@@ -58,9 +58,10 @@
     }
     .cidr-input:focus { border-color: #80cc80; outline: none; }
     .calc-btn {
-      padding: 0.55rem 1.6rem; font-size: 0.9rem; border-radius: 8px;
+      padding: 0.45rem 1.2rem; font-size: 0.9rem; border-radius: 8px;
       background: #1a3a1a; border: 1px solid #3a6a3a; color: #80cc80;
       cursor: pointer; font-weight: bold; transition: all 0.15s; white-space: nowrap;
+      height: 38px; flex-shrink: 0;
     }
     .calc-btn:hover { background: #80cc80; color: #0a0f0a; border-color: #80cc80; }
     .error-msg { color: #ff6b6b; font-size: 0.82rem; margin-top: 0.5rem; min-height: 1.2rem; }
