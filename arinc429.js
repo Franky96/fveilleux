@@ -1085,6 +1085,10 @@ function renderBits(word) {
   // Discrete bits (teal) and bit descriptions from DECODE_META
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
   const bitDescs = (metaBits && metaBits.bitDescs) || {};
+
+  // Label-specific orange bits (CAT bits for 033)
+  const catBits = new Set();
+  if (labelOct === '033') { catBits.add(11); catBits.add(12); }
   if (metaBits && metaBits.spareBits) metaBits.spareBits.forEach(b => padBits.add(b));
 
   // Bit 29 = sign bit for standard BNR labels (not ssmSign, not iso5)
@@ -1103,6 +1107,7 @@ function renderBits(word) {
                  : isSign ? 'bit-sign'
                  : dataBits.has(bitNum) ? 'bit-data'
                  : isDis  ? 'bit-sdi'
+                 : catBits.has(bitNum) ? 'bit-sign'
                  : getBitClass(bitNum);
 
     const wrapper = document.createElement('div');
