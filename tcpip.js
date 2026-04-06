@@ -63,6 +63,13 @@ function isPrivate(ip) {
 
 // ── Main calculate ────────────────────────────────────
 function calculate() {
+  try { _calculate(); } catch(e) {
+    document.getElementById('error-msg').textContent = 'Erreur JS: ' + e.message;
+    console.error(e);
+  }
+}
+
+function _calculate() {
   const ipStr  = document.getElementById('ip-input').value.trim();
   const cidr   = Math.max(0, Math.min(32, parseInt(document.getElementById('cidr-input').value) || 0));
   const errEl  = document.getElementById('error-msg');
@@ -168,3 +175,4 @@ function calculate() {
       <div class="bitmask-legend-item"><div class="legend-sq" style="background:#60b8c8;"></div> Hôte (${32 - cidr} bits)</div>
     </div>`;
 }
+
