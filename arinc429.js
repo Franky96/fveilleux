@@ -807,7 +807,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'0.1MHz',  cls:'fmap-freq' },
       { span:4, label:'0.01MHz', cls:'fmap-freq' },
       { span:2, label:'SP',      cls:'fmap-pad'  },
-      { span:2, label: catStr,   cls:'fmap-dis'  },
+      { span:2, label: catStr,   cls:'fmap-cat'  },
     ];
   }
   if (oct === '034') {
@@ -1168,7 +1168,7 @@ function renderFields(word) {
   if (decoded !== null && labelInfo) {
     if (labelInfo.oct === '033') {
       const cat = (word >> 10) & 0x3;
-      decodedExtra = ' — ' + ['Non', 'CAT I', 'CAT II', 'CAT III'][cat];
+      decodedExtra = ' — <span style="color:#fb923c;font-weight:bold;">' + ['Non', 'CAT I', 'CAT II', 'CAT III'][cat] + '</span>';
     } else if (labelInfo.oct === '034') {
       decodedExtra = ' (' + (getBit(word, 14) ? 'ILS' : 'VOR') + ')';
     } else if (labelInfo.oct === '035') {
@@ -1178,7 +1178,7 @@ function renderFields(word) {
                    + ' / ' + ['VOR','ILS','MLS','spare'][freq];
     }
   }
-  document.getElementById('d-data-decoded').textContent = decoded !== null
+  document.getElementById('d-data-decoded').innerHTML = decoded !== null
     ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
     : '—';
   document.getElementById('d-data-format').textContent = labelInfo ? labelInfo.enc : '—';
