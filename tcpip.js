@@ -67,8 +67,6 @@ function calculate() {
   const cidr   = Math.max(0, Math.min(32, parseInt(document.getElementById('cidr-input').value) || 0));
   const errEl  = document.getElementById('error-msg');
 
-  document.getElementById('cidr-slider').value = cidr;
-
   if (!ipStr) { errEl.textContent = ''; return; }
 
   const ipInt = ipToInt(ipStr);
