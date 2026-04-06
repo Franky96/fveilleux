@@ -476,8 +476,8 @@ const DECODE_META = {
   '104': { msb: 8192, spareBits:[11,12,13,14,15,16,17,18], bnrDecimals:0},  
   // Scale=±180, 11 sig bits (28→18), res=0.1 Degree
   '105': { msb: 90, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1},
-  // Scale=4096, 12 sig bits (28→17), res=1 Mach
-  '106': { msb: 2048, spareBits:[11,12,13,14,15,16], bnrDecimals:0},  
+  // Scale=±2.048 Mach, 12 sig bits (28→17), res=0.0005 Mach, PAD bits 11-16
+  '106': { msb: 1.024, spareBits:[11,12,13,14,15,16], bnrDecimals:4},
   // Scale=65536, 16 sig bits (28→13), res=1 Mach
   '107': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
   // Scale=±180, 12 sig bits (28→17), res=0.05 degree
@@ -503,11 +503,11 @@ const DECODE_META = {
   '173': { msb: 0.4, spareBits: [11,12,13,14,15,16], bnrDecimals: 4 },
   '174': { msb: 0.8, spareBits: [11,12,13,14,15,16], bnrDecimals: 4 },
   '175': { msb: 512    },
-  '176': { msb: 4      },  '177': { msb: 131072  },
+  '176': { msb: 1.024, bnrDecimals: 4 },  '177': { msb: 131072  },
   '202': { msb: 2048   },  '203': { msb: 131072  },  '204': { msb: 131072  },
-  '205': { msb: 4      },  '206': { msb: 1024    },  '207': { msb: 1024   },
-  '210': { msb: 1024   },  '211': { msb: 512     },  '212': { msb: 16384  },
-  '213': { msb: 512    },  '215': { msb: 1024    },  '217': { msb: 16384  },
+  '205': { msb: 1.024, bnrDecimals: 4 },  '206': { msb: 1024    },  '207': { msb: 1024   },
+  '210': { msb: 1024   },  '211': { msb: 256, bnrDecimals: 2 },  '212': { msb: 16384  },
+  '213': { msb: 256, bnrDecimals: 2 },  '215': { msb: 1024    },  '217': { msb: 16384  },
   '220': { msb: 131072  },  '221': { msb: 90     },  '222': { msb: 180    },
   '225': { msb: 1024   },
   '241': { msb: 512    },  '242': { msb: 2048    },  '244': { msb: 131072  },
