@@ -87,6 +87,16 @@
     .result-val.blue   { color: #60b8c8; }
     .result-val.yellow { color: #f59e0b; }
 
+    /* CIDR stepper */
+    .cidr-stepper { display: flex; align-items: stretch; border: 1px solid #2a3a2a; border-radius: 6px; overflow: hidden; height: 38px; }
+    .cidr-stepper input[type="number"] { border: none !important; flex: 1; width: 52px; background: #050a05; color: #f0ede6; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; -moz-appearance: textfield; outline: none; padding: 0; }
+    .cidr-stepper input::-webkit-outer-spin-button,
+    .cidr-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .cidr-stepper-btns { display: flex; flex-direction: column; border-left: 1px solid #2a3a2a; }
+    .cidr-stepper-btn { flex: 1; background: #1a2a1a; border: none; border-bottom: 1px solid #2a3a2a; color: #80cc80; cursor: pointer; font-size: 0.65rem; padding: 0 0.5rem; line-height: 1; transition: background 0.1s; }
+    .cidr-stepper-btn:last-child { border-bottom: none; }
+    .cidr-stepper-btn:hover { background: #2a3a2a; }
+
     /* CIDR slider */
     .cidr-slider-wrap { margin-top: 1rem; }
     .cidr-slider { width: 100%; accent-color: #80cc80; cursor: pointer; }
@@ -132,14 +142,20 @@
       <div class="input-row">
         <div class="input-group">
           <label>Adresse IPv4</label>
-          <input type="text" class="ip-input" id="ip-input" placeholder="192.168.1.0" maxlength="15"
+          <input type="text" class="ip-input" id="ip-input" placeholder="ex: 192.168.1.0" maxlength="15"
                  spellcheck="false" autocomplete="off" />
         </div>
         <div class="input-group">
           <label>Préfixe CIDR</label>
-          <div class="cidr-wrap">
+          <div style="display:flex; align-items:center; gap:0.4rem;">
             <span class="cidr-slash">/</span>
-            <input type="number" class="cidr-input" id="cidr-input" value="24" min="0" max="32" />
+            <div class="cidr-stepper">
+              <input type="number" id="cidr-input" value="24" min="0" max="32" />
+              <div class="cidr-stepper-btns">
+                <button class="cidr-stepper-btn" onclick="stepCidr(1)">▲</button>
+                <button class="cidr-stepper-btn" onclick="stepCidr(-1)">▼</button>
+              </div>
+            </div>
           </div>
         </div>
         <button class="calc-btn" onclick="calculate()">Calculer</button>
