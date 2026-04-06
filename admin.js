@@ -244,6 +244,7 @@ const PERMS_STRUCTURE = [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'converter', label: 'Convertisseur' },
     { key: 'crypteur',  label: 'Encodeur BNR' },
+    { key: 'tcpip',     label: 'TCP/IP' },
   ]},
 ];
 
