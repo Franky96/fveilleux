@@ -1,8 +1,16 @@
 'use strict';
 
-// ── Sync slider ↔ input CIDR ─────────────────────────
+// ── Sync slider ↔ stepper ────────────────────────────
 function syncSlider(val) {
   document.getElementById('cidr-input').value = val;
+  calculate();
+}
+
+function stepCidr(delta) {
+  const input = document.getElementById('cidr-input');
+  const v = Math.max(0, Math.min(32, (parseInt(input.value) || 24) + delta));
+  input.value = v;
+  document.getElementById('cidr-slider').value = v;
   calculate();
 }
 
