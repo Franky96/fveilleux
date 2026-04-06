@@ -500,7 +500,9 @@ const DECODE_META = {
   '153': { msb: 131072  },  '154': { msb: 180    },
   '162': { msb: 180    },  '164': { msb: 2500    },  '165': { msb: 16384  },
   '166': { msb: 1024   },  '167': { msb: 128     },  '171': { msb: 32     },
-  '173': { msb: 0.4    },  '174': { msb: 0.4     },  '175': { msb: 512    },
+  '173': { msb: 0.4, spareBits: [11,12,13,14,15,16], bnrDecimals: 4 },
+  '174': { msb: 0.8, spareBits: [11,12,13,14,15,16], bnrDecimals: 4 },
+  '175': { msb: 512    },
   '176': { msb: 4      },  '177': { msb: 131072  },
   '202': { msb: 2048   },  '203': { msb: 131072  },  '204': { msb: 131072  },
   '205': { msb: 4      },  '206': { msb: 1024    },  '207': { msb: 1024   },
@@ -962,8 +964,8 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
     { span:7,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading
-  if (['100','101','106','110','114'].includes(oct)) return [
+  // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading + LOC/GS deviation
+  if (['100','101','106','110','114','173','174'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
     { span:6,  label:'PAD',          cls:'fmap-pad'  },
