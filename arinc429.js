@@ -1106,8 +1106,8 @@ function renderBits(word) {
     const cls    = isPad  ? 'bit-pad'
                  : isSign ? 'bit-sign'
                  : dataBits.has(bitNum) ? 'bit-data'
-                 : isDis  ? 'bit-sdi'
                  : catBits.has(bitNum) ? 'bit-sign'
+                 : isDis  ? 'bit-sdi'
                  : getBitClass(bitNum);
 
     const wrapper = document.createElement('div');
