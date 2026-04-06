@@ -1,24 +1,12 @@
 'use strict';
 
-// ── Sync slider ↔ stepper ────────────────────────────
-function syncSlider(val) {
-  document.getElementById('cidr-input').value = val;
-  calculate();
-}
-
 function stepCidr(delta) {
   const input = document.getElementById('cidr-input');
-  const v = Math.max(0, Math.min(32, (parseInt(input.value) || 24) + delta));
-  input.value = v;
-  document.getElementById('cidr-slider').value = v;
+  input.value = Math.max(0, Math.min(32, (parseInt(input.value) || 24) + delta));
   calculate();
 }
 
-document.getElementById('cidr-input').addEventListener('input', function () {
-  const v = Math.max(0, Math.min(32, parseInt(this.value) || 0));
-  document.getElementById('cidr-slider').value = v;
-  calculate();
-});
+document.getElementById('cidr-input').addEventListener('input', calculate);
 
 document.getElementById('ip-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') calculate();
