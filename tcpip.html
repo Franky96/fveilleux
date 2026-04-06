@@ -45,7 +45,8 @@
     .ip-input {
       font-family: 'Courier New', monospace; font-size: 1.1rem;
       background: #050a05; border: 1px solid #2a3a2a; border-radius: 8px;
-      color: #f0ede6; padding: 0.5rem 1rem; width: 220px;
+      color: #f0ede6; padding: 0; padding-left: 0.8rem; width: 220px;
+      height: 38px; margin-bottom: 0 !important; box-sizing: border-box;
       transition: border-color 0.2s;
     }
     .ip-input:focus { border-color: #80cc80; outline: none; }
@@ -91,7 +92,8 @@
 
     /* CIDR stepper */
     .cidr-stepper { display: flex; align-items: stretch; border: 1px solid #2a3a2a; border-radius: 6px; overflow: hidden; height: 38px; }
-    .cidr-stepper input[type="number"] { border: none !important; flex: 1; width: 52px; background: #050a05; color: #f0ede6; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; -moz-appearance: textfield; outline: none; padding: 0; }
+    .cidr-stepper input[type="number"] { border: none !important; outline: none !important; margin-bottom: 0 !important; flex: 1; width: 52px; background: #050a05; color: #f0ede6; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; -moz-appearance: textfield; padding: 0; }
+    .cidr-stepper input[type="number"]:focus { border: none !important; outline: none !important; }
     .cidr-stepper input::-webkit-outer-spin-button,
     .cidr-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
     .cidr-stepper-btns { display: flex; flex-direction: column; border-left: 1px solid #2a3a2a; }
