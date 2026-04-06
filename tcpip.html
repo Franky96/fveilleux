@@ -101,13 +101,7 @@
     .cidr-stepper-btn:first-child { border-bottom: 1px solid #2a3a2a; }
     .cidr-stepper-btn:hover { background: #2a3a2a; }
 
-    /* CIDR slider */
-    .cidr-slider-wrap { margin-top: 1rem; }
-    .cidr-slider { width: 100%; accent-color: #80cc80; cursor: pointer; }
-    .cidr-labels { display: flex; justify-content: space-between;
-      font-size: 0.7rem; color: #556655; font-family: monospace; margin-top: 0.2rem; }
-
-    /* Bitmask visual */
+/* Bitmask visual */
     .bitmask-row { display: flex; flex-wrap: nowrap; gap: 2px; overflow-x: auto;
       padding-bottom: 0.4rem; margin-top: 0.5rem; }
     .bitmask-octet { display: flex; gap: 2px; }
@@ -160,13 +154,7 @@
         </div>
         <button class="calc-btn" onclick="calculate()">Calculer</button>
       </div>
-      <div class="cidr-slider-wrap">
-        <input type="range" class="cidr-slider" id="cidr-slider" min="0" max="32" value="24" oninput="syncSlider(this.value)" />
-        <div class="cidr-labels">
-          <span>/0</span><span>/8</span><span>/16</span><span>/24</span><span>/32</span>
-        </div>
-      </div>
-      <div class="error-msg" id="error-msg"></div>
+<div class="error-msg" id="error-msg"></div>
     </div>
 
     <!-- Résultats -->
