@@ -1086,9 +1086,17 @@ function renderBits(word) {
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
   const bitDescs = (metaBits && metaBits.bitDescs) || {};
 
-  // Label-specific orange bits (CAT bits for 033)
+  // Label-specific orange discrete bits
   const catBits = new Set();
-  if (labelOct === '033') { catBits.add(11); catBits.add(12); }
+  const orangeDiscLabels = {
+    '031': [11,12,13,14,15,16,17],
+    '032': [11,12],
+    '033': [11,12],
+    '034': [14],
+    '035': [11,12,13,14,15,16,17,18],
+    '037': [9,10,11],
+  };
+  if (orangeDiscLabels[labelOct]) orangeDiscLabels[labelOct].forEach(b => catBits.add(b));
   if (metaBits && metaBits.spareBits) metaBits.spareBits.forEach(b => padBits.add(b));
 
   // Bit 29 = sign bit for standard BNR labels (not ssmSign, not iso5)
@@ -1105,8 +1113,8 @@ function renderBits(word) {
     const val    = getBit(word, bitNum);
     const cls    = isPad  ? 'bit-pad'
                  : isSign ? 'bit-sign'
-                 : dataBits.has(bitNum) ? 'bit-data'
                  : catBits.has(bitNum) ? 'bit-sign'
+                 : dataBits.has(bitNum) ? 'bit-data'
                  : isDis  ? 'bit-sdi'
                  : getBitClass(bitNum);
 
