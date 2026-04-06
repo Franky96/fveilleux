@@ -40,11 +40,11 @@
     /* Input row */
     .input-row { display: flex; gap: 0.8rem; align-items: flex-end; flex-wrap: nowrap; }
     .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
-    .input-group label { font-size: 0.78rem; color: #a89f94; }
+    .input-group label { font-size: 0.78rem; color: #a89f94; white-space: nowrap; }
     .ip-input {
       font-family: 'Courier New', monospace; font-size: 1.1rem;
       background: #050a05; border: 1px solid #2a3a2a; border-radius: 8px;
-      color: #f0ede6; padding: 0.5rem 1rem; width: 100%;
+      color: #f0ede6; padding: 0.5rem 1rem; width: 220px;
       transition: border-color 0.2s;
     }
     .ip-input:focus { border-color: #80cc80; outline: none; }
@@ -141,7 +141,7 @@
     <div class="panel">
       <h2>Adresse IP</h2>
       <div class="input-row">
-        <div class="input-group" style="flex:1; min-width:0;">
+        <div class="input-group">
           <label>Adresse IPv4</label>
           <input type="text" class="ip-input" id="ip-input" placeholder="ex: 192.168.1.0" maxlength="15"
                  spellcheck="false" autocomplete="off" />
