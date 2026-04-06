@@ -777,13 +777,13 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:3, label:'B',   cls:'fmap-bcd' },  // bits 26-24 squawk digit B
     { span:3, label:'C',   cls:'fmap-bcd' },  // bits 23-21 squawk digit C
     { span:3, label:'D',   cls:'fmap-bcd' },  // bits 20-18 squawk digit D
-    { span:1, label:'HJK', cls:'fmap-dis' },  // bit 17 hijack
-    { span:1, label:'CP',  cls:'fmap-dis' },  // bit 16 control panel
-    { span:1, label:'CP',  cls:'fmap-dis' },  // bit 15 control panel
-    { span:1, label:'SRC', cls:'fmap-dis' },  // bit 14 alt data source
-    { span:1, label:'IDT', cls:'fmap-dis' },  // bit 13 ident
-    { span:1, label:'CP',  cls:'fmap-dis' },  // bit 12 control panel
-    { span:1, label:'ALT', cls:'fmap-dis' },  // bit 11 altitude report
+    { span:1, label:'HJK', cls:'fmap-cat' },  // bit 17 hijack
+    { span:1, label:'CP',  cls:'fmap-cat' },  // bit 16 control panel
+    { span:1, label:'CP',  cls:'fmap-cat' },  // bit 15 control panel
+    { span:1, label:'SRC', cls:'fmap-cat' },  // bit 14 alt data source
+    { span:1, label:'IDT', cls:'fmap-cat' },  // bit 13 ident
+    { span:1, label:'CP',  cls:'fmap-cat' },  // bit 12 control panel
+    { span:1, label:'ALT', cls:'fmap-cat' },  // bit 11 altitude report
   ];
   if (oct === '032') {
     const antMode = word ? getBit(word, 12) : 0;  // bit 12: 0=ADF, 1=ANT
@@ -794,8 +794,8 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'1kHz',    cls:'fmap-freq' },
       { span:1, label:'0.5',     cls:'fmap-freq' },
       { span:1, label:'SP',      cls:'fmap-pad'  },
-      { span:1, label: antMode ? 'ANT' : 'ADF', cls:'fmap-dis' },
-      { span:1, label:'BFO',     cls:'fmap-dis'  },
+      { span:1, label: antMode ? 'ANT' : 'ADF', cls:'fmap-cat' },
+      { span:1, label:'BFO',     cls:'fmap-cat'  },
     ];
   }
   if (oct === '033') {
@@ -817,7 +817,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'1MHz',                    cls:'fmap-freq' },
       { span:4, label:'0.1MHz',                  cls:'fmap-freq' },
       { span:4, label:'0.01MHz',                 cls:'fmap-freq' },
-      { span:1, label: ilsMode ? 'ILS' : 'VOR',  cls:'fmap-dis'  },
+      { span:1, label: ilsMode ? 'ILS' : 'VOR',  cls:'fmap-cat'  },
       { span:3, label:'SP',                      cls:'fmap-pad'  },
     ];
   }
@@ -831,10 +831,10 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'1MHz',    cls:'fmap-freq' },
       { span:4, label:'0.1MHz',  cls:'fmap-freq' },
       { span:1, label:'0.05',    cls:'fmap-freq' },
-      { span:1, label:'IDO',     cls:'fmap-dis'  },
-      { span:1, label:'IDD',     cls:'fmap-dis'  },
-      { span:2, label: freqStr,  cls:'fmap-dis'  },
-      { span:3, label: dmeStr,   cls:'fmap-dis'  },
+      { span:1, label:'IDO',     cls:'fmap-cat'  },
+      { span:1, label:'IDD',     cls:'fmap-cat'  },
+      { span:2, label: freqStr,  cls:'fmap-cat'  },
+      { span:3, label: dmeStr,   cls:'fmap-cat'  },
     ];
   }
   if (oct === '036') return [
@@ -853,9 +853,9 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'0.1MHz',               cls:'fmap-freq' },
       { span:4, label:'0.001MHz',             cls:'fmap-freq' },
       { span:4, label:'SP',                   cls:'fmap-pad'  },
-      { span:1, label: ssbMode ? 'LSB' : 'USB', cls:'fmap-bcd' },
-      { span:1, label: amMode  ? 'AM'  : 'SSB', cls:'fmap-bcd' },
-      { span:1, label:'WID',                  cls:'fmap-bcd'  },
+      { span:1, label: ssbMode ? 'LSB' : 'USB', cls:'fmap-cat' },
+      { span:1, label: amMode  ? 'AM'  : 'SSB', cls:'fmap-cat' },
+      { span:1, label:'WID',                  cls:'fmap-cat'  },
     ];
   }
   if (oct === '056') return [
