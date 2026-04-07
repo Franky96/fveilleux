@@ -491,8 +491,8 @@ const DECODE_META = {
 
   // Scale=±180°, 12 sig bits (28→17), res≈0.044°, PAD 11-16
   '115': { msb: 90,   spareBits:[11,12,13,14,15,16],    bnrDecimals:2 },
-  // Scale=±128 NM, 11 sig bits (28→18), res=0.0625 NM, PAD 11-17
-  '116': { msb: 64,   spareBits:[11,12,13,14,15,16,17], bnrDecimals:4 },
+  // Scale=±128 NM, 15 sig bits (28→14), res≈0.004 NM, PAD 11-13
+  '116': { msb: 64,   spareBits:[11,12,13], bnrDecimals:3 },
   // Scale=±2048 ft, 11 sig bits (28→18), res=1.0 ft, PAD 11-17
   '117': { msb: 1024, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1 },
   '120': { msb: 512    },  '121': { msb: 90      },  '122': { msb: 90     },
