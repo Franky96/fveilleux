@@ -970,14 +970,14 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:10, label:'data (28→19)', cls:'fmap-bnr'  },
     { span:8,  label:'PAD',          cls:'fmap-pad'  },
   ];  
-  // 11 sig bits (28→18), PAD 11-17  — Vref/V2/VR/V1/TargetAS
-  if (['070','071','072','073','077','103','105','112'].includes(oct)) return [
+  // 11 sig bits (28→18), PAD 11-17  — Vref/V2/VR/V1/TargetAS + Vertical Deviation
+  if (['070','071','072','073','077','103','105','112','117'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
     { span:7,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading + LOC/GS deviation
-  if (['100','101','106','110','114','173','174'].includes(oct)) return [
+  // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading + LOC/GS deviation + Waypoint Bearing
+  if (['100','101','106','110','114','115','173','174'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
     { span:6,  label:'PAD',          cls:'fmap-pad'  },
@@ -988,8 +988,8 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
     { span:4,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 15 sig bits (28→14), PAD 11-13  — ZFW/GW (054, 074, 075)
-  if (['054','074','075'].includes(oct)) return [
+  // 15 sig bits (28→14), PAD 11-13  — ZFW/GW (054, 074, 075) + Cross Track Distance
+  if (['054','074','075','116'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
     { span:3,  label:'PAD',          cls:'fmap-pad'  },
