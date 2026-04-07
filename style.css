@@ -2584,6 +2584,14 @@ body.films-page .etoile.etoile-survol {
   border-color: #80cc80;
   font-weight: bold;
 }
+.strap-status {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #80cc80;
+  letter-spacing: 0.05rem;
+}
 
 @media (max-width: 640px) {
   .modal-detail-content {
