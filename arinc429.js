@@ -500,8 +500,8 @@ const DECODE_META = {
   '153': { msb: 131072  },  '154': { msb: 180    },
   '162': { msb: 180    },  '164': { msb: 2500    },  '165': { msb: 16384  },
   '166': { msb: 1024   },  '167': { msb: 128     },  '171': { msb: 32     },
-  '173': { msb: 0.2, spareBits: [11,12,13,14,15,16], bnrDecimals: 4, twosComp: true },  // scale=0.4 DDM, bit29=-0.4, bit28=+0.2
-  '174': { msb: 0.4, spareBits: [11,12,13,14,15,16], bnrDecimals: 4, twosComp: true },  // scale=0.8 DDM, bit29=-0.8, bit28=+0.4
+  '173': { msb: 0.2, spareBits: [11,12,13,14,15,16], bnrDecimals: 4 },  // scale=0.4 DDM, bit29=-0.4, bit28=+0.2
+  '174': { msb: 0.4, spareBits: [11,12,13,14,15,16], bnrDecimals: 4 },  // scale=0.8 DDM, bit29=-0.8, bit28=+0.4
   '175': { msb: 512    },
   '176': { msb: 1.024, bnrDecimals: 4 },  '177': { msb: 131072  },
   '202': { msb: 2048   },  '203': { msb: 131072  },  '204': { msb: 131072  },
@@ -687,11 +687,12 @@ function decodeData(word, labelInfo, metaOverride) {
 
     const resolution = meta.extendSdi ? meta.msb / 524288 : meta.msb / 131072;
     let value;
-    if (meta.twosComp) {
-      // Complément à deux : bit 29 contribue -2×msb, bits 28-11 contribuent positivement
-      value = (sign ? -2 * meta.msb : 0) + magnitude * resolution;
-    } else {
+    if (meta.ssmSign) {
+      // SSM indique le signe (+/-) → signe-magnitude
       value = (sign ? -1 : 1) * magnitude * resolution;
+    } else {
+      // ARINC 429 BNR complément à deux : bit 29 contribue -2×msb (= -scale)
+      value = (sign ? -2 * meta.msb : 0) + magnitude * resolution;
     }
     // Choose decimal places — override with bnrDecimals if set
     const dp = meta.bnrDecimals !== undefined ? meta.bnrDecimals
