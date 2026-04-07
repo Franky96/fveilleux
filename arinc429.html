@@ -710,8 +710,8 @@
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-        
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
+
         <!-- Carre 1 -->
         <div class="detail-panel">
           <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">J1-14</div>
@@ -723,12 +723,29 @@
 
         <!-- Carre 2 -->
         <div class="detail-panel">
-          <div class="detail-panel-title">Titre 1</div>
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">Titre 1</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('titre1', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('titre1', 'OPEN', this)">OPEN</button>
+          </div>
         </div>
 
         <!-- Carre 3 -->
         <div class="detail-panel">
-          <div class="detail-panel-title">Titre 1</div>
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">Titre 1</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('titre2', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('titre2', 'OPEN', this)">OPEN</button>
+          </div>
+        </div>
+
+        <!-- Carre 4 -->
+        <div class="detail-panel">
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">Titre 1</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('titre3', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('titre3', 'OPEN', this)">OPEN</button>
+          </div>
         </div>
 
       </div>
