@@ -101,6 +101,7 @@ const LABELS = [
   { oct: '121', enc: 'BNR', param: 'Horizontal Command Signal',         unit: 'deg' },
   { oct: '122', enc: 'BNR', param: 'Vertical Command Signal',           unit: 'deg' },
   { oct: '123', enc: 'BNR', param: 'Throttle Command',                  unit: 'deg/s' },
+  { oct: '124', enc: 'BNR', param: 'Client Device for GNSS Receiver',   unit: 'm' },
   { oct: '125', enc: 'BCD', param: 'Universal Time Coordinated (UTC)',  unit: 'hr:min' },
   { oct: '126', enc: 'BNR', param: 'Vertical Deviation (wide)',         unit: 'ft' },
   { oct: '127', enc: 'BNR', param: 'Selected Landing Altitude',         unit: 'ft' },
@@ -495,8 +496,20 @@ const DECODE_META = {
   '116': { msb: 64,   spareBits:[11,12,13], bnrDecimals:3 },
   // Scale=±2048 ft, 11 sig bits (28→18), res=1.0 ft, PAD 11-17
   '117': { msb: 1024, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1 },
-  '120': { msb: 512    },  '121': { msb: 90      },  '122': { msb: 90     },
-  '123': { msb: 128    },  '126': { msb: 32768   },  '127': { msb: 131072  },
+  // Scale=±512 NM,  15 sig bits (28→14), res≈0.016 NM,  PAD 11-13
+  '120': { msb: 256,   spareBits:[11,12,13],             bnrDecimals:3 },
+  // Scale=±180°,   14 sig bits (28→15), res≈0.011°,    PAD 11-14
+  '121': { msb: 90,    spareBits:[11,12,13,14],           bnrDecimals:2 },
+  // Scale=±180°,   12 sig bits (28→17), res≈0.044°,    PAD 11-16
+  '122': { msb: 90,    spareBits:[11,12,13,14,15,16],     bnrDecimals:2 },
+  // Scale=±256°,   18 sig bits (28→11), res≈0.001°
+  '123': { msb: 128,                                      bnrDecimals:3 },
+  // Scale=±8192 m, 13 sig bits (28→16), res=1 m,       PAD 11-15
+  '124': { msb: 4096,  spareBits:[11,12,13,14,15],        bnrDecimals:1 },
+  // Scale=±32768 ft,15 sig bits (28→14), res=1 ft,     PAD 11-13
+  '126': { msb: 16384, spareBits:[11,12,13],              bnrDecimals:1 },
+  // Scale=±65536 ft,16 sig bits (28→13), res=1 ft,     PAD 11-12
+  '127': { msb: 32768, spareBits:[11,12],                 bnrDecimals:1 },
   '130': { msb: 512    },  '131': { msb: 131072  },  '132': { msb: 180    },
   '133': { msb: 180    },  '134': { msb: 180     },  '135': { msb: 16     },
   '140': { msb: 90     },  '141': { msb: 90      },  '142': { msb: 256    },
@@ -976,8 +989,8 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
     { span:7,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 12 sig bits (28→17), PAD 11-16 — selected:Course #1/#2, Mach, heading + LOC/GS deviation + Waypoint Bearing
-  if (['100','101','106','110','114','115','173','174'].includes(oct)) return [
+  // 12 sig bits (28→17), PAD 11-16
+  if (['100','101','106','110','114','115','122','173','174'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
     { span:6,  label:'PAD',          cls:'fmap-pad'  },
@@ -988,17 +1001,34 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
     { span:4,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 15 sig bits (28→14), PAD 11-13  — ZFW/GW (054, 074, 075) + Cross Track Distance
-  if (['054','074','075','116'].includes(oct)) return [
+  // 15 sig bits (28→14), PAD 11-13
+  if (['054','074','075','116','120','126'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
     { span:3,  label:'PAD',          cls:'fmap-pad'  },
   ];
-  // 16 sig bits (28→13), PAD 11-12 — selected altitude, Selected Cruise Altitude
-  if (['102','107'].includes(oct)) return [
+  // 13 sig bits (28→16), PAD 11-15
+  if (['124'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:13, label:'data (28→16)', cls:'fmap-bnr'  },
+    { span:5,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 14 sig bits (28→15), PAD 11-14
+  if (['121'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
+    { span:4,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 16 sig bits (28→13), PAD 11-12
+  if (['102','107','127'].includes(oct)) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:16, label:'data (28→13)', cls:'fmap-bnr'  },
     { span:2,  label:'PAD',          cls:'fmap-pad'  },
+  ];
+  // 18 sig bits (28→11), no PAD
+  if (['123'].includes(oct)) return [
+    { span:1,  label:'sgn',          cls:'fmap-sign' },
+    { span:18, label:'data (28→11)', cls:'fmap-bnr'  },
   ];
   // 20 sig bits (28→9)
   if (['111'].includes(oct)) return [
