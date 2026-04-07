@@ -1002,7 +1002,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
     { span:5,  label:'PAD',          cls:'fmap-pad'  },
-    { span:1,  label:'TuneInh',      cls:'fmap-dis'  },
+    { span:1,  label:'T.in',          cls:'fmap-cat'  },
   ];
   // 12 sig bits (28→17), PAD 11-16
   if (['100','101','106','110','114','115','122'].includes(oct)) return [
@@ -1154,6 +1154,8 @@ function renderBits(word) {
     '034': [14],
     '035': [11,12,13,14,15,16,17,18],
     '037': [9,10,11],
+    '173': [11],
+    '174': [11],
   };
   if (orangeDiscLabels[labelOct]) orangeDiscLabels[labelOct].forEach(b => catBits.add(b));
   if (metaBits && metaBits.spareBits) metaBits.spareBits.forEach(b => padBits.add(b));
