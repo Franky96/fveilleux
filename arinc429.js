@@ -1373,9 +1373,21 @@ function toggleBit(bitNum) {
 }
 
 // ── Strapping ─────────────────────────────────────────
+const STRAP_LABELS = {
+  'J1-28': { GND: 'GND',       OPEN: 'OPEN'      },
+  'J1-27': { GND: 'GND',       OPEN: 'OPEN'      },
+  'J1-32': { GND: 'CSDB',      OPEN: 'ARINC 429' },
+  'J1-14': { GND: 'Port A',    OPEN: 'Port B'    },
+};
+
 function setStrapping(pin, value, btn) {
   btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  const statusEl = btn.parentElement.nextElementSibling;
+  if (statusEl && statusEl.classList.contains('strap-status')) {
+    const labels = STRAP_LABELS[pin] || { GND: 'GND', OPEN: 'OPEN' };
+    statusEl.textContent = labels[value] || value;
+  }
 }
 
 
