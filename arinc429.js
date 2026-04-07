@@ -489,7 +489,12 @@ const DECODE_META = {
   // Scale=20480, 12 sig bits (28→17), res=0.05 Degree
   '114': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
 
-  '115': { msb: 180    },  '116': { msb: 64      },  '117': { msb: 2500   },
+  // Scale=±180°, 12 sig bits (28→17), res≈0.044°, PAD 11-16
+  '115': { msb: 90,   spareBits:[11,12,13,14,15,16],    bnrDecimals:2 },
+  // Scale=±128 NM, 11 sig bits (28→18), res=0.0625 NM, PAD 11-17
+  '116': { msb: 64,   spareBits:[11,12,13,14,15,16,17], bnrDecimals:4 },
+  // Scale=±2048 ft, 11 sig bits (28→18), res=1.0 ft, PAD 11-17
+  '117': { msb: 1024, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1 },
   '120': { msb: 512    },  '121': { msb: 90      },  '122': { msb: 90     },
   '123': { msb: 128    },  '126': { msb: 32768   },  '127': { msb: 131072  },
   '130': { msb: 512    },  '131': { msb: 131072  },  '132': { msb: 180    },
