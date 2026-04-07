@@ -410,7 +410,7 @@ const DECODE_META = {
   '065': { decimals: 0, bcdScale: 100 },  // Gross Weight — BCD × 100 = lb
   '066': { decimals: 2 },  // Longitudinal CG (% MAC) — res 0.01%
   '067': { decimals: 2 },  // Lateral CG (% MAC) — res 0.01%
-  '125': { decimals: 1 },  // UTC/GMT (H:min)           – 5 digits, 0.1 H/min res
+  '125': { decimals: 1, utcFmt: true },  // UTC HH:MM.m — d4d3=heures, d2d1.d0=min
   '145': { decimals: 0 },  // TACAN Control (channel)
   '170': { decimals: 0 },  // Decision Height Selected (ft)
   '200': { decimals: 1 },  // Drift Angle (deg)
@@ -737,6 +737,14 @@ function decodeData(word, labelInfo, metaOverride) {
     // Reject invalid BCD digits (>9 means binary garbage)
     if (d3 > 9 || d2 > 9 || d1 > 9 || d0 > 9) return null;
 
+    // UTC HH:MM.m format (label 125)
+    if (meta.utcFmt) {
+      const hh = d4 * 10 + d3;
+      const mm = d2 * 10 + d1;
+      if (hh > 23 || mm > 59 || d0 > 9) return null;
+      return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}.${d0}`;
+    }
+
     const raw = d4 * 10000 + d3 * 1000 + d2 * 100 + d1 * 10 + d0;
     const base = meta.implicit || 0;
     let value = base + raw / Math.pow(10, meta.decimals);
@@ -885,7 +893,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:1, label:'WID',                  cls:'fmap-cat'  },
     ];
   }
-  if (oct === '056') return [
+  if (oct === '056' || oct === '125') return [
     { span:3, label:"10h",    cls:'fmap-bcd' },
     { span:4, label:"1h",     cls:'fmap-bcd' },
     { span:4, label:"10mn",   cls:'fmap-bcd' },
