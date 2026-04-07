@@ -590,7 +590,62 @@ function switchLabelConfig(oct, idx) {
 }
 
 
+// ── BNR exact arithmetic helper ───────────────────────────────────────────────
+// Returns { value: <float>, step: <float> }
+//   value = exact decoded engineering value (full float precision, no rounding)
+//   step  = weight of the lowest significant data bit (= resolution)
+//
+// Bit masking: both spareBits AND discBits are excluded from magnitude so that
+// discrete bits (e.g. bit 11 = Tune Inhibit on labels 173/174) never pollute the BNR sum.
+//
+function computeBNR(word, meta, data19) {
+  // Sign bit
+  let sign;
+  if (meta.ssmSign) {
+    sign = ((word >> 29) & 0x3) === 0b10 ? 1 : 0;
+  } else {
+    sign = (data19 >> 18) & 1;
+  }
+
+  // 18-bit magnitude from bits 28-11; mask out spare AND discrete bits
+  let magnitude = data19 & 0x3FFFF;
+  const excluded = new Set([...(meta.spareBits || []), ...(meta.discBits || [])]);
+  for (const b of excluded) {
+    if (b >= 11 && b <= 28) magnitude &= ~(1 << (b - 11));
+  }
+
+  // Extended SDI: bits 9-10 extend the magnitude to 20 bits
+  if (meta.extendSdi) {
+    const sdiBits = (word >> 8) & 0x3;
+    magnitude = (magnitude << 2) | sdiBits;
+  }
+
+  // Resolution = weight of bit 11 (if it were a data bit) = msb / 2^17
+  const baseRes = meta.extendSdi ? meta.msb / 524288 : meta.msb / 131072;
+
+  // Exact decoded value (two's complement or sign-magnitude)
+  const value = meta.ssmSign
+    ? (sign ? -1 : 1) * magnitude * baseRes
+    : (sign ? -2 * meta.msb : 0) + magnitude * baseRes;
+
+  // Resolution step = weight of the lowest significant (non-excluded) bit
+  let step = baseRes;
+  if (!meta.extendSdi) {
+    for (let b = 11; b <= 28; b++) {
+      if (!excluded.has(b)) {
+        step = Math.pow(2, b - 11) * baseRes;
+        break;
+      }
+    }
+  }
+
+  return { value, step };
+}
+
 // Returns a formatted string, or null if no metadata / invalid data.
+// For BNR labels with msb defined, returns { bnr:true, exact, banner } instead:
+//   exact  = full-precision string for the DATA "Décodage" row
+//   banner = value rounded to nearest resolution step, for the banner display
 function decodeData(word, labelInfo, metaOverride) {
   if (!labelInfo) return null;
   const meta = metaOverride || DECODE_META[labelInfo.oct];
@@ -675,47 +730,24 @@ function decodeData(word, labelInfo, metaOverride) {
     return `"${toChar(c1)}${toChar(c2)}${toChar(c3)}"`;
   }
 
-    // ── BNR (sign-magnitude) ──────────────────────────
+  // ── BNR ──────────────────────────────────────────
   if (labelInfo.enc === 'BNR' && meta.msb !== undefined) {
-    const ssm = (word >> 29) & 0x3;
-    let sign;
-    if (meta.ssmSign) {
-      // SSM 01 = N/E/Right (+), SSM 10 = S/W/Left (-)
-      sign = (ssm === 0b10) ? 1 : 0;
-    } else {
-      // Bit 29 of word = bit 18 of data19 = sign bit
-      sign = (data19 >> 18) & 1;
-    }
-    
-    // Bits 28-11 of word = bits 17-0 of data19 = 18-bit magnitude
-    // Mask out any spareBits (sub-resolution padding) so they don't contribute noise
-    let magnitude = data19 & 0x3FFFF;
-    if (meta.spareBits) {
-      for (const b of meta.spareBits) {
-        if (b >= 11 && b <= 28) magnitude &= ~(1 << (b - 11));
-      }
-    }
+    const { value, step } = computeBNR(word, meta, data19);
 
-    // ──────────────── Extended SDI ───────────────────
-    if (meta.extendSdi) {
-      const sdiBits = (word >> 8) & 0x3;  // bits 9-10
-      magnitude = (magnitude << 2 ) | sdiBits;  // 20 bits
-      // bit 28 maintenant a la position de bit 19, résolution = meta.msb / 2^19
-    }
+    // Decimal places based on resolution step:
+    //   dpBanner = minimum to distinguish consecutive steps (round to nearest step)
+    //   dpExact  = dpBanner + 2 extra digits to show true floating-point value
+    const dpBanner = Math.max(0, Math.ceil(-Math.log10(step)));
+    const dpExact  = dpBanner + 2;
 
-    const resolution = meta.extendSdi ? meta.msb / 524288 : meta.msb / 131072;
-    let value;
-    if (meta.ssmSign) {
-      // SSM indique le signe (+/-) → signe-magnitude
-      value = (sign ? -1 : 1) * magnitude * resolution;
-    } else {
-      // ARINC 429 BNR complément à deux : bit 29 contribue -2×msb (= -scale)
-      value = (sign ? -2 * meta.msb : 0) + magnitude * resolution;
-    }
-    // Choose decimal places — override with bnrDecimals if set
-    const dp = meta.bnrDecimals !== undefined ? meta.bnrDecimals
-             : resolution >= 10 ? 1 : resolution >= 1 ? 2 : resolution >= 0.01 ? 3 : 5;
-    return (value < 0 ? '−' : '') + Math.abs(value).toFixed(dp);
+    // Banner: round to nearest resolution step, then format
+    const rounded = Math.round(value / step) * step;
+    const bannerStr = (rounded < 0 ? '−' : '') + Math.abs(rounded).toFixed(dpBanner);
+
+    // Exact: full-precision value for DATA panel
+    const exactStr  = (value  < 0 ? '−' : '') + Math.abs(value).toFixed(dpExact);
+
+    return { bnr: true, exact: exactStr, banner: bannerStr };
   }
 
   // ── BCD ──────────────────────────────────────────
@@ -1238,6 +1270,10 @@ function renderFields(word) {
   document.getElementById('d-data-dec').textContent = data19;
   document.getElementById('d-data-hex').textContent = '0x' + data19.toString(16).toUpperCase().padStart(5, '0');
   const decoded = decodeData(word, labelInfo, meta);
+  // BNR labels return {bnr:true, exact, banner}; all other labels return a string (or null)
+  const isBnrObj  = decoded !== null && typeof decoded === 'object' && decoded.bnr;
+  const decodedExact  = isBnrObj ? decoded.exact  : decoded;
+  const decodedBanner = isBnrObj ? decoded.banner : decoded;
   let decodedExtra = '';
   if (decoded !== null && labelInfo) {
     if (labelInfo.oct === '033') {
@@ -1252,8 +1288,8 @@ function renderFields(word) {
                    + ' / ' + ['VOR','ILS','MLS','spare'][freq];
     }
   }
-  document.getElementById('d-data-decoded').innerHTML = decoded !== null
-    ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
+  document.getElementById('d-data-decoded').innerHTML = decodedExact !== null
+    ? decodedExact + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
     : '—';
   document.getElementById('d-data-format').textContent = labelInfo ? labelInfo.enc : '—';
 
@@ -1323,24 +1359,24 @@ function renderFields(word) {
   }
   const bannerEl = document.getElementById('banner-value');
   if (labelInfo && (labelInfo.oct === '010' || labelInfo.oct === '011' ||
-                    labelInfo.oct === '041' || labelInfo.oct === '042') && decoded !== null) {
+                    labelInfo.oct === '041' || labelInfo.oct === '042') && decodedBanner !== null) {
     const isLat = labelInfo.oct === '010' || labelInfo.oct === '041';
     const dir = isLat
       ? (ssm === 0b00 ? 'N' : ssm === 0b11 ? 'S' : null)
       : (ssm === 0b00 ? 'E' : ssm === 0b11 ? 'W' : null);
     bannerEl.innerHTML = dir
-      ? `<span style="color:#4fc3f7;font-weight:bold">${dir}</span> ${decoded}`
-      : decoded;
-  } else if (labelInfo && ['001', '020'].includes(labelInfo.oct) && decoded !== null) {
+      ? `<span style="color:#4fc3f7;font-weight:bold">${dir}</span> ${decodedBanner}`
+      : decodedBanner;
+  } else if (labelInfo && ['001', '020'].includes(labelInfo.oct) && decodedBanner !== null) {
     const sign = ssm === 0b00 ? '+' : ssm === 0b11 ? '−' : null;
     const signColor = ssm === 0b00 ? '#80cc80' : '#ff6b6b';
     const unit = labelInfo.unit ? ' ' + labelInfo.unit : '';
     bannerEl.innerHTML = sign
-      ? `<span style="color:${signColor};font-weight:bold">${sign}</span> ${decoded}${unit}`
-      : decoded + unit;
+      ? `<span style="color:${signColor};font-weight:bold">${sign}</span> ${decodedBanner}${unit}`
+      : decodedBanner + unit;
   } else {
-    bannerEl.textContent = decoded !== null
-      ? decoded + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
+    bannerEl.textContent = decodedBanner !== null
+      ? decodedBanner + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '')
       : '—';
   }
 
