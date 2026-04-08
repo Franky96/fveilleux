@@ -904,10 +904,10 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:4, label:'1MHz',    cls:'fmap-freq' },
       { span:4, label:'0.1MHz',  cls:'fmap-freq' },
       { span:1, label:'0.05',    cls:'fmap-freq' },
-      { span:1, label:'IDO',     cls:'fmap-cat'  },
-      { span:1, label:'IDD',     cls:'fmap-cat'  },
-      { span:2, label: freqStr,  cls:'fmap-cat'  },
-      { span:3, label: dmeStr,   cls:'fmap-cat'  },
+      { span:1, label:'IDO',     cls:'fmap-freq' },
+      { span:1, label:'IDD',     cls:'fmap-freq' },
+      { span:2, label: freqStr,  cls:'fmap-freq' },
+      { span:3, label: dmeStr,   cls:'fmap-freq' },
     ];
   }
   if (oct === '036') return [
@@ -1169,10 +1169,12 @@ function renderBits(word) {
 
   // For labels 010/011/041/042, bits 9-10 carry data (dMin), not SDI
   // For label 037, bits 9-11 carry mode/ident data — show as green data bits
+  // For label 035, bits 11-18 are freq/mode control — show as green data bits
   const dataBits = new Set();
   if (labelOct === '010' || labelOct === '011' ||
       labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
   if (labelOct === '037') { dataBits.add(9); dataBits.add(10); dataBits.add(11); }
+  if (labelOct === '035') { [11,12,13,14,15,16,17,18].forEach(b => dataBits.add(b)); }
   // ACMS labels — no SDI, bits 9-10 are part of char #1
   // For label 111, bits 9-10 are part of the 20-bit BNR data field, not SDI
   if (labelOct === '061' || labelOct === '062' || labelOct === '063' || labelOct === '111') {
@@ -1190,7 +1192,6 @@ function renderBits(word) {
     '032': [11,12],
     '033': [11,12],
     '034': [14],
-    '035': [11,12,13,14,15,16,17,18],
     '037': [9,10,11],
     '173': [11],
     '174': [11],
