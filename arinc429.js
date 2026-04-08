@@ -735,10 +735,11 @@ function decodeData(word, labelInfo, metaOverride) {
     const { value, step } = computeBNR(word, meta, data19);
 
     // Decimal places based on resolution step:
-    //   dpBanner = minimum to distinguish consecutive steps (round to nearest step)
-    //   dpExact  = dpBanner + 2 extra digits to show true floating-point value
-    const dpBanner = Math.max(0, Math.ceil(-Math.log10(step)));
-    const dpExact  = dpBanner + 2;
+    //   dpBanner: uses step*1.5 so a step just above a power of 10
+    //             (e.g. 0.0000977 > 0.0001) doesn't bump to an extra digit.
+    //   dpExact:  dpBanner+6 to show the true bit-weight value; 0 for integer res.
+    const dpBanner = Math.max(0, Math.ceil(-Math.log10(step * 1.5)));
+    const dpExact  = dpBanner === 0 ? 0 : dpBanner + 6;
 
     // Banner: round to nearest resolution step, then format
     const rounded = Math.round(value / step) * step;
