@@ -741,9 +741,14 @@ function decodeData(word, labelInfo, metaOverride) {
     const dpBanner = Math.max(0, Math.ceil(-Math.log10(step * 1.5)));
     const dpExact  = dpBanner === 0 ? 0 : dpBanner + 6;
 
-    // Banner: round to nearest resolution step, then format
-    const rounded = Math.round(value / step) * step;
-    const bannerStr = (rounded < 0 ? '−' : '') + Math.abs(rounded).toFixed(dpBanner);
+    // Banner: round to nearest NOMINAL step.
+    // The nominal step = exact step rounded to dpBanner decimal places.
+    // e.g. step=0.000195312500, dpBanner=4 → nominalStep=0.0002
+    //      so 0.471875 rounds to nearest 0.0002 = 0.4718 (not 0.4719).
+    const factor      = Math.pow(10, dpBanner);
+    const nominalStep = Math.max(Math.round(step * factor) / factor, 1 / factor);
+    const rounded     = Math.round(value / nominalStep) * nominalStep;
+    const bannerStr   = (rounded < 0 ? '−' : '') + Math.abs(rounded).toFixed(dpBanner);
 
     // Exact: full-precision value for DATA panel
     const exactStr  = (value  < 0 ? '−' : '') + Math.abs(value).toFixed(dpExact);
