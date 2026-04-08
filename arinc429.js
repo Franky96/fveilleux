@@ -1175,6 +1175,7 @@ function renderBits(word) {
       labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
   if (labelOct === '037') { dataBits.add(9); dataBits.add(10); dataBits.add(11); }
   if (labelOct === '035') { dataBits.add(18); }  // bit 18 = 0.05 MHz halfBit (data, not discrete)
+  if (labelOct === '060') { [11,12,13].forEach(b => dataBits.add(b)); }  // bits 11-13 = P/N reserved fields
   // ACMS labels — no SDI, bits 9-10 are part of char #1
   // For label 111, bits 9-10 are part of the 20-bit BNR data field, not SDI
   if (labelOct === '061' || labelOct === '062' || labelOct === '063' || labelOct === '111') {
