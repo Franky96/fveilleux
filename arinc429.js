@@ -735,10 +735,18 @@ function decodeData(word, labelInfo, metaOverride) {
     const { value, step } = computeBNR(word, meta, data19);
 
     // Decimal places based on resolution step:
-    //   dpBanner: uses step*1.5 so a step just above a power of 10
-    //             (e.g. 0.0000977 > 0.0001) doesn't bump to an extra digit.
+    //   dpBanner: initial estimate via step*1.5 heuristic, then refined so the
+    //             nominal step (step rounded to dpBanner dp) is within 10% of the
+    //             true step. Handles cases like step=0.25 where 1dp gives 0.3 (20% off)
+    //             → bumped to 2dp so nominalStep=0.25 (0% off).
     //   dpExact:  dpBanner+6 to show the true bit-weight value; 0 for integer res.
-    const dpBanner = Math.max(0, Math.ceil(-Math.log10(step * 1.5)));
+    let dpBanner = Math.max(0, Math.ceil(-Math.log10(step * 1.5)));
+    for (let i = 0; i < 6; i++) {
+      const f  = Math.pow(10, dpBanner);
+      const ns = Math.max(Math.round(step * f) / f, 1 / f);
+      if (Math.abs(ns - step) / step <= 0.1) break;
+      dpBanner++;
+    }
     const dpExact  = dpBanner === 0 ? 0 : dpBanner + 6;
 
     // Banner: round to nearest NOMINAL step.
