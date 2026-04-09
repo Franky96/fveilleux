@@ -466,9 +466,9 @@ const DECODE_META = {
   '076': { msb: 81.92, spareBits:[11,12,13,14], bnrDecimals:2 },
   // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
   '077': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  // Scale=±180, 12 sig bits (28→17), res=0.05 degree
-  '100': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},
-  '101': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},  
+  // Scale=±204.8°, 12 sig bits (28→17), res=0.05°
+  '100': { msb: 102.4, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
+  '101': { msb: 102.4, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
   // Scale=65536, 16 sig bits (28→13), res=1 feet
   '102': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
   // Scale=512, 11 sig bits (28→18), res=0.25 knots
