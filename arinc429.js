@@ -481,8 +481,8 @@ const DECODE_META = {
   '106': { msb: 2048, spareBits:[11,12,13,14,15,16], bnrDecimals:0},
   // Scale=65536, 16 sig bits (28→13), res=1 Mach
   '107': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
-  // Scale=±180, 12 sig bits (28→17), res=0.05 degree
-  '110': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:3},
+  // Scale=±180°, 12 sig bits (28→17), step≈0.044°, display res=0.05°
+  '110': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
   // Scale=±180, 20 sig bits (28→9), res=0.000172 degree
   '111': { msb: 90, extendSdi: true, bnrDecimals:6},  
   // Scale=20480, 11 sig bits (28→18), res=10 feet
