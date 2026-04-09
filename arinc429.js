@@ -466,9 +466,9 @@ const DECODE_META = {
   '076': { msb: 81.92, spareBits:[11,12,13,14], bnrDecimals:2 },
   // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
   '077': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  // Scale=±204.8°, 12 sig bits (28→17), res=0.05°
-  '100': { msb: 102.4, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
-  '101': { msb: 102.4, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
+  // Scale=±180°, 12 sig bits (28→17), step≈0.044°, display res=0.05°
+  '100': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
+  '101': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
   // Scale=65536, 16 sig bits (28→13), res=1 feet
   '102': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
   // Scale=512, 11 sig bits (28→18), res=0.25 knots
@@ -734,27 +734,28 @@ function decodeData(word, labelInfo, metaOverride) {
   if (labelInfo.enc === 'BNR' && meta.msb !== undefined) {
     const { value, step } = computeBNR(word, meta, data19);
 
-    // Decimal places based on resolution step:
-    //   dpBanner: initial estimate via step*1.5 heuristic, then refined so the
-    //             nominal step (step rounded to dpBanner dp) is within 10% of the
-    //             true step. Handles cases like step=0.25 where 1dp gives 0.3 (20% off)
-    //             → bumped to 2dp so nominalStep=0.25 (0% off).
-    //   dpExact:  dpBanner+6 to show the true bit-weight value; 0 for integer res.
-    let dpBanner = Math.max(0, Math.ceil(-Math.log10(step * 1.5)));
-    for (let i = 0; i < 6; i++) {
-      const f  = Math.pow(10, dpBanner);
-      const ns = Math.max(Math.round(step * f) / f, 1 / f);
-      if (Math.abs(ns - step) / step <= 0.1) break;
-      dpBanner++;
+    // dpBanner / nominalStep:
+    //   If meta.bnrDecimals is set, use it directly as dpBanner and compute
+    //   nominalStep with ceil — rounds the true step UP to the nearest clean
+    //   value at that precision (e.g. step=0.04395 + bnrDecimals=2 → 0.05).
+    //   Otherwise auto-compute via step*1.5 heuristic + refinement loop.
+    let dpBanner, nominalStep;
+    if (meta.bnrDecimals !== undefined) {
+      dpBanner    = meta.bnrDecimals;
+      const f     = Math.pow(10, dpBanner);
+      nominalStep = Math.max(Math.ceil(step * f) / f, 1 / f);
+    } else {
+      dpBanner = Math.max(0, Math.ceil(-Math.log10(step * 1.5)));
+      for (let i = 0; i < 6; i++) {
+        const f  = Math.pow(10, dpBanner);
+        const ns = Math.max(Math.round(step * f) / f, 1 / f);
+        if (Math.abs(ns - step) / step <= 0.1) break;
+        dpBanner++;
+      }
+      const factor = Math.pow(10, dpBanner);
+      nominalStep  = Math.max(Math.round(step * factor) / factor, 1 / factor);
     }
-    const dpExact  = dpBanner === 0 ? 0 : dpBanner + 6;
-
-    // Banner: round to nearest NOMINAL step.
-    // The nominal step = exact step rounded to dpBanner decimal places.
-    // e.g. step=0.000195312500, dpBanner=4 → nominalStep=0.0002
-    //      so 0.471875 rounds to nearest 0.0002 = 0.4718 (not 0.4719).
-    const factor      = Math.pow(10, dpBanner);
-    const nominalStep = Math.max(Math.round(step * factor) / factor, 1 / factor);
+    const dpExact = dpBanner === 0 ? 0 : dpBanner + 6;
     const rounded     = Math.round(value / nominalStep) * nominalStep;
     const bannerStr   = (rounded < 0 ? '−' : '') + Math.abs(rounded).toFixed(dpBanner);
 
