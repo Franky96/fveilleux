@@ -477,8 +477,8 @@ const DECODE_META = {
   '104': { msb: 8192, spareBits:[11,12,13,14,15,16,17,18], bnrDecimals:0},  
   // Scale=±180, 11 sig bits (28→18), res=0.1 Degree
   '105': { msb: 90, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1},
-  // Scale=±2.048 Mach, 12 sig bits (28→17), res=0.0005 Mach, PAD bits 11-16
-  '106': { msb: 1.024, spareBits:[11,12,13,14,15,16], bnrDecimals:4},
+  // Scale=±4096 Mach, 12 sig bits (28→17), res=1 Mach, PAD bits 11-16
+  '106': { msb: 2048, spareBits:[11,12,13,14,15,16], bnrDecimals:0},
   // Scale=65536, 16 sig bits (28→13), res=1 Mach
   '107': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
   // Scale=±180, 12 sig bits (28→17), res=0.05 degree
