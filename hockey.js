@@ -28,6 +28,31 @@ function completeStep(stepEl, success = true) {
   stepEl.classList.add(success ? 'step-done' : 'step-fail');
 }
 
+async function fetchWithCountdown(stepEl, fetchFn, timeoutMs = 5000) {
+  const textSpan = stepEl.querySelector('span:last-child');
+  const baseText = textSpan.textContent;
+  let remaining = Math.ceil(timeoutMs / 1000);
+  textSpan.textContent = `${baseText} ${remaining}s`;
+  const timer = setInterval(() => {
+    remaining = Math.max(0, remaining - 1);
+    textSpan.textContent = `${baseText} ${remaining}s`;
+  }, 1000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const result = await fetchFn(controller.signal);
+    clearTimeout(timeoutId);
+    clearInterval(timer);
+    textSpan.textContent = baseText;
+    return result;
+  } catch (e) {
+    clearTimeout(timeoutId);
+    clearInterval(timer);
+    textSpan.textContent = baseText;
+    throw e;
+  }
+}
+
 // === RECHERCHE RAPIDE EN DIRECT ===
 let timeoutRecherche = null;
 const cacheRecherche = {};
@@ -72,16 +97,22 @@ if (inputJoueur) {
 
         let data = null;
         const proxies = [
-          { label: 'NHL API (direct)',     req: () => fetch(url) },
-          { label: 'Proxy allorigins',     req: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`) },
-          { label: 'Proxy cors.lol',       req: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`) },
-          { label: 'Proxy corsproxy.io',   req: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`) }
+          { label: 'NHL API (direct)',    req: s => fetch(url, { signal: s }) },
+          { label: 'allorigins',          req: s => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, { signal: s }) },
+          { label: 'cors.lol',            req: s => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`, { signal: s }) },
+          { label: 'corsproxy.io',        req: s => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, { signal: s }) },
+          { label: 'corsproxy.org',       req: s => fetch(`https://corsproxy.org/?${encodeURIComponent(url)}`, { signal: s }) },
+          { label: 'codetabs',            req: s => fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: s }) },
+          { label: 'cors.eu.org',         req: s => fetch(`https://cors.eu.org/${url}`, { signal: s }) },
+          { label: 'cors.sh',             req: s => fetch(`https://proxy.cors.sh/${url}`, { signal: s }) },
+          { label: 'allorigins /get',     req: s => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: s }) },
+          { label: 'thingproxy',          req: s => fetch(`https://thingproxy.freeboard.io/fetch/${url}`, { signal: s }) },
         ];
 
         for (const { label, req } of proxies) {
             const stepEl = addLoadingStep(label + '...');
             try {
-                let res = await req();
+                let res = await fetchWithCountdown(stepEl, req);
                 if (res.ok) {
                     let json = await res.json();
                     if (json && json.contents) json = JSON.parse(json.contents);
@@ -180,16 +211,22 @@ async function afficherFiche(playerId, nomComplet) {
     const url = `https://api-web.nhle.com/v1/player/${playerId}/landing`;
     let data = null;
     const proxies = [
-      { label: 'NHL API (direct)',     req: () => fetch(url) },
-      { label: 'Proxy allorigins',     req: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`) },
-      { label: 'Proxy cors.lol',       req: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`) },
-      { label: 'Proxy corsproxy.io',   req: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`) }
+      { label: 'NHL API (direct)',    req: s => fetch(url, { signal: s }) },
+      { label: 'allorigins',          req: s => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, { signal: s }) },
+      { label: 'cors.lol',            req: s => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`, { signal: s }) },
+      { label: 'corsproxy.io',        req: s => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, { signal: s }) },
+      { label: 'corsproxy.org',       req: s => fetch(`https://corsproxy.org/?${encodeURIComponent(url)}`, { signal: s }) },
+      { label: 'codetabs',            req: s => fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: s }) },
+      { label: 'cors.eu.org',         req: s => fetch(`https://cors.eu.org/${url}`, { signal: s }) },
+      { label: 'cors.sh',             req: s => fetch(`https://proxy.cors.sh/${url}`, { signal: s }) },
+      { label: 'allorigins /get',     req: s => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: s }) },
+      { label: 'thingproxy',          req: s => fetch(`https://thingproxy.freeboard.io/fetch/${url}`, { signal: s }) },
     ];
 
     for (const { label, req } of proxies) {
-      const stepEl = addLoadingStep("Profil NHL — " + label + "...");
+      const stepEl = addLoadingStep(label + '...');
       try {
-        let res = await req();
+        let res = await fetchWithCountdown(stepEl, req);
         if (res.ok) {
           let text = await res.text();
           let json = JSON.parse(text);
@@ -315,7 +352,13 @@ const PROXIES_CONTRATS = [
   u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
   u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.org/?${encodeURIComponent(u)}`
+  u => `https://corsproxy.org/?${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://cors.eu.org/${u}`,
+  u => `https://proxy.cors.sh/${u}`,
+  u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+  u => `https://thingproxy.freeboard.io/fetch/${u}`,
+  u => `https://yacdn.org/proxy/${u}`,
 ];
 
 async function chercherContrats(ppUrl, cwUrl) {
@@ -330,7 +373,7 @@ async function chercherContrats(ppUrl, cwUrl) {
   
   for (let i = 0; i < PROXIES_CONTRATS.length; i++) {
     try {
-      const res = await fetch(PROXIES_CONTRATS[i](cwUrl), { signal: AbortSignal.timeout(6000) });
+      const res = await fetch(PROXIES_CONTRATS[i](cwUrl), { signal: AbortSignal.timeout(5000) });
       if (res.ok) {
         let text = await res.text();
         if (text.includes('"contents"')) { try { const j = JSON.parse(text); text = j.contents || text; } catch(e){} }
@@ -345,7 +388,7 @@ async function chercherContrats(ppUrl, cwUrl) {
   if (contrats.length === 0) {
     for (let i = 0; i < PROXIES_CONTRATS.length; i++) {
       try {
-        const res = await fetch(PROXIES_CONTRATS[i](ppUrl), { signal: AbortSignal.timeout(6000) });
+        const res = await fetch(PROXIES_CONTRATS[i](ppUrl), { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
           let text = await res.text();
           if (text.includes('"contents"')) { try { const j = JSON.parse(text); text = j.contents || text; } catch(e){} }
