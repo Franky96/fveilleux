@@ -1732,6 +1732,53 @@ header .subtitle {
   font-style: italic;
 }
 
+.loading-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  min-width: 270px;
+  text-align: left;
+}
+
+.loading-step {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.8rem;
+  color: #a89f94;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.loading-step.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.loading-step .step-icon {
+  font-size: 0.75rem;
+  min-width: 1em;
+  color: #60b8c8;
+}
+
+.loading-step.step-done {
+  color: #80cc80;
+}
+
+.loading-step.step-done .step-icon {
+  color: #80cc80;
+}
+
+.loading-step.step-fail {
+  color: #cc6060;
+}
+
+.loading-step.step-fail .step-icon {
+  color: #cc6060;
+}
+
 /* === FILMS & SÉRIES === */
 
 .films-stats {
