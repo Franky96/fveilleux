@@ -1793,6 +1793,42 @@ header .subtitle {
   color: #cc6060;
 }
 
+/* === ÉTAPES PAR SECTION === */
+.section-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.3rem 0 0.6rem;
+}
+
+.section-step {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: #a89f94;
+  opacity: 0;
+  transform: translateX(-5px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.section-step.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.section-step .step-icon {
+  font-size: 0.68rem;
+  min-width: 1em;
+  text-align: center;
+  color: #60b8c8;
+}
+
+.section-step.step-done { color: #80cc80; }
+.section-step.step-done .step-icon { color: #80cc80; }
+.section-step.step-fail { color: #cc6060; }
+.section-step.step-fail .step-icon { color: #cc6060; }
+
 /* === JOURNAL DES MATCHS === */
 .gamelog-table { width: 100%; }
 

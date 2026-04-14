@@ -53,6 +53,22 @@ async function fetchWithCountdown(stepEl, fetchFn, timeoutMs = 5000) {
   }
 }
 
+function addSectionStep(container, text) {
+  if (!container) return null;
+  const div = document.createElement('div');
+  div.className = 'section-step';
+  div.innerHTML = `<span class="step-icon">⟳</span><span>${text}</span>`;
+  container.appendChild(div);
+  requestAnimationFrame(() => div.classList.add('visible'));
+  return div;
+}
+
+function completeSectionStep(stepEl, success = true) {
+  if (!stepEl) return;
+  stepEl.querySelector('.step-icon').textContent = success ? '✓' : '✗';
+  stepEl.classList.add(success ? 'step-done' : 'step-fail');
+}
+
 // === HELPERS API ===
 function saisonActuelle() {
   const d = new Date();
@@ -78,6 +94,34 @@ async function fetchViaProxies(url) {
         return json;
       }
     } catch (e) {}
+  }
+  return null;
+}
+
+async function fetchViaProxiesWithSteps(url, stepsEl) {
+  if (stepsEl) stepsEl.innerHTML = '';
+  const proxies = [
+    { label: 'NHL direct',    fn: s => fetch(url, { signal: s }) },
+    { label: 'allorigins',    fn: s => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, { signal: s }) },
+    { label: 'cors.lol',      fn: s => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`, { signal: s }) },
+    { label: 'corsproxy.io',  fn: s => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`, { signal: s }) },
+    { label: 'corsproxy.org', fn: s => fetch(`https://corsproxy.org/?${encodeURIComponent(url)}`, { signal: s }) },
+    { label: 'codetabs',      fn: s => fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, { signal: s }) },
+  ];
+  for (const { label, fn } of proxies) {
+    const stepEl = addSectionStep(stepsEl, label + '...');
+    try {
+      const res = await fetchWithCountdown(stepEl, fn);
+      if (res.ok) {
+        let json = await res.json();
+        if (json?.contents) json = JSON.parse(json.contents);
+        completeSectionStep(stepEl, true);
+        return json;
+      }
+      completeSectionStep(stepEl, false);
+    } catch (e) {
+      completeSectionStep(stepEl, false);
+    }
   }
   return null;
 }
@@ -384,12 +428,13 @@ async function chargerGameLog(playerId, estGardien) {
   const container = document.getElementById('gamelog-container');
   const status    = document.getElementById('gamelog-status');
   const loading   = document.getElementById('gamelog-loading');
+  const stepsEl   = document.getElementById('gamelog-steps');
   if (!container) return;
   container.innerHTML = '';
   if (status) status.textContent = '';
   if (loading) loading.style.display = 'flex';
 
-  const data = await fetchViaProxies(`https://api-web.nhle.com/v1/player/${playerId}/game-log/now`);
+  const data = await fetchViaProxiesWithSteps(`https://api-web.nhle.com/v1/player/${playerId}/game-log/now`, stepsEl);
   if (loading) loading.style.display = 'none';
 
   const games = data?.gameLog || [];
@@ -451,13 +496,14 @@ async function chargerEdge(playerId, estGardien, saison) {
   const container = document.getElementById('edge-container');
   const status    = document.getElementById('edge-status');
   const loading   = document.getElementById('edge-loading');
+  const stepsEl   = document.getElementById('edge-steps');
   if (!container) return;
   container.innerHTML = '';
   if (status) status.textContent = '';
   if (loading) loading.style.display = 'flex';
 
   const type = estGardien ? 'goalie' : 'skater';
-  const data = await fetchViaProxies(`https://api-web.nhle.com/v1/edge/${type}-detail/${playerId}/${saison}/2`);
+  const data = await fetchViaProxiesWithSteps(`https://api-web.nhle.com/v1/edge/${type}-detail/${playerId}/${saison}/2`, stepsEl);
   if (loading) loading.style.display = 'none';
 
   const d = data?.data?.[0] || data?.[0] || null;
@@ -501,57 +547,95 @@ async function chargerEdge(playerId, estGardien, saison) {
 
 // === EXTRACTEUR DE CONTRATS MULTI-SOURCES (CAPWAGES + PUCKPEDIA) ===
 const PROXIES_CONTRATS = [
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.org/?${encodeURIComponent(u)}`,
-  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u => `https://cors.eu.org/${u}`,
-  u => `https://proxy.cors.sh/${u}`,
-  u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-  u => `https://thingproxy.freeboard.io/fetch/${u}`,
-  u => `https://yacdn.org/proxy/${u}`,
+  { label: 'allorigins',    fn: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}` },
+  { label: 'cors.lol',      fn: u => `https://api.cors.lol/?url=${encodeURIComponent(u)}` },
+  { label: 'corsproxy.io',  fn: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}` },
+  { label: 'corsproxy.org', fn: u => `https://corsproxy.org/?${encodeURIComponent(u)}` },
+  { label: 'codetabs',      fn: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}` },
+  { label: 'cors.eu.org',   fn: u => `https://cors.eu.org/${u}` },
+  { label: 'cors.sh',       fn: u => `https://proxy.cors.sh/${u}` },
+  { label: 'allorigins/get',fn: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}` },
+  { label: 'thingproxy',    fn: u => `https://thingproxy.freeboard.io/fetch/${u}` },
+  { label: 'yacdn',         fn: u => `https://yacdn.org/proxy/${u}` },
 ];
 
 async function chercherContrats(ppUrl, cwUrl) {
   const container = document.getElementById('contrats-historique');
   const status    = document.getElementById('contrat-status');
   const loading   = document.getElementById('contrat-loading');
+  const stepsEl   = document.getElementById('contrat-steps');
   if (!container) return;
 
   container.innerHTML = '';
   if (status)  status.textContent = '';
   if (loading) loading.style.display = 'flex';
+  if (stepsEl) stepsEl.innerHTML = '';
 
   let contrats = [];
 
-  for (const proxyFn of PROXIES_CONTRATS) {
+  // Tenter CapWages
+  for (const { label, fn } of PROXIES_CONTRATS) {
+    const stepEl = addSectionStep(stepsEl, `CW — ${label}...`);
     try {
-      const res = await fetch(proxyFn(cwUrl), { signal: AbortSignal.timeout(5000) });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const textSpan = stepEl?.querySelector('span:last-child');
+      const baseText = textSpan?.textContent || '';
+      let remaining = 5;
+      if (textSpan) textSpan.textContent = `${baseText} ${remaining}s`;
+      const timer = setInterval(() => {
+        remaining = Math.max(0, remaining - 1);
+        if (textSpan) textSpan.textContent = `${baseText} ${remaining}s`;
+      }, 1000);
+      const res = await fetch(fn(cwUrl), { signal: controller.signal });
+      clearTimeout(timeoutId);
+      clearInterval(timer);
+      if (textSpan) textSpan.textContent = baseText;
       if (res.ok) {
         let text = await res.text();
         if (text.includes('"contents"')) { try { const j = JSON.parse(text); text = j.contents || text; } catch(e){} }
         if (!text.includes('Just a moment...') && !text.includes('Cloudflare') && !text.includes('DDoS protection')) {
           contrats = extraireContrats(text);
-          if (contrats.length > 0) break;
+          if (contrats.length > 0) { completeSectionStep(stepEl, true); break; }
         }
       }
-    } catch (e) {}
+      completeSectionStep(stepEl, false);
+    } catch (e) {
+      completeSectionStep(stepEl, false);
+    }
   }
 
+  // Si CapWages échoue, tenter PuckPedia
   if (contrats.length === 0) {
-    for (const proxyFn of PROXIES_CONTRATS) {
+    for (const { label, fn } of PROXIES_CONTRATS) {
+      const stepEl = addSectionStep(stepsEl, `PP — ${label}...`);
       try {
-        const res = await fetch(proxyFn(ppUrl), { signal: AbortSignal.timeout(5000) });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const textSpan = stepEl?.querySelector('span:last-child');
+        const baseText = textSpan?.textContent || '';
+        let remaining = 5;
+        if (textSpan) textSpan.textContent = `${baseText} ${remaining}s`;
+        const timer = setInterval(() => {
+          remaining = Math.max(0, remaining - 1);
+          if (textSpan) textSpan.textContent = `${baseText} ${remaining}s`;
+        }, 1000);
+        const res = await fetch(fn(ppUrl), { signal: controller.signal });
+        clearTimeout(timeoutId);
+        clearInterval(timer);
+        if (textSpan) textSpan.textContent = baseText;
         if (res.ok) {
           let text = await res.text();
           if (text.includes('"contents"')) { try { const j = JSON.parse(text); text = j.contents || text; } catch(e){} }
           if (!text.includes('Just a moment...') && !text.includes('Cloudflare') && !text.includes('DDoS protection')) {
             contrats = extraireContrats(text);
-            if (contrats.length > 0) break;
+            if (contrats.length > 0) { completeSectionStep(stepEl, true); break; }
           }
         }
-      } catch (e) {}
+        completeSectionStep(stepEl, false);
+      } catch (e) {
+        completeSectionStep(stepEl, false);
+      }
     }
   }
 
