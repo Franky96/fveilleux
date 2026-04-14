@@ -5,6 +5,29 @@ if (!sessionStorage.getItem('loggedIn') || !permissions.includes('hockey')) {
   window.location.href = 'dashboard.html';
 }
 
+// === ÉTAPES DE CHARGEMENT ===
+function clearLoadingSteps() {
+  const steps = document.getElementById('loading-steps');
+  if (steps) steps.innerHTML = '';
+}
+
+function addLoadingStep(text) {
+  const steps = document.getElementById('loading-steps');
+  if (!steps) return null;
+  const div = document.createElement('div');
+  div.className = 'loading-step';
+  div.innerHTML = `<span class="step-icon">⟳</span><span>${text}</span>`;
+  steps.appendChild(div);
+  requestAnimationFrame(() => div.classList.add('visible'));
+  return div;
+}
+
+function completeStep(stepEl, success = true) {
+  if (!stepEl) return;
+  stepEl.querySelector('.step-icon').textContent = success ? '✓' : '✗';
+  stepEl.classList.add(success ? 'step-done' : 'step-fail');
+}
+
 // === RECHERCHE RAPIDE EN DIRECT ===
 let timeoutRecherche = null;
 const cacheRecherche = {};
@@ -38,24 +61,25 @@ if (inputJoueur) {
       }
 
       if(erreur) erreur.textContent = '';
-      // On affiche le spinner d'animation !
       if(spinner) {
-          spinnerMsg.textContent = "Recherche des joueurs dans la base de données...";
+          clearLoadingSteps();
+          spinnerMsg.textContent = "Recherche en cours...";
           spinner.classList.remove('hidden');
       }
 
       try {
         const url = `https://search.d3.nhle.com/api/v1/search/player?culture=en-us&limit=20&q=${encodeURIComponent(nom)}`;
-        
+
         let data = null;
         const proxies = [
-          () => fetch(url),
-          () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
-          () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`),
-          () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`)
+          { label: 'NHL API (direct)',     req: () => fetch(url) },
+          { label: 'Proxy allorigins',     req: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`) },
+          { label: 'Proxy cors.lol',       req: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`) },
+          { label: 'Proxy corsproxy.io',   req: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`) }
         ];
 
-        for (const req of proxies) {
+        for (const { label, req } of proxies) {
+            const stepEl = addLoadingStep(label + '...');
             try {
                 let res = await req();
                 if (res.ok) {
@@ -63,13 +87,14 @@ if (inputJoueur) {
                     if (json && json.contents) json = JSON.parse(json.contents);
                     if (json && (json.players || Array.isArray(json))) {
                         data = json;
+                        completeStep(stepEl, true);
                         break;
                     }
                 }
-            } catch(e) {}
+                completeStep(stepEl, false);
+            } catch(e) { completeStep(stepEl, false); }
         }
 
-        // On cache le spinner une fois la recherche terminée
         if(spinner) spinner.classList.add('hidden');
 
         if (!data) throw new Error('API introuvable');
@@ -144,10 +169,10 @@ async function afficherFiche(playerId, nomComplet) {
   
   fiche.classList.add('hidden');
   if(erreur) erreur.textContent = '';
-  
-  // On affiche le spinner pour le chargement de la fiche !
+
   if(spinner) {
-      spinnerMsg.textContent = "Chargement des statistiques de " + nomComplet + "...";
+      clearLoadingSteps();
+      spinnerMsg.textContent = "Chargement de " + nomComplet + "...";
       spinner.classList.remove('hidden');
   }
 
@@ -155,13 +180,14 @@ async function afficherFiche(playerId, nomComplet) {
     const url = `https://api-web.nhle.com/v1/player/${playerId}/landing`;
     let data = null;
     const proxies = [
-      () => fetch(url),
-      () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`),
-      () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`),
-      () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`)
+      { label: 'NHL API (direct)',     req: () => fetch(url) },
+      { label: 'Proxy allorigins',     req: () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`) },
+      { label: 'Proxy cors.lol',       req: () => fetch(`https://api.cors.lol/?url=${encodeURIComponent(url)}`) },
+      { label: 'Proxy corsproxy.io',   req: () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`) }
     ];
 
-    for (const req of proxies) {
+    for (const { label, req } of proxies) {
+      const stepEl = addLoadingStep("Profil NHL — " + label + "...");
       try {
         let res = await req();
         if (res.ok) {
@@ -170,16 +196,18 @@ async function afficherFiche(playerId, nomComplet) {
           if (json && json.contents) json = JSON.parse(json.contents);
           if (json && (json.firstName || json.lastName)) {
             data = json;
-            break; 
+            completeStep(stepEl, true);
+            break;
           }
         }
-      } catch(e) { } 
+        completeStep(stepEl, false);
+      } catch(e) { completeStep(stepEl, false); }
     }
 
-    // Le chargement est fini, on cache le spinner
+    const stepStats = addLoadingStep("Traitement des statistiques...");
     if(spinner) spinner.classList.add('hidden');
 
-    if (!data) throw new Error("Statistiques inaccessibles.");
+    if (!data) { completeStep(stepStats, false); throw new Error("Statistiques inaccessibles."); }
     
     fiche.classList.remove('hidden');
 
@@ -272,6 +300,7 @@ async function afficherFiche(playerId, nomComplet) {
         carriereContainer.innerHTML = genererCases(data.featuredStats?.regularSeason?.career);
     }
 
+    completeStep(stepStats, true);
     chercherContrats(ppUrl, cwUrl);
 
   } catch (e) {
