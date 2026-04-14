@@ -644,10 +644,10 @@ async function chercherContrats(ppUrl, cwUrl) {
   if (contrats.length > 0) {
     const c = contrats[0];
     const fields = [
-      { l: 'CAP HIT', v: c.capHit },
-      { l: 'AAV',     v: c.aav    },
-      { l: 'DURÉE',   v: c.length },
-      { l: 'EXPIR.',  v: c.expiry },
+      { l: 'CAP HIT', v: c.capHit    },
+      { l: 'AAV',     v: c.aav       },
+      { l: 'DÉBUT',   v: c.startYear },
+      { l: 'FIN',     v: c.endYear   },
     ];
     container.style.display = 'grid';
     container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(70px, 1fr))';
@@ -675,33 +675,80 @@ async function chercherContrats(ppUrl, cwUrl) {
 
 function extraireContrats(htmlText) {
   const contratsData = [];
-  const textWithoutTags = htmlText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const text = htmlText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
-  const regexCapHit = /Cap Hit\s*[:]?\s*(\$[0-9,.]+[MK]?)/gi;
-  const regexLength = /(?:Length|Term)\s*[:]?\s*([0-9]+\s*Years?)/gi;
-  const regexExpiry = /Expiry\s*[:]?\s*([0-9]{4}(?:\s*(?:UFA|RFA))?)/gi;
-  const regexAAV = /AAV\s*[:]?\s*(\$[0-9,.]+[MK]?)/gi;
+  const regexCapHit  = /Cap Hit\s*[:]?\s*(\$[0-9,.]+[MK]?)/gi;
+  const regexAAV     = /AAV\s*[:]?\s*(\$[0-9,.]+[MK]?)/gi;
+  const regexLength  = /(?:Length|Term|Duration)\s*[:]?\s*([0-9]+)\s*Years?/gi;
+  const regexExpiry  = /Expiry\s*[:]?\s*(20\d\d)(?:\s*(?:UFA|RFA))?/gi;
+  // Explicit year range: "2023-2026" or "2023 – 2026" or "2023 — 2026"
+  const regexRange   = /(20\d\d)\s*[-–—]\s*(20\d\d)/g;
+  // NHL season format: "2023-24" → start=2023, end=2024+1=2025... take last end year
+  const regexSaison  = /\b(20\d\d)-(\d{2})\b/g;
 
-  let capHits = [...textWithoutTags.matchAll(regexCapHit)].map(m => m[1]);
-  let lengths = [...textWithoutTags.matchAll(regexLength)].map(m => m[1]);
-  let expirys = [...textWithoutTags.matchAll(regexExpiry)].map(m => m[1]);
-  let aavs = [...textWithoutTags.matchAll(regexAAV)].map(m => m[1]);
+  const capHits  = [...text.matchAll(regexCapHit)].map(m => m[1]);
+  const aavs     = [...text.matchAll(regexAAV)].map(m => m[1]);
+  const lengths  = [...text.matchAll(regexLength)].map(m => parseInt(m[1]));
+  const expirys  = [...text.matchAll(regexExpiry)].map(m => parseInt(m[1]));
+  const ranges   = [...text.matchAll(regexRange)];
+  const saisons  = [...text.matchAll(regexSaison)];
+
+  // Build start/end from seasons list (e.g. "2023-24 2024-25 2025-26" → 2023..2026)
+  let seasonStart = null, seasonEnd = null;
+  if (saisons.length >= 2) {
+    seasonStart = parseInt(saisons[0][1]);
+    const last  = saisons[saisons.length - 1];
+    // "2025-26" → end year = 2026
+    const lastY = parseInt(last[1]);
+    const lastSuffix = parseInt(last[2]);
+    seasonEnd = lastSuffix < 50 ? lastY + 1 : lastY; // handles "2023-24" → 2024, "2025-26" → 2026
+  }
 
   for (let i = 0; i < capHits.length; i++) {
-    if (!contratsData.find(c => c.capHit === capHits[i] && c.length === (lengths[i] || '—'))) {
-        contratsData.push({ capHit: capHits[i], aav: aavs[i] || capHits[i], length: lengths[i] || '—', expiry: expirys[i] || '—' });
+    let startYear = null;
+    let endYear   = expirys[i] || null;
+    const lengthYrs = lengths[i] || null;
+
+    // Priority 1: explicit "YYYY-YYYY" range
+    if (ranges[i]) {
+      startYear = parseInt(ranges[i][1]);
+      endYear   = parseInt(ranges[i][2]);
+    // Priority 2: NHL season blocks
+    } else if (seasonStart && seasonEnd) {
+      startYear = seasonStart;
+      endYear   = seasonEnd;
+    // Priority 3: expiry - length
+    } else if (endYear && lengthYrs) {
+      startYear = endYear - lengthYrs;
+    }
+
+    const entry = {
+      capHit:    capHits[i],
+      aav:       aavs[i] || capHits[i],
+      startYear: startYear ? String(startYear) : '—',
+      endYear:   endYear   ? String(endYear)   : '—',
+    };
+    if (!contratsData.find(c => c.capHit === entry.capHit && c.startYear === entry.startYear)) {
+      contratsData.push(entry);
     }
   }
 
+  // Fallback: "signed a X year, $Y contract with a cap hit of $Z"
   if (contratsData.length === 0) {
-      const matchPhrase = textWithoutTags.match(/signed a (\d+)\s*year,\s*(\$[0-9,.]+)\s*contract.*cap hit of\s*(\$[0-9,.]+)/i);
-      if (matchPhrase) {
-          let capVal = matchPhrase[3];
-          if (capVal.match(/^\$\d+$/)) {
-              capVal = "$" + parseInt(capVal.substring(1)).toLocaleString('en-US');
-          }
-          contratsData.push({ capHit: capVal, aav: capVal, length: matchPhrase[1] + ' Years', expiry: '—' });
-      }
+    const m = text.match(/signed a (\d+)\s*year,\s*(\$[0-9,.]+)\s*contract.*cap hit of\s*(\$[0-9,.]+)/i);
+    if (m) {
+      let capVal = m[3];
+      if (capVal.match(/^\$\d+$/)) capVal = '$' + parseInt(capVal.substring(1)).toLocaleString('en-US');
+      const lengthYrs = parseInt(m[1]);
+      const startYr   = seasonStart || (expirys[0] ? expirys[0] - lengthYrs : null);
+      const endYr     = seasonEnd   || expirys[0] || (startYr ? startYr + lengthYrs : null);
+      contratsData.push({
+        capHit:    capVal,
+        aav:       capVal,
+        startYear: startYr ? String(startYr) : '—',
+        endYear:   endYr   ? String(endYr)   : '—',
+      });
+    }
   }
 
   return contratsData;
