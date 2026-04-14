@@ -53,6 +53,35 @@ async function fetchWithCountdown(stepEl, fetchFn, timeoutMs = 5000) {
   }
 }
 
+// === HELPERS API ===
+function saisonActuelle() {
+  const d = new Date();
+  const y = d.getFullYear();
+  return (d.getMonth() >= 9) ? `${y}${y + 1}` : `${y - 1}${y}`;
+}
+
+async function fetchViaProxies(url) {
+  const urls = [
+    url,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://api.cors.lol/?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.org/?${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ];
+  for (const u of urls) {
+    try {
+      const res = await fetch(u, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        let json = await res.json();
+        if (json?.contents) json = JSON.parse(json.contents);
+        return json;
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
 // === RECHERCHE RAPIDE EN DIRECT ===
 let timeoutRecherche = null;
 const cacheRecherche = {};
@@ -338,6 +367,9 @@ async function afficherFiche(playerId, nomComplet) {
     }
 
     completeStep(stepStats, true);
+    const saison = saisonActuelle();
+    chargerGameLog(playerId, estGardien);
+    chargerEdge(playerId, estGardien, saison);
     chercherContrats(ppUrl, cwUrl);
 
   } catch (e) {
@@ -345,6 +377,126 @@ async function afficherFiche(playerId, nomComplet) {
     if(erreur) erreur.textContent = "Erreur lors du chargement de la fiche.";
     fiche.classList.add('hidden');
   }
+}
+
+// === JOURNAL DES MATCHS ===
+async function chargerGameLog(playerId, estGardien) {
+  const container = document.getElementById('gamelog-container');
+  const status    = document.getElementById('gamelog-status');
+  const loading   = document.getElementById('gamelog-loading');
+  if (!container) return;
+  container.innerHTML = '';
+  if (status) status.textContent = '';
+  if (loading) loading.style.display = 'flex';
+
+  const data = await fetchViaProxies(`https://api-web.nhle.com/v1/player/${playerId}/game-log/now`);
+  if (loading) loading.style.display = 'none';
+
+  const games = data?.gameLog || [];
+  if (!games.length) {
+    if (status) status.textContent = 'Aucune donnée disponible.';
+    return;
+  }
+
+  const mois = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+  const fmtDate = s => { const d = new Date(s); return `${d.getDate()} ${mois[d.getMonth()]}`; };
+  const derniers = [...games].sort((a, b) => new Date(b.gameDate) - new Date(a.gameDate)).slice(0, 5);
+
+  if (estGardien) {
+    container.innerHTML = `<div class="gamelog-table">
+      <div class="gamelog-row gamelog-header gamelog-row-goalie">
+        <span>Date</span><span>Adv.</span><span>Rés.</span><span>SAR</span><span>ARR</span><span>%ARR</span><span>BL</span>
+      </div>
+      ${derniers.map(g => {
+        const loc = g.homeRoadFlag === 'H' ? 'vs' : '@';
+        const res = g.wins > 0 ? '<span class="gamelog-win">V</span>' : '<span class="gamelog-loss">D</span>';
+        const pct = g.savePctg != null ? (g.savePctg < 1 ? g.savePctg * 100 : g.savePctg).toFixed(1) + '%' : '—';
+        return `<div class="gamelog-row gamelog-row-goalie">
+          <span>${fmtDate(g.gameDate)}</span>
+          <span style="color:#a89f94">${loc} ${g.opponentAbbrev || '—'}</span>
+          <span>${res}</span>
+          <span>${g.shotsAgainst ?? '—'}</span>
+          <span>${g.saves ?? '—'}</span>
+          <span>${pct}</span>
+          <span>${g.shutouts ?? '—'}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  } else {
+    container.innerHTML = `<div class="gamelog-table">
+      <div class="gamelog-row gamelog-header gamelog-row-skater">
+        <span>Date</span><span>Adv.</span><span>B</span><span>A</span><span>PTS</span><span>+/-</span><span>TOI</span>
+      </div>
+      ${derniers.map(g => {
+        const loc = g.homeRoadFlag === 'H' ? 'vs' : '@';
+        const pts = (g.goals || 0) + (g.assists || 0);
+        const pm  = g.plusMinus != null ? (g.plusMinus > 0 ? '+' + g.plusMinus : g.plusMinus) : '—';
+        const pmCls = g.plusMinus > 0 ? 'gamelog-win' : g.plusMinus < 0 ? 'gamelog-loss' : '';
+        return `<div class="gamelog-row gamelog-row-skater">
+          <span>${fmtDate(g.gameDate)}</span>
+          <span style="color:#a89f94">${loc} ${g.opponentAbbrev || '—'}</span>
+          <span>${g.goals ?? '—'}</span>
+          <span>${g.assists ?? '—'}</span>
+          <span class="gamelog-pts">${pts}</span>
+          <span class="${pmCls}">${pm}</span>
+          <span>${g.toi || '—'}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+}
+
+// === NHL EDGE STATS ===
+async function chargerEdge(playerId, estGardien, saison) {
+  const container = document.getElementById('edge-container');
+  const status    = document.getElementById('edge-status');
+  const loading   = document.getElementById('edge-loading');
+  if (!container) return;
+  container.innerHTML = '';
+  if (status) status.textContent = '';
+  if (loading) loading.style.display = 'flex';
+
+  const type = estGardien ? 'goalie' : 'skater';
+  const data = await fetchViaProxies(`https://api-web.nhle.com/v1/edge/${type}-detail/${playerId}/${saison}/2`);
+  if (loading) loading.style.display = 'none';
+
+  const d = data?.data?.[0] || data?.[0] || null;
+  if (!d) {
+    if (status) status.textContent = 'Données NHL Edge non disponibles pour cette saison.';
+    return;
+  }
+
+  const kmh = v => v != null ? (v * 3.6).toFixed(1) + ' km/h' : null;
+  const km  = v => v != null ? (v / 1000).toFixed(1) + ' km' : null;
+  const fmtKmh = v => v != null ? v.toFixed(1) + ' km/h' : null;
+
+  const fields = estGardien ? [
+    { l: 'MOY GAA',    v: d.goalsAgainstAvg?.toFixed(2) },
+    { l: '%ARR',       v: d.savePctg != null ? (d.savePctg < 1 ? d.savePctg * 100 : d.savePctg).toFixed(1) + '%' : null },
+    { l: 'ARR/MATCH',  v: d.savesPerGame?.toFixed(1) },
+    { l: 'SAR/MATCH',  v: d.shotsAgainstPerGame?.toFixed(1) },
+  ] : [
+    { l: 'VIT. MAX',   v: kmh(d.topSkatingSpeed)  ?? fmtKmh(d.topSkatingSpeedKph)  },
+    { l: 'VIT. MOY',   v: kmh(d.avgSkatingSpeed)  ?? fmtKmh(d.avgSkatingSpeedKph)  },
+    { l: 'DISTANCE',   v: km(d.totalDistanceOnIce) ?? (d.totalDistance != null ? d.totalDistance.toFixed(1) + ' km' : null) },
+    { l: 'TIR MAX',    v: fmtKmh(d.maxShotSpeed)  ?? kmh(d.maxShotSpeedMs)         },
+    { l: 'TIR MOY',    v: fmtKmh(d.avgShotSpeed)  ?? kmh(d.avgShotSpeedMs)         },
+  ];
+
+  const valides = fields.filter(f => f.v != null);
+  if (!valides.length) {
+    if (status) status.textContent = 'Données NHL Edge non disponibles pour cette saison.';
+    return;
+  }
+
+  container.style.display = 'grid';
+  container.style.gridTemplateColumns = 'repeat(auto-fit, minmax(70px, 1fr))';
+  container.style.gap = '10px';
+  container.innerHTML = valides.map(f => `
+    <div style="display:flex;flex-direction:column;align-items:center;background:#0a0f0a;border:1px solid #2a3a2a;border-radius:8px;padding:0.8rem;">
+      <span style="color:#a89f94;font-size:0.75rem;text-transform:uppercase;font-weight:bold;margin-bottom:0.2rem;">${f.l}</span>
+      <span style="color:#f0ede6;font-size:1.05rem;font-weight:bold;">${f.v}</span>
+    </div>`).join('');
 }
 
 // === EXTRACTEUR DE CONTRATS MULTI-SOURCES (CAPWAGES + PUCKPEDIA) ===

@@ -1793,6 +1793,37 @@ header .subtitle {
   color: #cc6060;
 }
 
+/* === JOURNAL DES MATCHS === */
+.gamelog-table { width: 100%; }
+
+.gamelog-row {
+  display: grid;
+  padding: 0.42rem 0.25rem;
+  gap: 0.4rem;
+  border-bottom: 1px solid #1a2a1a;
+  color: #f0ede6;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.gamelog-row-skater { grid-template-columns: 72px 62px 1fr 1fr 1fr 1fr 1fr; }
+.gamelog-row-goalie { grid-template-columns: 72px 62px 1fr 1fr 1fr 1fr 1fr; }
+
+.gamelog-header {
+  color: #a89f94;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #3a4a3a;
+  font-weight: bold;
+  padding-bottom: 0.5rem;
+}
+
+.gamelog-row:not(.gamelog-header):hover { background: #0a120a; border-radius: 4px; }
+.gamelog-win  { color: #80cc80; font-weight: bold; }
+.gamelog-loss { color: #cc6060; }
+.gamelog-pts  { color: #d4892a; font-weight: bold; }
+
 /* === FILMS & SÉRIES === */
 
 .films-stats {
