@@ -48,64 +48,85 @@ function setBadge(id, text, cls) {
 }
 
 // ─────────────────────────────────────────────
-// AVIONS — OpenSky Network
+// AVIONS — OpenSky Network (+ proxies + retry)
 // ─────────────────────────────────────────────
-async function chargerAvions() {
-  try {
-    const res = await fetch('https://opensky-network.org/api/states/all', {
-      signal: AbortSignal.timeout(15000),
+let avionsCount = 0; // garde le dernier compte valide
+
+const AVIONS_URLS = [
+  'https://opensky-network.org/api/states/all',
+  `https://api.allorigins.win/raw?url=${encodeURIComponent('https://opensky-network.org/api/states/all')}`,
+  `https://api.cors.lol/?url=${encodeURIComponent('https://opensky-network.org/api/states/all')}`,
+  `https://corsproxy.io/?url=${encodeURIComponent('https://opensky-network.org/api/states/all')}`,
+  `https://proxy.cors.sh/https://opensky-network.org/api/states/all`,
+];
+
+function afficherAvions(states) {
+  layerAvions.clearLayers();
+  let count = 0;
+  for (const s of states) {
+    const lon = s[5], lat = s[6];
+    if (lat == null || lon == null) continue;
+    const callsign = (s[1] || '').trim() || 'N/A';
+    const country  = s[2] || '—';
+    const altBaro  = s[7]  != null ? Math.round(s[7])  + ' m'   : '—';
+    const speed    = s[9]  != null ? Math.round(s[9] * 3.6) + ' km/h' : '—';
+    const hdg      = s[10] != null ? s[10] : 0;
+    const onGround = s[8];
+    const color    = onGround ? '#557755' : '#60b8c8';
+    const icon = L.divIcon({
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
+                  style="transform:rotate(${hdg}deg);display:block;overflow:visible;">
+               <path d="M7 0L3.5 11 7 9 10.5 11Z" fill="${color}" opacity="0.9"/>
+             </svg>`,
+      iconSize: [14, 14], iconAnchor: [7, 7], className: '',
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const states = data.states || [];
+    const marker = L.marker([lat, lon], { icon });
+    marker.bindPopup(`
+      <div class="popup-title">✈ ${callsign}</div>
+      <div class="popup-row"><b>Pays:</b> ${country}</div>
+      <div class="popup-row"><b>Altitude:</b> ${altBaro}</div>
+      <div class="popup-row"><b>Vitesse:</b> ${speed}</div>
+      <div class="popup-row"><b>Cap:</b> ${Math.round(hdg)}°</div>
+      <div class="popup-row"><b>Au sol:</b> ${onGround ? 'Oui' : 'Non'}</div>
+    `);
+    layerAvions.addLayer(marker);
+    count++;
+  }
+  avionsCount = count;
+  document.getElementById('stat-avions').textContent = count.toLocaleString('fr-CA');
+  document.getElementById('stat-update').textContent = new Date().toLocaleTimeString('fr-CA');
+  setBadge('badge-avions', `✈ ${count.toLocaleString('fr-CA')} avions`, 'live');
+  spinStop('spin-avions');
+}
 
-    layerAvions.clearLayers();
-    let count = 0;
-
-    for (const s of states) {
-      const lon = s[5], lat = s[6];
-      if (lat == null || lon == null) continue;
-
-      const callsign = (s[1] || '').trim() || 'N/A';
-      const country  = s[2] || '—';
-      const altBaro  = s[7]  != null ? Math.round(s[7])  + ' m'   : '—';
-      const speed    = s[9]  != null ? Math.round(s[9] * 3.6) + ' km/h' : '—';
-      const hdg      = s[10] != null ? s[10] : 0;
-      const onGround = s[8];
-
-      const color = onGround ? '#557755' : '#60b8c8';
-      const icon = L.divIcon({
-        html: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
-                    style="transform:rotate(${hdg}deg);display:block;overflow:visible;">
-                 <path d="M7 0L3.5 11 7 9 10.5 11Z" fill="${color}" opacity="0.9"/>
-               </svg>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-        className: '',
-      });
-
-      const marker = L.marker([lat, lon], { icon });
-      marker.bindPopup(`
-        <div class="popup-title">✈ ${callsign}</div>
-        <div class="popup-row"><b>Pays:</b> ${country}</div>
-        <div class="popup-row"><b>Altitude:</b> ${altBaro}</div>
-        <div class="popup-row"><b>Vitesse:</b> ${speed}</div>
-        <div class="popup-row"><b>Cap:</b> ${Math.round(hdg)}°</div>
-        <div class="popup-row"><b>Au sol:</b> ${onGround ? 'Oui' : 'Non'}</div>
-      `);
-      layerAvions.addLayer(marker);
-      count++;
+async function chargerAvions() {
+  for (const url of AVIONS_URLS) {
+    for (let tentative = 0; tentative < 2; tentative++) {
+      try {
+        if (tentative > 0) await new Promise(r => setTimeout(r, 3000));
+        const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+        if (!res.ok) {
+          if (res.status === 503 && tentative === 0) continue; // retry sur 503
+          break;
+        }
+        let data = await res.json();
+        // Déballer le wrapper allorigins si nécessaire
+        if (data?.contents) data = JSON.parse(data.contents);
+        const states = data?.states;
+        if (Array.isArray(states) && states.length > 0) {
+          afficherAvions(states);
+          return;
+        }
+        break;
+      } catch (_) { break; }
     }
-
-    document.getElementById('stat-avions').textContent = count.toLocaleString('fr-CA');
-    document.getElementById('stat-update').textContent = new Date().toLocaleTimeString('fr-CA');
-    setBadge('badge-avions', `✈ ${count.toLocaleString('fr-CA')} avions`, 'live');
-    spinStop('spin-avions');
-
-  } catch (e) {
-    console.warn('OpenSky:', e);
-    setBadge('badge-avions', '✈ Avions — erreur', 'err');
-    spinStop('spin-avions');
+  }
+  // Échec : ne pas écraser les données existantes avec "erreur"
+  spinStop('spin-avions');
+  if (avionsCount > 0) {
+    setBadge('badge-avions', `✈ ${avionsCount.toLocaleString('fr-CA')} (hors-ligne)`, '');
+  } else {
+    setBadge('badge-avions', '✈ API indisponible', 'err');
   }
 }
 
