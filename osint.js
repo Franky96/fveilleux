@@ -110,15 +110,10 @@ async function chargerAvions() {
 }
 
 // ─────────────────────────────────────────────
-// SATELLITES — CelesTrak + satellite.js
+// SATELLITES — SatNOGS (primaire) + CelesTrak (fallback) + satellite.js
 // ─────────────────────────────────────────────
-const TLE_URLS = [
-  'https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle',
-  `https://api.allorigins.win/raw?url=${encodeURIComponent('https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle')}`,
-  `https://api.cors.lol/?url=${encodeURIComponent('https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle')}`,
-  `https://corsproxy.io/?url=${encodeURIComponent('https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle')}`,
-];
 
+// Parse format texte 3-lignes (nom / tle1 / tle2)
 function parseTLE(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const sats = [];
@@ -126,7 +121,7 @@ function parseTLE(text) {
     if (lines[i + 1].startsWith('1 ') && lines[i + 2].startsWith('2 ')) {
       try {
         const satrec = satellite.twoline2satrec(lines[i + 1], lines[i + 2]);
-        sats.push({ name: lines[i].replace(/^\d+\s*/, ''), satrec });
+        sats.push({ name: lines[i].replace(/^0\s+/, '').replace(/^\d+\s*/, '').trim(), satrec });
       } catch (_) {}
       i += 2;
     }
@@ -134,23 +129,90 @@ function parseTLE(text) {
   return sats;
 }
 
-async function chargerTLE() {
-  for (const url of TLE_URLS) {
+// Parse format JSON SatNOGS [{tle0, tle1, tle2, norad_cat_id}, ...]
+function parseTLEJSON(data) {
+  const sats = [];
+  for (const item of data) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+      const name = (item.tle0 || '').replace(/^0\s+/, '').trim() || `NORAD-${item.norad_cat_id}`;
+      const satrec = satellite.twoline2satrec(item.tle1, item.tle2);
+      sats.push({ name, satrec });
+    } catch (_) {}
+  }
+  return sats;
+}
+
+function onTLELoaded(sats, source) {
+  tleSatellites = sats;
+  document.getElementById('stat-sats').textContent = sats.length.toLocaleString('fr-CA');
+  setBadge('badge-sats', `🛰 ${sats.length.toLocaleString('fr-CA')} satellites`, 'live');
+  spinStop('spin-sats');
+  console.info(`[OSINT] TLE chargés — ${source}: ${sats.length} satellites`);
+}
+
+// URLs SatNOGS (primaire — CORS natif, données fraîches, ~1500+ sats)
+const SATNOGS_URLS = [
+  'https://db.satnogs.org/api/tle/?format=json',
+  `https://api.allorigins.win/raw?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
+  `https://api.cors.lol/?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
+  `https://corsproxy.io/?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
+];
+
+// URLs CelesTrak format texte (fallback — plusieurs chemins + proxies)
+const CK_BASE_URLS = [
+  'https://celestrak.org/satcat/satcat.php?GROUP=visual&FORMAT=tle',
+  'https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle',
+  'https://celestrak.org/satcat/satcat.php?FORMAT=tle&STATUS=active',
+];
+const CK_TLE_URLS = [
+  ...CK_BASE_URLS,
+  ...CK_BASE_URLS.flatMap(u => [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+    `https://proxy.cors.sh/${u}`,
+  ]),
+];
+
+async function chargerTLE() {
+  if (typeof satellite === 'undefined') {
+    setBadge('badge-sats', '🛰 satellite.js non chargé', 'err');
+    spinStop('spin-sats');
+    return false;
+  }
+
+  // ── Étape 1 : SatNOGS JSON ──
+  for (const url of SATNOGS_URLS) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
       if (!res.ok) continue;
-      const text = await res.text();
-      if (!text.includes('1 ') || !text.includes('2 ')) continue;
-      tleSatellites = parseTLE(text);
-      if (tleSatellites.length > 0) {
-        document.getElementById('stat-sats').textContent = tleSatellites.length;
-        setBadge('badge-sats', `🛰 ${tleSatellites.length} satellites`, 'live');
-        spinStop('spin-sats');
+      const raw  = await res.json();
+      const arr  = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
+      if (!arr.length) continue;
+      const sats = parseTLEJSON(arr);
+      if (sats.length > 0) {
+        onTLELoaded(sats, 'SatNOGS');
         return true;
       }
     } catch (_) {}
   }
-  setBadge('badge-sats', '🛰 Satellites — erreur', 'err');
+
+  // ── Étape 2 : CelesTrak texte ──
+  for (const url of CK_TLE_URLS) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (!text.includes('1 ') || !text.includes('2 ')) continue;
+      const sats = parseTLE(text);
+      if (sats.length > 0) {
+        onTLELoaded(sats, 'CelesTrak');
+        return true;
+      }
+    } catch (_) {}
+  }
+
+  setBadge('badge-sats', '🛰 Aucune source TLE disponible', 'err');
   spinStop('spin-sats');
   return false;
 }
