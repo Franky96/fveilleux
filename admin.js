@@ -15,6 +15,7 @@ const SECTIONS_ARCHIVABLES = [
     { key: 'crypteur',  icon: '⚙️', label: 'Encodeur BNR'  },
   ]},
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
+  { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
 ];
 
 const configRef = doc(db, "systeme", "config");
@@ -240,6 +241,7 @@ const PERMS_STRUCTURE = [
   { key: 'webmail',   label: 'Webmail' },
   { key: 'rona',      label: 'RONA S&S' },
   { key: 'pageTest',  label: 'Page de tests' },
+  { key: 'osint',     label: 'OSINT Map' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'converter', label: 'Convertisseur' },
