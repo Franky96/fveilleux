@@ -1,6 +1,7 @@
 // === SÉCURITÉ ===
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('osint')) {
+const userRole = sessionStorage.getItem('userRole');
+if (!sessionStorage.getItem('loggedIn') || (userRole !== 'admin' && !permissions.includes('osint'))) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
   window.location.href = 'dashboard.html';
 }
