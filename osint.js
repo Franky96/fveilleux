@@ -6,29 +6,79 @@ if (!sessionStorage.getItem('loggedIn') || (userRole !== 'admin' && !permissions
   window.location.href = 'dashboard.html';
 }
 
-// === CARTE ===
+// ─────────────────────────────────────────────
+// CARTE
+// ─────────────────────────────────────────────
 const map = L.map('map', {
   center: [30, 0],
   zoom: 2,
   zoomControl: true,
   preferCanvas: true,
+  renderer: L.canvas(),
 });
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© <a href="https://www.openstreetmap.org/copyright" style="color:#80cc80">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" style="color:#80cc80">CARTO</a>',
+  attribution: '© <a href="https://www.openstreetmap.org/copyright" style="color:#80cc80">OpenStreetMap</a> © <a href="https://carto.com/attributions" style="color:#80cc80">CARTO</a>',
   maxZoom: 19,
   subdomains: 'abcd',
 }).addTo(map);
 
-// === GROUPES DE COUCHES ===
-const layerAvions  = L.layerGroup().addTo(map);
-const layerSats    = L.layerGroup().addTo(map);
+// ─────────────────────────────────────────────
+// CANVAS OVERLAY (avions + satellites)
+// Rendu direct sur <canvas> — zéro éléments DOM par marqueur
+// ─────────────────────────────────────────────
+const mapEl = map.getContainer();
+
+function creerCanvas(zIndex) {
+  const c = document.createElement('canvas');
+  Object.assign(c.style, {
+    position: 'absolute', top: '0', left: '0',
+    pointerEvents: 'none', zIndex: String(zIndex),
+  });
+  mapEl.appendChild(c);
+  return c;
+}
+
+const cvSats   = creerCanvas(410);
+const cvAvions = creerCanvas(420);
+
+function redimensionnerCanvas() {
+  const sz = map.getSize();
+  cvAvions.width  = cvSats.width  = sz.x;
+  cvAvions.height = cvSats.height = sz.y;
+}
+redimensionnerCanvas();
+map.on('resize', redimensionnerCanvas);
+
+// RAF-throttle pour éviter les redraws excessifs lors du pan/zoom
+let rafPending = false;
+function scheduleRedraw() {
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    redimensionnerCanvas();
+    dessinerAvions();
+    dessinerSatellites();
+  });
+}
+map.on('move moveend zoom zoomend', scheduleRedraw);
+
+// ─────────────────────────────────────────────
+// COUCHES LEAFLET (ISS + séismes seulement)
+// ─────────────────────────────────────────────
 const layerISS     = L.layerGroup().addTo(map);
 const layerSeismes = L.layerGroup().addTo(map);
 
-// === ÉTAT ===
-let tleSatellites  = [];
-let satInterval    = null;
+// ─────────────────────────────────────────────
+// ÉTAT GLOBAL
+// ─────────────────────────────────────────────
+let avionStates  = [];   // tableau brut OpenSky
+let satPositions = [];   // [{name, lat, lng, alt}] calculé par satellite.js
+let tleSatellites = [];  // [{name, satrec}]
+let avionsCount  = 0;
+let showAvions   = true;
+let showSats     = true;
 
 // ─────────────────────────────────────────────
 // HELPERS UI
@@ -48,10 +98,127 @@ function setBadge(id, text, cls) {
 }
 
 // ─────────────────────────────────────────────
+// DESSIN AVIONS — canvas HTML2D
+// Triangle orienté par cap, viewport culling
+// ─────────────────────────────────────────────
+function dessinerAvions() {
+  const ctx = cvAvions.getContext('2d');
+  ctx.clearRect(0, 0, cvAvions.width, cvAvions.height);
+  if (!showAvions || !avionStates.length) return;
+
+  const W = cvAvions.width, H = cvAvions.height;
+  const PAD = 20;
+
+  for (const s of avionStates) {
+    const lon = s[5], lat = s[6];
+    if (lat == null || lon == null) continue;
+
+    const pt = map.latLngToContainerPoint([lat, lon]);
+    if (pt.x < -PAD || pt.x > W + PAD || pt.y < -PAD || pt.y > H + PAD) continue;
+
+    const hdg      = ((s[10] || 0) * Math.PI) / 180;
+    const onGround = s[8];
+
+    ctx.save();
+    ctx.translate(pt.x, pt.y);
+    ctx.rotate(hdg);
+    ctx.fillStyle   = onGround ? '#557766' : '#60b8c8';
+    ctx.globalAlpha = 0.88;
+    ctx.beginPath();
+    ctx.moveTo( 0, -6);   // nez
+    ctx.lineTo(-3.5, 5);  // aile gauche
+    ctx.lineTo( 0,   3);  // queue centre
+    ctx.lineTo( 3.5, 5);  // aile droite
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────────
+// DESSIN SATELLITES — canvas HTML2D
+// Petits points, viewport culling
+// ─────────────────────────────────────────────
+function dessinerSatellites() {
+  const ctx = cvSats.getContext('2d');
+  ctx.clearRect(0, 0, cvSats.width, cvSats.height);
+  if (!showSats || !satPositions.length) return;
+
+  const W = cvSats.width, H = cvSats.height;
+  const PAD = 6;
+
+  ctx.fillStyle   = '#d4892a';
+  ctx.globalAlpha = 0.82;
+
+  for (const sat of satPositions) {
+    const pt = map.latLngToContainerPoint([sat.lat, sat.lng]);
+    if (pt.x < -PAD || pt.x > W + PAD || pt.y < -PAD || pt.y > H + PAD) continue;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ─────────────────────────────────────────────
+// CLIC SUR LA CARTE — détection de proximité
+// ─────────────────────────────────────────────
+map.on('click', function(e) {
+  const clickPt = map.latLngToContainerPoint(e.latlng);
+
+  // Avions (rayon 14px)
+  if (showAvions && avionStates.length) {
+    let best = null, bestD = 14 * 14;
+    for (const s of avionStates) {
+      if (s[5] == null || s[6] == null) continue;
+      const pt = map.latLngToContainerPoint([s[6], s[5]]);
+      const d  = (pt.x - clickPt.x) ** 2 + (pt.y - clickPt.y) ** 2;
+      if (d < bestD) { bestD = d; best = s; }
+    }
+    if (best) {
+      const callsign = (best[1] || '').trim() || 'N/A';
+      const alt = best[7] != null ? Math.round(best[7]) + ' m' : '—';
+      const spd = best[9] != null ? Math.round(best[9] * 3.6) + ' km/h' : '—';
+      L.popup()
+        .setLatLng([best[6], best[5]])
+        .setContent(`
+          <div class="popup-title">✈ ${callsign}</div>
+          <div class="popup-row"><b>Pays :</b> ${best[2] || '—'}</div>
+          <div class="popup-row"><b>Altitude :</b> ${alt}</div>
+          <div class="popup-row"><b>Vitesse :</b> ${spd}</div>
+          <div class="popup-row"><b>Cap :</b> ${Math.round(best[10] || 0)}°</div>
+          <div class="popup-row"><b>Au sol :</b> ${best[8] ? 'Oui' : 'Non'}</div>
+        `)
+        .openOn(map);
+      return;
+    }
+  }
+
+  // Satellites (rayon 10px)
+  if (showSats && satPositions.length) {
+    let best = null, bestD = 10 * 10;
+    for (const sat of satPositions) {
+      const pt = map.latLngToContainerPoint([sat.lat, sat.lng]);
+      const d  = (pt.x - clickPt.x) ** 2 + (pt.y - clickPt.y) ** 2;
+      if (d < bestD) { bestD = d; best = sat; }
+    }
+    if (best) {
+      L.popup()
+        .setLatLng([best.lat, best.lng])
+        .setContent(`
+          <div class="popup-title">🛰 ${best.name}</div>
+          <div class="popup-row"><b>Altitude :</b> ${best.alt} km</div>
+          <div class="popup-row"><b>Lat :</b> ${best.lat.toFixed(2)}°</div>
+          <div class="popup-row"><b>Lon :</b> ${best.lng.toFixed(2)}°</div>
+        `)
+        .openOn(map);
+      return;
+    }
+  }
+});
+
+// ─────────────────────────────────────────────
 // AVIONS — OpenSky Network (+ proxies + retry)
 // ─────────────────────────────────────────────
-let avionsCount = 0; // garde le dernier compte valide
-
 const AVIONS_URLS = [
   'https://opensky-network.org/api/states/all',
   `https://api.allorigins.win/raw?url=${encodeURIComponent('https://opensky-network.org/api/states/all')}`,
@@ -60,45 +227,6 @@ const AVIONS_URLS = [
   `https://proxy.cors.sh/https://opensky-network.org/api/states/all`,
 ];
 
-function afficherAvions(states) {
-  layerAvions.clearLayers();
-  let count = 0;
-  for (const s of states) {
-    const lon = s[5], lat = s[6];
-    if (lat == null || lon == null) continue;
-    const callsign = (s[1] || '').trim() || 'N/A';
-    const country  = s[2] || '—';
-    const altBaro  = s[7]  != null ? Math.round(s[7])  + ' m'   : '—';
-    const speed    = s[9]  != null ? Math.round(s[9] * 3.6) + ' km/h' : '—';
-    const hdg      = s[10] != null ? s[10] : 0;
-    const onGround = s[8];
-    const color    = onGround ? '#557755' : '#60b8c8';
-    const icon = L.divIcon({
-      html: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"
-                  style="transform:rotate(${hdg}deg);display:block;overflow:visible;">
-               <path d="M7 0L3.5 11 7 9 10.5 11Z" fill="${color}" opacity="0.9"/>
-             </svg>`,
-      iconSize: [14, 14], iconAnchor: [7, 7], className: '',
-    });
-    const marker = L.marker([lat, lon], { icon });
-    marker.bindPopup(`
-      <div class="popup-title">✈ ${callsign}</div>
-      <div class="popup-row"><b>Pays:</b> ${country}</div>
-      <div class="popup-row"><b>Altitude:</b> ${altBaro}</div>
-      <div class="popup-row"><b>Vitesse:</b> ${speed}</div>
-      <div class="popup-row"><b>Cap:</b> ${Math.round(hdg)}°</div>
-      <div class="popup-row"><b>Au sol:</b> ${onGround ? 'Oui' : 'Non'}</div>
-    `);
-    layerAvions.addLayer(marker);
-    count++;
-  }
-  avionsCount = count;
-  document.getElementById('stat-avions').textContent = count.toLocaleString('fr-CA');
-  document.getElementById('stat-update').textContent = new Date().toLocaleTimeString('fr-CA');
-  setBadge('badge-avions', `✈ ${count.toLocaleString('fr-CA')} avions`, 'live');
-  spinStop('spin-avions');
-}
-
 async function chargerAvions() {
   for (const url of AVIONS_URLS) {
     for (let tentative = 0; tentative < 2; tentative++) {
@@ -106,22 +234,26 @@ async function chargerAvions() {
         if (tentative > 0) await new Promise(r => setTimeout(r, 3000));
         const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
         if (!res.ok) {
-          if (res.status === 503 && tentative === 0) continue; // retry sur 503
+          if (res.status === 503 && tentative === 0) continue;
           break;
         }
         let data = await res.json();
-        // Déballer le wrapper allorigins si nécessaire
         if (data?.contents) data = JSON.parse(data.contents);
         const states = data?.states;
         if (Array.isArray(states) && states.length > 0) {
-          afficherAvions(states);
+          avionStates = states;
+          avionsCount = states.filter(s => s[5] != null && s[6] != null).length;
+          document.getElementById('stat-avions').textContent = avionsCount.toLocaleString('fr-CA');
+          document.getElementById('stat-update').textContent = new Date().toLocaleTimeString('fr-CA');
+          setBadge('badge-avions', `✈ ${avionsCount.toLocaleString('fr-CA')} avions`, 'live');
+          spinStop('spin-avions');
+          dessinerAvions();
           return;
         }
         break;
       } catch (_) { break; }
     }
   }
-  // Échec : ne pas écraser les données existantes avec "erreur"
   spinStop('spin-avions');
   if (avionsCount > 0) {
     setBadge('badge-avions', `✈ ${avionsCount.toLocaleString('fr-CA')} (hors-ligne)`, '');
@@ -133,8 +265,6 @@ async function chargerAvions() {
 // ─────────────────────────────────────────────
 // SATELLITES — SatNOGS (primaire) + CelesTrak (fallback) + satellite.js
 // ─────────────────────────────────────────────
-
-// Parse format texte 3-lignes (nom / tle1 / tle2)
 function parseTLE(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const sats = [];
@@ -150,12 +280,11 @@ function parseTLE(text) {
   return sats;
 }
 
-// Parse format JSON SatNOGS [{tle0, tle1, tle2, norad_cat_id}, ...]
 function parseTLEJSON(data) {
   const sats = [];
   for (const item of data) {
     try {
-      const name = (item.tle0 || '').replace(/^0\s+/, '').trim() || `NORAD-${item.norad_cat_id}`;
+      const name   = (item.tle0 || '').replace(/^0\s+/, '').trim() || `NORAD-${item.norad_cat_id}`;
       const satrec = satellite.twoline2satrec(item.tle1, item.tle2);
       sats.push({ name, satrec });
     } catch (_) {}
@@ -168,10 +297,9 @@ function onTLELoaded(sats, source) {
   document.getElementById('stat-sats').textContent = sats.length.toLocaleString('fr-CA');
   setBadge('badge-sats', `🛰 ${sats.length.toLocaleString('fr-CA')} satellites`, 'live');
   spinStop('spin-sats');
-  console.info(`[OSINT] TLE chargés — ${source}: ${sats.length} satellites`);
+  console.info(`[OSINT] TLE — ${source}: ${sats.length} satellites`);
 }
 
-// URLs SatNOGS (primaire — CORS natif, données fraîches, ~1500+ sats)
 const SATNOGS_URLS = [
   'https://db.satnogs.org/api/tle/?format=json',
   `https://api.allorigins.win/raw?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
@@ -179,7 +307,6 @@ const SATNOGS_URLS = [
   `https://corsproxy.io/?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
 ];
 
-// URLs CelesTrak format texte (fallback — plusieurs chemins + proxies)
 const CK_BASE_URLS = [
   'https://celestrak.org/satcat/satcat.php?GROUP=visual&FORMAT=tle',
   'https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle',
@@ -202,23 +329,18 @@ async function chargerTLE() {
     return false;
   }
 
-  // ── Étape 1 : SatNOGS JSON ──
   for (const url of SATNOGS_URLS) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
       if (!res.ok) continue;
-      const raw  = await res.json();
-      const arr  = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
+      const raw = await res.json();
+      const arr = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
       if (!arr.length) continue;
       const sats = parseTLEJSON(arr);
-      if (sats.length > 0) {
-        onTLELoaded(sats, 'SatNOGS');
-        return true;
-      }
+      if (sats.length > 0) { onTLELoaded(sats, 'SatNOGS'); return true; }
     } catch (_) {}
   }
 
-  // ── Étape 2 : CelesTrak texte ──
   for (const url of CK_TLE_URLS) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
@@ -226,55 +348,41 @@ async function chargerTLE() {
       const text = await res.text();
       if (!text.includes('1 ') || !text.includes('2 ')) continue;
       const sats = parseTLE(text);
-      if (sats.length > 0) {
-        onTLELoaded(sats, 'CelesTrak');
-        return true;
-      }
+      if (sats.length > 0) { onTLELoaded(sats, 'CelesTrak'); return true; }
     } catch (_) {}
   }
 
-  setBadge('badge-sats', '🛰 Aucune source TLE disponible', 'err');
+  setBadge('badge-sats', '🛰 Aucune source TLE', 'err');
   spinStop('spin-sats');
   return false;
 }
 
+// Propagation : calcule les positions dans un tableau, puis dessine sur canvas
 function propagerSatellites() {
   if (!tleSatellites.length) return;
+  if (typeof satellite === 'undefined') return;
+
   const now  = new Date();
   const gmst = satellite.gstime(now);
-
-  layerSats.clearLayers();
+  satPositions = [];
 
   for (const sat of tleSatellites) {
     try {
       const pv = satellite.propagate(sat.satrec, now);
-      if (!pv || !pv.position) continue;
+      if (!pv?.position) continue;
       const gd  = satellite.eciToGeodetic(pv.position, gmst);
-      const lat  = satellite.degreesLat(gd.latitude);
-      const lng  = satellite.degreesLong(gd.longitude);
-      const altKm = gd.height.toFixed(0);
+      const lat = satellite.degreesLat(gd.latitude);
+      const lng = satellite.degreesLong(gd.longitude);
       if (isNaN(lat) || isNaN(lng)) continue;
-
-      const dot = L.circleMarker([lat, lng], {
-        radius: 3.5,
-        color: '#d4892a',
-        fillColor: '#d4892a',
-        fillOpacity: 0.85,
-        weight: 0,
-      });
-      dot.bindPopup(`
-        <div class="popup-title">🛰 ${sat.name}</div>
-        <div class="popup-row"><b>Altitude:</b> ${altKm} km</div>
-        <div class="popup-row"><b>Lat:</b> ${lat.toFixed(2)}°</div>
-        <div class="popup-row"><b>Lon:</b> ${lng.toFixed(2)}°</div>
-      `);
-      layerSats.addLayer(dot);
+      satPositions.push({ name: sat.name, lat, lng, alt: gd.height.toFixed(0) });
     } catch (_) {}
   }
+
+  dessinerSatellites();
 }
 
 // ─────────────────────────────────────────────
-// ISS — wheretheiss.at
+// ISS — wheretheiss.at (marqueur Leaflet unique)
 // ─────────────────────────────────────────────
 const ISS_ICON = L.divIcon({
   html: `<div style="font-size:20px;line-height:1;filter:drop-shadow(0 0 5px #80cc80);">🚀</div>`,
@@ -296,10 +404,10 @@ async function chargerISS() {
     const marker = L.marker([lat, lng], { icon: ISS_ICON, zIndexOffset: 2000 });
     marker.bindPopup(`
       <div class="popup-title">🚀 Station Spatiale Internationale</div>
-      <div class="popup-row"><b>Latitude:</b> ${lat.toFixed(4)}°</div>
-      <div class="popup-row"><b>Longitude:</b> ${lng.toFixed(4)}°</div>
-      <div class="popup-row"><b>Altitude:</b> ${altitude.toFixed(1)} km</div>
-      <div class="popup-row"><b>Vitesse:</b> ${(velocity * 3.6).toFixed(0)} km/h</div>
+      <div class="popup-row"><b>Latitude :</b> ${lat.toFixed(4)}°</div>
+      <div class="popup-row"><b>Longitude :</b> ${lng.toFixed(4)}°</div>
+      <div class="popup-row"><b>Altitude :</b> ${altitude.toFixed(1)} km</div>
+      <div class="popup-row"><b>Vitesse :</b> ${(velocity * 3.6).toFixed(0)} km/h</div>
     `);
     layerISS.addLayer(marker);
 
@@ -313,7 +421,7 @@ async function chargerISS() {
 }
 
 // ─────────────────────────────────────────────
-// SÉISMES — USGS GeoJSON
+// SÉISMES — USGS GeoJSON (circleMarker Leaflet)
 // ─────────────────────────────────────────────
 async function chargerSeismes() {
   try {
@@ -322,7 +430,7 @@ async function chargerSeismes() {
       { signal: AbortSignal.timeout(15000) }
     );
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data  = await res.json();
     const quakes = data.features || [];
 
     layerSeismes.clearLayers();
@@ -332,22 +440,15 @@ async function chargerSeismes() {
       const mag   = q.properties.mag  ?? 0;
       const place = q.properties.place ?? '—';
       const time  = new Date(q.properties.time).toLocaleString('fr-CA');
-
       const color  = mag >= 6 ? '#ff3030' : mag >= 5 ? '#ff8800' : mag >= 4 ? '#ddcc00' : '#88cc88';
       const radius = Math.max(4, mag * 2.8);
 
-      const circle = L.circleMarker([lat, lon], {
-        radius,
-        color,
-        fillColor: color,
-        fillOpacity: 0.42,
-        weight: 1.5,
-      });
+      const circle = L.circleMarker([lat, lon], { radius, color, fillColor: color, fillOpacity: 0.42, weight: 1.5 });
       circle.bindPopup(`
         <div class="popup-title">🌍 M${mag.toFixed(1)} — ${place}</div>
-        <div class="popup-row"><b>Date:</b> ${time}</div>
-        <div class="popup-row"><b>Profondeur:</b> ${depth.toFixed(1)} km</div>
-        <div class="popup-row"><b>Lat / Lon:</b> ${lat.toFixed(2)}° / ${lon.toFixed(2)}°</div>
+        <div class="popup-row"><b>Date :</b> ${time}</div>
+        <div class="popup-row"><b>Profondeur :</b> ${depth.toFixed(1)} km</div>
+        <div class="popup-row"><b>Lat / Lon :</b> ${lat.toFixed(2)}° / ${lon.toFixed(2)}°</div>
       `);
       layerSeismes.addLayer(circle);
     }
@@ -366,29 +467,36 @@ async function chargerSeismes() {
 // ─────────────────────────────────────────────
 // TOGGLES DE COUCHES
 // ─────────────────────────────────────────────
-function setupToggle(toggleId, layer) {
+function setupToggle(toggleId, onShow, onHide) {
   const el = document.getElementById(toggleId);
   if (!el) return;
   el.addEventListener('click', () => {
     const cb = el.querySelector('input');
     cb.checked = !cb.checked;
-    if (cb.checked) {
-      map.addLayer(layer);
-      el.classList.remove('off');
-    } else {
-      map.removeLayer(layer);
-      el.classList.add('off');
-    }
+    if (cb.checked) { onShow(); el.classList.remove('off'); }
+    else            { onHide(); el.classList.add('off'); }
   });
 }
 
-setupToggle('toggle-avions',  layerAvions);
-setupToggle('toggle-sats',    layerSats);
-setupToggle('toggle-iss',     layerISS);
-setupToggle('toggle-seismes', layerSeismes);
+setupToggle('toggle-avions',
+  () => { showAvions = true;  dessinerAvions(); },
+  () => { showAvions = false; dessinerAvions(); }
+);
+setupToggle('toggle-sats',
+  () => { showSats = true;  dessinerSatellites(); },
+  () => { showSats = false; dessinerSatellites(); }
+);
+setupToggle('toggle-iss',
+  () => map.addLayer(layerISS),
+  () => map.removeLayer(layerISS)
+);
+setupToggle('toggle-seismes',
+  () => map.addLayer(layerSeismes),
+  () => map.removeLayer(layerSeismes)
+);
 
 // ─────────────────────────────────────────────
-// REFRESH ALL
+// REFRESH + INIT
 // ─────────────────────────────────────────────
 async function refreshAll() {
   chargerAvions();
@@ -396,11 +504,7 @@ async function refreshAll() {
 }
 window.refreshAll = refreshAll;
 
-// ─────────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────────
 async function init() {
-  // Lancer tout en parallèle
   await Promise.all([
     chargerAvions(),
     chargerTLE().then(ok => { if (ok) propagerSatellites(); }),
@@ -408,13 +512,9 @@ async function init() {
     chargerSeismes(),
   ]);
 
-  // Auto-refresh avions toutes les 30s
   setInterval(chargerAvions, 30_000);
-  // ISS toutes les 15s
   setInterval(chargerISS, 15_000);
-  // Propagation satellite toutes les 10s (pas de re-fetch, juste recalcul)
-  satInterval = setInterval(propagerSatellites, 10_000);
-  // Re-fetch TLE toutes les heures
+  setInterval(propagerSatellites, 10_000);
   setInterval(() => chargerTLE().then(ok => { if (ok) propagerSatellites(); }), 3_600_000);
 }
 
