@@ -504,6 +504,21 @@ async function refreshAll() {
 }
 window.refreshAll = refreshAll;
 
+// ─────────────────────────────────────────────
+// BADGES CLIQUABLES — relancer le chargement
+// ─────────────────────────────────────────────
+function setupBadgeRetry(badgeId, retryFn) {
+  const el = document.getElementById(badgeId);
+  if (!el) return;
+  el.title = 'Cliquer pour actualiser';
+  el.addEventListener('click', retryFn);
+}
+
+setupBadgeRetry('badge-avions',  chargerAvions);
+setupBadgeRetry('badge-sats',    () => chargerTLE().then(ok => { if (ok) propagerSatellites(); }));
+setupBadgeRetry('badge-iss',     chargerISS);
+setupBadgeRetry('badge-seismes', chargerSeismes);
+
 async function init() {
   await Promise.all([
     chargerAvions(),

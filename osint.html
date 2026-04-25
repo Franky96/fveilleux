@@ -55,9 +55,20 @@
       border: 1px solid #2a3a2a;
       color: #a89f94;
       white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, color 0.15s, transform 0.1s;
     }
+    .osint-badge:hover { border-color: #4a7a4a; color: #c0d8c0; transform: translateY(-1px); }
+    .osint-badge:active { transform: translateY(0); }
     .osint-badge.live { border-color: #3a6a3a; color: #80cc80; }
-    .osint-badge.err  { border-color: #6a2a2a; color: #cc8080; }
+    .osint-badge.live:hover { border-color: #60aa60; }
+    .osint-badge.err  { border-color: #6a2a2a; color: #cc8080; animation: pulse-err 1.8s ease-in-out infinite; }
+    .osint-badge.err:hover { border-color: #aa4040; color: #ee9090; }
+    @keyframes pulse-err {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(180, 60, 60, 0); }
+      50%       { box-shadow: 0 0 0 3px rgba(180, 60, 60, 0.3); }
+    }
 
     /* ── Body ── */
     .osint-body {
