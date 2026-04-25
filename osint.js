@@ -424,26 +424,23 @@ function onTLELoaded(sats, source, url) {
   logUpdate();
 }
 
+// SatNOGS — proxies ordonnés par capacité à gérer les grandes réponses (~300 KB JSON)
 const SATNOGS_URLS = [
   'https://db.satnogs.org/api/tle/?format=json',
-  `https://api.allorigins.win/raw?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
-  `https://api.cors.lol/?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
   `https://corsproxy.io/?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
+  `https://proxy.cors.sh/https://db.satnogs.org/api/tle/?format=json`,
+  `https://api.cors.lol/?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
+  `https://api.allorigins.win/raw?url=${encodeURIComponent('https://db.satnogs.org/api/tle/?format=json')}`,
 ];
 
-const CK_BASE_URLS = [
-  'https://celestrak.org/satcat/satcat.php?GROUP=visual&FORMAT=tle',
-  'https://celestrak.org/SOCRATES/satcat.php?GROUP=visual&FORMAT=tle',
-  'https://celestrak.org/satcat/satcat.php?FORMAT=tle&STATUS=active',
-];
+// CelesTrak active.txt — ~6000 satellites actifs, format TLE standard
+const CK_ACTIVE = 'https://celestrak.org/pub/TLE/active.txt';
 const CK_TLE_URLS = [
-  ...CK_BASE_URLS,
-  ...CK_BASE_URLS.flatMap(u => [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    `https://api.cors.lol/?url=${encodeURIComponent(u)}`,
-    `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-    `https://proxy.cors.sh/${u}`,
-  ]),
+  CK_ACTIVE,
+  `https://corsproxy.io/?url=${encodeURIComponent(CK_ACTIVE)}`,
+  `https://proxy.cors.sh/${CK_ACTIVE}`,
+  `https://api.cors.lol/?url=${encodeURIComponent(CK_ACTIVE)}`,
+  `https://api.allorigins.win/raw?url=${encodeURIComponent(CK_ACTIVE)}`,
 ];
 
 async function chargerTLE() {
@@ -462,7 +459,7 @@ async function chargerTLE() {
 
   for (const url of SATNOGS_URLS) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
       if (!res.ok) {
         dataLog.sats.erreurs.push(`SatNOGS HTTP ${res.status} — ${url}`);
         continue;
@@ -483,7 +480,7 @@ async function chargerTLE() {
 
   for (const url of CK_TLE_URLS) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
       if (!res.ok) {
         dataLog.sats.erreurs.push(`CelesTrak HTTP ${res.status} — ${url}`);
         continue;
