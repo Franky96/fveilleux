@@ -505,19 +505,36 @@ async function refreshAll() {
 window.refreshAll = refreshAll;
 
 // ─────────────────────────────────────────────
-// BADGES CLIQUABLES — relancer le chargement
+// BADGES CLIQUABLES — reset loading puis retry
 // ─────────────────────────────────────────────
-function setupBadgeRetry(badgeId, retryFn) {
+function badgeLoading(badgeId, spinId, label) {
+  const el = document.getElementById(badgeId);
+  if (!el) return;
+  // Retirer classe err/live, remettre état neutre + spinner
+  el.className = 'osint-badge';
+  el.textContent = label;
+  if (spinId) {
+    const spin = document.createElement('span');
+    spin.className = 'dot-spin';
+    spin.id = spinId;
+    el.appendChild(spin);
+  }
+}
+
+function setupBadgeRetry(badgeId, spinId, loadingLabel, retryFn) {
   const el = document.getElementById(badgeId);
   if (!el) return;
   el.title = 'Cliquer pour actualiser';
-  el.addEventListener('click', retryFn);
+  el.addEventListener('click', () => {
+    badgeLoading(badgeId, spinId, loadingLabel);
+    retryFn();
+  });
 }
 
-setupBadgeRetry('badge-avions',  chargerAvions);
-setupBadgeRetry('badge-sats',    () => chargerTLE().then(ok => { if (ok) propagerSatellites(); }));
-setupBadgeRetry('badge-iss',     chargerISS);
-setupBadgeRetry('badge-seismes', chargerSeismes);
+setupBadgeRetry('badge-avions',  'spin-avions',  '✈ Chargement…',   chargerAvions);
+setupBadgeRetry('badge-sats',    'spin-sats',    '🛰 Chargement…',   () => chargerTLE().then(ok => { if (ok) propagerSatellites(); }));
+setupBadgeRetry('badge-iss',     null,           '🚀 Chargement…',   chargerISS);
+setupBadgeRetry('badge-seismes', 'spin-seismes', '🌍 Chargement…',   chargerSeismes);
 
 async function init() {
   await Promise.all([
