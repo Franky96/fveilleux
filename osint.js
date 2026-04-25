@@ -178,6 +178,7 @@ let avionStates  = [];   // tableau brut OpenSky
 let satPositions = [];   // [{name, lat, lng, alt}] calculé par satellite.js
 let tleSatellites = [];  // [{name, satrec}]
 let avionsCount  = 0;
+let issPosition  = null; // dernière position ISS connue
 let showAvions   = true;
 let showSats     = true;
 
@@ -546,42 +547,52 @@ async function chargerISS() {
   dataLog.iss.erreur = null;
   logUpdate();
 
-  try {
-    const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544', {
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const d = await res.json();
-    const { latitude: lat, longitude: lng, altitude, velocity } = d;
+  for (let tentative = 0; tentative < 2; tentative++) {
+    try {
+      if (tentative > 0) await new Promise(r => setTimeout(r, 4000));
+      const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544', {
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      const { latitude: lat, longitude: lng, altitude, velocity } = d;
 
-    layerISS.clearLayers();
-    const marker = L.marker([lat, lng], { icon: ISS_ICON, zIndexOffset: 2000 });
-    marker.bindPopup(`
-      <div class="popup-title">🚀 Station Spatiale Internationale</div>
-      <div class="popup-row"><b>Latitude :</b> ${lat.toFixed(4)}°</div>
-      <div class="popup-row"><b>Longitude :</b> ${lng.toFixed(4)}°</div>
-      <div class="popup-row"><b>Altitude :</b> ${altitude.toFixed(1)} km</div>
-      <div class="popup-row"><b>Vitesse :</b> ${(velocity * 3.6).toFixed(0)} km/h</div>
-    `);
-    layerISS.addLayer(marker);
+      issPosition = { lat, lng, altitude, velocity };
 
-    document.getElementById('stat-iss-alt').textContent = altitude.toFixed(0) + ' km';
-    setBadge('badge-iss', `🚀 ISS ${lat.toFixed(1)}°, ${lng.toFixed(1)}°`, 'live');
-    dataLog.iss.etat = 'ok';
-    dataLog.iss.alt = altitude;
-    dataLog.iss.vel = velocity;
-    dataLog.iss.lat = lat;
-    dataLog.iss.lng = lng;
-    dataLog.iss.updated = new Date().toLocaleTimeString('fr-CA');
-    logUpdate();
+      layerISS.clearLayers();
+      const marker = L.marker([lat, lng], { icon: ISS_ICON, zIndexOffset: 2000 });
+      marker.bindPopup(`
+        <div class="popup-title">🚀 Station Spatiale Internationale</div>
+        <div class="popup-row"><b>Latitude :</b> ${lat.toFixed(4)}°</div>
+        <div class="popup-row"><b>Longitude :</b> ${lng.toFixed(4)}°</div>
+        <div class="popup-row"><b>Altitude :</b> ${altitude.toFixed(1)} km</div>
+        <div class="popup-row"><b>Vitesse :</b> ${(velocity * 3.6).toFixed(0)} km/h</div>
+      `);
+      layerISS.addLayer(marker);
 
-  } catch (e) {
-    console.warn('ISS:', e);
-    setBadge('badge-iss', '🚀 ISS — erreur', 'err');
-    dataLog.iss.etat = 'err';
-    dataLog.iss.erreur = e.message;
-    logUpdate();
+      document.getElementById('stat-iss-alt').textContent = altitude.toFixed(0) + ' km';
+      setBadge('badge-iss', `🚀 ISS ${lat.toFixed(1)}°, ${lng.toFixed(1)}°`, 'live');
+      dataLog.iss.etat = 'ok';
+      dataLog.iss.alt = altitude;
+      dataLog.iss.vel = velocity;
+      dataLog.iss.lat = lat;
+      dataLog.iss.lng = lng;
+      dataLog.iss.updated = new Date().toLocaleTimeString('fr-CA');
+      logUpdate();
+      return;
+    } catch (e) {
+      dataLog.iss.erreur = e.message;
+    }
   }
+
+  console.warn('ISS: toutes les tentatives ont échoué');
+  dataLog.iss.etat = 'err';
+  if (issPosition) {
+    setBadge('badge-iss', `🚀 ISS ${issPosition.lat.toFixed(1)}°, ${issPosition.lng.toFixed(1)}° (hors-ligne)`, '');
+  } else {
+    setBadge('badge-iss', '🚀 ISS — erreur', 'err');
+  }
+  logUpdate();
 }
 
 // ─────────────────────────────────────────────
