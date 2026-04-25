@@ -29,6 +29,107 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 // ─────────────────────────────────────────────
 const mapEl = map.getContainer();
 
+// ─────────────────────────────────────────────
+// JOURNAL DES SOURCES — alimenté par chaque chargeur
+// ─────────────────────────────────────────────
+const dataLog = {
+  avions:  { etat: 'loading', sourceNom: 'OpenSky Network', sourceUrl: 'opensky-network.org/api/states/all', urlUsee: null, count: 0, updated: null, erreurs: [] },
+  sats:    { etat: 'loading', sourceNom: null,              sourceUrl: null,                                  count: 0, tleDate: null, erreurs: [] },
+  iss:     { etat: 'loading', sourceNom: 'wheretheiss.at',  sourceUrl: 'api.wheretheiss.at/v1/satellites/25544', alt: null, vel: null, lat: null, lng: null, updated: null, erreur: null },
+  seismes: { etat: 'loading', sourceNom: 'USGS GeoJSON',    sourceUrl: 'earthquake.usgs.gov/…/2.5_week.geojson', count: 0, updated: null, erreur: null },
+};
+
+// ─────────────────────────────────────────────
+// PANNEAU DÉTAILS
+// ─────────────────────────────────────────────
+function toggleDetails() {
+  const panel = document.getElementById('details-panel');
+  const btn   = document.getElementById('details-toggle-btn');
+  const open  = panel.classList.toggle('open');
+  btn.classList.toggle('active', open);
+  if (open) renderDetails();
+}
+function fermerDetails() {
+  document.getElementById('details-panel').classList.remove('open');
+  document.getElementById('details-toggle-btn').classList.remove('active');
+}
+window.toggleDetails  = toggleDetails;
+window.fermerDetails  = fermerDetails;
+
+function dotEtat(etat) {
+  return `<span class="src-dot ${etat}"></span>`;
+}
+
+function tentativeHtml(tentatives) {
+  if (!tentatives?.length) return '';
+  return `<div class="src-tentatives">${
+    tentatives.map(t => `<div class="src-tent-item ${t.ok ? 'ok' : 'fail'}">${t.ok ? '✓' : '✗'} ${escHtml(t.url)}</div>`).join('')
+  }</div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderDetails() {
+  const body = document.getElementById('details-body');
+  if (!body) return;
+
+  const L = dataLog;
+
+  body.innerHTML = [
+    // ── Avions ──
+    `<div class="src-card">
+      <div class="src-card-title">${dotEtat(L.avions.etat)} ✈ Avions</div>
+      <div class="src-row"><b>Source</b><span class="src-val">${escHtml(L.avions.sourceNom)}</span></div>
+      <div class="src-row"><b>URL</b><span class="src-url">${escHtml(L.avions.sourceUrl)}</span></div>
+      ${L.avions.urlUsee && L.avions.urlUsee !== L.avions.sourceUrl
+        ? `<div class="src-row"><b>Via proxy</b><span class="src-url">${escHtml(L.avions.urlUsee)}</span></div>` : ''}
+      <div class="src-row"><b>Avions</b><span class="src-val">${L.avions.count > 0 ? L.avions.count.toLocaleString('fr-CA') : '—'}</span></div>
+      <div class="src-row"><b>MAJ</b><span class="src-val">${L.avions.updated ?? '—'}</span></div>
+      ${L.avions.erreurs.length ? `<div class="src-err-msg">⚠ ${escHtml(L.avions.erreurs.join(' · '))}</div>` : ''}
+      ${tentativeHtml(L.avions.tentatives)}
+    </div>`,
+
+    // ── Satellites ──
+    `<div class="src-card">
+      <div class="src-card-title">${dotEtat(L.sats.etat)} 🛰 Satellites</div>
+      <div class="src-row"><b>Source</b><span class="src-val">${escHtml(L.sats.sourceNom ?? '—')}</span></div>
+      <div class="src-row"><b>URL</b><span class="src-url">${escHtml(L.sats.sourceUrl ?? '—')}</span></div>
+      <div class="src-row"><b>Satellites</b><span class="src-val">${L.sats.count > 0 ? L.sats.count.toLocaleString('fr-CA') : '—'}</span></div>
+      <div class="src-row"><b>TLE chargés</b><span class="src-val">${L.sats.tleDate ?? '—'}</span></div>
+      ${L.sats.erreurs.length ? `<div class="src-err-msg">⚠ ${escHtml(L.sats.erreurs.join('<br>'))}</div>` : ''}
+    </div>`,
+
+    // ── ISS ──
+    `<div class="src-card">
+      <div class="src-card-title">${dotEtat(L.iss.etat)} 🚀 ISS</div>
+      <div class="src-row"><b>Source</b><span class="src-val">${escHtml(L.iss.sourceNom)}</span></div>
+      <div class="src-row"><b>URL</b><span class="src-url">${escHtml(L.iss.sourceUrl)}</span></div>
+      <div class="src-row"><b>Altitude</b><span class="src-val">${L.iss.alt != null ? L.iss.alt.toFixed(1) + ' km' : '—'}</span></div>
+      <div class="src-row"><b>Vitesse</b><span class="src-val">${L.iss.vel != null ? Math.round(L.iss.vel * 3.6).toLocaleString('fr-CA') + ' km/h' : '—'}</span></div>
+      <div class="src-row"><b>Position</b><span class="src-val">${L.iss.lat != null ? L.iss.lat.toFixed(3) + '°, ' + L.iss.lng.toFixed(3) + '°' : '—'}</span></div>
+      <div class="src-row"><b>MAJ</b><span class="src-val">${L.iss.updated ?? '—'}</span></div>
+      ${L.iss.erreur ? `<div class="src-err-msg">⚠ ${escHtml(L.iss.erreur)}</div>` : ''}
+    </div>`,
+
+    // ── Séismes ──
+    `<div class="src-card">
+      <div class="src-card-title">${dotEtat(L.seismes.etat)} 🌍 Séismes</div>
+      <div class="src-row"><b>Source</b><span class="src-val">${escHtml(L.seismes.sourceNom)}</span></div>
+      <div class="src-row"><b>URL</b><span class="src-url">${escHtml(L.seismes.sourceUrl)}</span></div>
+      <div class="src-row"><b>Séismes</b><span class="src-val">${L.seismes.count > 0 ? L.seismes.count.toLocaleString('fr-CA') + ' (M2.5+, 7 jours)' : '—'}</span></div>
+      <div class="src-row"><b>MAJ</b><span class="src-val">${L.seismes.updated ?? '—'}</span></div>
+      ${L.seismes.erreur ? `<div class="src-err-msg">⚠ ${escHtml(L.seismes.erreur)}</div>` : ''}
+    </div>`,
+  ].join('');
+}
+
+// Re-render si le panel est déjà ouvert
+function logUpdate() {
+  if (document.getElementById('details-panel')?.classList.contains('open')) renderDetails();
+}
+
 function creerCanvas(zIndex) {
   const c = document.createElement('canvas');
   Object.assign(c.style, {
@@ -228,12 +329,17 @@ const AVIONS_URLS = [
 ];
 
 async function chargerAvions() {
+  dataLog.avions.etat = 'loading';
+  dataLog.avions.erreurs = [];
+  logUpdate();
+
   for (const url of AVIONS_URLS) {
     for (let tentative = 0; tentative < 2; tentative++) {
       try {
         if (tentative > 0) await new Promise(r => setTimeout(r, 3000));
         const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
         if (!res.ok) {
+          dataLog.avions.erreurs.push(`HTTP ${res.status} — ${url}`);
           if (res.status === 503 && tentative === 0) continue;
           break;
         }
@@ -248,18 +354,29 @@ async function chargerAvions() {
           setBadge('badge-avions', `✈ ${avionsCount.toLocaleString('fr-CA')} avions`, 'live');
           spinStop('spin-avions');
           dessinerAvions();
+          dataLog.avions.etat = 'ok';
+          dataLog.avions.urlUsee = url;
+          dataLog.avions.count = avionsCount;
+          dataLog.avions.updated = new Date().toLocaleTimeString('fr-CA');
+          logUpdate();
           return;
         }
+        dataLog.avions.erreurs.push(`Données vides — ${url}`);
         break;
-      } catch (_) { break; }
+      } catch (err) {
+        dataLog.avions.erreurs.push(`${err.name}: ${err.message} — ${url}`);
+        break;
+      }
     }
   }
   spinStop('spin-avions');
+  dataLog.avions.etat = 'err';
   if (avionsCount > 0) {
     setBadge('badge-avions', `✈ ${avionsCount.toLocaleString('fr-CA')} (hors-ligne)`, '');
   } else {
     setBadge('badge-avions', '✈ API indisponible', 'err');
   }
+  logUpdate();
 }
 
 // ─────────────────────────────────────────────
@@ -292,12 +409,18 @@ function parseTLEJSON(data) {
   return sats;
 }
 
-function onTLELoaded(sats, source) {
+function onTLELoaded(sats, source, url) {
   tleSatellites = sats;
   document.getElementById('stat-sats').textContent = sats.length.toLocaleString('fr-CA');
   setBadge('badge-sats', `🛰 ${sats.length.toLocaleString('fr-CA')} satellites`, 'live');
   spinStop('spin-sats');
   console.info(`[OSINT] TLE — ${source}: ${sats.length} satellites`);
+  dataLog.sats.etat = 'ok';
+  dataLog.sats.sourceNom = source;
+  if (url) dataLog.sats.sourceUrl = url;
+  dataLog.sats.count = sats.length;
+  dataLog.sats.tleDate = new Date().toLocaleString('fr-CA');
+  logUpdate();
 }
 
 const SATNOGS_URLS = [
@@ -323,37 +446,64 @@ const CK_TLE_URLS = [
 ];
 
 async function chargerTLE() {
+  dataLog.sats.etat = 'loading';
+  dataLog.sats.erreurs = [];
+  logUpdate();
+
   if (typeof satellite === 'undefined') {
     setBadge('badge-sats', '🛰 satellite.js non chargé', 'err');
     spinStop('spin-sats');
+    dataLog.sats.etat = 'err';
+    dataLog.sats.erreurs.push('Bibliothèque satellite.js non chargée');
+    logUpdate();
     return false;
   }
 
   for (const url of SATNOGS_URLS) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        dataLog.sats.erreurs.push(`SatNOGS HTTP ${res.status} — ${url}`);
+        continue;
+      }
       const raw = await res.json();
       const arr = Array.isArray(raw) ? raw : (raw.results || raw.data || []);
-      if (!arr.length) continue;
+      if (!arr.length) {
+        dataLog.sats.erreurs.push(`SatNOGS réponse vide — ${url}`);
+        continue;
+      }
       const sats = parseTLEJSON(arr);
-      if (sats.length > 0) { onTLELoaded(sats, 'SatNOGS'); return true; }
-    } catch (_) {}
+      if (sats.length > 0) { onTLELoaded(sats, 'SatNOGS', 'db.satnogs.org/api/tle/'); return true; }
+      dataLog.sats.erreurs.push(`SatNOGS: 0 TLE valides — ${url}`);
+    } catch (err) {
+      dataLog.sats.erreurs.push(`SatNOGS ${err.name}: ${err.message} — ${url}`);
+    }
   }
 
   for (const url of CK_TLE_URLS) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        dataLog.sats.erreurs.push(`CelesTrak HTTP ${res.status} — ${url}`);
+        continue;
+      }
       const text = await res.text();
-      if (!text.includes('1 ') || !text.includes('2 ')) continue;
+      if (!text.includes('1 ') || !text.includes('2 ')) {
+        dataLog.sats.erreurs.push(`CelesTrak format invalide — ${url}`);
+        continue;
+      }
       const sats = parseTLE(text);
-      if (sats.length > 0) { onTLELoaded(sats, 'CelesTrak'); return true; }
-    } catch (_) {}
+      if (sats.length > 0) { onTLELoaded(sats, 'CelesTrak', url); return true; }
+      dataLog.sats.erreurs.push(`CelesTrak: 0 TLE valides — ${url}`);
+    } catch (err) {
+      dataLog.sats.erreurs.push(`CelesTrak ${err.name}: ${err.message} — ${url}`);
+    }
   }
 
   setBadge('badge-sats', '🛰 Aucune source TLE', 'err');
   spinStop('spin-sats');
+  dataLog.sats.etat = 'err';
+  logUpdate();
   return false;
 }
 
@@ -392,6 +542,10 @@ const ISS_ICON = L.divIcon({
 });
 
 async function chargerISS() {
+  dataLog.iss.etat = 'loading';
+  dataLog.iss.erreur = null;
+  logUpdate();
+
   try {
     const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544', {
       signal: AbortSignal.timeout(8000),
@@ -413,10 +567,20 @@ async function chargerISS() {
 
     document.getElementById('stat-iss-alt').textContent = altitude.toFixed(0) + ' km';
     setBadge('badge-iss', `🚀 ISS ${lat.toFixed(1)}°, ${lng.toFixed(1)}°`, 'live');
+    dataLog.iss.etat = 'ok';
+    dataLog.iss.alt = altitude;
+    dataLog.iss.vel = velocity;
+    dataLog.iss.lat = lat;
+    dataLog.iss.lng = lng;
+    dataLog.iss.updated = new Date().toLocaleTimeString('fr-CA');
+    logUpdate();
 
   } catch (e) {
     console.warn('ISS:', e);
     setBadge('badge-iss', '🚀 ISS — erreur', 'err');
+    dataLog.iss.etat = 'err';
+    dataLog.iss.erreur = e.message;
+    logUpdate();
   }
 }
 
@@ -424,6 +588,10 @@ async function chargerISS() {
 // SÉISMES — USGS GeoJSON (circleMarker Leaflet)
 // ─────────────────────────────────────────────
 async function chargerSeismes() {
+  dataLog.seismes.etat = 'loading';
+  dataLog.seismes.erreur = null;
+  logUpdate();
+
   try {
     const res = await fetch(
       'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson',
@@ -456,11 +624,18 @@ async function chargerSeismes() {
     document.getElementById('stat-seismes').textContent = quakes.length;
     setBadge('badge-seismes', `🌍 ${quakes.length} séismes`, 'live');
     spinStop('spin-seismes');
+    dataLog.seismes.etat = 'ok';
+    dataLog.seismes.count = quakes.length;
+    dataLog.seismes.updated = new Date().toLocaleString('fr-CA');
+    logUpdate();
 
   } catch (e) {
     console.warn('USGS:', e);
     setBadge('badge-seismes', '🌍 Séismes — erreur', 'err');
     spinStop('spin-seismes');
+    dataLog.seismes.etat = 'err';
+    dataLog.seismes.erreur = e.message;
+    logUpdate();
   }
 }
 

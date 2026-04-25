@@ -200,9 +200,134 @@
     .osint-sidebar::-webkit-scrollbar { width: 4px; }
     .osint-sidebar::-webkit-scrollbar-track { background: #0a0f0a; }
     .osint-sidebar::-webkit-scrollbar-thumb { background: #2a3a2a; border-radius: 2px; }
+
+    /* ── Bouton détails ── */
+    .details-toggle-btn {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: #162216;
+      border: 1px solid #2a3a2a;
+      color: #a89f94;
+      padding: 0.22rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .details-toggle-btn:hover { border-color: #4a8a4a; color: #80cc80; }
+    .details-toggle-btn.active { border-color: #60aa60; color: #80cc80; background: #1a2a1a; }
+
+    /* ── Panneau latéral droit ── */
+    .details-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: 310px;
+      height: 100vh;
+      background: #0c160c;
+      border-left: 1px solid #2a3a2a;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.22s ease;
+      overflow: hidden;
+    }
+    .details-panel.open { transform: translateX(0); }
+
+    .details-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid #1a2a1a;
+      flex-shrink: 0;
+    }
+    .details-panel-header span { color: #80cc80; font-size: 0.88rem; font-weight: bold; }
+    .details-close {
+      background: none;
+      border: none;
+      color: #a89f94;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+    .details-close:hover { color: #f0ede6; }
+
+    .details-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 0.5rem 0;
+    }
+    .details-body::-webkit-scrollbar { width: 3px; }
+    .details-body::-webkit-scrollbar-thumb { background: #2a3a2a; border-radius: 2px; }
+
+    /* Source card */
+    .src-card {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #1a2a1a;
+    }
+    .src-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #f0ede6;
+      margin-bottom: 0.45rem;
+    }
+    .src-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .src-dot.ok  { background: #80cc80; }
+    .src-dot.err { background: #cc4040; animation: pulse-err 1.8s infinite; }
+    .src-dot.loading { background: #d4892a; animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .src-row {
+      font-size: 0.73rem;
+      color: #8a9a8a;
+      line-height: 1.6;
+      display: flex;
+      gap: 0.4rem;
+    }
+    .src-row b { color: #b0c0b0; font-weight: 600; min-width: 64px; flex-shrink: 0; }
+    .src-row .src-val { color: #d0e0d0; word-break: break-all; }
+    .src-row .src-url { color: #556655; font-family: monospace; font-size: 0.68rem; word-break: break-all; }
+    .src-err-msg {
+      margin-top: 0.35rem;
+      font-size: 0.72rem;
+      color: #cc6060;
+      background: #1c0a0a;
+      border: 1px solid #3a1a1a;
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      line-height: 1.4;
+    }
+    .src-tentatives {
+      margin-top: 0.3rem;
+      font-size: 0.68rem;
+      color: #556655;
+    }
+    .src-tent-item { display: flex; gap: 0.3rem; align-items: center; padding: 0.1rem 0; }
+    .src-tent-item.ok  { color: #4a8a4a; }
+    .src-tent-item.fail{ color: #6a3a3a; }
   </style>
 </head>
 <body>
+
+  <!-- Panneau latéral droit -->
+  <div class="details-panel" id="details-panel">
+    <div class="details-panel-header">
+      <span>📡 Sources de données</span>
+      <button class="details-close" onclick="fermerDetails()">✕</button>
+    </div>
+    <div class="details-body" id="details-body"></div>
+  </div>
 
   <div class="osint-header">
     <a href="dashboard.html">&#8592; Accueil</a>
@@ -213,6 +338,7 @@
       <span class="osint-badge live" id="badge-iss">🚀 ISS</span>
       <span class="osint-badge" id="badge-seismes">🌍 Séismes <span class="dot-spin" id="spin-seismes"></span></span>
     </div>
+    <button class="details-toggle-btn" id="details-toggle-btn" onclick="toggleDetails()" title="Détails des sources">📡 Détails</button>
   </div>
 
   <div class="osint-body">
