@@ -11,6 +11,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'films',        icon: '🎬', label: 'Films & Séries'  },
   { key: 'informatique', icon: '💻', label: 'Informatique', children: [
     { key: 'arinc429',  icon: '📡', label: 'ARINC 429'     },
+    { key: 'csdb',      icon: '📶', label: 'CSDB'           },
     { key: 'converter', icon: '🔢', label: 'Convertisseur'  },
     { key: 'crypteur',  icon: '⚙️', label: 'Encodeur BNR'  },
   ]},
@@ -244,6 +245,7 @@ const PERMS_STRUCTURE = [
   { key: 'osint',     label: 'OSINT Map' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
+    { key: 'csdb',      label: 'CSDB' },
     { key: 'converter', label: 'Convertisseur' },
     { key: 'crypteur',  label: 'Encodeur BNR' },
     { key: 'tcpip',     label: 'TCP/IP' },
