@@ -61,28 +61,28 @@
     .csdb-header p { color:#a89f94; font-size:0.93rem; }
 
     /* ── Panel ── */
-    .panel { background:#0f1a0f; border:1px solid #2a3a2a; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+    .panel { background:#040904; border:1px solid #1a2a1a; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
     .panel h2 { color:#80cc80; font-size:0.85rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1rem; }
 
-    /* ── Byte display ── */
-    .bytes-display { display:flex; flex-direction:column; gap:3px; padding:0.5rem 0; }
-    .bytes-bitnums { display:flex; align-items:center; gap:8px; padding:0 4px; margin-bottom:2px; }
-    .bytes-bitnums-spacer { display:inline-block; }
-    .byte-group { display:flex; flex-direction:row; align-items:center; gap:8px; padding:3px 4px; border-radius:6px; }
-    .byte-group:hover { background:rgba(255,255,255,0.025); }
-    .byte-role-chip { font-size:0.6rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:3px 8px; border-radius:4px; min-width:76px; text-align:center; flex-shrink:0; }
+    /* ── Byte display (CSS Grid — colonnes parfaitement alignées) ── */
+    .bytes-display {
+      display: grid;
+      grid-template-columns: 88px 54px repeat(8, 28px);
+      column-gap: 3px; row-gap: 6px;
+      padding: 0.5rem 0.4rem;
+      align-items: center;
+    }
+    .bit-num-hdr { font-size:0.62rem; color:#4a6a8a; font-family:'Courier New',monospace; text-align:center; padding-bottom:2px; }
+    .byte-role-chip { font-size:0.6rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:3px 6px; border-radius:4px; text-align:center; }
     .role-addr   { background:rgba(245,158,11,0.25); color:#f59e0b; }
     .role-status { background:rgba(96,184,200,0.25);  color:#60b8c8; }
     .role-data   { background:rgba(128,204,128,0.20); color:#80cc80; }
-    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold; min-width:46px; text-align:right; flex-shrink:0; }
+    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold; text-align:right; padding-right:2px; }
     .addr-color   { color:#f59e0b; }
     .status-color { color:#60b8c8; }
     .data-color   { color:#80cc80; }
-    .byte-bits-row { display:grid; grid-template-columns:repeat(8,26px); gap:2px; }
-    .byte-bit-wrapper { display:flex; flex-direction:column; align-items:center; }
-    .byte-bit-num { font-size:0.55rem; color:#4a6a8a; font-family:'Courier New',monospace; }
     .byte-bit-cell {
-      width:26px; height:32px; display:flex; align-items:center; justify-content:center;
+      width:28px; height:32px; display:flex; align-items:center; justify-content:center;
       font-family:'Courier New',monospace; font-size:0.9rem; font-weight:bold;
       border-radius:4px; cursor:pointer; user-select:none;
       transition:filter 0.1s, transform 0.1s; border:2px solid transparent;
@@ -97,26 +97,11 @@
     .legend-dot { width:12px; height:12px; border-radius:3px; }
     .placeholder-msg { color:#556655; font-size:0.9rem; padding:1.5rem; font-style:italic; text-align:center; }
 
-    /* ── Address banner ── */
-    .address-banner {
-      background:#141414; border:1px solid #222222; border-left:4px solid #f59e0b;
-      border-radius:10px; padding:1rem 1.5rem; margin-bottom:1.5rem;
-      display:flex; align-items:center; justify-content:space-between; gap:1rem;
-    }
-    .address-banner-left { display:flex; align-items:center; gap:1rem; }
-    .addr-hex-box {
-      background:#f59e0b; color:#0a0f0a; font-family:'Courier New',monospace;
-      font-size:1.1rem; font-weight:bold; padding:0.4rem 0.8rem; border-radius:8px;
-      min-width:4rem; text-align:center;
-    }
-    .banner-name { font-size:1.1rem; font-weight:bold; color:#f0ede6; }
-    .banner-sub  { font-size:0.78rem; color:#556680; margin-top:0.2rem; }
-    .banner-hex  { font-family:'Courier New',monospace; font-size:1.5rem; font-weight:bold; color:#f59e0b; }
-
     /* ── Detail grid ── */
-    .detail-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
-    @media (max-width:900px) { .detail-grid { grid-template-columns:1fr; } }
-    .detail-panel { background:#141414; border:1px solid #222222; border-radius:10px; padding:1.1rem 1.2rem; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+    .detail-panel-full { grid-column:1/-1; }
+    @media (max-width:700px) { .detail-grid { grid-template-columns:1fr; } }
+    .detail-panel { background:#000000; border:1px solid #1c1c1c; border-radius:10px; padding:1.1rem 1.2rem; }
     .detail-panel-title {
       font-size:0.78rem; font-weight:bold; letter-spacing:0.08rem; text-transform:uppercase;
       color:#a89f94; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;
@@ -207,19 +192,7 @@
       </div>
     </div>
 
-    <!-- ── Bannière adresse ── -->
-    <div class="address-banner">
-      <div class="address-banner-left">
-        <div class="addr-hex-box" id="banner-addr-box">0x--</div>
-        <div>
-          <div class="banner-name" id="banner-name">—</div>
-          <div class="banner-sub"  id="banner-sub">—</div>
-        </div>
-      </div>
-      <div class="banner-hex" id="banner-hex">—</div>
-    </div>
-
-    <!-- ── Détails 3 colonnes ── -->
+    <!-- ── Détails ── -->
     <div class="detail-grid">
 
       <!-- ADRESSE -->
@@ -242,8 +215,8 @@
         </div>
       </div>
 
-      <!-- DONNÉES -->
-      <div class="detail-panel">
+      <!-- DONNÉES — pleine largeur -->
+      <div class="detail-panel detail-panel-full">
         <div class="detail-panel-title"><span class="dot dot-green"></span>Octets de données</div>
         <div id="data-panel-body">
           <div class="detail-row"><span class="detail-key">—</span><span class="detail-val dim">En attente</span></div>

@@ -108,6 +108,7 @@ function getStatusFields(addr) {
 
 // ── State ─────────────────────────────────────────────
 let currentBytes = [];
+let lastHighlightedAddr = -1;
 
 // ── Input parsing ─────────────────────────────────────
 function parseHexInput(raw) {
@@ -139,7 +140,6 @@ function decodeBlock(bytes) {
   const info   = CSDB_ADDR[addr] || null;
 
   renderBytesDisplay(bytes);
-  updateAddressBanner(addr, info);
   updateAddressPanel(addr, info);
   updateStatusPanel(status, addr, info);
   updateDataPanel(data, addr, info);
@@ -172,67 +172,50 @@ function loadExample(hexStr) {
   decodeBlock(parseHexInput(hexStr));
 }
 
-// ── Byte display rendering ────────────────────────────
+// ── Byte display rendering (CSS Grid — enfants directs) ──
 function renderBytesDisplay(bytes) {
   const container = document.getElementById('bytes-display');
   container.innerHTML = '';
 
   if (!bytes.length) {
-    container.innerHTML = `<div class="placeholder-msg">
-      Entrez des octets hexadécimaux séparés par des espaces<br>
-      <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 E0 08 41 85 00</code> — VHF COMM FREQ</small>
-    </div>`;
+    const ph = document.createElement('div');
+    ph.className = 'placeholder-msg';
+    ph.style.gridColumn = '1/-1';
+    ph.innerHTML = `Entrez des octets hexadécimaux séparés par des espaces<br>
+      <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 E0 08 41 85 00</code> — VHF COMM FREQ</small>`;
+    container.appendChild(ph);
     return;
   }
 
-  // ── Bit-number header row ─────────────────────────
-  const hdr = document.createElement('div');
-  hdr.className = 'bytes-bitnums';
-  const sp1 = document.createElement('span');
-  sp1.className = 'bytes-bitnums-spacer';
-  sp1.style.minWidth = '76px';
-  const sp2 = document.createElement('span');
-  sp2.className = 'bytes-bitnums-spacer';
-  sp2.style.minWidth = '54px'; // hex + gap
-  hdr.appendChild(sp1);
-  hdr.appendChild(sp2);
-  const numHdr = document.createElement('div');
-  numHdr.className = 'byte-bits-row';
+  // ── Ligne d'en-tête : 2 espaceurs + numéros de bits ─
+  container.appendChild(document.createElement('span')); // chip spacer
+  container.appendChild(document.createElement('span')); // hex spacer
   for (let bit = 7; bit >= 0; bit--) {
-    const w = document.createElement('div');
-    w.className = 'byte-bit-wrapper';
-    w.innerHTML = `<div style="font-size:0.65rem;color:#4a6a8a;font-family:'Courier New',monospace;text-align:center">${bit}</div>`;
-    numHdr.appendChild(w);
+    const d = document.createElement('div');
+    d.className = 'bit-num-hdr';
+    d.textContent = bit;
+    container.appendChild(d);
   }
-  hdr.appendChild(numHdr);
-  container.appendChild(hdr);
 
-  // ── One row per byte ──────────────────────────────
+  // ── Une rangée de 10 enfants directs par octet ────
   bytes.forEach((byteVal, idx) => {
     let role, roleLabel, hexCls, bitCls;
-    if (idx === 0)      { role='addr';   roleLabel='ADRESSE';         hexCls='addr-color';   bitCls='bit-addr'; }
-    else if (idx === 1) { role='status'; roleLabel='STATUS';          hexCls='status-color'; bitCls='bit-status'; }
-    else                { role='data';   roleLabel=`DONNÉES #${idx-1}`; hexCls='data-color'; bitCls='bit-data'; }
-
-    const grp = document.createElement('div');
-    grp.className = 'byte-group';
+    if (idx === 0)      { role='addr';   roleLabel='ADRESSE';           hexCls='addr-color';   bitCls='bit-addr'; }
+    else if (idx === 1) { role='status'; roleLabel='STATUS';            hexCls='status-color'; bitCls='bit-status'; }
+    else                { role='data';   roleLabel=`DONNÉES #${idx-1}`; hexCls='data-color';   bitCls='bit-data'; }
 
     const chip = document.createElement('span');
     chip.className = `byte-role-chip role-${role}`;
     chip.textContent = roleLabel;
+    container.appendChild(chip);
 
     const hexLbl = document.createElement('span');
     hexLbl.className = `byte-hex-val ${hexCls}`;
     hexLbl.textContent = '0x' + byteVal.toString(16).toUpperCase().padStart(2, '0');
-
-    const bitsRow = document.createElement('div');
-    bitsRow.className = 'byte-bits-row';
+    container.appendChild(hexLbl);
 
     for (let bit = 7; bit >= 0; bit--) {
       const val = (byteVal >> bit) & 1;
-      const wrap = document.createElement('div');
-      wrap.className = 'byte-bit-wrapper';
-
       const cell = document.createElement('div');
       cell.className = `byte-bit-cell ${bitCls}`;
       cell.textContent = val;
@@ -240,34 +223,19 @@ function renderBytesDisplay(bytes) {
 
       const ci = idx, cb = bit;
       cell.addEventListener('click', () => {
+        const savedY = window.scrollY;
         const nb = [...currentBytes];
         nb[ci] = nb[ci] ^ (1 << cb);
         const hexStr = nb.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
         document.getElementById('hex-input').value = hexStr;
         document.getElementById('error-msg').textContent = '';
         decodeBlock(nb);
+        requestAnimationFrame(() => window.scrollTo({ top: savedY, behavior: 'instant' }));
       });
 
-      wrap.appendChild(cell);
-      bitsRow.appendChild(wrap);
+      container.appendChild(cell);
     }
-
-    grp.appendChild(chip);
-    grp.appendChild(hexLbl);
-    grp.appendChild(bitsRow);
-    container.appendChild(grp);
   });
-}
-
-// ── Address banner ────────────────────────────────────
-function updateAddressBanner(addr, info) {
-  const hex = '0x' + addr.toString(16).toUpperCase().padStart(2, '0');
-  document.getElementById('banner-addr-box').textContent = hex;
-  document.getElementById('banner-name').textContent = info ? info.name : 'Adresse inconnue';
-  document.getElementById('banner-sub').textContent = info
-    ? `Système : ${info.system}  •  Données : ${info.db} octet(s) attendu(s)`
-    : 'Non répertoriée dans le catalogue CSDB';
-  document.getElementById('banner-hex').textContent = hex;
 }
 
 // ── Address panel ─────────────────────────────────────
@@ -396,7 +364,10 @@ function highlightCatalogRow(addr) {
   const row = document.getElementById(`cat-row-${addr}`);
   if (row) {
     row.classList.add('tr-current');
-    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (addr !== lastHighlightedAddr) {
+      row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      lastHighlightedAddr = addr;
+    }
   }
 }
 
@@ -440,10 +411,7 @@ function setText(id, text, cls = '') {
 }
 
 function clearPanels() {
-  document.getElementById('banner-addr-box').textContent = '0x--';
-  document.getElementById('banner-name').textContent     = '—';
-  document.getElementById('banner-sub').textContent      = '—';
-  document.getElementById('banner-hex').textContent      = '—';
+  lastHighlightedAddr = -1;
   ['addr-hex','addr-dec','addr-bin','addr-name','addr-system','addr-db','addr-desc']
     .forEach(id => setText(id, '—', 'dim'));
   document.getElementById('status-panel-body').innerHTML = row('—', 'En attente', 'dim');
