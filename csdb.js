@@ -106,6 +106,106 @@ function getStatusFields(addr) {
   return f || null; // null = use standard layout
 }
 
+// ── Field map segments par octet ─────────────────────
+// Chaque entrée = [{span, label, cls}, ...]  (total spans = 8)
+const STATUS_FIELD_MAP = {
+  standard: [
+    { span:1, label:'V1',   cls:'csdb-fmap-valid' },
+    { span:1, label:'V2',   cls:'csdb-fmap-valid' },
+    { span:1, label:'V3',   cls:'csdb-fmap-valid' },
+    { span:2, label:'MODE', cls:'csdb-fmap-mode'  },
+    { span:1, label:'TEST', cls:'csdb-fmap-test'  },
+    { span:2, label:'SRC',  cls:'csdb-fmap-src'   },
+  ],
+  0x10: [
+    { span:1, label:'FV',  cls:'csdb-fmap-valid' },
+    { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+    { span:1, label:'XFR', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SQL', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SI',  cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'TST', cls:'csdb-fmap-test'  },
+    { span:2, label:'SRC', cls:'csdb-fmap-src'   },
+  ],
+  0x11: [
+    { span:1, label:'FV',  cls:'csdb-fmap-valid' },
+    { span:1, label:'FLB', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'FLA', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'XMT', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SI',  cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'TST', cls:'csdb-fmap-test'  },
+    { span:2, label:'SRC', cls:'csdb-fmap-src'   },
+  ],
+};
+STATUS_FIELD_MAP[0x12] = STATUS_FIELD_MAP[0x10];
+STATUS_FIELD_MAP[0x13] = STATUS_FIELD_MAP[0x11];
+
+const DATA_FIELD_MAP = {
+  // VHF COMM FREQ actif — BCD 0.001 MHz
+  0x10: [
+    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // VHF COMM DATA — fréquence standby BCD
+  0x11: [
+    [{ span:4, label:'STBY 0.01',  cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.001', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'STBY 1 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.1',   cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'STBY 100',   cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 10',     cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',        cls:'csdb-fmap-pad' }],
+  ],
+  // NAV / DME FREQ — BCD MHz
+  0x20: [
+    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  0x24: [
+    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // ATC — BCD 4 chiffres (D C B A)
+  0x33: [
+    [{ span:4, label:'Chiffre D', cls:'csdb-fmap-bcd' }, { span:4, label:'Chiffre C', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'Chiffre B', cls:'csdb-fmap-bcd' }, { span:4, label:'Chiffre A', cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // Heading magnétique — complément à 2, degrés
+  0x46: [
+    [{ span:8, label:'CAP (MSB)',  cls:'csdb-fmap-data' }],
+    [{ span:8, label:'CAP (LSB)',  cls:'csdb-fmap-data' }],
+    [{ span:8, label:'PAD',        cls:'csdb-fmap-pad'  }],
+    [{ span:8, label:'PAD',        cls:'csdb-fmap-pad'  }],
+  ],
+  // Radio altitude + décision height
+  0xC3: [
+    [{ span:8, label:'ALT MSB (ft)', cls:'csdb-fmap-data' }],
+    [{ span:8, label:'ALT LSB (ft)', cls:'csdb-fmap-data' }],
+    [{ span:8, label:'DH MSB (ft)',  cls:'csdb-fmap-data' }],
+    [{ span:8, label:'DH LSB (ft)',  cls:'csdb-fmap-data' }],
+  ],
+};
+DATA_FIELD_MAP[0x12] = DATA_FIELD_MAP[0x10];
+DATA_FIELD_MAP[0x13] = DATA_FIELD_MAP[0x11];
+DATA_FIELD_MAP[0x25] = DATA_FIELD_MAP[0x24];
+
+function getFieldMapForByte(byteIdx, addr) {
+  if (byteIdx === 0) {
+    return [{ span:8, label:'ADRESSE', cls:'csdb-fmap-addr' }];
+  }
+  if (byteIdx === 1) {
+    return STATUS_FIELD_MAP[addr] || STATUS_FIELD_MAP.standard;
+  }
+  const dataIdx = byteIdx - 2;
+  const addrMap = DATA_FIELD_MAP[addr];
+  if (addrMap && addrMap[dataIdx]) return addrMap[dataIdx];
+  return [{ span:8, label:'DATA', cls:'csdb-fmap-data' }];
+}
+
 // ── State ─────────────────────────────────────────────
 let currentBytes = [];
 let lastHighlightedAddr = -1;
@@ -198,12 +298,17 @@ function renderBytesDisplay(bytes) {
     container.appendChild(d);
   }
 
-  // ── Une rangée de 10 enfants directs par octet ────
+  // ── Une rangée par octet + ligne d'étiquettes ─────
   bytes.forEach((byteVal, idx) => {
     let role, roleLabel, hexCls, bitCls;
     if (idx === 0)      { role='addr';   roleLabel='ADRESSE';           hexCls='addr-color';   bitCls='bit-addr'; }
     else if (idx === 1) { role='status'; roleLabel='STATUS';            hexCls='status-color'; bitCls='bit-status'; }
     else                { role='data';   roleLabel=`DONNÉES #${idx-1}`; hexCls='data-color';   bitCls='bit-data'; }
+
+    // Espaceur visuel entre octets (avant chaque octet y compris le premier)
+    const spacer = document.createElement('div');
+    spacer.className = 'csdb-byte-spacer';
+    container.appendChild(spacer);
 
     const chip = document.createElement('span');
     chip.className = `byte-role-chip role-${role}`;
@@ -235,6 +340,18 @@ function renderBytesDisplay(bytes) {
       });
 
       container.appendChild(cell);
+    }
+
+    // ── Ligne d'étiquettes de champs sous les bits ──
+    container.appendChild(document.createElement('span')); // col chip vide
+    container.appendChild(document.createElement('span')); // col hex vide
+    const segs = getFieldMapForByte(idx, bytes[0]);
+    for (const seg of segs) {
+      const el = document.createElement('div');
+      el.className = `csdb-fmap-seg ${seg.cls}`;
+      el.style.gridColumn = `span ${seg.span}`;
+      el.textContent = seg.label;
+      container.appendChild(el);
     }
   });
 }

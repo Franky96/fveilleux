@@ -57,7 +57,7 @@
     .bytes-display {
       display: grid;
       grid-template-columns: 92px 60px repeat(8, 42px);
-      column-gap: 4px; row-gap: 8px;
+      column-gap: 4px; row-gap: 4px;
       padding: 0.8rem 0.4rem;
       align-items: center;
       width: fit-content;
@@ -82,6 +82,24 @@
     .bit-addr   { background:rgba(245,158,11,0.18); color:#f59e0b; border-color:rgba(245,158,11,0.6); }
     .bit-status { background:rgba(96,184,200,0.18);  color:#60b8c8; border-color:rgba(96,184,200,0.6); }
     .bit-data   { background:rgba(128,204,128,0.18); color:#80cc80; border-color:rgba(128,204,128,0.6); }
+
+    /* ── Field map labels (sous les bits) ── */
+    .csdb-fmap-seg {
+      height:1.5rem; font-size:0.58rem; letter-spacing:0.02rem;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:3px; border:1px solid; overflow:hidden; white-space:nowrap;
+      font-family:'Courier New',monospace;
+    }
+    .csdb-fmap-addr  { background:rgba(245,158,11,0.2);  color:#f59e0b; border-color:rgba(245,158,11,0.5); }
+    .csdb-fmap-valid { background:rgba(128,204,128,0.2); color:#80cc80; border-color:rgba(128,204,128,0.5); }
+    .csdb-fmap-mode  { background:rgba(96,184,200,0.2);  color:#60b8c8; border-color:rgba(96,184,200,0.5); }
+    .csdb-fmap-test  { background:rgba(255,107,107,0.2); color:#ff6b6b; border-color:rgba(255,107,107,0.5); }
+    .csdb-fmap-src   { background:rgba(192,132,252,0.2); color:#c084fc; border-color:rgba(192,132,252,0.5); }
+    .csdb-fmap-ctrl  { background:rgba(251,146,60,0.2);  color:#fb923c; border-color:rgba(251,146,60,0.5); }
+    .csdb-fmap-bcd   { background:rgba(128,204,128,0.2); color:#80cc80; border-color:rgba(128,204,128,0.4); }
+    .csdb-fmap-data  { background:rgba(128,204,128,0.15);color:#6ab86a; border-color:rgba(128,204,128,0.3); }
+    .csdb-fmap-pad   { background:rgba(40,40,40,0.5);    color:#445544; border-color:rgba(60,60,60,0.5); }
+    .csdb-byte-spacer { grid-column:1/-1; height:8px; }
 
     .legend { display:flex; gap:1.2rem; flex-wrap:wrap; margin-top:1.2rem; justify-content:center; }
     .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:#c8c4bc; }
