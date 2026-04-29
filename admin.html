@@ -53,6 +53,8 @@
   </style>
 </head>
 <body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — vous consultez la vraie page Admin &nbsp;·&nbsp; <a href="beta/dashboard.html" style="color:#000;text-decoration:underline;">Retour au dashboard beta</a></div>
+  <script>if(sessionStorage.getItem('betaMode')==='1'){document.getElementById('beta-banner').style.display='block';document.body.style.paddingTop='34px';}</script>
   <div class="page-container">
 
     <aside class="sidebar" style="border-right-color: #c0392b;">
