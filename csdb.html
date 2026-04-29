@@ -44,15 +44,12 @@
     .error-msg { color:#ff6b6b; font-size:0.82rem; flex:1; min-width:0; }
 
     /* ── Examples ── */
-    .examples-bar {
-      display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;
-      padding:0.5rem 1.5rem; background:#080d08; border-bottom:1px solid #1a2a1a;
-    }
-    .examples-label { color:#445544; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06rem; flex-shrink:0; }
+    .examples-bar { display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .examples-label { color:#445544; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06rem; flex-shrink:0; margin-right:0.2rem; }
     .ex-btn {
-      font-family:'Courier New',monospace; font-size:0.72rem; color:#80cc80;
-      background:rgba(128,204,128,0.08); border:1px solid #2a3a2a;
-      border-radius:5px; padding:0.2rem 0.6rem; cursor:pointer; white-space:nowrap;
+      font-family:'Courier New',monospace; font-size:0.7rem; color:#80cc80;
+      background:rgba(128,204,128,0.07); border:1px solid #2a3a2a;
+      border-radius:5px; padding:0.18rem 0.55rem; cursor:pointer; white-space:nowrap;
       transition:border-color 0.15s, background 0.15s;
     }
     .ex-btn:hover { border-color:#80cc80; background:rgba(128,204,128,0.15); }
@@ -68,20 +65,22 @@
     .panel h2 { color:#80cc80; font-size:0.85rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1rem; }
 
     /* ── Byte display ── */
-    .bytes-display { display:flex; flex-wrap:wrap; gap:0.6rem 1rem; padding:0.5rem 0; align-items:flex-end; min-height:90px; }
-    .byte-group { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
-    .byte-role-chip { font-size:0.6rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
+    .bytes-display { display:flex; flex-direction:column; gap:3px; padding:0.5rem 0; }
+    .bytes-bitnums { display:flex; align-items:center; gap:8px; padding:0 4px; margin-bottom:2px; }
+    .bytes-bitnums-spacer { display:inline-block; }
+    .byte-group { display:flex; flex-direction:row; align-items:center; gap:8px; padding:3px 4px; border-radius:6px; }
+    .byte-group:hover { background:rgba(255,255,255,0.025); }
+    .byte-role-chip { font-size:0.6rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:3px 8px; border-radius:4px; min-width:76px; text-align:center; flex-shrink:0; }
     .role-addr   { background:rgba(245,158,11,0.25); color:#f59e0b; }
     .role-status { background:rgba(96,184,200,0.25);  color:#60b8c8; }
     .role-data   { background:rgba(128,204,128,0.20); color:#80cc80; }
-    .byte-num-label { font-size:0.58rem; color:#445566; font-family:'Courier New',monospace; }
-    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold; }
+    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold; min-width:46px; text-align:right; flex-shrink:0; }
     .addr-color   { color:#f59e0b; }
     .status-color { color:#60b8c8; }
     .data-color   { color:#80cc80; }
     .byte-bits-row { display:grid; grid-template-columns:repeat(8,26px); gap:2px; }
-    .byte-bit-wrapper { display:flex; flex-direction:column; align-items:center; gap:2px; }
-    .byte-bit-num { font-size:0.52rem; color:#8aaa8a; font-family:'Courier New',monospace; }
+    .byte-bit-wrapper { display:flex; flex-direction:column; align-items:center; }
+    .byte-bit-num { font-size:0.55rem; color:#4a6a8a; font-family:'Courier New',monospace; }
     .byte-bit-cell {
       width:26px; height:32px; display:flex; align-items:center; justify-content:center;
       font-family:'Courier New',monospace; font-size:0.9rem; font-weight:bold;
@@ -92,7 +91,6 @@
     .bit-addr   { background:rgba(245,158,11,0.18); color:#f59e0b; border-color:rgba(245,158,11,0.6); }
     .bit-status { background:rgba(96,184,200,0.18);  color:#60b8c8; border-color:rgba(96,184,200,0.6); }
     .bit-data   { background:rgba(128,204,128,0.18); color:#80cc80; border-color:rgba(128,204,128,0.6); }
-    .byte-divider { color:#2a3a2a; font-size:1.8rem; align-self:center; padding-bottom:0.8rem; line-height:1; }
 
     .legend { display:flex; gap:1.2rem; flex-wrap:wrap; margin-top:1.2rem; justify-content:center; }
     .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:#c8c4bc; }
@@ -170,24 +168,26 @@
     <div class="error-msg" id="error-msg"></div>
   </div>
 
-  <!-- ── Exemples rapides ── -->
-  <div class="examples-bar">
-    <span class="examples-label">Exemples :</span>
-    <button class="ex-btn" onclick="loadExample('A5')">A5 — SYNC</button>
-    <button class="ex-btn" onclick="loadExample('10 E0 08 41 85 00')">10 — VHF COMM FREQ</button>
-    <button class="ex-btn" onclick="loadExample('46 A0 00 5A 00 00')">46 — CAP MAGNÉTIQUE</button>
-    <button class="ex-btn" onclick="loadExample('C3 80 01 F4 00 00')">C3 — RADIO ALT / DH</button>
-    <button class="ex-btn" onclick="loadExample('33 80 02 05 00 00')">33 — CODE ATC</button>
-    <button class="ex-btn" onclick="loadExample('F3 00 00 00 00 00')">F3 — DIAGNOSTICS</button>
-    <button class="ex-btn" onclick="loadExample('FF 00 00 00 00 00')">FF — NO DATA</button>
-  </div>
-
   <div class="csdb-container">
 
     <div class="csdb-header">
       <h1>Décodeur CSDB</h1>
       <p>Commercial Standard Digital Bus — GAMA Standard 523-0772774<br>
          <small>Chaque byte = cadre UART 11 bits · Bloc = ADRESSE + STATUS + DONNÉES</small></p>
+    </div>
+
+    <!-- ── Exemples rapides ── -->
+    <div class="examples-bar">
+      <span class="examples-label">Exemples :</span>
+      <button class="ex-btn" onclick="loadExample('A5')">A5 — SYNC</button>
+      <button class="ex-btn" onclick="loadExample('10 E0 08 41 85 00')">10 — VHF COMM FREQ</button>
+      <button class="ex-btn" onclick="loadExample('11 A0 12 45 00 00')">11 — VHF DATA</button>
+      <button class="ex-btn" onclick="loadExample('24 80 11 85 00 00')">24 — DME FREQ</button>
+      <button class="ex-btn" onclick="loadExample('46 A0 00 5A 00 00')">46 — CAP MAG.</button>
+      <button class="ex-btn" onclick="loadExample('C3 80 01 F4 00 00')">C3 — RADIO ALT</button>
+      <button class="ex-btn" onclick="loadExample('33 80 02 05 00 00')">33 — CODE ATC</button>
+      <button class="ex-btn" onclick="loadExample('F3 00 00 00 00 00')">F3 — DIAG</button>
+      <button class="ex-btn" onclick="loadExample('FF 00 00 00 00 00')">FF — NO DATA</button>
     </div>
 
     <!-- ── Affichage des octets ── -->
@@ -203,7 +203,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>Adresse — octet 0</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#60b8c8"></div><span>Status — octet 1</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#80cc80"></div><span>Données — octets 2+</span></div>
-        <div class="legend-item" style="color:#445566;font-size:0.75rem;">Cliquer sur un bit pour le basculer</div>
+        <div class="legend-item" style="color:#3a5a3a;font-size:0.72rem;">↑ cliquer un bit pour le basculer</div>
       </div>
     </div>
 

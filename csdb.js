@@ -180,15 +180,38 @@ function renderBytesDisplay(bytes) {
   if (!bytes.length) {
     container.innerHTML = `<div class="placeholder-msg">
       Entrez des octets hexadécimaux séparés par des espaces<br>
-      <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 80 08 41 00 00</code> — VHF COMM FREQ</small>
+      <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 E0 08 41 85 00</code> — VHF COMM FREQ</small>
     </div>`;
     return;
   }
 
+  // ── Bit-number header row ─────────────────────────
+  const hdr = document.createElement('div');
+  hdr.className = 'bytes-bitnums';
+  const sp1 = document.createElement('span');
+  sp1.className = 'bytes-bitnums-spacer';
+  sp1.style.minWidth = '76px';
+  const sp2 = document.createElement('span');
+  sp2.className = 'bytes-bitnums-spacer';
+  sp2.style.minWidth = '54px'; // hex + gap
+  hdr.appendChild(sp1);
+  hdr.appendChild(sp2);
+  const numHdr = document.createElement('div');
+  numHdr.className = 'byte-bits-row';
+  for (let bit = 7; bit >= 0; bit--) {
+    const w = document.createElement('div');
+    w.className = 'byte-bit-wrapper';
+    w.innerHTML = `<div style="font-size:0.65rem;color:#4a6a8a;font-family:'Courier New',monospace;text-align:center">${bit}</div>`;
+    numHdr.appendChild(w);
+  }
+  hdr.appendChild(numHdr);
+  container.appendChild(hdr);
+
+  // ── One row per byte ──────────────────────────────
   bytes.forEach((byteVal, idx) => {
     let role, roleLabel, hexCls, bitCls;
-    if (idx === 0)      { role='addr';   roleLabel='ADRESSE';       hexCls='addr-color';   bitCls='bit-addr'; }
-    else if (idx === 1) { role='status'; roleLabel='STATUS';        hexCls='status-color'; bitCls='bit-status'; }
+    if (idx === 0)      { role='addr';   roleLabel='ADRESSE';         hexCls='addr-color';   bitCls='bit-addr'; }
+    else if (idx === 1) { role='status'; roleLabel='STATUS';          hexCls='status-color'; bitCls='bit-status'; }
     else                { role='data';   roleLabel=`DONNÉES #${idx-1}`; hexCls='data-color'; bitCls='bit-data'; }
 
     const grp = document.createElement('div');
@@ -197,10 +220,6 @@ function renderBytesDisplay(bytes) {
     const chip = document.createElement('span');
     chip.className = `byte-role-chip role-${role}`;
     chip.textContent = roleLabel;
-
-    const numLbl = document.createElement('span');
-    numLbl.className = 'byte-num-label';
-    numLbl.textContent = `octet #${idx}`;
 
     const hexLbl = document.createElement('span');
     hexLbl.className = `byte-hex-val ${hexCls}`;
@@ -214,16 +233,11 @@ function renderBytesDisplay(bytes) {
       const wrap = document.createElement('div');
       wrap.className = 'byte-bit-wrapper';
 
-      const numEl = document.createElement('div');
-      numEl.className = 'byte-bit-num';
-      numEl.textContent = bit;
-
       const cell = document.createElement('div');
       cell.className = `byte-bit-cell ${bitCls}`;
       cell.textContent = val;
-      cell.title = `Octet #${idx} (${roleLabel}), Bit ${bit}`;
+      cell.title = `Octet #${idx} (${roleLabel}), Bit ${bit} — cliquer pour basculer`;
 
-      // Click to toggle bit
       const ci = idx, cb = bit;
       cell.addEventListener('click', () => {
         const nb = [...currentBytes];
@@ -234,23 +248,14 @@ function renderBytesDisplay(bytes) {
         decodeBlock(nb);
       });
 
-      wrap.appendChild(numEl);
       wrap.appendChild(cell);
       bitsRow.appendChild(wrap);
     }
 
     grp.appendChild(chip);
-    grp.appendChild(numLbl);
     grp.appendChild(hexLbl);
     grp.appendChild(bitsRow);
     container.appendChild(grp);
-
-    if (idx < bytes.length - 1) {
-      const div = document.createElement('div');
-      div.className = 'byte-divider';
-      div.textContent = '╎';
-      container.appendChild(div);
-    }
   });
 }
 
