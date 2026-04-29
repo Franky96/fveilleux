@@ -421,8 +421,13 @@ function clearPanels() {
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   populateCatalog();
-  clearPanels();
 
   const inp = document.getElementById('hex-input');
   if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') decodeFromInput(); });
+
+  // Afficher le bloc par défaut (tous les bits à 0) sans défiler vers le catalogue
+  const defaultBytes = [0, 0, 0, 0, 0, 0];
+  lastHighlightedAddr = defaultBytes[0]; // empêche scrollIntoView au chargement
+  document.getElementById('hex-input').value = '00 00 00 00 00 00';
+  decodeBlock(defaultBytes);
 });
