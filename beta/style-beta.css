@@ -1,0 +1,407 @@
+/* ============================================================
+   BETA THEME — Noir / Vert vif / Accent bleu & rouge
+   Override sur style.css (chargé en second, prend le dessus)
+   ============================================================ */
+
+/* ── Palette ──────────────────────────────────────────────
+   BG principal    : #000000
+   Surface 1       : #0d0d0d
+   Surface 2       : #111111
+   Bordure subtile : #1c1c1c
+   Bordure active  : #222222
+   Vert primaire   : #00e676   (neon vert vif)
+   Vert doux       : #00aa44   (vert secondaire)
+   Vert foncé bg   : #001a0d
+   Bleu accent     : #00b4d8
+   Rouge accent    : #ff3a3a
+   Texte clair     : #f0f0f0
+   Texte muted     : #777777
+   Texte dim       : #444444
+   ──────────────────────────────────────────────────────── */
+
+/* ── Globals ─────────────────────────────────────────────── */
+body {
+  background: #000000 !important;
+  color: #f0f0f0 !important;
+}
+
+h1, h2, h3, h4, h5 { color: #00e676; }
+
+a { color: #00b4d8; }
+
+input, textarea, select {
+  background: #0d0d0d !important;
+  border-color: #222 !important;
+  color: #f0f0f0 !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #00e676 !important;
+}
+
+button {
+  background: #00e676 !important;
+  color: #000 !important;
+}
+button:hover {
+  background: #00c45a !important;
+}
+
+/* ── Login ────────────────────────────────────────────────── */
+.login-container {
+  background: #0d0d0d !important;
+  border-color: #00e676 !important;
+  box-shadow: 0 0 40px rgba(0,230,118,0.15) !important;
+}
+.login-container h1 { color: #00e676 !important; }
+.login-container .subtitle { color: #777 !important; }
+#error-msg { color: #ff3a3a !important; }
+
+/* ── Dashboard ────────────────────────────────────────────── */
+.dashboard-container {
+  background: #000 !important;
+}
+
+header {
+  border-bottom-color: #1c1c1c !important;
+}
+header h1 { color: #00e676 !important; }
+header .subtitle { color: #777 !important; }
+
+#logoutBtn {
+  background: transparent !important;
+  border-color: #1c1c1c !important;
+  color: #777 !important;
+}
+#logoutBtn:hover {
+  border-color: #ff3a3a !important;
+  color: #ff3a3a !important;
+}
+
+.menu-card {
+  background: #0d0d0d !important;
+  border-color: #1c1c1c !important;
+  color: #f0f0f0 !important;
+}
+.menu-card:hover {
+  border-color: #00e676 !important;
+  box-shadow: 0 8px 24px rgba(0,230,118,0.18) !important;
+  transform: translateY(-5px) !important;
+}
+.menu-card h2 { color: #00e676 !important; }
+.menu-card p  { color: #777 !important; }
+
+.welcome-text { color: #f0f0f0 !important; }
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.sidebar {
+  background: #0d0d0d !important;
+  border-right-color: #1c1c1c !important;
+}
+.sidebar h2 { color: #00e676 !important; }
+.sidebar-subtitle { color: #777 !important; }
+.back-btn { color: #00e676 !important; }
+
+.sidebar-link { color: #777 !important; }
+.sidebar-link:hover  { background: #001a0d !important; color: #00e676 !important; }
+.sidebar-link.active { background: #001a0d !important; color: #00e676 !important; }
+.sidebar-link.disabled { color: #333 !important; }
+
+.sidebar-sublink { color: #00aa44 !important; }
+.sidebar-sublink:hover  { background: #001a0d !important; color: #00e676 !important; }
+.sidebar-sublink.active { background: #001a0d !important; color: #00e676 !important; font-weight: bold; }
+
+.etape-arrow { color: #00e676 !important; }
+.sidebar-etape-label { color: #00e676 !important; }
+.sidebar-etape-label.muted { color: #333 !important; }
+.sidebar-etape-header:hover { background: #001a0d !important; }
+
+/* ── Page content (section blanche → noire) ────────────────── */
+.page-content {
+  background: #080808 !important;
+  color: #e8e8e8 !important;
+  border-left: 1px solid #1c1c1c !important;
+}
+
+.etape-section h1 { color: #00e676 !important; }
+
+.content-block {
+  background: #0d0d0d !important;
+  border-color: #1c1c1c !important;
+}
+.content-block h3 { color: #00e676 !important; }
+
+/* Tables ─────────────────────────────────────────────────── */
+.calendar-table th {
+  color: #777 !important;
+  border-bottom-color: #1c1c1c !important;
+}
+.calendar-table td {
+  border-bottom-color: #1c1c1c !important;
+  color: #e8e8e8 !important;
+}
+
+/* Badge ──────────────────────────────────────────────────── */
+.badge.current { background: #001a0d !important; color: #00e676 !important; border-color: #00e676 !important; }
+.badge.upcoming { background: #111 !important; color: #444 !important; border-color: #222 !important; }
+
+/* Status ─────────────────────────────────────────────────── */
+.status.done    { background: #001a0d !important; color: #00e676 !important; }
+.status.pending { background: #1a1200 !important; color: #cc9900 !important; }
+
+/* Docs ───────────────────────────────────────────────────── */
+.doc-card {
+  background: #0d0d0d !important;
+  border-color: #1c1c1c !important;
+}
+.doc-title { color: #e8e8e8 !important; }
+.doc-meta  { color: #777 !important; }
+.doc-expand { background: #001a0d !important; color: #00e676 !important; }
+.doc-expand:hover { background: #002a14 !important; }
+.doc-note { background: #0d0d0d !important; border-color: #1c1c1c !important; color: #e8e8e8 !important; }
+
+/* Cours ──────────────────────────────────────────────────── */
+.cours-block { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.cours-code  { background: #001a0d !important; color: #00e676 !important; }
+.cours-titre { color: #e8e8e8 !important; }
+.cours-info  { color: #777 !important; }
+
+.modalite-toggle { background: #001a0d !important; border-color: #00aa44 !important; color: #00aa44 !important; }
+.modalite-toggle:hover { background: #00aa44 !important; color: #000 !important; }
+.modalite.hybride { color: #00e676 !important; }
+
+/* Groupes / Items ────────────────────────────────────────── */
+.groupe-card { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.groupe-header { background: #111 !important; border-bottom-color: #1c1c1c !important; }
+.groupe-titre { color: #e8e8e8 !important; }
+.groupe-count { color: #444 !important; }
+.groupe-progress { background: #001a0d !important; color: #00e676 !important; border-color: #00aa44 !important; }
+
+.btn-ajouter-dans-groupe { background: #00aa44 !important; }
+.btn-ajouter-dans-groupe:hover { background: #00e676 !important; color: #000 !important; }
+.btn-ajouter-module { background: #00aa44 !important; }
+.btn-ajouter-module:hover { background: #00e676 !important; color: #000 !important; }
+
+.bloc-echeance { background: #0d0d0d !important; border-bottom-color: #111 !important; }
+.echeance-date { color: #777 !important; }
+.echeance-desc { color: #e8e8e8 !important; }
+
+/* Menus flottants ────────────────────────────────────────── */
+.menu-ajout { background: #111 !important; border-color: #1c1c1c !important; }
+.menu-ajout-item { color: #e8e8e8 !important; }
+.menu-ajout-item:hover { background: #001a0d !important; color: #00e676 !important; }
+
+/* Modal ──────────────────────────────────────────────────── */
+.modal-box {
+  background: #0d0d0d !important;
+  border: 1px solid #1c1c1c !important;
+}
+.modal-box h3 { color: #00e676 !important; }
+.modal-box label { color: #777 !important; }
+.modal-box input, .modal-box textarea, .modal-box select {
+  background: #080808 !important;
+  border-color: #1c1c1c !important;
+  color: #f0f0f0 !important;
+}
+.modal-box input:focus, .modal-box textarea:focus { border-color: #00e676 !important; }
+
+.btn-save   { background: #00aa44 !important; border-color: #00e676 !important; color: #000 !important; }
+.btn-save:hover   { background: #00e676 !important; }
+.btn-cancel { background: #111 !important; border-color: #1c1c1c !important; color: #777 !important; }
+.btn-cancel:hover { background: #1c1c1c !important; }
+.btn-ajouter { background: #001a0d !important; border-color: #00aa44 !important; color: #00aa44 !important; }
+.btn-ajouter:hover { background: #00aa44 !important; color: #000 !important; }
+
+.btn-edit:hover   { background: #001a0d !important; }
+.btn-delete:hover { background: #1a0000 !important; }
+
+/* Notes ──────────────────────────────────────────────────── */
+.note-card { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.note-titre { color: #e8e8e8 !important; }
+.note-contenu { color: #aaa !important; }
+.note-lien { color: #00aa44 !important; }
+.note-type-pdf       { border-left-color: #cc8800 !important; }
+.note-type-lien      { border-left-color: #00aa44 !important; }
+.note-type-reference { border-left-color: #00b4d8 !important; }
+.note-type-texte     { border-left-color: #444 !important; }
+
+/* Perms overlay ──────────────────────────────────────────── */
+.perms-overlay { background: rgba(0,0,0,0.75) !important; }
+.perms-overlay span { color: #ff3a3a !important; border-color: rgba(255,58,58,0.4) !important; background: rgba(255,58,58,0.1) !important; }
+
+/* Back buttons ───────────────────────────────────────────── */
+.back-btn-dash {
+  background: #000 !important;
+  border-color: #1c1c1c !important;
+  color: #777 !important;
+}
+.back-btn-dash:hover {
+  background: #001a0d !important;
+  border-color: #00e676 !important;
+  color: #00e676 !important;
+}
+
+/* Archive btn ────────────────────────────────────────────── */
+.archive-btn {
+  background: #000 !important;
+  border-color: #1c1c1c !important;
+  color: #333 !important;
+}
+.archive-btn:hover { border-color: #444 !important; color: #777 !important; }
+
+/* ── Bières ───────────────────────────────────────────────── */
+.biere-intro { color: #777 !important; }
+.biere-section-header.lager     { background: #000d1a !important; border-color: #00b4d8 !important; }
+.biere-section-header.ale       { background: #000d05 !important; border-color: #00e676 !important; }
+.biere-section-header.spontanee { background: #0d0010 !important; border-color: #aa44cc !important; }
+.biere-section-header.lager h2     { color: #00b4d8 !important; }
+.biere-section-header.ale h2       { color: #00e676 !important; }
+.biere-section-header.spontanee h2 { color: #cc44ff !important; }
+.biere-section-header p { color: #777 !important; }
+.biere-sous-titre { color: #00aa44 !important; border-bottom-color: #001a0d !important; }
+
+.biere-carte { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.biere-carte:hover { border-color: #00aa44 !important; }
+.biere-nom { color: #00e676 !important; }
+.biere-badge.ale       { background: #001a0d !important; color: #00e676 !important; border-color: #00aa44 !important; }
+.biere-badge.lager     { background: #000d1a !important; color: #00b4d8 !important; border-color: #006688 !important; }
+.biere-badge.spontanee { background: #0d0010 !important; color: #cc44ff !important; border-color: #6600aa !important; }
+.biere-desc { color: #bbb !important; }
+.biere-detail { background: #080808 !important; border-color: #111 !important; }
+.detail-label { color: #00aa44 !important; }
+.detail-val   { color: #f0f0f0 !important; }
+.biere-verre  { background: #080808 !important; border-color: #1c1c1c !important; }
+.verre-label  { color: #00aa44 !important; }
+.verre-nom    { color: #00e676 !important; }
+.verre-raison { color: #777 !important; }
+.biere-exemples { color: #00aa44 !important; border-top-color: #111 !important; }
+
+/* ── Hockey ───────────────────────────────────────────────── */
+.hockey-section-title { color: #00e676 !important; }
+.hockey-error { color: #ff3a3a !important; }
+.hockey-fiche-header { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.joueur-photo { border-color: #1c1c1c !important; background: #000 !important; }
+#joueur-nom  { color: #00e676 !important; }
+#joueur-meta { color: #777 !important; }
+.equipe-badge { background: #001a0d !important; color: #00e676 !important; border-color: #00aa44 !important; }
+.hockey-card  { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.hockey-card h3, .hockey-card-header h3 { color: #00e676 !important; }
+.hockey-card a { color: #00aa44 !important; }
+.hockey-card a:hover { color: #00e676 !important; }
+
+.btn-legende { border-color: #00aa44 !important; color: #00e676 !important; }
+.btn-legende:hover { background: #001a0d !important; border-color: #00e676 !important; }
+.legende-stats { background: #080808 !important; border-color: #1c1c1c !important; }
+.legende-code { color: #00e676 !important; }
+.legende-desc { color: #777 !important; }
+
+.stats-grid > div { background: #080808 !important; border-color: #1c1c1c !important; }
+.stats-grid > div > :first-child { color: #777 !important; }
+.stats-grid > div > :last-child  { color: #f0f0f0 !important; }
+
+.hockey-resultats-liste button { background: #0d0d0d !important; border-color: #1c1c1c !important; color: #e8e8e8 !important; }
+.hockey-resultats-liste button:hover { background: #001a0d !important; border-color: #00e676 !important; color: #00e676 !important; }
+.puckpedia-header-link { color: #00e676 !important; border-color: #00e676 !important; }
+.puckpedia-header-link:hover { background: #00e676 !important; color: #000 !important; }
+
+.contrats-section { background: #0a0a0a !important; border-color: #1c1c1c !important; }
+.contrat-card { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.contrat-card:hover { border-color: #00b4d8 !important; }
+
+.gamelog-row { border-bottom-color: #111 !important; color: #e8e8e8 !important; }
+.gamelog-header { color: #777 !important; border-bottom-color: #1c1c1c !important; }
+.gamelog-row:not(.gamelog-header):hover { background: #0a0a0a !important; }
+.gamelog-win  { color: #00e676 !important; }
+.gamelog-loss { color: #ff3a3a !important; }
+.gamelog-pts  { color: #00b4d8 !important; }
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.spinner { border-color: #111 !important; border-top-color: #00b4d8 !important; }
+.spinner-mini { border-color: #111 !important; border-top-color: #00b4d8 !important; }
+.spinner-text { color: #777 !important; }
+.loading-step { color: #777 !important; }
+.loading-step .step-icon { color: #00b4d8 !important; }
+.loading-step.step-done { color: #00e676 !important; }
+.loading-step.step-done .step-icon { color: #00e676 !important; }
+.loading-step.step-fail { color: #ff3a3a !important; }
+.loading-step.step-fail .step-icon { color: #ff3a3a !important; }
+.section-step .step-icon { color: #00b4d8 !important; }
+.section-step.step-done { color: #00e676 !important; }
+.section-step.step-done .step-icon { color: #00e676 !important; }
+.section-step.step-fail { color: #ff3a3a !important; }
+
+/* ── Aviation / METAR ─────────────────────────────────────── */
+.metar-exemple { background: #001a0d !important; border-color: #00aa44 !important; color: #00aa44 !important; }
+.metar-exemple:hover { background: #00aa44 !important; color: #000 !important; }
+.remarques-table th { color: #777 !important; border-bottom-color: #1c1c1c !important; }
+.remarques-table td { border-bottom-color: #111 !important; color: #e8e8e8 !important; }
+.remarques-table tr:hover td { background: #0a0a0a !important; }
+.remarque-code { color: #00e676 !important; background: #001a0d !important; }
+
+/* ── Films ────────────────────────────────────────────────── */
+.films-topbar { background: #080808 !important; border-bottom-color: #1c1c1c !important; }
+.films-back-btn { background: #0d0d0d !important; border-color: #1c1c1c !important; color: #00aa44 !important; }
+.films-back-btn:hover { background: #001a0d !important; color: #00e676 !important; }
+.films-topbar-title { color: #00e676 !important; }
+.films-filter-nav .sidebar-sublink { background: #0d0d0d !important; border-color: #1c1c1c !important; color: #777 !important; }
+.films-filter-nav .sidebar-sublink:hover  { color: #00e676 !important; border-color: #001a0d !important; background: #001a0d !important; }
+.films-filter-nav .sidebar-sublink.active { color: #00e676 !important; background: #001a0d !important; border-color: #00e676 !important; }
+.films-add-btn { background: #001a0d !important; border-color: #00e676 !important; color: #00e676 !important; }
+.films-add-btn:hover { background: #002a14 !important; }
+.films-section-titre { color: #00e676 !important; }
+
+body.films-page .film-stat-badge { background: #0d0d0d !important; border-color: #1c1c1c !important; color: #00aa44 !important; }
+body.films-page .film-card { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+body.films-page .film-card:hover { border-color: #001a0d !important; box-shadow: 0 0 16px rgba(0,230,118,0.14) !important; }
+body.films-page .film-titre { color: #e8e8e8 !important; }
+body.films-page .film-genre { background: #001a0d !important; border-color: #1a3a1a !important; color: #00aa44 !important; }
+body.films-page .film-annee { color: #444 !important; }
+body.films-page .film-etoiles { color: #00e676 !important; }
+body.films-page .film-commentaire { color: #555 !important; border-top-color: #1c1c1c !important; }
+
+.badge-a-voir   { background: #1a1200 !important; color: #ccaa00 !important; border-color: #665500 !important; }
+.badge-en-cours { background: #000d1a !important; color: #00b4d8 !important; border-color: #005577 !important; }
+.badge-vu       { background: #001a0d !important; color: #00e676 !important; border-color: #006633 !important; }
+.film-type-badge { background: #0a001a !important; color: #aa66ff !important; border-color: #4400aa !important; }
+.film-type-badge.serie { background: #1a0d00 !important; color: #ff8833 !important; border-color: #993300 !important; }
+
+body.films-page .films-modal-box { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+body.films-page .films-modal-box h3 { color: #00e676 !important; }
+body.films-page .films-modal-box label { color: #777 !important; }
+body.films-page .films-modal-box input,
+body.films-page .films-modal-box select,
+body.films-page .films-modal-box textarea { background: #080808 !important; border-color: #1c1c1c !important; color: #f0f0f0 !important; }
+body.films-page .films-modal-box .btn-save { background: #001a0d !important; border-color: #00e676 !important; color: #00e676 !important; }
+body.films-page .films-modal-box .btn-save:hover { background: #002a14 !important; }
+body.films-page .films-modal-box .btn-cancel { background: #111 !important; border-color: #222 !important; color: #777 !important; }
+body.films-page .etoile.etoile-active { color: #00e676 !important; }
+body.films-page .etoile.etoile-survol { color: #00c45a !important; }
+
+.modal-detail-box { background: #0d0d0d !important; border-color: #1c1c1c !important; }
+.modal-detail-titre { color: #f0f0f0 !important; }
+.modal-detail-synopsis { color: #aaa !important; border-top-color: #1c1c1c !important; }
+.modal-detail-commentaire { color: #777 !important; border-left-color: #1c1c1c !important; }
+.modal-detail-people { border-top-color: #1c1c1c !important; }
+.detail-role { color: #444 !important; }
+.detail-people-row { color: #aaa !important; }
+.btn-detail-edit { background: #001a0d !important; border-color: #00e676 !important; color: #00e676 !important; }
+.btn-detail-edit:hover { background: #002a14 !important; }
+.modal-detail-trailer { border-top-color: #111 !important; }
+.modal-detail-trailer-label { color: #444 !important; }
+
+.sections-empty { color: #444 !important; }
+.groupe-empty   { color: #444 !important; }
+.notes-empty    { color: #444 !important; }
+.empty-row td   { color: #444 !important; }
+.muted { color: #444 !important; }
+
+/* ── Straps ───────────────────────────────────────────────── */
+.strap-btn { background: #0d0d0d !important; color: #333 !important; border-color: #1c1c1c !important; }
+.strap-btn.active { background: #00e676 !important; color: #000 !important; border-color: #00e676 !important; }
+.strap-desc { color: #555 !important; }
+.strap-status { color: #00e676 !important; }
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #1c1c1c; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00aa44; }
