@@ -3,6 +3,33 @@
    Override sur style.css (chargé en second, prend le dessus)
    ============================================================ */
 
+/* ── Bannière En construction (34px fixe en haut) ──────────
+   body.beta-active = admin connecté en mode beta
+   ────────────────────────────────────────────────────────── */
+body.beta-active {
+  padding-top: 34px !important;
+}
+
+/* Dashboard beta : topbar fixe + db-body */
+body.beta-active .db-topbar {
+  top: 34px !important;
+}
+body.beta-active .db-body {
+  padding-top: calc(52px + 34px) !important; /* topbar + banner */
+}
+
+/* Sidebar sticky sur les pages internes */
+body.beta-active .sidebar {
+  top: 34px !important;
+  max-height: calc(100vh - 34px) !important;
+}
+
+/* Films topbar sticky */
+body.beta-active .films-topbar {
+  top: 34px !important;
+}
+
+
 /* ── Palette ──────────────────────────────────────────────
    BG principal    : #000000
    Surface 1       : #0d0d0d
