@@ -119,7 +119,7 @@ const STATUS_FIELD_MAP = {
   ],
   // bits 3,1,0 = source ident (3 bits non-contigus)
   0x10: [
-    { span:1, label:'FV',  cls:'csdb-fmap-valid' },
+    { span:1, label:'VAL', cls:'csdb-fmap-valid' },
     { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
     { span:1, label:'XFR', cls:'csdb-fmap-ctrl'  },
     { span:1, label:'SQL', cls:'csdb-fmap-ctrl'  },
@@ -128,7 +128,7 @@ const STATUS_FIELD_MAP = {
     { span:2, label:'SI',  cls:'csdb-fmap-src'   },
   ],
   0x11: [
-    { span:1, label:'FV',  cls:'csdb-fmap-valid' },
+    { span:1, label:'VAL', cls:'csdb-fmap-valid' },
     { span:1, label:'FLB', cls:'csdb-fmap-ctrl'  },
     { span:1, label:'FLA', cls:'csdb-fmap-ctrl'  },
     { span:1, label:'XMT', cls:'csdb-fmap-ctrl'  },
