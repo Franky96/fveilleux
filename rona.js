@@ -372,9 +372,9 @@ window.genererPDF = async function() {
     const tw = fontBold.widthOfTextAtSize(texte, 20);
     const { width } = page.getSize();
     page.drawText(texte, {
-      x: (width - tw) / 2 - 40,
-      y: 115,
-      size: 20,
+      x: 100,
+      y: 110,
+      size: 15,
       font: fontBold,
       color: green,
     });
@@ -532,9 +532,9 @@ window.genererToutPDF = async function() {
       const tw = fontBold.widthOfTextAtSize(texte, 20);
       const { width } = page.getSize();
       page.drawText(texte, {
-        x: (width - tw) / 2 - 40,
-        y: 115,
-        size: 20,
+        x: 100,
+        y: 110,
+        size: 15,
         font: fontBold,
         color: green,
       });
