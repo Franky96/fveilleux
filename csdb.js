@@ -72,28 +72,28 @@ const CSDB_ADDR = {
 //   Bit 7 = DATA #1 VALID, Bit 6 = DATA #2 VALID, Bit 5 = DATA #3 VALID
 //   Bits 4-3 = MODE (1=ON), Bit 2 = TEST (1=TEST), Bits 1-0 = SOURCE IDENT
 const STATUS_FIELDS = {
-  // Adresses VHF COMM FREQ (0x10, 0x12)
+  // Adresses VHF COMM FREQ (0x10, 0x12) — manuel §5, page 24
   0x10: [
-    { bit:7, name:'FREQ VALID',   desc:'Fréquence valide' },
-    { bit:6, name:'PAD',          desc:'—' },
-    { bit:5, name:'XFR CTL',      desc:'Transfert freq (1=XFR)' },
-    { bit:4, name:'SQLCH CTL',    desc:'Squelch (1=audio activé)' },
-    { bit:3, name:'SI',           desc:'Side-tone ident' },
-    { bit:2, name:'TEST CTL',     desc:'Test (1=TEST)' },
-    { bit:1, name:'SOURCE',       desc:'Source ident (bit 1)' },
-    { bit:0, name:'SI IDENT',     desc:'Source ident (bit 0)' },
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'PAD',        desc:'Non utilisé' },
+    { bit:5, name:'XFR CTL',    desc:'Transfert fréquence (1=XFR en cours)' },
+    { bit:4, name:'SQLCH CTL',  desc:'0=Squelch auto · 1=Audio activé (squelch off)' },
+    { bit:3, name:'SRC b3',     desc:'Source ident bit 3 (MSB) — voir NOTE 1' },
+    { bit:2, name:'TEST CTL',   desc:'Mode test (1=test actif)' },
+    { bit:1, name:'SRC b1',     desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SRC b0',     desc:'Source ident bit 0 (LSB) — voir NOTE 1' },
   ],
   0x12: 'same:0x10',
-  // Adresses VHF COMM DATA (0x11, 0x13)
+  // Adresses VHF COMM DATA (0x11, 0x13) — manuel §5, page 25
   0x11: [
-    { bit:7, name:'FREQ VALID',   desc:'Fréquence valide' },
-    { bit:6, name:'FREQ LIM B',   desc:'Limite fréquence B' },
-    { bit:5, name:'FREQ LIM A',   desc:'Limite fréquence A' },
-    { bit:4, name:'XMIT IND',     desc:'Indicateur émission (1=ON)' },
-    { bit:3, name:'SI',           desc:'Side-tone ident' },
-    { bit:2, name:'SELF TEST',    desc:'Auto-test (1=ON)' },
-    { bit:1, name:'SOURCE',       desc:'Source ident (bit 1)' },
-    { bit:0, name:'SI IDENT',     desc:'Source ident (bit 0)' },
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'FREQ LIM B', desc:'Limite fréquence bit 6 — voir NOTE 2' },
+    { bit:5, name:'FREQ LIM A', desc:'Limite fréquence bit 5 — voir NOTE 2' },
+    { bit:4, name:'XMIT IND',   desc:'Indicateur émission (1=émission active)' },
+    { bit:3, name:'SRC b3',     desc:'Source ident bit 3 (MSB) — voir NOTE 1' },
+    { bit:2, name:'SELF TEST',  desc:'Auto-test (1=test actif)' },
+    { bit:1, name:'SRC b1',     desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SRC b0',     desc:'Source ident bit 0 (LSB) — voir NOTE 1' },
   ],
   0x13: 'same:0x11',
 };
@@ -104,6 +104,110 @@ function getStatusFields(addr) {
     f = STATUS_FIELDS[parseInt(f.slice(5))];
   }
   return f || null; // null = use standard layout
+}
+
+// ── Field map segments par octet ─────────────────────
+// Chaque entrée = [{span, label, cls}, ...]  (total spans = 8)
+const STATUS_FIELD_MAP = {
+  standard: [
+    { span:1, label:'V1',   cls:'csdb-fmap-valid' },
+    { span:1, label:'V2',   cls:'csdb-fmap-valid' },
+    { span:1, label:'V3',   cls:'csdb-fmap-valid' },
+    { span:2, label:'MODE', cls:'csdb-fmap-mode'  },
+    { span:1, label:'TEST', cls:'csdb-fmap-test'  },
+    { span:2, label:'SI',   cls:'csdb-fmap-src'   },
+  ],
+  // bits 3,1,0 = source ident (3 bits non-contigus)
+  0x10: [
+    { span:1, label:'FV',  cls:'csdb-fmap-valid' },
+    { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+    { span:1, label:'XFR', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SQL', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SI',  cls:'csdb-fmap-src'   },
+    { span:1, label:'TST', cls:'csdb-fmap-test'  },
+    { span:2, label:'SI',  cls:'csdb-fmap-src'   },
+  ],
+  0x11: [
+    { span:1, label:'FV',  cls:'csdb-fmap-valid' },
+    { span:1, label:'FLB', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'FLA', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'XMT', cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SI',  cls:'csdb-fmap-src'   },
+    { span:1, label:'TST', cls:'csdb-fmap-test'  },
+    { span:2, label:'SI',  cls:'csdb-fmap-src'   },
+  ],
+};
+STATUS_FIELD_MAP[0x12] = STATUS_FIELD_MAP[0x10];
+STATUS_FIELD_MAP[0x13] = STATUS_FIELD_MAP[0x11];
+
+const DATA_FIELD_MAP = {
+  // VHF COMM FREQ actif — BCD, manuel page 24
+  // Byte2[7:4]=0.001MHz, Byte2[3:0]=PAD
+  // Byte3[7:4]=0.1MHz,   Byte3[3:0]=0.01MHz
+  // Byte4[7]=PAD, Byte4[6:4]=10MHz (3 bits), Byte4[3:0]=1MHz
+  0x10: [
+    [{ span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'PAD',       cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',       cls:'csdb-fmap-pad' }, { span:3, label:'10 MHz',    cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // VHF COMM DATA — fréquence standby BCD (même structure que 0x10)
+  0x11: [
+    [{ span:4, label:'STBY 0.001', cls:'csdb-fmap-bcd' }, { span:4, label:'PAD',         cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'STBY 0.1',   cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.01',   cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',        cls:'csdb-fmap-pad' }, { span:3, label:'STBY 10 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 1', cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',        cls:'csdb-fmap-pad' }],
+  ],
+  // NAV / DME FREQ — BCD MHz
+  0x20: [
+    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  0x24: [
+    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // ATC — BCD 4 chiffres (D C B A)
+  0x33: [
+    [{ span:4, label:'Chiffre D', cls:'csdb-fmap-bcd' }, { span:4, label:'Chiffre C', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'Chiffre B', cls:'csdb-fmap-bcd' }, { span:4, label:'Chiffre A', cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // Heading magnétique — complément à 2, degrés
+  0x46: [
+    [{ span:8, label:'CAP (MSB)',  cls:'csdb-fmap-data' }],
+    [{ span:8, label:'CAP (LSB)',  cls:'csdb-fmap-data' }],
+    [{ span:8, label:'PAD',        cls:'csdb-fmap-pad'  }],
+    [{ span:8, label:'PAD',        cls:'csdb-fmap-pad'  }],
+  ],
+  // Radio altitude + décision height
+  0xC3: [
+    [{ span:8, label:'ALT MSB (ft)', cls:'csdb-fmap-data' }],
+    [{ span:8, label:'ALT LSB (ft)', cls:'csdb-fmap-data' }],
+    [{ span:8, label:'DH MSB (ft)',  cls:'csdb-fmap-data' }],
+    [{ span:8, label:'DH LSB (ft)',  cls:'csdb-fmap-data' }],
+  ],
+};
+DATA_FIELD_MAP[0x12] = DATA_FIELD_MAP[0x10];
+DATA_FIELD_MAP[0x13] = DATA_FIELD_MAP[0x11];
+DATA_FIELD_MAP[0x25] = DATA_FIELD_MAP[0x24];
+
+function getFieldMapForByte(byteIdx, addr) {
+  if (byteIdx === 0) {
+    return [{ span:8, label:'ADRESSE', cls:'csdb-fmap-addr' }];
+  }
+  if (byteIdx === 1) {
+    return STATUS_FIELD_MAP[addr] || STATUS_FIELD_MAP.standard;
+  }
+  const dataIdx = byteIdx - 2;
+  const addrMap = DATA_FIELD_MAP[addr];
+  if (addrMap && addrMap[dataIdx]) return addrMap[dataIdx];
+  return [{ span:8, label:'DATA', cls:'csdb-fmap-data' }];
 }
 
 // ── State ─────────────────────────────────────────────
@@ -140,9 +244,11 @@ function decodeBlock(bytes) {
   const info   = CSDB_ADDR[addr] || null;
 
   renderBytesDisplay(bytes);
+  updateAddressBanner(addr, info, data);
   updateAddressPanel(addr, info);
   updateStatusPanel(status, addr, info);
   updateDataPanel(data, addr, info);
+  updateQuickStatus(status, addr);
   highlightCatalogRow(addr);
 }
 
@@ -197,12 +303,17 @@ function renderBytesDisplay(bytes) {
     container.appendChild(d);
   }
 
-  // ── Une rangée de 10 enfants directs par octet ────
+  // ── Une rangée par octet + ligne d'étiquettes ─────
   bytes.forEach((byteVal, idx) => {
     let role, roleLabel, hexCls, bitCls;
     if (idx === 0)      { role='addr';   roleLabel='ADRESSE';           hexCls='addr-color';   bitCls='bit-addr'; }
     else if (idx === 1) { role='status'; roleLabel='STATUS';            hexCls='status-color'; bitCls='bit-status'; }
     else                { role='data';   roleLabel=`DONNÉES #${idx-1}`; hexCls='data-color';   bitCls='bit-data'; }
+
+    // Espaceur visuel entre octets (avant chaque octet y compris le premier)
+    const spacer = document.createElement('div');
+    spacer.className = 'csdb-byte-spacer';
+    container.appendChild(spacer);
 
     const chip = document.createElement('span');
     chip.className = `byte-role-chip role-${role}`;
@@ -235,7 +346,104 @@ function renderBytesDisplay(bytes) {
 
       container.appendChild(cell);
     }
+
+    // ── Ligne d'étiquettes de champs sous les bits ──
+    container.appendChild(document.createElement('span')); // col chip vide
+    container.appendChild(document.createElement('span')); // col hex vide
+    const segs = getFieldMapForByte(idx, bytes[0]);
+    for (const seg of segs) {
+      const el = document.createElement('div');
+      el.className = `csdb-fmap-seg ${seg.cls}`;
+      el.style.gridColumn = `span ${seg.span}`;
+      el.textContent = seg.label;
+      container.appendChild(el);
+    }
   });
+}
+
+// ── Banner values ─────────────────────────────────────
+function getBannerValues(addr, data) {
+  if (!data || data.length < 3) return [];
+  const freqActive = [0x10, 0x12, 0x20, 0x24, 0x25];
+  const freqStby   = [0x11, 0x13];
+  if (freqActive.includes(addr)) {
+    const f = tryDecodeBCDFreq(data);
+    return f ? [{ label:'FREQ ACTIVE', value:f }] : [];
+  }
+  if (freqStby.includes(addr)) {
+    const f = tryDecodeBCDFreq(data);
+    return f ? [{ label:'FREQ STANDBY', value:f }] : [];
+  }
+  if (addr === 0x46 && data.length >= 2) {
+    const raw = (data[0] << 8) | data[1];
+    const deg = raw > 32767 ? raw - 65536 : raw;
+    return [{ label:'CAP MAG', value:`${deg}°` }];
+  }
+  if (addr === 0x33 && data.length >= 2) {
+    const dD=(data[0]>>4)&0xF, dC=data[0]&0xF, dB=(data[1]>>4)&0xF, dA=data[1]&0xF;
+    if ([dA,dB,dC,dD].every(x => x <= 7)) return [{ label:'CODE ATC', value:`${dD}${dC}${dB}${dA}` }];
+  }
+  if (addr === 0xC3 && data.length >= 2) {
+    const vals = [{ label:'RADIO ALT', value:`${(data[0]<<8)|data[1]} ft` }];
+    if (data.length >= 4) vals.push({ label:'DH', value:`${(data[2]<<8)|data[3]} ft` });
+    return vals;
+  }
+  return [];
+}
+
+// ── Address banner ────────────────────────────────────
+function updateAddressBanner(addr, info, data) {
+  const hex = '0x' + addr.toString(16).toUpperCase().padStart(2, '0');
+  document.getElementById('banner-addr-box').textContent = hex;
+  document.getElementById('banner-name').textContent = info ? info.name : 'Adresse inconnue';
+  document.getElementById('banner-sub').textContent = info
+    ? `${info.system}  •  ${info.db} octet(s) de données`
+    : 'Non répertoriée dans le catalogue CSDB';
+  const vals = getBannerValues(addr, data);
+  document.getElementById('banner-values').innerHTML = vals.map(v =>
+    `<div class="banner-val-item">
+       <span class="banner-val-label">${v.label}</span>
+       <span class="banner-val-num">${v.value}</span>
+     </div>`
+  ).join('');
+}
+
+// ── Quick status (Valid + SI) ─────────────────────────
+function updateQuickStatus(statusByte, addr) {
+  const validEl = document.getElementById('qs-valid');
+  const siEl    = document.getElementById('qs-si');
+  if (statusByte === null) {
+    validEl.innerHTML = '<span class="qs-off">—</span>';
+    siEl.innerHTML    = '<span class="qs-off">—</span>';
+    return;
+  }
+  const fields = getStatusFields(addr);
+  if (fields) {
+    // Adresses spécifiques : FREQ VALID (bit 7) seulement
+    const fv = (statusByte >> 7) & 1;
+    validEl.innerHTML = `<div class="qs-item">
+      <span class="qs-item-label">FREQ</span>
+      <span class="qs-item-val ${fv ? 'qs-on' : 'qs-off'}">${fv ? 'OUI' : 'NON'}</span>
+    </div>`;
+    if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
+      const srcVal = (((statusByte>>3)&1)<<2) | (((statusByte>>1)&1)<<1) | (statusByte&1);
+      const names  = ['ALL','#1','#2','#3','---','P#1','P#2','P#3'];
+      siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
+    } else {
+      siEl.innerHTML = '<span class="qs-off">—</span>';
+    }
+  } else {
+    // Layout standard : V1, V2, V3 + SI bits 1-0
+    const v1=( statusByte>>7)&1, v2=(statusByte>>6)&1, v3=(statusByte>>5)&1;
+    const src = statusByte & 3;
+    const srcNames = ['INCONNU','UNITÉ #1','UNITÉ #2','UNITÉ #3'];
+    validEl.innerHTML =
+      ['D1','D2','D3'].map((lbl,i)=> {
+        const v=[v1,v2,v3][i];
+        return `<div class="qs-item"><span class="qs-item-label">${lbl}</span><span class="qs-item-val ${v?'qs-on':'qs-off'}">${v?'OUI':'NON'}</span></div>`;
+      }).join('');
+    siEl.innerHTML = `<span class="qs-si">${srcNames[src]}</span>`;
+  }
 }
 
 // ── Address panel ─────────────────────────────────────
@@ -267,14 +475,21 @@ function updateStatusPanel(statusByte, addr, info) {
   const fields = getStatusFields(addr);
 
   if (fields) {
-    // Message-specific status decode
     let html = '';
     for (const f of fields) {
       const v = (statusByte >> f.bit) & 1;
       html += row(`Bit ${f.bit} — ${f.name}`, v === 1 ? `1 — ${f.desc}` : `0`, v === 1 ? 'ok' : 'dim');
     }
+    // Source ident 3-bit (bits 3,1,0) pour 0x10–0x13 — NOTE 1 du manuel
+    if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
+      const b3 = (statusByte >> 3) & 1;
+      const b1 = (statusByte >> 1) & 1;
+      const b0 = (statusByte >> 0) & 1;
+      const srcVal = (b3 << 2) | (b1 << 1) | b0;
+      const srcNames = ['TOUTES UNITÉS','UNITÉ #1','UNITÉ #2','UNITÉ #3','---','PRESET #1','PRESET #2','PRESET #3'];
+      html += row('Source ident (b3,b1,b0)', `${srcVal.toString(2).padStart(3,'0')}b = ${srcNames[srcVal]}`, 'accent');
+    }
     html += row('Brut', '0x' + statusByte.toString(16).toUpperCase().padStart(2,'0') + ' = ' + statusByte.toString(2).padStart(8,'0') + 'b', 'dim');
-    html += row('⚠ Layout', 'Spécifique à cette adresse (§5 manuel)', 'dim');
     body.innerHTML = html;
   } else {
     // Standard layout (Figure 4)
@@ -337,23 +552,23 @@ function updateDataPanel(dataBytes, addr, info) {
   body.innerHTML = html;
 }
 
-// ── BCD frequency decoder (VHF: 108.000–137.975 MHz) ─
+// ── BCD frequency decoder — manuel §5 page 24 ────────
+// Byte2[7:4]=0.001MHz  Byte2[3:0]=PAD (ignoré)
+// Byte3[7:4]=0.1MHz    Byte3[3:0]=0.01MHz
+// Byte4[7]=PAD(ignoré) Byte4[6:4]=10MHz(3bits) Byte4[3:0]=1MHz
+// Le digit 100 MHz (toujours 1) est implicite — non encodé
 function tryDecodeBCDFreq(data) {
   try {
-    // Byte 2: bits [7:4]=BCD_8, [3:0]=BCD_4  → 0.001 MHz digits
-    // Byte 3: bits [7:4]=BCD_2, [3:0]=BCD_1  → 0.001 & 0.01 MHz
-    // Byte 4: bits [7:4]=BCD_8, [3:0]=BCD_4  → 10 MHz & 1 MHz
-    // Format: BBB.BBB MHz (100s, 10s, 1s . 0.1s, 0.01s, 0.001s)
-    const b2 = data[0], b3 = data[1], b4 = data.length > 2 ? data[2] : 0;
-    const d100 = (b4 >> 4) & 0xF; // 100 MHz digit
-    const d10  = (b4 >> 0) & 0xF; // 10 MHz digit
-    const d1   = (b3 >> 4) & 0xF; // 1 MHz digit  — actually let's check manual format
-    const d01  = (b3 >> 0) & 0xF; // 0.1 MHz
-    const d001 = (b2 >> 4) & 0xF; // 0.01 MHz
-    const d0001= (b2 >> 0) & 0xF; // 0.001 MHz
-    // Validate BCD digits
-    if ([d100,d10,d1,d01,d001,d0001].some(d => d > 9)) return null;
-    return `${d100}${d10}${d1}.${d01}${d001}${d0001} MHz`;
+    if (data.length < 3) return null;
+    const b2 = data[0], b3 = data[1], b4 = data[2];
+    const d0001 = (b2 >> 4) & 0xF;   // 0.001 MHz — bits 7-4 de l'octet 2
+    const d01   = (b3 >> 4) & 0xF;   // 0.1 MHz   — bits 7-4 de l'octet 3
+    const d001  = (b3 >> 0) & 0xF;   // 0.01 MHz  — bits 3-0 de l'octet 3
+    const d10   = (b4 >> 4) & 0x7;   // 10 MHz    — bits 6-4 de l'octet 4 (bit 7=PAD)
+    const d1    = (b4 >> 0) & 0xF;   // 1 MHz     — bits 3-0 de l'octet 4
+    if ([d0001, d01, d001, d10, d1].some(d => d > 9)) return null;
+    if (d10 === 0 && d1 === 0) return null; // données nulles
+    return `1${d10}${d1}.${d01}${d001}${d0001} MHz`;
   } catch { return null; }
 }
 
@@ -412,17 +627,36 @@ function setText(id, text, cls = '') {
 
 function clearPanels() {
   lastHighlightedAddr = -1;
+  document.getElementById('banner-addr-box').textContent = '0x--';
+  document.getElementById('banner-name').textContent = '—';
+  document.getElementById('banner-sub').textContent  = '—';
+  document.getElementById('banner-values').innerHTML = '';
+  document.getElementById('qs-valid').innerHTML = '<span class="qs-off">—</span>';
+  document.getElementById('qs-si').innerHTML    = '<span class="qs-off">—</span>';
   ['addr-hex','addr-dec','addr-bin','addr-name','addr-system','addr-db','addr-desc']
     .forEach(id => setText(id, '—', 'dim'));
   document.getElementById('status-panel-body').innerHTML = row('—', 'En attente', 'dim');
   document.getElementById('data-panel-body').innerHTML   = row('—', 'En attente', 'dim');
 }
 
+// ── Tab switching ─────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b =>
+    b.classList.toggle('tab-active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-pane').forEach(p =>
+    p.classList.toggle('tab-active', p.id === `tab-${name}`));
+}
+
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   populateCatalog();
-  clearPanels();
 
   const inp = document.getElementById('hex-input');
   if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') decodeFromInput(); });
+
+  // Afficher le bloc par défaut (tous les bits à 0) sans défiler vers le catalogue
+  const defaultBytes = [0, 0, 0, 0, 0, 0];
+  lastHighlightedAddr = defaultBytes[0]; // empêche scrollIntoView au chargement
+  document.getElementById('hex-input').value = '00 00 00 00 00 00';
+  decodeBlock(defaultBytes);
 });
