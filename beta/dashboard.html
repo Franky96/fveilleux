@@ -12,113 +12,431 @@
       document.location.href = 'index.html';
     }
   </script>
+  <style>
+    /* ── Reset layout pour ce dashboard ── */
+    body {
+      display: block !important;
+      align-items: unset !important;
+      justify-content: unset !important;
+      background: #000 !important;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .db-topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: #080808;
+      border-bottom: 1px solid #1c1c1c;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      z-index: 1000;
+    }
+    .db-logo {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #00e676;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .db-logo span { color: #fff; font-weight: 300; }
+    .db-topbar-sep { flex: 1; }
+    .db-topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .db-btn {
+      background: transparent;
+      border: 1px solid #1c1c1c;
+      color: #555;
+      padding: 0.3rem 0.85rem;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+      width: auto;
+      margin: 0;
+    }
+    .db-btn:hover { border-color: #444; color: #aaa; }
+    .db-btn.db-btn-logout:hover { border-color: #ff3a3a; color: #ff3a3a; }
+    .db-btn.db-btn-construction {
+      border-color: #f39c12;
+      color: #f39c12;
+      background: rgba(243,156,18,0.07);
+      display: none;
+    }
+    .db-btn.db-btn-construction:hover { background: rgba(243,156,18,0.15); }
+    .db-version-badge {
+      font-size: 0.72rem;
+      color: #333;
+      font-family: monospace;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid #1a1a1a;
+      border-radius: 4px;
+    }
+
+    /* ── Contenu principal ── */
+    .db-body {
+      padding-top: 52px;
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .db-hero {
+      padding: 3rem 2.5rem 2rem;
+      border-bottom: 1px solid #0d0d0d;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .db-hero-left {}
+    .db-greeting {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f0f0f0;
+      margin-bottom: 0.3rem;
+      line-height: 1.2;
+    }
+    .db-greeting strong { color: #00e676; }
+    .db-tagline {
+      font-size: 0.88rem;
+      color: #444;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .db-hero-right {
+      text-align: right;
+    }
+    .db-date {
+      font-size: 0.82rem;
+      color: #333;
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+    .db-datetime {
+      font-size: 1.6rem;
+      font-family: monospace;
+      color: #1c1c1c;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Sections catégorisées ── */
+    .db-main {
+      padding: 1.5rem 2.5rem 4rem;
+    }
+    .db-category {
+      margin-bottom: 2.5rem;
+    }
+    .db-category-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .db-category-line {
+      height: 2px;
+      flex: 1;
+      border-radius: 2px;
+      opacity: 0.4;
+    }
+    .db-category-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    /* Couleurs par catégorie */
+    .cat-aviation .db-category-label { color: #00b4d8; }
+    .cat-aviation .db-category-line  { background: #00b4d8; }
+    .cat-aviation .db-card           { border-left-color: #00b4d8; }
+    .cat-aviation .db-card:hover     { box-shadow: 0 4px 20px rgba(0,180,216,0.12); border-color: #00b4d8; }
+    .cat-aviation .db-card-icon      { color: #00b4d8; }
+
+    .cat-loisirs .db-category-label  { color: #00e676; }
+    .cat-loisirs .db-category-line   { background: #00e676; }
+    .cat-loisirs .db-card            { border-left-color: #00e676; }
+    .cat-loisirs .db-card:hover      { box-shadow: 0 4px 20px rgba(0,230,118,0.12); border-color: #00e676; }
+    .cat-loisirs .db-card-icon       { color: #00e676; }
+
+    .cat-outils .db-category-label   { color: #ff3a3a; }
+    .cat-outils .db-category-line    { background: #ff3a3a; }
+    .cat-outils .db-card             { border-left-color: #ff3a3a; }
+    .cat-outils .db-card:hover       { box-shadow: 0 4px 20px rgba(255,58,58,0.12); border-color: #ff3a3a; }
+    .cat-outils .db-card-icon        { color: #ff3a3a; }
+
+    /* ── Grille de cartes ── */
+    .db-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.75rem;
+    }
+
+    /* ── Carte ── */
+    .db-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
+      border-left-width: 3px;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      text-decoration: none;
+      color: #f0f0f0;
+      transition: all 0.18s;
+    }
+    .db-card:hover {
+      background: #111;
+      transform: translateY(-2px);
+    }
+    .db-card[style*="display: none"] { display: none !important; }
+
+    .db-card-icon {
+      font-size: 1.6rem;
+      flex-shrink: 0;
+      width: 2.2rem;
+      text-align: center;
+    }
+    .db-card-text {}
+    .db-card-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e8e8e8;
+      margin-bottom: 0.2rem;
+    }
+    .db-card-desc {
+      font-size: 0.76rem;
+      color: #444;
+      line-height: 1.4;
+    }
+
+    /* ── Footer fixe bas-droite ── */
+    .db-archive {
+      position: fixed;
+      bottom: 1.2rem;
+      right: 1.5rem;
+      font-size: 0.72rem;
+      color: #222;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      letter-spacing: 0.03em;
+      transition: color 0.2s;
+    }
+    .db-archive:hover { color: #444; }
+
+    /* ── Horloge live ── */
+    @keyframes blink { 50% { opacity: 0; } }
+    .db-clock-colon { animation: blink 1s step-end infinite; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .db-hero { padding: 2rem 1.25rem 1.5rem; }
+      .db-main  { padding: 1.25rem 1.25rem 4rem; }
+      .db-greeting { font-size: 1.4rem; }
+      .db-hero-right { display: none; }
+      .db-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
-  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
-  <div class="dashboard-container">
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal &nbsp;·&nbsp; <a href="dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";var tb=document.querySelector(".db-topbar");if(tb)tb.style.top="34px";}</script>
 
-    <header>
-      <h1>Outils de Frank</h1>
-      <p class="subtitle">Bienvenue, Francis 👋</p>
-      
-      <div style="display: flex; justify-content: center; gap: 1rem;">
-        
-        <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" style="display: none; align-items: center; gap: 0.5rem; text-decoration: none; background: #162216; color: #60b8c8; border: 1px solid #2a3a2a; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.borderColor='#60b8c8'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='#2a3a2a'; this.style.transform='translateY(0)';">
-          <span>✉️</span> Webmail
-        </a>
-        
-        <button id="logoutBtn" style="margin-bottom: 0;">Déconnexion</button>
-
-        <button id="toggle-version-btn" style="display:none; margin-bottom:0; background:transparent; border:1px solid #3a3a3a; color:#666; font-size:0.8rem; padding:0.45rem 0.9rem; border-radius:6px; cursor:pointer;" onclick="toggleVersionBadge()">v</button>
-        
-      </div>
-    </header>
-
-    <main>
-      <p class="welcome-text">
-        Les Outils
-      </p>
-
-      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
-        
-        <a href="beta/ena.html" class="menu-card" data-section="ena">
-          <span class="icon">🛠️</span>
-          <h2>ÉNA</h2>
-          <p>École nationale d'aérotechnique</p>
-        </a>
-        
-        <a href="beta/aviation.html" class="menu-card" data-section="aviation">
-          <span class="icon">✈️</span>
-          <h2>Aviation</h2>
-          <p>Outils, météo et aéronefs</p>
-        </a>
-        
-        <a href="beta/bieres.html" class="menu-card" data-section="bieres">
-          <span class="icon">🍺</span>
-          <h2>Bières</h2>
-          <p>Vive la zythologie</p>
-        </a>
-        
-        <a href="beta/scifi.html" class="menu-card" data-section="scifi">
-          <span class="icon">🚀</span>
-          <h2>Science-Fiction</h2>
-          <p>Archives galactiques</p>
-        </a>
-        
-        <a href="beta/hockey.html" class="menu-card" data-section="hockey">
-          <span class="icon">🏒</span>
-          <h2>Hockey</h2>
-          <p>Statistiques LNH</p>
-        </a>
-        
-        <a href="beta/liens.html" class="menu-card" data-section="liens">
-          <span class="icon">🌍</span>
-          <h2>Liens utiles</h2>
-          <p>Ressources et favoris</p>
-        </a>
-
-        <a href="beta/films.html" class="menu-card" data-section="films">
-          <span class="icon">🎬</span>
-          <h2>Films & Séries</h2>
-          <p>Ma liste de visionnement</p>
-        </a>
-
-        <a href="beta/informatique.html" class="menu-card" data-section="informatique">
-          <span class="icon">💻</span>
-          <h2>Informatique</h2>
-          <p>Outils techniques et avioniques</p>
-        </a>
-
-        <a href="beta/rona.html" class="menu-card" data-section="rona">
-          <span class="icon">👷‍♂️</span>
-          <h2>RONA S&amp;S</h2>
-          <p>Suivi des trousses de premiers soins</p>
-        </a>
-
-        <a href="beta/pageTest.html" class="menu-card" data-section="pageTest">
-          <span class="icon">🧪</span>
-          <h2>Page de tests</h2>
-          <p>Page pour faire des tests html et js</p>
-        </a>
-
-        <a href="beta/osint.html" class="menu-card" data-section="osint">
-          <span class="icon">🌐</span>
-          <h2>OSINT Map</h2>
-          <p>Avions, satellites, séismes en direct</p>
-        </a>
-
-      </nav>
-    </main>
-
+  <!-- ── Topbar ── -->
+  <div class="db-topbar">
+    <div class="db-logo">Outils <span>de Frank</span></div>
+    <div class="db-topbar-sep"></div>
+    <div class="db-topbar-actions">
+      <span class="db-version-badge" id="db-ver"></span>
+      <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="db-btn" style="display:none;">✉️ Webmail</a>
+      <button id="toggle-version-btn" class="db-btn" style="display:none;" onclick="toggleVersionBadge()">v</button>
+      <a href="beta/dashboard.html" id="btn-construction" class="db-btn db-btn-construction">🚧 En construction</a>
+      <button id="logoutBtn" class="db-btn db-btn-logout">Déconnexion</button>
+    </div>
   </div>
 
-  <!-- Bouton Archives — fixé en bas à droite -->
-  <a href="beta/archive.html" class="archive-btn">📁 Archives</a>
+  <!-- ── Body ── -->
+  <div class="db-body">
+
+    <!-- Hero -->
+    <div class="db-hero">
+      <div class="db-hero-left">
+        <div class="db-greeting">Bienvenue, <strong><span class="subtitle">Frank</span></strong></div>
+        <div class="db-tagline">Tableau de bord · Outils & Ressources</div>
+      </div>
+      <div class="db-hero-right">
+        <div class="db-datetime" id="db-clock">--:--<span class="db-clock-colon">:</span>--</div>
+        <div class="db-date" id="db-date"></div>
+      </div>
+    </div>
+
+    <!-- Sections -->
+    <div class="db-main">
+      <nav id="menu-grid" style="visibility:hidden;">
+
+        <!-- Aviation -->
+        <div class="db-category cat-aviation">
+          <div class="db-category-header">
+            <div class="db-category-label">Aviation & Cartographie</div>
+            <div class="db-category-line"></div>
+          </div>
+          <div class="db-grid">
+            <a href="beta/aviation.html" class="db-card" data-section="aviation">
+              <div class="db-card-icon">✈️</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Aviation</div>
+                <div class="db-card-desc">Outils, météo et aéronefs</div>
+              </div>
+            </a>
+            <a href="beta/ena.html" class="db-card" data-section="ena">
+              <div class="db-card-icon">🛠️</div>
+              <div class="db-card-text">
+                <div class="db-card-name">ÉNA</div>
+                <div class="db-card-desc">École nationale d'aérotechnique</div>
+              </div>
+            </a>
+            <a href="beta/osint.html" class="db-card" data-section="osint">
+              <div class="db-card-icon">🌐</div>
+              <div class="db-card-text">
+                <div class="db-card-name">OSINT Map</div>
+                <div class="db-card-desc">Avions, satellites, séismes en direct</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Loisirs -->
+        <div class="db-category cat-loisirs">
+          <div class="db-category-header">
+            <div class="db-category-label">Loisirs</div>
+            <div class="db-category-line"></div>
+          </div>
+          <div class="db-grid">
+            <a href="beta/films.html" class="db-card" data-section="films">
+              <div class="db-card-icon">🎬</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Films & Séries</div>
+                <div class="db-card-desc">Ma liste de visionnement</div>
+              </div>
+            </a>
+            <a href="beta/hockey.html" class="db-card" data-section="hockey">
+              <div class="db-card-icon">🏒</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Hockey</div>
+                <div class="db-card-desc">Statistiques LNH</div>
+              </div>
+            </a>
+            <a href="beta/bieres.html" class="db-card" data-section="bieres">
+              <div class="db-card-icon">🍺</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Bières</div>
+                <div class="db-card-desc">Vive la zythologie</div>
+              </div>
+            </a>
+            <a href="beta/scifi.html" class="db-card" data-section="scifi">
+              <div class="db-card-icon">🚀</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Science-Fiction</div>
+                <div class="db-card-desc">Archives galactiques</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Outils -->
+        <div class="db-category cat-outils">
+          <div class="db-category-header">
+            <div class="db-category-label">Outils & Gestion</div>
+            <div class="db-category-line"></div>
+          </div>
+          <div class="db-grid">
+            <a href="beta/informatique.html" class="db-card" data-section="informatique">
+              <div class="db-card-icon">💻</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Informatique</div>
+                <div class="db-card-desc">Outils techniques et avioniques</div>
+              </div>
+            </a>
+            <a href="beta/rona.html" class="db-card" data-section="rona">
+              <div class="db-card-icon">👷‍♂️</div>
+              <div class="db-card-text">
+                <div class="db-card-name">RONA S&amp;S</div>
+                <div class="db-card-desc">Suivi des trousses de premiers soins</div>
+              </div>
+            </a>
+            <a href="beta/liens.html" class="db-card" data-section="liens">
+              <div class="db-card-icon">🌍</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Liens utiles</div>
+                <div class="db-card-desc">Ressources et favoris</div>
+              </div>
+            </a>
+            <a href="beta/pageTest.html" class="db-card" data-section="pageTest">
+              <div class="db-card-icon">🧪</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Page de tests</div>
+                <div class="db-card-desc">Page pour faire des tests html et js</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </nav>
+    </div>
+  </div>
+
+  <a href="beta/archive.html" class="db-archive">📁 Archives</a>
+
+  <div data-version-badge style="display:none;position:fixed;bottom:1rem;left:1rem;background:#ff3a3a;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
 
   <script type="module" src="dashboard.js"></script>
 
-  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
-  <script src="version.js"></script>
+  <script>
+    // Horloge
+    function tickClock() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2,'0');
+      const mm = String(now.getMinutes()).padStart(2,'0');
+      const ss = String(now.getSeconds()).padStart(2,'0');
+      const el = document.getElementById('db-clock');
+      if (el) el.innerHTML = `${hh}<span class="db-clock-colon">:</span>${mm}<span class="db-clock-colon">:</span>${ss}`;
+
+      const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+      const mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      const d = document.getElementById('db-date');
+      if (d) d.textContent = `${jours[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]} ${now.getFullYear()}`;
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    // Version dans topbar
+    document.addEventListener('DOMContentLoaded', () => {
+      const vEl = document.getElementById('db-ver');
+      if (vEl && typeof SITE_VERSION !== 'undefined') vEl.textContent = 'v' + SITE_VERSION;
+
+      // Override du message de bienvenue pour le subtitle (injecté par dashboard.js)
+      // dashboard.js écrit dans .subtitle — on laisse faire, mais on re-cible le bon élément
+      const sub = document.querySelector('.subtitle');
+      if (sub && sub.tagName === 'DIV') sub.style.display = 'inline';
+    });
+  </script>
 </body>
 </html>
