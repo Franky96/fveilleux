@@ -56,27 +56,29 @@
     /* ── Byte display (CSS Grid — colonnes parfaitement alignées) ── */
     .bytes-display {
       display: grid;
-      grid-template-columns: 88px 54px repeat(8, 28px);
-      column-gap: 3px; row-gap: 6px;
-      padding: 0.5rem 0.4rem;
+      grid-template-columns: 92px 60px repeat(8, 42px);
+      column-gap: 4px; row-gap: 8px;
+      padding: 0.8rem 0.4rem;
       align-items: center;
+      width: fit-content;
+      margin: 0 auto;
     }
-    .bit-num-hdr { font-size:0.62rem; color:#4a6a8a; font-family:'Courier New',monospace; text-align:center; padding-bottom:2px; }
-    .byte-role-chip { font-size:0.6rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:3px 6px; border-radius:4px; text-align:center; }
+    .bit-num-hdr { font-size:0.7rem; color:#4a6a8a; font-family:'Courier New',monospace; text-align:center; padding-bottom:2px; }
+    .byte-role-chip { font-size:0.65rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:4px 8px; border-radius:4px; text-align:center; }
     .role-addr   { background:rgba(245,158,11,0.25); color:#f59e0b; }
     .role-status { background:rgba(96,184,200,0.25);  color:#60b8c8; }
     .role-data   { background:rgba(128,204,128,0.20); color:#80cc80; }
-    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold; text-align:right; padding-right:2px; }
+    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.95rem; font-weight:bold; text-align:right; padding-right:4px; }
     .addr-color   { color:#f59e0b; }
     .status-color { color:#60b8c8; }
     .data-color   { color:#80cc80; }
     .byte-bit-cell {
-      width:28px; height:32px; display:flex; align-items:center; justify-content:center;
-      font-family:'Courier New',monospace; font-size:0.9rem; font-weight:bold;
-      border-radius:4px; cursor:pointer; user-select:none;
+      width:42px; height:46px; display:flex; align-items:center; justify-content:center;
+      font-family:'Courier New',monospace; font-size:1.15rem; font-weight:bold;
+      border-radius:5px; cursor:pointer; user-select:none;
       transition:filter 0.1s, transform 0.1s; border:2px solid transparent;
     }
-    .byte-bit-cell:hover { filter:brightness(1.5); transform:scale(1.12); }
+    .byte-bit-cell:hover { filter:brightness(1.5); transform:scale(1.1); }
     .bit-addr   { background:rgba(245,158,11,0.18); color:#f59e0b; border-color:rgba(245,158,11,0.6); }
     .bit-status { background:rgba(96,184,200,0.18);  color:#60b8c8; border-color:rgba(96,184,200,0.6); }
     .bit-data   { background:rgba(128,204,128,0.18); color:#80cc80; border-color:rgba(128,204,128,0.6); }
