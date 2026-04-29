@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const subtitleEl = document.querySelector('.subtitle');
 
   if (role === 'admin') {
-    subtitleEl.innerHTML = `Bienvenue, ${nomUser} 👋 <a href="admin.html" style="text-decoration:none;" title="Accéder à l'administration"><span style="background:#c0392b; color:white; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:12px; margin-left:8px; vertical-align:middle; font-weight:bold; letter-spacing:0.05em; cursor:pointer; box-shadow:0 2px 5px rgba(192,57,43,0.4);">ADMIN</span></a>`;
+    const adminHref = window.location.pathname.includes('/beta/') ? 'beta/admin.html' : 'admin.html';
+    subtitleEl.innerHTML = `Bienvenue, ${nomUser} 👋 <a href="${adminHref}" style="text-decoration:none;" title="Accéder à l'administration"><span style="background:#c0392b; color:white; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:12px; margin-left:8px; vertical-align:middle; font-weight:bold; letter-spacing:0.05em; cursor:pointer; box-shadow:0 2px 5px rgba(192,57,43,0.4);">ADMIN</span></a>`;
   } else {
     subtitleEl.textContent = `Bienvenue, ${nomUser} 👋`;
   }
