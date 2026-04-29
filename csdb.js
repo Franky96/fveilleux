@@ -140,6 +140,7 @@ function decodeBlock(bytes) {
   const info   = CSDB_ADDR[addr] || null;
 
   renderBytesDisplay(bytes);
+  updateAddressBanner(addr, info);
   updateAddressPanel(addr, info);
   updateStatusPanel(status, addr, info);
   updateDataPanel(data, addr, info);
@@ -236,6 +237,16 @@ function renderBytesDisplay(bytes) {
       container.appendChild(cell);
     }
   });
+}
+
+// ── Address banner ────────────────────────────────────
+function updateAddressBanner(addr, info) {
+  const hex = '0x' + addr.toString(16).toUpperCase().padStart(2, '0');
+  document.getElementById('banner-addr-box').textContent = hex;
+  document.getElementById('banner-name').textContent = info ? info.name : 'Adresse inconnue';
+  document.getElementById('banner-sub').textContent = info
+    ? `${info.system}  •  ${info.db} octet(s) de données`
+    : 'Non répertoriée dans le catalogue CSDB';
 }
 
 // ── Address panel ─────────────────────────────────────
@@ -412,6 +423,9 @@ function setText(id, text, cls = '') {
 
 function clearPanels() {
   lastHighlightedAddr = -1;
+  document.getElementById('banner-addr-box').textContent = '0x--';
+  document.getElementById('banner-name').textContent = '—';
+  document.getElementById('banner-sub').textContent  = '—';
   ['addr-hex','addr-dec','addr-bin','addr-name','addr-system','addr-db','addr-desc']
     .forEach(id => setText(id, '—', 'dim'));
   document.getElementById('status-panel-body').innerHTML = row('—', 'En attente', 'dim');

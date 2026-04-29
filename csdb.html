@@ -88,6 +88,21 @@
     .legend-dot { width:12px; height:12px; border-radius:3px; }
     .placeholder-msg { color:#556655; font-size:0.9rem; padding:1.5rem; font-style:italic; text-align:center; }
 
+    /* ── Address banner ── */
+    .address-banner {
+      background:#000000; border:1px solid #1c1c1c; border-left:4px solid #f59e0b;
+      border-radius:10px; padding:1rem 1.5rem; margin-bottom:1.5rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    }
+    .address-banner-left { display:flex; align-items:center; gap:1rem; }
+    .addr-hex-box {
+      background:#f59e0b; color:#0a0f0a; font-family:'Courier New',monospace;
+      font-size:1.2rem; font-weight:bold; padding:0.45rem 1rem; border-radius:8px;
+      min-width:5rem; text-align:center; letter-spacing:0.08rem;
+    }
+    .banner-name { font-size:1.05rem; font-weight:bold; color:#f0ede6; }
+    .banner-sub  { font-size:0.78rem; color:#556680; margin-top:0.25rem; }
+
     /* ── Detail grid ── */
     .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
     .detail-panel-full { grid-column:1/-1; }
@@ -166,6 +181,17 @@
         <div class="legend-item"><div class="legend-dot" style="background:#60b8c8"></div><span>Status — octet 1</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#80cc80"></div><span>Données — octets 2+</span></div>
         <div class="legend-item" style="color:#3a5a3a;font-size:0.72rem;">↑ cliquer un bit pour le basculer</div>
+      </div>
+    </div>
+
+    <!-- ── Bannière adresse ── -->
+    <div class="address-banner">
+      <div class="address-banner-left">
+        <div class="addr-hex-box" id="banner-addr-box">0x00</div>
+        <div>
+          <div class="banner-name" id="banner-name">—</div>
+          <div class="banner-sub"  id="banner-sub">—</div>
+        </div>
       </div>
     </div>
 
