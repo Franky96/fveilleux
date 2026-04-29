@@ -43,17 +43,6 @@
     #zero-btn:hover { border-color:#666; color:#aaa; }
     .error-msg { color:#ff6b6b; font-size:0.82rem; flex:1; min-width:0; }
 
-    /* ── Examples ── */
-    .examples-bar { display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem; }
-    .examples-label { color:#445544; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06rem; flex-shrink:0; margin-right:0.2rem; }
-    .ex-btn {
-      font-family:'Courier New',monospace; font-size:0.7rem; color:#80cc80;
-      background:rgba(128,204,128,0.07); border:1px solid #2a3a2a;
-      border-radius:5px; padding:0.18rem 0.55rem; cursor:pointer; white-space:nowrap;
-      transition:border-color 0.15s, background 0.15s;
-    }
-    .ex-btn:hover { border-color:#80cc80; background:rgba(128,204,128,0.15); }
-
     /* ── Layout ── */
     .csdb-container { max-width:1380px; margin:0 auto; padding:2rem 1.5rem 3rem; color:#f0ede6; width:100%; }
     .csdb-header { text-align:center; margin-bottom:2rem; }
@@ -159,20 +148,6 @@
       <h1>Décodeur CSDB</h1>
       <p>Commercial Standard Digital Bus — GAMA Standard 523-0772774<br>
          <small>Chaque byte = cadre UART 11 bits · Bloc = ADRESSE + STATUS + DONNÉES</small></p>
-    </div>
-
-    <!-- ── Exemples rapides ── -->
-    <div class="examples-bar">
-      <span class="examples-label">Exemples :</span>
-      <button class="ex-btn" onclick="loadExample('A5')">A5 — SYNC</button>
-      <button class="ex-btn" onclick="loadExample('10 E0 08 41 85 00')">10 — VHF COMM FREQ</button>
-      <button class="ex-btn" onclick="loadExample('11 A0 12 45 00 00')">11 — VHF DATA</button>
-      <button class="ex-btn" onclick="loadExample('24 80 11 85 00 00')">24 — DME FREQ</button>
-      <button class="ex-btn" onclick="loadExample('46 A0 00 5A 00 00')">46 — CAP MAG.</button>
-      <button class="ex-btn" onclick="loadExample('C3 80 01 F4 00 00')">C3 — RADIO ALT</button>
-      <button class="ex-btn" onclick="loadExample('33 80 02 05 00 00')">33 — CODE ATC</button>
-      <button class="ex-btn" onclick="loadExample('F3 00 00 00 00 00')">F3 — DIAG</button>
-      <button class="ex-btn" onclick="loadExample('FF 00 00 00 00 00')">FF — NO DATA</button>
     </div>
 
     <!-- ── Affichage des octets ── -->
