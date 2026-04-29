@@ -364,8 +364,24 @@ window.genererPDF = async function() {
     }
   });
 
+  // ── COMPLET si aucun ajout ────────────────────────────
+  const aucunAjout = !Object.values(manquants).some(q => q > 0);
+  if (aucunAjout) {
+    const green = rgb(0, 0.5, 0);
+    const texte = 'COMPLET';
+    const tw = fontBold.widthOfTextAtSize(texte, 20);
+    const { width } = page.getSize();
+    page.drawText(texte, {
+      x: (width - tw) / 2,
+      y: 135,
+      size: 20,
+      font: fontBold,
+      color: green,
+    });
+  }
+
   // ── Téléchargement ────────────────────────────────────
-  
+
   pdfDoc.setTitle('');
   pdfDoc.setAuthor('');
   pdfDoc.setSubject('');
@@ -507,6 +523,22 @@ window.genererToutPDF = async function() {
         });
       }
     });
+
+    // ── COMPLET si aucun ajout ──────────────────────────
+    const aucunAjout = !Object.values(manquants).some(q => q > 0);
+    if (aucunAjout) {
+      const green = rgb(0, 0.5, 0);
+      const texte = 'COMPLET';
+      const tw = fontBold.widthOfTextAtSize(texte, 20);
+      const { width } = page.getSize();
+      page.drawText(texte, {
+        x: (width - tw) / 2,
+        y: 135,
+        size: 20,
+        font: fontBold,
+        color: green,
+      });
+    }
 
     // Copier la page remplie dans le PDF fusionné
     const [copiedPage] = await mergedPdf.copyPages(pdfDoc, [0]);
