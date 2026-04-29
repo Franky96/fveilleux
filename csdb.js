@@ -72,28 +72,28 @@ const CSDB_ADDR = {
 //   Bit 7 = DATA #1 VALID, Bit 6 = DATA #2 VALID, Bit 5 = DATA #3 VALID
 //   Bits 4-3 = MODE (1=ON), Bit 2 = TEST (1=TEST), Bits 1-0 = SOURCE IDENT
 const STATUS_FIELDS = {
-  // Adresses VHF COMM FREQ (0x10, 0x12)
+  // Adresses VHF COMM FREQ (0x10, 0x12) — manuel §5, page 24
   0x10: [
-    { bit:7, name:'FREQ VALID',   desc:'Fréquence valide' },
-    { bit:6, name:'PAD',          desc:'—' },
-    { bit:5, name:'XFR CTL',      desc:'Transfert freq (1=XFR)' },
-    { bit:4, name:'SQLCH CTL',    desc:'Squelch (1=audio activé)' },
-    { bit:3, name:'SI',           desc:'Side-tone ident' },
-    { bit:2, name:'TEST CTL',     desc:'Test (1=TEST)' },
-    { bit:1, name:'SOURCE',       desc:'Source ident (bit 1)' },
-    { bit:0, name:'SI IDENT',     desc:'Source ident (bit 0)' },
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'PAD',        desc:'Non utilisé' },
+    { bit:5, name:'XFR CTL',    desc:'Transfert fréquence (1=XFR en cours)' },
+    { bit:4, name:'SQLCH CTL',  desc:'0=Squelch auto · 1=Audio activé (squelch off)' },
+    { bit:3, name:'SRC b3',     desc:'Source ident bit 3 (MSB) — voir NOTE 1' },
+    { bit:2, name:'TEST CTL',   desc:'Mode test (1=test actif)' },
+    { bit:1, name:'SRC b1',     desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SRC b0',     desc:'Source ident bit 0 (LSB) — voir NOTE 1' },
   ],
   0x12: 'same:0x10',
-  // Adresses VHF COMM DATA (0x11, 0x13)
+  // Adresses VHF COMM DATA (0x11, 0x13) — manuel §5, page 25
   0x11: [
-    { bit:7, name:'FREQ VALID',   desc:'Fréquence valide' },
-    { bit:6, name:'FREQ LIM B',   desc:'Limite fréquence B' },
-    { bit:5, name:'FREQ LIM A',   desc:'Limite fréquence A' },
-    { bit:4, name:'XMIT IND',     desc:'Indicateur émission (1=ON)' },
-    { bit:3, name:'SI',           desc:'Side-tone ident' },
-    { bit:2, name:'SELF TEST',    desc:'Auto-test (1=ON)' },
-    { bit:1, name:'SOURCE',       desc:'Source ident (bit 1)' },
-    { bit:0, name:'SI IDENT',     desc:'Source ident (bit 0)' },
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'FREQ LIM B', desc:'Limite fréquence bit 6 — voir NOTE 2' },
+    { bit:5, name:'FREQ LIM A', desc:'Limite fréquence bit 5 — voir NOTE 2' },
+    { bit:4, name:'XMIT IND',   desc:'Indicateur émission (1=émission active)' },
+    { bit:3, name:'SRC b3',     desc:'Source ident bit 3 (MSB) — voir NOTE 1' },
+    { bit:2, name:'SELF TEST',  desc:'Auto-test (1=test actif)' },
+    { bit:1, name:'SRC b1',     desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SRC b0',     desc:'Source ident bit 0 (LSB) — voir NOTE 1' },
   ],
   0x13: 'same:0x11',
 };
@@ -117,12 +117,13 @@ const STATUS_FIELD_MAP = {
     { span:1, label:'TEST', cls:'csdb-fmap-test'  },
     { span:2, label:'SRC',  cls:'csdb-fmap-src'   },
   ],
+  // bits 3,1,0 = source ident (3 bits non-contigus)
   0x10: [
     { span:1, label:'FV',  cls:'csdb-fmap-valid' },
     { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
     { span:1, label:'XFR', cls:'csdb-fmap-ctrl'  },
     { span:1, label:'SQL', cls:'csdb-fmap-ctrl'  },
-    { span:1, label:'SI',  cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SRC', cls:'csdb-fmap-src'   },
     { span:1, label:'TST', cls:'csdb-fmap-test'  },
     { span:2, label:'SRC', cls:'csdb-fmap-src'   },
   ],
@@ -131,7 +132,7 @@ const STATUS_FIELD_MAP = {
     { span:1, label:'FLB', cls:'csdb-fmap-ctrl'  },
     { span:1, label:'FLA', cls:'csdb-fmap-ctrl'  },
     { span:1, label:'XMT', cls:'csdb-fmap-ctrl'  },
-    { span:1, label:'SI',  cls:'csdb-fmap-ctrl'  },
+    { span:1, label:'SRC', cls:'csdb-fmap-src'   },
     { span:1, label:'TST', cls:'csdb-fmap-test'  },
     { span:2, label:'SRC', cls:'csdb-fmap-src'   },
   ],
@@ -140,18 +141,21 @@ STATUS_FIELD_MAP[0x12] = STATUS_FIELD_MAP[0x10];
 STATUS_FIELD_MAP[0x13] = STATUS_FIELD_MAP[0x11];
 
 const DATA_FIELD_MAP = {
-  // VHF COMM FREQ actif — BCD 0.001 MHz
+  // VHF COMM FREQ actif — BCD, manuel page 24
+  // Byte2[7:4]=0.001MHz, Byte2[3:0]=PAD
+  // Byte3[7:4]=0.1MHz,   Byte3[3:0]=0.01MHz
+  // Byte4[7]=PAD, Byte4[6:4]=10MHz (3 bits), Byte4[3:0]=1MHz
   0x10: [
-    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'PAD',       cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',       cls:'csdb-fmap-pad' }, { span:3, label:'10 MHz',    cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
     [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
   ],
-  // VHF COMM DATA — fréquence standby BCD
+  // VHF COMM DATA — fréquence standby BCD (même structure que 0x10)
   0x11: [
-    [{ span:4, label:'STBY 0.01',  cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.001', cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'STBY 1 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.1',   cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'STBY 100',   cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 10',     cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'STBY 0.001', cls:'csdb-fmap-bcd' }, { span:4, label:'PAD',         cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'STBY 0.1',   cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.01',   cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',        cls:'csdb-fmap-pad' }, { span:3, label:'STBY 10 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 1', cls:'csdb-fmap-bcd' }],
     [{ span:8, label:'PAD',        cls:'csdb-fmap-pad' }],
   ],
   // NAV / DME FREQ — BCD MHz
@@ -395,14 +399,21 @@ function updateStatusPanel(statusByte, addr, info) {
   const fields = getStatusFields(addr);
 
   if (fields) {
-    // Message-specific status decode
     let html = '';
     for (const f of fields) {
       const v = (statusByte >> f.bit) & 1;
       html += row(`Bit ${f.bit} — ${f.name}`, v === 1 ? `1 — ${f.desc}` : `0`, v === 1 ? 'ok' : 'dim');
     }
+    // Source ident 3-bit (bits 3,1,0) pour 0x10–0x13 — NOTE 1 du manuel
+    if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
+      const b3 = (statusByte >> 3) & 1;
+      const b1 = (statusByte >> 1) & 1;
+      const b0 = (statusByte >> 0) & 1;
+      const srcVal = (b3 << 2) | (b1 << 1) | b0;
+      const srcNames = ['TOUTES UNITÉS','UNITÉ #1','UNITÉ #2','UNITÉ #3','---','PRESET #1','PRESET #2','PRESET #3'];
+      html += row('Source ident (b3,b1,b0)', `${srcVal.toString(2).padStart(3,'0')}b = ${srcNames[srcVal]}`, 'accent');
+    }
     html += row('Brut', '0x' + statusByte.toString(16).toUpperCase().padStart(2,'0') + ' = ' + statusByte.toString(2).padStart(8,'0') + 'b', 'dim');
-    html += row('⚠ Layout', 'Spécifique à cette adresse (§5 manuel)', 'dim');
     body.innerHTML = html;
   } else {
     // Standard layout (Figure 4)
@@ -465,23 +476,23 @@ function updateDataPanel(dataBytes, addr, info) {
   body.innerHTML = html;
 }
 
-// ── BCD frequency decoder (VHF: 108.000–137.975 MHz) ─
+// ── BCD frequency decoder — manuel §5 page 24 ────────
+// Byte2[7:4]=0.001MHz  Byte2[3:0]=PAD (ignoré)
+// Byte3[7:4]=0.1MHz    Byte3[3:0]=0.01MHz
+// Byte4[7]=PAD(ignoré) Byte4[6:4]=10MHz(3bits) Byte4[3:0]=1MHz
+// Le digit 100 MHz (toujours 1) est implicite — non encodé
 function tryDecodeBCDFreq(data) {
   try {
-    // Byte 2: bits [7:4]=BCD_8, [3:0]=BCD_4  → 0.001 MHz digits
-    // Byte 3: bits [7:4]=BCD_2, [3:0]=BCD_1  → 0.001 & 0.01 MHz
-    // Byte 4: bits [7:4]=BCD_8, [3:0]=BCD_4  → 10 MHz & 1 MHz
-    // Format: BBB.BBB MHz (100s, 10s, 1s . 0.1s, 0.01s, 0.001s)
-    const b2 = data[0], b3 = data[1], b4 = data.length > 2 ? data[2] : 0;
-    const d100 = (b4 >> 4) & 0xF; // 100 MHz digit
-    const d10  = (b4 >> 0) & 0xF; // 10 MHz digit
-    const d1   = (b3 >> 4) & 0xF; // 1 MHz digit  — actually let's check manual format
-    const d01  = (b3 >> 0) & 0xF; // 0.1 MHz
-    const d001 = (b2 >> 4) & 0xF; // 0.01 MHz
-    const d0001= (b2 >> 0) & 0xF; // 0.001 MHz
-    // Validate BCD digits
-    if ([d100,d10,d1,d01,d001,d0001].some(d => d > 9)) return null;
-    return `${d100}${d10}${d1}.${d01}${d001}${d0001} MHz`;
+    if (data.length < 3) return null;
+    const b2 = data[0], b3 = data[1], b4 = data[2];
+    const d0001 = (b2 >> 4) & 0xF;   // 0.001 MHz — bits 7-4 de l'octet 2
+    const d01   = (b3 >> 4) & 0xF;   // 0.1 MHz   — bits 7-4 de l'octet 3
+    const d001  = (b3 >> 0) & 0xF;   // 0.01 MHz  — bits 3-0 de l'octet 3
+    const d10   = (b4 >> 4) & 0x7;   // 10 MHz    — bits 6-4 de l'octet 4 (bit 7=PAD)
+    const d1    = (b4 >> 0) & 0xF;   // 1 MHz     — bits 3-0 de l'octet 4
+    if ([d0001, d01, d001, d10, d1].some(d => d > 9)) return null;
+    if (d10 === 0 && d1 === 0) return null; // données nulles
+    return `1${d10}${d1}.${d01}${d001}${d0001} MHz`;
   } catch { return null; }
 }
 
