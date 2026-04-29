@@ -121,6 +121,28 @@
     .banner-name { font-size:1.05rem; font-weight:bold; color:#f0ede6; }
     .banner-sub  { font-size:0.78rem; color:#556680; margin-top:0.25rem; }
 
+    /* ── Collapsible panels ── */
+    .collapsible {
+      background:#040904; border:1px solid #1a2a1a; border-radius:12px;
+      margin-bottom:1rem; overflow:hidden;
+    }
+    .collapsible summary {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.5rem; cursor:pointer; user-select:none; list-style:none;
+      font-size:0.85rem; font-weight:bold; text-transform:uppercase;
+      letter-spacing:0.1rem; color:#80cc80;
+      border-bottom:1px solid transparent; transition:border-color 0.2s;
+    }
+    .collapsible summary::-webkit-details-marker { display:none; }
+    .collapsible[open] summary { border-bottom-color:#1a2a1a; }
+    .collapsible summary:hover { background:rgba(128,204,128,0.04); }
+    .collapsible summary::after {
+      content:'▶'; font-size:0.7rem; color:#4a6a4a;
+      transition:transform 0.2s; flex-shrink:0;
+    }
+    .collapsible[open] summary::after { transform:rotate(90deg); }
+    .collapsible-body { padding:1.5rem; }
+
     /* ── Detail grid ── */
     .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
     .detail-panel-full { grid-column:1/-1; }
@@ -247,93 +269,93 @@
     </div>
 
     <!-- ── Référence protocole ── -->
-    <div class="panel">
-      <h2>Protocole CSDB</h2>
-      <p style="color:#a89f94;font-size:0.88rem;line-height:1.65;margin-bottom:1.5rem;">
-        Le <strong style="color:#80cc80;">Commercial Standard Digital Bus (CSDB)</strong> est un standard avionique
-        série défini par la GAMA (General Aviation Manufacturers Association), standard 523-0772774.
-        Contrairement à l'ARINC 429 (mots de 32 bits), le CSDB est orienté <strong>blocs de messages</strong>.
-        Chaque octet est transmis dans un cadre UART de <strong>11 bits</strong>
-        (1 start + 8 données + 1 parité impaire + 1 stop).
-        Un bloc typique contient un <strong style="color:#f59e0b;">octet d'adresse</strong>,
-        un <strong style="color:#60b8c8;">octet de status</strong>, et jusqu'à 4
-        <strong style="color:#80cc80;">octets de données</strong>.
-      </p>
-
-      <div class="two-col" style="margin-bottom:1.5rem;">
-        <table class="ref-table">
-          <thead><tr><th colspan="3">Structure d'un bloc de message</th></tr></thead>
+    <details class="collapsible">
+      <summary>Référence protocole CSDB</summary>
+      <div class="collapsible-body">
+        <p style="color:#a89f94;font-size:0.88rem;line-height:1.65;margin-bottom:1.5rem;">
+          Le <strong style="color:#80cc80;">Commercial Standard Digital Bus (CSDB)</strong> est un standard avionique
+          série défini par la GAMA (General Aviation Manufacturers Association), standard 523-0772774.
+          Contrairement à l'ARINC 429 (mots de 32 bits), le CSDB est orienté <strong>blocs de messages</strong>.
+          Chaque octet est transmis dans un cadre UART de <strong>11 bits</strong>
+          (1 start + 8 données + 1 parité impaire + 1 stop).
+          Un bloc typique contient un <strong style="color:#f59e0b;">octet d'adresse</strong>,
+          un <strong style="color:#60b8c8;">octet de status</strong>, et jusqu'à 4
+          <strong style="color:#80cc80;">octets de données</strong>.
+        </p>
+        <div class="two-col" style="margin-bottom:1.5rem;">
+          <table class="ref-table">
+            <thead><tr><th colspan="3">Structure d'un bloc de message</th></tr></thead>
+            <tbody>
+              <tr><td style="color:#f59e0b">Octet 0</td><td>ADRESSE</td><td>Type de message</td></tr>
+              <tr><td style="color:#60b8c8">Octet 1</td><td>STATUS</td><td>Validité / mode / source</td></tr>
+              <tr><td style="color:#80cc80">Octets 2–5</td><td>DONNÉES</td><td>BCD, complément à 2, discrets</td></tr>
+            </tbody>
+          </table>
+          <table class="ref-table">
+            <thead><tr><th colspan="2">Cadre UART par octet (11 bits)</th></tr></thead>
+            <tbody>
+              <tr><td>Start bit</td><td>1 bit (toujours 0)</td></tr>
+              <tr><td>Données</td><td>8 bits D0→D7</td></tr>
+              <tr><td>Parité</td><td>1 bit (parité impaire)</td></tr>
+              <tr><td>Stop bit</td><td>1 bit (toujours 1)</td></tr>
+              <tr><td>Débit nominal</td><td style="color:#60b8c8">12,5 kbps</td></tr>
+              <tr><td>Max blocs/trame</td><td style="color:#60b8c8">18 blocs</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="color:#80cc80;font-size:0.8rem;font-weight:bold;letter-spacing:0.08rem;text-transform:uppercase;margin-bottom:0.8rem;">Octet de status — layout standard (Figure 4, §3.4)</p>
+        <table class="ref-table" style="margin-bottom:1rem;">
+          <thead><tr><th>Bit(s)</th><th>Nom</th><th>0</th><th>1</th></tr></thead>
           <tbody>
-            <tr><td style="color:#f59e0b">Octet 0</td><td>ADRESSE</td><td>Type de message</td></tr>
-            <tr><td style="color:#60b8c8">Octet 1</td><td>STATUS</td><td>Validité / mode / source</td></tr>
-            <tr><td style="color:#80cc80">Octets 2–5</td><td>DONNÉES</td><td>BCD, complément à 2, discrets</td></tr>
+            <tr><td>7</td><td>Données #1 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+            <tr><td>6</td><td>Données #2 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+            <tr><td>5</td><td>Données #3 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+            <tr><td>4–3</td><td>Mode</td><td style="color:#556680">DÉSACTIVÉ</td><td style="color:#80cc80">ACTIVÉ</td></tr>
+            <tr><td>2</td><td>Test</td><td style="color:#80cc80">NORMAL</td><td style="color:#ff6b6b">TEST</td></tr>
+            <tr><td>1–0</td><td>Source</td><td colspan="2">00=INCONNU · 01=UNITÉ#1 · 10=UNITÉ#2 · 11=UNITÉ#3</td></tr>
           </tbody>
         </table>
-        <table class="ref-table">
-          <thead><tr><th colspan="2">Cadre UART par octet (11 bits)</th></tr></thead>
-          <tbody>
-            <tr><td>Start bit</td><td>1 bit (toujours 0)</td></tr>
-            <tr><td>Données</td><td>8 bits D0→D7</td></tr>
-            <tr><td>Parité</td><td>1 bit (parité impaire)</td></tr>
-            <tr><td>Stop bit</td><td>1 bit (toujours 1)</td></tr>
-            <tr><td>Débit nominal</td><td style="color:#60b8c8">12,5 kbps</td></tr>
-            <tr><td>Max blocs/trame</td><td style="color:#60b8c8">18 blocs</td></tr>
-          </tbody>
-        </table>
+        <div class="two-col">
+          <table class="ref-table">
+            <thead><tr><th>Caractéristique</th><th>CSDB</th><th>ARINC 429</th></tr></thead>
+            <tbody>
+              <tr><td>Structure</td><td style="color:#60b8c8">Blocs messages</td><td>Mots 32 bits</td></tr>
+              <tr><td>Taille typique</td><td style="color:#60b8c8">6 octets/bloc</td><td>32 bits/mot</td></tr>
+              <tr><td>Débit</td><td style="color:#60b8c8">12,5 kbps</td><td>12,5 / 100 kbps</td></tr>
+              <tr><td>Encodage</td><td style="color:#60b8c8">BCD · 2's comp · DIS</td><td>BCD · BNR · DIS</td></tr>
+              <tr><td>Parité</td><td style="color:#60b8c8">Par octet (UART)</td><td>Bit 32 du mot</td></tr>
+              <tr><td>Topologie</td><td style="color:#60b8c8">Point-à-point</td><td>1 TX → N RX</td></tr>
+              <tr><td>Synchronisation</td><td style="color:#60b8c8">Octet 0xA5 (SYNC)</td><td>Temps de silence bus</td></tr>
+            </tbody>
+          </table>
+          <table class="ref-table">
+            <thead><tr><th colspan="2">Encodages des données</th></tr></thead>
+            <tbody>
+              <tr><td>BCD</td><td>Fréquences radio (VHF, DME, ADF) — 4 bits/chiffre</td></tr>
+              <tr><td>2's complement</td><td>Angles, vitesses, altitudes — 16 bits signé</td></tr>
+              <tr><td>Discret</td><td>Flags, modes, états ON/OFF — bit par bit</td></tr>
+              <tr><td>ASCII</td><td>Messages texte CRT (adresse 0x70)</td></tr>
+              <tr><td>PAD</td><td>Octet de rembourrage (valeur quelconque)</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+    </details>
 
-      <h2 style="margin-top:0.5rem;">Octet de status — layout standard (Figure 4, §3.4)</h2>
-      <table class="ref-table" style="margin-bottom:1.5rem;">
-        <thead><tr><th>Bit(s)</th><th>Nom</th><th>0</th><th>1</th></tr></thead>
-        <tbody>
-          <tr><td>7</td><td>Données #1 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
-          <tr><td>6</td><td>Données #2 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
-          <tr><td>5</td><td>Données #3 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
-          <tr><td>4–3</td><td>Mode</td><td style="color:#556680">DÉSACTIVÉ</td><td style="color:#80cc80">ACTIVÉ</td></tr>
-          <tr><td>2</td><td>Test</td><td style="color:#80cc80">NORMAL</td><td style="color:#ff6b6b">TEST</td></tr>
-          <tr><td>1–0</td><td>Source</td><td colspan="2">00=INCONNU · 01=UNITÉ#1 · 10=UNITÉ#2 · 11=UNITÉ#3</td></tr>
-        </tbody>
-      </table>
-      <p style="color:#556680;font-size:0.8rem;margin-bottom:1.5rem;">
-        ⚠ Le layout de l'octet de status varie selon l'adresse (§5 du manuel). Le décodage ci-dessus est le layout standard.
-        Certaines adresses (ex. 0x10, 0x11) utilisent des champs spécifiques au message.
-      </p>
-
-      <h2>Catalogue des adresses — cliquer une ligne pour charger un exemple</h2>
-      <div class="addr-table-wrapper">
-        <table class="ref-table">
-          <thead>
-            <tr><th>Adresse</th><th>Nom du message</th><th>Système</th><th>Description</th></tr>
-          </thead>
-          <tbody id="addr-catalog-body"></tbody>
-        </table>
+    <!-- ── Catalogue des adresses ── -->
+    <details class="collapsible">
+      <summary>Catalogue des adresses — cliquer une ligne pour décoder</summary>
+      <div class="collapsible-body">
+        <div class="addr-table-wrapper">
+          <table class="ref-table">
+            <thead>
+              <tr><th>Adresse</th><th>Nom du message</th><th>Système</th><th>Description</th></tr>
+            </thead>
+            <tbody id="addr-catalog-body"></tbody>
+          </table>
+        </div>
       </div>
-
-      <div class="two-col" style="margin-top:1.5rem;">
-        <table class="ref-table">
-          <thead><tr><th>Caractéristique</th><th>CSDB</th><th>ARINC 429</th></tr></thead>
-          <tbody>
-            <tr><td>Structure</td><td style="color:#60b8c8">Blocs messages</td><td>Mots 32 bits</td></tr>
-            <tr><td>Taille typique</td><td style="color:#60b8c8">6 octets/bloc</td><td>32 bits/mot</td></tr>
-            <tr><td>Débit</td><td style="color:#60b8c8">12,5 kbps</td><td>12,5 / 100 kbps</td></tr>
-            <tr><td>Encodage</td><td style="color:#60b8c8">BCD · 2's comp · DIS</td><td>BCD · BNR · DIS</td></tr>
-            <tr><td>Parité</td><td style="color:#60b8c8">Par octet (UART)</td><td>Bit 32 du mot</td></tr>
-            <tr><td>Topologie</td><td style="color:#60b8c8">Point-à-point</td><td>1 TX → N RX</td></tr>
-            <tr><td>Synchronisation</td><td style="color:#60b8c8">Octet 0xA5 (SYNC)</td><td>Temps de silence bus</td></tr>
-          </tbody>
-        </table>
-        <table class="ref-table">
-          <thead><tr><th colspan="2">Encodages des données</th></tr></thead>
-          <tbody>
-            <tr><td>BCD</td><td>Fréquences radio (VHF, DME, ADF) — 4 bits/chiffre</td></tr>
-            <tr><td>2's complement</td><td>Angles, vitesses, altitudes — 16 bits signé</td></tr>
-            <tr><td>Discret</td><td>Flags, modes, états ON/OFF — bit par bit</td></tr>
-            <tr><td>ASCII</td><td>Messages texte CRT (adresse 0x70)</td></tr>
-            <tr><td>PAD</td><td>Octet de rembourrage (valeur quelconque)</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </details>
 
   </div>
 
