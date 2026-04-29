@@ -57,6 +57,8 @@
 
     <aside class="sidebar" style="border-right-color: #c0392b;">
       <a href="dashboard.html" class="back-btn" style="color:#e74c3c;">&#8592; Accueil</a>
+      <a id="btn-beta-admin" href="beta/dashboard.html" class="back-btn" style="display:none; color:#f39c12; font-size:0.8rem; margin-top:0.5rem;">🚧 Dashboard beta</a>
+      <script>if(sessionStorage.getItem('betaMode')==='1'){document.getElementById('btn-beta-admin').style.display='inline-block';}</script>
       <h2 style="color:#e74c3c;">Admin</h2>
       <p class="sidebar-subtitle">Centre de contrôle</p>
     </aside>

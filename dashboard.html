@@ -9,6 +9,7 @@
     if (!sessionStorage.getItem('loggedIn')) {
       document.location.href = 'index.html';
     }
+    sessionStorage.removeItem('betaMode');
   </script>
 </head>
 <body>
