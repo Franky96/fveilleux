@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Aviation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+  <div class="page-container">
+
+    <aside class="sidebar" style="display: flex; flex-direction: column; height: 100vh;">
+      
+      <div>
+        <a href="beta/dashboard.html" class="back-btn-dash" style="margin-bottom:1.5rem; display:inline-flex;">&#8592; Accueil</a>
+        <h2>Aviation</h2>
+        <p class="sidebar-subtitle">Outils et références</p>
+        
+        <nav class="sidebar-nav">
+          <div class="sidebar-etape-header" onclick="afficherSection('traducteur-metar', this)">
+            <span class="sidebar-etape-label" id="label-metar">METAR</span>
+          </div>
+
+          <div class="sidebar-etape-header" onclick="afficherSection('autres', this)">
+            <span class="sidebar-etape-label" id="label-autres">Notes générales</span>
+          </div>
+        </nav>
+      </div>
+
+      <div style="margin-top: auto; padding-bottom: 2rem;">
+        <a href="beta/aeronefs.html" id="btn-aeronefs" style="display: none; align-items: center; justify-content: center; background: #162216; border: 1px solid #2a3a2a; padding: 1rem; border-radius: 8px; color: #a89f94; text-decoration: none; font-weight: bold; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onmouseover="this.style.borderColor='#60b8c8'; this.style.color='#60b8c8'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='#2a3a2a'; this.style.color='#a89f94'; this.style.transform='translateY(0)';">
+          🛩️ Manuels d'aéronefs ↗
+        </a>
+      </div>
+
+    </aside>
+
+    <main class="page-content">
+
+      <div class="section-view" id="traducteur-metar">
+        <div class="cours-header">
+          <h1 class="cours-titre">Traducteur METAR</h1>
+          <span class="cours-info">Décodeur de messages météorologiques d'aérodrome</span>
+        </div>
+        <div class="content-block">
+          <h3>Entrer un METAR</h3>
+          <div class="metar-input-group">
+            <input type="text" id="metar-input" placeholder="Ex: CYUL 251900Z 27015KT 9999 FEW030 BKN250 12/05 A2992" />
+            <button class="btn-decoder" onclick="decoderMETAR()">Décoder</button>
+          </div>
+          <p class="metar-exemple" onclick="chargerExemple()">Charger un exemple</p>
+        </div>
+        <div class="content-block" id="metar-resultat-block" style="display:none;">
+          <h3>Résultat décodé</h3>
+          <div class="metar-raw" id="metar-raw"></div>
+          <div class="metar-grid" id="metar-grid"></div>
+        </div>
+      </div>
+
+      <div class="section-view hidden" id="autres">
+        <div class="cours-header">
+          <h1 class="cours-titre">Notes générales</h1>
+          <span class="cours-info">Notes, liens et références d'aviation</span>
+          <button class="btn-ajouter-module" onclick="ouvrirModalGroupe(this)" title="Nouveau groupe">+</button>
+        </div>
+        <div class="sections-container" id="sections-aviation-autres"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Menu flottant : ajouter une note dans un groupe -->
+  <div class="menu-ajout hidden" id="menu-ajout-item">
+    <button class="menu-ajout-item" onclick="choisirTypeItem('note')"><span class="menu-ajout-icone">📚</span> Note</button>
+  </div>
+
+  <!-- Modal Groupe -->
+  <div class="modal-overlay hidden" id="modal-groupe">
+    <div class="modal-box">
+      <h3 id="modal-groupe-titre-label">Nouveau groupe</h3>
+      <label>Nom du groupe</label>
+      <input type="text" id="modal-groupe-titre" placeholder="Ex: Météo, Navigation, Réglementation…" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalGroupe()">Annuler</button>
+        <button class="btn-save" id="modal-groupe-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Note -->
+  <div class="modal-overlay hidden" id="modal-note">
+    <div class="modal-box">
+      <h3 id="modal-note-titre-label">Nouvelle note</h3>
+      <label>Titre</label>
+      <input type="text" id="modal-note-titre" placeholder="Ex: Site de météo aviation" />
+      <label>Type</label>
+      <select id="modal-note-type" onchange="updateModalNoteType()">
+        <option value="texte">📝 Note texte</option>
+        <option value="pdf">📎 Fichier PDF</option>
+        <option value="lien">🔗 Lien</option>
+        <option value="reference">🌐 Site de référence</option>
+      </select>
+      <label id="modal-note-contenu-label">Contenu</label>
+      <textarea id="modal-note-contenu" rows="6" placeholder="Écris tes notes ici..."></textarea>
+      <div id="modal-note-nom-group" class="hidden">
+        <label>Nom affiché</label>
+        <input type="text" id="modal-note-nom" placeholder="Ex: Nav Canada" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalNote()">Annuler</button>
+        <button class="btn-save" id="modal-note-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="aviation.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>

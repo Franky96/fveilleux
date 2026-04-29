@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Décodeur ARINC 429 — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if (!sessionStorage.getItem('loggedIn')) {
+      document.location.href = 'index.html';
+    }
+  </script>
+  <style>
+    body {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      width: 100%;
+      background: #0a0f0a;
+      border-bottom: 2px solid #2a3a2a;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.7rem 1.5rem;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    .top-bar-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #f0ede6;
+      white-space: nowrap;
+      margin-right: 0.5rem;
+    }
+    .top-bar-title span {
+      color: #80cc80;
+    }
+    .top-bar-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #80cc80;
+      text-decoration: none;
+      font-size: 0.85rem;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      padding: 0.3rem 0.8rem;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .top-bar-back:hover { border-color: #80cc80; }
+    .top-bar-divider {
+      width: 1px;
+      height: 24px;
+      background: #2a3a2a;
+      flex-shrink: 0;
+    }
+    .hex-label {
+      color: #556655;
+      font-size: 0.72rem;
+      font-weight: bold;
+      letter-spacing: 0.08rem;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #hex-input {
+      font-family: 'Courier New', monospace;
+      font-size: 1.3rem;
+      letter-spacing: 0.15rem;
+      text-transform: uppercase;
+      background: #111811;
+      border: 1px solid #2a3a2a;
+      border-radius: 8px;
+      color: #f0ede6;
+      padding: 0.4rem 1rem;
+      width: 240px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    #hex-input:focus { border-color: #80cc80; outline: none; }
+    #decode-btn, #zero-btn {
+      width: auto;
+      padding: 0.45rem 1.4rem;
+      font-size: 0.9rem;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    #zero-btn {
+      background: transparent;
+      border: 1px solid #3a3a3a;
+      color: #888;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #zero-btn:hover { border-color: #666; color: #aaa; }
+    .error-msg {
+      color: #ff6b6b;
+      font-size: 0.82rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .arinc-container {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+      color: #f0ede6;
+      width: 100%;
+    }
+
+    .arinc-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .arinc-header h1 {
+      font-size: 2rem;
+      color: #80cc80;
+      margin-bottom: 0.3rem;
+    }
+    .arinc-header p {
+      color: #a89f94;
+      font-size: 0.95rem;
+    }
+
+    /* ── Bit display ── */
+    .panel {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel h2 {
+      color: #80cc80;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1rem;
+    }
+
+    .bit-display {
+      display: grid;
+      grid-template-columns: repeat(32, 1fr);
+      gap: 3px;
+      overflow: visible;
+      padding-bottom: 0.6rem;
+    }
+    .bit-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .bit-num {
+      font-size: clamp(0.5rem, 1.4vw, 0.8rem);
+      color: #8aaa8a;
+      font-family: 'Courier New', monospace;
+    }
+    @media (max-width: 600px) {
+      .bit-num { display: none; }
+    }
+    .bit-cell {
+      width: 100%;
+      aspect-ratio: 4 / 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: clamp(0.5rem, 1.8vw, 1rem);
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+      transition: filter 0.1s, transform 0.1s;
+      border: 2px solid transparent;
+    }
+    .bit-cell:hover { filter: brightness(1.4); transform: scale(1.12); }
+
+    .bit-parity { background: rgba(255,107,107,0.18); color: #ff6b6b; border-color: rgba(255,107,107,0.6); }
+    .bit-ssm    { background: rgba(192,132,252,0.18); color: #c084fc; border-color: rgba(192,132,252,0.6); }
+    .bit-data   { background: rgba(128,204,128,0.18); color: #80cc80; border-color: rgba(128,204,128,0.6); }
+    .bit-sign   { background: rgba(251,146,60,0.22);  color: #fb923c; border-color: rgba(251,146,60,0.7); }
+    .bit-sdi    { background: rgba(96,184,200,0.18);  color: #60b8c8; border-color: rgba(96,184,200,0.6); }
+    .bit-label  { background: rgba(245,158,11,0.18);  color: #f59e0b; border-color: rgba(245,158,11,0.6); }
+    .bit-pad    { background: rgba(80,80,80,0.20);    color: #555;    border-color: rgba(100,100,100,0.4); cursor: default; }
+
+    /* ── Field map ── */
+    .field-map {
+      display: grid;
+      grid-template-columns: repeat(32, 1fr);
+      gap: 3px;
+      margin-top: 4px;
+      margin-bottom: 0.6rem;
+    }
+    .fmap-seg {
+      height: 1.8rem;
+      font-size: clamp(0.5rem, 1.2vw, 0.75rem);
+      font-family: 'Courier New', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      border: 1px solid;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .fmap-parity { background: rgba(255,107,107,0.25); color: #ff6b6b; border-color: rgba(255,107,107,0.5); }
+    .fmap-ssm    { background: rgba(192,132,252,0.25); color: #c084fc; border-color: rgba(192,132,252,0.5); }
+    .fmap-sdi    { background: rgba(96,184,200,0.25);  color: #60b8c8; border-color: rgba(96,184,200,0.5); }
+    .fmap-label  { background: rgba(245,158,11,0.25);  color: #f59e0b; border-color: rgba(245,158,11,0.5); }
+    .fmap-bcd    { background: rgba(128,204,128,0.20); color: #80cc80; border-color: rgba(128,204,128,0.4); }
+    .fmap-freq   { background: rgba(128,204,128,0.20); color: #80cc80; border-color: rgba(128,204,128,0.4); }
+    .fmap-bnr    { background: rgba(128,204,128,0.15); color: #6ab86a; border-color: rgba(128,204,128,0.3); }
+    .fmap-sign   { background: rgba(251,146,60,0.22);  color: #fb923c; border-color: rgba(251,146,60,0.7); }
+    .fmap-dis    { background: rgba(251,191,36,0.20);  color: #fbbf24; border-color: rgba(251,191,36,0.4); }
+    .fmap-cat    { background: rgba(251,146,60,0.22);  color: #fb923c; border-color: rgba(251,146,60,0.5); }
+    .fmap-pad    { background: rgba(60,60,60,0.30);    color: #444;    border-color: rgba(80,80,80,0.4); }
+    @media (max-width: 600px) { .field-map { display: none; } }
+
+    .legend {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+      justify-content: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: #c8c4bc;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .placeholder-msg {
+      color: #556655;
+      font-size: 0.9rem;
+      padding: 1.5rem;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* ── Label banner ── */
+    .label-banner {
+      background: #141414;
+      border: 1px solid #222222;
+      border-left: 4px solid #f59e0b;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .label-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .label-oct-box {
+      background: #f59e0b;
+      color: #0a0f0a;
+      font-family: 'Courier New', monospace;
+      font-size: 1.3rem;
+      font-weight: bold;
+      padding: 0.4rem 0.7rem;
+      border-radius: 8px;
+      min-width: 3rem;
+      text-align: center;
+    }
+    .label-banner-name {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: #f0ede6;
+    }
+    .label-banner-sub {
+      font-size: 0.78rem;
+      color: #556680;
+      margin-top: 0.2rem;
+    }
+    .label-banner-value {
+      font-family: 'Courier New', monospace;
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #60b8c8;
+      white-space: nowrap;
+    }
+
+    /* ── 3-panel detail grid ── */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-panel {
+      background: #141414;
+      border: 1px solid #222222;
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+    }
+    .detail-panel-title {
+      font-size: 0.78rem;
+      font-weight: bold;
+      letter-spacing: 0.08rem;
+      text-transform: uppercase;
+      color: #a89f94;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid #222222;
+      padding-bottom: 0.6rem;
+    }
+    .status-sub-row {
+      display: flex;
+      gap: 0;
+      margin-top: 0.7rem;
+      min-height: 0;
+    }
+    .detail-subsection {
+      flex: 1;
+      padding-top: 0.4rem;
+      min-width: 0;
+    }
+    .detail-subsection.ssm-col {
+      padding-right: 0.8rem;
+      border-right: 1px solid #1c2a1c;
+    }
+    .detail-subsection.sdi-col {
+      padding-left: 0.8rem;
+    }
+    .detail-subsection-title {
+      font-size: 0.68rem;
+      font-weight: bold;
+      letter-spacing: 0.07rem;
+      text-transform: uppercase;
+      color: #4a6a4a;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #1c2a1c;
+    }
+    .detail-subsection .detail-row {
+      flex-direction: column;
+      gap: 0.1rem;
+      padding: 0.25rem 0;
+      border-bottom: none;
+    }
+    .detail-subsection .detail-key {
+      font-size: 0.68rem;
+    }
+    .detail-subsection .detail-val {
+      font-size: 0.82rem;
+    }
+    .detail-subsection .ssm-ref-block {
+      margin: 0.3rem 0 0 0;
+      padding: 0.3rem 0 0.2rem 0.5rem;
+    }
+    .detail-subsection .ssm-ref-row {
+      font-size: 0.75rem;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-red   { background: #ff6b6b; box-shadow: 0 0 5px #ff6b6b88; }
+    .dot-green { background: #80cc80; box-shadow: 0 0 5px #80cc8088; }
+    .dot-blue  { background: #60b8c8; box-shadow: 0 0 5px #60b8c888; }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #1a1a1a;
+      gap: 1rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key {
+      color: #6a7a8a;
+      font-size: 0.82rem;
+      flex-shrink: 0;
+    }
+    .detail-val {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #c8c4bc;
+      text-align: right;
+      word-break: break-all;
+    }
+    .detail-val.ok    { color: #80cc80; font-weight: bold; }
+    .detail-val.err   { color: #ff6b6b; font-weight: bold; }
+    .detail-val.accent { color: #f59e0b; }
+    .detail-val.dim   { color: #556680; font-size: 0.82rem; font-family: inherit; }
+
+    /* ── SSM reference table ── */
+    .ssm-ref-block {
+      margin: 0.4rem 0 0.2rem 0;
+      padding: 0.4rem 0.6rem 0.3rem 0.8rem;
+      border-left: 2px solid #1e2e1e;
+    }
+    .ssm-ref-title {
+      color: #4a5a4a;
+      font-size: 0.72rem;
+      margin-bottom: 0.3rem;
+      font-family: inherit;
+    }
+    .ssm-ref-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.08rem 0;
+      font-size: 0.8rem;
+      transition: color 0.15s;
+    }
+    /* inactive (dimmed) colors */
+    .ssm-ref-row.ssm-fw     { color: #5a2a2a; }
+    .ssm-ref-row.ssm-normal { color: #2a5a2a; }
+    .ssm-ref-row.ssm-ft     { color: #2a4a5a; }
+    .ssm-ref-row.ssm-ncd    { color: #5a4a1a; }
+    .ssm-ref-row.ssm-undef  { color: #3a3a3a; }
+    /* active (bright + bold) */
+    .ssm-ref-row.ssm-fw.ssm-active     { color: #ff6b6b; font-weight: bold; }
+    .ssm-ref-row.ssm-normal.ssm-active { color: #80cc80; font-weight: bold; }
+    .ssm-ref-row.ssm-ft.ssm-active     { color: #60b8c8; font-weight: bold; }
+    .ssm-ref-row.ssm-ncd.ssm-active    { color: #f59e0b; font-weight: bold; }
+    .ssm-ref-row.ssm-undef.ssm-active  { color: #888888; font-weight: bold; }
+
+    /* ── Config selector ── */
+    .config-select {
+      margin-top: 0.35rem;
+      background: #0f1a0f;
+      border: 1px solid #3a5a3a;
+      border-radius: 6px;
+      color: #80cc80;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .config-select:hover, .config-select:focus { border-color: #80cc80; }
+    .ssm-ref-code {
+      font-family: 'Courier New', monospace;
+      min-width: 1.8rem;
+      flex-shrink: 0;
+      text-align: left;
+    }
+    .ssm-ref-desc {
+      flex: 1;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Octal digit boxes (label panel) ── */
+    .label-octal-display {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin: 0.8rem 0 1rem;
+    }
+    .octal-digit-box {
+      border: 2px solid #60b8c8;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      min-width: 60px;
+    }
+    .octal-digit-box.mid  { border-color: #80cc80; }
+    .octal-digit-box.lsb  { border-color: #f59e0b; }
+    .octal-digit {
+      display: block;
+      font-family: 'Courier New', monospace;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #60b8c8;
+    }
+    .octal-digit-box.mid  .octal-digit { color: #80cc80; }
+    .octal-digit-box.lsb  .octal-digit { color: #f59e0b; }
+    .octal-digit-sub {
+      font-size: 0.65rem;
+      color: #556680;
+      margin-top: 0.2rem;
+    }
+
+    /* parity badges */
+    .parity-ok  { color: #80cc80 !important; font-weight: bold; }
+    .parity-err { color: #ff6b6b !important; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+  <!-- ── Top bar ── -->
+  <div class="top-bar">
+    <span class="top-bar-title"><span>ARINC 429</span> Décodeur</span>
+    <a href="beta/informatique.html" class="top-bar-back">&#8592; Informatique</a>
+    <div class="top-bar-divider"></div>
+    <span class="hex-label">HEX 32-BIT</span>
+    <input type="text" id="hex-input" placeholder="00000000" maxlength="8"
+           spellcheck="false" autocomplete="off" />
+    <button id="decode-btn" onclick="decodeFromInput()">Décoder</button>
+    <button id="zero-btn" onclick="resetToZero()">Tout à zéro</button>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+
+  <div class="arinc-container">
+
+    <div class="arinc-header">
+      <h1>Décodeur ARINC 429</h1>
+      <p>Décodage d'un mot de données 32 bits selon le standard ARINC 429</p>
+    </div>
+
+    <!-- ── Bits ── -->
+    <div class="panel">
+      <h2>Représentation binaire — 32 bits</h2>
+      <div class="bit-display" id="bit-display">
+        <div class="placeholder-msg" style="grid-column:1/-1">Entrez un mot hexadécimal pour commencer</div>
+      </div>
+      <div class="field-map" id="field-map"></div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#ff6b6b"></div>
+          <span>Parité — bit 32</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#c084fc"></div>
+          <span>SSM — bits 30-31</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#80cc80"></div>
+          <span>Données — bits 11-29</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#60b8c8"></div>
+          <span>SDI — bits 9-10</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#f59e0b"></div>
+          <span>Étiquette — bits 1-8</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Label banner ── -->
+    <div class="label-banner" id="label-banner">
+      <div class="label-banner-left">
+        <div class="label-oct-box" id="banner-oct">000</div>
+        <div>
+          <div class="label-banner-name" id="banner-name">—</div>
+          <div class="label-banner-sub" id="banner-sub">—</div>
+          <div id="banner-config"></div>
+        </div>
+      </div>
+      <div class="label-banner-value" id="banner-value">—</div>
+    </div>
+
+    <!-- ── 3-panel detail ── -->
+    <div class="detail-grid" id="detail-grid">
+
+      <!-- STATUS / CONTROLE -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-red"></span> STATUS / CONTROLE</div>
+
+        <!-- Parity -->
+        <div class="detail-row">
+          <span class="detail-key">Parity (Bit 32)</span>
+          <span class="detail-val" id="d-parity">—</span>
+        </div>
+
+        <!-- SSM + SDI side by side -->
+        <div class="status-sub-row">
+
+          <!-- SSM — left column -->
+          <div class="detail-subsection ssm-col">
+            <div class="detail-subsection-title">SSM — Bits 30-31</div>
+            <div class="detail-row">
+              <span class="detail-key">Valeur</span>
+              <span class="detail-val" id="d-ssm">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Table</span>
+              <span class="detail-val dim" id="d-ssm-type">—</span>
+            </div>
+            <div class="ssm-ref-block">
+              <div class="ssm-ref-title" id="ssm-ref-title">Référentiel :</div>
+              <div class="ssm-ref-row" id="ssm-ref-0">
+                <span class="ssm-ref-code">00</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-0">—</span>
+              </div>
+              <div class="ssm-ref-row" id="ssm-ref-1">
+                <span class="ssm-ref-code">01</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-1">—</span>
+              </div>
+              <div class="ssm-ref-row" id="ssm-ref-2">
+                <span class="ssm-ref-code">10</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-2">—</span>
+              </div>
+              <div class="ssm-ref-row" id="ssm-ref-3">
+                <span class="ssm-ref-code">11</span>
+                <span class="ssm-ref-desc" id="ssm-ref-desc-3">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SDI — right column -->
+          <div class="detail-subsection sdi-col">
+            <div class="detail-subsection-title">SDI — Bits 9-10</div>
+            <div class="detail-row">
+              <span class="detail-key">Valeur</span>
+              <span class="detail-val" id="d-sdi">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Source / Dest</span>
+              <span class="detail-val dim" id="d-sdi-desc">—</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DATA BITS 11-29 -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-green"></span> DATA (BITS 11-29)</div>
+        <div class="detail-row">
+          <span class="detail-key">Binaire (19 bits)</span>
+          <span class="detail-val" id="d-data-bin">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Décimal</span>
+          <span class="detail-val" id="d-data-dec">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Hexadécimal</span>
+          <span class="detail-val" id="d-data-hex">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Décodage</span>
+          <span class="detail-val accent" id="d-data-decoded">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Format</span>
+          <span class="detail-val dim" id="d-data-format">—</span>
+        </div>
+      </div>
+
+      <!-- LABEL BITS 1-8 -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-blue"></span> LABEL (BITS 1-8)</div>
+        <div class="label-octal-display">
+          <div class="octal-digit-box">
+            <span class="octal-digit" id="d-label-msb">0</span>
+            <div class="octal-digit-sub">MSB</div>
+          </div>
+          <div class="octal-digit-box mid">
+            <span class="octal-digit" id="d-label-med">0</span>
+            <div class="octal-digit-sub">MED</div>
+          </div>
+          <div class="octal-digit-box lsb">
+            <span class="octal-digit" id="d-label-lsb">0</span>
+            <div class="octal-digit-sub">LSB</div>
+          </div>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Octal</span>
+          <span class="detail-val" id="d-label-oct">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Décimal</span>
+          <span class="detail-val" id="d-label-dec">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Hex</span>
+          <span class="detail-val" id="d-label-hex">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Binaire</span>
+          <span class="detail-val" id="d-label-bin">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-key">Nom</span>
+          <span class="detail-val accent" id="d-label-name">—</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Nouveau panneau ── -->
+    <div class="panel">
+      
+      <div style="display: flex; justify-content: center; align-items: start; margin-bottom: 1rem;">  
+        <div style="display: flex; flex-direction: row; justify-items: center; align-items: center;">
+          <h2 style="display: flex; margin: 0.5rem;">Strapping</h2>
+          <h1 style="display: flex; margin: 0.5rem;">VHF422</h1>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem;">
+
+        <!-- Carre 1 -->
+        <div class="detail-panel">
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">J1-28</div>
+          <div class="strap-desc">Unit Ident A</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('J1-28', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('J1-28', 'OPEN', this)">OPEN</button>
+          </div>
+          <div class="strap-status">OPEN</div>
+        </div>
+
+        <!-- Carre 2 -->
+        <div class="detail-panel">
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">J1-27</div>
+          <div class="strap-desc">Unit Ident B</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('J1-27', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('J1-27', 'OPEN', this)">OPEN</button>
+          </div>
+          <div class="strap-status">OPEN</div>
+        </div>
+
+        <!-- Carre 3 -->
+        <div class="detail-panel">
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">J1-32</div>
+          <div class="strap-desc">ARINC / CSDB</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('J1-32', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('J1-32', 'OPEN', this)">OPEN</button>
+          </div>
+          <div class="strap-status">ARINC 429</div>
+        </div>
+
+        <!-- Carre 4 -->
+        <div class="detail-panel">
+          <div class="detail-panel-title" style="display: flex; justify-content: center; font-size: medium;">J1-14</div>
+          <div class="strap-desc">ARINC Bus Select</div>
+          <div style="display: flex; gap: 0;">
+            <button class="strap-btn" onclick="setStrapping('J1-14', 'GND', this)">GND</button>
+            <button class="strap-btn active" onclick="setStrapping('J1-14', 'OPEN', this)">OPEN</button>
+          </div>
+          <div class="strap-status">Port B</div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="arinc429.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+
+</body>
+</html>

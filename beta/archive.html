@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Archives</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    if (!sessionStorage.getItem('loggedIn')) {
+      window.location.href = 'index.html';
+    }
+  </script>
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+  <div class="dashboard-container">
+
+    <header>
+      <a href="beta/dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <h1>Archives</h1>
+      <p class="subtitle">Sections archivées</p>
+    </header>
+
+    <main>
+      <p class="welcome-text">Contenu archivé</p>
+
+      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+
+        <a href="beta/ena.html" class="menu-card" data-section="ena">
+          <span class="icon">🛠️</span>
+          <h2>ÉNA</h2>
+          <p>École nationale d'aérotechnique</p>
+        </a>
+
+        <a href="beta/aviation.html" class="menu-card" data-section="aviation">
+          <span class="icon">✈️</span>
+          <h2>Aviation</h2>
+          <p>Outils, météo et aéronefs</p>
+        </a>
+
+        <a href="beta/bieres.html" class="menu-card" data-section="bieres">
+          <span class="icon">🍺</span>
+          <h2>Bières</h2>
+          <p>Vive la zythologie</p>
+        </a>
+
+        <a href="beta/scifi.html" class="menu-card" data-section="scifi">
+          <span class="icon">🚀</span>
+          <h2>Science-Fiction</h2>
+          <p>Archives galactiques</p>
+        </a>
+
+        <a href="beta/hockey.html" class="menu-card" data-section="hockey">
+          <span class="icon">🏒</span>
+          <h2>Hockey</h2>
+          <p>Statistiques LNH</p>
+        </a>
+
+        <a href="beta/liens.html" class="menu-card" data-section="liens">
+          <span class="icon">🌍</span>
+          <h2>Liens utiles</h2>
+          <p>Ressources et favoris</p>
+        </a>
+
+        <a href="beta/films.html" class="menu-card" data-section="films">
+          <span class="icon">🎬</span>
+          <h2>Films &amp; Séries</h2>
+          <p>Ma liste de visionnement</p>
+        </a>
+
+        <a href="beta/informatique.html" class="menu-card" data-section="informatique">
+          <span class="icon">💻</span>
+          <h2>Informatique</h2>
+          <p>Outils techniques et avioniques</p>
+        </a>
+
+        <a href="beta/rona.html" class="menu-card" data-section="rona">
+          <span class="icon">👷‍♂️</span>
+          <h2>RONA S&amp;S</h2>
+          <p>Suivi des trousses de premiers soins</p>
+        </a>
+
+      </nav>
+
+      <p id="archive-empty" style="display:none; text-align:center; color:#3a3a3a;
+         font-style:italic; margin-top:3rem; font-size:0.9rem;">
+        Aucune section archivée.
+      </p>
+    </main>
+
+  </div>
+
+  <!-- Bouton retour dashboard -->
+  <a href="beta/dashboard.html" class="archive-btn">🏠 Dashboard</a>
+
+  <script type="module" src="archive.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>

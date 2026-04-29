@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Informatique</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _permsInfo = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsInfo.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+  <div class="dashboard-container">
+
+    <header>
+      <a href="beta/dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <h1>Informatique</h1>
+      <p class="subtitle">Outils techniques</p>
+    </header>
+
+    <main>
+      <p class="welcome-text">Les Outils</p>
+
+      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+
+        <a href="beta/arinc429.html" class="menu-card" data-section="arinc429">
+          <span class="icon">📡</span>
+          <h2>ARINC 429</h2>
+          <p>Décodeur de mots avioniques</p>
+        </a>
+
+        <a href="beta/csdb.html" class="menu-card" data-section="csdb">
+          <span class="icon">📶</span>
+          <h2>CSDB</h2>
+          <p>Commercial Standard Digital Bus — décodeur de blocs</p>
+        </a>
+
+        <a href="beta/converter.html" class="menu-card" data-section="converter">
+          <span class="icon">🔢</span>
+          <h2>Convertisseur</h2>
+          <p>Décimal · Binaire · Hex · Octal</p>
+        </a>
+
+        <a href="beta/crypteur.html" class="menu-card" data-section="crypteur">
+          <span class="icon">⚙️</span>
+          <h2>Encodeur BNR</h2>
+          <p>Signe-magnitude · Bit de signe · Valeur par bit</p>
+        </a>
+
+        <a href="beta/tcpip.html" class="menu-card" data-section="tcpip">
+          <span class="icon">🌐</span>
+          <h2>TCP/IP</h2>
+          <p>Calculateur de sous-réseau · CIDR</p>
+        </a>
+
+      </nav>
+    </main>
+
+  </div>
+
+  <script type="module" src="informatique.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>

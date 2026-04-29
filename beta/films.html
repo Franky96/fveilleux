@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Films & Séries</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="films-page">
+
+  <!-- Barre de navigation supérieure -->
+  <nav class="films-topbar">
+    <div class="films-topbar-left">
+      <a href="beta/dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <span class="films-topbar-title">Films & Séries</span>
+    </div>
+    <div class="films-topbar-filters">
+      <nav id="type-nav" class="films-filter-nav"></nav>
+      <div class="films-filter-sep"></div>
+      <nav id="statut-nav" class="films-filter-nav"></nav>
+    </div>
+    <button class="films-add-btn" onclick="ouvrirModal()">+ Ajouter</button>
+  </nav>
+
+  <!-- Contenu principal -->
+  <main class="films-main">
+    <div class="films-main-header">
+      <h1 class="films-section-titre" id="titre-section">Tous</h1>
+      <div id="films-stats" class="films-stats"></div>
+    </div>
+    <div id="section-films" class="films-section-block">
+      <h2 class="films-section-subhead">🎬 Films</h2>
+      <div class="films-grid" id="grid-films"></div>
+    </div>
+    <div id="section-series" class="films-section-block">
+      <h2 class="films-section-subhead">📺 Séries</h2>
+      <div class="films-grid" id="grid-series"></div>
+    </div>
+  </main>
+
+  <!-- Modal Ajout / Modification -->
+  <div class="modal-overlay hidden" id="modal-film">
+    <div class="modal-box films-modal-box">
+      <h3 id="modal-titre-label">Nouveau titre</h3>
+
+      <label>Titre</label>
+      <input type="text" id="modal-titre" placeholder="Ex: Inception" />
+
+      <label>Image (URL du poster)</label>
+      <input type="url" id="modal-image" placeholder="https://image.tmdb.org/t/p/w300/..." />
+
+      <label>Type</label>
+      <select id="modal-type">
+        <option value="film">🎬 Film</option>
+        <option value="serie">📺 Série</option>
+      </select>
+
+      <label>Genre</label>
+      <input type="text" id="modal-genre" placeholder="Ex: Science-Fiction, Thriller…" />
+
+      <label>Année</label>
+      <input type="number" id="modal-annee" placeholder="Ex: 2010" min="1900" max="2099" />
+
+      <div id="modal-duree-row">
+        <label>Durée (minutes)</label>
+        <input type="number" id="modal-duree" placeholder="Ex: 148" min="1" max="999" />
+      </div>
+      <div id="modal-saisons-row">
+        <label>Nombre de saisons</label>
+        <input type="number" id="modal-nb-saisons" placeholder="Ex: 5" min="1" max="99" />
+      </div>
+
+      <label>Réalisateur / Créateur</label>
+      <input type="text" id="modal-realisateur" placeholder="Ex: Christopher Nolan" />
+
+      <label>Acteurs principaux</label>
+      <input type="text" id="modal-acteurs" placeholder="Ex: Leonardo DiCaprio, Tom Hardy…" />
+
+      <label>Synopsis</label>
+      <textarea id="modal-synopsis" placeholder="Résumé de l'histoire…" rows="3"></textarea>
+
+      <label>Bande-annonce YouTube (URL ou ID vidéo)</label>
+      <input type="text" id="modal-trailer" placeholder="Ex: https://youtu.be/YoHD9XEInc0" />
+
+      <label>Statut</label>
+      <select id="modal-statut">
+        <option value="a_voir">⏳ À voir</option>
+        <option value="en_cours">▶️ En cours</option>
+        <option value="vu">✅ Vu</option>
+      </select>
+
+      <label>Note (sur 5)</label>
+      <div class="etoiles-input" id="etoiles-input">
+        <span class="etoile" data-val="1">★</span>
+        <span class="etoile" data-val="2">★</span>
+        <span class="etoile" data-val="3">★</span>
+        <span class="etoile" data-val="4">★</span>
+        <span class="etoile" data-val="5">★</span>
+        <button type="button" class="btn-reset-note" id="btn-reset-note" title="Effacer la note">✕</button>
+      </div>
+      <input type="hidden" id="modal-note" value="0" />
+
+      <label>Commentaire (optionnel)</label>
+      <textarea id="modal-commentaire" placeholder="Tes impressions…" rows="3"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModal()">Annuler</button>
+        <button class="btn-save" id="modal-save-btn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Détail -->
+  <div class="modal-overlay hidden" id="modal-detail" onclick="fermerDetail(event)">
+    <div class="modal-detail-box" onclick="event.stopPropagation()">
+      <button class="modal-detail-close" onclick="fermerDetail()">✕</button>
+      <div class="modal-detail-content">
+        <div class="modal-detail-left">
+          <img class="modal-detail-poster" id="detail-poster" src="" alt="" onerror="this.style.display='none';document.getElementById('detail-poster-ph').style.display='flex'">
+          <div class="modal-detail-poster-placeholder" id="detail-poster-ph" style="display:none"></div>
+        </div>
+        <div class="modal-detail-right">
+          <div class="modal-detail-badges" id="detail-badges"></div>
+          <h2 class="modal-detail-titre" id="detail-titre"></h2>
+          <div class="modal-detail-meta" id="detail-meta"></div>
+          <div id="detail-etoiles"></div>
+          <div class="modal-detail-people" id="detail-people"></div>
+          <p class="modal-detail-synopsis" id="detail-synopsis"></p>
+          <p class="modal-detail-commentaire" id="detail-commentaire"></p>
+          <div class="modal-detail-actions">
+            <button class="btn-detail-edit" onclick="ouvrirEditDepuisDetail()">✏️ Modifier</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-detail-trailer" id="detail-trailer-wrap" style="display:none">
+        <div class="modal-detail-trailer-label">▶ Bande-annonce</div>
+        <iframe id="detail-trailer-iframe" class="modal-detail-iframe" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="films.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>

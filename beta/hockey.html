@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Hockey</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+  <div class="dashboard-container">
+
+    <header>
+      <a href="beta/dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <h1>Hockey</h1>
+    </header>
+
+    <main>
+
+      <div class="hockey-search-block">
+        <h2 class="hockey-section-title">Rechercher un joueur LNH</h2>
+        <div class="hockey-search-group">
+          <input type="text" id="joueur-input" placeholder="Commence à taper un nom... (ex: Caufield)" autocomplete="off" />
+        </div>
+        <p id="hockey-error" class="hockey-error"></p>
+      </div>
+
+      <div id="hockey-resultats-liste" class="hockey-resultats-liste hidden"></div>
+
+      <div id="loading-spinner" class="spinner-container hidden">
+        <div class="spinner"></div>
+        <p id="spinner-message" class="spinner-text">Recherche en cours...</p>
+        <div id="loading-steps" class="loading-steps"></div>
+      </div>
+
+      <div id="hockey-fiche" class="hidden hockey-wide-container">
+
+        <div class="hockey-fiche-header">
+          <img id="joueur-photo" src="" alt="Photo joueur" class="joueur-photo" onerror="this.style.display='none'" />
+          <div class="joueur-identite">
+            <h2 id="joueur-nom"></h2>
+            <p id="joueur-infos" class="joueur-infos-texte" style="color:#a89f94; font-size: 0.9rem; margin-bottom: 0.5rem;"></p>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <span id="joueur-equipe-badge" class="equipe-badge"></span>
+              <a id="puckpedia-link" href="#" target="_blank" class="puckpedia-header-link hidden">PuckPedia ↗</a>
+            </div>
+          </div>
+          <img id="equipe-logo" src="" alt="Logo équipe" class="equipe-logo" onerror="this.style.display='none'" />
+        </div>
+
+        <div class="stats-split">
+          
+          <div class="stats-colonne hockey-card">
+            <div class="hockey-card-header">
+              <h3>Saison en cours</h3>
+              <button class="btn-legende" onclick="toggleLegende()" title="Légende">?</button>
+            </div>
+            
+            <div id="legende-stats" class="legende-stats hidden">
+              <div class="legende-item"><span class="legende-code">PJ</span><span class="legende-desc">Parties jouées</span></div>
+              <div class="legende-item"><span class="legende-code">B/V</span><span class="legende-desc">Buts / Victoires (G)</span></div>
+              <div class="legende-item"><span class="legende-code">A/D</span><span class="legende-desc">Aides / Défaites (G)</span></div>
+              <div class="legende-item"><span class="legende-code">PTS/MOY</span><span class="legende-desc">Points / Moyenne (G)</span></div>
+              <div class="legende-item"><span class="legende-code">+/- / %ARR</span><span class="legende-desc">Différentiel / % Arrêts (G)</span></div>
+              <div class="legende-item"><span class="legende-code">PM/BL</span><span class="legende-desc">Pénalités / Blanchissages (G)</span></div>
+              <div class="legende-item"><span class="legende-code">TIR</span><span class="legende-desc">Tirs au but</span></div>
+              <div class="legende-item"><span class="legende-code">%TIR</span><span class="legende-desc">Pourcentage de tirs</span></div>
+            </div>
+
+            <div id="joueur-stats" class="stats-grid">
+              </div>
+          </div>
+
+          <div class="stats-colonne hockey-card">
+            <div class="hockey-card-header">
+              <h3>En Carrière (LNH)</h3>
+            </div>
+            <div id="joueur-stats-carriere" class="stats-grid">
+              </div>
+          </div>
+
+        </div>
+
+        <div class="hockey-card" style="margin-top: 1.5rem;">
+          <div class="hockey-card-header">
+            <h3>Derniers Matchs</h3>
+            <div id="gamelog-loading" class="spinner-mini-wrap"><div class="spinner-mini"></div></div>
+          </div>
+          <div id="gamelog-steps" class="section-steps"></div>
+          <p id="gamelog-status" style="color:#a89f94; font-size:0.8rem; margin:0.4rem 0 0.8rem;"></p>
+          <div id="gamelog-container"></div>
+        </div>
+
+        <div class="hockey-card" style="margin-top: 1.5rem;">
+          <div class="hockey-card-header">
+            <h3>Stats Avancées <span style="color:#a89f94; font-size:0.75rem; font-weight:normal;">(NHL Edge)</span></h3>
+            <div id="edge-loading" class="spinner-mini-wrap"><div class="spinner-mini"></div></div>
+          </div>
+          <div id="edge-steps" class="section-steps"></div>
+          <p id="edge-status" style="color:#a89f94; font-size:0.8rem; margin:0.4rem 0 0.8rem;"></p>
+          <div id="edge-container" class="stats-grid"></div>
+        </div>
+
+        <div class="hockey-card" style="margin-top: 1.5rem;">
+          <div class="hockey-card-header">
+            <h3>Contrat Actuel</h3>
+            <div id="contrat-loading" class="spinner-mini-wrap">
+              <div class="spinner-mini"></div>
+            </div>
+          </div>
+          <div id="contrat-steps" class="section-steps"></div>
+          <p id="contrat-status" style="color: #a89f94; font-size: 0.8rem; margin: 0.4rem 0 0.8rem;"></p>
+          <div id="contrats-historique" class="stats-grid"></div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="hockey.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>

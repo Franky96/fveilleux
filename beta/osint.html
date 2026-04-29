@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — OSINT</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0f0a;
+      color: #f0ede6;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .osint-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.55rem 1rem;
+      background: #0f1a0f;
+      border-bottom: 1px solid #2a3a2a;
+      z-index: 1000;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .osint-header a {
+      color: #80cc80;
+      text-decoration: none;
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+    .osint-header h1 {
+      color: #80cc80;
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+    .osint-badges {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .osint-badge {
+      font-size: 0.72rem;
+      padding: 0.18rem 0.55rem;
+      border-radius: 4px;
+      background: #162216;
+      border: 1px solid #2a3a2a;
+      color: #a89f94;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, color 0.15s, transform 0.1s;
+    }
+    .osint-badge:hover { border-color: #4a7a4a; color: #c0d8c0; transform: translateY(-1px); }
+    .osint-badge:active { transform: translateY(0); }
+    .osint-badge.live { border-color: #3a6a3a; color: #80cc80; }
+    .osint-badge.live:hover { border-color: #60aa60; }
+    .osint-badge.err  { border-color: #6a2a2a; color: #cc8080; animation: pulse-err 1.8s ease-in-out infinite; }
+    .osint-badge.err:hover { border-color: #aa4040; color: #ee9090; }
+    @keyframes pulse-err {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(180, 60, 60, 0); }
+      50%       { box-shadow: 0 0 0 3px rgba(180, 60, 60, 0.3); }
+    }
+
+    /* ── Body ── */
+    .osint-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .osint-sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      background: #0f1a0f;
+      border-right: 1px solid #2a3a2a;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 500;
+    }
+    .sb-section {
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid #1a2a1a;
+    }
+    .sb-section h3 {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #6a8a6a;
+      margin-bottom: 0.55rem;
+    }
+
+    /* Layer toggle */
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.84rem;
+      color: #f0ede6;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .layer-toggle input { display: none; }
+    .layer-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+    .layer-toggle.off .layer-dot { opacity: 0.22; }
+    .layer-toggle.off { color: #555; }
+
+    /* Stats */
+    .stat-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      padding: 0.18rem 0;
+      color: #8a9a8a;
+    }
+    .stat-line b { color: #d0e0d0; font-weight: 600; }
+
+    /* Buttons */
+    .osint-btn {
+      display: block;
+      width: 100%;
+      padding: 0.45rem;
+      background: #162216;
+      border: 1px solid #2a3a2a;
+      color: #80cc80;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-radius: 4px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .osint-btn:hover { border-color: #4a8a4a; }
+
+    /* Legend */
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.74rem;
+      color: #8a9a8a;
+      margin: 0.18rem 0;
+    }
+    .legend-dot {
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    /* Spinner mini inline */
+    .dot-spin {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      border: 1.5px solid #2a3a2a;
+      border-top-color: #d4892a;
+      animation: spin 0.7s linear infinite;
+      margin-left: 0.3rem;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Map ── */
+    #map { flex: 1; z-index: 0; }
+
+    /* ── Leaflet popup overrides ── */
+    .leaflet-popup-content-wrapper {
+      background: #0f1a0f !important;
+      border: 1px solid #2a3a2a !important;
+      color: #f0ede6 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6) !important;
+    }
+    .leaflet-popup-tip { background: #0f1a0f !important; }
+    .leaflet-popup-content { margin: 10px 14px !important; font-size: 0.82rem !important; line-height: 1.55 !important; }
+    .popup-title { font-weight: bold; color: #80cc80; margin-bottom: 4px; font-size: 0.88rem; }
+    .popup-row   { color: #a89f94; }
+    .popup-row b { color: #f0ede6; }
+
+    /* ── Scrollbar ── */
+    .osint-sidebar::-webkit-scrollbar { width: 4px; }
+    .osint-sidebar::-webkit-scrollbar-track { background: #0a0f0a; }
+    .osint-sidebar::-webkit-scrollbar-thumb { background: #2a3a2a; border-radius: 2px; }
+
+    /* ── Bouton détails ── */
+    .details-toggle-btn {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: #162216;
+      border: 1px solid #2a3a2a;
+      color: #a89f94;
+      padding: 0.22rem 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .details-toggle-btn:hover { border-color: #4a8a4a; color: #80cc80; }
+    .details-toggle-btn.active { border-color: #60aa60; color: #80cc80; background: #1a2a1a; }
+
+    /* ── Panneau latéral droit ── */
+    .details-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: 310px;
+      height: 100vh;
+      background: #0c160c;
+      border-left: 1px solid #2a3a2a;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.22s ease;
+      overflow: hidden;
+    }
+    .details-panel.open { transform: translateX(0); }
+
+    .details-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid #1a2a1a;
+      flex-shrink: 0;
+    }
+    .details-panel-header span { color: #80cc80; font-size: 0.88rem; font-weight: bold; }
+    .details-close {
+      background: none;
+      border: none;
+      color: #a89f94;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+    .details-close:hover { color: #f0ede6; }
+
+    .details-body {
+      overflow-y: auto;
+      flex: 1;
+      padding: 0.5rem 0;
+    }
+    .details-body::-webkit-scrollbar { width: 3px; }
+    .details-body::-webkit-scrollbar-thumb { background: #2a3a2a; border-radius: 2px; }
+
+    /* Source card */
+    .src-card {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #1a2a1a;
+    }
+    .src-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #f0ede6;
+      margin-bottom: 0.45rem;
+    }
+    .src-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .src-dot.ok  { background: #80cc80; }
+    .src-dot.err { background: #cc4040; animation: pulse-err 1.8s infinite; }
+    .src-dot.loading { background: #d4892a; animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .src-row {
+      font-size: 0.73rem;
+      color: #8a9a8a;
+      line-height: 1.6;
+      display: flex;
+      gap: 0.4rem;
+    }
+    .src-row b { color: #b0c0b0; font-weight: 600; min-width: 64px; flex-shrink: 0; }
+    .src-row .src-val { color: #d0e0d0; word-break: break-all; }
+    .src-row .src-url { color: #556655; font-family: monospace; font-size: 0.68rem; word-break: break-all; }
+    .src-err-msg {
+      margin-top: 0.35rem;
+      font-size: 0.72rem;
+      color: #cc6060;
+      background: #1c0a0a;
+      border: 1px solid #3a1a1a;
+      border-radius: 4px;
+      padding: 0.3rem 0.5rem;
+      line-height: 1.4;
+    }
+    .src-tentatives {
+      margin-top: 0.3rem;
+      font-size: 0.68rem;
+      color: #556655;
+    }
+    .src-tent-item { display: flex; gap: 0.3rem; align-items: center; padding: 0.1rem 0; }
+    .src-tent-item.ok  { color: #4a8a4a; }
+    .src-tent-item.fail{ color: #6a3a3a; }
+  </style>
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+
+  <!-- Panneau latéral droit -->
+  <div class="details-panel" id="details-panel">
+    <div class="details-panel-header">
+      <span>📡 Sources de données</span>
+      <button class="details-close" onclick="fermerDetails()">✕</button>
+    </div>
+    <div class="details-body" id="details-body"></div>
+  </div>
+
+  <div class="osint-header">
+    <a href="beta/dashboard.html">&#8592; Accueil</a>
+    <h1>🌐 OSINT Map</h1>
+    <div class="osint-badges">
+      <span class="osint-badge" id="badge-avions">✈ Avions <span class="dot-spin" id="spin-avions"></span></span>
+      <span class="osint-badge" id="badge-sats">🛰 Satellites <span class="dot-spin" id="spin-sats"></span></span>
+      <span class="osint-badge live" id="badge-iss">🚀 ISS</span>
+      <span class="osint-badge" id="badge-seismes">🌍 Séismes <span class="dot-spin" id="spin-seismes"></span></span>
+    </div>
+    <button class="details-toggle-btn" id="details-toggle-btn" onclick="toggleDetails()" title="Détails des sources">📡 Détails</button>
+  </div>
+
+  <div class="osint-body">
+
+    <div class="osint-sidebar">
+
+      <div class="sb-section">
+        <h3>Couches</h3>
+
+        <label class="layer-toggle" id="toggle-avions">
+          <input type="checkbox" checked>
+          <span class="layer-dot" style="background:#60b8c8;"></span>
+          <span>✈ Avions</span>
+        </label>
+
+        <label class="layer-toggle" id="toggle-sats">
+          <input type="checkbox" checked>
+          <span class="layer-dot" style="background:#d4892a;"></span>
+          <span>🛰 Satellites</span>
+        </label>
+
+        <label class="layer-toggle" id="toggle-iss">
+          <input type="checkbox" checked>
+          <span class="layer-dot" style="background:#80cc80;"></span>
+          <span>🚀 ISS</span>
+        </label>
+
+        <label class="layer-toggle" id="toggle-seismes">
+          <input type="checkbox" checked>
+          <span class="layer-dot" style="background:#cc4040;"></span>
+          <span>🌍 Séismes 7j</span>
+        </label>
+
+      </div>
+
+      <div class="sb-section">
+        <h3>Statistiques</h3>
+        <div class="stat-line"><span>Avions visibles</span><b id="stat-avions">—</b></div>
+        <div class="stat-line"><span>Satellites</span><b id="stat-sats">—</b></div>
+        <div class="stat-line"><span>Séismes M2.5+</span><b id="stat-seismes">—</b></div>
+        <div class="stat-line"><span>MAJ avions</span><b id="stat-update">—</b></div>
+        <div class="stat-line"><span>ISS altitude</span><b id="stat-iss-alt">—</b></div>
+      </div>
+
+      <div class="sb-section">
+        <h3>Actions</h3>
+        <button class="osint-btn" onclick="window.refreshAll()">⟳ Actualiser tout</button>
+        <div style="margin-top:0.6rem; font-size:0.7rem; color:#556655; line-height:1.5;">
+          Avions: auto 30s<br>
+          ISS: auto 15s<br>
+          Sats: propagation 10s<br>
+          Séismes: au chargement
+        </div>
+      </div>
+
+      <div class="sb-section">
+        <h3>Légende — Séismes</h3>
+        <div class="legend-row"><span class="legend-dot" style="width:8px;height:8px;background:#88cc88;"></span> M &lt; 4.0</div>
+        <div class="legend-row"><span class="legend-dot" style="width:10px;height:10px;background:#ddcc00;"></span> M 4.0 – 4.9</div>
+        <div class="legend-row"><span class="legend-dot" style="width:12px;height:12px;background:#ff8800;"></span> M 5.0 – 5.9</div>
+        <div class="legend-row"><span class="legend-dot" style="width:15px;height:15px;background:#ff3030;"></span> M ≥ 6.0</div>
+      </div>
+
+      <div class="sb-section">
+        <h3>Sources</h3>
+        <div style="font-size:0.7rem; color:#556655; line-height:1.7;">
+          OpenSky Network<br>
+          CelesTrak GP TLE<br>
+          wheretheiss.at<br>
+          USGS Earthquake Feed
+        </div>
+      </div>
+
+    </div>
+
+    <div id="map"></div>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+  <script src="osint.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;right:5rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>

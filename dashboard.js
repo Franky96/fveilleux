@@ -46,14 +46,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
 
-  // Toggle badge de version (admin seulement)
+  // Boutons admin seulement
   if (role === 'admin') {
-    const btn = document.getElementById('toggle-version-btn');
-    if (btn) {
-      btn.style.display = 'inline-block';
+    const btnVersion = document.getElementById('toggle-version-btn');
+    if (btnVersion) {
+      btnVersion.style.display = 'inline-block';
       const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
-      updateToggleBtn(btn, hidden);
+      updateToggleBtn(btnVersion, hidden);
     }
+    const btnConstruction = document.getElementById('btn-construction');
+    if (btnConstruction) btnConstruction.style.display = 'inline-flex';
   }
 
   // Déconnexion

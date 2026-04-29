@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCP/IP — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _permsTcp = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsTcp.includes('tcpip') && !_permsTcp.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'index.html';
+    }
+  </script>
+  <style>
+    body { flex-direction: column; align-items: stretch; justify-content: flex-start; }
+
+    .top-bar {
+      width: 100%; background: #0a0f0a; border-bottom: 2px solid #2a3a2a;
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.7rem 1.5rem; box-sizing: border-box; flex-shrink: 0;
+    }
+    .top-bar h1 { font-size: 1rem; font-weight: bold; color: #f0ede6; margin: 0; }
+    .top-bar h1 span { color: #80cc80; }
+    .top-bar a { color: #80cc80; text-decoration: none; font-size: 0.85rem;
+      border: 1px solid #2a3a2a; border-radius: 6px; padding: 0.3rem 0.8rem;
+      white-space: nowrap; transition: border-color 0.2s; flex-shrink: 0; }
+    .top-bar a:hover { border-color: #80cc80; }
+
+    .tcp-container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 3rem; width: 100%; color: #f0ede6; }
+
+    .panel { background: #0f1a0f; border: 1px solid #2a3a2a; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .panel h2 { color: #80cc80; font-size: 0.85rem; margin-bottom: 1.2rem;
+      text-transform: uppercase; letter-spacing: 0.1rem; }
+
+    /* Input row */
+    .input-labels { display: flex; gap: 0.8rem; margin-bottom: 0.4rem; }
+    .input-labels span { font-size: 0.78rem; color: #a89f94; white-space: nowrap; }
+    .ip-label-space { width: 220px; }
+    .input-row { display: flex; gap: 0.8rem; align-items: center; flex-wrap: nowrap; }
+    .ip-input {
+      font-family: 'Courier New', monospace; font-size: 1.1rem;
+      background: #050a05; border: 1px solid #2a3a2a; border-radius: 8px;
+      color: #f0ede6; padding: 0; padding-left: 0.8rem; width: 220px;
+      height: 38px; margin-bottom: 0 !important; box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .ip-input:focus { border-color: #80cc80; outline: none; }
+    .cidr-wrap { display: flex; align-items: center; gap: 0; }
+    .cidr-slash { font-size: 1.4rem; color: #556655; padding: 0 0.4rem; font-family: monospace; }
+    .cidr-input {
+      font-family: 'Courier New', monospace; font-size: 1.1rem;
+      background: #050a05; border: 1px solid #2a3a2a; border-radius: 8px;
+      color: #f0ede6; padding: 0.5rem 0.7rem; width: 70px;
+      text-align: center; transition: border-color 0.2s;
+    }
+    .cidr-input:focus { border-color: #80cc80; outline: none; }
+    .calc-btn {
+      padding: 0.45rem 1.4rem; font-size: 0.9rem; border-radius: 8px;
+      background: #1a3a1a; border: 1px solid #3a6a3a; color: #80cc80;
+      cursor: pointer; font-weight: bold; transition: all 0.15s; white-space: nowrap;
+      height: 38px; width: auto; flex-shrink: 0; flex-grow: 0;
+    }
+    .calc-btn:hover { background: #80cc80; color: #0a0f0a; border-color: #80cc80; }
+    .error-msg { color: #ff6b6b; font-size: 0.82rem; margin-top: 0.5rem; min-height: 1.2rem; }
+
+    /* Results grid */
+    .results-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media (max-width: 600px) { .results-grid { grid-template-columns: 1fr; } }
+
+    .result-panel { background: #141414; border: 1px solid #222; border-radius: 10px; padding: 1.1rem 1.2rem; }
+    .result-panel-title {
+      font-size: 0.75rem; font-weight: bold; letter-spacing: 0.08rem;
+      text-transform: uppercase; color: #a89f94; margin-bottom: 0.8rem;
+      border-bottom: 1px solid #222; padding-bottom: 0.5rem;
+    }
+    .result-row { display: flex; justify-content: space-between; align-items: baseline;
+      padding: 0.4rem 0; border-bottom: 1px solid #1a1a1a; gap: 1rem; }
+    .result-row:last-child { border-bottom: none; }
+    .result-key { color: #6a7a8a; font-size: 0.82rem; flex-shrink: 0; }
+    .result-val { font-family: 'Courier New', monospace; font-size: 0.9rem; color: #c8c4bc; text-align: right; }
+    .result-val.accent { color: #80cc80; font-weight: bold; }
+    .result-val.orange { color: #fb923c; }
+    .result-val.blue   { color: #60b8c8; }
+    .result-val.yellow { color: #f59e0b; }
+
+    /* CIDR stepper */
+    .cidr-stepper { display: flex; align-items: stretch; border: 1px solid #2a3a2a; border-radius: 6px; overflow: hidden; height: 38px; }
+    .cidr-stepper input[type="number"] { border: none !important; outline: none !important; margin-bottom: 0 !important; flex: 1; width: 52px; background: #050a05; color: #f0ede6; font-family: 'Courier New', monospace; font-size: 1.1rem; text-align: center; -moz-appearance: textfield; padding: 0; }
+    .cidr-stepper input[type="number"]:focus { border: none !important; outline: none !important; }
+    .cidr-stepper input::-webkit-outer-spin-button,
+    .cidr-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .cidr-stepper-btns { display: flex; flex-direction: column; border-left: 1px solid #2a3a2a; }
+    .cidr-stepper-btn { flex: 1; background: #1a2a1a; border: none; color: #80cc80; cursor: pointer; font-size: 0.65rem; padding: 0 0.5rem; line-height: 1; transition: background 0.1s; }
+    .cidr-stepper-btn:first-child { border-bottom: 1px solid #2a3a2a; }
+    .cidr-stepper-btn:hover { background: #2a3a2a; }
+
+/* Bitmask visual */
+    .bitmask-row { display: flex; flex-wrap: nowrap; gap: 2px; overflow-x: auto;
+      padding-bottom: 0.4rem; margin-top: 0.5rem; }
+    .bitmask-octet { display: flex; gap: 2px; }
+    .bitmask-octet + .bitmask-octet { margin-left: 6px; }
+    .bit-box {
+      width: 22px; height: 24px; display: flex; align-items: center; justify-content: center;
+      font-family: monospace; font-size: 0.75rem; font-weight: bold; border-radius: 3px;
+      border: 1px solid;
+    }
+    .bit-net  { background: rgba(128,204,128,0.18); color: #80cc80; border-color: rgba(128,204,128,0.5); }
+    .bit-host { background: rgba(96,184,200,0.15);  color: #60b8c8; border-color: rgba(96,184,200,0.4); }
+
+    .bitmask-legend { display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap; }
+    .bitmask-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #a89f94; }
+    .legend-sq { width: 12px; height: 12px; border-radius: 2px; }
+
+    .placeholder-msg { color: #556655; font-size: 0.9rem; font-style: italic; text-align: center; padding: 1.5rem 0; }
+  </style>
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+  <div class="top-bar">
+    <h1><span>TCP/IP</span> Outils réseau</h1>
+    <a href="beta/informatique.html" class="back-btn-dash">&#8592; Informatique</a>
+  </div>
+
+  <div class="tcp-container">
+
+    <!-- Input -->
+    <div class="panel">
+      <h2>Calculateur de sous-réseau</h2>
+      <div class="input-labels">
+        <span class="ip-label-space">Adresse IPv4</span>
+        <span>Préfixe CIDR</span>
+      </div>
+      <div class="input-row">
+        <input type="text" class="ip-input" id="ip-input" placeholder="" maxlength="15"
+               spellcheck="false" autocomplete="off" />
+        <span class="cidr-slash">/</span>
+        <div class="cidr-stepper">
+          <input type="number" id="cidr-input" value="24" min="0" max="32" />
+          <div class="cidr-stepper-btns">
+            <button class="cidr-stepper-btn" onclick="stepCidr(1)">▲</button>
+            <button class="cidr-stepper-btn" onclick="stepCidr(-1)">▼</button>
+          </div>
+        </div>
+        <button class="calc-btn" onclick="calculate()">Calculer</button>
+      </div>
+<div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <!-- Résultats -->
+    <div class="panel" id="results-panel">
+      <h2>Résultats</h2>
+      <div id="results-content">
+        <div class="placeholder-msg">Entrez une adresse IP pour commencer</div>
+      </div>
+    </div>
+
+    <!-- Visualisation binaire -->
+    <div class="panel" id="binary-panel">
+      <h2>Masque binaire</h2>
+      <div id="binary-content">
+        <div class="placeholder-msg">Entrez une adresse IP pour commencer</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="tcpip.js"></script>
+  <script src="version.js"></script>
+</body>
+</html>

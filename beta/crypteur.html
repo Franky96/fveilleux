@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="../">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encodeur BNR — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _permsCrypt = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsCrypt.includes('crypteur') && !_permsCrypt.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      document.location.href = 'index.html';
+    }
+  </script>
+  <style>
+    body { flex-direction: column; align-items: stretch; justify-content: flex-start; }
+
+    .top-bar {
+      width: 100%;
+      background: #0a0f0a;
+      border-bottom: 2px solid #2a3a2a;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.7rem 1.5rem;
+      box-sizing: border-box;
+    }
+    .top-bar a { color: #80cc80; text-decoration: none; font-size: 0.9rem; }
+    .top-bar a:hover { text-decoration: none; }
+    .top-bar h1 { font-size: 1.1rem; color: #80cc80; margin: 0; flex: 1; }
+
+    .enc-page {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+      width: 100%;
+    }
+
+    /* Title */
+    .enc-title { text-align: center; margin-bottom: 2rem; }
+    .enc-title h2 { font-size: 1.6rem; color: #80cc80; }
+    .enc-title p { color: #a89f94; font-size: 0.9rem; margin-top: 0.3rem; }
+
+    /* Config panel */
+    .enc-config {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+
+    .enc-config-fields {
+      display: grid;
+      grid-template-columns: auto 140px;
+      row-gap: 0.7rem;
+      column-gap: 1.2rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .enc-config .cfg-group { display: contents; }
+    .enc-config label { font-size: 0.78rem; color: #a89f94; letter-spacing: 0.04em; text-align: right; }
+
+    .enc-config-btns {
+      grid-column: 2;
+      display: flex;
+      gap: 0.5rem;
+      padding-top: 0.3rem;
+    }
+
+    .enc-config input[type="number"] {
+      background: #050a05;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      color: #f0ede6;
+      font-size: 1rem;
+      padding: 0 0.7rem;
+      width: 140px;
+      height: 38px;
+      outline: none;
+      font-family: 'Courier New', monospace;
+      -moz-appearance: textfield;
+      box-sizing: border-box;
+    }
+    .enc-config input[type="number"]::-webkit-outer-spin-button,
+    .enc-config input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .enc-config input[type="number"]:focus { border-color: #80cc80; }
+
+    .bits-stepper {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      overflow: hidden;
+      width: 140px;
+      height: 38px;
+      box-sizing: border-box;
+    }
+
+    .bits-stepper input[type="number"] {
+      border: none !important;
+      border-radius: 0 !important;
+      width: 0;
+      flex: 1;
+    }
+
+    .stepper-btns {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #2a3a2a;
+    }
+
+    .stepper-btn {
+      background: #1a2a1a;
+      border: none;
+      border-bottom: 1px solid #2a3a2a;
+      color: #80cc80;
+      font-size: 0.5rem;
+      padding: 0 0.4rem;
+      cursor: pointer;
+      flex: 1;
+      line-height: 1;
+      transition: background 0.12s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stepper-btn:last-child { border-bottom: none; }
+    .stepper-btn:hover { background: #2a3a2a; }
+
+    .enc-config-btns {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .btn-apply {
+      background: #1a2a1a;
+      border: 1px solid #80cc80;
+      border-radius: 6px;
+      color: #80cc80;
+      font-size: 0.85rem;
+      padding: 0.4rem 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-apply:hover { background: #80cc80; color: #0a0f0a; }
+
+    .btn-reset {
+      background: none;
+      border: 1px solid #2a3a2a;
+      border-radius: 6px;
+      color: #6a6a5a;
+      font-size: 0.85rem;
+      padding: 0.4rem 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-reset:hover { border-color: #e05555; color: #e05555; }
+
+    /* Bit grid */
+    .enc-bits {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.4rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .enc-bit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .enc-bit .bit-num {
+      font-size: 1rem;
+      color: #6a7a6a;
+      font-family: 'Courier New', monospace;
+    }
+
+    .enc-bit .bit-cell {
+      width: 42px;
+      height: 38px;
+      border-radius: 6px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      transition: all 0.12s;
+    }
+
+    .enc-bit .bit-val {
+      font-size: 0.9rem;
+      font-family: 'Courier New', monospace;
+      color: #6a7a6a;
+      text-align: center;
+      max-width: 66px;
+      word-break: break-all;
+    }
+
+    /* Sign bit */
+    .enc-bit.sign .bit-cell {
+      background: rgba(251,146,60,0.08);
+      border-color: rgba(251,146,60,0.4);
+      color: #fb923c;
+    }
+    .enc-bit.sign.active .bit-cell {
+      background: rgba(251,146,60,0.25);
+      border-color: #fb923c;
+      color: #fb923c;
+      box-shadow: 0 0 8px rgba(251,146,60,0.3);
+    }
+    .enc-bit.sign .bit-val { color: #fb923c88; }
+
+    /* High bits (top 1/3) */
+    .enc-bit.hi .bit-cell {
+      background: rgba(128,204,128,0.06);
+      border-color: rgba(128,204,128,0.25);
+      color: #4a7a4a;
+    }
+    .enc-bit.hi.active .bit-cell {
+      background: rgba(128,204,128,0.2);
+      border-color: #80cc80;
+      color: #80cc80;
+      box-shadow: 0 0 8px rgba(128,204,128,0.25);
+    }
+    .enc-bit.hi.active .bit-val { color: #80cc80aa; }
+
+    /* Mid bits */
+    .enc-bit.mid .bit-cell {
+      background: rgba(122,179,204,0.06);
+      border-color: rgba(122,179,204,0.25);
+      color: #3a6a7a;
+    }
+    .enc-bit.mid.active .bit-cell {
+      background: rgba(122,179,204,0.2);
+      border-color: #7ab3cc;
+      color: #7ab3cc;
+      box-shadow: 0 0 8px rgba(122,179,204,0.25);
+    }
+    .enc-bit.mid.active .bit-val { color: #7ab3ccaa; }
+
+    /* Low bits */
+    .enc-bit.lo .bit-cell {
+      background: rgba(200,184,74,0.06);
+      border-color: rgba(200,184,74,0.25);
+      color: #6a5a2a;
+    }
+    .enc-bit.lo.active .bit-cell {
+      background: rgba(200,184,74,0.2);
+      border-color: #c8b84a;
+      color: #c8b84a;
+      box-shadow: 0 0 8px rgba(200,184,74,0.25);
+    }
+    .enc-bit.lo.active .bit-val { color: #c8b84aaa; }
+
+    /* Result panel */
+    .enc-result {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .res-block { display: flex; flex-direction: column; gap: 0.3rem; }
+    .res-label { font-size: 0.72rem; color: #a89f94; letter-spacing: 0.06em; }
+
+    .res-value {
+      font-size: 1.5rem;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #80cc80;
+    }
+
+    .res-value.negative { color: #fb923c; }
+    .res-value.small { font-size: 1rem; color: #c8c0b4; }
+
+    /* Bit contributions table */
+    .enc-table {
+      background: #0f1a0f;
+      border: 1px solid #2a3a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .enc-table h3 {
+      font-size: 0.82rem;
+      color: #80cc80;
+      padding: 0.8rem 1.2rem;
+      border-bottom: 1px solid #2a3a2a;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    .enc-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    .enc-table th {
+      background: #0a0f0a;
+      color: #a89f94;
+      padding: 0.45rem 1rem;
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.72rem;
+    }
+
+    .enc-table td {
+      padding: 0.4rem 1rem;
+      color: #c8c0b4;
+      border-top: 1px solid #1a2a1a;
+    }
+
+    .enc-table tr.active-row td { background: #0a150a; }
+    .enc-table tr.sign-row td:first-child { color: #fb923c; }
+    .enc-table tr.active-row.sign-row td { color: #fb923c; }
+    .enc-table tr.active-row td { color: #f0ede6; }
+    .enc-table td.contrib { color: #80cc80; font-weight: 600; }
+    .enc-table td.contrib.neg { color: #fb923c; }
+
+    @media (max-width: 700px) {
+      .enc-result { grid-template-columns: 1fr 1fr; }
+      .enc-config { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>
+  <script>if(sessionStorage.getItem("userRole")==="admin"){var b=document.getElementById("beta-banner");b.style.display="block";document.body.style.paddingTop="34px";}</script>
+
+  <div class="top-bar">
+    <a href="beta/informatique.html" class="back-btn-dash">&#8592; Informatique</a>
+    <h1>Encodeur / Décodeur BNR</h1>
+  </div>
+
+  <div class="enc-page">
+
+    <div class="enc-title">
+      <h2>Encodeur BNR</h2>
+      <p>Signe-magnitude — bit 29 = signe, bits suivants = données</p>
+    </div>
+
+    <!-- Config -->
+    <div class="enc-config">
+      <div class="enc-config-fields">
+        <div class="cfg-group">
+          <label>VALEUR MAXIMALE (Scale)</label>
+          <input type="number" id="cfg-max" value="180" min="0" step="any">
+        </div>
+        <div class="cfg-group">
+          <label>NOMBRE DE BITS</label>
+          <div class="bits-stepper">
+            <input type="number" id="cfg-bits" value="11" min="1" max="28">
+            <div class="stepper-btns">
+              <button class="stepper-btn" onclick="stepBits(1)">▲</button>
+              <button class="stepper-btn" onclick="stepBits(-1)">▼</button>
+            </div>
+          </div>
+        </div>
+        <div class="enc-config-btns">
+          <button class="btn-apply" onclick="applyConfig()">Appliquer</button>
+          <button class="btn-reset" onclick="resetBits()">✕ Réinit.</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bit grid -->
+    <div class="enc-bits" id="enc-bits"></div>
+
+    <!-- Result -->
+    <div class="enc-result">
+      <div class="res-block">
+        <span class="res-label">VALEUR DÉCODÉE</span>
+        <span class="res-value" id="res-value">0</span>
+      </div>
+      <div class="res-block">
+        <span class="res-label">RÉSOLUTION (LSB)</span>
+        <span class="res-value small" id="res-lsb">—</span>
+      </div>
+      <div class="res-block">
+        <span class="res-label">MOT BINAIRE (bits 29→18)</span>
+        <span class="res-value small" id="res-bin">—</span>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="enc-table">
+      <h3>CONTRIBUTION DES BITS</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Bit</th>
+            <th>Rôle</th>
+            <th>État</th>
+            <th>Valeur du bit</th>
+            <th>Contribution</th>
+          </tr>
+        </thead>
+        <tbody id="enc-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script src="crypteur.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>
