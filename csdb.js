@@ -1,291 +1,455 @@
 // ════════════════════════════════════════════════════
-//  Décodeur CSDB (Collins Serial Data Bus)
+//  Décodeur CSDB — Commercial Standard Digital Bus
+//  GAMA Standard 523-0772774
 // ════════════════════════════════════════════════════
-// ----------------------------------------------------
-// Sécurité : vérifier la connexion et les permissions
+
 const _permsCSDB = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || (!_permsCSDB.includes('csdb') && !_permsCSDB.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
-  alert("Accès refusé.");
+if (!sessionStorage.getItem('loggedIn') ||
+    (!_permsCSDB.includes('csdb') && !_permsCSDB.includes('informatique') &&
+     sessionStorage.getItem('userRole') !== 'admin')) {
+  alert('Accès refusé.');
   window.location.href = 'dashboard.html';
 }
 
-let currentWord = null;
+// ── Catalogue des adresses (Section 4 & 5 du manuel) ─
+const CSDB_ADDR = {
+  0xA5: { name: 'SYNC',                        system: 'Bus',      db: 0, desc: 'Octet de synchronisation de trame — toujours 0xA5' },
+  0x10: { name: 'VHF COMM FREQ',               system: 'VHF COMM', db: 4, desc: 'Fréquence active VHF COM (BCD, 0.001 MHz)' },
+  0x11: { name: 'VHF COMM DATA',               system: 'VHF COMM', db: 4, desc: 'Données VHF COM — standby, XMT, squelch' },
+  0x12: { name: 'VHF COMM FREQ (8.33 kHz)',    system: 'VHF COMM', db: 4, desc: 'Fréquence VHF COM — canaux 8.33 kHz' },
+  0x13: { name: 'VHF COMM DATA (8.33 kHz)',    system: 'VHF COMM', db: 4, desc: 'Données VHF COM — canaux 8.33 kHz' },
+  0x20: { name: 'NAV FREQ',                    system: 'NAV',      db: 4, desc: 'Fréquence NAV active (VOR/ILS)' },
+  0x21: { name: 'VOR DATA',                    system: 'NAV',      db: 4, desc: 'Données VOR (cap, déviation)' },
+  0x22: { name: 'ILS DATA',                    system: 'NAV',      db: 4, desc: 'Données ILS (localizer / glideslope)' },
+  0x24: { name: 'DME FREQ',                    system: 'DME',      db: 4, desc: 'Fréquence DME active' },
+  0x25: { name: 'DME FREQ & DIST',             system: 'DME',      db: 4, desc: 'Fréquence et distance DME' },
+  0x26: { name: 'DME TTS & VEL',               system: 'DME',      db: 4, desc: 'Temps de transit et vitesse DME' },
+  0x27: { name: 'DME IDENT',                   system: 'DME',      db: 4, desc: 'Identifiant de station DME' },
+  0x2A: { name: 'STEER CMDS / ALT REF',        system: 'FCC',      db: 4, desc: 'Commandes de direction / référence altitude (FCC)' },
+  0x2B: { name: 'ADF DATA',                    system: 'ADF',      db: 4, desc: 'Données ADF (relèvement, statut)' },
+  0x2C: { name: 'ADF FREQ',                    system: 'ADF',      db: 4, desc: 'Fréquence ADF active' },
+  0x30: { name: 'REMOTE NAV TUNE',             system: 'CDU',      db: 4, desc: 'Accord NAV à distance (CDU/FMS)' },
+  0x31: { name: 'REMOTE COMM TUNE',            system: 'CDU',      db: 4, desc: 'Accord COMM à distance (CDU/FMS)' },
+  0x32: { name: 'REMOTE ADF TUNE',             system: 'CDU',      db: 4, desc: 'Accord ADF à distance (CDU/FMS)' },
+  0x33: { name: 'REMOTE ATC CODE',             system: 'CDU',      db: 4, desc: 'Code transpondeur ATC (CDU/FMS)' },
+  0x34: { name: 'REMOTE DME TUNE',             system: 'CDU',      db: 4, desc: 'Accord DME à distance (CDU/FMS)' },
+  0x39: { name: 'REMOTE HF TUNE (TX)',         system: 'CDU',      db: 4, desc: 'Accord HF émission (CDU/FMS)' },
+  0x3A: { name: 'REMOTE HF TUNE (RX)',         system: 'CDU',      db: 4, desc: 'Accord HF réception (CDU/FMS)' },
+  0x46: { name: 'HEADING, MAGNETIC',           system: 'AHRS',     db: 4, desc: 'Cap magnétique (complément à 2, degrés)' },
+  0x70: { name: 'CRT ASCII MESSAGES',          system: 'FCC',      db: 4, desc: 'Messages ASCII pour affichage CRT (8 msg/trame)' },
+  0x72: { name: 'VS / IAS / MACH REF',         system: 'FCC',      db: 4, desc: 'Références vitesse verticale, IAS, Mach' },
+  0x73: { name: 'DELTA TORQUE / PWT STATUS',   system: 'FCC',      db: 4, desc: 'Couple différentiel et statut puissance' },
+  0xA6: { name: 'SAT / VMO / MMO',             system: 'ADC',      db: 4, desc: 'Température air statique, vitesses maxi opérationnelles' },
+  0xA7: { name: 'TAT / PRE-ALT',               system: 'ADC',      db: 4, desc: 'Température totale (TAT) et pré-sélection altitude' },
+  0xAA: { name: 'FCS ANNUNCIATIONS',           system: 'FCC',      db: 4, desc: 'Annunciateurs du système de contrôle de vol' },
+  0xAB: { name: 'FCS MODES',                   system: 'FCC',      db: 4, desc: 'Modes actifs du système de contrôle de vol' },
+  0xB0: { name: 'PITCH CMD / VERT DEV',        system: 'FCC/VNI',  db: 4, desc: 'Commande tangage / déviation verticale' },
+  0xB1: { name: 'DISTANCE TO TRK/ALT',         system: 'VNI',      db: 4, desc: 'Distance à la route / altitude cible' },
+  0xB2: { name: 'SELECT ANGLE / COMP ANGLE',   system: 'VNI',      db: 4, desc: 'Angle sélecté / angle de comparaison' },
+  0xB3: { name: 'AIMPOINT ALT / VS SELECT',    system: 'VNI',      db: 4, desc: 'Altitude cible / vitesse verticale sélectée' },
+  0xC0: { name: 'EFIS CONTROL & STATUS',       system: 'DPU',      db: 4, desc: 'Contrôle et statut de l\'affichage EFIS' },
+  0xC1: { name: 'HEADING / HDG ERROR',         system: 'DPU',      db: 4, desc: 'Cap / erreur de cap' },
+  0xC2: { name: 'CRS ERROR (ACTV/NEXT)',       system: 'DPU',      db: 4, desc: 'Erreur de route — active et suivante' },
+  0xC3: { name: 'RADIO ALTITUDE / DH',         system: 'DPU',      db: 4, desc: 'Radio-altitude et hauteur de décision (DH)' },
+  0xC4: { name: 'FCS LAT/VERT DEV (ACTV)',     system: 'DPU',      db: 4, desc: 'Déviation latérale/verticale FCS — mode actif' },
+  0xC5: { name: 'FCS LAT/VERT DEV (NEXT)',     system: 'DPU',      db: 4, desc: 'Déviation latérale/verticale FCS — mode suivant' },
+  0xC6: { name: 'FCS ROLL/PITCH CMD (ACTV)',   system: 'DPU',      db: 4, desc: 'Commandes roulis/tangage FCC — mode actif' },
+  0xC7: { name: 'LOCALIZER/GLIDESLOPE DEV',    system: 'DPU',      db: 4, desc: 'Déviation localizer et radiophare de descente' },
+  0xC8: { name: 'FCS DISTANCE (ACTV/NEXT)',    system: 'DPU',      db: 4, desc: 'Distance FCC — active et suivante' },
+  0xC9: { name: 'WIND VELOCITY/DIRECTION',     system: 'DPU',      db: 4, desc: 'Vitesse et direction du vent' },
+  0xCA: { name: 'SELECT CRS (ACTV/NEXT)',      system: 'DPU',      db: 4, desc: 'Route sélectée — active et suivante' },
+  0xCB: { name: 'JOYSTICK CURSOR POSITION',    system: 'MPU',      db: 4, desc: 'Position curseur joystick EFIS' },
+  0xCC: { name: 'EFIS KEYSWITCH STATUS',       system: 'MPU',      db: 4, desc: 'État des claviers et commutateurs EFIS' },
+  0xCD: { name: 'SELECT HDG (BUG)',            system: 'MPU',      db: 4, desc: 'Cap sélecté (bug de cap EFIS)' },
+  0xCE: { name: 'MIN / MAX STALL SPEEDS',      system: 'DPU',      db: 4, desc: 'Vitesses de décrochage minimale et maximale' },
+  0xF3: { name: 'DIAGNOSTICS',                 system: 'Tous',     db: 4, desc: 'Données de diagnostic du bus' },
+  0xF5: { name: 'ASCII PAGE DATA',             system: 'NAV/DME',  db: 4, desc: 'Données de page ASCII (navigation / ident)' },
+  0xFF: { name: 'NO USEFUL DATA',              system: 'Bus',      db: 4, desc: 'Trame de rembourrage sans donnée utile' },
+};
 
-// ── Label reference data ────────────────────────────
-// CSDB labels use the same 3-digit octal system as ARINC 429.
-// The 8-bit label field (bits 1-8) is transmitted LSB-first,
-// so the bits must be reversed to obtain the octal label value.
-const CSDB_LABELS = [
-  { oct: '000', enc: 'DIS', param: 'Null Word',                    unit: '' },
-  { oct: '001', enc: 'BCD', param: 'Fréquence Active',             unit: 'MHz' },
-  { oct: '002', enc: 'BCD', param: 'Fréquence Standby',            unit: 'MHz' },
-  { oct: '003', enc: 'DIS', param: 'Volume/Squelch Control',       unit: '' },
-  { oct: '004', enc: 'DIS', param: 'Audio Select',                 unit: '' },
-  { oct: '005', enc: 'DIS', param: 'Squelch Status',               unit: '' },
-  { oct: '030', enc: 'BCD', param: 'Fréquence VHF COM',            unit: 'MHz' },
-  { oct: '033', enc: 'BCD', param: 'Fréquence ILS Localizer',      unit: 'MHz' },
-  { oct: '034', enc: 'BCD', param: 'Fréquence VOR/ILS',            unit: 'MHz' },
-  { oct: '035', enc: 'BCD', param: 'Fréquence DME',                unit: 'MHz' },
-  { oct: '100', enc: 'BNR', param: 'Heading Select',               unit: 'deg' },
-  { oct: '101', enc: 'BNR', param: 'Course Select',                unit: 'deg' },
-  { oct: '125', enc: 'BCD', param: 'UTC Time',                     unit: 'hr:min' },
-  { oct: '177', enc: 'DIS', param: 'Maintenance Word',             unit: '' },
-  { oct: '377', enc: 'DIS', param: 'Null/End Frame',               unit: '' },
-];
+// ── Status bit fields par adresse (standard sinon) ────
+// Standard layout (Figure 4 du manuel) :
+//   Bit 7 = DATA #1 VALID, Bit 6 = DATA #2 VALID, Bit 5 = DATA #3 VALID
+//   Bits 4-3 = MODE (1=ON), Bit 2 = TEST (1=TEST), Bits 1-0 = SOURCE IDENT
+const STATUS_FIELDS = {
+  // Adresses VHF COMM FREQ (0x10, 0x12)
+  0x10: [
+    { bit:7, name:'FREQ VALID',   desc:'Fréquence valide' },
+    { bit:6, name:'PAD',          desc:'—' },
+    { bit:5, name:'XFR CTL',      desc:'Transfert freq (1=XFR)' },
+    { bit:4, name:'SQLCH CTL',    desc:'Squelch (1=audio activé)' },
+    { bit:3, name:'SI',           desc:'Side-tone ident' },
+    { bit:2, name:'TEST CTL',     desc:'Test (1=TEST)' },
+    { bit:1, name:'SOURCE',       desc:'Source ident (bit 1)' },
+    { bit:0, name:'SI IDENT',     desc:'Source ident (bit 0)' },
+  ],
+  0x12: 'same:0x10',
+  // Adresses VHF COMM DATA (0x11, 0x13)
+  0x11: [
+    { bit:7, name:'FREQ VALID',   desc:'Fréquence valide' },
+    { bit:6, name:'FREQ LIM B',   desc:'Limite fréquence B' },
+    { bit:5, name:'FREQ LIM A',   desc:'Limite fréquence A' },
+    { bit:4, name:'XMIT IND',     desc:'Indicateur émission (1=ON)' },
+    { bit:3, name:'SI',           desc:'Side-tone ident' },
+    { bit:2, name:'SELF TEST',    desc:'Auto-test (1=ON)' },
+    { bit:1, name:'SOURCE',       desc:'Source ident (bit 1)' },
+    { bit:0, name:'SI IDENT',     desc:'Source ident (bit 0)' },
+  ],
+  0x13: 'same:0x11',
+};
 
-// Pre-compute hex/dec for each label
-CSDB_LABELS.forEach(l => {
-  const dec = parseInt(l.oct, 8);
-  l.hex = dec.toString(16).toUpperCase().padStart(2, '0');
-  l.dec = dec;
-});
-
-// ── State ────────────────────────────────────────────
-let currentWordCSDB = null;
-
-// ── Bit-reversal helper ──────────────────────────────
-// Reverse the 8 label bits (bits 1-8) to get the true octal label value.
-// CSDB transmits LSB first, so the raw label byte must be bit-reversed.
-function reverseBits8(b) {
-  let result = 0;
-  for (let i = 0; i < 8; i++) {
-    if (b & (1 << i)) result |= (1 << (7 - i));
+function getStatusFields(addr) {
+  let f = STATUS_FIELDS[addr];
+  if (typeof f === 'string' && f.startsWith('same:')) {
+    f = STATUS_FIELDS[parseInt(f.slice(5))];
   }
-  return result;
+  return f || null; // null = use standard layout
 }
 
-// ── Parity helper ────────────────────────────────────
-// Counts the number of set bits in a 16-bit word.
-// CSDB uses odd parity: total number of 1-bits in the word must be odd.
-function countBits16(w) {
-  let c = 0;
-  let v = w & 0xFFFF;
-  while (v) { c += v & 1; v >>>= 1; }
-  return c;
+// ── State ─────────────────────────────────────────────
+let currentBytes = [];
+
+// ── Input parsing ─────────────────────────────────────
+function parseHexInput(raw) {
+  const clean = raw.trim().replace(/\s+/g, ' ');
+  if (!clean) return null;
+  const parts = clean.split(' ');
+  if (parts.length === 1 && parts[0].length > 2) {
+    // Contiguous hex (e.g. "10A08041") → split every 2 chars
+    const s = parts[0];
+    if (s.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(s)) return null;
+    const out = [];
+    for (let i = 0; i < s.length; i += 2) out.push(parseInt(s.slice(i, i + 2), 16));
+    return out.length <= 12 ? out : null;
+  }
+  const bytes = [];
+  for (const p of parts) {
+    if (!/^[0-9a-fA-F]{1,2}$/.test(p)) return null;
+    bytes.push(parseInt(p, 16));
+  }
+  return (bytes.length >= 1 && bytes.length <= 12) ? bytes : null;
 }
 
-// ── Main decode ──────────────────────────────────────
-function decodeCSDB(word) {
-  word = word & 0xFFFF;
-  currentWordCSDB = word;
+// ── Main decode ───────────────────────────────────────
+function decodeBlock(bytes) {
+  currentBytes = bytes;
+  const addr   = bytes[0];
+  const status = bytes.length > 1 ? bytes[1] : null;
+  const data   = bytes.length > 2 ? bytes.slice(2) : [];
+  const info   = CSDB_ADDR[addr] || null;
 
-  // Extract fields
-  const labelBits = word & 0xFF;           // bits 1-8  (raw, LSB-first)
-  const dataBits  = (word >> 8) & 0x7F;   // bits 9-15
-  const parityBit = (word >> 15) & 1;     // bit 16
-
-  // Bit-reverse label byte to get actual octal label
-  const labelVal   = reverseBits8(labelBits);
-  const labelOctal = labelVal.toString(8).padStart(3, '0');
-
-  // Parity check (odd parity: total 1-bits must be odd)
-  const bitCount = countBits16(word);
-  const parityOk = (bitCount % 2 === 1);
-
-  // Look up label info
-  const labelInfo = CSDB_LABELS.find(l => l.oct === labelOctal) || null;
-
-  // Update all display sections
-  updateBitDisplay(word);
-  updateLabelPanel(labelOctal, labelVal, labelInfo);
-  updateDataPanel(dataBits, labelInfo);
-  updateParityPanel(parityBit, parityOk);
-  updateLabelBanner(labelOctal, labelInfo, dataBits);
+  renderBytesDisplay(bytes);
+  updateAddressBanner(addr, info);
+  updateAddressPanel(addr, info);
+  updateStatusPanel(status, addr, info);
+  updateDataPanel(data, addr, info);
+  highlightCatalogRow(addr);
 }
 
-// ── Input handler ─────────────────────────────────────
 function decodeFromInput() {
-  const raw = document.getElementById('hex-input').value.trim();
-  const errEl = document.getElementById('error-msg');
-
-  if (raw === '') {
-    errEl.textContent = 'Entrez 1 à 4 chiffres hexadécimaux.';
+  const raw = document.getElementById('hex-input').value;
+  const err = document.getElementById('error-msg');
+  const bytes = parseHexInput(raw);
+  if (!bytes) {
+    err.textContent = 'Format invalide — octets hex séparés par des espaces (ex: 10 80 08 41 00 00)';
     return;
   }
-  if (!/^[0-9a-fA-F]{1,4}$/.test(raw)) {
-    errEl.textContent = 'Valeur hexadécimale invalide (1-4 caractères: 0-9, A-F).';
-    return;
-  }
-  errEl.textContent = '';
-  const word = parseInt(raw.padStart(4, '0'), 16);
-  decodeCSDB(word);
+  err.textContent = '';
+  decodeBlock(bytes);
 }
 
 function resetToZero() {
   document.getElementById('hex-input').value = '';
   document.getElementById('error-msg').textContent = '';
-  decodeCSDB(0x0000);
+  currentBytes = [];
+  renderBytesDisplay([]);
+  clearPanels();
 }
 
-// ── Bit display rendering ─────────────────────────────
-// 16 cells: bit 16 on the left (index 0), bit 1 on the right (index 15).
-function renderBits(word) {
-  const container = document.getElementById('bit-display');
+function loadExample(hexStr) {
+  document.getElementById('hex-input').value = hexStr;
+  document.getElementById('error-msg').textContent = '';
+  decodeBlock(parseHexInput(hexStr));
+}
+
+// ── Byte display rendering ────────────────────────────
+function renderBytesDisplay(bytes) {
+  const container = document.getElementById('bytes-display');
   container.innerHTML = '';
 
-  for (let i = 15; i >= 0; i--) {
-    const bitNum  = i + 1;          // bit number 1-16
-    const bitVal  = (word >> i) & 1;
-
-    let cls;
-    if (bitNum === 16)              cls = 'bit-parity';
-    else if (bitNum >= 9)           cls = 'bit-data';
-    else                            cls = 'bit-label';
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'bit-wrapper';
-
-    const numEl = document.createElement('div');
-    numEl.className = 'bit-num';
-    numEl.textContent = bitNum;
-
-    const cell = document.createElement('div');
-    cell.className = `bit-cell ${cls}`;
-    cell.textContent = bitVal;
-    cell.title = `Bit ${bitNum}`;
-
-    // Click to toggle bit and re-decode
-    cell.addEventListener('click', () => {
-      const toggled = currentWordCSDB ^ (1 << i);
-      document.getElementById('hex-input').value = toggled.toString(16).toUpperCase().padStart(4, '0');
-      document.getElementById('error-msg').textContent = '';
-      decodeCSDB(toggled);
-    });
-
-    wrapper.appendChild(numEl);
-    wrapper.appendChild(cell);
-    container.appendChild(wrapper);
+  if (!bytes.length) {
+    container.innerHTML = `<div class="placeholder-msg">
+      Entrez des octets hexadécimaux séparés par des espaces<br>
+      <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 80 08 41 00 00</code> — VHF COMM FREQ</small>
+    </div>`;
+    return;
   }
+
+  bytes.forEach((byteVal, idx) => {
+    let role, roleLabel, hexCls, bitCls;
+    if (idx === 0)      { role='addr';   roleLabel='ADRESSE';       hexCls='addr-color';   bitCls='bit-addr'; }
+    else if (idx === 1) { role='status'; roleLabel='STATUS';        hexCls='status-color'; bitCls='bit-status'; }
+    else                { role='data';   roleLabel=`DONNÉES #${idx-1}`; hexCls='data-color'; bitCls='bit-data'; }
+
+    const grp = document.createElement('div');
+    grp.className = 'byte-group';
+
+    const chip = document.createElement('span');
+    chip.className = `byte-role-chip role-${role}`;
+    chip.textContent = roleLabel;
+
+    const numLbl = document.createElement('span');
+    numLbl.className = 'byte-num-label';
+    numLbl.textContent = `octet #${idx}`;
+
+    const hexLbl = document.createElement('span');
+    hexLbl.className = `byte-hex-val ${hexCls}`;
+    hexLbl.textContent = '0x' + byteVal.toString(16).toUpperCase().padStart(2, '0');
+
+    const bitsRow = document.createElement('div');
+    bitsRow.className = 'byte-bits-row';
+
+    for (let bit = 7; bit >= 0; bit--) {
+      const val = (byteVal >> bit) & 1;
+      const wrap = document.createElement('div');
+      wrap.className = 'byte-bit-wrapper';
+
+      const numEl = document.createElement('div');
+      numEl.className = 'byte-bit-num';
+      numEl.textContent = bit;
+
+      const cell = document.createElement('div');
+      cell.className = `byte-bit-cell ${bitCls}`;
+      cell.textContent = val;
+      cell.title = `Octet #${idx} (${roleLabel}), Bit ${bit}`;
+
+      // Click to toggle bit
+      const ci = idx, cb = bit;
+      cell.addEventListener('click', () => {
+        const nb = [...currentBytes];
+        nb[ci] = nb[ci] ^ (1 << cb);
+        const hexStr = nb.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+        document.getElementById('hex-input').value = hexStr;
+        document.getElementById('error-msg').textContent = '';
+        decodeBlock(nb);
+      });
+
+      wrap.appendChild(numEl);
+      wrap.appendChild(cell);
+      bitsRow.appendChild(wrap);
+    }
+
+    grp.appendChild(chip);
+    grp.appendChild(numLbl);
+    grp.appendChild(hexLbl);
+    grp.appendChild(bitsRow);
+    container.appendChild(grp);
+
+    if (idx < bytes.length - 1) {
+      const div = document.createElement('div');
+      div.className = 'byte-divider';
+      div.textContent = '╎';
+      container.appendChild(div);
+    }
+  });
 }
 
-// ── Field map rendering ───────────────────────────────
-// 3 colored segments spanning the 16-column grid.
-function renderFieldMap(word) {
-  const container = document.getElementById('field-map');
-  container.innerHTML = '';
-
-  // Segment: Parité — bit 16 (column 1)
-  const segParity = document.createElement('div');
-  segParity.className = 'fmap-seg fmap-parity';
-  segParity.style.gridColumn = '1 / span 1';
-  segParity.textContent = 'Parité 16';
-  container.appendChild(segParity);
-
-  // Segment: Données — bits 9-15 (columns 2-8, 7 bits)
-  const segData = document.createElement('div');
-  segData.className = 'fmap-seg fmap-bcd';
-  segData.style.gridColumn = '2 / span 7';
-  segData.textContent = 'Données 9-15';
-  container.appendChild(segData);
-
-  // Segment: Étiquette — bits 1-8 (columns 9-16, 8 bits)
-  const segLabel = document.createElement('div');
-  segLabel.className = 'fmap-seg fmap-label';
-  segLabel.style.gridColumn = '9 / span 8';
-  segLabel.textContent = 'Étiquette 1-8';
-  container.appendChild(segLabel);
+// ── Address banner ────────────────────────────────────
+function updateAddressBanner(addr, info) {
+  const hex = '0x' + addr.toString(16).toUpperCase().padStart(2, '0');
+  document.getElementById('banner-addr-box').textContent = hex;
+  document.getElementById('banner-name').textContent = info ? info.name : 'Adresse inconnue';
+  document.getElementById('banner-sub').textContent = info
+    ? `Système : ${info.system}  •  Données : ${info.db} octet(s) attendu(s)`
+    : 'Non répertoriée dans le catalogue CSDB';
+  document.getElementById('banner-hex').textContent = hex;
 }
 
-// ── Combined update ───────────────────────────────────
-function updateBitDisplay(word) {
-  renderBits(word);
-  renderFieldMap(word);
+// ── Address panel ─────────────────────────────────────
+function updateAddressPanel(addr, info) {
+  const hex = '0x' + addr.toString(16).toUpperCase().padStart(2, '0');
+  setText('addr-hex',    hex);
+  setText('addr-dec',    addr.toString(10));
+  setText('addr-bin',    addr.toString(2).padStart(8, '0') + 'b');
+  setText('addr-name',   info ? info.name    : '(inconnu)',   info ? 'accent' : 'dim');
+  setText('addr-system', info ? info.system  : '—');
+  setText('addr-db',     info ? `${info.db} octet(s)` : '—');
+  setText('addr-desc',   info ? info.desc    : '—',           'dim');
 }
 
-// ── Label banner ──────────────────────────────────────
-function updateLabelBanner(labelOctal, labelInfo, dataBits) {
-  document.getElementById('banner-oct').textContent  = labelOctal;
-  document.getElementById('banner-name').textContent = labelInfo ? labelInfo.param : 'Étiquette inconnue';
-  document.getElementById('banner-sub').textContent  = labelInfo
-    ? `Format : ${labelInfo.enc}  •  Unité : ${labelInfo.unit || '—'}`
-    : 'Non répertoriée dans la base CSDB';
+// ── Status panel ──────────────────────────────────────
+function updateStatusPanel(statusByte, addr, info) {
+  const body = document.getElementById('status-panel-body');
 
-  // Decoded value for the banner
-  let bannerVal = '—';
-  if (labelInfo && labelInfo.enc === 'BCD') {
-    bannerVal = `0x${dataBits.toString(16).toUpperCase().padStart(2, '0')}`;
-  } else if (labelInfo && labelInfo.enc === 'BNR') {
-    bannerVal = dataBits.toString(10);
-  } else if (labelInfo && labelInfo.enc === 'DIS') {
-    bannerVal = `0b${dataBits.toString(2).padStart(7, '0')}`;
+  if (statusByte === null) {
+    body.innerHTML = row('—', 'Aucun octet status', 'dim');
+    return;
   }
-  document.getElementById('banner-value').textContent = bannerVal;
-}
+  if (info && info.db === 0) {
+    // SYNC — no status byte
+    body.innerHTML = row('—', 'Pas de status (SYNC)', 'dim');
+    return;
+  }
 
-// ── Parity panel ──────────────────────────────────────
-function updateParityPanel(parityBit, parityOk) {
-  const parityEl  = document.getElementById('d-parity-bit');
-  const checkEl   = document.getElementById('d-parity-check');
-  const typeEl    = document.getElementById('d-parity-type');
+  const fields = getStatusFields(addr);
 
-  parityEl.textContent  = parityBit;
-  checkEl.textContent   = parityOk ? 'OK' : 'ERR';
-  checkEl.className     = 'detail-val ' + (parityOk ? 'ok' : 'err');
-  typeEl.textContent    = 'Parité impaire (odd)';
+  if (fields) {
+    // Message-specific status decode
+    let html = '';
+    for (const f of fields) {
+      const v = (statusByte >> f.bit) & 1;
+      html += row(`Bit ${f.bit} — ${f.name}`, v === 1 ? `1 — ${f.desc}` : `0`, v === 1 ? 'ok' : 'dim');
+    }
+    html += row('Brut', '0x' + statusByte.toString(16).toUpperCase().padStart(2,'0') + ' = ' + statusByte.toString(2).padStart(8,'0') + 'b', 'dim');
+    html += row('⚠ Layout', 'Spécifique à cette adresse (§5 manuel)', 'dim');
+    body.innerHTML = html;
+  } else {
+    // Standard layout (Figure 4)
+    const v1  = (statusByte >> 7) & 1;
+    const v2  = (statusByte >> 6) & 1;
+    const v3  = (statusByte >> 5) & 1;
+    const m4  = (statusByte >> 4) & 1;
+    const m3  = (statusByte >> 3) & 1;
+    const tst = (statusByte >> 2) & 1;
+    const src = statusByte & 3;
+    const srcNames = ['INCONNU', 'UNITÉ #1', 'UNITÉ #2', 'UNITÉ #3'];
+    const modeOn = m4 || m3;
+
+    body.innerHTML =
+      row('Bit 7 — Données #1 valides', v1 ? '1  OUI' : '0  NON', v1 ? 'ok' : 'dim') +
+      row('Bit 6 — Données #2 valides', v2 ? '1  OUI' : '0  NON', v2 ? 'ok' : 'dim') +
+      row('Bit 5 — Données #3 valides', v3 ? '1  OUI' : '0  NON', v3 ? 'ok' : 'dim') +
+      row('Bits 4-3 — Mode',  modeOn ? 'ACTIVÉ'    : 'DÉSACTIVÉ', modeOn ? 'ok' : 'dim') +
+      row('Bit 2 — Test',     tst    ? '1  TEST'   : '0  NORMAL', tst ? 'err' : '') +
+      row('Bits 1-0 — Source', srcNames[src], 'accent') +
+      row('Brut', '0x' + statusByte.toString(16).toUpperCase().padStart(2,'0') + ' = ' + statusByte.toString(2).padStart(8,'0') + 'b', 'dim') +
+      row('⚠ Layout', 'Standard (Figure 4). Peut varier selon l\'adresse.', 'dim');
+  }
 }
 
 // ── Data panel ────────────────────────────────────────
-function updateDataPanel(dataBits, labelInfo) {
-  document.getElementById('d-data-bin').textContent     = dataBits.toString(2).padStart(7, '0');
-  document.getElementById('d-data-dec').textContent     = dataBits.toString(10);
-  document.getElementById('d-data-hex').textContent     = '0x' + dataBits.toString(16).toUpperCase().padStart(2, '0');
+function updateDataPanel(dataBytes, addr, info) {
+  const body = document.getElementById('data-panel-body');
 
-  let decoded = '—';
-  let fmt     = labelInfo ? labelInfo.enc : '—';
+  if (!dataBytes.length) {
+    body.innerHTML = row('—', 'Aucun octet de données', 'dim');
+    return;
+  }
 
-  if (labelInfo) {
-    if (labelInfo.enc === 'BCD') {
-      // Simple BCD: treat 7 bits as two nibble-like groups (high 3 + low 4)
-      const hi = (dataBits >> 4) & 0x7;
-      const lo =  dataBits       & 0xF;
-      if (lo <= 9) {
-        decoded = `${hi}${lo}`;
-        if (labelInfo.unit === 'MHz') decoded += ' MHz (mantisse BCD)';
-        if (labelInfo.unit === 'hr:min') decoded = `(valeur BCD brute) ${hi}${lo}`;
-      } else {
-        decoded = '(invalide BCD)';
-      }
-      fmt = 'BCD';
-    } else if (labelInfo.enc === 'BNR') {
-      // BNR: treat 7 bits as signed (2's complement with 6 sig bits + sign)
-      const sign = (dataBits >> 6) & 1;
-      const mag  = dataBits & 0x3F;
-      const val  = sign ? (mag - 64) : mag;
-      decoded    = `${val} ${labelInfo.unit}`;
-      fmt        = 'BNR (binaire signé)';
-    } else if (labelInfo.enc === 'DIS') {
-      decoded = `0b${dataBits.toString(2).padStart(7, '0')}`;
-      fmt     = 'DIS (discrets)';
+  let html = '';
+  dataBytes.forEach((b, i) => {
+    const hex = '0x' + b.toString(16).toUpperCase().padStart(2, '0');
+    const bin = b.toString(2).padStart(8, '0');
+    html += `<div class="detail-row">
+      <span class="detail-key">Octet #${i + 2} — Données #${i + 1}</span>
+      <span class="detail-val">
+        <span class="data-color">${hex}</span>
+        <span style="color:#445566;font-size:0.75rem;margin-left:0.5rem">${bin}b</span>
+      </span>
+    </div>`;
+  });
+
+  // Try to decode BCD frequency for known comm/nav addresses
+  const freqAddrs = [0x10, 0x11, 0x12, 0x13, 0x20, 0x24];
+  if (freqAddrs.includes(addr) && dataBytes.length >= 2) {
+    const decoded = tryDecodeBCDFreq(dataBytes);
+    if (decoded) {
+      html += `<div class="detail-row">
+        <span class="detail-key">Fréquence BCD</span>
+        <span class="detail-val ok">${decoded}</span>
+      </div>`;
     }
   }
 
-  document.getElementById('d-data-decoded').textContent = decoded;
-  document.getElementById('d-data-format').textContent  = fmt;
+  body.innerHTML = html;
 }
 
-// ── Label panel ───────────────────────────────────────
-function updateLabelPanel(labelOctal, labelVal, labelInfo) {
-  // Octal digit boxes
-  const digits = labelOctal.split('');          // ['0','3','3'] etc.
-  document.getElementById('d-label-msb').textContent = digits[0];
-  document.getElementById('d-label-med').textContent = digits[1];
-  document.getElementById('d-label-lsb').textContent = digits[2];
-
-  document.getElementById('d-label-oct').textContent  = labelOctal;
-  document.getElementById('d-label-dec').textContent  = labelVal.toString(10);
-  document.getElementById('d-label-hex').textContent  = '0x' + labelVal.toString(16).toUpperCase().padStart(2, '0');
-  document.getElementById('d-label-bin').textContent  = labelVal.toString(2).padStart(8, '0');
-  document.getElementById('d-label-name').textContent = labelInfo ? labelInfo.param : '(inconnu)';
+// ── BCD frequency decoder (VHF: 108.000–137.975 MHz) ─
+function tryDecodeBCDFreq(data) {
+  try {
+    // Byte 2: bits [7:4]=BCD_8, [3:0]=BCD_4  → 0.001 MHz digits
+    // Byte 3: bits [7:4]=BCD_2, [3:0]=BCD_1  → 0.001 & 0.01 MHz
+    // Byte 4: bits [7:4]=BCD_8, [3:0]=BCD_4  → 10 MHz & 1 MHz
+    // Format: BBB.BBB MHz (100s, 10s, 1s . 0.1s, 0.01s, 0.001s)
+    const b2 = data[0], b3 = data[1], b4 = data.length > 2 ? data[2] : 0;
+    const d100 = (b4 >> 4) & 0xF; // 100 MHz digit
+    const d10  = (b4 >> 0) & 0xF; // 10 MHz digit
+    const d1   = (b3 >> 4) & 0xF; // 1 MHz digit  — actually let's check manual format
+    const d01  = (b3 >> 0) & 0xF; // 0.1 MHz
+    const d001 = (b2 >> 4) & 0xF; // 0.01 MHz
+    const d0001= (b2 >> 0) & 0xF; // 0.001 MHz
+    // Validate BCD digits
+    if ([d100,d10,d1,d01,d001,d0001].some(d => d > 9)) return null;
+    return `${d100}${d10}${d1}.${d01}${d001}${d0001} MHz`;
+  } catch { return null; }
 }
 
-// ── Enter key shortcut ────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const inp = document.getElementById('hex-input');
-  if (inp) {
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') decodeFromInput();
-    });
+// ── Catalog highlight ─────────────────────────────────
+function highlightCatalogRow(addr) {
+  document.querySelectorAll('#addr-catalog-body tr.tr-current')
+    .forEach(el => el.classList.remove('tr-current'));
+  const row = document.getElementById(`cat-row-${addr}`);
+  if (row) {
+    row.classList.add('tr-current');
+    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
-  // Initialise with all-zeros word
-  decodeCSDB(0x0000);
+}
+
+// ── Catalog table population ──────────────────────────
+function populateCatalog() {
+  const tbody = document.getElementById('addr-catalog-body');
+  if (!tbody) return;
+  const sorted = Object.entries(CSDB_ADDR).sort(([a], [b]) => +a - +b);
+  sorted.forEach(([addrNum, info]) => {
+    const n = +addrNum;
+    const hex = '0x' + n.toString(16).toUpperCase().padStart(2, '0');
+    const tr = document.createElement('tr');
+    tr.id = `cat-row-${n}`;
+    tr.innerHTML = `<td>${hex}</td>
+      <td style="color:#c8c4bc">${info.name}</td>
+      <td style="color:#60b8c8">${info.system}</td>
+      <td style="color:#a89f94;font-size:0.78rem">${info.desc}</td>`;
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', () => {
+      const exHex = hex.replace('0x', '').padStart(2, '0');
+      const exStr = `${exHex} E0 00 00 00 00`;
+      loadExample(exStr);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────
+function row(key, val, cls = '') {
+  return `<div class="detail-row">
+    <span class="detail-key">${key}</span>
+    <span class="detail-val ${cls}">${val}</span>
+  </div>`;
+}
+
+function setText(id, text, cls = '') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'detail-val' + (cls ? ' ' + cls : '');
+}
+
+function clearPanels() {
+  document.getElementById('banner-addr-box').textContent = '0x--';
+  document.getElementById('banner-name').textContent     = '—';
+  document.getElementById('banner-sub').textContent      = '—';
+  document.getElementById('banner-hex').textContent      = '—';
+  ['addr-hex','addr-dec','addr-bin','addr-name','addr-system','addr-db','addr-desc']
+    .forEach(id => setText(id, '—', 'dim'));
+  document.getElementById('status-panel-body').innerHTML = row('—', 'En attente', 'dim');
+  document.getElementById('data-panel-body').innerHTML   = row('—', 'En attente', 'dim');
+}
+
+// ── Init ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  populateCatalog();
+  clearPanels();
+
+  const inp = document.getElementById('hex-input');
+  if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') decodeFromInput(); });
 });

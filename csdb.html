@@ -6,680 +6,338 @@
   <title>Décodeur CSDB — Outils de Frank</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    if (!sessionStorage.getItem('loggedIn')) {
-      document.location.href = 'index.html';
+    const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_p.includes('csdb') && !_p.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
     }
   </script>
   <style>
-    body {
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: flex-start;
-    }
+    body { flex-direction:column; align-items:stretch; justify-content:flex-start; }
 
     /* ── Top bar ── */
     .top-bar {
-      width: 100%;
-      background: #0a0f0a;
-      border-bottom: 2px solid #2a3a2a;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.7rem 1.5rem;
-      box-sizing: border-box;
-      flex-shrink: 0;
+      width:100%; background:#0a0f0a; border-bottom:2px solid #2a3a2a;
+      display:flex; align-items:center; gap:1rem; padding:0.7rem 1.5rem;
+      box-sizing:border-box; flex-shrink:0; flex-wrap:wrap;
     }
-    .top-bar-title {
-      font-size: 1rem;
-      font-weight: bold;
-      color: #f0ede6;
-      white-space: nowrap;
-      margin-right: 0.5rem;
-    }
-    .top-bar-title span {
-      color: #80cc80;
-    }
+    .top-bar-title { font-size:1rem; font-weight:bold; color:#f0ede6; white-space:nowrap; }
+    .top-bar-title span { color:#80cc80; }
     .top-bar-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      color: #80cc80;
-      text-decoration: none;
-      font-size: 0.85rem;
-      border: 1px solid #2a3a2a;
-      border-radius: 6px;
-      padding: 0.3rem 0.8rem;
-      white-space: nowrap;
-      transition: border-color 0.2s, color 0.2s;
-      flex-shrink: 0;
+      display:inline-flex; align-items:center; gap:0.4rem; color:#80cc80;
+      text-decoration:none; font-size:0.85rem; border:1px solid #2a3a2a;
+      border-radius:6px; padding:0.3rem 0.8rem; white-space:nowrap;
+      transition:border-color 0.2s; flex-shrink:0;
     }
-    .top-bar-back:hover { border-color: #80cc80; }
-    .top-bar-divider {
-      width: 1px;
-      height: 24px;
-      background: #2a3a2a;
-      flex-shrink: 0;
-    }
-    .hex-label {
-      color: #556655;
-      font-size: 0.72rem;
-      font-weight: bold;
-      letter-spacing: 0.08rem;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .top-bar-back:hover { border-color:#80cc80; }
+    .top-bar-divider { width:1px; height:24px; background:#2a3a2a; flex-shrink:0; }
+    .hex-label { color:#556655; font-size:0.72rem; font-weight:bold; letter-spacing:0.08rem; text-transform:uppercase; white-space:nowrap; flex-shrink:0; }
     #hex-input {
-      font-family: 'Courier New', monospace;
-      font-size: 1.3rem;
-      letter-spacing: 0.15rem;
-      text-transform: uppercase;
-      background: #111811;
-      border: 1px solid #2a3a2a;
-      border-radius: 8px;
-      color: #f0ede6;
-      padding: 0.4rem 1rem;
-      width: 160px;
-      margin-bottom: 0;
-      flex-shrink: 0;
+      font-family:'Courier New',monospace; font-size:1.05rem; letter-spacing:0.12rem;
+      text-transform:uppercase; background:#111811; border:1px solid #2a3a2a;
+      border-radius:8px; color:#f0ede6; padding:0.4rem 1rem; width:280px; flex-shrink:0;
     }
-    #hex-input:focus { border-color: #80cc80; outline: none; }
-    #decode-btn, #zero-btn {
-      width: auto;
-      padding: 0.45rem 1.4rem;
-      font-size: 0.9rem;
-      margin-bottom: 0;
-      flex-shrink: 0;
-    }
-    #zero-btn {
-      background: transparent;
-      border: 1px solid #3a3a3a;
-      color: #888;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #zero-btn:hover { border-color: #666; color: #aaa; }
-    .error-msg {
-      color: #ff6b6b;
-      font-size: 0.82rem;
-      flex: 1;
-      min-width: 0;
-    }
+    #hex-input:focus { border-color:#80cc80; outline:none; }
+    #decode-btn, #zero-btn { width:auto; padding:0.45rem 1.2rem; font-size:0.9rem; flex-shrink:0; }
+    #zero-btn { background:transparent; border:1px solid #3a3a3a; color:#888; border-radius:6px; cursor:pointer; }
+    #zero-btn:hover { border-color:#666; color:#aaa; }
+    .error-msg { color:#ff6b6b; font-size:0.82rem; flex:1; min-width:0; }
 
-    .arinc-container {
-      max-width: 1380px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
-      color: #f0ede6;
-      width: 100%;
+    /* ── Examples ── */
+    .examples-bar {
+      display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;
+      padding:0.5rem 1.5rem; background:#080d08; border-bottom:1px solid #1a2a1a;
     }
+    .examples-label { color:#445544; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06rem; flex-shrink:0; }
+    .ex-btn {
+      font-family:'Courier New',monospace; font-size:0.72rem; color:#80cc80;
+      background:rgba(128,204,128,0.08); border:1px solid #2a3a2a;
+      border-radius:5px; padding:0.2rem 0.6rem; cursor:pointer; white-space:nowrap;
+      transition:border-color 0.15s, background 0.15s;
+    }
+    .ex-btn:hover { border-color:#80cc80; background:rgba(128,204,128,0.15); }
 
-    .arinc-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .arinc-header h1 {
-      font-size: 2rem;
-      color: #80cc80;
-      margin-bottom: 0.3rem;
-    }
-    .arinc-header p {
-      color: #a89f94;
-      font-size: 0.95rem;
-    }
+    /* ── Layout ── */
+    .csdb-container { max-width:1380px; margin:0 auto; padding:2rem 1.5rem 3rem; color:#f0ede6; width:100%; }
+    .csdb-header { text-align:center; margin-bottom:2rem; }
+    .csdb-header h1 { font-size:2rem; color:#80cc80; margin-bottom:0.3rem; }
+    .csdb-header p { color:#a89f94; font-size:0.93rem; }
 
-    /* ── Bit display ── */
-    .panel {
-      background: #0f1a0f;
-      border: 1px solid #2a3a2a;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .panel h2 {
-      color: #80cc80;
-      font-size: 0.85rem;
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1rem;
-    }
+    /* ── Panel ── */
+    .panel { background:#0f1a0f; border:1px solid #2a3a2a; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+    .panel h2 { color:#80cc80; font-size:0.85rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1rem; }
 
-    .bit-display {
-      display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      gap: 3px;
-      overflow: visible;
-      padding-bottom: 0.6rem;
+    /* ── Byte display ── */
+    .bytes-display { display:flex; flex-wrap:wrap; gap:0.6rem 1rem; padding:0.5rem 0; align-items:flex-end; min-height:90px; }
+    .byte-group { display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; }
+    .byte-role-chip { font-size:0.6rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
+    .role-addr   { background:rgba(245,158,11,0.25); color:#f59e0b; }
+    .role-status { background:rgba(96,184,200,0.25);  color:#60b8c8; }
+    .role-data   { background:rgba(128,204,128,0.20); color:#80cc80; }
+    .byte-num-label { font-size:0.58rem; color:#445566; font-family:'Courier New',monospace; }
+    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold; }
+    .addr-color   { color:#f59e0b; }
+    .status-color { color:#60b8c8; }
+    .data-color   { color:#80cc80; }
+    .byte-bits-row { display:grid; grid-template-columns:repeat(8,26px); gap:2px; }
+    .byte-bit-wrapper { display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .byte-bit-num { font-size:0.52rem; color:#8aaa8a; font-family:'Courier New',monospace; }
+    .byte-bit-cell {
+      width:26px; height:32px; display:flex; align-items:center; justify-content:center;
+      font-family:'Courier New',monospace; font-size:0.9rem; font-weight:bold;
+      border-radius:4px; cursor:pointer; user-select:none;
+      transition:filter 0.1s, transform 0.1s; border:2px solid transparent;
     }
-    .bit-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-    }
-    .bit-num {
-      font-size: clamp(0.5rem, 1.4vw, 0.8rem);
-      color: #8aaa8a;
-      font-family: 'Courier New', monospace;
-    }
-    @media (max-width: 600px) {
-      .bit-num { display: none; }
-    }
-    .bit-cell {
-      width: 100%;
-      aspect-ratio: 4 / 6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Courier New', monospace;
-      font-size: clamp(0.5rem, 2.5vw, 1rem);
-      font-weight: bold;
-      border-radius: 4px;
-      cursor: pointer;
-      user-select: none;
-      transition: filter 0.1s, transform 0.1s;
-      border: 2px solid transparent;
-    }
-    .bit-cell:hover { filter: brightness(1.4); transform: scale(1.12); }
+    .byte-bit-cell:hover { filter:brightness(1.5); transform:scale(1.12); }
+    .bit-addr   { background:rgba(245,158,11,0.18); color:#f59e0b; border-color:rgba(245,158,11,0.6); }
+    .bit-status { background:rgba(96,184,200,0.18);  color:#60b8c8; border-color:rgba(96,184,200,0.6); }
+    .bit-data   { background:rgba(128,204,128,0.18); color:#80cc80; border-color:rgba(128,204,128,0.6); }
+    .byte-divider { color:#2a3a2a; font-size:1.8rem; align-self:center; padding-bottom:0.8rem; line-height:1; }
 
-    .bit-parity { background: rgba(255,107,107,0.18); color: #ff6b6b; border-color: rgba(255,107,107,0.6); }
-    .bit-data   { background: rgba(128,204,128,0.18); color: #80cc80; border-color: rgba(128,204,128,0.6); }
-    .bit-label  { background: rgba(245,158,11,0.18);  color: #f59e0b; border-color: rgba(245,158,11,0.6); }
+    .legend { display:flex; gap:1.2rem; flex-wrap:wrap; margin-top:1.2rem; justify-content:center; }
+    .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:#c8c4bc; }
+    .legend-dot { width:12px; height:12px; border-radius:3px; }
+    .placeholder-msg { color:#556655; font-size:0.9rem; padding:1.5rem; font-style:italic; text-align:center; }
 
-    /* ── Field map ── */
-    .field-map {
-      display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      gap: 3px;
-      margin-top: 4px;
-      margin-bottom: 0.6rem;
+    /* ── Address banner ── */
+    .address-banner {
+      background:#141414; border:1px solid #222222; border-left:4px solid #f59e0b;
+      border-radius:10px; padding:1rem 1.5rem; margin-bottom:1.5rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem;
     }
-    .fmap-seg {
-      height: 1.8rem;
-      font-size: clamp(0.5rem, 1.2vw, 0.75rem);
-      font-family: 'Courier New', monospace;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 3px;
-      border: 1px solid;
-      overflow: hidden;
-      white-space: nowrap;
+    .address-banner-left { display:flex; align-items:center; gap:1rem; }
+    .addr-hex-box {
+      background:#f59e0b; color:#0a0f0a; font-family:'Courier New',monospace;
+      font-size:1.1rem; font-weight:bold; padding:0.4rem 0.8rem; border-radius:8px;
+      min-width:4rem; text-align:center;
     }
-    .fmap-parity { background: rgba(255,107,107,0.25); color: #ff6b6b; border-color: rgba(255,107,107,0.5); }
-    .fmap-label  { background: rgba(245,158,11,0.25);  color: #f59e0b; border-color: rgba(245,158,11,0.5); }
-    .fmap-bcd    { background: rgba(128,204,128,0.20); color: #80cc80; border-color: rgba(128,204,128,0.4); }
-    @media (max-width: 600px) { .field-map { display: none; } }
+    .banner-name { font-size:1.1rem; font-weight:bold; color:#f0ede6; }
+    .banner-sub  { font-size:0.78rem; color:#556680; margin-top:0.2rem; }
+    .banner-hex  { font-family:'Courier New',monospace; font-size:1.5rem; font-weight:bold; color:#f59e0b; }
 
-    .legend {
-      display: flex;
-      gap: 1.2rem;
-      flex-wrap: wrap;
-      margin-top: 1.2rem;
-      justify-content: center;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.82rem;
-      color: #c8c4bc;
-    }
-    .legend-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
-    }
-
-    .placeholder-msg {
-      color: #556655;
-      font-size: 0.9rem;
-      padding: 1.5rem;
-      font-style: italic;
-      text-align: center;
-    }
-
-    /* ── Label banner ── */
-    .label-banner {
-      background: #141414;
-      border: 1px solid #222222;
-      border-left: 4px solid #f59e0b;
-      border-radius: 10px;
-      padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-    .label-banner-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .label-oct-box {
-      background: #f59e0b;
-      color: #0a0f0a;
-      font-family: 'Courier New', monospace;
-      font-size: 1.3rem;
-      font-weight: bold;
-      padding: 0.4rem 0.7rem;
-      border-radius: 8px;
-      min-width: 3rem;
-      text-align: center;
-    }
-    .label-banner-name {
-      font-size: 1.15rem;
-      font-weight: bold;
-      color: #f0ede6;
-    }
-    .label-banner-sub {
-      font-size: 0.78rem;
-      color: #556680;
-      margin-top: 0.2rem;
-    }
-    .label-banner-value {
-      font-family: 'Courier New', monospace;
-      font-size: 1.6rem;
-      font-weight: bold;
-      color: #60b8c8;
-      white-space: nowrap;
-    }
-
-    /* ── 3-panel detail grid ── */
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    @media (max-width: 900px) {
-      .detail-grid { grid-template-columns: 1fr; }
-    }
-    .detail-panel {
-      background: #141414;
-      border: 1px solid #222222;
-      border-radius: 10px;
-      padding: 1.1rem 1.2rem;
-    }
+    /* ── Detail grid ── */
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+    @media (max-width:900px) { .detail-grid { grid-template-columns:1fr; } }
+    .detail-panel { background:#141414; border:1px solid #222222; border-radius:10px; padding:1.1rem 1.2rem; }
     .detail-panel-title {
-      font-size: 0.78rem;
-      font-weight: bold;
-      letter-spacing: 0.08rem;
-      text-transform: uppercase;
-      color: #a89f94;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      border-bottom: 1px solid #222222;
-      padding-bottom: 0.6rem;
+      font-size:0.78rem; font-weight:bold; letter-spacing:0.08rem; text-transform:uppercase;
+      color:#a89f94; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;
+      border-bottom:1px solid #222222; padding-bottom:0.6rem;
     }
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .dot-red   { background: #ff6b6b; box-shadow: 0 0 5px #ff6b6b88; }
-    .dot-green { background: #80cc80; box-shadow: 0 0 5px #80cc8088; }
-    .dot-blue  { background: #60b8c8; box-shadow: 0 0 5px #60b8c888; }
+    .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dot-orange { background:#f59e0b; box-shadow:0 0 5px #f59e0b88; }
+    .dot-blue   { background:#60b8c8; box-shadow:0 0 5px #60b8c888; }
+    .dot-green  { background:#80cc80; box-shadow:0 0 5px #80cc8088; }
+    .detail-row { display:flex; justify-content:space-between; align-items:baseline; padding:0.45rem 0; border-bottom:1px solid #1a1a1a; gap:1rem; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-key { color:#6a7a8a; font-size:0.82rem; flex-shrink:0; }
+    .detail-val { font-family:'Courier New',monospace; font-size:0.88rem; color:#c8c4bc; text-align:right; word-break:break-all; }
+    .detail-val.ok     { color:#80cc80; font-weight:bold; }
+    .detail-val.err    { color:#ff6b6b; font-weight:bold; }
+    .detail-val.accent { color:#f59e0b; }
+    .detail-val.dim    { color:#556680; font-size:0.8rem; font-family:inherit; }
 
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 0.45rem 0;
-      border-bottom: 1px solid #1a1a1a;
-      gap: 1rem;
-    }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-key {
-      color: #6a7a8a;
-      font-size: 0.82rem;
-      flex-shrink: 0;
-    }
-    .detail-val {
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      color: #c8c4bc;
-      text-align: right;
-      word-break: break-all;
-    }
-    .detail-val.ok    { color: #80cc80; font-weight: bold; }
-    .detail-val.err   { color: #ff6b6b; font-weight: bold; }
-    .detail-val.accent { color: #f59e0b; }
-    .detail-val.dim   { color: #556680; font-size: 0.82rem; font-family: inherit; }
+    /* ── Reference tables ── */
+    .ref-table { width:100%; border-collapse:collapse; font-size:0.85rem; font-family:'Courier New',monospace; margin-top:0.8rem; }
+    .ref-table th { background:#0a1a0a; color:#80cc80; padding:0.5rem 0.8rem; text-align:left; border-bottom:1px solid #2a3a2a; font-size:0.75rem; letter-spacing:0.06rem; text-transform:uppercase; }
+    .ref-table td { padding:0.45rem 0.8rem; border-bottom:1px solid #151f15; color:#c8c4bc; vertical-align:top; }
+    .ref-table tr:last-child td { border-bottom:none; }
+    .ref-table tr:hover td { background:#111c11; }
+    .ref-table td:first-child { color:#f59e0b; font-weight:bold; }
 
-    /* ── Octal digit boxes (label panel) ── */
-    .label-octal-display {
-      display: flex;
-      justify-content: center;
-      gap: 0.6rem;
-      margin: 0.8rem 0 1rem;
-    }
-    .octal-digit-box {
-      border: 2px solid #60b8c8;
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      text-align: center;
-      min-width: 60px;
-    }
-    .octal-digit-box.mid  { border-color: #80cc80; }
-    .octal-digit-box.lsb  { border-color: #f59e0b; }
-    .octal-digit {
-      display: block;
-      font-family: 'Courier New', monospace;
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: #60b8c8;
-    }
-    .octal-digit-box.mid  .octal-digit { color: #80cc80; }
-    .octal-digit-box.lsb  .octal-digit { color: #f59e0b; }
-    .octal-digit-sub {
-      font-size: 0.65rem;
-      color: #556680;
-      margin-top: 0.2rem;
-    }
+    .addr-table-wrapper { max-height:380px; overflow-y:auto; border:1px solid #1a2a1a; border-radius:6px; margin-top:0.8rem; }
+    .addr-table-wrapper .ref-table { margin-top:0; }
+    .addr-table-wrapper .ref-table th { position:sticky; top:0; z-index:1; }
+    .addr-table-wrapper .ref-table td:first-child { color:#f59e0b; }
+    tr.tr-current td { background:rgba(245,158,11,0.10) !important; }
 
-    /* parity badges */
-    .parity-ok  { color: #80cc80 !important; font-weight: bold; }
-    .parity-err { color: #ff6b6b !important; font-weight: bold; }
-
-    /* ── Reference table ── */
-    .ref-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-      font-family: 'Courier New', monospace;
-      margin-top: 0.8rem;
-    }
-    .ref-table th {
-      background: #0a1a0a;
-      color: #80cc80;
-      padding: 0.5rem 0.8rem;
-      text-align: left;
-      border-bottom: 1px solid #2a3a2a;
-      font-size: 0.75rem;
-      letter-spacing: 0.06rem;
-      text-transform: uppercase;
-    }
-    .ref-table td {
-      padding: 0.45rem 0.8rem;
-      border-bottom: 1px solid #151f15;
-      color: #c8c4bc;
-      vertical-align: top;
-    }
-    .ref-table tr:last-child td { border-bottom: none; }
-    .ref-table tr:hover td { background: #111c11; }
-    .ref-table td:first-child { color: #f59e0b; font-weight: bold; }
-    .ref-compare-highlight { color: #60b8c8; }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.2rem; }
+    @media (max-width:700px) { .two-col { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
+
   <!-- ── Top bar ── -->
   <div class="top-bar">
     <span class="top-bar-title"><span>CSDB</span> Décodeur</span>
     <a href="informatique.html" class="top-bar-back">&#8592; Informatique</a>
     <div class="top-bar-divider"></div>
-    <span class="hex-label">HEX 16-BIT</span>
-    <input type="text" id="hex-input" placeholder="0000" maxlength="4"
+    <span class="hex-label">OCTETS HEX</span>
+    <input type="text" id="hex-input" placeholder="10 80 08 41 00 00"
            spellcheck="false" autocomplete="off" />
     <button id="decode-btn" onclick="decodeFromInput()">Décoder</button>
-    <button id="zero-btn" onclick="resetToZero()">Tout à zéro</button>
+    <button id="zero-btn" onclick="resetToZero()">Effacer</button>
     <div class="error-msg" id="error-msg"></div>
   </div>
 
-  <div class="arinc-container">
+  <!-- ── Exemples rapides ── -->
+  <div class="examples-bar">
+    <span class="examples-label">Exemples :</span>
+    <button class="ex-btn" onclick="loadExample('A5')">A5 — SYNC</button>
+    <button class="ex-btn" onclick="loadExample('10 E0 08 41 85 00')">10 — VHF COMM FREQ</button>
+    <button class="ex-btn" onclick="loadExample('46 A0 00 5A 00 00')">46 — CAP MAGNÉTIQUE</button>
+    <button class="ex-btn" onclick="loadExample('C3 80 01 F4 00 00')">C3 — RADIO ALT / DH</button>
+    <button class="ex-btn" onclick="loadExample('33 80 02 05 00 00')">33 — CODE ATC</button>
+    <button class="ex-btn" onclick="loadExample('F3 00 00 00 00 00')">F3 — DIAGNOSTICS</button>
+    <button class="ex-btn" onclick="loadExample('FF 00 00 00 00 00')">FF — NO DATA</button>
+  </div>
 
-    <div class="arinc-header">
+  <div class="csdb-container">
+
+    <div class="csdb-header">
       <h1>Décodeur CSDB</h1>
-      <p>Décodage d'un mot de données 16 bits selon le protocole Collins Serial Data Bus (CSDB)</p>
+      <p>Commercial Standard Digital Bus — GAMA Standard 523-0772774<br>
+         <small>Chaque byte = cadre UART 11 bits · Bloc = ADRESSE + STATUS + DONNÉES</small></p>
     </div>
 
-    <!-- ── Bits ── -->
+    <!-- ── Affichage des octets ── -->
     <div class="panel">
-      <h2>Représentation binaire — 16 bits</h2>
-      <div class="bit-display" id="bit-display">
-        <div class="placeholder-msg" style="grid-column:1/-1">Entrez un mot hexadécimal pour commencer</div>
+      <h2>Bloc de message — octets (8 bits de données chacun)</h2>
+      <div class="bytes-display" id="bytes-display">
+        <div class="placeholder-msg">
+          Entrez des octets hexadécimaux séparés par des espaces<br>
+          <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 E0 08 41 85 00</code> — VHF COMM FREQ</small>
+        </div>
       </div>
-      <div class="field-map" id="field-map"></div>
       <div class="legend">
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#ff6b6b"></div>
-          <span>Parité — bit 16</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#80cc80"></div>
-          <span>Données — bits 9–15</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#f59e0b"></div>
-          <span>Étiquette — bits 1–8</span>
-        </div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>Adresse — octet 0</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#60b8c8"></div><span>Status — octet 1</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#80cc80"></div><span>Données — octets 2+</span></div>
+        <div class="legend-item" style="color:#445566;font-size:0.75rem;">Cliquer sur un bit pour le basculer</div>
       </div>
     </div>
 
-    <!-- ── Label banner ── -->
-    <div class="label-banner" id="label-banner">
-      <div class="label-banner-left">
-        <div class="label-oct-box" id="banner-oct">000</div>
+    <!-- ── Bannière adresse ── -->
+    <div class="address-banner">
+      <div class="address-banner-left">
+        <div class="addr-hex-box" id="banner-addr-box">0x--</div>
         <div>
-          <div class="label-banner-name" id="banner-name">—</div>
-          <div class="label-banner-sub" id="banner-sub">—</div>
+          <div class="banner-name" id="banner-name">—</div>
+          <div class="banner-sub"  id="banner-sub">—</div>
         </div>
       </div>
-      <div class="label-banner-value" id="banner-value">—</div>
+      <div class="banner-hex" id="banner-hex">—</div>
     </div>
 
-    <!-- ── 3-panel detail ── -->
-    <div class="detail-grid" id="detail-grid">
+    <!-- ── Détails 3 colonnes ── -->
+    <div class="detail-grid">
 
-      <!-- STATUS / PARITÉ -->
+      <!-- ADRESSE -->
       <div class="detail-panel">
-        <div class="detail-panel-title"><span class="dot dot-red"></span> STATUS / PARITÉ</div>
-        <div class="detail-row">
-          <span class="detail-key">Bit parité (Bit 16)</span>
-          <span class="detail-val" id="d-parity-bit">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Vérification</span>
-          <span class="detail-val" id="d-parity-check">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Type</span>
-          <span class="detail-val dim" id="d-parity-type">—</span>
+        <div class="detail-panel-title"><span class="dot dot-orange"></span>Octet d'adresse</div>
+        <div class="detail-row"><span class="detail-key">Hexadécimal</span><span class="detail-val accent" id="addr-hex">—</span></div>
+        <div class="detail-row"><span class="detail-key">Décimal</span><span class="detail-val" id="addr-dec">—</span></div>
+        <div class="detail-row"><span class="detail-key">Binaire</span><span class="detail-val" id="addr-bin">—</span></div>
+        <div class="detail-row"><span class="detail-key">Message</span><span class="detail-val accent" id="addr-name">—</span></div>
+        <div class="detail-row"><span class="detail-key">Système</span><span class="detail-val" id="addr-system">—</span></div>
+        <div class="detail-row"><span class="detail-key">Données attendues</span><span class="detail-val" id="addr-db">—</span></div>
+        <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val dim" id="addr-desc">—</span></div>
+      </div>
+
+      <!-- STATUS -->
+      <div class="detail-panel">
+        <div class="detail-panel-title"><span class="dot dot-blue"></span>Octet de status</div>
+        <div id="status-panel-body">
+          <div class="detail-row"><span class="detail-key">—</span><span class="detail-val dim">En attente</span></div>
         </div>
       </div>
 
-      <!-- DATA BITS 9-15 -->
+      <!-- DONNÉES -->
       <div class="detail-panel">
-        <div class="detail-panel-title"><span class="dot dot-green"></span> DATA (BITS 9-15)</div>
-        <div class="detail-row">
-          <span class="detail-key">Binaire (7 bits)</span>
-          <span class="detail-val" id="d-data-bin">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Décimal</span>
-          <span class="detail-val" id="d-data-dec">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Hexadécimal</span>
-          <span class="detail-val" id="d-data-hex">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Décodage</span>
-          <span class="detail-val accent" id="d-data-decoded">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Format</span>
-          <span class="detail-val dim" id="d-data-format">—</span>
-        </div>
-      </div>
-
-      <!-- LABEL BITS 1-8 -->
-      <div class="detail-panel">
-        <div class="detail-panel-title"><span class="dot dot-blue"></span> LABEL (BITS 1-8)</div>
-        <div class="label-octal-display">
-          <div class="octal-digit-box">
-            <span class="octal-digit" id="d-label-msb">0</span>
-            <div class="octal-digit-sub">MSB</div>
-          </div>
-          <div class="octal-digit-box mid">
-            <span class="octal-digit" id="d-label-med">0</span>
-            <div class="octal-digit-sub">MED</div>
-          </div>
-          <div class="octal-digit-box lsb">
-            <span class="octal-digit" id="d-label-lsb">0</span>
-            <div class="octal-digit-sub">LSB</div>
-          </div>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Octal</span>
-          <span class="detail-val" id="d-label-oct">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Décimal</span>
-          <span class="detail-val" id="d-label-dec">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Hex</span>
-          <span class="detail-val" id="d-label-hex">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Binaire</span>
-          <span class="detail-val" id="d-label-bin">—</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Nom</span>
-          <span class="detail-val accent" id="d-label-name">—</span>
+        <div class="detail-panel-title"><span class="dot dot-green"></span>Octets de données</div>
+        <div id="data-panel-body">
+          <div class="detail-row"><span class="detail-key">—</span><span class="detail-val dim">En attente</span></div>
         </div>
       </div>
 
     </div>
 
-    <!-- ── Protocole CSDB ── -->
+    <!-- ── Référence protocole ── -->
     <div class="panel">
       <h2>Protocole CSDB</h2>
-      <p style="color:#a89f94;font-size:0.88rem;margin-bottom:1rem;line-height:1.6;">
-        Le <strong style="color:#80cc80;">Collins Serial Data Bus (CSDB)</strong> est un bus de données avionique série
-        asynchrone développé par Collins Avionics (maintenant Collins Aerospace). Il est utilisé dans les équipements
-        radio VHF/NAV/COM de la série Collins Pro Line et microLine pour la communication inter-LRU.
-        Les mots sont transmis en 16 bits, LSB en premier, avec parité impaire en bit de fin.
+      <p style="color:#a89f94;font-size:0.88rem;line-height:1.65;margin-bottom:1.5rem;">
+        Le <strong style="color:#80cc80;">Commercial Standard Digital Bus (CSDB)</strong> est un standard avionique
+        série défini par la GAMA (General Aviation Manufacturers Association), standard 523-0772774.
+        Contrairement à l'ARINC 429 (mots de 32 bits), le CSDB est orienté <strong>blocs de messages</strong>.
+        Chaque octet est transmis dans un cadre UART de <strong>11 bits</strong>
+        (1 start + 8 données + 1 parité impaire + 1 stop).
+        Un bloc typique contient un <strong style="color:#f59e0b;">octet d'adresse</strong>,
+        un <strong style="color:#60b8c8;">octet de status</strong>, et jusqu'à 4
+        <strong style="color:#80cc80;">octets de données</strong>.
       </p>
-      <table class="ref-table">
-        <thead>
-          <tr>
-            <th>Champ</th>
-            <th>Bits</th>
-            <th>Longueur</th>
-            <th>Description</th>
-          </tr>
-        </thead>
+
+      <div class="two-col" style="margin-bottom:1.5rem;">
+        <table class="ref-table">
+          <thead><tr><th colspan="3">Structure d'un bloc de message</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f59e0b">Octet 0</td><td>ADRESSE</td><td>Type de message</td></tr>
+            <tr><td style="color:#60b8c8">Octet 1</td><td>STATUS</td><td>Validité / mode / source</td></tr>
+            <tr><td style="color:#80cc80">Octets 2–5</td><td>DONNÉES</td><td>BCD, complément à 2, discrets</td></tr>
+          </tbody>
+        </table>
+        <table class="ref-table">
+          <thead><tr><th colspan="2">Cadre UART par octet (11 bits)</th></tr></thead>
+          <tbody>
+            <tr><td>Start bit</td><td>1 bit (toujours 0)</td></tr>
+            <tr><td>Données</td><td>8 bits D0→D7</td></tr>
+            <tr><td>Parité</td><td>1 bit (parité impaire)</td></tr>
+            <tr><td>Stop bit</td><td>1 bit (toujours 1)</td></tr>
+            <tr><td>Débit nominal</td><td style="color:#60b8c8">12,5 kbps</td></tr>
+            <tr><td>Max blocs/trame</td><td style="color:#60b8c8">18 blocs</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 style="margin-top:0.5rem;">Octet de status — layout standard (Figure 4, §3.4)</h2>
+      <table class="ref-table" style="margin-bottom:1.5rem;">
+        <thead><tr><th>Bit(s)</th><th>Nom</th><th>0</th><th>1</th></tr></thead>
         <tbody>
-          <tr>
-            <td>Étiquette</td>
-            <td>1 – 8</td>
-            <td>8 bits</td>
-            <td>Identifiant du paramètre. Transmis LSB en premier — les bits doivent être inversés pour obtenir la valeur octale. Même système que l'ARINC 429.</td>
-          </tr>
-          <tr>
-            <td>Données</td>
-            <td>9 – 15</td>
-            <td>7 bits</td>
-            <td>Données du paramètre (BCD, BNR ou discret selon l'étiquette). Bit 9 = LSB données, bit 15 = MSB données.</td>
-          </tr>
-          <tr>
-            <td>Parité</td>
-            <td>16</td>
-            <td>1 bit</td>
-            <td>Parité impaire (odd parity) sur les 16 bits du mot. Le nombre total de bits à 1 dans le mot doit être impair.</td>
-          </tr>
+          <tr><td>7</td><td>Données #1 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+          <tr><td>6</td><td>Données #2 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+          <tr><td>5</td><td>Données #3 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+          <tr><td>4–3</td><td>Mode</td><td style="color:#556680">DÉSACTIVÉ</td><td style="color:#80cc80">ACTIVÉ</td></tr>
+          <tr><td>2</td><td>Test</td><td style="color:#80cc80">NORMAL</td><td style="color:#ff6b6b">TEST</td></tr>
+          <tr><td>1–0</td><td>Source</td><td colspan="2">00=INCONNU · 01=UNITÉ#1 · 10=UNITÉ#2 · 11=UNITÉ#3</td></tr>
         </tbody>
       </table>
+      <p style="color:#556680;font-size:0.8rem;margin-bottom:1.5rem;">
+        ⚠ Le layout de l'octet de status varie selon l'adresse (§5 du manuel). Le décodage ci-dessus est le layout standard.
+        Certaines adresses (ex. 0x10, 0x11) utilisent des champs spécifiques au message.
+      </p>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.2rem;">
-
+      <h2>Catalogue des adresses — cliquer une ligne pour charger un exemple</h2>
+      <div class="addr-table-wrapper">
         <table class="ref-table">
           <thead>
-            <tr>
-              <th colspan="2">Caractéristiques électriques</th>
-            </tr>
+            <tr><th>Adresse</th><th>Nom du message</th><th>Système</th><th>Description</th></tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>Vitesse haute</td>
-              <td class="ref-compare-highlight">50 kHz (50 000 bps)</td>
-            </tr>
-            <tr>
-              <td>Vitesse basse</td>
-              <td class="ref-compare-highlight">12,5 kHz (12 500 bps)</td>
-            </tr>
-            <tr>
-              <td>Niveau logique</td>
-              <td>TTL / RS-232 compatible</td>
-            </tr>
-            <tr>
-              <td>Encodage</td>
-              <td>NRZ (Non Return to Zero)</td>
-            </tr>
-            <tr>
-              <td>Longueur mot</td>
-              <td>16 bits</td>
-            </tr>
-            <tr>
-              <td>Ordre transmission</td>
-              <td>LSB en premier (bit 1 → bit 16)</td>
-            </tr>
-          </tbody>
+          <tbody id="addr-catalog-body"></tbody>
         </table>
+      </div>
 
+      <div class="two-col" style="margin-top:1.5rem;">
         <table class="ref-table">
-          <thead>
-            <tr>
-              <th>Caractéristique</th>
-              <th>CSDB</th>
-              <th>ARINC 429</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Caractéristique</th><th>CSDB</th><th>ARINC 429</th></tr></thead>
           <tbody>
-            <tr>
-              <td>Longueur mot</td>
-              <td class="ref-compare-highlight">16 bits</td>
-              <td>32 bits</td>
-            </tr>
-            <tr>
-              <td>Vitesse</td>
-              <td class="ref-compare-highlight">12,5 / 50 kHz</td>
-              <td>12,5 / 100 kHz</td>
-            </tr>
-            <tr>
-              <td>Étiquette</td>
-              <td class="ref-compare-highlight">8 bits (bits 1-8)</td>
-              <td>8 bits (bits 1-8)</td>
-            </tr>
-            <tr>
-              <td>Données</td>
-              <td class="ref-compare-highlight">7 bits (bits 9-15)</td>
-              <td>19 bits (bits 11-29)</td>
-            </tr>
-            <tr>
-              <td>SSM / SDI</td>
-              <td class="ref-compare-highlight">Absent</td>
-              <td>SSM 2 bits + SDI 2 bits</td>
-            </tr>
-            <tr>
-              <td>Parité</td>
-              <td class="ref-compare-highlight">Bit 16 (impaire)</td>
-              <td>Bit 32 (impaire)</td>
-            </tr>
-            <tr>
-              <td>Topologie</td>
-              <td class="ref-compare-highlight">Point-à-point / bus</td>
-              <td>Un émetteur, multi-récepteurs</td>
-            </tr>
+            <tr><td>Structure</td><td style="color:#60b8c8">Blocs messages</td><td>Mots 32 bits</td></tr>
+            <tr><td>Taille typique</td><td style="color:#60b8c8">6 octets/bloc</td><td>32 bits/mot</td></tr>
+            <tr><td>Débit</td><td style="color:#60b8c8">12,5 kbps</td><td>12,5 / 100 kbps</td></tr>
+            <tr><td>Encodage</td><td style="color:#60b8c8">BCD · 2's comp · DIS</td><td>BCD · BNR · DIS</td></tr>
+            <tr><td>Parité</td><td style="color:#60b8c8">Par octet (UART)</td><td>Bit 32 du mot</td></tr>
+            <tr><td>Topologie</td><td style="color:#60b8c8">Point-à-point</td><td>1 TX → N RX</td></tr>
+            <tr><td>Synchronisation</td><td style="color:#60b8c8">Octet 0xA5 (SYNC)</td><td>Temps de silence bus</td></tr>
           </tbody>
         </table>
-
+        <table class="ref-table">
+          <thead><tr><th colspan="2">Encodages des données</th></tr></thead>
+          <tbody>
+            <tr><td>BCD</td><td>Fréquences radio (VHF, DME, ADF) — 4 bits/chiffre</td></tr>
+            <tr><td>2's complement</td><td>Angles, vitesses, altitudes — 16 bits signé</td></tr>
+            <tr><td>Discret</td><td>Flags, modes, états ON/OFF — bit par bit</td></tr>
+            <tr><td>ASCII</td><td>Messages texte CRT (adresse 0x70)</td></tr>
+            <tr><td>PAD</td><td>Octet de rembourrage (valeur quelconque)</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -688,6 +346,5 @@
   <script src="csdb.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
   <script src="version.js"></script>
-
 </body>
 </html>
