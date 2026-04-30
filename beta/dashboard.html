@@ -161,23 +161,29 @@
     }
 
     /* Couleurs par catégorie */
-    .cat-aviation .db-category-label { color: #00b4d8; }
-    .cat-aviation .db-category-line  { background: #00b4d8; }
-    .cat-aviation .db-card           { border-left-color: #00b4d8; }
-    .cat-aviation .db-card:hover     { box-shadow: 0 4px 20px rgba(0,180,216,0.12); border-color: #00b4d8; }
-    .cat-aviation .db-card-icon      { color: #00b4d8; }
+    .cat-aeronautique .db-category-label { color: #00b4d8; }
+    .cat-aeronautique .db-category-line  { background: #00b4d8; }
+    .cat-aeronautique .db-card           { border-left-color: #00b4d8; }
+    .cat-aeronautique .db-card:hover     { box-shadow: 0 4px 20px rgba(0,180,216,0.12); border-color: #00b4d8; }
+    .cat-aeronautique .db-card-icon      { color: #00b4d8; }
 
-    .cat-loisirs .db-category-label  { color: #00e676; }
-    .cat-loisirs .db-category-line   { background: #00e676; }
-    .cat-loisirs .db-card            { border-left-color: #00e676; }
-    .cat-loisirs .db-card:hover      { box-shadow: 0 4px 20px rgba(0,230,118,0.12); border-color: #00e676; }
-    .cat-loisirs .db-card-icon       { color: #00e676; }
+    .cat-rona .db-category-label  { color: #f39c12; }
+    .cat-rona .db-category-line   { background: #f39c12; }
+    .cat-rona .db-card            { border-left-color: #f39c12; }
+    .cat-rona .db-card:hover      { box-shadow: 0 4px 20px rgba(243,156,18,0.12); border-color: #f39c12; }
+    .cat-rona .db-card-icon       { color: #f39c12; }
 
-    .cat-outils .db-category-label   { color: #ff3a3a; }
-    .cat-outils .db-category-line    { background: #ff3a3a; }
-    .cat-outils .db-card             { border-left-color: #ff3a3a; }
-    .cat-outils .db-card:hover       { box-shadow: 0 4px 20px rgba(255,58,58,0.12); border-color: #ff3a3a; }
-    .cat-outils .db-card-icon        { color: #ff3a3a; }
+    .cat-divertissement .db-category-label { color: #00e676; }
+    .cat-divertissement .db-category-line  { background: #00e676; }
+    .cat-divertissement .db-card           { border-left-color: #00e676; }
+    .cat-divertissement .db-card:hover     { box-shadow: 0 4px 20px rgba(0,230,118,0.12); border-color: #00e676; }
+    .cat-divertissement .db-card-icon      { color: #00e676; }
+
+    .cat-references .db-category-label { color: #7c4dff; }
+    .cat-references .db-category-line  { background: #7c4dff; }
+    .cat-references .db-card           { border-left-color: #7c4dff; }
+    .cat-references .db-card:hover     { box-shadow: 0 4px 20px rgba(124,77,255,0.12); border-color: #7c4dff; }
+    .cat-references .db-card-icon      { color: #7c4dff; }
 
     /* ── Grille de cartes ── */
     .db-grid {
@@ -291,10 +297,10 @@
     <div class="db-main">
       <nav id="menu-grid" style="visibility:hidden;">
 
-        <!-- Aviation -->
-        <div class="db-category cat-aviation">
+        <!-- Aéronautique -->
+        <div class="db-category cat-aeronautique">
           <div class="db-category-header">
-            <div class="db-category-label">Aviation & Cartographie</div>
+            <div class="db-category-label">Aéronautique</div>
             <div class="db-category-line"></div>
           </div>
           <div class="db-grid">
@@ -312,27 +318,44 @@
                 <div class="db-card-desc">École nationale d'aérotechnique</div>
               </div>
             </a>
-            <a href="beta/osint.html" class="db-card menu-card" data-section="osint">
-              <div class="db-card-icon">🌐</div>
+            <a href="beta/informatique.html" class="db-card menu-card" data-section="informatique">
+              <div class="db-card-icon">💻</div>
               <div class="db-card-text">
-                <div class="db-card-name">OSINT Map</div>
-                <div class="db-card-desc">Avions, satellites, séismes en direct</div>
+                <div class="db-card-name">Informatique</div>
+                <div class="db-card-desc">ARINC 429, CSDB, outils avioniques</div>
               </div>
             </a>
           </div>
         </div>
 
-        <!-- Loisirs -->
-        <div class="db-category cat-loisirs">
+        <!-- RONA -->
+        <div class="db-category cat-rona">
           <div class="db-category-header">
-            <div class="db-category-label">Loisirs</div>
+            <div class="db-category-label">RONA</div>
+            <div class="db-category-line"></div>
+          </div>
+          <div class="db-grid">
+            <a href="beta/rona.html" class="db-card menu-card" data-section="rona">
+              <div class="db-card-icon">👷‍♂️</div>
+              <div class="db-card-text">
+                <div class="db-card-name">Santé &amp; Sécurité</div>
+                <div class="db-card-desc">Suivi des trousses de premiers soins</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Divertissement -->
+        <div class="db-category cat-divertissement">
+          <div class="db-category-header">
+            <div class="db-category-label">Divertissement</div>
             <div class="db-category-line"></div>
           </div>
           <div class="db-grid">
             <a href="beta/films.html" class="db-card menu-card" data-section="films">
               <div class="db-card-icon">🎬</div>
               <div class="db-card-text">
-                <div class="db-card-name">Films & Séries</div>
+                <div class="db-card-name">Films &amp; Séries</div>
                 <div class="db-card-desc">Ma liste de visionnement</div>
               </div>
             </a>
@@ -360,32 +383,25 @@
           </div>
         </div>
 
-        <!-- Outils -->
-        <div class="db-category cat-outils">
+        <!-- Références -->
+        <div class="db-category cat-references">
           <div class="db-category-header">
-            <div class="db-category-label">Outils & Gestion</div>
+            <div class="db-category-label">Références</div>
             <div class="db-category-line"></div>
           </div>
           <div class="db-grid">
-            <a href="beta/informatique.html" class="db-card menu-card" data-section="informatique">
-              <div class="db-card-icon">💻</div>
-              <div class="db-card-text">
-                <div class="db-card-name">Informatique</div>
-                <div class="db-card-desc">Outils techniques et avioniques</div>
-              </div>
-            </a>
-            <a href="beta/rona.html" class="db-card menu-card" data-section="rona">
-              <div class="db-card-icon">👷‍♂️</div>
-              <div class="db-card-text">
-                <div class="db-card-name">RONA S&amp;S</div>
-                <div class="db-card-desc">Suivi des trousses de premiers soins</div>
-              </div>
-            </a>
             <a href="beta/liens.html" class="db-card menu-card" data-section="liens">
               <div class="db-card-icon">🌍</div>
               <div class="db-card-text">
                 <div class="db-card-name">Liens utiles</div>
                 <div class="db-card-desc">Ressources et favoris</div>
+              </div>
+            </a>
+            <a href="beta/osint.html" class="db-card menu-card" data-section="osint">
+              <div class="db-card-icon">🌐</div>
+              <div class="db-card-text">
+                <div class="db-card-name">OSINT Map</div>
+                <div class="db-card-desc">Avions, satellites, séismes en direct</div>
               </div>
             </a>
             <a href="beta/pageTest.html" class="db-card menu-card" data-section="pageTest">
