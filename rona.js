@@ -404,7 +404,7 @@ window.genererPDF = async function() {
   page.drawText('André Veilleux', { x: 200, y: 668, size: 11, font: fontBold, color: black });
 
   // Emplacement (sur la ligne pointillée après "Emplacement :")
-  page.drawText(loc.nom, { x: 435, y: 668, size: 11, font: fontBold, color: black });
+  page.drawText(loc.nom, { x: 430, y: 668, size: 11, font: fontBold, color: black });
 
   // Date (sur la ligne après "Date :")
   page.drawText(date, { x: 125, y: 641, size: 11, font: fontBold, color: black });
@@ -581,7 +581,7 @@ window.genererToutPDF = async function() {
 
     // Nom + Emplacement + Date
     page.drawText('André Veilleux', { x: 200, y: 668, size: 11, font: fontBold, color: black });
-    page.drawText(loc.nom, { x: 435, y: 668, size: 11, font: fontBold, color: black });
+    page.drawText(loc.nom, { x: 430, y: 668, size: 11, font: fontBold, color: black });
     page.drawText(date, { x: 125, y: 641, size: 11, font: fontBold, color: black });
 
     // Rangées
