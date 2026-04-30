@@ -29,6 +29,14 @@ body.beta-active .films-topbar {
   top: 34px !important;
 }
 
+/* Informatique beta topbar */
+body.beta-active .info-topbar {
+  top: 34px !important;
+}
+body.beta-active .info-body {
+  padding-top: calc(52px + 34px) !important;
+}
+
 
 /* ── Palette ──────────────────────────────────────────────
    BG principal    : #000000
