@@ -401,13 +401,13 @@ window.genererPDF = async function() {
   // ── Champs du formulaire ──────────────────────────────
 
   // Nom (sur la ligne pointillée après "Nom :")
-  page.drawText('André Veilleux', { x: 200, y: 668, size: 9, font: fontBold, color: black });
+  page.drawText('André Veilleux', { x: 200, y: 668, size: 11, font: fontBold, color: black });
 
   // Emplacement (sur la ligne pointillée après "Emplacement :")
-  page.drawText(loc.nom, { x: 440, y: 668, size: 9, font: fontBold, color: black });
+  page.drawText(loc.nom, { x: 440, y: 668, size: 11, font: fontBold, color: black });
 
   // Date (sur la ligne après "Date :")
-  page.drawText(date, { x: 130, y: 641, size: 9, font: fontBold, color: black });
+  page.drawText(date, { x: 130, y: 641, size: 11, font: fontBold, color: black });
 
   // ── Rangées du tableau ────────────────────────────────
   // Positions y (depuis le bas de la page, en pts) du bord supérieur de chaque rangée
@@ -580,9 +580,9 @@ window.genererToutPDF = async function() {
     const red      = rgb(0.7, 0, 0);
 
     // Nom + Emplacement + Date
-    page.drawText('André Veilleux', { x: 200, y: 668, size: 9, font: fontBold, color: black });
-    page.drawText(loc.nom, { x: 440, y: 668, size: 9, font: fontBold, color: black });
-    page.drawText(date, { x: 130, y: 641, size: 9, font: fontBold, color: black });
+    page.drawText('André Veilleux', { x: 200, y: 668, size: 11, font: fontBold, color: black });
+    page.drawText(loc.nom, { x: 440, y: 668, size: 11, font: fontBold, color: black });
+    page.drawText(date, { x: 130, y: 641, size: 11, font: fontBold, color: black });
 
     // Rangées
     const rowTops = [
