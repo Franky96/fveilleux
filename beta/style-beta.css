@@ -37,6 +37,13 @@ body.beta-active .info-body {
   padding-top: calc(52px + 34px) !important;
 }
 
+/* OSINT beta : body en flex column 100vh → décaler */
+body.beta-active.osint-page,
+body.beta-active:has(.osint-header) {
+  height: calc(100vh - 34px) !important;
+  margin-top: 34px;
+}
+
 
 /* ── Palette ──────────────────────────────────────────────
    BG principal    : #000000
