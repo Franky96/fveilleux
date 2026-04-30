@@ -151,6 +151,7 @@ function renderGrille() {
       <span>👷‍♂️</span>Choisis un emplacement ci-dessus, ou crée-en un avec <strong>+</strong>.
     </div>`;
     btnPdf.style.display = 'none';
+    masquerMessageValidation();
     return;
   }
   btnPdf.style.display = 'flex';
@@ -159,21 +160,34 @@ function renderGrille() {
   const loc = ronaData.locations.find(l => l.id === locationActive);
   if (!loc) return;
   const manquants = loc.manquants || {};
+  if (!loc.complets) loc.complets = [];
 
   grid.innerHTML = '';
   ITEMS.forEach(item => {
     const estManquant = item.id in manquants;
+    const estComplet  = loc.complets.includes(item.id);
     const qteManquante = manquants[item.id] || 0;
-    const present = item.qte - qteManquante;
+    const present = estManquant ? (item.qte - qteManquante) : item.qte;
 
     const row = document.createElement('div');
     row.className = 'item-row' + (estManquant ? ' manquant' : '');
 
-    // Checkbox
-    const chk = document.createElement('div');
-    chk.className = 'item-chk' + (estManquant ? ' checked' : '');
-    chk.textContent = estManquant ? '✕' : '';
-    chk.onclick = () => toggleManquant(item, loc, row, chk, qteInput, qteLabel);
+    // Boutons ✕ et ✓
+    const btns = document.createElement('div');
+    btns.className = 'item-btns';
+
+    const btnX = document.createElement('button');
+    btnX.className = 'btn-x' + (estManquant ? ' active' : '');
+    btnX.textContent = '✕';
+    btnX.title = 'Manquant';
+
+    const btnChk = document.createElement('button');
+    btnChk.className = 'btn-chk' + (estComplet ? ' active' : '');
+    btnChk.textContent = '✓';
+    btnChk.title = 'Complet (quantité maximale)';
+
+    btns.appendChild(btnX);
+    btns.appendChild(btnChk);
 
     // Info
     const info = document.createElement('div');
@@ -181,7 +195,7 @@ function renderGrille() {
     info.innerHTML = `<div class="item-nom">${item.court}</div>
                       <div class="item-fraction">${present}/${item.qte}</div>`;
 
-     // Label pour la quantité
+    // Label pour la quantité
     const qteLabel = document.createElement('span');
     qteLabel.textContent = 'à ajouter: ';
     qteLabel.className = 'item-qte-label';
@@ -199,7 +213,10 @@ function renderGrille() {
     qteInput.onchange = () => mettreAJourQte(item, loc, qteInput, info);
     qteInput.onblur  = () => mettreAJourQte(item, loc, qteInput, info);
 
-    row.appendChild(chk);
+    btnX.onclick   = () => clickerX(item, loc, row, btnX, btnChk, qteInput, qteLabel, info);
+    btnChk.onclick = () => clickerChk(item, loc, row, btnX, btnChk, qteInput, qteLabel, info);
+
+    row.appendChild(btns);
     row.appendChild(info);
     row.appendChild(qteLabel);
     row.appendChild(qteInput);
@@ -209,32 +226,86 @@ function renderGrille() {
 
 // ── Interactions inline ───────────────────────────────
 
-function toggleManquant(item, loc, row, chk, qteInput, qteLabel) {
+function clickerX(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
   if (!loc.manquants) loc.manquants = {};
+  if (!loc.complets) loc.complets = [];
   const estManquant = item.id in loc.manquants;
+
   if (estManquant) {
-    // Remettre complet
     delete loc.manquants[item.id];
     row.classList.remove('manquant');
-    chk.classList.remove('checked');
-    chk.textContent = '';
+    btnX.classList.remove('active');
     qteInput.value = '';
     qteInput.style.display = 'none';
     qteLabel.style.display = 'none';
-    row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
+    info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
   } else {
-    // Marquer manquant (null = coché sans quantité encore saisie)
+    loc.complets = loc.complets.filter(id => id !== item.id);
+    btnChk.classList.remove('active');
     loc.manquants[item.id] = null;
     row.classList.add('manquant');
-    chk.classList.add('checked');
-    chk.textContent = '✕';
+    btnX.classList.add('active');
     qteInput.value = '';
     qteInput.style.display = 'block';
     qteLabel.style.display = 'inline';
-    row.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
+    info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
     setTimeout(() => qteInput.focus(), 50);
   }
+  row.classList.remove('non-rempli');
+  masquerMessageValidation();
   sauvegarder();
+}
+
+function clickerChk(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
+  if (!loc.manquants) loc.manquants = {};
+  if (!loc.complets) loc.complets = [];
+  const estComplet = loc.complets.includes(item.id);
+
+  if (estComplet) {
+    loc.complets = loc.complets.filter(id => id !== item.id);
+    btnChk.classList.remove('active');
+  } else {
+    if (item.id in loc.manquants) {
+      delete loc.manquants[item.id];
+      row.classList.remove('manquant');
+      btnX.classList.remove('active');
+      qteInput.value = '';
+      qteInput.style.display = 'none';
+      qteLabel.style.display = 'none';
+    }
+    loc.complets.push(item.id);
+    btnChk.classList.add('active');
+    info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
+  }
+  row.classList.remove('non-rempli');
+  masquerMessageValidation();
+  sauvegarder();
+}
+
+// ── Validation ────────────────────────────────────────
+
+function toutRempli(loc) {
+  const complets  = loc.complets  || [];
+  const manquants = loc.manquants || {};
+  return ITEMS.every(item => (item.id in manquants) || complets.includes(item.id));
+}
+
+function montrerItemsNonRemplis(loc) {
+  const complets  = loc.complets  || [];
+  const manquants = loc.manquants || {};
+  document.querySelectorAll('#items-grid .item-row').forEach((row, idx) => {
+    const item = ITEMS[idx];
+    if (item && !(item.id in manquants) && !complets.includes(item.id)) {
+      row.classList.add('non-rempli');
+    }
+  });
+  const msg = document.getElementById('msg-validation');
+  if (msg) msg.style.display = 'flex';
+}
+
+function masquerMessageValidation() {
+  const msg = document.getElementById('msg-validation');
+  if (msg) msg.style.display = 'none';
 }
 
 function mettreAJourQte(item, loc, qteInput, info) {
@@ -279,6 +350,7 @@ function sauvegarderLocation() {
 window.genererPDF = async function() {
   const loc = ronaData.locations.find(l => l.id === locationActive);
   if (!loc) return;
+  if (!toutRempli(loc)) { montrerItemsNonRemplis(loc); return; }
   const manquants = loc.manquants || {};
   const date = new Date().toLocaleDateString('fr-CA');
 
@@ -400,6 +472,12 @@ window.marquerComplete = function() {
   if (!ronaData.completes) ronaData.completes = [];
 
   const dejaComplete = ronaData.completes.includes(locationActive);
+
+  if (!dejaComplete) {
+    const loc = ronaData.locations.find(l => l.id === locationActive);
+    if (loc && !toutRempli(loc)) { montrerItemsNonRemplis(loc); return; }
+  }
+
   const btn = document.getElementById('btn-ok');
 
   if (dejaComplete) {
@@ -565,8 +643,9 @@ window.genererToutPDF = async function() {
 
 window.resetGlobal = function() {
   if (!confirm('Faire un RESET GLOBAL ?')) return;
-  ronaData.locations.forEach(loc => loc.manquants = {});
+  ronaData.locations.forEach(loc => { loc.manquants = {}; loc.complets = []; });
   ronaData.completes = [];
+  masquerMessageValidation();
   
   sauvegarder();
   afficherCompletes();
