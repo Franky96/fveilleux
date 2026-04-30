@@ -72,6 +72,7 @@ button {
 button:hover {
   background: #00c45a !important;
 }
+.btn-clear { color: #000 !important; }
 
 /* ── Login ────────────────────────────────────────────────── */
 .login-container {
