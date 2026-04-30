@@ -65,6 +65,14 @@ const ITEMS = [
     qte: 1, qteMoy: 1, qteGrd: 1, qtePerso: 1 },
 ];
 
+// ── Helper : lecture rétrocompatible d'un item manquant ──
+// Format ancien : number | null   /   Format nouveau : { qte, type }
+function getManquantInfo(val) {
+  if (val === null || val === undefined) return { qte: null, type: 'ajout' };
+  if (typeof val === 'object') return { qte: val.qte ?? null, type: val.type || 'ajout' };
+  return { qte: val, type: 'ajout' };
+}
+
 // ── Firebase ──────────────────────────────────────────
 const ronaDocRef = doc(db, "donnees", "rona_global");
 
@@ -166,8 +174,8 @@ function renderGrille() {
   ITEMS.forEach(item => {
     const estManquant = item.id in manquants;
     const estComplet  = loc.complets.includes(item.id);
-    const qteManquante = manquants[item.id] || 0;
-    const present = estManquant ? (item.qte - qteManquante) : item.qte;
+    const { qte: qteManquante, type: manquantType } = getManquantInfo(manquants[item.id]);
+    const present = estManquant ? (item.qte - (qteManquante || 0)) : item.qte;
 
     const row = document.createElement('div');
     row.className = 'item-row' + (estManquant ? ' manquant' : '');
@@ -195,11 +203,17 @@ function renderGrille() {
     info.innerHTML = `<div class="item-nom">${item.court}</div>
                       <div class="item-fraction">${present}/${item.qte}</div>`;
 
-    // Label pour la quantité
-    const qteLabel = document.createElement('span');
-    qteLabel.textContent = 'à ajouter: ';
-    qteLabel.className = 'item-qte-label';
-    qteLabel.style.display = estManquant ? 'inline' : 'none';
+    // Menu déroulant Ajout / cmd
+    const typeSelect = document.createElement('select');
+    typeSelect.className = 'item-type-select';
+    typeSelect.style.display = estManquant ? 'inline-block' : 'none';
+    ['ajout', 'cmd'].forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt; o.textContent = opt;
+      if (opt === manquantType) o.selected = true;
+      typeSelect.appendChild(o);
+    });
+    typeSelect.onchange = () => mettreAJourType(item, loc, typeSelect);
 
     // Champ quantité
     const qteInput = document.createElement('input');
@@ -209,16 +223,16 @@ function renderGrille() {
     qteInput.min = 1;
     qteInput.max = item.qte;
     qteInput.placeholder = '?';
-    if (estManquant && qteManquante > 0) qteInput.value = qteManquante;
+    if (estManquant && (qteManquante || 0) > 0) qteInput.value = qteManquante;
     qteInput.onchange = () => mettreAJourQte(item, loc, qteInput, info);
     qteInput.onblur  = () => mettreAJourQte(item, loc, qteInput, info);
 
-    btnX.onclick   = () => clickerX(item, loc, row, btnX, btnChk, qteInput, qteLabel, info);
-    btnChk.onclick = () => clickerChk(item, loc, row, btnX, btnChk, qteInput, qteLabel, info);
+    btnX.onclick   = () => clickerX(item, loc, row, btnX, btnChk, typeSelect, qteInput, info);
+    btnChk.onclick = () => clickerChk(item, loc, row, btnX, btnChk, typeSelect, qteInput, info);
 
     row.appendChild(btns);
     row.appendChild(info);
-    row.appendChild(qteLabel);
+    row.appendChild(typeSelect);
     row.appendChild(qteInput);
     grid.appendChild(row);
   });
@@ -226,7 +240,7 @@ function renderGrille() {
 
 // ── Interactions inline ───────────────────────────────
 
-function clickerX(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
+function clickerX(item, loc, row, btnX, btnChk, typeSelect, qteInput, info) {
   if (!loc.manquants) loc.manquants = {};
   if (!loc.complets) loc.complets = [];
   const estManquant = item.id in loc.manquants;
@@ -235,19 +249,20 @@ function clickerX(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
     delete loc.manquants[item.id];
     row.classList.remove('manquant');
     btnX.classList.remove('active');
+    typeSelect.style.display = 'none';
     qteInput.value = '';
     qteInput.style.display = 'none';
-    qteLabel.style.display = 'none';
     info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
   } else {
     loc.complets = loc.complets.filter(id => id !== item.id);
     btnChk.classList.remove('active');
-    loc.manquants[item.id] = null;
+    loc.manquants[item.id] = { qte: null, type: 'ajout' };
     row.classList.add('manquant');
     btnX.classList.add('active');
+    typeSelect.value = 'ajout';
+    typeSelect.style.display = 'inline-block';
     qteInput.value = '';
     qteInput.style.display = 'block';
-    qteLabel.style.display = 'inline';
     info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
     setTimeout(() => qteInput.focus(), 50);
   }
@@ -256,7 +271,7 @@ function clickerX(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
   sauvegarder();
 }
 
-function clickerChk(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
+function clickerChk(item, loc, row, btnX, btnChk, typeSelect, qteInput, info) {
   if (!loc.manquants) loc.manquants = {};
   if (!loc.complets) loc.complets = [];
   const estComplet = loc.complets.includes(item.id);
@@ -269,9 +284,9 @@ function clickerChk(item, loc, row, btnX, btnChk, qteInput, qteLabel, info) {
       delete loc.manquants[item.id];
       row.classList.remove('manquant');
       btnX.classList.remove('active');
+      typeSelect.style.display = 'none';
       qteInput.value = '';
       qteInput.style.display = 'none';
-      qteLabel.style.display = 'none';
     }
     loc.complets.push(item.id);
     btnChk.classList.add('active');
@@ -310,15 +325,23 @@ function masquerMessageValidation() {
 
 function mettreAJourQte(item, loc, qteInput, info) {
   if (!loc.manquants) loc.manquants = {};
+  const { type } = getManquantInfo(loc.manquants[item.id]);
   const val = parseInt(qteInput.value);
   if (!isNaN(val) && val > 0) {
-    loc.manquants[item.id] = Math.min(val, item.qte);
-    const present = item.qte - loc.manquants[item.id];
-    info.querySelector('.item-fraction').textContent = `${present}/${item.qte}`;
+    const qte = Math.min(val, item.qte);
+    loc.manquants[item.id] = { qte, type };
+    info.querySelector('.item-fraction').textContent = `${item.qte - qte}/${item.qte}`;
   } else {
-    loc.manquants[item.id] = null; // coché mais sans quantité
+    loc.manquants[item.id] = { qte: null, type };
     info.querySelector('.item-fraction').textContent = `${item.qte}/${item.qte}`;
   }
+  sauvegarder();
+}
+
+function mettreAJourType(item, loc, typeSelect) {
+  if (!loc.manquants) loc.manquants = {};
+  const { qte } = getManquantInfo(loc.manquants[item.id]);
+  loc.manquants[item.id] = { qte, type: typeSelect.value };
   sauvegarder();
 }
 
@@ -407,9 +430,10 @@ window.genererPDF = async function() {
     const rowHeight = rowTop - nextTop;
 
     const estManquant  = item.id in manquants;
-    const qteManquante = estManquant ? (manquants[item.id] || 0) : 0;
-    const present      = item.qte - qteManquante;
-    const isMissing    = estManquant && qteManquante > 0;
+    const { qte: qteManquante, type: manquantType } = getManquantInfo(manquants[item.id]);
+    const qteM    = estManquant ? (qteManquante || 0) : 0;
+    const present = item.qte - qteM;
+    const isMissing = estManquant && qteM > 0;
 
     // Quantité actuelle (en haut à gauche de la diagonale / dans la col Petite)
     const writeY = rowTop - 12;
@@ -422,11 +446,11 @@ window.genererPDF = async function() {
     });
 
     // Quantité à commander (col Commande, seulement si manquant)
-    // Colonne Commande = 480.5→537.1pt ; centre ≈ 509pt
     if (isMissing) {
-      const qStr = String(qteManquante);
-      const tw   = fontBold.widthOfTextAtSize(qStr, 9);
-      page.drawText('Ajout: ' + qStr, {
+      const qStr   = String(qteM);
+      const label  = manquantType + ': ' + qStr;
+      const tw     = fontBold.widthOfTextAtSize(qStr, 9);
+      page.drawText(label, {
         x: 490 - tw / 2,
         y: rowTop - rowHeight / 2 - 4,
         size: 11,
@@ -437,7 +461,7 @@ window.genererPDF = async function() {
   });
 
   // ── COMPLET si aucun ajout ────────────────────────────
-  const aucunAjout = !Object.values(manquants).some(q => q > 0);
+  const aucunAjout = !Object.values(manquants).some(v => (getManquantInfo(v).qte || 0) > 0);
   if (aucunAjout) {
     const green = rgb(0, 0.5, 0);
     const texte = 'COMPLET';
@@ -576,9 +600,10 @@ window.genererToutPDF = async function() {
       const rowHeight = rowTop - nextTop;
 
       const estManquant  = item.id in manquants;
-      const qteManquante = estManquant ? (manquants[item.id] || 0) : 0;
-      const present      = item.qte - qteManquante;
-      const isMissing    = estManquant && qteManquante > 0;
+      const { qte: qteManquante, type: manquantType } = getManquantInfo(manquants[item.id]);
+      const qteM    = estManquant ? (qteManquante || 0) : 0;
+      const present = item.qte - qteM;
+      const isMissing = estManquant && qteM > 0;
 
       const writeY = rowTop - 12;
       page.drawText(String(present), {
@@ -590,9 +615,10 @@ window.genererToutPDF = async function() {
       });
 
       if (isMissing) {
-        const qStr = String(qteManquante);
-        const tw   = fontBold.widthOfTextAtSize(qStr, 9);
-        page.drawText('Ajout: ' + qStr, {
+        const qStr  = String(qteM);
+        const label = manquantType + ': ' + qStr;
+        const tw    = fontBold.widthOfTextAtSize(qStr, 9);
+        page.drawText(label, {
           x: 490 - tw / 2,
           y: rowTop - rowHeight / 2 - 4,
           size: 11,
@@ -603,7 +629,7 @@ window.genererToutPDF = async function() {
     });
 
     // ── COMPLET si aucun ajout ──────────────────────────
-    const aucunAjout = !Object.values(manquants).some(q => q > 0);
+    const aucunAjout = !Object.values(manquants).some(v => (getManquantInfo(v).qte || 0) > 0);
     if (aucunAjout) {
       const green = rgb(0, 0.5, 0);
       const texte = 'COMPLET';
