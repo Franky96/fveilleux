@@ -17,6 +17,7 @@ const SECTIONS_ARCHIVABLES = [
   ]},
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
+  { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
 ];
 
 const configRef = doc(db, "systeme", "config");
