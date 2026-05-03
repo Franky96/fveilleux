@@ -18,6 +18,7 @@ const CSDB_ADDR = {
   0x11: { name: 'VHF COMM DATA',               system: 'VHF COMM', db: 4, desc: 'Données VHF COM — standby, XMT, squelch' },
   0x12: { name: 'VHF COMM FREQ (8.33 kHz)',    system: 'VHF COMM', db: 4, desc: 'Fréquence VHF COM — canaux 8.33 kHz' },
   0x13: { name: 'VHF COMM DATA (8.33 kHz)',    system: 'VHF COMM', db: 4, desc: 'Données VHF COM — canaux 8.33 kHz' },
+  0x1E: { name: 'TRANSPONDER ATC CODE/ALTITUDE', system: 'ATC',      db: 4, desc: 'Code ATC (BCD 0–7) et altitude (Gray code)' },
   0x20: { name: 'NAV FREQ',                    system: 'NAV',      db: 4, desc: 'Fréquence NAV active (VOR/ILS)' },
   0x21: { name: 'VOR DATA',                    system: 'NAV',      db: 4, desc: 'Données VOR (cap, déviation)' },
   0x22: { name: 'ILS DATA',                    system: 'NAV',      db: 4, desc: 'Données ILS (localizer / glideslope)' },
@@ -96,6 +97,17 @@ const STATUS_FIELDS = {
     { bit:0, name:'SRC b0',     desc:'Source ident bit 0 (LSB) — voir NOTE 1' },
   ],
   0x13: 'same:0x11',
+  // Transpondeur ATC — manuel §5, page 28
+  0x1E: [
+    { bit:7, name:'CODE VALID', desc:'Code ATC valide (1=valide) — NOTE 2' },
+    { bit:6, name:'PAD',        desc:'Non utilisé' },
+    { bit:5, name:'MODE',       desc:'Mode (1=STBY)' },
+    { bit:4, name:'ALT REPR',   desc:'Rapport altitude activé (1=ON)' },
+    { bit:3, name:'ATC IDENT',  desc:'Identification ATC (1=ON)' },
+    { bit:2, name:'TEST',       desc:'Auto-test (1=test actif)' },
+    { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
+  ],
 };
 
 function getStatusFields(addr) {
@@ -139,6 +151,15 @@ const STATUS_FIELD_MAP = {
 };
 STATUS_FIELD_MAP[0x12] = STATUS_FIELD_MAP[0x10];
 STATUS_FIELD_MAP[0x13] = STATUS_FIELD_MAP[0x11];
+STATUS_FIELD_MAP[0x1E] = [
+  { span:1, label:'VAL', cls:'csdb-fmap-valid' },
+  { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+  { span:1, label:'MOD', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'ALT', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'IDT', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'SI',  cls:'csdb-fmap-src'   },
+];
 
 const DATA_FIELD_MAP = {
   // VHF COMM FREQ actif — BCD, manuel page 24
@@ -170,6 +191,18 @@ const DATA_FIELD_MAP = {
     [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
     [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
     [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+  ],
+  // Transpondeur ATC — Code BCD 0-7 (bytes 2-3) + Altitude Gray code (bytes 4-5)
+  // Chaque nibble : PAD(bit7/3) + 3 bits BCD/Gray (bits 6-4 / 2-0)
+  0x1E: [
+    [{ span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ATC C', cls:'csdb-fmap-bcd'  },
+     { span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ATC D', cls:'csdb-fmap-bcd'  }],
+    [{ span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ATC A', cls:'csdb-fmap-bcd'  },
+     { span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ATC B', cls:'csdb-fmap-bcd'  }],
+    [{ span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ALT C', cls:'csdb-fmap-data' },
+     { span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ALT D', cls:'csdb-fmap-data' }],
+    [{ span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ALT A', cls:'csdb-fmap-data' },
+     { span:1, label:'PAD', cls:'csdb-fmap-pad' }, { span:3, label:'ALT B', cls:'csdb-fmap-data' }],
   ],
   // ATC — BCD 4 chiffres (D C B A)
   0x33: [
@@ -395,6 +428,10 @@ function getBannerValues(addr, data) {
     const deg = raw > 32767 ? raw - 65536 : raw;
     return [{ label:'CAP MAG', value:`${deg}°` }];
   }
+  if (addr === 0x1E && data.length >= 2) {
+    const dC=(data[0]>>4)&0x7, dD=data[0]&0x7, dA=(data[1]>>4)&0x7, dB=data[1]&0x7;
+    return [{ label:'CODE ATC', value:`${dA}${dB}${dC}${dD}` }];
+  }
   if (addr === 0x33 && data.length >= 2) {
     const dD=(data[0]>>4)&0xF, dC=data[0]&0xF, dB=(data[1]>>4)&0xF, dA=data[1]&0xF;
     if ([dA,dB,dC,dD].every(x => x <= 7)) return [{ label:'CODE ATC', value:`${dD}${dC}${dB}${dA}` }];
@@ -435,15 +472,19 @@ function updateQuickStatus(statusByte, addr) {
   }
   const fields = getStatusFields(addr);
   if (fields) {
-    // Adresses spécifiques : FREQ VALID (bit 7) seulement
     const fv = (statusByte >> 7) & 1;
+    const bit7Label = fields.find(f => f.bit === 7)?.name || 'VALID';
     validEl.innerHTML = `<div class="qs-item">
-      <span class="qs-item-label">FREQ</span>
+      <span class="qs-item-label">${bit7Label}</span>
       <span class="qs-item-val ${fv ? 'qs-on' : 'qs-off'}">${fv ? 'OUI' : 'NON'}</span>
     </div>`;
     if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
       const srcVal = (((statusByte>>3)&1)<<2) | (((statusByte>>1)&1)<<1) | (statusByte&1);
       const names  = ['ALL','#1','#2','#3','---','P#1','P#2','P#3'];
+      siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
+    } else if ([0x1E].includes(addr)) {
+      const srcVal = statusByte & 3;
+      const names  = ['N/U', '#1', '#2', 'N/U'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
     } else {
       siEl.innerHTML = '<span class="qs-off">—</span>';
@@ -513,6 +554,12 @@ function updateStatusPanel(statusByte, addr, info) {
     for (const f of fields) {
       const v = (statusByte >> f.bit) & 1;
       html += row(`Bit ${f.bit} — ${f.name}`, v === 1 ? `1 — ${f.desc}` : `0`, v === 1 ? 'ok' : 'dim');
+    }
+    // Source ident 2-bit (bits 1,0) pour 0x1E — NOTE 1 du manuel
+    if ([0x1E].includes(addr)) {
+      const srcVal = statusByte & 3;
+      const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'N/U'];
+      html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
     }
     // Source ident 3-bit (bits 3,1,0) pour 0x10–0x13 — NOTE 1 du manuel
     if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
