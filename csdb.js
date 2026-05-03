@@ -337,10 +337,13 @@ function renderBytesDisplay(bytes) {
     parityCell.title = `Bit de parité — ${onesCount} bit(s) à 1 (parité ${onesCount % 2 === 0 ? 'paire' : 'impaire'})`;
     container.appendChild(parityCell);
 
+    const padBits = new Set();
+    { let bp = 7; for (const seg of getFieldMapForByte(idx, bytes[0])) { if (seg.cls === 'csdb-fmap-pad') for (let i = 0; i < seg.span; i++) padBits.add(bp - i); bp -= seg.span; } }
+
     for (let bit = 7; bit >= 0; bit--) {
       const val = (byteVal >> bit) & 1;
       const cell = document.createElement('div');
-      cell.className = `byte-bit-cell ${bitCls}`;
+      cell.className = `byte-bit-cell ${padBits.has(bit) ? 'bit-pad' : bitCls}`;
       cell.textContent = val;
       cell.title = `Octet #${idx} (${roleLabel}), Bit ${bit} — cliquer pour basculer`;
 
