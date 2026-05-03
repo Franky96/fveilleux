@@ -19,6 +19,7 @@ const CSDB_ADDR = {
   0x12: { name: 'VHF COMM FREQ (8.33 kHz)',    system: 'VHF COMM', db: 4, desc: 'Fréquence VHF COM — canaux 8.33 kHz' },
   0x13: { name: 'VHF COMM DATA (8.33 kHz)',    system: 'VHF COMM', db: 4, desc: 'Données VHF COM — canaux 8.33 kHz' },
   0x1E: { name: 'TRANSPONDER ATC CODE/ALTITUDE', system: 'ATC',      db: 4, desc: 'Code ATC (BCD 0–7) et altitude (Gray code)' },
+  0x1F: { name: 'TRANSPONDER OUTPUT DATA',       system: 'ATC',      db: 4, desc: 'Sortie transpondeur — code ATC + altitude + état XMIT' },
   0x20: { name: 'NAV FREQ',                    system: 'NAV',      db: 4, desc: 'Fréquence NAV active (VOR/ILS)' },
   0x21: { name: 'VOR DATA',                    system: 'NAV',      db: 4, desc: 'Données VOR (cap, déviation)' },
   0x22: { name: 'ILS DATA',                    system: 'NAV',      db: 4, desc: 'Données ILS (localizer / glideslope)' },
@@ -108,6 +109,17 @@ const STATUS_FIELDS = {
     { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
     { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
   ],
+  // Transpondeur sortie — manuel §5, page 29
+  0x1F: [
+    { bit:7, name:'CODE VALID', desc:'Code ATC valide (1=valide) — NOTE 2' },
+    { bit:6, name:'XMIT',       desc:'Émission active (1=ON)' },
+    { bit:5, name:'MODE',       desc:'Mode (1=STBY)' },
+    { bit:4, name:'ALT REPR',   desc:'Rapport altitude activé (1=ON)' },
+    { bit:3, name:'ATC IDENT',  desc:'Identification ATC (1=ON)' },
+    { bit:2, name:'TEST',       desc:'Auto-test (1=test actif)' },
+    { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
+  ],
 };
 
 function getStatusFields(addr) {
@@ -154,6 +166,15 @@ STATUS_FIELD_MAP[0x13] = STATUS_FIELD_MAP[0x11];
 STATUS_FIELD_MAP[0x1E] = [
   { span:1, label:'VAL', cls:'csdb-fmap-valid' },
   { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+  { span:1, label:'MOD', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'ALT', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'IDT', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'SI',  cls:'csdb-fmap-src'   },
+];
+STATUS_FIELD_MAP[0x1F] = [
+  { span:1, label:'VAL', cls:'csdb-fmap-valid' },
+  { span:1, label:'XMT', cls:'csdb-fmap-ctrl'  },
   { span:1, label:'MOD', cls:'csdb-fmap-ctrl'  },
   { span:1, label:'ALT', cls:'csdb-fmap-ctrl'  },
   { span:1, label:'IDT', cls:'csdb-fmap-ctrl'  },
@@ -228,6 +249,7 @@ const DATA_FIELD_MAP = {
 };
 DATA_FIELD_MAP[0x12] = DATA_FIELD_MAP[0x10];
 DATA_FIELD_MAP[0x13] = DATA_FIELD_MAP[0x11];
+DATA_FIELD_MAP[0x1F] = DATA_FIELD_MAP[0x1E];
 DATA_FIELD_MAP[0x25] = DATA_FIELD_MAP[0x24];
 
 function getFieldMapForByte(byteIdx, addr) {
@@ -428,7 +450,7 @@ function getBannerValues(addr, data) {
     const deg = raw > 32767 ? raw - 65536 : raw;
     return [{ label:'CAP MAG', value:`${deg}°` }];
   }
-  if (addr === 0x1E && data.length >= 2) {
+  if ([0x1E, 0x1F].includes(addr) && data.length >= 2) {
     const dC=(data[0]>>4)&0x7, dD=data[0]&0x7, dA=(data[1]>>4)&0x7, dB=data[1]&0x7;
     const vals = [{ label:'CODE ATC', value:`${dA}${dB}${dC}${dD}` }];
     if (data.length >= 4) {
@@ -487,7 +509,7 @@ function updateQuickStatus(statusByte, addr) {
       const srcVal = (((statusByte>>3)&1)<<2) | (((statusByte>>1)&1)<<1) | (statusByte&1);
       const names  = ['ALL','#1','#2','#3','---','P#1','P#2','P#3'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
-    } else if ([0x1E].includes(addr)) {
+    } else if ([0x1E, 0x1F].includes(addr)) {
       const srcVal = statusByte & 3;
       const names  = ['N/U', '#1', '#2', 'N/U'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
@@ -560,8 +582,8 @@ function updateStatusPanel(statusByte, addr, info) {
       const v = (statusByte >> f.bit) & 1;
       html += row(`Bit ${f.bit} — ${f.name}`, v === 1 ? `1 — ${f.desc}` : `0`, v === 1 ? 'ok' : 'dim');
     }
-    // Source ident 2-bit (bits 1,0) pour 0x1E — NOTE 1 du manuel
-    if ([0x1E].includes(addr)) {
+    // Source ident 2-bit (bits 1,0) pour 0x1E/0x1F — NOTE 1 du manuel
+    if ([0x1E, 0x1F].includes(addr)) {
       const srcVal = statusByte & 3;
       const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'N/U'];
       html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
