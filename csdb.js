@@ -87,8 +87,8 @@ const STATUS_FIELDS = {
   // Adresses VHF COMM DATA (0x11, 0x13) — manuel §5, page 25
   0x11: [
     { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
-    { bit:6, name:'FREQ LIM B', desc:'Limite fréquence bit 6 — voir NOTE 2' },
-    { bit:5, name:'FREQ LIM A', desc:'Limite fréquence bit 5 — voir NOTE 2' },
+    { bit:6, name:'FREQ LIM B', desc:'Freq limit MSB (NOTE 2) — 00=N/U · 01=135.975 · 10=136.975 · 11=151.975 MHz' },
+    { bit:5, name:'FREQ LIM A', desc:'Freq limit LSB (NOTE 2) — 00=N/U · 01=135.975 · 10=136.975 · 11=151.975 MHz' },
     { bit:4, name:'XMIT IND',   desc:'Indicateur émission (1=émission active)' },
     { bit:3, name:'SRC b3',     desc:'Source ident bit 3 (MSB) — voir NOTE 1' },
     { bit:2, name:'SELF TEST',  desc:'Auto-test (1=test actif)' },
@@ -448,6 +448,24 @@ function updateQuickStatus(statusByte, addr) {
     } else {
       siEl.innerHTML = '<span class="qs-off">—</span>';
     }
+    // FREQ LIMIT — spécifique aux adresses 0x11 / 0x13 (NOTE 2)
+    const extraSep = document.getElementById('qs-extra-sep');
+    const extraLbl = document.getElementById('qs-extra-lbl');
+    const extraEl  = document.getElementById('qs-extra');
+    if (extraSep && extraLbl && extraEl) {
+      if ([0x11, 0x13].includes(addr)) {
+        const flVal   = (statusByte >> 5) & 3;
+        const flNames = ['N/U', '135.975 MHz', '136.975 MHz', '151.975 MHz'];
+        extraSep.style.display = '';
+        extraLbl.style.display = '';
+        extraLbl.textContent   = 'FREQ LIM';
+        extraEl.innerHTML      = `<span class="qs-freqlim">${flNames[flVal]}</span>`;
+      } else {
+        extraSep.style.display = 'none';
+        extraLbl.style.display = 'none';
+        extraEl.innerHTML      = '';
+      }
+    }
   } else {
     // Layout standard : V1, V2, V3 + SI bits 1-0
     const v1=( statusByte>>7)&1, v2=(statusByte>>6)&1, v3=(statusByte>>5)&1;
@@ -558,8 +576,9 @@ function updateDataPanel(dataBytes, addr, info) {
   if (freqAddrs.includes(addr) && dataBytes.length >= 2) {
     const decoded = tryDecodeBCDFreq(dataBytes);
     if (decoded) {
+      const freqLabel = [0x11, 0x13].includes(addr) ? 'Fréquence STANDBY (BCD)' : 'Fréquence ACTIVE (BCD)';
       html += `<div class="detail-row">
-        <span class="detail-key">Fréquence BCD</span>
+        <span class="detail-key">${freqLabel}</span>
         <span class="detail-val ok">${decoded}</span>
       </div>`;
     }
