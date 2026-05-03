@@ -120,6 +120,17 @@ const STATUS_FIELDS = {
     { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
     { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
   ],
+  // VHF NAV FREQ — manuel §5, page 30
+  0x20: [
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'PAD',        desc:'Non utilisé' },
+    { bit:5, name:'PAD',        desc:'Non utilisé' },
+    { bit:4, name:'MKR SENS',   desc:'Sensibilité baliseur (1=LOW)' },
+    { bit:3, name:'DME HOLD',   desc:'Maintien DME (1=ON)' },
+    { bit:2, name:'TEST',       desc:'Auto-test (1=test actif)' },
+    { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
+  ],
 };
 
 function getStatusFields(addr) {
@@ -181,6 +192,15 @@ STATUS_FIELD_MAP[0x1F] = [
   { span:1, label:'TST', cls:'csdb-fmap-test'  },
   { span:2, label:'SI',  cls:'csdb-fmap-src'   },
 ];
+STATUS_FIELD_MAP[0x20] = [
+  { span:1, label:'VAL', cls:'csdb-fmap-valid' },
+  { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+  { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+  { span:1, label:'MKR', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'DME', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'SI',  cls:'csdb-fmap-src'   },
+];
 
 const DATA_FIELD_MAP = {
   // VHF COMM FREQ actif — BCD, manuel page 24
@@ -200,13 +220,16 @@ const DATA_FIELD_MAP = {
     [{ span:1, label:'PAD',      cls:'csdb-fmap-pad' }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
     [{ span:8, label:'PAD',        cls:'csdb-fmap-pad' }],
   ],
-  // NAV / DME FREQ — BCD MHz
+  // VHF NAV FREQ — BCD MHz (page 30)
+  // byte2[7:4]=0.1MHz  byte2[3:0]=0.01MHz
+  // byte3[7]=PAD  byte3[6:4]=10MHz  byte3[3:0]=1MHz
   0x20: [
-    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
-    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'0.1 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.01 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',      cls:'csdb-fmap-pad' }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',      cls:'csdb-fmap-pad' }],
+    [{ span:8, label:'PAD',      cls:'csdb-fmap-pad' }],
   ],
+  // DME FREQ
   0x24: [
     [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
     [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
@@ -435,8 +458,12 @@ function renderBytesDisplay(bytes) {
 // ── Banner values ─────────────────────────────────────
 function getBannerValues(addr, data) {
   if (!data || data.length < 3) return [];
-  const freqActive = [0x10, 0x12, 0x20, 0x24, 0x25];
+  const freqActive = [0x10, 0x12, 0x24, 0x25];
   const freqStby   = [0x11, 0x13];
+  if (addr === 0x20) {
+    const f = tryDecodeNavFreq(data);
+    return f ? [{ label:'FREQ ACTIVE', value:f }] : [];
+  }
   if (freqActive.includes(addr)) {
     const f = tryDecodeBCDFreq(data);
     return f ? [{ label:'FREQ ACTIVE', value:f }] : [];
@@ -513,6 +540,10 @@ function updateQuickStatus(statusByte, addr) {
       const srcVal = statusByte & 3;
       const names  = ['N/U', '#1', '#2', 'N/U'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
+    } else if (addr === 0x20) {
+      const srcVal = statusByte & 3;
+      const names  = ['N/U', '#1', '#2', '#3'];
+      siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
     } else {
       siEl.innerHTML = '<span class="qs-off">—</span>';
     }
@@ -588,6 +619,12 @@ function updateStatusPanel(statusByte, addr, info) {
       const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'N/U'];
       html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
     }
+    // Source ident 2-bit (bits 1,0) pour 0x20 — NOTE 1 du manuel
+    if (addr === 0x20) {
+      const srcVal = statusByte & 3;
+      const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'UNITÉ #3'];
+      html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
+    }
     // Source ident 3-bit (bits 3,1,0) pour 0x10–0x13 — NOTE 1 du manuel
     if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
       const b3 = (statusByte >> 3) & 1;
@@ -648,7 +685,7 @@ function updateDataPanel(dataBytes, addr, info) {
   // Try to decode BCD frequency for known comm/nav addresses
   const freqAddrs = [0x10, 0x11, 0x12, 0x13, 0x20, 0x24];
   if (freqAddrs.includes(addr) && dataBytes.length >= 2) {
-    const decoded = tryDecodeBCDFreq(dataBytes);
+    const decoded = addr === 0x20 ? tryDecodeNavFreq(dataBytes) : tryDecodeBCDFreq(dataBytes);
     if (decoded) {
       const freqLabel = [0x11, 0x13].includes(addr) ? 'Fréquence STANDBY (BCD)' : 'Fréquence ACTIVE (BCD)';
       html += `<div class="detail-row">
@@ -676,8 +713,24 @@ function tryDecodeBCDFreq(data) {
     const d10   = (b4 >> 4) & 0x7;   // 10 MHz    — bits 6-4 de l'octet 4 (bit 7=PAD)
     const d1    = (b4 >> 0) & 0xF;   // 1 MHz     — bits 3-0 de l'octet 4
     if ([d0001, d01, d001, d10, d1].some(d => d > 9)) return null;
-    if (d10 === 0 && d1 === 0) return null; // données nulles
+    if (d10 === 0 && d1 === 0) return null;
     return `1${d10}${d1}.${d01}${d001}${d0001} MHz`;
+  } catch { return null; }
+}
+
+// NAV FREQ (0x20) : byte2[7:4]=0.1MHz  byte2[3:0]=0.01MHz
+//                   byte3[6:4]=10MHz   byte3[3:0]=1MHz   (bit 7=PAD)
+function tryDecodeNavFreq(data) {
+  try {
+    if (data.length < 2) return null;
+    const b2 = data[0], b3 = data[1];
+    const d01  = (b2 >> 4) & 0xF;
+    const d001 = (b2 >> 0) & 0xF;
+    const d10  = (b3 >> 4) & 0x7;
+    const d1   = (b3 >> 0) & 0xF;
+    if ([d01, d001, d10, d1].some(d => d > 9)) return null;
+    if (d10 === 0 && d1 === 0) return null;
+    return `1${d10}${d1}.${d01}${d001} MHz`;
   } catch { return null; }
 }
 
