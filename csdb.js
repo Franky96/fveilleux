@@ -430,7 +430,12 @@ function getBannerValues(addr, data) {
   }
   if (addr === 0x1E && data.length >= 2) {
     const dC=(data[0]>>4)&0x7, dD=data[0]&0x7, dA=(data[1]>>4)&0x7, dB=data[1]&0x7;
-    return [{ label:'CODE ATC', value:`${dA}${dB}${dC}${dD}` }];
+    const vals = [{ label:'CODE ATC', value:`${dA}${dB}${dC}${dD}` }];
+    if (data.length >= 4) {
+      const eC=(data[2]>>4)&0x7, eD=data[2]&0x7, eA=(data[3]>>4)&0x7, eB=data[3]&0x7;
+      vals.unshift({ label:'CODE ALT', value:`${eA}${eB}${eC}${eD}` });
+    }
+    return vals;
   }
   if (addr === 0x33 && data.length >= 2) {
     const dD=(data[0]>>4)&0xF, dC=data[0]&0xF, dB=(data[1]>>4)&0xF, dA=data[1]&0xF;
