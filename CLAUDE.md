@@ -12,3 +12,4 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 
 - Développer sur `website-updating`, merger vers `master`, puis push les deux.
 - Ne jamais pusher directement sur `master` sans passer par `website-updating`.
+- **Toujours faire le merge et push après chaque modification.**
