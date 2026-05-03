@@ -153,9 +153,9 @@ const DATA_FIELD_MAP = {
   ],
   // VHF COMM DATA — fréquence standby BCD (même structure que 0x10)
   0x11: [
-    [{ span:4, label:'STBY 0.001', cls:'csdb-fmap-bcd' }, { span:4, label:'PAD',         cls:'csdb-fmap-pad' }],
-    [{ span:4, label:'STBY 0.1',   cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 0.01',   cls:'csdb-fmap-bcd' }],
-    [{ span:1, label:'PAD',        cls:'csdb-fmap-pad' }, { span:3, label:'STBY 10 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'STBY 1', cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }, { span:4, label:'PAD',      cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'0.1 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.01 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',      cls:'csdb-fmap-pad' }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
     [{ span:8, label:'PAD',        cls:'csdb-fmap-pad' }],
   ],
   // NAV / DME FREQ — BCD MHz
