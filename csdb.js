@@ -293,8 +293,12 @@ function renderBytesDisplay(bytes) {
     return;
   }
 
-  // ── Ligne d'en-tête : 2 espaceurs + numéros de bits ─
+  // ── Ligne d'en-tête : chip spacer + P + hex spacer + numéros de bits ─
   container.appendChild(document.createElement('span')); // chip spacer
+  const pHdr = document.createElement('div');
+  pHdr.className = 'bit-num-hdr-p';
+  pHdr.textContent = 'P';
+  container.appendChild(pHdr);
   container.appendChild(document.createElement('span')); // hex spacer
   for (let bit = 7; bit >= 0; bit--) {
     const d = document.createElement('div');
@@ -319,6 +323,14 @@ function renderBytesDisplay(bytes) {
     chip.className = `byte-role-chip role-${role}`;
     chip.textContent = roleLabel;
     container.appendChild(chip);
+
+    const onesCount = byteVal.toString(2).split('').filter(b => b === '1').length;
+    const parityBit = (onesCount % 2 === 0) ? 1 : 0;
+    const parityCell = document.createElement('div');
+    parityCell.className = `byte-bit-parity ${parityBit ? 'p-one' : 'p-zero'}`;
+    parityCell.textContent = parityBit;
+    parityCell.title = `Bit de parité — ${onesCount} bit(s) à 1 (parité ${onesCount % 2 === 0 ? 'paire' : 'impaire'})`;
+    container.appendChild(parityCell);
 
     const hexLbl = document.createElement('span');
     hexLbl.className = `byte-hex-val ${hexCls}`;
@@ -349,6 +361,7 @@ function renderBytesDisplay(bytes) {
 
     // ── Ligne d'étiquettes de champs sous les bits ──
     container.appendChild(document.createElement('span')); // col chip vide
+    container.appendChild(document.createElement('span')); // col parity vide
     container.appendChild(document.createElement('span')); // col hex vide
     const segs = getFieldMapForByte(idx, bytes[0]);
     for (const seg of segs) {
