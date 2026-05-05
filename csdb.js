@@ -142,6 +142,17 @@ const STATUS_FIELDS = {
     { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
     { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
   ],
+  // VOR DATA — manuel §5, page 31
+  0x21: [
+    { bit:7, name:'VOR VALID',  desc:'VOR valide (1=valide)' },
+    { bit:6, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:5, name:'2/5 TUNE',   desc:'Accord 2/5 activé (1=ENAB)' },
+    { bit:4, name:'MKR SENS',   desc:'Sensibilité baliseur (1=LOW)' },
+    { bit:3, name:'ROT FILT',   desc:'Filtre rotation activé (1=ACTV)' },
+    { bit:2, name:'TEST',       desc:'Auto-test (1=test actif)' },
+    { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
+  ],
 };
 
 function getStatusFields(addr) {
@@ -221,6 +232,15 @@ STATUS_FIELD_MAP[0x22] = [
   { span:1, label:'TST', cls:'csdb-fmap-test'  },
   { span:2, label:'SI',  cls:'csdb-fmap-src'   },
 ];
+STATUS_FIELD_MAP[0x21] = [
+  { span:1, label:'VOR', cls:'csdb-fmap-valid' },
+  { span:1, label:'FRQ', cls:'csdb-fmap-valid' },
+  { span:1, label:'2/5', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'MKR', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'ROT', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'SI',  cls:'csdb-fmap-src'   },
+];
 
 const DATA_FIELD_MAP = {
   // VHF COMM FREQ actif — BCD, manuel page 24
@@ -248,6 +268,18 @@ const DATA_FIELD_MAP = {
     [{ span:1, label:'PAD',      cls:'csdb-fmap-pad' }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
     [{ span:8, label:'PAD',      cls:'csdb-fmap-pad' }],
     [{ span:8, label:'PAD',      cls:'csdb-fmap-pad' }],
+  ],
+  // VOR DATA — bearing 12-bit 2's complement ±180° + freq NAV (bytes 4-5)
+  // byte2[7:4]=BRG LSB  byte3[7:0]=BRG MSB  byte4=freq 0.1/0.01 MHz  byte5=freq PAD+10+1 MHz
+  0x21: [
+    [{ span:4, label:'BRG LSB', cls:'csdb-fmap-data' },
+     { span:1, label:'PAD',     cls:'csdb-fmap-pad'  },
+     { span:1, label:'INN',     cls:'csdb-fmap-ctrl' },
+     { span:1, label:'MDL',     cls:'csdb-fmap-ctrl' },
+     { span:1, label:'OUT',     cls:'csdb-fmap-ctrl' }],
+    [{ span:8, label:'BRG MSB', cls:'csdb-fmap-data' }],
+    [{ span:4, label:'0.1 MHz', cls:'csdb-fmap-bcd'  }, { span:4, label:'0.01 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'PAD',     cls:'csdb-fmap-pad'  }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz', cls:'csdb-fmap-bcd' }],
   ],
   // ILS DATA — déviation GS (12-bit 2's complement ±0.80 DDM) et LOC (±0.40 DDM)
   // byte2[7:4]=GS LSB  byte3[7:0]=GS MSB  byte4[7:4]=LOC LSB  byte5[7:0]=LOC MSB
@@ -510,6 +542,17 @@ function getBannerValues(addr, data) {
     const deg = raw > 32767 ? raw - 65536 : raw;
     return [{ label:'CAP MAG', value:`${deg}°` }];
   }
+  if (addr === 0x21 && data.length >= 2) {
+    const brgRaw = ((data[1] << 4) | (data[0] >> 4)) & 0xFFF;
+    const brgSgn = brgRaw >= 2048 ? brgRaw - 4096 : brgRaw;
+    const brgDeg = (brgSgn * 180 / 2048).toFixed(1);
+    const vals = [{ label:'VOR BRG', value:`${brgSgn > 0 ? '+' : ''}${brgDeg}°` }];
+    if (data.length >= 4) {
+      const f = tryDecodeNavFreq([data[2], data[3]]);
+      if (f) vals.unshift({ label:'FREQ', value:f });
+    }
+    return vals;
+  }
   if (addr === 0x22 && data.length >= 4) {
     const gsRaw  = ((data[1] << 4) | (data[0] >> 4)) & 0xFFF;
     const locRaw = ((data[3] << 4) | (data[2] >> 4)) & 0xFFF;
@@ -571,7 +614,13 @@ function updateQuickStatus(statusByte, addr) {
   }
   const fields = getStatusFields(addr);
   if (fields) {
-    if (addr === 0x22) {
+    if (addr === 0x21) {
+      const vor  = (statusByte >> 7) & 1;
+      const freq = (statusByte >> 6) & 1;
+      validEl.innerHTML =
+        `<div class="qs-item"><span class="qs-item-label">VOR</span><span class="qs-item-val ${vor  ? 'qs-on' : 'qs-off'}">${vor  ? 'OUI' : 'NON'}</span></div>` +
+        `<div class="qs-item"><span class="qs-item-label">FREQ</span><span class="qs-item-val ${freq ? 'qs-on' : 'qs-off'}">${freq ? 'OUI' : 'NON'}</span></div>`;
+    } else if (addr === 0x22) {
       const gs  = (statusByte >> 7) & 1;
       const loc = (statusByte >> 6) & 1;
       validEl.innerHTML =
@@ -593,7 +642,7 @@ function updateQuickStatus(statusByte, addr) {
       const srcVal = statusByte & 3;
       const names  = ['N/U', '#1', '#2', 'N/U'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
-    } else if ([0x20, 0x22].includes(addr)) {
+    } else if ([0x20, 0x21, 0x22].includes(addr)) {
       const srcVal = statusByte & 3;
       const names  = ['N/U', '#1', '#2', '#3'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
@@ -672,8 +721,8 @@ function updateStatusPanel(statusByte, addr, info) {
       const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'N/U'];
       html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
     }
-    // Source ident 2-bit (bits 1,0) pour 0x20 / 0x22 — NOTE 1 du manuel
-    if ([0x20, 0x22].includes(addr)) {
+    // Source ident 2-bit (bits 1,0) pour 0x20 / 0x21 / 0x22 — NOTE 1 du manuel
+    if ([0x20, 0x21, 0x22].includes(addr)) {
       const srcVal = statusByte & 3;
       const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'UNITÉ #3'];
       html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
