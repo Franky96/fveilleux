@@ -124,6 +124,13 @@
     .starwars-theme .scifi-tag { background: #2a0a0a; color: #e74c3c; border: 1px solid #c0392b; }
 
   </style>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_p.includes('scifi') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
 </head>
 <body>
   <div id="beta-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#f39c12;color:#000;text-align:center;padding:0.4rem 1rem;font-size:0.82rem;font-weight:bold;letter-spacing:0.05em;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🚧 MODE EN CONSTRUCTION — les modifications ici n'affectent pas le site principal <body>nbsp;·<body>nbsp; <a href="../dashboard.html" style="color:#000;text-decoration:underline;">Retour au site principal</a></div>

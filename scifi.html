@@ -122,6 +122,13 @@
     .starwars-theme .scifi-tag { background: #2a0a0a; color: #e74c3c; border: 1px solid #c0392b; }
 
   </style>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_p.includes('scifi') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
 </head>
 <body>
   <div class="page-container">
