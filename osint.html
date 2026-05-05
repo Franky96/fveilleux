@@ -317,6 +317,13 @@
     .src-tent-item.ok  { color: #4a8a4a; }
     .src-tent-item.fail{ color: #6a3a3a; }
   </style>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_p.includes('osint') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
 </head>
 <body>
 

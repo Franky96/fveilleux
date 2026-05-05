@@ -219,6 +219,13 @@
 
  .verre-svg { display: block; }
  </style>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_p.includes('bieres') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
 </head>
 <body>
  <div class="dashboard-container">
