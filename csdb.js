@@ -520,6 +520,13 @@ function renderBytesDisplay(bytes) {
   });
 }
 
+function mkrHtml(inn, mdl, out) {
+  const s = (active, name, color) => active
+    ? `<span style="color:${color};font-weight:bold">${name}</span>`
+    : `<span style="color:#1e2e1e">—</span>`;
+  return `${s(inn,'INN','#f0f0f0')} · ${s(mdl,'MDL','#facc15')} · ${s(out,'OUT','#60a5fa')}`;
+}
+
 // ── Banner values ─────────────────────────────────────
 function getBannerValues(addr, data) {
   if (!data || data.length < 3) return [];
@@ -552,7 +559,7 @@ function getBannerValues(addr, data) {
       if (f) vals.unshift({ label:'FREQ', value:f });
     }
     const inn=(data[0]>>2)&1, mdl=(data[0]>>1)&1, out=data[0]&1;
-    vals.unshift({ label:'MARKERS', value:[inn?'INN':'—', mdl?'MDL':'—', out?'OUT':'—'].join(' · ') });
+    vals.unshift({ label:'MARKERS', value:mkrHtml(inn,mdl,out) });
     return vals;
   }
   if (addr === 0x22 && data.length >= 4) {
@@ -564,7 +571,7 @@ function getBannerValues(addr, data) {
     const locVal = (locSgn * 0.40 / 2048).toFixed(3);
     const inn=(data[0]>>2)&1, mdl=(data[0]>>1)&1, out=data[0]&1;
     return [
-      { label:'MARKERS', value:[inn?'INN':'—', mdl?'MDL':'—', out?'OUT':'—'].join(' · ') },
+      { label:'MARKERS', value:mkrHtml(inn,mdl,out) },
       { label:'GS DEV',  value:`${gsVal  > 0 ? '+' : ''}${gsVal} DDM`  },
       { label:'LOC DEV', value:`${locVal > 0 ? '+' : ''}${locVal} DDM` },
     ];
