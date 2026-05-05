@@ -153,6 +153,50 @@ const STATUS_FIELDS = {
     { bit:1, name:'SI b1',      desc:'Source ident bit 1 — voir NOTE 1' },
     { bit:0, name:'SI b0',      desc:'Source ident bit 0 — voir NOTE 1' },
   ],
+  // DME FREQ (0x24) — manuel §5, page 33
+  0x24: [
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'AUTO TUNE',  desc:'Accord auto (0=manuel · 1=auto base données) — NOTE 2' },
+    { bit:5, name:'PAD',        desc:'Non utilisé' },
+    { bit:4, name:'MLS/VOR',    desc:'Type ident (1=MLS · 0=VORLOC)' },
+    { bit:3, name:'DME HOLD',   desc:'Maintien DME (1=ON)' },
+    { bit:2, name:'TEST',       desc:'Auto-test (1=ON)' },
+    { bit:1, name:'CH ID b1',   desc:'Channel ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'CH ID b0',   desc:'Channel ident bit 0 — voir NOTE 1' },
+  ],
+  // DME FREQ & DIST (0x25) — manuel §5, page 34
+  0x25: [
+    { bit:7, name:'FREQ VALID', desc:'Fréquence valide (1=valide)' },
+    { bit:6, name:'DIST VALID', desc:'Distance valide (1=valide)' },
+    { bit:5, name:'SRCH/TRCK',  desc:'Recherche/poursuite MSB — voir NOTE 2' },
+    { bit:4, name:'SRCH/TRCK',  desc:'Recherche/poursuite LSB — voir NOTE 2' },
+    { bit:3, name:'DME HOLD',   desc:'Maintien DME (1=ON)' },
+    { bit:2, name:'TEST',       desc:'Auto-test (1=ON)' },
+    { bit:1, name:'CH ID b1',   desc:'Channel ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'CH ID b0',   desc:'Channel ident bit 0 — voir NOTE 1' },
+  ],
+  // DME TTS & VEL (0x26) — manuel §5, page 35
+  0x26: [
+    { bit:7, name:'TTS&VEL VAL', desc:'TTS & vitesse valides (1=valide)' },
+    { bit:6, name:'AUTO TUNE',   desc:'Accord auto (0=manuel · 1=auto) — NOTE 4' },
+    { bit:5, name:'SRCH/TRCK',   desc:'Recherche/poursuite MSB — voir NOTE 2' },
+    { bit:4, name:'SRCH/TRCK',   desc:'Recherche/poursuite LSB — voir NOTE 2' },
+    { bit:3, name:'MLS/VOR',     desc:'Type ident (1=MLS · 0=VORLOC)' },
+    { bit:2, name:'TEST',        desc:'Auto-test (1=ON)' },
+    { bit:1, name:'CH ID b1',    desc:'Channel ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'CH ID b0',    desc:'Channel ident bit 0 — voir NOTE 1' },
+  ],
+  // DME IDENT (0x27) — manuel §5, page 36
+  0x27: [
+    { bit:7, name:'IDENT VALID', desc:'Ident valide (1=valide)' },
+    { bit:6, name:'ANALG/568',   desc:'Source données analogiques/568 — NOTE 3' },
+    { bit:5, name:'SRCH/TRCK',   desc:'Recherche/poursuite MSB — voir NOTE 2' },
+    { bit:4, name:'SRCH/TRCK',   desc:'Recherche/poursuite LSB — voir NOTE 2' },
+    { bit:3, name:'PAD',         desc:'Non utilisé' },
+    { bit:2, name:'TEST',        desc:'Auto-test (1=ON)' },
+    { bit:1, name:'CH ID b1',    desc:'Channel ident bit 1 — voir NOTE 1' },
+    { bit:0, name:'CH ID b0',    desc:'Channel ident bit 0 — voir NOTE 1' },
+  ],
 };
 
 function getStatusFields(addr) {
@@ -241,6 +285,39 @@ STATUS_FIELD_MAP[0x21] = [
   { span:1, label:'TST', cls:'csdb-fmap-test'  },
   { span:2, label:'SI',  cls:'csdb-fmap-src'   },
 ];
+STATUS_FIELD_MAP[0x24] = [
+  { span:1, label:'VAL', cls:'csdb-fmap-valid' },
+  { span:1, label:'AUT', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+  { span:1, label:'MLS', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'HLD', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'CH',  cls:'csdb-fmap-src'   },
+];
+STATUS_FIELD_MAP[0x25] = [
+  { span:1, label:'FRQ', cls:'csdb-fmap-valid' },
+  { span:1, label:'DST', cls:'csdb-fmap-valid' },
+  { span:2, label:'S/T', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'HLD', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'CH',  cls:'csdb-fmap-src'   },
+];
+STATUS_FIELD_MAP[0x26] = [
+  { span:1, label:'VAL', cls:'csdb-fmap-valid' },
+  { span:1, label:'AUT', cls:'csdb-fmap-ctrl'  },
+  { span:2, label:'S/T', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'MLS', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'CH',  cls:'csdb-fmap-src'   },
+];
+STATUS_FIELD_MAP[0x27] = [
+  { span:1, label:'VAL', cls:'csdb-fmap-valid' },
+  { span:1, label:'568', cls:'csdb-fmap-ctrl'  },
+  { span:2, label:'S/T', cls:'csdb-fmap-ctrl'  },
+  { span:1, label:'PAD', cls:'csdb-fmap-pad'   },
+  { span:1, label:'TST', cls:'csdb-fmap-test'  },
+  { span:2, label:'CH',  cls:'csdb-fmap-src'   },
+];
 
 const DATA_FIELD_MAP = {
   // VHF COMM FREQ actif — BCD, manuel page 24
@@ -294,12 +371,33 @@ const DATA_FIELD_MAP = {
      { span:4, label:'PAD',     cls:'csdb-fmap-pad'  }],
     [{ span:8, label:'LOC MSB', cls:'csdb-fmap-data' }],
   ],
-  // DME FREQ
+  // DME FREQ (0x24) — byte2=0.1/0.01 MHz · byte3=MLS+10/1 MHz · byte4=PAD · byte5=RMT+AUTO+PAD
   0x24: [
-    [{ span:4, label:'0.01 MHz',  cls:'csdb-fmap-bcd' }, { span:4, label:'0.001 MHz', cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'1 MHz',     cls:'csdb-fmap-bcd' }, { span:4, label:'0.1 MHz',   cls:'csdb-fmap-bcd' }],
-    [{ span:4, label:'100 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'10 MHz',    cls:'csdb-fmap-bcd' }],
-    [{ span:8, label:'PAD',       cls:'csdb-fmap-pad' }],
+    [{ span:4, label:'0.1 MHz',  cls:'csdb-fmap-bcd'  }, { span:4, label:'0.01 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'MLS',      cls:'csdb-fmap-ctrl'  }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz',  cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'PAD',      cls:'csdb-fmap-pad'   }],
+    [{ span:1, label:'RMT',      cls:'csdb-fmap-ctrl'  }, { span:1, label:'AUTO',     cls:'csdb-fmap-ctrl' }, { span:6, label:'PAD',    cls:'csdb-fmap-pad' }],
+  ],
+  // DME FREQ & DIST (0x25) — bytes 2-3 freq identiques à 0x24 · bytes 4-5 distance 16-bit
+  0x25: [
+    [{ span:4, label:'0.1 MHz',  cls:'csdb-fmap-bcd'  }, { span:4, label:'0.01 MHz', cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'MLS',      cls:'csdb-fmap-ctrl'  }, { span:3, label:'10 MHz',   cls:'csdb-fmap-bcd' }, { span:4, label:'1 MHz',  cls:'csdb-fmap-bcd' }],
+    [{ span:8, label:'DIST LSB', cls:'csdb-fmap-data'  }],
+    [{ span:8, label:'DIST MSB', cls:'csdb-fmap-data'  }],
+  ],
+  // DME TTS & VEL (0x26)
+  0x26: [
+    [{ span:4, label:'1.0 MIN',  cls:'csdb-fmap-bcd'  }, { span:4, label:'0.1 MIN',  cls:'csdb-fmap-bcd' }],
+    [{ span:3, label:'PAD',      cls:'csdb-fmap-pad'   }, { span:1, label:'100 MIN',  cls:'csdb-fmap-bcd' }, { span:4, label:'10 MIN',  cls:'csdb-fmap-bcd' }],
+    [{ span:4, label:'10 KTS',   cls:'csdb-fmap-bcd'  }, { span:4, label:'1 KTS',    cls:'csdb-fmap-bcd' }],
+    [{ span:1, label:'RMT',      cls:'csdb-fmap-ctrl'  }, { span:1, label:'AUTO',     cls:'csdb-fmap-ctrl' }, { span:2, label:'PAD',    cls:'csdb-fmap-pad' }, { span:4, label:'100 KTS', cls:'csdb-fmap-bcd' }],
+  ],
+  // DME IDENT (0x27) — 4 bytes ASCII 7-bit, bit 7 = validité (0=valide)
+  0x27: [
+    [{ span:1, label:'VAL', cls:'csdb-fmap-valid' }, { span:7, label:'ASCII 1', cls:'csdb-fmap-data' }],
+    [{ span:1, label:'VAL', cls:'csdb-fmap-valid' }, { span:7, label:'ASCII 2', cls:'csdb-fmap-data' }],
+    [{ span:1, label:'VAL', cls:'csdb-fmap-valid' }, { span:7, label:'ASCII 3', cls:'csdb-fmap-data' }],
+    [{ span:1, label:'VAL', cls:'csdb-fmap-valid' }, { span:7, label:'ASCII 4', cls:'csdb-fmap-data' }],
   ],
   // Transpondeur ATC — Code BCD 0-7 (bytes 2-3) + Altitude Gray code (bytes 4-5)
   // Chaque nibble : PAD(bit7/3) + 3 bits BCD/Gray (bits 6-4 / 2-0)
@@ -338,7 +436,7 @@ const DATA_FIELD_MAP = {
 DATA_FIELD_MAP[0x12] = DATA_FIELD_MAP[0x10];
 DATA_FIELD_MAP[0x13] = DATA_FIELD_MAP[0x11];
 DATA_FIELD_MAP[0x1F] = DATA_FIELD_MAP[0x1E];
-DATA_FIELD_MAP[0x25] = DATA_FIELD_MAP[0x24];
+// 0x25 a sa propre entrée (bytes 4-5 = distance, pas PAD)
 
 function getFieldMapForByte(byteIdx, addr) {
   if (byteIdx === 0) {
@@ -530,7 +628,43 @@ function mkrHtml(inn, mdl, out) {
 // ── Banner values ─────────────────────────────────────
 function getBannerValues(addr, data) {
   if (!data || data.length < 3) return [];
-  const freqActive = [0x10, 0x12, 0x24, 0x25];
+  if (addr === 0x24 && data.length >= 2) {
+    const f = tryDecodeNavFreq([data[0], data[1] & 0x7F]);
+    return f ? [{ label:'FREQ DME', value:f }] : [];
+  }
+  if (addr === 0x25 && data.length >= 2) {
+    const vals = [];
+    if (data.length >= 4) {
+      const dist = (data[3] << 8) | data[2];
+      vals.push({ label:'DIST DME', value:`${dist} NM` });
+    }
+    const f = tryDecodeNavFreq([data[0], data[1] & 0x7F]);
+    if (f) vals.unshift({ label:'FREQ DME', value:f });
+    return vals;
+  }
+  if (addr === 0x26 && data.length >= 3) {
+    const min1   = (data[0] >> 4) & 0xF;
+    const min01  = data[0] & 0xF;
+    const min100 = (data[1] >> 4) & 0x1;
+    const min10  = data[1] & 0xF;
+    const tts    = min100*100 + min10*10 + min1 + min01*0.1;
+    const vals   = [{ label:'TTS', value:`${tts.toFixed(1)} min` }];
+    if (data.length >= 4) {
+      const kts10  = (data[2] >> 4) & 0xF;
+      const kts1   = data[2] & 0xF;
+      const kts100 = data[3] & 0xF;
+      vals.push({ label:'VEL DME', value:`${kts100*100 + kts10*10 + kts1} kts` });
+    }
+    return vals;
+  }
+  if (addr === 0x27 && data.length >= 1) {
+    let ident = '';
+    for (let i = 0; i < Math.min(4, data.length); i++) {
+      if ((data[i] >> 7) === 0) { const c = data[i] & 0x7F; if (c >= 0x20 && c < 0x7F) ident += String.fromCharCode(c); }
+    }
+    return ident.trim() ? [{ label:'IDENT DME', value:ident.trim() }] : [];
+  }
+  const freqActive = [0x10, 0x12];
   const freqStby   = [0x11, 0x13];
   if (addr === 0x20) {
     const f = tryDecodeNavFreq(data);
@@ -631,6 +765,12 @@ function updateQuickStatus(statusByte, addr, data = []) {
       validEl.innerHTML =
         `<div class="qs-item"><span class="qs-item-label">VOR</span><span class="qs-item-val ${vor  ? 'qs-on' : 'qs-off'}">${vor  ? 'OUI' : 'NON'}</span></div>` +
         `<div class="qs-item"><span class="qs-item-label">FREQ</span><span class="qs-item-val ${freq ? 'qs-on' : 'qs-off'}">${freq ? 'OUI' : 'NON'}</span></div>`;
+    } else if (addr === 0x25) {
+      const freq = (statusByte >> 7) & 1;
+      const dist = (statusByte >> 6) & 1;
+      validEl.innerHTML =
+        `<div class="qs-item"><span class="qs-item-label">FREQ</span><span class="qs-item-val ${freq ? 'qs-on' : 'qs-off'}">${freq ? 'OUI' : 'NON'}</span></div>` +
+        `<div class="qs-item"><span class="qs-item-label">DIST</span><span class="qs-item-val ${dist ? 'qs-on' : 'qs-off'}">${dist ? 'OUI' : 'NON'}</span></div>`;
     } else if (addr === 0x22) {
       const gs  = (statusByte >> 7) & 1;
       const loc = (statusByte >> 6) & 1;
@@ -657,6 +797,10 @@ function updateQuickStatus(statusByte, addr, data = []) {
       const srcVal = statusByte & 3;
       const names  = ['N/U', '#1', '#2', '#3'];
       siEl.innerHTML = `<span class="qs-si">${names[srcVal]}</span>`;
+    } else if ([0x24, 0x25, 0x26, 0x27].includes(addr)) {
+      const chVal  = statusByte & 3;
+      const chNames = ['PRESET', '#1', '#2', 'REMOTE'];
+      siEl.innerHTML = `<span class="qs-si">${chNames[chVal]}</span>`;
     } else {
       siEl.innerHTML = '<span class="qs-off">—</span>';
     }
@@ -672,6 +816,13 @@ function updateQuickStatus(statusByte, addr, data = []) {
         extraLbl.style.display = '';
         extraLbl.textContent   = 'FREQ LIM';
         extraEl.innerHTML      = `<span class="qs-freqlim">${flNames[flVal]}</span>`;
+      } else if ([0x25, 0x26, 0x27].includes(addr)) {
+        const stVal   = (statusByte >> 4) & 3;
+        const stNames = ['NO SQUIT', 'SEARCH', 'PRE-TRK', 'TRACK'];
+        extraSep.style.display = '';
+        extraLbl.style.display = '';
+        extraLbl.textContent   = 'SRCH/TRK';
+        extraEl.innerHTML      = `<span class="qs-freqlim">${stNames[stVal]}</span>`;
       } else {
         extraSep.style.display = 'none';
         extraLbl.style.display = 'none';
@@ -738,6 +889,12 @@ function updateStatusPanel(statusByte, addr, info) {
       const srcNames = ['N/U', 'UNITÉ #1', 'UNITÉ #2', 'UNITÉ #3'];
       html += row('Source ident (b1,b0)', `${srcVal.toString(2).padStart(2,'0')}b = ${srcNames[srcVal]}`, 'accent');
     }
+    // Channel ident 2-bit (bits 1,0) pour DME 0x24-0x27 — NOTE 1 du manuel
+    if ([0x24, 0x25, 0x26, 0x27].includes(addr)) {
+      const chVal = statusByte & 3;
+      const chNames = ['PRESET (ou REMOTE)', '#1 ACTIVE', '#2 ACTIVE', 'REMOTE ONLY'];
+      html += row('Channel ident (b1,b0)', `${chVal.toString(2).padStart(2,'0')}b = ${chNames[chVal]}`, 'accent');
+    }
     // Source ident 3-bit (bits 3,1,0) pour 0x10–0x13 — NOTE 1 du manuel
     if ([0x10, 0x11, 0x12, 0x13].includes(addr)) {
       const b3 = (statusByte >> 3) & 1;
@@ -798,14 +955,22 @@ function updateDataPanel(dataBytes, addr, info) {
   // Try to decode BCD frequency for known comm/nav addresses
   const freqAddrs = [0x10, 0x11, 0x12, 0x13, 0x20, 0x24];
   if (freqAddrs.includes(addr) && dataBytes.length >= 2) {
-    const decoded = addr === 0x20 ? tryDecodeNavFreq(dataBytes) : tryDecodeBCDFreq(dataBytes);
+    const decoded = [0x20, 0x24].includes(addr)
+      ? tryDecodeNavFreq(addr === 0x24 ? [dataBytes[0], dataBytes[1] & 0x7F] : dataBytes)
+      : tryDecodeBCDFreq(dataBytes);
     if (decoded) {
       const freqLabel = [0x11, 0x13].includes(addr) ? 'Fréquence STANDBY (BCD)' : 'Fréquence ACTIVE (BCD)';
-      html += `<div class="detail-row">
-        <span class="detail-key">${freqLabel}</span>
-        <span class="detail-val ok">${decoded}</span>
-      </div>`;
+      html += `<div class="detail-row"><span class="detail-key">${freqLabel}</span><span class="detail-val ok">${decoded}</span></div>`;
     }
+  }
+  if (addr === 0x27 && dataBytes.length >= 1) {
+    let ident = '';
+    for (let i = 0; i < Math.min(4, dataBytes.length); i++) {
+      const valid = (dataBytes[i] >> 7) === 0;
+      const c = dataBytes[i] & 0x7F;
+      ident += valid && c >= 0x20 && c < 0x7F ? String.fromCharCode(c) : '?';
+    }
+    html += `<div class="detail-row"><span class="detail-key">Ident ASCII</span><span class="detail-val ok">${ident.trim()}</span></div>`;
   }
 
   body.innerHTML = html;
