@@ -391,7 +391,7 @@ function decodeBlock(bytes) {
   updateAddressPanel(addr, info);
   updateStatusPanel(status, addr, info);
   updateDataPanel(data, addr, info);
-  updateQuickStatus(status, addr);
+  updateQuickStatus(status, addr, data);
   highlightCatalogRow(addr);
 }
 
@@ -551,6 +551,8 @@ function getBannerValues(addr, data) {
       const f = tryDecodeNavFreq([data[2], data[3]]);
       if (f) vals.unshift({ label:'FREQ', value:f });
     }
+    const inn=(data[0]>>2)&1, mdl=(data[0]>>1)&1, out=data[0]&1;
+    vals.unshift({ label:'MARKERS', value:[inn?'INN':'—', mdl?'MDL':'—', out?'OUT':'—'].join(' · ') });
     return vals;
   }
   if (addr === 0x22 && data.length >= 4) {
@@ -560,7 +562,9 @@ function getBannerValues(addr, data) {
     const locSgn = locRaw >= 2048 ? locRaw - 4096 : locRaw;
     const gsVal  = (gsSgn  * 0.80 / 2048).toFixed(3);
     const locVal = (locSgn * 0.40 / 2048).toFixed(3);
+    const inn=(data[0]>>2)&1, mdl=(data[0]>>1)&1, out=data[0]&1;
     return [
+      { label:'MARKERS', value:[inn?'INN':'—', mdl?'MDL':'—', out?'OUT':'—'].join(' · ') },
       { label:'GS DEV',  value:`${gsVal  > 0 ? '+' : ''}${gsVal} DDM`  },
       { label:'LOC DEV', value:`${locVal > 0 ? '+' : ''}${locVal} DDM` },
     ];
@@ -604,7 +608,7 @@ function updateAddressBanner(addr, info, data) {
 }
 
 // ── Quick status (Valid + SI) ─────────────────────────
-function updateQuickStatus(statusByte, addr) {
+function updateQuickStatus(statusByte, addr, data = []) {
   const validEl = document.getElementById('qs-valid');
   const siEl    = document.getElementById('qs-si');
   if (statusByte === null) {
