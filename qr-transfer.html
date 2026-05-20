@@ -714,7 +714,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
@@ -852,13 +852,18 @@ function makeScanner(videoEl, onFound) {
 
 /* ----- QR RENDERING ----- */
 
-async function renderQR(canvas, text, opts) {
-  await QRCode.toCanvas(canvas, text, {
-    errorCorrectionLevel: opts.ecc,
-    margin: 2,
-    width: opts.size,
-    color: { dark: '#000000', light: '#ffffff' }
-  });
+function renderQR(canvas, text, opts) {
+  const qr = qrcode(0, opts.ecc);
+  qr.addData(text, 'Byte');
+  qr.make();
+  const count = qr.getModuleCount();
+  const cellSize = Math.max(2, Math.floor(opts.size / count));
+  canvas.width  = cellSize * count;
+  canvas.height = cellSize * count;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  qr.renderTo2dContext(ctx, cellSize);
 }
 
 /* ====================================================================
@@ -935,7 +940,7 @@ $('#tx-start').addEventListener('click', async () => {
   // user-gesture frame — otherwise Safari/Chrome mobile silently deny it.
   const cameraPromise = startCamera($('#tx-video'), txFacing);
 
-  try { await txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); }
+  try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); }
 
   try {
     await cameraPromise;
@@ -945,7 +950,7 @@ $('#tx-start').addEventListener('click', async () => {
   }
 });
 
-async function txRenderCurrent() {
+function txRenderCurrent() {
   let frame;
   if (tx.currentIdx === -1) {
     frame = { t:'H', n: tx.file.name, s: tx.file.size, f: tx.totalFrames, m: tx.file.type || 'application/octet-stream' };
@@ -969,7 +974,7 @@ async function txRenderCurrent() {
   if (!$('#tx-qr-frame').querySelector('canvas')) {
     $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
   }
-  await renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: QR_DATA_ECC, size: QR_DATA_SIZE });
+  renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: QR_DATA_ECC, size: QR_DATA_SIZE });
 }
 
 function onTxScan(data) {
@@ -1075,7 +1080,7 @@ async function onRxScan(data) {
   if (msg.t === 'H') {
     if (rx.meta && rx.meta.n === msg.n && rx.meta.s === msg.s) {
       // duplicate HELLO — re-ack
-      await rxRenderAck(-1);
+      rxRenderAck(-1);
       return;
     }
     // fresh HELLO
@@ -1089,7 +1094,7 @@ async function onRxScan(data) {
     $('#rx-tel-frames').textContent = msg.f;
     $('#rx-frame-label').textContent = `HELLO reçu · attente DATA 0`;
     beep();
-    await rxRenderAck(-1);
+    rxRenderAck(-1);
     return;
   }
 
@@ -1099,7 +1104,7 @@ async function onRxScan(data) {
     if (i < 0 || i >= rx.meta.f) return;
     if (rx.chunks[i]) {
       // already received — re-ack
-      await rxRenderAck(i);
+      rxRenderAck(i);
       return;
     }
     // accept new chunk
@@ -1114,7 +1119,7 @@ async function onRxScan(data) {
     const bytes = rx.receivedCount * CHUNK_BYTES;
     $('#rx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
     $('#rx-frame-label').textContent = `DATA ${i + 1} / ${rx.meta.f} reçue`;
-    await rxRenderAck(i);
+    rxRenderAck(i);
 
     if (rx.receivedCount === rx.meta.f) {
       rxComplete();
@@ -1122,7 +1127,7 @@ async function onRxScan(data) {
   }
 }
 
-async function rxRenderAck(i) {
+function rxRenderAck(i) {
   if (rx.lastAckIdx === i) {
     // already showing this ack — skip re-render
     return;
@@ -1133,7 +1138,7 @@ async function rxRenderAck(i) {
   if (!$('#rx-qr-frame').querySelector('canvas')) {
     $('#rx-qr-frame').innerHTML = '<canvas></canvas>';
   }
-  await renderQR($('#rx-qr-frame').querySelector('canvas'), ack, { ecc: QR_ACK_ECC, size: QR_ACK_SIZE });
+  renderQR($('#rx-qr-frame').querySelector('canvas'), ack, { ecc: QR_ACK_ECC, size: QR_ACK_SIZE });
   $('#rx-ack-label').textContent = i === -1 ? 'ACK HELLO' : `ACK ${i}`;
 }
 
