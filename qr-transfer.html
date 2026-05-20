@@ -691,6 +691,7 @@
 
       <div class="controls">
         <button class="btn danger" id="tx-stop">■ Arrêter</button>
+        <button class="btn" id="tx-pause-btn" style="display:none;">⏸ Pause</button>
         <button class="btn primary" id="tx-send-btn" style="display:none;">▶ Démarrer l'envoi</button>
         <button class="btn primary" id="tx-done-btn" style="display:none;">✓ Terminer</button>
       </div>
@@ -983,6 +984,7 @@ const tx = {
   intervalId: null,
   scanner: null,
   qrCanvas: $('#tx-qr'),
+  paused: false,
 };
 
 function txBuildFileInfo() {
@@ -1056,8 +1058,24 @@ $('#tx-start').addEventListener('click', async () => {
 
 $('#tx-send-btn').addEventListener('click', () => {
   $('#tx-send-btn').style.display = 'none';
+  $('#tx-pause-btn').style.display = '';
   tx.currentIdx = 0;
   txNoAckAdvance();
+});
+
+$('#tx-pause-btn').addEventListener('click', () => {
+  if (tx.paused) {
+    tx.paused = false;
+    $('#tx-pause-btn').textContent = '⏸ Pause';
+    $('#tx-pause-btn').className = 'btn';
+    tx.currentIdx++;
+    txNoAckAdvance();
+  } else {
+    tx.paused = true;
+    if (tx.intervalId) { clearTimeout(tx.intervalId); tx.intervalId = null; }
+    $('#tx-pause-btn').textContent = '▶ Reprendre';
+    $('#tx-pause-btn').className = 'btn primary';
+  }
 });
 
 function txNoAckAdvance() {
@@ -1106,9 +1124,10 @@ function txRenderCurrent() {
 
 function txEnterBrowseMode() {
   $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--blue)">PARCOURS</b>';
+  $('#tx-pause-btn').style.display = 'none';
   $('#tx-browse').style.display = '';
   $('#tx-done-btn').style.display = '';
-  tx.currentIdx = 0;
+  tx.currentIdx = tx.totalFrames - 1;  // stay on last frame
   txBrowseRender();
 }
 
@@ -1181,10 +1200,14 @@ function txReset(toMode) {
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
   tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
+  tx.paused = false;
   // Restore no-ack layout changes
   $('#tx-cam-panel').style.display = '';
   document.querySelector('#tx-active .stage').classList.remove('solo');
   $('#tx-send-btn').style.display = 'none';
+  $('#tx-pause-btn').style.display = 'none';
+  $('#tx-pause-btn').textContent = '⏸ Pause';
+  $('#tx-pause-btn').className = 'btn';
   $('#tx-done-btn').style.display = 'none';
   $('#tx-browse').style.display = 'none';
   $('#tx-pre').style.display = 'block';
