@@ -568,6 +568,13 @@
 
   #scan-canvas { display: none; }
 </style>
+<script>
+  const _permsQr = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_permsQr.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
 </head>
 <body>
 
@@ -579,6 +586,7 @@
       <div class="brand"><span class="dot"></span>QR-LINK</div>
       <div class="status-strip">
         <span>SYS <b>READY</b></span>
+        <a href="informatique.html" class="btn" style="font-size:11px;padding:4px 10px;">← Informatique</a>
       </div>
     </div>
 
@@ -686,6 +694,18 @@
         <button class="btn primary" id="tx-send-btn" style="display:none;">▶ Démarrer l'envoi</button>
         <button class="btn primary" id="tx-done-btn" style="display:none;">✓ Terminer</button>
       </div>
+
+      <div id="tx-browse" style="display:none;background:var(--bg-panel);border:1px solid var(--border);padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;">
+          <button class="btn" id="tx-browse-restart">↺ Début</button>
+          <button class="btn" id="tx-browse-prev" style="padding:8px 18px;font-size:16px;">◀</button>
+          <input type="number" id="tx-browse-jump" min="1"
+            style="width:68px;font-family:'JetBrains Mono',monospace;font-size:1rem;background:var(--bg-deep);border:1px solid var(--border-hot);color:var(--text);padding:7px 6px;text-align:center;-moz-appearance:textfield;outline:none;">
+          <button class="btn" id="tx-browse-next" style="padding:8px 18px;font-size:16px;">▶</button>
+          <span id="tx-browse-total" style="font-size:12px;color:var(--text-dim);letter-spacing:0.08em;"></span>
+        </div>
+        <div style="font-size:10px;color:var(--text-mute);text-align:center;margin-top:8px;letter-spacing:0.08em;text-transform:uppercase;">← → pour naviguer au clavier</div>
+      </div>
     </div>
   </section>
 
@@ -746,9 +766,9 @@
       </div>
 
       <div class="controls" id="rx-force-wrap" style="display:none;">
-        <button class="btn primary" id="rx-nack-btn">⟳ Demander renvoi</button>
-        <span id="rx-nack-info" style="font-size:11px;color:var(--text-dim);align-self:center;letter-spacing:0.05em;"></span>
-        <button class="btn" id="rx-force-btn">⬇ Reconstituer (incomplet)</button>
+        <button class="btn" id="rx-nack-btn">⚠ Voir manquantes</button>
+        <span id="rx-nack-info" style="font-size:11px;color:var(--text-dim);align-self:center;letter-spacing:0.05em;max-width:420px;line-height:1.5;"></span>
+        <button class="btn primary" id="rx-force-btn">⬇ Reconstituer (incomplet)</button>
       </div>
 
       <div id="rx-complete" style="display: none;" class="complete-card">
@@ -963,8 +983,6 @@ const tx = {
   intervalId: null,
   scanner: null,
   qrCanvas: $('#tx-qr'),
-  retryQueue: [],    // frame indices to resend after NACK
-  retryQueuePos: 0,
 };
 
 function txBuildFileInfo() {
@@ -1056,28 +1074,6 @@ function txNoAckAdvance() {
   }
 }
 
-function txNoAckRetryAdvance() {
-  if (tx.retryQueuePos >= tx.retryQueue.length) {
-    // All retries sent — go back to NACK watch
-    tx.currentIdx = tx.totalFrames;
-    tx.retryQueue = [];
-    tx.retryQueuePos = 0;
-    txRenderCurrent();
-    return;
-  }
-  tx.currentIdx = tx.retryQueue[tx.retryQueuePos];
-  try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); return; }
-  const total = tx.retryQueue.length;
-  const sent = tx.retryQueuePos + 1;
-  $('#tx-frame-label').textContent = `RETRY ${sent} / ${total}`;
-  $('#tx-mode-label').innerHTML = `STATE <b style="color:var(--amber)">RETRY</b>`;
-  const pct = Math.round((sent / total) * 100);
-  $('#tx-progress').style.width = pct + '%';
-  $('#tx-progress-text').textContent = pct + '%';
-  tx.retryQueuePos++;
-  tx.intervalId = setTimeout(txNoAckRetryAdvance, TX_NOACK_FRAME_MS);
-}
-
 function txRenderCurrent() {
   let frame;
   if (tx.currentIdx === -1) {
@@ -1089,17 +1085,7 @@ function txRenderCurrent() {
     $('#tx-qr-frame').innerHTML = `<div style="font-family:'Major Mono Display'; color:var(--green); font-size:32px; text-align:center;">[OK]<div style="font-family:'JetBrains Mono'; font-size:11px; letter-spacing:0.15em; margin-top:8px; color:var(--text-dim)">TRANSFERT TERMINÉ</div></div>`;
     toast('Transfert complété ✓', 'ok');
     if (noAckMode) {
-      // Re-show camera panel so TX can scan a NACK from RX
-      $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">NACK WATCH</b>';
-      $('#tx-cam-panel').style.display = '';
-      document.querySelector('#tx-active .stage').classList.remove('solo');
-      $('#tx-ack-label').textContent = 'attente NACK…';
-      $('#tx-done-btn').style.display = '';
-      if (!tx.scanner) {
-        startCamera($('#tx-video'), txFacing)
-          .then(() => { tx.scanner = makeScanner($('#tx-video'), onTxScan); })
-          .catch(e => toast('Caméra — ' + (e.message || e), 'err'));
-      }
+      txEnterBrowseMode();
     } else {
       $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
       if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
@@ -1118,27 +1104,52 @@ function txRenderCurrent() {
   renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: tx.ecc, size: QR_DATA_SIZE });
 }
 
+function txEnterBrowseMode() {
+  $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--blue)">PARCOURS</b>';
+  $('#tx-browse').style.display = '';
+  $('#tx-done-btn').style.display = '';
+  tx.currentIdx = 0;
+  txBrowseRender();
+}
+
+function txBrowseRender() {
+  const i = tx.currentIdx;
+  const frame = { t:'D', i, d: tx.chunks[i] };
+  if (!$('#tx-qr-frame').querySelector('canvas')) {
+    $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
+  }
+  renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: tx.ecc, size: QR_DATA_SIZE });
+  $('#tx-frame-label').textContent = `PARCOURS ${i + 1} / ${tx.totalFrames}`;
+  const jumpEl = $('#tx-browse-jump');
+  if (parseInt(jumpEl.value) !== i + 1) jumpEl.value = i + 1;
+  $('#tx-browse-total').textContent = `/ ${tx.totalFrames}`;
+}
+
+$('#tx-browse-prev').addEventListener('click', () => {
+  if (tx.currentIdx > 0) { tx.currentIdx--; txBrowseRender(); }
+});
+$('#tx-browse-next').addEventListener('click', () => {
+  if (tx.currentIdx < tx.totalFrames - 1) { tx.currentIdx++; txBrowseRender(); }
+});
+$('#tx-browse-restart').addEventListener('click', () => {
+  tx.currentIdx = 0; txBrowseRender();
+});
+$('#tx-browse-jump').addEventListener('change', () => {
+  const v = parseInt($('#tx-browse-jump').value);
+  if (!isNaN(v)) {
+    tx.currentIdx = Math.max(0, Math.min(tx.totalFrames - 1, v - 1));
+    txBrowseRender();
+  }
+});
+document.addEventListener('keydown', e => {
+  if ($('#tx-browse').style.display === 'none') return;
+  if (e.key === 'ArrowLeft'  && tx.currentIdx > 0)                  { tx.currentIdx--; txBrowseRender(); }
+  if (e.key === 'ArrowRight' && tx.currentIdx < tx.totalFrames - 1) { tx.currentIdx++; txBrowseRender(); }
+});
+
 function onTxScan(data) {
   let msg;
   try { msg = JSON.parse(data); } catch { return; }
-
-  if (msg.t === 'N') {
-    if (!noAckMode) return;
-    const missing = (msg.r || []).filter(i => Number.isInteger(i) && i >= 0 && i < tx.totalFrames);
-    if (!missing.length) return;
-    beep();
-    $('#tx-ack-label').innerHTML = `<span style="color:var(--amber)">NACK ${missing.length} trame(s)</span>`;
-    if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
-    stopCamera($('#tx-video'));
-    $('#tx-cam-panel').style.display = 'none';
-    document.querySelector('#tx-active .stage').classList.add('solo');
-    $('#tx-done-btn').style.display = 'none';
-    tx.retryQueue = missing;
-    tx.retryQueuePos = 0;
-    toast(`Renvoi de ${missing.length} trame(s)…`);
-    txNoAckRetryAdvance();
-    return;
-  }
 
   if (msg.t !== 'A') return;
   const expected = tx.currentIdx;
@@ -1170,12 +1181,12 @@ function txReset(toMode) {
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
   tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
-  tx.retryQueue = []; tx.retryQueuePos = 0;
   // Restore no-ack layout changes
   $('#tx-cam-panel').style.display = '';
   document.querySelector('#tx-active .stage').classList.remove('solo');
   $('#tx-send-btn').style.display = 'none';
   $('#tx-done-btn').style.display = 'none';
+  $('#tx-browse').style.display = 'none';
   $('#tx-pre').style.display = 'block';
   $('#tx-active').style.display = 'none';
   $('#tx-drop').classList.remove('has-file');
@@ -1200,7 +1211,6 @@ const rx = {
   startedAt: 0,
   scanner: null,
   lastAckIdx: null,
-  nackShown: false,
 };
 
 $('#no-ack-toggle').addEventListener('click', () => {
@@ -1225,7 +1235,6 @@ async function rxStart() {
   rx.expectedNext = -1;
   rx.startedAt = 0;
   rx.lastAckIdx = null;
-  rx.nackShown = false;
   $('#rx-tel-name').textContent = '—';
   $('#rx-tel-size').textContent = '—';
   $('#rx-tel-frames').textContent = '—';
@@ -1298,13 +1307,6 @@ async function onRxScan(data) {
         $('#rx-progress').style.width = txPct + '%';
         $('#rx-progress-text').textContent = txPct + '%';
       }
-      // Retransmission started — hide NACK QR and go back to full-width camera
-      if (rx.nackShown) {
-        rx.nackShown = false;
-        $('#rx-qr-panel').style.display = 'none';
-        document.querySelector('#rx-active .stage').classList.add('solo');
-        $('#rx-nack-info').textContent = '';
-      }
     }
 
     if (rx.chunks[i]) {
@@ -1346,11 +1348,6 @@ function rxRenderAck(i) {
 
 function rxComplete() {
   $('#rx-force-wrap').style.display = 'none';
-  if (noAckMode && rx.nackShown) {
-    rx.nackShown = false;
-    $('#rx-qr-panel').style.display = 'none';
-    document.querySelector('#rx-active .stage').classList.add('solo');
-  }
   // assemble file — filter missing chunks (no-ack mode may have gaps)
   const totalLen = rx.chunks.reduce((a, c) => a + (c ? c.length : 0), 0);
   const merged = new Uint8Array(totalLen);
@@ -1372,7 +1369,7 @@ function rxComplete() {
   toast('Fichier reconstruit ✓', 'ok');
 }
 
-function rxRequestNack() {
+function rxShowMissing() {
   if (!rx.meta) return;
   const missing = [];
   for (let i = 0; i < rx.meta.f; i++) {
@@ -1382,25 +1379,13 @@ function rxRequestNack() {
     rxComplete();
     return;
   }
-  const nackStr = JSON.stringify({ t: 'N', r: missing });
-  try {
-    $('#rx-qr-panel').style.display = '';
-    document.querySelector('#rx-active .stage').classList.remove('solo');
-    $('#rx-qr-frame').classList.remove('empty');
-    if (!$('#rx-qr-frame').querySelector('canvas')) {
-      $('#rx-qr-frame').innerHTML = '<canvas></canvas>';
-    }
-    renderQR($('#rx-qr-frame').querySelector('canvas'), nackStr, { ecc: 'L', size: QR_DATA_SIZE });
-    rx.nackShown = true;
-    $('#rx-ack-label').textContent = `NACK · ${missing.length} manquantes`;
-    $('#rx-nack-info').textContent = `${missing.length} / ${rx.meta.f} trames manquantes`;
-    toast(`${missing.length} trame(s) manquante(s) — montrez le code à l'émetteur`);
-  } catch (e) {
-    toast('NACK trop grand — veuillez relancer le transfert', 'err');
-  }
+  const limit = 40;
+  const nums = missing.slice(0, limit).map(i => i + 1).join(', ');
+  const more = missing.length > limit ? ` … (+${missing.length - limit})` : '';
+  $('#rx-nack-info').textContent = `Trames manquantes (${missing.length}/${rx.meta.f}) : ${nums}${more}`;
 }
 
-$('#rx-nack-btn').addEventListener('click', rxRequestNack);
+$('#rx-nack-btn').addEventListener('click', rxShowMissing);
 
 $('#rx-back').addEventListener('click', () => {
   if (rx.scanner) { rx.scanner.stop(); rx.scanner = null; }
