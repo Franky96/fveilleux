@@ -885,10 +885,14 @@ $('#tx-start').addEventListener('click', async () => {
   tx.ackedCount = 0;
   tx.startedAt = performance.now();
 
+  // getUserMedia must be called before any await to stay within the
+  // user-gesture frame — otherwise Safari/Chrome mobile silently deny it.
+  const cameraPromise = startCamera($('#tx-video'));
+
   await txRenderCurrent();
 
   try {
-    await startCamera($('#tx-video'));
+    await cameraPromise;
     tx.scanner = makeScanner($('#tx-video'), onTxScan);
   } catch (e) {
     toast('Caméra indisponible — ' + (e.message || e), 'err');
