@@ -1049,7 +1049,7 @@ function txNoAckAdvance() {
     $('#tx-progress-text').textContent = pct + '%';
     tx.intervalId = setTimeout(() => { tx.currentIdx++; txNoAckAdvance(); }, TX_NOACK_FRAME_MS);
   }
-});
+}
 
 function txRenderCurrent() {
   let frame;
