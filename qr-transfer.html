@@ -691,7 +691,6 @@
 
       <div class="controls">
         <button class="btn danger" id="tx-stop">■ Arrêter</button>
-        <button class="btn" id="tx-pause-btn" style="display:none;">⏸ Pause</button>
         <button class="btn primary" id="tx-send-btn" style="display:none;">▶ Démarrer l'envoi</button>
         <button class="btn primary" id="tx-done-btn" style="display:none;">✓ Terminer</button>
       </div>
@@ -703,6 +702,7 @@
           <input type="number" id="tx-browse-jump" min="1"
             style="width:68px;font-family:'JetBrains Mono',monospace;font-size:1rem;background:var(--bg-deep);border:1px solid var(--border-hot);color:var(--text);padding:7px 6px;text-align:center;-moz-appearance:textfield;outline:none;">
           <button class="btn" id="tx-browse-next" style="padding:8px 18px;font-size:16px;">▶</button>
+          <button class="btn" id="tx-browse-play">▶ Auto</button>
           <span id="tx-browse-total" style="font-size:12px;color:var(--text-dim);letter-spacing:0.08em;"></span>
         </div>
         <div style="font-size:10px;color:var(--text-mute);text-align:center;margin-top:8px;letter-spacing:0.08em;text-transform:uppercase;">← → pour naviguer au clavier</div>
@@ -984,7 +984,7 @@ const tx = {
   intervalId: null,
   scanner: null,
   qrCanvas: $('#tx-qr'),
-  paused: false,
+  browsePlayId: null,
 };
 
 function txBuildFileInfo() {
@@ -1058,24 +1058,8 @@ $('#tx-start').addEventListener('click', async () => {
 
 $('#tx-send-btn').addEventListener('click', () => {
   $('#tx-send-btn').style.display = 'none';
-  $('#tx-pause-btn').style.display = '';
   tx.currentIdx = 0;
   txNoAckAdvance();
-});
-
-$('#tx-pause-btn').addEventListener('click', () => {
-  if (tx.paused) {
-    tx.paused = false;
-    $('#tx-pause-btn').textContent = '⏸ Pause';
-    $('#tx-pause-btn').className = 'btn';
-    tx.currentIdx++;
-    txNoAckAdvance();
-  } else {
-    tx.paused = true;
-    if (tx.intervalId) { clearTimeout(tx.intervalId); tx.intervalId = null; }
-    $('#tx-pause-btn').textContent = '▶ Reprendre';
-    $('#tx-pause-btn').className = 'btn primary';
-  }
 });
 
 function txNoAckAdvance() {
@@ -1124,10 +1108,9 @@ function txRenderCurrent() {
 
 function txEnterBrowseMode() {
   $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--blue)">PARCOURS</b>';
-  $('#tx-pause-btn').style.display = 'none';
   $('#tx-browse').style.display = '';
   $('#tx-done-btn').style.display = '';
-  tx.currentIdx = tx.totalFrames - 1;  // stay on last frame
+  tx.currentIdx = tx.totalFrames - 1;
   txBrowseRender();
 }
 
@@ -1143,6 +1126,26 @@ function txBrowseRender() {
   if (parseInt(jumpEl.value) !== i + 1) jumpEl.value = i + 1;
   $('#tx-browse-total').textContent = `/ ${tx.totalFrames}`;
 }
+
+function txBrowsePlay() {
+  tx.browsePlayId = setInterval(() => {
+    tx.currentIdx = (tx.currentIdx + 1) % tx.totalFrames;
+    txBrowseRender();
+  }, TX_NOACK_FRAME_MS);
+  $('#tx-browse-play').textContent = '⏸ Pause';
+  $('#tx-browse-play').className = 'btn primary';
+}
+
+function txBrowsePause() {
+  clearInterval(tx.browsePlayId);
+  tx.browsePlayId = null;
+  $('#tx-browse-play').textContent = '▶ Auto';
+  $('#tx-browse-play').className = 'btn';
+}
+
+$('#tx-browse-play').addEventListener('click', () => {
+  if (tx.browsePlayId) txBrowsePause(); else txBrowsePlay();
+});
 
 $('#tx-browse-prev').addEventListener('click', () => {
   if (tx.currentIdx > 0) { tx.currentIdx--; txBrowseRender(); }
@@ -1200,14 +1203,13 @@ function txReset(toMode) {
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
   tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
-  tx.paused = false;
+  if (tx.browsePlayId) { clearInterval(tx.browsePlayId); tx.browsePlayId = null; }
+  $('#tx-browse-play').textContent = '▶ Auto';
+  $('#tx-browse-play').className = 'btn';
   // Restore no-ack layout changes
   $('#tx-cam-panel').style.display = '';
   document.querySelector('#tx-active .stage').classList.remove('solo');
   $('#tx-send-btn').style.display = 'none';
-  $('#tx-pause-btn').style.display = 'none';
-  $('#tx-pause-btn').textContent = '⏸ Pause';
-  $('#tx-pause-btn').className = 'btn';
   $('#tx-done-btn').style.display = 'none';
   $('#tx-browse').style.display = 'none';
   $('#tx-pre').style.display = 'block';
