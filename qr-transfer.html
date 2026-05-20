@@ -302,6 +302,24 @@
   }
   .cam-flip-btn:hover { border-color: var(--amber); color: var(--amber); }
 
+  .qr-mode-btn {
+    background: none;
+    border: 1px solid var(--border-hot);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .qr-mode-btn.active {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(255, 176, 0, 0.08);
+  }
+
   .qr-frame.empty {
     background: var(--bg-elev);
     color: var(--text-mute);
@@ -586,7 +604,8 @@
         </div>
       </label>
       <input type="file" id="tx-file" style="display:none">
-      <div class="controls" style="margin-top: 16px; justify-content: flex-end;">
+      <div class="controls" style="margin-top: 16px; justify-content: space-between; align-items: center;">
+        <button class="qr-mode-btn" id="tx-simple-toggle" title="Réduit les données par trame pour des QR codes plus simples à lire">◻ QR simple</button>
         <button class="btn primary" id="tx-start" disabled>▶ Démarrer transmission</button>
       </div>
     </div>
@@ -657,6 +676,18 @@
       <div class="stage">
         <div class="panel">
           <div class="panel-header">
+            <div><span class="led send" id="rx-ack-led"></span>ACK ÉMIS</div>
+            <div id="rx-ack-label">—</div>
+          </div>
+          <div class="panel-body">
+            <div class="qr-frame empty" id="rx-qr-frame">
+              En attente de la première trame
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
             <div><span class="led live"></span>SCAN DATA</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="cam-flip-btn" id="rx-cam-flip">⟳ caméra</button>
@@ -668,18 +699,6 @@
               <video id="rx-video" autoplay playsinline muted></video>
               <div class="scanline"></div>
               <div class="corners"><span></span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <div><span class="led send" id="rx-ack-led"></span>ACK ÉMIS</div>
-            <div id="rx-ack-label">—</div>
-          </div>
-          <div class="panel-body">
-            <div class="qr-frame empty" id="rx-qr-frame">
-              En attente de la première trame
             </div>
           </div>
         </div>
@@ -727,11 +746,13 @@
      ACK    { t:"A", i:index }   (i = -1 acknowledges HELLO)
    ==================================================================== */
 
-const CHUNK_BYTES = 1100;            // raw bytes per chunk before base64
+const CHUNK_BYTES        = 1100;     // raw bytes per chunk — normal mode
+const CHUNK_BYTES_SIMPLE = 300;      // raw bytes per chunk — simple QR mode
 const QR_DATA_SIZE = 460;            // px for data QR rendering
-const QR_ACK_SIZE = 280;             // px for ack QR rendering
-const QR_DATA_ECC = 'L';             // low ECC = max capacity
-const QR_ACK_ECC = 'M';              // small payload, higher ECC ok
+const QR_ACK_SIZE  = 280;            // px for ack QR rendering
+const QR_DATA_ECC        = 'L';      // normal: low ECC = max capacity
+const QR_DATA_ECC_SIMPLE = 'M';      // simple: medium ECC for robustness
+const QR_ACK_ECC   = 'M';           // small payload, higher ECC ok
 const SCAN_MAX_DIM = 800;            // downscale scanning canvas for perf
 
 /* ----- DOM ----- */
@@ -869,8 +890,9 @@ function renderQR(canvas, text, opts) {
 /* ====================================================================
    TRANSMITTER
    ==================================================================== */
-let txFacing = 'environment';
-let rxFacing = 'environment';
+let txFacing     = 'environment';
+let rxFacing     = 'environment';
+let txSimpleMode = false;
 
 async function flipTxCamera() {
   if (!tx.scanner) return;
@@ -896,36 +918,57 @@ async function flipRxCamera() {
 
 const tx = {
   file: null,
-  chunks: [],       // base64 strings
+  buf: null,         // raw Uint8Array of the file
+  chunks: [],        // base64 strings
   totalFrames: 0,
   currentIdx: -1,   // -1 = HELLO, 0..n-1 = DATA[i], n = done
   startedAt: 0,
   ackedCount: 0,
+  ecc: QR_DATA_ECC,
   scanner: null,
   qrCanvas: $('#tx-qr'),
 };
+
+function txBuildFileInfo() {
+  const chunkSize = txSimpleMode ? CHUNK_BYTES_SIMPLE : CHUNK_BYTES;
+  const frames = Math.ceil(tx.buf.length / chunkSize);
+  const mode = txSimpleMode ? ' · mode simple' : '';
+  $('#tx-drop-content').innerHTML = `
+    <div class="file-info">
+      <div><b>${tx.file.name}</b></div>
+      <div class="meta">${fmtBytes(tx.file.size)} · ${frames} trames${mode}</div>
+    </div>`;
+}
 
 async function onTxFileSelected(e) {
   const f = e.target.files[0];
   if (!f) return;
   tx.file = f;
-  const buf = new Uint8Array(await f.arrayBuffer());
-  tx.chunks = [];
-  for (let i = 0; i < buf.length; i += CHUNK_BYTES) {
-    tx.chunks.push(uint8ToBase64(buf.subarray(i, i + CHUNK_BYTES)));
-  }
-  tx.totalFrames = tx.chunks.length;
+  tx.buf = new Uint8Array(await f.arrayBuffer());
   $('#tx-drop').classList.add('has-file');
-  $('#tx-drop-content').innerHTML = `
-    <div class="file-info">
-      <div><b>${f.name}</b></div>
-      <div class="meta">${fmtBytes(f.size)} · ${tx.totalFrames} trames de ${CHUNK_BYTES} octets</div>
-    </div>`;
+  txBuildFileInfo();
   $('#tx-start').disabled = false;
 }
 $('#tx-file').addEventListener('change', onTxFileSelected);
 
+$('#tx-simple-toggle').addEventListener('click', () => {
+  txSimpleMode = !txSimpleMode;
+  const btn = $('#tx-simple-toggle');
+  btn.classList.toggle('active', txSimpleMode);
+  btn.textContent = txSimpleMode ? '◼ QR simple' : '◻ QR simple';
+  if (tx.buf) txBuildFileInfo();
+});
+
 $('#tx-start').addEventListener('click', async () => {
+  // Rebuild chunks for the active mode
+  const chunkSize = txSimpleMode ? CHUNK_BYTES_SIMPLE : CHUNK_BYTES;
+  tx.ecc = txSimpleMode ? QR_DATA_ECC_SIMPLE : QR_DATA_ECC;
+  tx.chunks = [];
+  for (let i = 0; i < tx.buf.length; i += chunkSize) {
+    tx.chunks.push(uint8ToBase64(tx.buf.subarray(i, i + chunkSize)));
+  }
+  tx.totalFrames = tx.chunks.length;
+
   $('#tx-pre').style.display = 'none';
   $('#tx-active').style.display = 'flex';
   $('#tx-tel-name').textContent = tx.file.name;
@@ -974,7 +1017,7 @@ function txRenderCurrent() {
   if (!$('#tx-qr-frame').querySelector('canvas')) {
     $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
   }
-  renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: QR_DATA_ECC, size: QR_DATA_SIZE });
+  renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: tx.ecc, size: QR_DATA_SIZE });
 }
 
 function onTxScan(data) {
@@ -1007,7 +1050,7 @@ $('#tx-stop').addEventListener('click', () => txReset(true));
 function txReset(toMode) {
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
-  tx.file = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0;
+  tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
   $('#tx-pre').style.display = 'block';
   $('#tx-active').style.display = 'none';
   $('#tx-drop').classList.remove('has-file');
