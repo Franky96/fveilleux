@@ -320,6 +320,26 @@
     background: rgba(255, 176, 0, 0.08);
   }
 
+  .no-ack-btn {
+    background: none;
+    border: 1px solid var(--border-hot);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .no-ack-btn.active {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(95, 255, 143, 0.06);
+  }
+
+  .stage.solo { grid-template-columns: 1fr; }
+
   .qr-frame.empty {
     background: var(--bg-elev);
     color: var(--text-mute);
@@ -583,6 +603,11 @@
           <p>Scanner les codes QR d'un émetteur, valider chaque trame et reconstruire le fichier.</p>
         </button>
       </div>
+
+      <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.2rem;text-align:center;">
+        <button class="no-ack-btn" id="no-ack-toggle">⚡ Mode sans confirmation</button>
+        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Envoi continu sans validation trame par trame — plus rapide, sans garantie</p>
+      </div>
     </div>
   </section>
 
@@ -624,7 +649,7 @@
           </div>
         </div>
 
-        <div class="panel">
+        <div class="panel" id="tx-cam-panel">
           <div class="panel-header">
             <div><span class="led live"></span>SCAN ACK</div>
             <div style="display:flex;align-items:center;gap:8px;">
@@ -658,6 +683,7 @@
 
       <div class="controls">
         <button class="btn danger" id="tx-stop">■ Arrêter</button>
+        <button class="btn primary" id="tx-send-btn" style="display:none;">▶ Démarrer l'envoi</button>
       </div>
     </div>
   </section>
@@ -674,7 +700,7 @@
 
     <div id="rx-active" style="display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0;">
       <div class="stage">
-        <div class="panel">
+        <div class="panel" id="rx-qr-panel">
           <div class="panel-header">
             <div><span class="led send" id="rx-ack-led"></span>ACK ÉMIS</div>
             <div id="rx-ack-label">—</div>
@@ -718,6 +744,10 @@
         <span class="progress-text" id="rx-progress-text">0%</span>
       </div>
 
+      <div class="controls" id="rx-force-wrap" style="display:none;">
+        <button class="btn primary" id="rx-force-btn">⬇ Reconstituer (incomplet)</button>
+      </div>
+
       <div id="rx-complete" style="display: none;" class="complete-card">
         <div class="glyph">[OK]</div>
         <h3>Transfert complété</h3>
@@ -746,14 +776,15 @@
      ACK    { t:"A", i:index }   (i = -1 acknowledges HELLO)
    ==================================================================== */
 
-const CHUNK_BYTES        = 1100;     // raw bytes per chunk — normal mode
-const CHUNK_BYTES_SIMPLE = 300;      // raw bytes per chunk — simple QR mode
-const QR_DATA_SIZE = 460;            // px for data QR rendering
-const QR_ACK_SIZE  = 280;            // px for ack QR rendering
-const QR_DATA_ECC        = 'L';      // normal: low ECC = max capacity
-const QR_DATA_ECC_SIMPLE = 'M';      // simple: medium ECC for robustness
-const QR_ACK_ECC   = 'M';           // small payload, higher ECC ok
-const SCAN_MAX_DIM = 800;            // downscale scanning canvas for perf
+const CHUNK_BYTES          = 1100;   // raw bytes per chunk — normal mode
+const CHUNK_BYTES_SIMPLE   = 300;    // raw bytes per chunk — simple QR mode
+const QR_DATA_SIZE         = 460;    // px for data QR rendering
+const QR_ACK_SIZE          = 280;    // px for ack QR rendering
+const QR_DATA_ECC          = 'L';   // normal: low ECC = max capacity
+const QR_DATA_ECC_SIMPLE   = 'M';   // simple: medium ECC for robustness
+const QR_ACK_ECC           = 'M';   // small payload, higher ECC ok
+const SCAN_MAX_DIM         = 800;   // downscale scanning canvas for perf
+const TX_NOACK_FRAME_MS    = 1200;  // ms per DATA frame in no-ack mode
 
 /* ----- DOM ----- */
 const $ = sel => document.querySelector(sel);
@@ -893,6 +924,7 @@ function renderQR(canvas, text, opts) {
 let txFacing     = 'environment';
 let rxFacing     = 'environment';
 let txSimpleMode = false;
+let noAckMode    = false;
 
 async function flipTxCamera() {
   if (!tx.scanner) return;
@@ -925,6 +957,7 @@ const tx = {
   startedAt: 0,
   ackedCount: 0,
   ecc: QR_DATA_ECC,
+  intervalId: null,
   scanner: null,
   qrCanvas: $('#tx-qr'),
 };
@@ -977,19 +1010,44 @@ $('#tx-start').addEventListener('click', async () => {
   tx.currentIdx = -1;
   tx.ackedCount = 0;
   tx.startedAt = performance.now();
-  txFacing = 'environment';
-
-  // getUserMedia must be called before any await to stay within the
-  // user-gesture frame — otherwise Safari/Chrome mobile silently deny it.
-  const cameraPromise = startCamera($('#tx-video'), txFacing);
 
   try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); }
 
-  try {
-    await cameraPromise;
-    tx.scanner = makeScanner($('#tx-video'), onTxScan);
-  } catch (e) {
-    toast('Caméra indisponible — ' + (e.message || e), 'err');
+  if (noAckMode) {
+    // Hide camera panel, make QR panel full width, show send button
+    $('#tx-cam-panel').style.display = 'none';
+    document.querySelector('#tx-active .stage').classList.add('solo');
+    $('#tx-send-btn').style.display = '';
+  } else {
+    txFacing = 'environment';
+    // getUserMedia before any await to stay within the user-gesture frame
+    const cameraPromise = startCamera($('#tx-video'), txFacing);
+    try {
+      await cameraPromise;
+      tx.scanner = makeScanner($('#tx-video'), onTxScan);
+    } catch (e) {
+      toast('Caméra indisponible — ' + (e.message || e), 'err');
+    }
+  }
+});
+
+$('#tx-send-btn').addEventListener('click', () => {
+  $('#tx-send-btn').style.display = 'none';
+  tx.currentIdx = 0;
+  txNoAckAdvance();
+});
+
+function txNoAckAdvance() {
+  try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); return; }
+  if (tx.currentIdx < tx.totalFrames) {
+    const elapsed = (performance.now() - tx.startedAt) / 1000;
+    const bytes = Math.max(0, tx.currentIdx) * (txSimpleMode ? CHUNK_BYTES_SIMPLE : CHUNK_BYTES);
+    $('#tx-tel-acked').textContent = tx.currentIdx;
+    $('#tx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
+    const pct = Math.round((tx.currentIdx / tx.totalFrames) * 100);
+    $('#tx-progress').style.width = pct + '%';
+    $('#tx-progress-text').textContent = pct + '%';
+    tx.intervalId = setTimeout(() => { tx.currentIdx++; txNoAckAdvance(); }, TX_NOACK_FRAME_MS);
   }
 });
 
@@ -1048,9 +1106,14 @@ $('#tx-back').addEventListener('click', () => txReset(true));
 $('#tx-stop').addEventListener('click', () => txReset(true));
 
 function txReset(toMode) {
+  if (tx.intervalId) { clearTimeout(tx.intervalId); tx.intervalId = null; }
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
   tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
+  // Restore no-ack layout changes
+  $('#tx-cam-panel').style.display = '';
+  document.querySelector('#tx-active .stage').classList.remove('solo');
+  $('#tx-send-btn').style.display = 'none';
   $('#tx-pre').style.display = 'block';
   $('#tx-active').style.display = 'none';
   $('#tx-drop').classList.remove('has-file');
@@ -1076,6 +1139,11 @@ const rx = {
   scanner: null,
   lastAckIdx: null,
 };
+
+$('#no-ack-toggle').addEventListener('click', () => {
+  noAckMode = !noAckMode;
+  $('#no-ack-toggle').classList.toggle('active', noAckMode);
+});
 
 screens.mode.addEventListener('click', e => {
   const btn = e.target.closest('.mode-btn');
@@ -1106,7 +1174,16 @@ async function rxStart() {
   $('#rx-qr-frame').classList.add('empty');
   $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
   $('#rx-complete').style.display = 'none';
+  $('#rx-force-wrap').style.display = 'none';
   $('#rx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SCAN</b>';
+  // No-ack layout: hide ACK QR panel, full-width camera
+  if (noAckMode) {
+    $('#rx-qr-panel').style.display = 'none';
+    document.querySelector('#rx-active .stage').classList.add('solo');
+  } else {
+    $('#rx-qr-panel').style.display = '';
+    document.querySelector('#rx-active .stage').classList.remove('solo');
+  }
   rxFacing = 'environment';
   try {
     await startCamera($('#rx-video'), rxFacing);
@@ -1122,11 +1199,9 @@ async function onRxScan(data) {
 
   if (msg.t === 'H') {
     if (rx.meta && rx.meta.n === msg.n && rx.meta.s === msg.s) {
-      // duplicate HELLO — re-ack
-      rxRenderAck(-1);
+      if (!noAckMode) rxRenderAck(-1);
       return;
     }
-    // fresh HELLO
     rx.meta = { n: msg.n, s: msg.s, f: msg.f, m: msg.m || 'application/octet-stream' };
     rx.chunks = new Array(msg.f);
     rx.receivedCount = 0;
@@ -1135,22 +1210,24 @@ async function onRxScan(data) {
     $('#rx-tel-name').textContent = msg.n;
     $('#rx-tel-size').textContent = fmtBytes(msg.s);
     $('#rx-tel-frames').textContent = msg.f;
-    $('#rx-frame-label').textContent = `HELLO reçu · attente DATA 0`;
+    $('#rx-frame-label').textContent = `HELLO reçu · attente DATA`;
     beep();
-    rxRenderAck(-1);
+    if (noAckMode) {
+      $('#rx-force-wrap').style.display = '';
+    } else {
+      rxRenderAck(-1);
+    }
     return;
   }
 
   if (msg.t === 'D') {
-    if (!rx.meta) return;  // no HELLO yet
+    if (!rx.meta) return;
     const i = msg.i;
     if (i < 0 || i >= rx.meta.f) return;
     if (rx.chunks[i]) {
-      // already received — re-ack
-      rxRenderAck(i);
+      if (!noAckMode) rxRenderAck(i);
       return;
     }
-    // accept new chunk
     rx.chunks[i] = base64ToUint8(msg.d);
     rx.receivedCount++;
     beep();
@@ -1162,11 +1239,8 @@ async function onRxScan(data) {
     const bytes = rx.receivedCount * CHUNK_BYTES;
     $('#rx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
     $('#rx-frame-label').textContent = `DATA ${i + 1} / ${rx.meta.f} reçue`;
-    rxRenderAck(i);
-
-    if (rx.receivedCount === rx.meta.f) {
-      rxComplete();
-    }
+    if (!noAckMode) rxRenderAck(i);
+    if (rx.receivedCount === rx.meta.f) rxComplete();
   }
 }
 
@@ -1186,11 +1260,12 @@ function rxRenderAck(i) {
 }
 
 function rxComplete() {
-  // assemble file
-  const totalLen = rx.chunks.reduce((a, c) => a + c.length, 0);
+  $('#rx-force-wrap').style.display = 'none';
+  // assemble file — filter missing chunks (no-ack mode may have gaps)
+  const totalLen = rx.chunks.reduce((a, c) => a + (c ? c.length : 0), 0);
   const merged = new Uint8Array(totalLen);
   let off = 0;
-  for (const c of rx.chunks) { merged.set(c, off); off += c.length; }
+  for (const c of rx.chunks) { if (c) { merged.set(c, off); off += c.length; } }
   // sanity: trim/expand to declared size
   const final = merged.length === rx.meta.s ? merged : merged.subarray(0, rx.meta.s);
   const blob = new Blob([final], { type: rx.meta.m });
@@ -1212,6 +1287,8 @@ $('#rx-back').addEventListener('click', () => {
   stopCamera($('#rx-video'));
   showScreen('mode');
 });
+
+$('#rx-force-btn').addEventListener('click', () => rxComplete());
 
 $('#tx-cam-flip').addEventListener('click', flipTxCamera);
 $('#rx-cam-flip').addEventListener('click', flipRxCamera);
