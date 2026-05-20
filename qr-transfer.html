@@ -1224,6 +1224,17 @@ async function onRxScan(data) {
     if (!rx.meta) return;
     const i = msg.i;
     if (i < 0 || i >= rx.meta.f) return;
+
+    // In no-ack mode: advance progress bar from frame index encoded in QR (monotone)
+    if (noAckMode) {
+      const txPct = Math.round(((i + 1) / rx.meta.f) * 100);
+      const curPct = parseFloat($('#rx-progress').style.width) || 0;
+      if (txPct > curPct) {
+        $('#rx-progress').style.width = txPct + '%';
+        $('#rx-progress-text').textContent = txPct + '%';
+      }
+    }
+
     if (rx.chunks[i]) {
       if (!noAckMode) rxRenderAck(i);
       return;
@@ -1231,9 +1242,11 @@ async function onRxScan(data) {
     rx.chunks[i] = base64ToUint8(msg.d);
     rx.receivedCount++;
     beep();
-    const pct = Math.round((rx.receivedCount / rx.meta.f) * 100);
-    $('#rx-progress').style.width = pct + '%';
-    $('#rx-progress-text').textContent = pct + '%';
+    if (!noAckMode) {
+      const pct = Math.round((rx.receivedCount / rx.meta.f) * 100);
+      $('#rx-progress').style.width = pct + '%';
+      $('#rx-progress-text').textContent = pct + '%';
+    }
     $('#rx-tel-received').textContent = rx.receivedCount + ' / ' + rx.meta.f;
     const elapsed = (performance.now() - rx.startedAt) / 1000;
     const bytes = rx.receivedCount * CHUNK_BYTES;
