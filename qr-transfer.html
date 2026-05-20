@@ -284,9 +284,23 @@
   .qr-frame canvas, .qr-frame img {
     display: block;
     width: 100% !important;
-    height: auto !important;
+    aspect-ratio: 1 / 1;
     image-rendering: pixelated;
   }
+
+  .cam-flip-btn {
+    background: none;
+    border: 1px solid var(--border-hot);
+    color: var(--text-dim);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .cam-flip-btn:hover { border-color: var(--amber); color: var(--amber); }
 
   .qr-frame.empty {
     background: var(--bg-elev);
@@ -594,7 +608,10 @@
         <div class="panel">
           <div class="panel-header">
             <div><span class="led live"></span>SCAN ACK</div>
-            <div id="tx-ack-label">attente…</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="cam-flip-btn" id="tx-cam-flip">⟳ caméra</button>
+              <span id="tx-ack-label">attente…</span>
+            </div>
           </div>
           <div class="panel-body">
             <div class="camera-frame">
@@ -641,7 +658,10 @@
         <div class="panel">
           <div class="panel-header">
             <div><span class="led live"></span>SCAN DATA</div>
-            <div id="rx-frame-label">en attente HELLO…</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="cam-flip-btn" id="rx-cam-flip">⟳ caméra</button>
+              <span id="rx-frame-label">en attente HELLO…</span>
+            </div>
           </div>
           <div class="panel-body">
             <div class="camera-frame">
@@ -775,10 +795,10 @@ function base64ToUint8(b64) {
 
 /* ----- CAMERA + SCAN ----- */
 
-async function startCamera(videoEl) {
+async function startCamera(videoEl, facing = 'environment') {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: {
-      facingMode: { ideal: 'environment' },
+      facingMode: { ideal: facing },
       width:  { ideal: 1280 },
       height: { ideal: 720 }
     },
@@ -844,6 +864,31 @@ async function renderQR(canvas, text, opts) {
 /* ====================================================================
    TRANSMITTER
    ==================================================================== */
+let txFacing = 'environment';
+let rxFacing = 'environment';
+
+async function flipTxCamera() {
+  if (!tx.scanner) return;
+  txFacing = txFacing === 'environment' ? 'user' : 'environment';
+  tx.scanner.stop(); tx.scanner = null;
+  stopCamera($('#tx-video'));
+  try {
+    await startCamera($('#tx-video'), txFacing);
+    tx.scanner = makeScanner($('#tx-video'), onTxScan);
+  } catch (e) { toast('Caméra indisponible — ' + (e.message || e), 'err'); }
+}
+
+async function flipRxCamera() {
+  if (!rx.scanner) return;
+  rxFacing = rxFacing === 'environment' ? 'user' : 'environment';
+  rx.scanner.stop(); rx.scanner = null;
+  stopCamera($('#rx-video'));
+  try {
+    await startCamera($('#rx-video'), rxFacing);
+    rx.scanner = makeScanner($('#rx-video'), onRxScan);
+  } catch (e) { toast('Caméra indisponible — ' + (e.message || e), 'err'); }
+}
+
 const tx = {
   file: null,
   chunks: [],       // base64 strings
@@ -884,12 +929,13 @@ $('#tx-start').addEventListener('click', async () => {
   tx.currentIdx = -1;
   tx.ackedCount = 0;
   tx.startedAt = performance.now();
+  txFacing = 'environment';
 
   // getUserMedia must be called before any await to stay within the
   // user-gesture frame — otherwise Safari/Chrome mobile silently deny it.
-  const cameraPromise = startCamera($('#tx-video'));
+  const cameraPromise = startCamera($('#tx-video'), txFacing);
 
-  await txRenderCurrent();
+  try { await txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); }
 
   try {
     await cameraPromise;
@@ -1013,8 +1059,9 @@ async function rxStart() {
   $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
   $('#rx-complete').style.display = 'none';
   $('#rx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SCAN</b>';
+  rxFacing = 'environment';
   try {
-    await startCamera($('#rx-video'));
+    await startCamera($('#rx-video'), rxFacing);
     rx.scanner = makeScanner($('#rx-video'), onRxScan);
   } catch (e) {
     toast('Caméra indisponible — ' + (e.message || e), 'err');
@@ -1117,6 +1164,9 @@ $('#rx-back').addEventListener('click', () => {
   stopCamera($('#rx-video'));
   showScreen('mode');
 });
+
+$('#tx-cam-flip').addEventListener('click', flipTxCamera);
+$('#rx-cam-flip').addEventListener('click', flipRxCamera);
 
 /* ====================================================================
    INIT
