@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e14">
+<title>QR-LINK — Transmission optique par code QR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0e14;
+    --bg-panel: #11171f;
+    --bg-elev: #1a212d;
+    --border: #2a3441;
+    --border-hot: #3d4a5c;
+    --text: #d6deeb;
+    --text-dim: #7a8599;
+    --text-mute: #4a5566;
+    --amber: #ffb000;
+    --amber-glow: #ffcc44;
+    --green: #5fff8f;
+    --red: #ff5c5c;
+    --blue: #5fb3ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255, 176, 0, 0.04), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(95, 179, 255, 0.03), transparent 40%),
+      repeating-linear-gradient(
+        0deg,
+        transparent 0,
+        transparent 2px,
+        rgba(255,255,255,0.005) 2px,
+        rgba(255,255,255,0.005) 3px
+      );
+  }
+
+  /* ============ LAYOUT ============ */
+
+  .app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .screen { display: none; flex: 1; flex-direction: column; gap: 16px; }
+  .screen.active { display: flex; }
+
+  /* ============ HEADER ============ */
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    position: relative;
+  }
+  .topbar::before, .topbar::after {
+    content: '';
+    position: absolute;
+    width: 10px; height: 10px;
+    border-color: var(--amber);
+    border-style: solid;
+  }
+  .topbar::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .topbar::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+  .brand {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 16px;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+  }
+  .brand .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    margin-right: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-strip {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .status-strip span b { color: var(--text); font-weight: 500; }
+
+  /* ============ MODE SELECTION ============ */
+
+  .mode-select {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    padding: 32px 16px;
+  }
+
+  .hero {
+    text-align: center;
+    max-width: 600px;
+  }
+  .hero h1 {
+    font-family: 'Major Mono Display', monospace;
+    font-size: clamp(28px, 5vw, 48px);
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 8px;
+    text-shadow: 0 0 24px rgba(255, 176, 0, 0.25);
+  }
+  .hero .subtitle {
+    color: var(--text-dim);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    line-height: 1.6;
+  }
+  .hero .subtitle b { color: var(--text); font-weight: 500; }
+
+  .mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 600px;
+  }
+  @media (max-width: 500px) {
+    .mode-buttons { grid-template-columns: 1fr; }
+  }
+
+  .mode-btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    padding: 32px 24px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .mode-btn:hover {
+    border-color: var(--amber);
+    background: var(--bg-elev);
+    transform: translateY(-2px);
+  }
+  .mode-btn::before, .mode-btn::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    border: 1px solid var(--amber);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .mode-btn::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .mode-btn::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+  .mode-btn:hover::before, .mode-btn:hover::after { opacity: 1; }
+
+  .mode-btn .glyph {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 32px;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: block;
+  }
+  .mode-btn h3 {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .mode-btn p {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ============ PANELS ============ */
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel::before, .panel::after {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    border-color: var(--border-hot);
+    border-style: solid;
+  }
+  .panel::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .panel::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.01);
+  }
+  .panel-header .led {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .led.idle { background: var(--text-mute); }
+  .led.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1s infinite; }
+  .led.send { background: var(--amber); box-shadow: 0 0 6px var(--amber); animation: pulse 1s infinite; }
+  .led.err  { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  .panel-body {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    min-height: 0;
+  }
+
+  /* ============ TRANSFER SCREEN ============ */
+
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+  }
+  @media (max-width: 800px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+
+  .qr-frame {
+    background: #fff;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .qr-frame canvas, .qr-frame img {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    image-rendering: pixelated;
+  }
+
+  .qr-frame.empty {
+    background: var(--bg-elev);
+    color: var(--text-mute);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    text-align: center;
+    padding: 24px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .camera-frame {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+  }
+  .camera-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .camera-frame .scanline {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    box-shadow: 0 0 12px var(--amber);
+    animation: scan 2.5s linear infinite;
+  }
+  @keyframes scan {
+    0% { top: 0; }
+    50% { top: calc(100% - 2px); }
+    100% { top: 0; }
+  }
+  .camera-frame .corners::before,
+  .camera-frame .corners::after,
+  .camera-frame .corners > span::before,
+  .camera-frame .corners > span::after {
+    content: '';
+    position: absolute;
+    width: 24px; height: 24px;
+    border: 2px solid var(--amber);
+    pointer-events: none;
+  }
+  .camera-frame .corners::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+  .camera-frame .corners::after  { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+  .camera-frame .corners > span::before { content:''; bottom: 8px; left: 8px; border-width: 0 0 2px 2px; position: absolute; }
+  .camera-frame .corners > span::after  { content:''; bottom: 8px; right: 8px; border-width: 0 2px 2px 0; position: absolute; }
+
+  /* ============ CONTROLS ============ */
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--amber); color: var(--amber); }
+  .btn.primary { background: var(--amber); color: var(--bg-deep); border-color: var(--amber); font-weight: 500; }
+  .btn.primary:hover { background: var(--amber-glow); border-color: var(--amber-glow); color: var(--bg-deep); }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: var(--border); color: var(--text); }
+
+  /* ============ TELEMETRY ============ */
+
+  .telemetry {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .telemetry .cell {
+    background: var(--bg-panel);
+    padding: 10px 14px;
+  }
+  .telemetry .cell .label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 4px;
+  }
+  .telemetry .cell .value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .telemetry .cell .value.amber { color: var(--amber); }
+  .telemetry .cell .value.green { color: var(--green); }
+
+  /* ============ PROGRESS ============ */
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-elev);
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar > div {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--amber), var(--amber-glow));
+    box-shadow: 0 0 8px rgba(255, 176, 0, 0.5);
+    transition: width 0.2s ease;
+  }
+  .progress-text { color: var(--text); font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+
+  /* ============ FILE PICKER ============ */
+
+  .file-zone {
+    border: 1px dashed var(--border-hot);
+    background: var(--bg-elev);
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .file-zone:hover {
+    border-color: var(--amber);
+    background: rgba(255, 176, 0, 0.03);
+  }
+  .file-zone.has-file {
+    border-style: solid;
+    border-color: var(--green);
+    text-align: left;
+  }
+  .file-zone .glyph {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 28px;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .file-zone .hint {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .file-zone .file-info { color: var(--text); font-size: 13px; }
+  .file-zone .file-info .meta { color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+  .file-zone input { display: none; }
+
+  /* ============ NOTIFICATION ============ */
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-panel);
+    border: 1px solid var(--amber);
+    color: var(--text);
+    padding: 12px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: transform 0.3s ease;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: var(--red); color: var(--red); }
+  .toast.ok { border-color: var(--green); color: var(--green); }
+
+  /* ============ MODAL ============ */
+
+  .complete-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--green);
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 0 32px rgba(95, 255, 143, 0.15);
+  }
+  .complete-card .glyph {
+    font-family: 'Major Mono Display', monospace;
+    font-size: 36px;
+    color: var(--green);
+    text-shadow: 0 0 16px rgba(95, 255, 143, 0.5);
+    margin-bottom: 8px;
+  }
+  .complete-card h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .complete-card .meta {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* ============ HIDDEN ============ */
+
+  #scan-canvas { display: none; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ MODE SELECTION ============ -->
+  <section id="screen-mode" class="screen active">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>QR-LINK</div>
+      <div class="status-strip">
+        <span>SYS <b>READY</b></span>
+      </div>
+    </div>
+
+    <div class="mode-select">
+      <div class="hero">
+        <h1>QR-LINK</h1>
+        <div class="subtitle">
+          Transfert de fichier <b>optique</b> par codes QR successifs.<br>
+          Protocole stop-and-wait, deux appareils, deux caméras.
+        </div>
+      </div>
+
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="tx">
+          <span class="glyph">tx&gt;</span>
+          <h3>Émetteur</h3>
+          <p>Charger un fichier et le transmettre sous forme de codes QR consécutifs vers un récepteur.</p>
+        </button>
+        <button class="mode-btn" data-mode="rx">
+          <span class="glyph">&lt;rx</span>
+          <h3>Récepteur</h3>
+          <p>Scanner les codes QR d'un émetteur, valider chaque trame et reconstruire le fichier.</p>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRANSMITTER ============ -->
+  <section id="screen-tx" class="screen">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>QR-LINK <span style="color: var(--text-dim); letter-spacing: 0.1em;">// TX</span></div>
+      <div class="status-strip">
+        <span id="tx-mode-label">STATE <b>IDLE</b></span>
+        <button class="btn danger" id="tx-back">← Retour</button>
+      </div>
+    </div>
+
+    <div id="tx-pre" class="panel" style="padding: 20px;">
+      <label for="tx-file" class="file-zone" id="tx-drop">
+        <div id="tx-drop-content">
+          <div class="glyph">[+]</div>
+          <div class="hint">Sélectionner un fichier à transmettre</div>
+        </div>
+      </label>
+      <input type="file" id="tx-file" style="display:none">
+      <div class="controls" style="margin-top: 16px; justify-content: flex-end;">
+        <button class="btn primary" id="tx-start" disabled>▶ Démarrer transmission</button>
+      </div>
+    </div>
+
+    <div id="tx-active" style="display: none; flex-direction: column; gap: 16px; flex: 1; min-height: 0;">
+      <div class="stage">
+        <div class="panel">
+          <div class="panel-header">
+            <div><span class="led send"></span>TRAME ÉMISE</div>
+            <div id="tx-frame-label">— / —</div>
+          </div>
+          <div class="panel-body">
+            <div class="qr-frame" id="tx-qr-frame">
+              <canvas id="tx-qr"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div><span class="led live"></span>SCAN ACK</div>
+            <div id="tx-ack-label">attente…</div>
+          </div>
+          <div class="panel-body">
+            <div class="camera-frame">
+              <video id="tx-video" autoplay playsinline muted></video>
+              <div class="scanline"></div>
+              <div class="corners"><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="telemetry">
+        <div class="cell"><div class="label">Fichier</div><div class="value" id="tx-tel-name">—</div></div>
+        <div class="cell"><div class="label">Taille</div><div class="value" id="tx-tel-size">—</div></div>
+        <div class="cell"><div class="label">Trames</div><div class="value amber" id="tx-tel-frames">—</div></div>
+        <div class="cell"><div class="label">Confirmées</div><div class="value green" id="tx-tel-acked">0</div></div>
+        <div class="cell"><div class="label">Débit moy.</div><div class="value" id="tx-tel-rate">— B/s</div></div>
+      </div>
+
+      <div class="progress-row">
+        <span>Progression</span>
+        <div class="progress-bar"><div id="tx-progress" style="width: 0%"></div></div>
+        <span class="progress-text" id="tx-progress-text">0%</span>
+      </div>
+
+      <div class="controls">
+        <button class="btn danger" id="tx-stop">■ Arrêter</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RECEIVER ============ -->
+  <section id="screen-rx" class="screen">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>QR-LINK <span style="color: var(--text-dim); letter-spacing: 0.1em;">// RX</span></div>
+      <div class="status-strip">
+        <span id="rx-mode-label">STATE <b>SCAN</b></span>
+        <button class="btn danger" id="rx-back">← Retour</button>
+      </div>
+    </div>
+
+    <div id="rx-active" style="display: flex; flex-direction: column; gap: 16px; flex: 1; min-height: 0;">
+      <div class="stage">
+        <div class="panel">
+          <div class="panel-header">
+            <div><span class="led live"></span>SCAN DATA</div>
+            <div id="rx-frame-label">en attente HELLO…</div>
+          </div>
+          <div class="panel-body">
+            <div class="camera-frame">
+              <video id="rx-video" autoplay playsinline muted></video>
+              <div class="scanline"></div>
+              <div class="corners"><span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div><span class="led send" id="rx-ack-led"></span>ACK ÉMIS</div>
+            <div id="rx-ack-label">—</div>
+          </div>
+          <div class="panel-body">
+            <div class="qr-frame empty" id="rx-qr-frame">
+              En attente de la première trame
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="telemetry">
+        <div class="cell"><div class="label">Fichier</div><div class="value" id="rx-tel-name">—</div></div>
+        <div class="cell"><div class="label">Taille attendue</div><div class="value" id="rx-tel-size">—</div></div>
+        <div class="cell"><div class="label">Trames</div><div class="value amber" id="rx-tel-frames">—</div></div>
+        <div class="cell"><div class="label">Reçues</div><div class="value green" id="rx-tel-received">0</div></div>
+        <div class="cell"><div class="label">Débit moy.</div><div class="value" id="rx-tel-rate">— B/s</div></div>
+      </div>
+
+      <div class="progress-row">
+        <span>Progression</span>
+        <div class="progress-bar"><div id="rx-progress" style="width: 0%"></div></div>
+        <span class="progress-text" id="rx-progress-text">0%</span>
+      </div>
+
+      <div id="rx-complete" style="display: none;" class="complete-card">
+        <div class="glyph">[OK]</div>
+        <h3>Transfert complété</h3>
+        <div class="meta" id="rx-complete-meta">—</div>
+        <button class="btn primary" id="rx-download">⤓ Télécharger le fichier</button>
+      </div>
+
+      <canvas id="scan-canvas"></canvas>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+/* ====================================================================
+   QR-LINK — Optical file transfer over QR codes
+   Protocol: stop-and-wait ARQ
+   Frames (JSON, compact keys):
+     HELLO  { t:"H", n:filename, s:size, f:totalFrames, m:mime }
+     DATA   { t:"D", i:index, d:base64chunk }
+     ACK    { t:"A", i:index }   (i = -1 acknowledges HELLO)
+   ==================================================================== */
+
+const CHUNK_BYTES = 1100;            // raw bytes per chunk before base64
+const QR_DATA_SIZE = 460;            // px for data QR rendering
+const QR_ACK_SIZE = 280;             // px for ack QR rendering
+const QR_DATA_ECC = 'L';             // low ECC = max capacity
+const QR_ACK_ECC = 'M';              // small payload, higher ECC ok
+const SCAN_MAX_DIM = 800;            // downscale scanning canvas for perf
+
+/* ----- DOM ----- */
+const $ = sel => document.querySelector(sel);
+const screens = {
+  mode: $('#screen-mode'),
+  tx: $('#screen-tx'),
+  rx: $('#screen-rx'),
+};
+
+/* ----- UTIL ----- */
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+function fmtBytes(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024*1024) return `${(n/1024).toFixed(1)} KB`;
+  return `${(n/(1024*1024)).toFixed(2)} MB`;
+}
+
+function toast(msg, kind='') {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + kind;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.value = 0.04;
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    setTimeout(() => { osc.stop(); ctx.close(); }, 60);
+  } catch(e) {}
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+/* base64 helpers (binary-safe, chunked to avoid stack overflow) */
+function uint8ToBase64(u8) {
+  let s = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < u8.length; i += CHUNK) {
+    s += String.fromCharCode.apply(null, u8.subarray(i, i + CHUNK));
+  }
+  return btoa(s);
+}
+function base64ToUint8(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/* ----- CAMERA + SCAN ----- */
+
+async function startCamera(videoEl) {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: { ideal: 'environment' },
+      width:  { ideal: 1280 },
+      height: { ideal: 720 }
+    },
+    audio: false
+  });
+  videoEl.srcObject = stream;
+  await videoEl.play();
+  return stream;
+}
+
+function stopCamera(videoEl) {
+  const s = videoEl.srcObject;
+  if (s) s.getTracks().forEach(t => t.stop());
+  videoEl.srcObject = null;
+}
+
+function makeScanner(videoEl, onFound) {
+  const canvas = $('#scan-canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  let running = true;
+  let lastPayload = null;
+  let lastPayloadAt = 0;
+
+  function tick() {
+    if (!running) return;
+    if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+      const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+      const scale = Math.min(1, SCAN_MAX_DIM / Math.max(vw, vh));
+      const w = Math.floor(vw * scale), h = Math.floor(vh * scale);
+      if (canvas.width !== w) canvas.width = w;
+      if (canvas.height !== h) canvas.height = h;
+      ctx.drawImage(videoEl, 0, 0, w, h);
+      const img = ctx.getImageData(0, 0, w, h);
+      const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+      if (code && code.data) {
+        // dedupe within ~150ms window for the same payload
+        const now = performance.now();
+        if (code.data !== lastPayload || (now - lastPayloadAt) > 150) {
+          lastPayload = code.data;
+          lastPayloadAt = now;
+          try { onFound(code.data); } catch(e) { console.error(e); }
+        }
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  return { stop: () => { running = false; } };
+}
+
+/* ----- QR RENDERING ----- */
+
+async function renderQR(canvas, text, opts) {
+  await QRCode.toCanvas(canvas, text, {
+    errorCorrectionLevel: opts.ecc,
+    margin: 2,
+    width: opts.size,
+    color: { dark: '#000000', light: '#ffffff' }
+  });
+}
+
+/* ====================================================================
+   TRANSMITTER
+   ==================================================================== */
+const tx = {
+  file: null,
+  chunks: [],       // base64 strings
+  totalFrames: 0,
+  currentIdx: -1,   // -1 = HELLO, 0..n-1 = DATA[i], n = done
+  startedAt: 0,
+  ackedCount: 0,
+  scanner: null,
+  qrCanvas: $('#tx-qr'),
+};
+
+async function onTxFileSelected(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  tx.file = f;
+  const buf = new Uint8Array(await f.arrayBuffer());
+  tx.chunks = [];
+  for (let i = 0; i < buf.length; i += CHUNK_BYTES) {
+    tx.chunks.push(uint8ToBase64(buf.subarray(i, i + CHUNK_BYTES)));
+  }
+  tx.totalFrames = tx.chunks.length;
+  $('#tx-drop').classList.add('has-file');
+  $('#tx-drop-content').innerHTML = `
+    <div class="file-info">
+      <div><b>${f.name}</b></div>
+      <div class="meta">${fmtBytes(f.size)} · ${tx.totalFrames} trames de ${CHUNK_BYTES} octets</div>
+    </div>`;
+  $('#tx-start').disabled = false;
+}
+$('#tx-file').addEventListener('change', onTxFileSelected);
+
+$('#tx-start').addEventListener('click', async () => {
+  $('#tx-pre').style.display = 'none';
+  $('#tx-active').style.display = 'flex';
+  $('#tx-tel-name').textContent = tx.file.name;
+  $('#tx-tel-size').textContent = fmtBytes(tx.file.size);
+  $('#tx-tel-frames').textContent = tx.totalFrames;
+  tx.currentIdx = -1;
+  tx.ackedCount = 0;
+  tx.startedAt = performance.now();
+
+  await txRenderCurrent();
+
+  try {
+    await startCamera($('#tx-video'));
+    tx.scanner = makeScanner($('#tx-video'), onTxScan);
+  } catch (e) {
+    toast('Caméra indisponible — ' + (e.message || e), 'err');
+  }
+});
+
+async function txRenderCurrent() {
+  let frame;
+  if (tx.currentIdx === -1) {
+    frame = { t:'H', n: tx.file.name, s: tx.file.size, f: tx.totalFrames, m: tx.file.type || 'application/octet-stream' };
+    $('#tx-frame-label').textContent = `HELLO`;
+    $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">HELLO</b>';
+  } else if (tx.currentIdx >= tx.totalFrames) {
+    $('#tx-frame-label').textContent = `terminé`;
+    $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
+    $('#tx-qr-frame').innerHTML = `<div style="font-family:'Major Mono Display'; color:var(--green); font-size:32px; text-align:center;">[OK]<div style="font-family:'JetBrains Mono'; font-size:11px; letter-spacing:0.15em; margin-top:8px; color:var(--text-dim)">TRANSFERT TERMINÉ</div></div>`;
+    toast('Transfert complété ✓', 'ok');
+    // stop scanner — no more ACKs to process
+    if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
+    stopCamera($('#tx-video'));
+    return;
+  } else {
+    frame = { t:'D', i: tx.currentIdx, d: tx.chunks[tx.currentIdx] };
+    $('#tx-frame-label').textContent = `${tx.currentIdx + 1} / ${tx.totalFrames}`;
+    $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SENDING</b>';
+  }
+  // ensure canvas exists in frame
+  if (!$('#tx-qr-frame').querySelector('canvas')) {
+    $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
+  }
+  await renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: QR_DATA_ECC, size: QR_DATA_SIZE });
+}
+
+function onTxScan(data) {
+  let msg;
+  try { msg = JSON.parse(data); } catch { return; }
+  if (msg.t !== 'A') return;
+  const expected = tx.currentIdx;
+  if (msg.i !== expected) {
+    $('#tx-ack-label').textContent = `ACK ${msg.i} (ignoré, attendu ${expected})`;
+    return;
+  }
+  // matching ack
+  beep();
+  $('#tx-ack-label').innerHTML = `<span style="color:var(--green)">ACK ${msg.i} ✓</span>`;
+  tx.currentIdx++;
+  tx.ackedCount++;
+  const pct = Math.round((tx.ackedCount / (tx.totalFrames + 1)) * 100);
+  $('#tx-progress').style.width = pct + '%';
+  $('#tx-progress-text').textContent = pct + '%';
+  $('#tx-tel-acked').textContent = tx.ackedCount + ' / ' + (tx.totalFrames + 1);
+  const elapsed = (performance.now() - tx.startedAt) / 1000;
+  const bytes = tx.currentIdx < 0 ? 0 : Math.min(tx.currentIdx, tx.totalFrames) * CHUNK_BYTES;
+  $('#tx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
+  txRenderCurrent();
+}
+
+$('#tx-back').addEventListener('click', () => txReset(true));
+$('#tx-stop').addEventListener('click', () => txReset(true));
+
+function txReset(toMode) {
+  if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
+  stopCamera($('#tx-video'));
+  tx.file = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0;
+  $('#tx-pre').style.display = 'block';
+  $('#tx-active').style.display = 'none';
+  $('#tx-drop').classList.remove('has-file');
+  $('#tx-drop-content').innerHTML = `
+    <div class="glyph">[+]</div>
+    <div class="hint">Sélectionner un fichier à transmettre</div>`;
+  $('#tx-file').value = '';
+  $('#tx-start').disabled = true;
+  $('#tx-progress').style.width = '0%';
+  $('#tx-progress-text').textContent = '0%';
+  if (toMode) showScreen('mode');
+}
+
+/* ====================================================================
+   RECEIVER
+   ==================================================================== */
+const rx = {
+  meta: null,        // { n, s, f, m }
+  chunks: [],        // Uint8Array per index
+  receivedCount: 0,
+  expectedNext: -1,  // -1 = expect HELLO, then 0..n-1
+  startedAt: 0,
+  scanner: null,
+  lastAckIdx: null,
+};
+
+screens.mode.addEventListener('click', e => {
+  const btn = e.target.closest('.mode-btn');
+  if (!btn) return;
+  if (btn.dataset.mode === 'tx') showScreen('tx');
+  else if (btn.dataset.mode === 'rx') {
+    showScreen('rx');
+    rxStart();
+  }
+});
+
+async function rxStart() {
+  rx.meta = null;
+  rx.chunks = [];
+  rx.receivedCount = 0;
+  rx.expectedNext = -1;
+  rx.startedAt = 0;
+  rx.lastAckIdx = null;
+  $('#rx-tel-name').textContent = '—';
+  $('#rx-tel-size').textContent = '—';
+  $('#rx-tel-frames').textContent = '—';
+  $('#rx-tel-received').textContent = '0';
+  $('#rx-tel-rate').textContent = '— B/s';
+  $('#rx-progress').style.width = '0%';
+  $('#rx-progress-text').textContent = '0%';
+  $('#rx-frame-label').textContent = 'en attente HELLO…';
+  $('#rx-ack-label').textContent = '—';
+  $('#rx-qr-frame').classList.add('empty');
+  $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
+  $('#rx-complete').style.display = 'none';
+  $('#rx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SCAN</b>';
+  try {
+    await startCamera($('#rx-video'));
+    rx.scanner = makeScanner($('#rx-video'), onRxScan);
+  } catch (e) {
+    toast('Caméra indisponible — ' + (e.message || e), 'err');
+  }
+}
+
+async function onRxScan(data) {
+  let msg;
+  try { msg = JSON.parse(data); } catch { return; }
+
+  if (msg.t === 'H') {
+    if (rx.meta && rx.meta.n === msg.n && rx.meta.s === msg.s) {
+      // duplicate HELLO — re-ack
+      await rxRenderAck(-1);
+      return;
+    }
+    // fresh HELLO
+    rx.meta = { n: msg.n, s: msg.s, f: msg.f, m: msg.m || 'application/octet-stream' };
+    rx.chunks = new Array(msg.f);
+    rx.receivedCount = 0;
+    rx.expectedNext = 0;
+    rx.startedAt = performance.now();
+    $('#rx-tel-name').textContent = msg.n;
+    $('#rx-tel-size').textContent = fmtBytes(msg.s);
+    $('#rx-tel-frames').textContent = msg.f;
+    $('#rx-frame-label').textContent = `HELLO reçu · attente DATA 0`;
+    beep();
+    await rxRenderAck(-1);
+    return;
+  }
+
+  if (msg.t === 'D') {
+    if (!rx.meta) return;  // no HELLO yet
+    const i = msg.i;
+    if (i < 0 || i >= rx.meta.f) return;
+    if (rx.chunks[i]) {
+      // already received — re-ack
+      await rxRenderAck(i);
+      return;
+    }
+    // accept new chunk
+    rx.chunks[i] = base64ToUint8(msg.d);
+    rx.receivedCount++;
+    beep();
+    const pct = Math.round((rx.receivedCount / rx.meta.f) * 100);
+    $('#rx-progress').style.width = pct + '%';
+    $('#rx-progress-text').textContent = pct + '%';
+    $('#rx-tel-received').textContent = rx.receivedCount + ' / ' + rx.meta.f;
+    const elapsed = (performance.now() - rx.startedAt) / 1000;
+    const bytes = rx.receivedCount * CHUNK_BYTES;
+    $('#rx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
+    $('#rx-frame-label').textContent = `DATA ${i + 1} / ${rx.meta.f} reçue`;
+    await rxRenderAck(i);
+
+    if (rx.receivedCount === rx.meta.f) {
+      rxComplete();
+    }
+  }
+}
+
+async function rxRenderAck(i) {
+  if (rx.lastAckIdx === i) {
+    // already showing this ack — skip re-render
+    return;
+  }
+  rx.lastAckIdx = i;
+  const ack = JSON.stringify({ t: 'A', i });
+  $('#rx-qr-frame').classList.remove('empty');
+  if (!$('#rx-qr-frame').querySelector('canvas')) {
+    $('#rx-qr-frame').innerHTML = '<canvas></canvas>';
+  }
+  await renderQR($('#rx-qr-frame').querySelector('canvas'), ack, { ecc: QR_ACK_ECC, size: QR_ACK_SIZE });
+  $('#rx-ack-label').textContent = i === -1 ? 'ACK HELLO' : `ACK ${i}`;
+}
+
+function rxComplete() {
+  // assemble file
+  const totalLen = rx.chunks.reduce((a, c) => a + c.length, 0);
+  const merged = new Uint8Array(totalLen);
+  let off = 0;
+  for (const c of rx.chunks) { merged.set(c, off); off += c.length; }
+  // sanity: trim/expand to declared size
+  const final = merged.length === rx.meta.s ? merged : merged.subarray(0, rx.meta.s);
+  const blob = new Blob([final], { type: rx.meta.m });
+  const url = URL.createObjectURL(blob);
+  const elapsed = ((performance.now() - rx.startedAt) / 1000).toFixed(1);
+  const rate = fmtBytes(rx.meta.s / parseFloat(elapsed)) + '/s';
+  $('#rx-complete-meta').textContent = `${rx.meta.n} · ${fmtBytes(rx.meta.s)} · ${elapsed}s · ${rate}`;
+  $('#rx-complete').style.display = 'block';
+  $('#rx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
+  $('#rx-download').onclick = () => {
+    const a = document.createElement('a');
+    a.href = url; a.download = rx.meta.n; a.click();
+  };
+  toast('Fichier reconstruit ✓', 'ok');
+}
+
+$('#rx-back').addEventListener('click', () => {
+  if (rx.scanner) { rx.scanner.stop(); rx.scanner = null; }
+  stopCamera($('#rx-video'));
+  showScreen('mode');
+});
+
+/* ====================================================================
+   INIT
+   ==================================================================== */
+
+// Check basic browser support
+window.addEventListener('load', () => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast('Caméra non supportée par ce navigateur', 'err');
+  }
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    toast('HTTPS requis pour accès caméra', 'err');
+  }
+});
+</script>
+</body>
+</html>
