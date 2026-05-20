@@ -684,6 +684,7 @@
       <div class="controls">
         <button class="btn danger" id="tx-stop">■ Arrêter</button>
         <button class="btn primary" id="tx-send-btn" style="display:none;">▶ Démarrer l'envoi</button>
+        <button class="btn primary" id="tx-done-btn" style="display:none;">✓ Terminer</button>
       </div>
     </div>
   </section>
@@ -745,7 +746,9 @@
       </div>
 
       <div class="controls" id="rx-force-wrap" style="display:none;">
-        <button class="btn primary" id="rx-force-btn">⬇ Reconstituer (incomplet)</button>
+        <button class="btn primary" id="rx-nack-btn">⟳ Demander renvoi</button>
+        <span id="rx-nack-info" style="font-size:11px;color:var(--text-dim);align-self:center;letter-spacing:0.05em;"></span>
+        <button class="btn" id="rx-force-btn">⬇ Reconstituer (incomplet)</button>
       </div>
 
       <div id="rx-complete" style="display: none;" class="complete-card">
@@ -960,6 +963,8 @@ const tx = {
   intervalId: null,
   scanner: null,
   qrCanvas: $('#tx-qr'),
+  retryQueue: [],    // frame indices to resend after NACK
+  retryQueuePos: 0,
 };
 
 function txBuildFileInfo() {
@@ -1051,6 +1056,28 @@ function txNoAckAdvance() {
   }
 }
 
+function txNoAckRetryAdvance() {
+  if (tx.retryQueuePos >= tx.retryQueue.length) {
+    // All retries sent — go back to NACK watch
+    tx.currentIdx = tx.totalFrames;
+    tx.retryQueue = [];
+    tx.retryQueuePos = 0;
+    txRenderCurrent();
+    return;
+  }
+  tx.currentIdx = tx.retryQueue[tx.retryQueuePos];
+  try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); return; }
+  const total = tx.retryQueue.length;
+  const sent = tx.retryQueuePos + 1;
+  $('#tx-frame-label').textContent = `RETRY ${sent} / ${total}`;
+  $('#tx-mode-label').innerHTML = `STATE <b style="color:var(--amber)">RETRY</b>`;
+  const pct = Math.round((sent / total) * 100);
+  $('#tx-progress').style.width = pct + '%';
+  $('#tx-progress-text').textContent = pct + '%';
+  tx.retryQueuePos++;
+  tx.intervalId = setTimeout(txNoAckRetryAdvance, TX_NOACK_FRAME_MS);
+}
+
 function txRenderCurrent() {
   let frame;
   if (tx.currentIdx === -1) {
@@ -1059,12 +1086,25 @@ function txRenderCurrent() {
     $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">HELLO</b>';
   } else if (tx.currentIdx >= tx.totalFrames) {
     $('#tx-frame-label').textContent = `terminé`;
-    $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
     $('#tx-qr-frame').innerHTML = `<div style="font-family:'Major Mono Display'; color:var(--green); font-size:32px; text-align:center;">[OK]<div style="font-family:'JetBrains Mono'; font-size:11px; letter-spacing:0.15em; margin-top:8px; color:var(--text-dim)">TRANSFERT TERMINÉ</div></div>`;
     toast('Transfert complété ✓', 'ok');
-    // stop scanner — no more ACKs to process
-    if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
-    stopCamera($('#tx-video'));
+    if (noAckMode) {
+      // Re-show camera panel so TX can scan a NACK from RX
+      $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">NACK WATCH</b>';
+      $('#tx-cam-panel').style.display = '';
+      document.querySelector('#tx-active .stage').classList.remove('solo');
+      $('#tx-ack-label').textContent = 'attente NACK…';
+      $('#tx-done-btn').style.display = '';
+      if (!tx.scanner) {
+        startCamera($('#tx-video'), txFacing)
+          .then(() => { tx.scanner = makeScanner($('#tx-video'), onTxScan); })
+          .catch(e => toast('Caméra — ' + (e.message || e), 'err'));
+      }
+    } else {
+      $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
+      if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
+      stopCamera($('#tx-video'));
+    }
     return;
   } else {
     frame = { t:'D', i: tx.currentIdx, d: tx.chunks[tx.currentIdx] };
@@ -1081,6 +1121,25 @@ function txRenderCurrent() {
 function onTxScan(data) {
   let msg;
   try { msg = JSON.parse(data); } catch { return; }
+
+  if (msg.t === 'N') {
+    if (!noAckMode) return;
+    const missing = (msg.r || []).filter(i => Number.isInteger(i) && i >= 0 && i < tx.totalFrames);
+    if (!missing.length) return;
+    beep();
+    $('#tx-ack-label').innerHTML = `<span style="color:var(--amber)">NACK ${missing.length} trame(s)</span>`;
+    if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
+    stopCamera($('#tx-video'));
+    $('#tx-cam-panel').style.display = 'none';
+    document.querySelector('#tx-active .stage').classList.add('solo');
+    $('#tx-done-btn').style.display = 'none';
+    tx.retryQueue = missing;
+    tx.retryQueuePos = 0;
+    toast(`Renvoi de ${missing.length} trame(s)…`);
+    txNoAckRetryAdvance();
+    return;
+  }
+
   if (msg.t !== 'A') return;
   const expected = tx.currentIdx;
   if (msg.i !== expected) {
@@ -1104,16 +1163,19 @@ function onTxScan(data) {
 
 $('#tx-back').addEventListener('click', () => txReset(true));
 $('#tx-stop').addEventListener('click', () => txReset(true));
+$('#tx-done-btn').addEventListener('click', () => txReset(true));
 
 function txReset(toMode) {
   if (tx.intervalId) { clearTimeout(tx.intervalId); tx.intervalId = null; }
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
   tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
+  tx.retryQueue = []; tx.retryQueuePos = 0;
   // Restore no-ack layout changes
   $('#tx-cam-panel').style.display = '';
   document.querySelector('#tx-active .stage').classList.remove('solo');
   $('#tx-send-btn').style.display = 'none';
+  $('#tx-done-btn').style.display = 'none';
   $('#tx-pre').style.display = 'block';
   $('#tx-active').style.display = 'none';
   $('#tx-drop').classList.remove('has-file');
@@ -1138,6 +1200,7 @@ const rx = {
   startedAt: 0,
   scanner: null,
   lastAckIdx: null,
+  nackShown: false,
 };
 
 $('#no-ack-toggle').addEventListener('click', () => {
@@ -1162,6 +1225,7 @@ async function rxStart() {
   rx.expectedNext = -1;
   rx.startedAt = 0;
   rx.lastAckIdx = null;
+  rx.nackShown = false;
   $('#rx-tel-name').textContent = '—';
   $('#rx-tel-size').textContent = '—';
   $('#rx-tel-frames').textContent = '—';
@@ -1175,6 +1239,7 @@ async function rxStart() {
   $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
   $('#rx-complete').style.display = 'none';
   $('#rx-force-wrap').style.display = 'none';
+  $('#rx-nack-info').textContent = '';
   $('#rx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SCAN</b>';
   // No-ack layout: hide ACK QR panel, full-width camera
   if (noAckMode) {
@@ -1233,6 +1298,13 @@ async function onRxScan(data) {
         $('#rx-progress').style.width = txPct + '%';
         $('#rx-progress-text').textContent = txPct + '%';
       }
+      // Retransmission started — hide NACK QR and go back to full-width camera
+      if (rx.nackShown) {
+        rx.nackShown = false;
+        $('#rx-qr-panel').style.display = 'none';
+        document.querySelector('#rx-active .stage').classList.add('solo');
+        $('#rx-nack-info').textContent = '';
+      }
     }
 
     if (rx.chunks[i]) {
@@ -1274,6 +1346,11 @@ function rxRenderAck(i) {
 
 function rxComplete() {
   $('#rx-force-wrap').style.display = 'none';
+  if (noAckMode && rx.nackShown) {
+    rx.nackShown = false;
+    $('#rx-qr-panel').style.display = 'none';
+    document.querySelector('#rx-active .stage').classList.add('solo');
+  }
   // assemble file — filter missing chunks (no-ack mode may have gaps)
   const totalLen = rx.chunks.reduce((a, c) => a + (c ? c.length : 0), 0);
   const merged = new Uint8Array(totalLen);
@@ -1294,6 +1371,36 @@ function rxComplete() {
   };
   toast('Fichier reconstruit ✓', 'ok');
 }
+
+function rxRequestNack() {
+  if (!rx.meta) return;
+  const missing = [];
+  for (let i = 0; i < rx.meta.f; i++) {
+    if (!rx.chunks[i]) missing.push(i);
+  }
+  if (!missing.length) {
+    rxComplete();
+    return;
+  }
+  const nackStr = JSON.stringify({ t: 'N', r: missing });
+  try {
+    $('#rx-qr-panel').style.display = '';
+    document.querySelector('#rx-active .stage').classList.remove('solo');
+    $('#rx-qr-frame').classList.remove('empty');
+    if (!$('#rx-qr-frame').querySelector('canvas')) {
+      $('#rx-qr-frame').innerHTML = '<canvas></canvas>';
+    }
+    renderQR($('#rx-qr-frame').querySelector('canvas'), nackStr, { ecc: 'L', size: QR_DATA_SIZE });
+    rx.nackShown = true;
+    $('#rx-ack-label').textContent = `NACK · ${missing.length} manquantes`;
+    $('#rx-nack-info').textContent = `${missing.length} / ${rx.meta.f} trames manquantes`;
+    toast(`${missing.length} trame(s) manquante(s) — montrez le code à l'émetteur`);
+  } catch (e) {
+    toast('NACK trop grand — veuillez relancer le transfert', 'err');
+  }
+}
+
+$('#rx-nack-btn').addEventListener('click', rxRequestNack);
 
 $('#rx-back').addEventListener('click', () => {
   if (rx.scanner) { rx.scanner.stop(); rx.scanner = null; }
