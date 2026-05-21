@@ -1855,7 +1855,12 @@ async function rxDecodeVideoBlob(blob) {
   const vid = document.createElement('video');
   vid.src = url;
   vid.muted = true;
-  vid.playbackRate = 2.0; // 2× speed — faster processing, still catches all frames
+  vid.playbackRate = 2.0;
+  vid.setAttribute('playsinline', '');
+  vid.setAttribute('webkit-playsinline', '');
+  // Must be in the DOM + invisible to prevent iOS from launching the native player fullscreen
+  vid.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;top:-9999px;left:-9999px;';
+  document.body.appendChild(vid);
   await new Promise((res, rej) => {
     vid.onloadedmetadata = res;
     vid.onerror = () => rej(new Error('Vidéo illisible'));
@@ -1901,6 +1906,7 @@ async function rxDecodeVideoBlob(blob) {
     vid.onplay   = () => { animId = requestAnimationFrame(processFrame); };
     vid.play().catch(resolve);
   });
+  document.body.removeChild(vid);
   URL.revokeObjectURL(url);
   toast(`Vidéo : ${decoded} trames décodées`);
 }
