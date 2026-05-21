@@ -575,35 +575,84 @@
   }
   .fs-btn:hover { border-color: var(--amber); color: var(--amber); }
 
-  .qr-frame:fullscreen,
-  .qr-frame:-webkit-full-screen {
-    max-width: none !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  /* ============ FULLSCREEN OVERLAY ============ */
+
+  #fs-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
     background: #000;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
   }
-  .qr-frame:fullscreen canvas,
-  .qr-frame:-webkit-full-screen canvas {
-    width: min(100vw, 100vh) !important;
-    height: min(100vw, 100vh) !important;
-    background: #fff;
+  #fs-overlay.active { display: flex; }
+
+  #fs-main-slot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    padding: 8px;
   }
-  .camera-frame:fullscreen,
-  .camera-frame:-webkit-full-screen {
+  #fs-main-slot .qr-frame {
+    width: min(100vw, calc(100vh - 16px)) !important;
+    height: min(100vw, calc(100vh - 16px)) !important;
+    max-width: none !important;
+    aspect-ratio: 1/1 !important;
+    margin: 0 auto !important;
+    padding: 12px !important;
+  }
+  #fs-main-slot .camera-frame {
     width: 100vw !important;
     height: 100vh !important;
     max-width: none !important;
     aspect-ratio: auto !important;
+    margin: 0 !important;
   }
-  .camera-frame:fullscreen video,
-  .camera-frame:-webkit-full-screen video {
-    object-fit: contain;
+  #fs-main-slot .camera-frame video { object-fit: contain !important; }
+
+  #fs-pip-slot {
+    position: absolute;
+    bottom: 60px;
+    right: 12px;
+    width: 130px;
+    border: 2px solid rgba(128, 204, 128, 0.5);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.8);
   }
+  #fs-pip-slot .camera-frame,
+  #fs-pip-slot .qr-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    aspect-ratio: 1/1 !important;
+    margin: 0 !important;
+  }
+  #fs-pip-slot .camera-frame video { object-fit: cover !important; }
+
+  #fs-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.75);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  #fs-close-btn:hover { border-color: var(--amber); color: var(--amber); }
 
   /* ============ HIDDEN ============ */
 
@@ -691,7 +740,7 @@
             <div><span class="led send"></span>TRAME ÉMISE</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span id="tx-frame-label">— / —</span>
-              <button class="fs-btn" onclick="goFullscreen(document.getElementById('tx-qr-frame'))" title="Plein écran">⛶</button>
+              <button class="fs-btn" onclick="goFullscreen('tx-qr-frame','tx-cam-frame')" title="Plein écran">⛶</button>
             </div>
           </div>
           <div class="panel-body">
@@ -707,7 +756,7 @@
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="cam-flip-btn" id="tx-cam-flip">⟳ caméra</button>
               <span id="tx-ack-label">attente…</span>
-              <button class="fs-btn" onclick="goFullscreen(document.getElementById('tx-cam-frame'))" title="Plein écran">⛶</button>
+              <button class="fs-btn" onclick="goFullscreen('tx-cam-frame','tx-qr-frame')" title="Plein écran">⛶</button>
             </div>
           </div>
           <div class="panel-body">
@@ -772,7 +821,7 @@
             <div><span class="led send" id="rx-ack-led"></span>ACK ÉMIS</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span id="rx-ack-label">—</span>
-              <button class="fs-btn" onclick="goFullscreen(document.getElementById('rx-qr-frame'))" title="Plein écran">⛶</button>
+              <button class="fs-btn" onclick="goFullscreen('rx-qr-frame','rx-cam-frame')" title="Plein écran">⛶</button>
             </div>
           </div>
           <div class="panel-body">
@@ -788,7 +837,7 @@
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="cam-flip-btn" id="rx-cam-flip">⟳ caméra</button>
               <span id="rx-frame-label">en attente HELLO…</span>
-              <button class="fs-btn" onclick="goFullscreen(document.getElementById('rx-cam-frame'))" title="Plein écran">⛶</button>
+              <button class="fs-btn" onclick="goFullscreen('rx-cam-frame','rx-qr-frame')" title="Plein écran">⛶</button>
             </div>
           </div>
           <div class="panel-body">
@@ -832,6 +881,12 @@
     </div>
   </section>
 
+</div>
+
+<div id="fs-overlay">
+  <div id="fs-main-slot"></div>
+  <div id="fs-pip-slot" style="display:none;"></div>
+  <button id="fs-close-btn" onclick="closeOverlay()">✕</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -888,9 +943,40 @@ function toast(msg, kind='') {
   toast._t = setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-function goFullscreen(el) {
-  if (el.requestFullscreen) el.requestFullscreen();
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+const _fs = {};
+
+function goFullscreen(mainId, pipId) {
+  const mainEl = document.getElementById(mainId);
+  const pipEl  = pipId ? document.getElementById(pipId) : null;
+  const mainSlot = $('#fs-main-slot');
+  const pipSlot  = $('#fs-pip-slot');
+
+  _fs.mainEl     = mainEl;
+  _fs.mainParent = mainEl.parentNode;
+  _fs.mainNext   = mainEl.nextSibling;
+  mainSlot.appendChild(mainEl);
+
+  if (pipEl) {
+    _fs.pipEl     = pipEl;
+    _fs.pipParent = pipEl.parentNode;
+    _fs.pipNext   = pipEl.nextSibling;
+    pipSlot.appendChild(pipEl);
+    pipSlot.style.display = '';
+  } else {
+    pipSlot.style.display = 'none';
+    _fs.pipEl = null;
+  }
+
+  $('#fs-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeOverlay() {
+  if (_fs.mainEl) _fs.mainParent.insertBefore(_fs.mainEl, _fs.mainNext);
+  if (_fs.pipEl)  _fs.pipParent.insertBefore(_fs.pipEl,  _fs.pipNext);
+  Object.keys(_fs).forEach(k => delete _fs[k]);
+  $('#fs-overlay').classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 function beep() {
@@ -1218,6 +1304,7 @@ $('#tx-browse-jump').addEventListener('change', () => {
   }
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#fs-overlay').classList.contains('active')) { closeOverlay(); return; }
   if ($('#tx-browse').style.display === 'none') return;
   if (e.key === 'ArrowLeft'  && tx.currentIdx > 0)                  { tx.currentIdx--; txBrowseRender(); }
   if (e.key === 'ArrowRight' && tx.currentIdx < tx.totalFrames - 1) { tx.currentIdx++; txBrowseRender(); }
