@@ -707,7 +707,7 @@
           <button class="no-ack-btn" id="no-ack-toggle">⚡ Sans confirmation</button>
           <button class="no-ack-btn" id="express-toggle">🎬 Express</button>
         </div>
-        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Sans confirmation : 1200 ms/trame · Express : 150 ms/trame, scanner live côté récepteur</p>
+        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Sans confirmation : 1200 ms/trame · Express : 150 ms/trame + ⏺ REC côté récepteur</p>
       </div>
     </div>
   </section>
@@ -846,6 +846,7 @@
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="cam-flip-btn" id="rx-cam-flip">⟳ caméra</button>
               <button class="cam-flip-btn" id="rx-force-read" title="Forcer une lecture du code actuellement visible">📸</button>
+              <button class="cam-flip-btn" id="rx-rec-btn" style="display:none;" title="Enregistrer la séquence express puis décoder">⏺ REC</button>
               <span id="rx-frame-label">en attente HELLO…</span>
               <button class="fs-btn" onclick="goFullscreen('rx-cam-frame','rx-qr-frame')" title="Plein écran">⛶</button>
             </div>
@@ -1622,6 +1623,10 @@ async function rxStart() {
   $('#rx-progress-text').textContent = '0%';
   $('#rx-frame-label').textContent = 'en attente HELLO…';
   $('#rx-ack-label').textContent = '—';
+  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
+  $('#rx-rec-btn').textContent = '⏺ REC';
+  $('#rx-rec-btn').style.borderColor = '';
+  $('#rx-rec-btn').style.color = '';
   $('#rx-qr-frame').classList.add('empty');
   $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
   $('#rx-complete').style.display = 'none';
@@ -1799,6 +1804,109 @@ $('#express-toggle').addEventListener('click', () => {
     noAckMode = true;
     $('#no-ack-toggle').classList.add('active');
   }
+  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
+});
+
+/* Express recording + video decode (play-based, not seek-based) */
+const rxExpress = { mediaRecorder: null, chunks: [], recording: false };
+
+function rxStartRecord() {
+  const stream = $('#rx-video').srcObject;
+  if (!stream) { toast('Caméra non démarrée', 'err'); return; }
+  rxExpress.chunks = [];
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9'
+                 : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '';
+  try {
+    rxExpress.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 8000000 } : {});
+  } catch(e) { toast('Enregistrement non supporté par ce navigateur', 'err'); return; }
+  rxExpress.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) rxExpress.chunks.push(e.data); };
+  rxExpress.mediaRecorder.start(100);
+  rxExpress.recording = true;
+  const btn = $('#rx-rec-btn');
+  btn.textContent = '⏹ Décoder';
+  btn.style.borderColor = 'var(--red)';
+  btn.style.color = 'var(--red)';
+  toast('Enregistrement en cours…');
+}
+
+async function rxStopAndDecode() {
+  const btn = $('#rx-rec-btn');
+  btn.disabled = true;
+  btn.textContent = '⌛ Lecture…';
+  rxExpress.mediaRecorder.stop();
+  rxExpress.recording = false;
+  await new Promise(r => { rxExpress.mediaRecorder.onstop = r; });
+  const mimeType = rxExpress.mediaRecorder.mimeType || 'video/webm';
+  const blob = new Blob(rxExpress.chunks, { type: mimeType });
+  toast('Décodage vidéo en cours…');
+  try {
+    await rxDecodeVideoBlob(blob);
+  } catch(e) {
+    toast('Erreur : ' + (e.message || e), 'err');
+  }
+  btn.disabled = false;
+  btn.textContent = '⏺ REC';
+  btn.style.borderColor = '';
+  btn.style.color = '';
+}
+
+async function rxDecodeVideoBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const vid = document.createElement('video');
+  vid.src = url;
+  vid.muted = true;
+  vid.playbackRate = 2.0; // 2× speed — faster processing, still catches all frames
+  await new Promise((res, rej) => {
+    vid.onloadedmetadata = res;
+    vid.onerror = () => rej(new Error('Vidéo illisible'));
+    vid.load();
+    setTimeout(() => rej(new Error('Timeout')), 12000);
+  });
+  const cvs = document.createElement('canvas');
+  cvs.width = vid.videoWidth || 640;
+  cvs.height = vid.videoHeight || 480;
+  const ctx = cvs.getContext('2d');
+  let lastKey = null, decoded = 0;
+  // Play the video and decode each rendered frame with rAF instead of seeking
+  // This is far more reliable than seek-based decoding
+  await new Promise((resolve) => {
+    let animId;
+    function processFrame() {
+      ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
+      const img = ctx.getImageData(0, 0, cvs.width, cvs.height);
+      const code = jsQR(img.data, cvs.width, cvs.height, { inversionAttempts: 'dontInvert' });
+      const bd = code && code.binaryData;
+      if (bd && bd.length > 0) {
+        const key = bd[0] === 0x44 && bd.length >= 3 ? 'B' + ((bd[1]<<8)|bd[2]) : (code.data || bd.slice(0,4).join(','));
+        if (key !== lastKey) {
+          lastKey = key; decoded++;
+          try { onRxScan(code.data, bd, null); } catch(e) { console.error(e); }
+        }
+      } else {
+        const cg = tryColorGrid(ctx, cvs.width, cvs.height);
+        if (cg) {
+          const key = 'CG' + cg.frameIndex;
+          if (key !== lastKey) {
+            lastKey = key; decoded++;
+            try { onRxScan('', null, cg); } catch(e) { console.error(e); }
+          }
+        }
+      }
+      const pct = vid.duration > 0 ? Math.round(vid.currentTime / vid.duration * 100) : 0;
+      $('#rx-frame-label').textContent = `Vidéo ${pct}% · ${decoded} trames`;
+      if (!vid.ended && !vid.paused) animId = requestAnimationFrame(processFrame);
+    }
+    vid.onended = () => { cancelAnimationFrame(animId); resolve(); };
+    vid.onerror  = () => { cancelAnimationFrame(animId); resolve(); };
+    vid.onplay   = () => { animId = requestAnimationFrame(processFrame); };
+    vid.play().catch(resolve);
+  });
+  URL.revokeObjectURL(url);
+  toast(`Vidéo : ${decoded} trames décodées`);
+}
+
+$('#rx-rec-btn').addEventListener('click', () => {
+  if (!rxExpress.recording) rxStartRecord(); else rxStopAndDecode();
 });
 
 /* Force-read: retry decode on current scan canvas with aggressive settings */
