@@ -1532,7 +1532,7 @@ function onTxScan(data) {
   $('#tx-progress-text').textContent = pct + '%';
   $('#tx-tel-acked').textContent = tx.ackedCount + ' / ' + (tx.totalFrames + 1);
   const elapsed = (performance.now() - tx.startedAt) / 1000;
-  const bytes = tx.currentIdx < 0 ? 0 : Math.min(tx.currentIdx, tx.totalFrames) * CHUNK_BYTES;
+  const bytes = tx.currentIdx < 0 ? 0 : Math.min(tx.currentIdx, tx.totalFrames) * Math.ceil(tx.file.size / tx.totalFrames);
   $('#tx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
   txRenderCurrent();
 }
