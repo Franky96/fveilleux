@@ -732,6 +732,8 @@
           <button class="qr-mode-btn" id="tx-simple-toggle" title="Réduit les données par trame — QR plus facile à scanner">◻ QR simple</button>
           <button class="qr-mode-btn" id="tx-max-toggle"    title="Maximise les données par trame — JSON+base64, QR v40 (~2100 o/trame)">▲ QR max</button>
           <button class="qr-mode-btn" id="tx-binary-toggle" title="Encodage binaire brut — capacité maximale (~2950 o/trame)">⬡ QR binaire</button>
+          <button class="qr-mode-btn" id="tx-auto-toggle"   title="Choisit automatiquement la version QR pour que les modules fassent ≥4px à l'écran">⊙ Auto</button>
+          <button class="qr-mode-btn" id="tx-cgrid-toggle"  title="Grille 4 couleurs — protocole couleur, 36×36 cellules, coins rouge/bleu">⬛ Grille</button>
         </div>
         <button class="btn primary" id="tx-start" disabled>▶ Démarrer transmission</button>
       </div>
@@ -921,6 +923,16 @@ const QR_ACK_ECC           = 'M';   // small payload, higher ECC ok
 const SCAN_MAX_DIM         = 800;   // downscale scanning canvas for perf
 const TX_NOACK_FRAME_MS    = 1200;  // ms per DATA frame in no-ack mode
 
+// QR ECC-L byte capacity per version v1-v40 (for auto-density)
+const QR_CAP_L = [0,17,32,53,78,106,134,154,192,230,271,321,367,425,458,520,586,644,718,792,858,929,1003,1091,1171,1273,1367,1465,1528,1628,1732,1840,1952,2068,2188,2303,2431,2563,2699,2809,2953];
+
+// Color grid (cgrid mode) constants
+const CGRID_N      = 36;    // cells per side
+const CGRID_CS     = 12;    // cell size in px (canvas render)
+const CGRID_CC     = 3;     // corner block size in cells
+const CGRID_MAGIC  = 0xCF;  // first byte of cgrid frame
+const CGRID_COLORS = ['#000000','#ffffff','#ff3030','#3366ff']; // black, white, red, blue
+
 /* ----- DOM ----- */
 const $ = sel => document.querySelector(sel);
 const screens = {
@@ -1058,7 +1070,6 @@ function makeScanner(videoEl, onFound) {
       const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
       const bd = code && code.binaryData;
       if (bd && bd.length > 0) {
-        // dedupe: binary DATA frames use type+index as key; JSON frames use decoded string
         const dk = (bd[0] === 0x44 && bd.length >= 3)
           ? 'B' + ((bd[1] << 8) | bd[2])
           : (code.data || bd.slice(0, 8).join(','));
@@ -1066,7 +1077,19 @@ function makeScanner(videoEl, onFound) {
         if (dk !== lastPayload || (now - lastPayloadAt) > 150) {
           lastPayload = dk;
           lastPayloadAt = now;
-          try { onFound(code.data, bd); } catch(e) { console.error(e); }
+          try { onFound(code.data, bd, null); } catch(e) { console.error(e); }
+        }
+      } else {
+        // No QR code found — try color grid
+        const cg = tryColorGrid(ctx, w, h);
+        if (cg) {
+          const dk = 'CG' + cg.frameIndex;
+          const now = performance.now();
+          if (dk !== lastPayload || (now - lastPayloadAt) > 150) {
+            lastPayload = dk;
+            lastPayloadAt = now;
+            try { onFound('', null, cg); } catch(e) { console.error(e); }
+          }
         }
       }
     }
@@ -1085,6 +1108,118 @@ function buildBinaryFrame(index, u8slice) {
   let s = String.fromCharCode(0x44, (index >> 8) & 0xff, index & 0xff);
   for (let i = 0; i < u8slice.length; i++) s += String.fromCharCode(u8slice[i]);
   return s;
+}
+
+/* ----- COLOR GRID RENDER ----- */
+
+function renderColorGrid(canvas, frameIndex, u8data) {
+  const N = CGRID_N, CC = CGRID_CC, cs = CGRID_CS;
+  canvas.width = canvas.height = N * cs;
+  const ctx = canvas.getContext('2d');
+  // Build payload bits: [magic][hi(idx)][lo(idx)][data bytes...]
+  const allBytes = new Uint8Array(3 + u8data.length);
+  allBytes[0] = CGRID_MAGIC;
+  allBytes[1] = (frameIndex >> 8) & 0xff;
+  allBytes[2] = frameIndex & 0xff;
+  allBytes.set(u8data, 3);
+  const bits = [];
+  for (const b of allBytes) for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1);
+
+  function isCorner(r, c) {
+    return (r<CC&&c<CC)||(r<CC&&c>=N-CC)||(r>=N-CC&&c<CC)||(r>=N-CC&&c>=N-CC);
+  }
+  function cornerColor(r, c) {
+    return (r<CC&&c<CC)||(r>=N-CC&&c>=N-CC) ? 2 : 3; // TL+BR=red, TR+BL=blue
+  }
+  let bi = 0;
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      let ci;
+      if (isCorner(r, c)) {
+        ci = cornerColor(r, c);
+      } else {
+        const b0 = bi < bits.length ? bits[bi++] : 0;
+        const b1 = bi < bits.length ? bits[bi++] : 0;
+        ci = (b0 << 1) | b1;
+      }
+      ctx.fillStyle = CGRID_COLORS[ci];
+      ctx.fillRect(c * cs, r * cs, cs, cs);
+    }
+  }
+}
+
+/* ----- COLOR GRID DECODE ----- */
+
+function findColorBlock(px, imgW, imgH, x0, y0, x1, y1, isRed) {
+  const bw = Math.max(8, Math.floor((x1 - x0) / 8));
+  const bh = Math.max(8, Math.floor((y1 - y0) / 8));
+  const step = Math.max(2, Math.floor(bw / 4));
+  let bestScore = 15, bestX = (x0 + x1) / 2, bestY = (y0 + y1) / 2;
+  for (let y = y0; y < y1 - bh; y += step) {
+    for (let x = x0; x < x1 - bw; x += step) {
+      let score = 0, n = 0;
+      for (let dy = 0; dy < bh; dy += 3) {
+        for (let dx = 0; dx < bw; dx += 3) {
+          const pi = (Math.min(imgH-1, Math.floor(y+dy)) * imgW + Math.min(imgW-1, Math.floor(x+dx))) * 4;
+          const r = px[pi], g = px[pi+1], b = px[pi+2];
+          score += isRed ? (r - (g+b)/2) : (b - (r+g)/2);
+          n++;
+        }
+      }
+      if (n && score/n > bestScore) { bestScore = score/n; bestX = x + bw/2; bestY = y + bh/2; }
+    }
+  }
+  return bestScore > 15 ? { x: bestX, y: bestY } : null;
+}
+
+function tryColorGrid(ctx, imgW, imgH) {
+  const N = CGRID_N, CC = CGRID_CC;
+  const px = ctx.getImageData(0, 0, imgW, imgH).data;
+  const qw = imgW / 2, qh = imgH / 2;
+  const tl = findColorBlock(px, imgW, imgH, 0,  0,  qw,   qh,   true);  // red TL
+  const br = findColorBlock(px, imgW, imgH, qw, qh, imgW, imgH, true);   // red BR
+  if (!tl || !br) return null;
+  const gridW = br.x - tl.x, gridH = br.y - tl.y;
+  if (gridW < 40 || gridH < 40) return null;
+  const cw = gridW / N, ch = gridH / N;
+
+  function sampleAvg(cx, cy, r) {
+    let rv=0,gv=0,bv=0,n=0;
+    for (let dy=-r; dy<=r; dy+=2) for (let dx=-r; dx<=r; dx+=2) {
+      const pi=(Math.max(0,Math.min(imgH-1,0|(cy+dy)))*imgW+Math.max(0,Math.min(imgW-1,0|(cx+dx))))*4;
+      rv+=px[pi]; gv+=px[pi+1]; bv+=px[pi+2]; n++;
+    }
+    return n ? {r:rv/n,g:gv/n,b:bv/n} : {r:0,g:0,b:0};
+  }
+  // Calibrate from known corner colors
+  const refR = sampleAvg(tl.x, tl.y, cw);            // TL = red
+  const refB = sampleAvg(tl.x + (N-CC+1)*cw, tl.y, cw); // TR ≈ blue
+  const dark  = Math.min(refR.b, refR.g, refB.r, refB.g);
+  const light = Math.max(refR.r, refB.b);
+  const mid   = (dark + light) / 2;
+  const refK  = {r:dark*0.6, g:dark*0.6, b:dark*0.6};
+  const refW  = {r:light*0.9, g:light*0.9, b:light*0.9};
+
+  function dist(a,b){return (a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2;}
+  function classify(cx, cy) {
+    const s = sampleAvg(cx, cy, Math.max(2, cw*0.3));
+    const d = [dist(s,refK), dist(s,refW), dist(s,refR), dist(s,refB)];
+    return d.indexOf(Math.min(...d));
+  }
+  function isCorner(r,c){return (r<CC&&c<CC)||(r<CC&&c>=N-CC)||(r>=N-CC&&c<CC)||(r>=N-CC&&c>=N-CC);}
+
+  const bits = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (isCorner(r,c)) continue;
+      const ci = classify(tl.x + (c+0.5)*cw, tl.y + (r+0.5)*ch);
+      bits.push((ci>>1)&1); bits.push(ci&1);
+    }
+  }
+  const bytes = new Uint8Array(Math.floor(bits.length/8));
+  for (let i=0;i<bytes.length;i++){let b=0;for(let j=0;j<8;j++)b=(b<<1)|(bits[i*8+j]||0);bytes[i]=b;}
+  if (bytes[0] !== CGRID_MAGIC) return null;
+  return { frameIndex: (bytes[1]<<8)|bytes[2], payload: bytes.subarray(3) };
 }
 
 /* ----- QR RENDERING ----- */
@@ -1154,6 +1289,18 @@ function txModeConfig() {
     case 'simple': return { chunkBytes: CHUNK_BYTES_SIMPLE, ecc: QR_DATA_ECC_SIMPLE, qrSize: QR_DATA_SIZE     };
     case 'max':    return { chunkBytes: CHUNK_BYTES_MAX,    ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE_MAX };
     case 'binary': return { chunkBytes: CHUNK_BYTES_BINARY, ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE_MAX };
+    case 'auto': {
+      // Pick largest QR version where modules are >= 4px at current screen width
+      const w = Math.max(240, Math.min(800, Math.floor((window.innerWidth - 64) / 2)));
+      const ver = Math.min(40, Math.max(1, Math.floor((Math.floor(w / 4) - 17) / 4)));
+      const cap = QR_CAP_L[ver];
+      const rawBytes = Math.max(100, Math.floor((cap - 25) * 3 / 4 / 3) * 3);
+      return { chunkBytes: rawBytes, ecc: QR_DATA_ECC, qrSize: w };
+    }
+    case 'cgrid': {
+      const dataCells = CGRID_N * CGRID_N - 4 * CGRID_CC * CGRID_CC - 12;
+      return { chunkBytes: Math.floor(dataCells / 4), ecc: QR_DATA_ECC, qrSize: CGRID_N * CGRID_CS };
+    }
     default:       return { chunkBytes: CHUNK_BYTES,        ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE     };
   }
 }
@@ -1184,7 +1331,9 @@ function setTxQrMode(mode) {
   txQrMode = txQrMode === mode ? 'normal' : mode;
   [['simple', '◻ QR simple',  '◼ QR simple' ],
    ['max',    '▲ QR max',     '▲ QR max'    ],
-   ['binary', '⬡ QR binaire', '⬡ QR binaire']].forEach(([m, off, on]) => {
+   ['binary', '⬡ QR binaire', '⬡ QR binaire'],
+   ['auto',   '⊙ Auto',       '⊙ Auto'      ],
+   ['cgrid',  '⬛ Grille',     '⬛ Grille'   ]].forEach(([m, off, on]) => {
     const b = $(`#tx-${m}-toggle`);
     b.classList.toggle('active', txQrMode === m);
     b.textContent = txQrMode === m ? on : off;
@@ -1194,6 +1343,8 @@ function setTxQrMode(mode) {
 $('#tx-simple-toggle').addEventListener('click', () => setTxQrMode('simple'));
 $('#tx-max-toggle').addEventListener('click',    () => setTxQrMode('max'));
 $('#tx-binary-toggle').addEventListener('click', () => setTxQrMode('binary'));
+$('#tx-auto-toggle').addEventListener('click',   () => setTxQrMode('auto'));
+$('#tx-cgrid-toggle').addEventListener('click',  () => setTxQrMode('cgrid'));
 
 $('#tx-start').addEventListener('click', async () => {
   // Rebuild chunks for the active mode
@@ -1203,7 +1354,9 @@ $('#tx-start').addEventListener('click', async () => {
   tx.chunks = [];
   for (let off = 0, idx = 0; off < tx.buf.length; off += chunkBytes, idx++) {
     const slice = tx.buf.subarray(off, off + chunkBytes);
-    tx.chunks.push(txQrMode === 'binary' ? buildBinaryFrame(idx, slice) : uint8ToBase64(slice));
+    if      (txQrMode === 'binary') tx.chunks.push(buildBinaryFrame(idx, slice));
+    else if (txQrMode === 'cgrid')  tx.chunks.push(slice); // raw Uint8Array
+    else                             tx.chunks.push(uint8ToBase64(slice));
   }
   tx.totalFrames = tx.chunks.length;
 
@@ -1275,19 +1428,17 @@ function txRenderCurrent() {
     }
     return;
   } else {
-    frame = txQrMode === 'binary'
-      ? null  // binary chunks are already the final payload string
-      : { t:'D', i: tx.currentIdx, d: tx.chunks[tx.currentIdx] };
     $('#tx-frame-label').textContent = `${tx.currentIdx + 1} / ${tx.totalFrames}`;
     $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SENDING</b>';
+    if (txQrMode === 'cgrid') {
+      if (!$('#tx-qr-frame').querySelector('canvas')) $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
+      renderColorGrid($('#tx-qr-frame').querySelector('canvas'), tx.currentIdx, tx.chunks[tx.currentIdx]);
+      return;
+    }
+    frame = txQrMode === 'binary' ? null : { t:'D', i: tx.currentIdx, d: tx.chunks[tx.currentIdx] };
   }
-  // ensure canvas exists in frame
-  if (!$('#tx-qr-frame').querySelector('canvas')) {
-    $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
-  }
-  const payload = frame !== null
-    ? JSON.stringify(frame)
-    : tx.chunks[tx.currentIdx];
+  if (!$('#tx-qr-frame').querySelector('canvas')) $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
+  const payload = frame !== null ? JSON.stringify(frame) : tx.chunks[tx.currentIdx];
   renderQR($('#tx-qr-frame').querySelector('canvas'), payload, { ecc: tx.ecc, size: tx.qrSize });
 }
 
@@ -1301,13 +1452,17 @@ function txEnterBrowseMode() {
 
 function txBrowseRender() {
   const i = tx.currentIdx;
-  const payload = txQrMode === 'binary'
-    ? tx.chunks[i]
-    : JSON.stringify({ t:'D', i, d: tx.chunks[i] });
   if (!$('#tx-qr-frame').querySelector('canvas')) {
     $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
   }
-  renderQR($('#tx-qr-frame').querySelector('canvas'), payload, { ecc: tx.ecc, size: tx.qrSize });
+  if (txQrMode === 'cgrid') {
+    renderColorGrid($('#tx-qr-frame').querySelector('canvas'), i, tx.chunks[i]);
+  } else {
+    const payload = txQrMode === 'binary'
+      ? tx.chunks[i]
+      : JSON.stringify({ t:'D', i, d: tx.chunks[i] });
+    renderQR($('#tx-qr-frame').querySelector('canvas'), payload, { ecc: tx.ecc, size: tx.qrSize });
+  }
   $('#tx-frame-label').textContent = `PARCOURS ${i + 1} / ${tx.totalFrames}`;
   const jumpEl = $('#tx-browse-jump');
   if (parseInt(jumpEl.value) !== i + 1) jumpEl.value = i + 1;
@@ -1514,7 +1669,10 @@ function rxProcessDFrame(i, bytes) {
   if (rx.receivedCount === rx.meta.f) rxComplete();
 }
 
-async function onRxScan(data, binaryData) {
+async function onRxScan(data, binaryData, cgData) {
+  // Color grid frame
+  if (cgData) { rxProcessDFrame(cgData.frameIndex, cgData.payload); return; }
+
   // Binary DATA frame: first byte is 0x44 ('D'), not '{' (JSON start)
   if (binaryData && binaryData[0] === 0x44 && binaryData.length >= 3) {
     const i = (binaryData[1] << 8) | binaryData[2];
