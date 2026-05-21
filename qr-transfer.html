@@ -578,19 +578,20 @@
   .qr-frame:fullscreen,
   .qr-frame:-webkit-full-screen {
     max-width: none !important;
-    width: 100vh !important;
+    width: 100vw !important;
     height: 100vh !important;
     padding: 0 !important;
-    margin: auto !important;
-    background: #fff;
+    margin: 0 !important;
+    background: #000;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .qr-frame:fullscreen canvas,
   .qr-frame:-webkit-full-screen canvas {
-    width: 100% !important;
-    height: 100% !important;
+    width: min(100vw, 100vh) !important;
+    height: min(100vw, 100vh) !important;
+    background: #fff;
   }
   .camera-frame:fullscreen,
   .camera-frame:-webkit-full-screen {
@@ -598,6 +599,10 @@
     height: 100vh !important;
     max-width: none !important;
     aspect-ratio: auto !important;
+  }
+  .camera-frame:fullscreen video,
+  .camera-frame:-webkit-full-screen video {
+    object-fit: contain;
   }
 
   /* ============ HIDDEN ============ */
