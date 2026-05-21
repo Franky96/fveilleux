@@ -1603,10 +1603,11 @@ function setTxTransportMode(mode) {
   // mode: 'confirm' | 'express'
   noAckMode   = mode !== 'confirm';
   expressMode = mode === 'express';
-  ['confirm','express'].forEach(m => {
-    $(`#${m}-toggle`).classList.toggle('active', m === mode);
-  });
-  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
+  $('#confirm-toggle').classList.remove('active');
+  $('#express-toggle').classList.remove('active');
+  $(`#${mode}-toggle`).classList.add('active');
+  const recBtn = $('#rx-rec-btn');
+  if (recBtn) recBtn.style.display = expressMode ? '' : 'none';
 }
 $('#confirm-toggle').addEventListener('click', () => setTxTransportMode('confirm'));
 $('#express-toggle').addEventListener('click', () => setTxTransportMode('express'));
