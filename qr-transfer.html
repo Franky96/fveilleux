@@ -703,8 +703,11 @@
       </div>
 
       <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.2rem;text-align:center;">
-        <button class="no-ack-btn" id="no-ack-toggle">⚡ Mode sans confirmation</button>
-        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Envoi continu sans validation trame par trame — plus rapide, sans garantie</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="no-ack-btn" id="no-ack-toggle">⚡ Sans confirmation</button>
+          <button class="no-ack-btn" id="express-toggle">🎬 Express</button>
+        </div>
+        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Sans confirmation : envoi continu · Express : 150 ms/trame, le récepteur enregistre la vidéo puis décode</p>
       </div>
     </div>
   </section>
@@ -842,6 +845,8 @@
             <div><span class="led live"></span>SCAN DATA</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="cam-flip-btn" id="rx-cam-flip">⟳ caméra</button>
+              <button class="cam-flip-btn" id="rx-force-read" title="Forcer une lecture du code actuellement visible">📸</button>
+              <button class="cam-flip-btn" id="rx-rec-btn" style="display:none;" title="Enregistrer la séquence express puis décoder">⏺ REC</button>
               <span id="rx-frame-label">en attente HELLO…</span>
               <button class="fs-btn" onclick="goFullscreen('rx-cam-frame','rx-qr-frame')" title="Plein écran">⛶</button>
             </div>
@@ -922,6 +927,7 @@ const QR_DATA_ECC_SIMPLE   = 'M';   // simple: medium ECC for robustness
 const QR_ACK_ECC           = 'M';   // small payload, higher ECC ok
 const SCAN_MAX_DIM         = 800;   // downscale scanning canvas for perf
 const TX_NOACK_FRAME_MS    = 1200;  // ms per DATA frame in no-ack mode
+const TX_EXPRESS_FRAME_MS  =  150;  // ms per DATA frame in express mode
 
 // QR ECC-L byte capacity per version v1-v40 (for auto-density)
 const QR_CAP_L = [0,17,32,53,78,106,134,154,192,230,271,321,367,425,458,520,586,644,718,792,858,929,1003,1091,1171,1273,1367,1465,1528,1628,1732,1840,1952,2068,2188,2303,2431,2563,2699,2809,2953];
@@ -1243,8 +1249,9 @@ function renderQR(canvas, text, opts) {
    ==================================================================== */
 let txFacing     = 'environment';
 let rxFacing     = 'environment';
-let txQrMode  = 'normal'; // 'normal' | 'simple' | 'max' | 'binary'
-let noAckMode = false;
+let txQrMode    = 'normal'; // 'normal' | 'simple' | 'max' | 'binary'
+let noAckMode   = false;
+let expressMode = false;
 
 async function flipTxCamera() {
   if (!tx.scanner) return;
@@ -1405,7 +1412,7 @@ function txNoAckAdvance() {
     const pct = Math.round((tx.currentIdx / tx.totalFrames) * 100);
     $('#tx-progress').style.width = pct + '%';
     $('#tx-progress-text').textContent = pct + '%';
-    tx.intervalId = setTimeout(() => { tx.currentIdx++; txNoAckAdvance(); }, TX_NOACK_FRAME_MS);
+    tx.intervalId = setTimeout(() => { tx.currentIdx++; txNoAckAdvance(); }, expressMode ? TX_EXPRESS_FRAME_MS : TX_NOACK_FRAME_MS);
   }
 }
 
@@ -1473,7 +1480,7 @@ function txBrowsePlay() {
   tx.browsePlayId = setInterval(() => {
     tx.currentIdx = (tx.currentIdx + 1) % tx.totalFrames;
     txBrowseRender();
-  }, TX_NOACK_FRAME_MS);
+  }, expressMode ? TX_EXPRESS_FRAME_MS : TX_NOACK_FRAME_MS);
   $('#tx-browse-play').textContent = '⏸ Pause';
   $('#tx-browse-play').className = 'btn primary';
 }
@@ -1612,6 +1619,10 @@ async function rxStart() {
   $('#rx-progress-text').textContent = '0%';
   $('#rx-frame-label').textContent = 'en attente HELLO…';
   $('#rx-ack-label').textContent = '—';
+  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
+  $('#rx-rec-btn').textContent = '⏺ REC';
+  $('#rx-rec-btn').style.borderColor = '';
+  $('#rx-rec-btn').style.color = '';
   $('#rx-qr-frame').classList.add('empty');
   $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
   $('#rx-complete').style.display = 'none';
@@ -1777,6 +1788,158 @@ $('#rx-force-btn').addEventListener('click', () => rxComplete());
 
 $('#tx-cam-flip').addEventListener('click', flipTxCamera);
 $('#rx-cam-flip').addEventListener('click', flipRxCamera);
+
+/* ====================================================================
+   EXPRESS MODE + FORCE READ
+   ==================================================================== */
+
+$('#express-toggle').addEventListener('click', () => {
+  expressMode = !expressMode;
+  $('#express-toggle').classList.toggle('active', expressMode);
+  // Express implies no-ack
+  if (expressMode && !noAckMode) {
+    noAckMode = true;
+    $('#no-ack-toggle').classList.add('active');
+  }
+  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
+});
+
+/* Force-read: retry decode on current scan canvas with aggressive settings */
+$('#rx-force-read').addEventListener('click', () => {
+  const canvas = $('#scan-canvas');
+  if (!canvas.width || !canvas.height) { toast('Pas d\'image caméra', 'err'); return; }
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  // 1. jsQR both inversions, native size
+  let img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let code = jsQR(img.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+  if (code && code.binaryData && code.binaryData.length > 0) {
+    try { onRxScan(code.data, code.binaryData, null); toast('QR lu ✓', 'ok'); } catch(e) {}
+    return;
+  }
+
+  // 2. 2× upscale — helps small or dense QR
+  const c2 = document.createElement('canvas');
+  c2.width = canvas.width * 2; c2.height = canvas.height * 2;
+  const ctx2 = c2.getContext('2d');
+  ctx2.imageSmoothingEnabled = false;
+  ctx2.drawImage(canvas, 0, 0, c2.width, c2.height);
+  img = ctx2.getImageData(0, 0, c2.width, c2.height);
+  code = jsQR(img.data, c2.width, c2.height, { inversionAttempts: 'attemptBoth' });
+  if (code && code.binaryData && code.binaryData.length > 0) {
+    try { onRxScan(code.data, code.binaryData, null); toast('QR lu (2×) ✓', 'ok'); } catch(e) {}
+    return;
+  }
+
+  // 3. Color grid
+  const cg = tryColorGrid(ctx, canvas.width, canvas.height);
+  if (cg) {
+    try { onRxScan('', null, cg); toast('Grille lue ✓', 'ok'); } catch(e) {}
+    return;
+  }
+
+  toast('Aucun code détecté', 'err');
+});
+
+/* Express recording + video decode */
+const rxExpress = { mediaRecorder: null, chunks: [], recording: false };
+
+function rxStartRecord() {
+  const stream = $('#rx-video').srcObject;
+  if (!stream) { toast('Caméra non démarrée', 'err'); return; }
+  rxExpress.chunks = [];
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9'
+                 : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '';
+  try {
+    rxExpress.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+  } catch(e) { toast('Enregistrement non supporté par ce navigateur', 'err'); return; }
+  rxExpress.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) rxExpress.chunks.push(e.data); };
+  rxExpress.mediaRecorder.start(200);
+  rxExpress.recording = true;
+  const btn = $('#rx-rec-btn');
+  btn.textContent = '⏹ Décoder';
+  btn.style.borderColor = 'var(--red)';
+  btn.style.color = 'var(--red)';
+  toast('Enregistrement en cours…');
+}
+
+async function rxStopAndDecode() {
+  const btn = $('#rx-rec-btn');
+  btn.disabled = true;
+  btn.textContent = '⌛ Analyse…';
+  rxExpress.mediaRecorder.stop();
+  rxExpress.recording = false;
+  await new Promise(r => { rxExpress.mediaRecorder.onstop = r; });
+  const mimeType = rxExpress.mediaRecorder.mimeType || 'video/webm';
+  const blob = new Blob(rxExpress.chunks, { type: mimeType });
+  toast('Décodage vidéo en cours…');
+  try {
+    await rxDecodeVideoBlob(blob);
+  } catch(e) {
+    toast('Erreur : ' + (e.message || e), 'err');
+  }
+  btn.disabled = false;
+  btn.textContent = '⏺ REC';
+  btn.style.borderColor = '';
+  btn.style.color = '';
+}
+
+async function rxDecodeVideoBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const vid = document.createElement('video');
+  vid.src = url;
+  vid.muted = true;
+  vid.preload = 'auto';
+  await new Promise((res, rej) => {
+    vid.onloadedmetadata = res;
+    vid.onerror = () => rej(new Error('Vidéo illisible'));
+    vid.load();
+    setTimeout(() => rej(new Error('Timeout chargement vidéo')), 12000);
+  });
+  const duration = vid.duration;
+  if (!isFinite(duration) || duration <= 0) throw new Error('Durée vidéo invalide');
+
+  const step = 1 / 15; // sample at 15 fps — catches frames shown for ≥67 ms
+  const totalSteps = Math.ceil(duration / step);
+  const cvs = document.createElement('canvas');
+  const ctx = cvs.getContext('2d');
+  let lastKey = null;
+  let decoded = 0;
+
+  for (let i = 0; i < totalSteps; i++) {
+    vid.currentTime = i * step;
+    await new Promise(r => { vid.onseeked = r; });
+    if (!cvs.width) { cvs.width = vid.videoWidth || 640; cvs.height = vid.videoHeight || 480; }
+    ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
+
+    const img = ctx.getImageData(0, 0, cvs.width, cvs.height);
+    const code = jsQR(img.data, cvs.width, cvs.height, { inversionAttempts: 'dontInvert' });
+    const bd = code && code.binaryData;
+    if (bd && bd.length > 0) {
+      const key = bd[0] === 0x44 && bd.length >= 3 ? 'B' + ((bd[1]<<8)|bd[2]) : (code.data || bd.slice(0,4).join(','));
+      if (key !== lastKey) {
+        lastKey = key; decoded++;
+        try { await onRxScan(code.data, bd, null); } catch(e) { console.error(e); }
+      }
+    } else {
+      const cg = tryColorGrid(ctx, cvs.width, cvs.height);
+      if (cg) {
+        const key = 'CG' + cg.frameIndex;
+        if (key !== lastKey) {
+          lastKey = key; decoded++;
+          try { await onRxScan('', null, cg); } catch(e) { console.error(e); }
+        }
+      }
+    }
+    $('#rx-frame-label').textContent = `Vidéo ${Math.round((i+1)/totalSteps*100)}% · ${decoded} trames`;
+  }
+  URL.revokeObjectURL(url);
+  toast(`Vidéo décodée — ${decoded} trames distinctes`);
+}
+
+$('#rx-rec-btn').addEventListener('click', () => {
+  if (!rxExpress.recording) rxStartRecord(); else rxStopAndDecode();
+});
 
 /* ====================================================================
    INIT
