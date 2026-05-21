@@ -705,10 +705,9 @@
       <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.2rem;text-align:center;">
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
           <button class="no-ack-btn" id="confirm-toggle">🔒 Avec confirmation</button>
-          <button class="no-ack-btn" id="no-ack-toggle">⚡ Sans confirmation</button>
           <button class="no-ack-btn active" id="express-toggle">🎬 Express</button>
         </div>
-        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Confirmation : stop-and-wait · Sans conf : 1200 ms/trame · Express : 150 ms/trame + ⏺ REC</p>
+        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Express (défaut) : 150 ms/trame · Avec confirmation : stop-and-wait, trame par trame</p>
       </div>
     </div>
   </section>
@@ -1601,16 +1600,15 @@ const rx = {
 };
 
 function setTxTransportMode(mode) {
-  // mode: 'confirm' | 'noack' | 'express'
+  // mode: 'confirm' | 'express'
   noAckMode   = mode !== 'confirm';
   expressMode = mode === 'express';
-  ['confirm','noack','express'].forEach(m => {
+  ['confirm','express'].forEach(m => {
     $(`#${m}-toggle`).classList.toggle('active', m === mode);
   });
   $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
 }
 $('#confirm-toggle').addEventListener('click', () => setTxTransportMode('confirm'));
-$('#no-ack-toggle').addEventListener('click',  () => setTxTransportMode('noack'));
 $('#express-toggle').addEventListener('click', () => setTxTransportMode('express'));
 
 screens.mode.addEventListener('click', e => {
