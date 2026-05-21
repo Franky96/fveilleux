@@ -1056,13 +1056,17 @@ function makeScanner(videoEl, onFound) {
       ctx.drawImage(videoEl, 0, 0, w, h);
       const img = ctx.getImageData(0, 0, w, h);
       const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
-      if (code && code.data) {
-        // dedupe within ~150ms window for the same payload
+      const bd = code && code.binaryData;
+      if (bd && bd.length > 0) {
+        // dedupe: binary DATA frames use type+index as key; JSON frames use decoded string
+        const dk = (bd[0] === 0x44 && bd.length >= 3)
+          ? 'B' + ((bd[1] << 8) | bd[2])
+          : (code.data || bd.slice(0, 8).join(','));
         const now = performance.now();
-        if (code.data !== lastPayload || (now - lastPayloadAt) > 150) {
-          lastPayload = code.data;
+        if (dk !== lastPayload || (now - lastPayloadAt) > 150) {
+          lastPayload = dk;
           lastPayloadAt = now;
-          try { onFound(code.data, code.binaryData); } catch(e) { console.error(e); }
+          try { onFound(code.data, bd); } catch(e) { console.error(e); }
         }
       }
     }
