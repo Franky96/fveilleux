@@ -727,8 +727,12 @@
         </div>
       </label>
       <input type="file" id="tx-file" style="display:none">
-      <div class="controls" style="margin-top: 16px; justify-content: space-between; align-items: center;">
-        <button class="qr-mode-btn" id="tx-simple-toggle" title="Réduit les données par trame pour des QR codes plus simples à lire">◻ QR simple</button>
+      <div class="controls" style="margin-top: 16px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="qr-mode-btn" id="tx-simple-toggle" title="Réduit les données par trame — QR plus facile à scanner">◻ QR simple</button>
+          <button class="qr-mode-btn" id="tx-max-toggle"    title="Maximise les données par trame — JSON+base64, QR v40 (~2100 o/trame)">▲ QR max</button>
+          <button class="qr-mode-btn" id="tx-binary-toggle" title="Encodage binaire brut — capacité maximale (~2950 o/trame)">⬡ QR binaire</button>
+        </div>
         <button class="btn primary" id="tx-start" disabled>▶ Démarrer transmission</button>
       </div>
     </div>
@@ -906,7 +910,10 @@
 
 const CHUNK_BYTES          = 1100;   // raw bytes per chunk — normal mode
 const CHUNK_BYTES_SIMPLE   = 300;    // raw bytes per chunk — simple QR mode
+const CHUNK_BYTES_MAX      = 2100;   // option 1: JSON+base64 near QR v40 L capacity
+const CHUNK_BYTES_BINARY   = 2950;   // option 2: raw binary, fills QR v40 L fully
 const QR_DATA_SIZE         = 460;    // px for data QR rendering
+const QR_DATA_SIZE_MAX     = 800;    // px for high-density modes
 const QR_ACK_SIZE          = 280;    // px for ack QR rendering
 const QR_DATA_ECC          = 'L';   // normal: low ECC = max capacity
 const QR_DATA_ECC_SIMPLE   = 'M';   // simple: medium ECC for robustness
@@ -1055,7 +1062,7 @@ function makeScanner(videoEl, onFound) {
         if (code.data !== lastPayload || (now - lastPayloadAt) > 150) {
           lastPayload = code.data;
           lastPayloadAt = now;
-          try { onFound(code.data); } catch(e) { console.error(e); }
+          try { onFound(code.data, code.binaryData); } catch(e) { console.error(e); }
         }
       }
     }
@@ -1064,6 +1071,16 @@ function makeScanner(videoEl, onFound) {
   requestAnimationFrame(tick);
 
   return { stop: () => { running = false; } };
+}
+
+/* ----- BINARY FRAME HELPERS ----- */
+
+/* Build a binary DATA QR payload: byte 'D' + 2-byte big-endian index + raw bytes.
+   Using ISO-8859-1 string so qrcode-generator Byte mode gets the exact bytes. */
+function buildBinaryFrame(index, u8slice) {
+  let s = String.fromCharCode(0x44, (index >> 8) & 0xff, index & 0xff);
+  for (let i = 0; i < u8slice.length; i++) s += String.fromCharCode(u8slice[i]);
+  return s;
 }
 
 /* ----- QR RENDERING ----- */
@@ -1087,8 +1104,8 @@ function renderQR(canvas, text, opts) {
    ==================================================================== */
 let txFacing     = 'environment';
 let rxFacing     = 'environment';
-let txSimpleMode = false;
-let noAckMode    = false;
+let txQrMode  = 'normal'; // 'normal' | 'simple' | 'max' | 'binary'
+let noAckMode = false;
 
 async function flipTxCamera() {
   if (!tx.scanner) return;
@@ -1125,16 +1142,26 @@ const tx = {
   scanner: null,
   qrCanvas: $('#tx-qr'),
   browsePlayId: null,
+  qrSize: QR_DATA_SIZE,
 };
 
+function txModeConfig() {
+  switch (txQrMode) {
+    case 'simple': return { chunkBytes: CHUNK_BYTES_SIMPLE, ecc: QR_DATA_ECC_SIMPLE, qrSize: QR_DATA_SIZE     };
+    case 'max':    return { chunkBytes: CHUNK_BYTES_MAX,    ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE_MAX };
+    case 'binary': return { chunkBytes: CHUNK_BYTES_BINARY, ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE_MAX };
+    default:       return { chunkBytes: CHUNK_BYTES,        ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE     };
+  }
+}
+
 function txBuildFileInfo() {
-  const chunkSize = txSimpleMode ? CHUNK_BYTES_SIMPLE : CHUNK_BYTES;
-  const frames = Math.ceil(tx.buf.length / chunkSize);
-  const mode = txSimpleMode ? ' · mode simple' : '';
+  const { chunkBytes } = txModeConfig();
+  const frames = Math.ceil(tx.buf.length / chunkBytes);
+  const tag = txQrMode !== 'normal' ? ` · QR ${txQrMode}` : '';
   $('#tx-drop-content').innerHTML = `
     <div class="file-info">
       <div><b>${tx.file.name}</b></div>
-      <div class="meta">${fmtBytes(tx.file.size)} · ${frames} trames${mode}</div>
+      <div class="meta">${fmtBytes(tx.file.size)} · ${frames} trames${tag}</div>
     </div>`;
 }
 
@@ -1149,21 +1176,30 @@ async function onTxFileSelected(e) {
 }
 $('#tx-file').addEventListener('change', onTxFileSelected);
 
-$('#tx-simple-toggle').addEventListener('click', () => {
-  txSimpleMode = !txSimpleMode;
-  const btn = $('#tx-simple-toggle');
-  btn.classList.toggle('active', txSimpleMode);
-  btn.textContent = txSimpleMode ? '◼ QR simple' : '◻ QR simple';
+function setTxQrMode(mode) {
+  txQrMode = txQrMode === mode ? 'normal' : mode;
+  [['simple', '◻ QR simple',  '◼ QR simple' ],
+   ['max',    '▲ QR max',     '▲ QR max'    ],
+   ['binary', '⬡ QR binaire', '⬡ QR binaire']].forEach(([m, off, on]) => {
+    const b = $(`#tx-${m}-toggle`);
+    b.classList.toggle('active', txQrMode === m);
+    b.textContent = txQrMode === m ? on : off;
+  });
   if (tx.buf) txBuildFileInfo();
-});
+}
+$('#tx-simple-toggle').addEventListener('click', () => setTxQrMode('simple'));
+$('#tx-max-toggle').addEventListener('click',    () => setTxQrMode('max'));
+$('#tx-binary-toggle').addEventListener('click', () => setTxQrMode('binary'));
 
 $('#tx-start').addEventListener('click', async () => {
   // Rebuild chunks for the active mode
-  const chunkSize = txSimpleMode ? CHUNK_BYTES_SIMPLE : CHUNK_BYTES;
-  tx.ecc = txSimpleMode ? QR_DATA_ECC_SIMPLE : QR_DATA_ECC;
+  const { chunkBytes, ecc, qrSize } = txModeConfig();
+  tx.ecc    = ecc;
+  tx.qrSize = qrSize;
   tx.chunks = [];
-  for (let i = 0; i < tx.buf.length; i += chunkSize) {
-    tx.chunks.push(uint8ToBase64(tx.buf.subarray(i, i + chunkSize)));
+  for (let off = 0, idx = 0; off < tx.buf.length; off += chunkBytes, idx++) {
+    const slice = tx.buf.subarray(off, off + chunkBytes);
+    tx.chunks.push(txQrMode === 'binary' ? buildBinaryFrame(idx, slice) : uint8ToBase64(slice));
   }
   tx.totalFrames = tx.chunks.length;
 
@@ -1206,7 +1242,7 @@ function txNoAckAdvance() {
   try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); return; }
   if (tx.currentIdx < tx.totalFrames) {
     const elapsed = (performance.now() - tx.startedAt) / 1000;
-    const bytes = Math.max(0, tx.currentIdx) * (txSimpleMode ? CHUNK_BYTES_SIMPLE : CHUNK_BYTES);
+    const bytes = Math.max(0, tx.currentIdx) * txModeConfig().chunkBytes;
     $('#tx-tel-acked').textContent = tx.currentIdx;
     $('#tx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
     const pct = Math.round((tx.currentIdx / tx.totalFrames) * 100);
@@ -1224,7 +1260,7 @@ function txRenderCurrent() {
     $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">HELLO</b>';
   } else if (tx.currentIdx >= tx.totalFrames) {
     $('#tx-frame-label').textContent = `terminé`;
-    $('#tx-qr-frame').innerHTML = `<div style="font-family:'Major Mono Display'; color:var(--green); font-size:32px; text-align:center;">[OK]<div style="font-family:'JetBrains Mono'; font-size:11px; letter-spacing:0.15em; margin-top:8px; color:var(--text-dim)">TRANSFERT TERMINÉ</div></div>`;
+    $('#tx-qr-frame').innerHTML = `<div style="font-family:'Courier New',monospace;color:var(--green);font-size:32px;text-align:center;">[OK]<div style="font-size:11px;letter-spacing:0.15em;margin-top:8px;color:var(--text-dim)">TRANSFERT TERMINÉ</div></div>`;
     toast('Transfert complété ✓', 'ok');
     if (noAckMode) {
       txEnterBrowseMode();
@@ -1235,7 +1271,9 @@ function txRenderCurrent() {
     }
     return;
   } else {
-    frame = { t:'D', i: tx.currentIdx, d: tx.chunks[tx.currentIdx] };
+    frame = txQrMode === 'binary'
+      ? null  // binary chunks are already the final payload string
+      : { t:'D', i: tx.currentIdx, d: tx.chunks[tx.currentIdx] };
     $('#tx-frame-label').textContent = `${tx.currentIdx + 1} / ${tx.totalFrames}`;
     $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--amber)">SENDING</b>';
   }
@@ -1243,7 +1281,10 @@ function txRenderCurrent() {
   if (!$('#tx-qr-frame').querySelector('canvas')) {
     $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
   }
-  renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: tx.ecc, size: QR_DATA_SIZE });
+  const payload = frame !== null
+    ? JSON.stringify(frame)
+    : tx.chunks[tx.currentIdx];
+  renderQR($('#tx-qr-frame').querySelector('canvas'), payload, { ecc: tx.ecc, size: tx.qrSize });
 }
 
 function txEnterBrowseMode() {
@@ -1256,11 +1297,13 @@ function txEnterBrowseMode() {
 
 function txBrowseRender() {
   const i = tx.currentIdx;
-  const frame = { t:'D', i, d: tx.chunks[i] };
+  const payload = txQrMode === 'binary'
+    ? tx.chunks[i]
+    : JSON.stringify({ t:'D', i, d: tx.chunks[i] });
   if (!$('#tx-qr-frame').querySelector('canvas')) {
     $('#tx-qr-frame').innerHTML = '<canvas id="tx-qr"></canvas>';
   }
-  renderQR($('#tx-qr-frame').querySelector('canvas'), JSON.stringify(frame), { ecc: tx.ecc, size: QR_DATA_SIZE });
+  renderQR($('#tx-qr-frame').querySelector('canvas'), payload, { ecc: tx.ecc, size: tx.qrSize });
   $('#tx-frame-label').textContent = `PARCOURS ${i + 1} / ${tx.totalFrames}`;
   const jumpEl = $('#tx-browse-jump');
   if (parseInt(jumpEl.value) !== i + 1) jumpEl.value = i + 1;
@@ -1343,7 +1386,7 @@ function txReset(toMode) {
   if (tx.intervalId) { clearTimeout(tx.intervalId); tx.intervalId = null; }
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
-  tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC;
+  tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC; tx.qrSize = QR_DATA_SIZE;
   if (tx.browsePlayId) { clearInterval(tx.browsePlayId); tx.browsePlayId = null; }
   $('#tx-browse-play').textContent = '▶ Auto';
   $('#tx-browse-play').className = 'btn';
@@ -1433,7 +1476,48 @@ async function rxStart() {
   }
 }
 
-async function onRxScan(data) {
+function rxProcessDFrame(i, bytes) {
+  if (!rx.meta) return;
+  if (i < 0 || i >= rx.meta.f) return;
+
+  if (noAckMode) {
+    const txPct = Math.round(((i + 1) / rx.meta.f) * 100);
+    const curPct = parseFloat($('#rx-progress').style.width) || 0;
+    if (txPct > curPct) {
+      $('#rx-progress').style.width = txPct + '%';
+      $('#rx-progress-text').textContent = txPct + '%';
+    }
+  }
+
+  if (rx.chunks[i]) {
+    if (!noAckMode) rxRenderAck(i);
+    return;
+  }
+  rx.chunks[i] = bytes;
+  rx.receivedCount++;
+  beep();
+  if (!noAckMode) {
+    const pct = Math.round((rx.receivedCount / rx.meta.f) * 100);
+    $('#rx-progress').style.width = pct + '%';
+    $('#rx-progress-text').textContent = pct + '%';
+  }
+  $('#rx-tel-received').textContent = rx.receivedCount + ' / ' + rx.meta.f;
+  const elapsed = (performance.now() - rx.startedAt) / 1000;
+  const estBytes = rx.receivedCount * Math.ceil(rx.meta.s / rx.meta.f);
+  $('#rx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(estBytes / elapsed) + '/s' : '— B/s';
+  $('#rx-frame-label').textContent = `DATA ${i + 1} / ${rx.meta.f} reçue`;
+  if (!noAckMode) rxRenderAck(i);
+  if (rx.receivedCount === rx.meta.f) rxComplete();
+}
+
+async function onRxScan(data, binaryData) {
+  // Binary DATA frame: first byte is 0x44 ('D'), not '{' (JSON start)
+  if (binaryData && binaryData[0] === 0x44 && binaryData.length >= 3) {
+    const i = (binaryData[1] << 8) | binaryData[2];
+    rxProcessDFrame(i, new Uint8Array(binaryData.slice(3)));
+    return;
+  }
+
   let msg;
   try { msg = JSON.parse(data); } catch { return; }
 
@@ -1461,39 +1545,7 @@ async function onRxScan(data) {
   }
 
   if (msg.t === 'D') {
-    if (!rx.meta) return;
-    const i = msg.i;
-    if (i < 0 || i >= rx.meta.f) return;
-
-    // In no-ack mode: advance progress bar from frame index encoded in QR (monotone)
-    if (noAckMode) {
-      const txPct = Math.round(((i + 1) / rx.meta.f) * 100);
-      const curPct = parseFloat($('#rx-progress').style.width) || 0;
-      if (txPct > curPct) {
-        $('#rx-progress').style.width = txPct + '%';
-        $('#rx-progress-text').textContent = txPct + '%';
-      }
-    }
-
-    if (rx.chunks[i]) {
-      if (!noAckMode) rxRenderAck(i);
-      return;
-    }
-    rx.chunks[i] = base64ToUint8(msg.d);
-    rx.receivedCount++;
-    beep();
-    if (!noAckMode) {
-      const pct = Math.round((rx.receivedCount / rx.meta.f) * 100);
-      $('#rx-progress').style.width = pct + '%';
-      $('#rx-progress-text').textContent = pct + '%';
-    }
-    $('#rx-tel-received').textContent = rx.receivedCount + ' / ' + rx.meta.f;
-    const elapsed = (performance.now() - rx.startedAt) / 1000;
-    const bytes = rx.receivedCount * CHUNK_BYTES;
-    $('#rx-tel-rate').textContent = elapsed > 0.5 ? fmtBytes(bytes / elapsed) + '/s' : '— B/s';
-    $('#rx-frame-label').textContent = `DATA ${i + 1} / ${rx.meta.f} reçue`;
-    if (!noAckMode) rxRenderAck(i);
-    if (rx.receivedCount === rx.meta.f) rxComplete();
+    rxProcessDFrame(msg.i, base64ToUint8(msg.d));
   }
 }
 
