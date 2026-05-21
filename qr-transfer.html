@@ -276,7 +276,7 @@
     align-items: center;
     aspect-ratio: 1 / 1;
     width: 100%;
-    max-width: 480px;
+    max-width: 600px;
     margin: 0 auto;
   }
   .qr-frame canvas, .qr-frame img {
@@ -348,7 +348,7 @@
 
   .camera-frame {
     width: 100%;
-    max-width: 480px;
+    max-width: 600px;
     margin: 0 auto;
     aspect-ratio: 1 / 1;
     background: #000;
@@ -915,12 +915,12 @@
      ACK    { t:"A", i:index }   (i = -1 acknowledges HELLO)
    ==================================================================== */
 
-const CHUNK_BYTES          = 1100;   // raw bytes per chunk — normal mode
+const CHUNK_BYTES          = 500;    // raw bytes per chunk — normal mode (~v23, ~6px/mod at 600px)
 const CHUNK_BYTES_SIMPLE   = 300;    // raw bytes per chunk — simple QR mode
-const CHUNK_BYTES_MAX      = 2100;   // option 1: JSON+base64 near QR v40 L capacity
-const CHUNK_BYTES_BINARY   = 2950;   // option 2: raw binary, fills QR v40 L fully
-const QR_DATA_SIZE         = 460;    // px for data QR rendering
-const QR_DATA_SIZE_MAX     = 800;    // px for high-density modes
+const CHUNK_BYTES_MAX      = 700;    // option 1: higher density, still camera-scannable
+const CHUNK_BYTES_BINARY   = 900;    // option 2: raw binary, moderate density
+const QR_DATA_SIZE         = 500;    // px for data QR rendering
+const QR_DATA_SIZE_MAX     = 600;    // px for high-density modes
 const QR_ACK_SIZE          = 280;    // px for ack QR rendering
 const QR_DATA_ECC          = 'L';   // normal: low ECC = max capacity
 const QR_DATA_ECC_SIMPLE   = 'M';   // simple: medium ECC for robustness
@@ -1305,12 +1305,15 @@ function txModeConfig() {
     case 'max':    return { chunkBytes: CHUNK_BYTES_MAX,    ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE_MAX };
     case 'binary': return { chunkBytes: CHUNK_BYTES_BINARY, ecc: QR_DATA_ECC,         qrSize: QR_DATA_SIZE_MAX };
     case 'auto': {
-      // Pick largest QR version where modules are >= 4px at current screen width
-      const w = Math.max(240, Math.min(800, Math.floor((window.innerWidth - 64) / 2)));
-      const ver = Math.min(40, Math.max(1, Math.floor((Math.floor(w / 4) - 17) / 4)));
+      // Mobile-aware: target 5px/module so cameras can scan reliably
+      const isMobile = window.innerWidth < 800;
+      const stageColW = isMobile ? (window.innerWidth - 32) : Math.floor((window.innerWidth - 64) / 2);
+      const frameW = Math.min(600, Math.max(240, stageColW));
+      const maxModules = Math.floor(frameW / 5);
+      const ver = Math.min(30, Math.max(1, Math.floor((maxModules - 17) / 4)));
       const cap = QR_CAP_L[ver];
       const rawBytes = Math.max(100, Math.floor((cap - 25) * 3 / 4 / 3) * 3);
-      return { chunkBytes: rawBytes, ecc: QR_DATA_ECC, qrSize: w };
+      return { chunkBytes: rawBytes, ecc: QR_DATA_ECC, qrSize: frameW };
     }
     case 'cgrid': {
       const dataCells = CGRID_N * CGRID_N - 4 * CGRID_CC * CGRID_CC - 12;
