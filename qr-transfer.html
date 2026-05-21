@@ -707,7 +707,7 @@
           <button class="no-ack-btn" id="no-ack-toggle">⚡ Sans confirmation</button>
           <button class="no-ack-btn" id="express-toggle">🎬 Express</button>
         </div>
-        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Sans confirmation : envoi continu · Express : 150 ms/trame, le récepteur enregistre la vidéo puis décode</p>
+        <p style="color:var(--text-mute);font-size:11px;margin-top:0.6rem;letter-spacing:0.05em;">Sans confirmation : 1200 ms/trame · Express : 150 ms/trame, scanner live côté récepteur</p>
       </div>
     </div>
   </section>
@@ -846,7 +846,6 @@
             <div style="display:flex;align-items:center;gap:8px;">
               <button class="cam-flip-btn" id="rx-cam-flip">⟳ caméra</button>
               <button class="cam-flip-btn" id="rx-force-read" title="Forcer une lecture du code actuellement visible">📸</button>
-              <button class="cam-flip-btn" id="rx-rec-btn" style="display:none;" title="Enregistrer la séquence express puis décoder">⏺ REC</button>
               <span id="rx-frame-label">en attente HELLO…</span>
               <button class="fs-btn" onclick="goFullscreen('rx-cam-frame','rx-qr-frame')" title="Plein écran">⛶</button>
             </div>
@@ -1289,6 +1288,7 @@ const tx = {
   qrCanvas: $('#tx-qr'),
   browsePlayId: null,
   qrSize: QR_DATA_SIZE,
+  browsing: false,
 };
 
 function txModeConfig() {
@@ -1404,7 +1404,7 @@ $('#tx-send-btn').addEventListener('click', () => {
 
 function txNoAckAdvance() {
   try { txRenderCurrent(); } catch (e) { toast('Erreur QR — ' + (e.message || e), 'err'); return; }
-  if (tx.currentIdx < tx.totalFrames) {
+  if (!tx.browsing && tx.currentIdx < tx.totalFrames) {
     const elapsed = (performance.now() - tx.startedAt) / 1000;
     const bytes = Math.max(0, tx.currentIdx) * txModeConfig().chunkBytes;
     $('#tx-tel-acked').textContent = tx.currentIdx;
@@ -1450,6 +1450,7 @@ function txRenderCurrent() {
 }
 
 function txEnterBrowseMode() {
+  tx.browsing = true;
   $('#tx-mode-label').innerHTML = 'STATE <b style="color:var(--blue)">PARCOURS</b>';
   $('#tx-browse').style.display = '';
   $('#tx-done-btn').style.display = '';
@@ -1515,6 +1516,8 @@ $('#tx-browse-jump').addEventListener('change', () => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#fs-overlay').classList.contains('active')) { closeOverlay(); return; }
   if ($('#tx-browse').style.display === 'none') return;
+  if (document.activeElement === $('#tx-browse-jump')) return;
+  if (tx.browsePlayId) return; // don't jump frames while auto-play is running
   if (e.key === 'ArrowLeft'  && tx.currentIdx > 0)                  { tx.currentIdx--; txBrowseRender(); }
   if (e.key === 'ArrowRight' && tx.currentIdx < tx.totalFrames - 1) { tx.currentIdx++; txBrowseRender(); }
 });
@@ -1552,7 +1555,7 @@ function txReset(toMode) {
   if (tx.intervalId) { clearTimeout(tx.intervalId); tx.intervalId = null; }
   if (tx.scanner) { tx.scanner.stop(); tx.scanner = null; }
   stopCamera($('#tx-video'));
-  tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC; tx.qrSize = QR_DATA_SIZE;
+  tx.file = null; tx.buf = null; tx.chunks = []; tx.totalFrames = 0; tx.currentIdx = -1; tx.ackedCount = 0; tx.ecc = QR_DATA_ECC; tx.qrSize = QR_DATA_SIZE; tx.browsing = false;
   if (tx.browsePlayId) { clearInterval(tx.browsePlayId); tx.browsePlayId = null; }
   $('#tx-browse-play').textContent = '▶ Auto';
   $('#tx-browse-play').className = 'btn';
@@ -1619,10 +1622,6 @@ async function rxStart() {
   $('#rx-progress-text').textContent = '0%';
   $('#rx-frame-label').textContent = 'en attente HELLO…';
   $('#rx-ack-label').textContent = '—';
-  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
-  $('#rx-rec-btn').textContent = '⏺ REC';
-  $('#rx-rec-btn').style.borderColor = '';
-  $('#rx-rec-btn').style.color = '';
   $('#rx-qr-frame').classList.add('empty');
   $('#rx-qr-frame').innerHTML = 'En attente de la première trame';
   $('#rx-complete').style.display = 'none';
@@ -1796,12 +1795,10 @@ $('#rx-cam-flip').addEventListener('click', flipRxCamera);
 $('#express-toggle').addEventListener('click', () => {
   expressMode = !expressMode;
   $('#express-toggle').classList.toggle('active', expressMode);
-  // Express implies no-ack
   if (expressMode && !noAckMode) {
     noAckMode = true;
     $('#no-ack-toggle').classList.add('active');
   }
-  $('#rx-rec-btn').style.display = expressMode ? '' : 'none';
 });
 
 /* Force-read: retry decode on current scan canvas with aggressive settings */
@@ -1841,105 +1838,6 @@ $('#rx-force-read').addEventListener('click', () => {
   toast('Aucun code détecté', 'err');
 });
 
-/* Express recording + video decode */
-const rxExpress = { mediaRecorder: null, chunks: [], recording: false };
-
-function rxStartRecord() {
-  const stream = $('#rx-video').srcObject;
-  if (!stream) { toast('Caméra non démarrée', 'err'); return; }
-  rxExpress.chunks = [];
-  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9'
-                 : MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '';
-  try {
-    rxExpress.mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-  } catch(e) { toast('Enregistrement non supporté par ce navigateur', 'err'); return; }
-  rxExpress.mediaRecorder.ondataavailable = e => { if (e.data.size > 0) rxExpress.chunks.push(e.data); };
-  rxExpress.mediaRecorder.start(200);
-  rxExpress.recording = true;
-  const btn = $('#rx-rec-btn');
-  btn.textContent = '⏹ Décoder';
-  btn.style.borderColor = 'var(--red)';
-  btn.style.color = 'var(--red)';
-  toast('Enregistrement en cours…');
-}
-
-async function rxStopAndDecode() {
-  const btn = $('#rx-rec-btn');
-  btn.disabled = true;
-  btn.textContent = '⌛ Analyse…';
-  rxExpress.mediaRecorder.stop();
-  rxExpress.recording = false;
-  await new Promise(r => { rxExpress.mediaRecorder.onstop = r; });
-  const mimeType = rxExpress.mediaRecorder.mimeType || 'video/webm';
-  const blob = new Blob(rxExpress.chunks, { type: mimeType });
-  toast('Décodage vidéo en cours…');
-  try {
-    await rxDecodeVideoBlob(blob);
-  } catch(e) {
-    toast('Erreur : ' + (e.message || e), 'err');
-  }
-  btn.disabled = false;
-  btn.textContent = '⏺ REC';
-  btn.style.borderColor = '';
-  btn.style.color = '';
-}
-
-async function rxDecodeVideoBlob(blob) {
-  const url = URL.createObjectURL(blob);
-  const vid = document.createElement('video');
-  vid.src = url;
-  vid.muted = true;
-  vid.preload = 'auto';
-  await new Promise((res, rej) => {
-    vid.onloadedmetadata = res;
-    vid.onerror = () => rej(new Error('Vidéo illisible'));
-    vid.load();
-    setTimeout(() => rej(new Error('Timeout chargement vidéo')), 12000);
-  });
-  const duration = vid.duration;
-  if (!isFinite(duration) || duration <= 0) throw new Error('Durée vidéo invalide');
-
-  const step = 1 / 15; // sample at 15 fps — catches frames shown for ≥67 ms
-  const totalSteps = Math.ceil(duration / step);
-  const cvs = document.createElement('canvas');
-  const ctx = cvs.getContext('2d');
-  let lastKey = null;
-  let decoded = 0;
-
-  for (let i = 0; i < totalSteps; i++) {
-    vid.currentTime = i * step;
-    await new Promise(r => { vid.onseeked = r; });
-    if (!cvs.width) { cvs.width = vid.videoWidth || 640; cvs.height = vid.videoHeight || 480; }
-    ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
-
-    const img = ctx.getImageData(0, 0, cvs.width, cvs.height);
-    const code = jsQR(img.data, cvs.width, cvs.height, { inversionAttempts: 'dontInvert' });
-    const bd = code && code.binaryData;
-    if (bd && bd.length > 0) {
-      const key = bd[0] === 0x44 && bd.length >= 3 ? 'B' + ((bd[1]<<8)|bd[2]) : (code.data || bd.slice(0,4).join(','));
-      if (key !== lastKey) {
-        lastKey = key; decoded++;
-        try { await onRxScan(code.data, bd, null); } catch(e) { console.error(e); }
-      }
-    } else {
-      const cg = tryColorGrid(ctx, cvs.width, cvs.height);
-      if (cg) {
-        const key = 'CG' + cg.frameIndex;
-        if (key !== lastKey) {
-          lastKey = key; decoded++;
-          try { await onRxScan('', null, cg); } catch(e) { console.error(e); }
-        }
-      }
-    }
-    $('#rx-frame-label').textContent = `Vidéo ${Math.round((i+1)/totalSteps*100)}% · ${decoded} trames`;
-  }
-  URL.revokeObjectURL(url);
-  toast(`Vidéo décodée — ${decoded} trames distinctes`);
-}
-
-$('#rx-rec-btn').addEventListener('click', () => {
-  if (!rxExpress.recording) rxStartRecord(); else rxStopAndDecode();
-});
 
 /* ====================================================================
    INIT
