@@ -416,6 +416,7 @@ function mettreAJourType(item, loc, typeSelect) {
   sauvegarder();
 }
 
+let _expSaveTimer = null;
 function mettreAJourExp(item, loc, dateStr) {
   if (!loc.expirations) loc.expirations = {};
   if (dateStr) {
@@ -423,7 +424,9 @@ function mettreAJourExp(item, loc, dateStr) {
   } else {
     delete loc.expirations[item.id];
   }
-  sauvegarder();
+  // Debounce : évite que onSnapshot reconstruit le DOM pendant que le picker iOS est ouvert
+  clearTimeout(_expSaveTimer);
+  _expSaveTimer = setTimeout(() => sauvegarder(), 1500);
 }
 
 // ── Modal emplacement ─────────────────────────────────
