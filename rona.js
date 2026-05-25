@@ -65,6 +65,27 @@ const ITEMS = [
     qte: 1, qteMoy: 1, qteGrd: 1, qtePerso: 1 },
 ];
 
+// ── Helper : statut d'expiration ─────────────────────────
+function getExpirationStatus(dateStr) {
+  if (!dateStr) return 'none';
+  const exp = new Date(dateStr);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diff = (exp - now) / (1000 * 60 * 60 * 24);
+  if (diff < 0)  return 'expired';
+  if (diff <= 30) return 'soon';
+  return 'ok';
+}
+
+function expLabel(dateStr) {
+  const status = getExpirationStatus(dateStr);
+  if (!dateStr || status === 'none') return { text: '📅 —', status: 'none' };
+  const d = new Date(dateStr);
+  const fmt = d.toLocaleDateString('fr-CA');
+  const prefix = status === 'expired' ? '⚠️ ' : status === 'soon' ? '⏳ ' : '📅 ';
+  return { text: prefix + fmt, status };
+}
+
 // ── Helper : lecture rétrocompatible d'un item manquant ──
 // Format ancien : number | null   /   Format nouveau : { qte, type }
 function getManquantInfo(val) {
@@ -167,7 +188,8 @@ function renderGrille() {
 
   const loc = ronaData.locations.find(l => l.id === locationActive);
   if (!loc) return;
-  const manquants = loc.manquants || {};
+  const manquants   = loc.manquants   || {};
+  const expirations = loc.expirations || {};
   if (!loc.complets) loc.complets = [];
 
   grid.innerHTML = '';
@@ -202,6 +224,36 @@ function renderGrille() {
     info.className = 'item-info';
     info.innerHTML = `<div class="item-nom">${item.court}</div>
                       <div class="item-fraction">${present}/${item.qte}</div>`;
+
+    // Date d'expiration
+    const expDateStr = expirations[item.id] || null;
+    const { text: expText, status: expStatus } = expLabel(expDateStr);
+    const expRow = document.createElement('div');
+    expRow.className = 'item-exp';
+    const expChip = document.createElement('span');
+    expChip.className = `item-exp-chip exp-${expStatus}`;
+    expChip.textContent = expText;
+    expChip.title = 'Date d\'expiration (cliquer pour modifier)';
+    const expInput = document.createElement('input');
+    expInput.type = 'date';
+    expInput.className = 'item-exp-input';
+    if (expDateStr) expInput.value = expDateStr;
+    expChip.onclick = () => {
+      expInput.style.display = expInput.style.display === 'none' ? 'inline-block' : 'none';
+      if (expInput.style.display !== 'none') expInput.focus();
+    };
+    expInput.onchange = () => {
+      const val = expInput.value || null;
+      mettreAJourExp(item, loc, val);
+      const { text, status } = expLabel(val);
+      expChip.textContent = text;
+      expChip.className = `item-exp-chip exp-${status}`;
+      expInput.style.display = 'none';
+    };
+    expInput.onblur = () => { setTimeout(() => { expInput.style.display = 'none'; }, 150); };
+    expRow.appendChild(expChip);
+    expRow.appendChild(expInput);
+    info.appendChild(expRow);
 
     // Menu déroulant Ajout / cmd
     const typeSelect = document.createElement('select');
@@ -345,6 +397,16 @@ function mettreAJourType(item, loc, typeSelect) {
   sauvegarder();
 }
 
+function mettreAJourExp(item, loc, dateStr) {
+  if (!loc.expirations) loc.expirations = {};
+  if (dateStr) {
+    loc.expirations[item.id] = dateStr;
+  } else {
+    delete loc.expirations[item.id];
+  }
+  sauvegarder();
+}
+
 // ── Modal emplacement ─────────────────────────────────
 
 window.ouvrirModalLocation = function() {
@@ -362,7 +424,7 @@ function sauvegarderLocation() {
   const nom = document.getElementById('location-nom').value.trim();
   if (!nom) return;
   const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  ronaData.locations.push({ id, nom, manquants: {} });
+  ronaData.locations.push({ id, nom, manquants: {}, expirations: {} });
   locationActive = id;
   sauvegarder();
   fermerModalLocation();

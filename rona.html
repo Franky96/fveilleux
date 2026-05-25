@@ -222,6 +222,40 @@
     .modal-box input { margin-bottom: 0.75rem; }
     .modal-box label { font-size: 0.85rem; color: #a89f94; margin-bottom: 0.3rem; display: block; }
 
+    /* ── Date d'expiration ── */
+    .item-exp {
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .item-exp-chip {
+      font-size: 0.65rem;
+      cursor: pointer;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      user-select: none;
+      border: 1px solid transparent;
+      transition: opacity 0.15s;
+    }
+    .item-exp-chip:hover { opacity: 0.75; }
+    .exp-none    { color: #3a4a3a; border-color: #2a3a2a; }
+    .exp-ok      { color: #27ae60; border-color: #1a4a1a; }
+    .exp-soon    { color: #f39c12; border-color: #3a2a00; background: #1a1200; }
+    .exp-expired { color: #c0392b; border-color: #3a1010; background: #1a0808; font-weight: bold; }
+    .item-exp-input {
+      width: 7.5rem;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.35rem;
+      background: #0a0f0a;
+      border: 1px solid #3a7a3a;
+      border-radius: 6px;
+      color: #f0ede6;
+      margin: 0;
+      display: none;
+    }
+
     /* ── État vide ── */
     .rona-empty {
       text-align: center;
