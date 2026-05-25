@@ -223,52 +223,36 @@
     .modal-box label { font-size: 0.85rem; color: #a89f94; margin-bottom: 0.3rem; display: block; }
 
     /* ── Date d'expiration ── */
-    .item-exp {
-      margin-top: 0.3rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .item-exp-label {
-      font-size: 0.65rem;
-      font-weight: bold;
-      white-space: nowrap;
-      letter-spacing: 0.03em;
-    }
-    .exp-none    { color: #3a5a3a; }
-    .exp-ok      { color: #27ae60; }
-    .exp-soon    { color: #f39c12; }
-    .exp-expired { color: #c0392b; }
-    .item-exp-input {
-      flex: 1;
-      min-width: 0;
-      max-width: 9rem;
-      font-size: 0.8rem;
-      padding: 0.3rem 0.4rem;
-      background: #0a0f0a;
+    .btn-date-exp {
+      display: inline-block;
+      vertical-align: middle;
+      font-size: 0.6rem;
+      padding: 0.1rem 0.35rem;
+      margin-left: 0.4rem;
       border: 1px solid #2a3a2a;
-      border-radius: 8px;
-      color: #f0ede6;
-      margin: 0;
-      -webkit-appearance: none;
-    }
-    .item-exp-input:focus { border-color: #80cc80; outline: none; }
-    .item-exp-input.exp-expired { border-color: #c0392b; color: #c0392b; }
-    .item-exp-input.exp-soon    { border-color: #f39c12; color: #f39c12; }
-    .item-exp-input.exp-ok      { border-color: #27ae60; }
-    .btn-exp-clear {
+      border-radius: 5px;
       background: transparent;
-      border: none;
-      color: #3a4a3a;
-      font-size: 0.8rem;
-      padding: 0.25rem;
+      color: #556655;
       cursor: pointer;
-      line-height: 1;
+      white-space: nowrap;
       width: auto;
-      margin: 0;
+      margin-bottom: 0;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-exp-clear:hover { color: #c0392b; }
+    .item-exp-trigger {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+    .item-exp-display {
+      font-size: 0.7rem;
+      margin-top: 0.1rem;
+    }
+    .exp-ok      { color: #27ae60; }
+    .exp-soon    { color: #f39c12; }
+    .exp-expired { color: #c0392b; font-weight: bold; }
 
     /* ── État vide ── */
     .rona-empty {

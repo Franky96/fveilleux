@@ -216,52 +216,63 @@ function renderGrille() {
     // Info
     const info = document.createElement('div');
     info.className = 'item-info';
-    info.innerHTML = `<div class="item-nom">${item.court}</div>
-                      <div class="item-fraction">${present}/${item.qte}</div>`;
+
+    const nomDiv = document.createElement('div');
+    nomDiv.className = 'item-nom';
+    nomDiv.textContent = item.court;
+
+    const fracDiv = document.createElement('div');
+    fracDiv.className = 'item-fraction';
+    fracDiv.textContent = `${present}/${item.qte}`;
+
+    info.appendChild(nomDiv);
+    info.appendChild(fracDiv);
 
     // Date d'expiration (seulement pour les articles concernés)
     if (ITEMS_AVEC_EXPIRY.has(item.id)) {
       const expDateStr = expirations[item.id] || '';
       const expStatus  = getExpirationStatus(expDateStr);
-      const expRow = document.createElement('div');
-      expRow.className = 'item-exp';
 
-      const expLabel = document.createElement('span');
-      expLabel.className = `item-exp-label exp-${expStatus}`;
-      expLabel.textContent = expStatus === 'expired' ? '⚠️ EXP' : expStatus === 'soon' ? '⏳ EXP' : '📅 EXP';
+      // Bouton "Date" inline dans le nom
+      const btnDate = document.createElement('button');
+      btnDate.className = 'btn-date-exp';
+      btnDate.textContent = '📅';
+      btnDate.title = 'Définir la date d\'expiration';
+      nomDiv.appendChild(btnDate);
 
+      // Input caché (non display:none pour iOS)
       const expInput = document.createElement('input');
       expInput.type = 'date';
-      expInput.className = `item-exp-input${expStatus !== 'none' ? ' exp-' + expStatus : ''}`;
+      expInput.className = 'item-exp-trigger';
       if (expDateStr) expInput.value = expDateStr;
+      nomDiv.appendChild(expInput);
+
+      btnDate.onclick = () => {
+        try { expInput.showPicker(); } catch(e) { expInput.click(); }
+      };
+
+      // Affichage de la date sous le nom
+      const expDisplay = document.createElement('div');
+      expDisplay.className = 'item-exp-display';
+      expDisplay.style.display = expDateStr ? '' : 'none';
+      if (expDateStr) {
+        expDisplay.textContent = expDateStr;
+        expDisplay.className = `item-exp-display exp-${expStatus}`;
+      }
+      info.insertBefore(expDisplay, fracDiv);
+
       expInput.onchange = () => {
         const val = expInput.value || null;
         mettreAJourExp(item, loc, val);
         const st = getExpirationStatus(val);
-        expLabel.className = `item-exp-label exp-${st}`;
-        expLabel.textContent = st === 'expired' ? '⚠️ EXP' : st === 'soon' ? '⏳ EXP' : '📅 EXP';
-        expInput.className = `item-exp-input${st !== 'none' ? ' exp-' + st : ''}`;
-        btnClear.style.display = val ? 'inline-block' : 'none';
+        if (val) {
+          expDisplay.textContent = val;
+          expDisplay.className = `item-exp-display exp-${st}`;
+          expDisplay.style.display = '';
+        } else {
+          expDisplay.style.display = 'none';
+        }
       };
-
-      const btnClear = document.createElement('button');
-      btnClear.className = 'btn-exp-clear';
-      btnClear.textContent = '✕';
-      btnClear.title = 'Effacer la date';
-      btnClear.style.display = expDateStr ? 'inline-block' : 'none';
-      btnClear.onclick = () => {
-        expInput.value = '';
-        mettreAJourExp(item, loc, null);
-        expLabel.className = 'item-exp-label exp-none';
-        expLabel.textContent = '📅 EXP';
-        expInput.className = 'item-exp-input';
-        btnClear.style.display = 'none';
-      };
-
-      expRow.appendChild(expLabel);
-      expRow.appendChild(expInput);
-      expRow.appendChild(btnClear);
-      info.appendChild(expRow);
     }
 
     // Menu déroulant Ajout / cmd
