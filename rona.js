@@ -252,17 +252,23 @@ function renderGrille() {
 
       // Affichage de la date sous le nom
       const expDisplay = document.createElement('div');
-      expDisplay.className = 'item-exp-display';
+      expDisplay.className = expDateStr ? `item-exp-display exp-${expStatus}` : 'item-exp-display';
       expDisplay.style.display = expDateStr ? '' : 'none';
-      if (expDateStr) {
-        expDisplay.textContent = expDateStr;
-        expDisplay.className = `item-exp-display exp-${expStatus}`;
-      }
+      expDisplay.textContent = expDateStr || '';
       info.insertBefore(expDisplay, fracDiv);
 
-      expInput.onchange = () => {
+      // Mémoriser la valeur au moment où le picker s'ouvre
+      expInput.addEventListener('focus', () => {
+        expInput.dataset.prev = expInput.value;
+      });
+
+      // change = mettre à jour l'affichage local SEULEMENT, pas Firebase
+      // (évite que onSnapshot/renderGrille ferme le picker en pleine utilisation)
+      expInput.addEventListener('change', () => {
         const val = expInput.value || null;
-        mettreAJourExp(item, loc, val);
+        if (!loc.expirations) loc.expirations = {};
+        if (val) loc.expirations[item.id] = val;
+        else delete loc.expirations[item.id];
         const st = getExpirationStatus(val);
         if (val) {
           expDisplay.textContent = val;
@@ -271,7 +277,15 @@ function renderGrille() {
         } else {
           expDisplay.style.display = 'none';
         }
-      };
+      });
+
+      // blur = picker fermé → sauvegarder Firebase seulement si valeur changée
+      expInput.addEventListener('blur', () => {
+        const prev = expInput.dataset.prev ?? null;
+        const val  = expInput.value || null;
+        if (val === prev) return;
+        sauvegarder();
+      });
     }
 
     // Menu déroulant Ajout / cmd
@@ -416,17 +430,10 @@ function mettreAJourType(item, loc, typeSelect) {
   sauvegarder();
 }
 
-let _expSaveTimer = null;
 function mettreAJourExp(item, loc, dateStr) {
   if (!loc.expirations) loc.expirations = {};
-  if (dateStr) {
-    loc.expirations[item.id] = dateStr;
-  } else {
-    delete loc.expirations[item.id];
-  }
-  // Debounce : évite que onSnapshot reconstruit le DOM pendant que le picker iOS est ouvert
-  clearTimeout(_expSaveTimer);
-  _expSaveTimer = setTimeout(() => sauvegarder(), 1500);
+  if (dateStr) loc.expirations[item.id] = dateStr;
+  else delete loc.expirations[item.id];
 }
 
 // ── Modal emplacement ─────────────────────────────────
