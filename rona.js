@@ -65,6 +65,9 @@ const ITEMS = [
     qte: 1, qteMoy: 1, qteGrd: 1, qtePerso: 1 },
 ];
 
+// ── Articles avec date d'expiration ──────────────────────
+const ITEMS_AVEC_EXPIRY = new Set(['05', '06', '08', '13', '16']);
+
 // ── Helper : statut d'expiration ─────────────────────────
 function getExpirationStatus(dateStr) {
   if (!dateStr) return 'none';
@@ -72,18 +75,9 @@ function getExpirationStatus(dateStr) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const diff = (exp - now) / (1000 * 60 * 60 * 24);
-  if (diff < 0)  return 'expired';
+  if (diff < 0)   return 'expired';
   if (diff <= 30) return 'soon';
   return 'ok';
-}
-
-function expLabel(dateStr) {
-  const status = getExpirationStatus(dateStr);
-  if (!dateStr || status === 'none') return { text: '📅 —', status: 'none' };
-  const d = new Date(dateStr);
-  const fmt = d.toLocaleDateString('fr-CA');
-  const prefix = status === 'expired' ? '⚠️ ' : status === 'soon' ? '⏳ ' : '📅 ';
-  return { text: prefix + fmt, status };
 }
 
 // ── Helper : lecture rétrocompatible d'un item manquant ──
@@ -225,35 +219,50 @@ function renderGrille() {
     info.innerHTML = `<div class="item-nom">${item.court}</div>
                       <div class="item-fraction">${present}/${item.qte}</div>`;
 
-    // Date d'expiration
-    const expDateStr = expirations[item.id] || null;
-    const { text: expText, status: expStatus } = expLabel(expDateStr);
-    const expRow = document.createElement('div');
-    expRow.className = 'item-exp';
-    const expChip = document.createElement('span');
-    expChip.className = `item-exp-chip exp-${expStatus}`;
-    expChip.textContent = expText;
-    expChip.title = 'Date d\'expiration (cliquer pour modifier)';
-    const expInput = document.createElement('input');
-    expInput.type = 'date';
-    expInput.className = 'item-exp-input';
-    if (expDateStr) expInput.value = expDateStr;
-    expChip.onclick = () => {
-      expInput.style.display = expInput.style.display === 'none' ? 'inline-block' : 'none';
-      if (expInput.style.display !== 'none') expInput.focus();
-    };
-    expInput.onchange = () => {
-      const val = expInput.value || null;
-      mettreAJourExp(item, loc, val);
-      const { text, status } = expLabel(val);
-      expChip.textContent = text;
-      expChip.className = `item-exp-chip exp-${status}`;
-      expInput.style.display = 'none';
-    };
-    expInput.onblur = () => { setTimeout(() => { expInput.style.display = 'none'; }, 150); };
-    expRow.appendChild(expChip);
-    expRow.appendChild(expInput);
-    info.appendChild(expRow);
+    // Date d'expiration (seulement pour les articles concernés)
+    if (ITEMS_AVEC_EXPIRY.has(item.id)) {
+      const expDateStr = expirations[item.id] || '';
+      const expStatus  = getExpirationStatus(expDateStr);
+      const expRow = document.createElement('div');
+      expRow.className = 'item-exp';
+
+      const expLabel = document.createElement('span');
+      expLabel.className = `item-exp-label exp-${expStatus}`;
+      expLabel.textContent = expStatus === 'expired' ? '⚠️ EXP' : expStatus === 'soon' ? '⏳ EXP' : '📅 EXP';
+
+      const expInput = document.createElement('input');
+      expInput.type = 'date';
+      expInput.className = `item-exp-input${expStatus !== 'none' ? ' exp-' + expStatus : ''}`;
+      if (expDateStr) expInput.value = expDateStr;
+      expInput.onchange = () => {
+        const val = expInput.value || null;
+        mettreAJourExp(item, loc, val);
+        const st = getExpirationStatus(val);
+        expLabel.className = `item-exp-label exp-${st}`;
+        expLabel.textContent = st === 'expired' ? '⚠️ EXP' : st === 'soon' ? '⏳ EXP' : '📅 EXP';
+        expInput.className = `item-exp-input${st !== 'none' ? ' exp-' + st : ''}`;
+        btnClear.style.display = val ? 'inline-block' : 'none';
+      };
+
+      const btnClear = document.createElement('button');
+      btnClear.className = 'btn-exp-clear';
+      btnClear.textContent = '✕';
+      btnClear.title = 'Effacer la date';
+      btnClear.style.display = expDateStr ? 'inline-block' : 'none';
+      btnClear.onclick = () => {
+        expInput.value = '';
+        mettreAJourExp(item, loc, null);
+        expLabel.className = 'item-exp-label exp-none';
+        expLabel.textContent = '📅 EXP';
+        expInput.className = 'item-exp-input';
+        btnClear.style.display = 'none';
+      };
+
+      expRow.appendChild(expLabel);
+      expRow.appendChild(expInput);
+      expRow.appendChild(btnClear);
+      info.appendChild(expRow);
+    }
 
     // Menu déroulant Ajout / cmd
     const typeSelect = document.createElement('select');
