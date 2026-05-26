@@ -237,11 +237,10 @@
       border-radius: 5px;
       background: transparent;
       color: #556655;
-      cursor: pointer;
       white-space: nowrap;
       width: auto;
       margin: 0;
-      -webkit-tap-highlight-color: transparent;
+      pointer-events: none; /* visuel seulement — l'input transparent capte tous les clics */
     }
     .item-exp-trigger {
       position: absolute;
@@ -250,6 +249,7 @@
       height: 100%;
       opacity: 0;
       cursor: pointer;
+      z-index: 1;
     }
     .item-exp-display {
       font-size: 0.7rem;
