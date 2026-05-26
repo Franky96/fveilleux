@@ -1,4 +1,4 @@
-const SITE_VERSION = '1.3.1';
+const SITE_VERSION = '1.3.2';
 
 (function () {
   const badge = document.querySelector('[data-version-badge]');
