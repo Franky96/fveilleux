@@ -223,28 +223,32 @@
     .modal-box label { font-size: 0.85rem; color: #a89f94; margin-bottom: 0.3rem; display: block; }
 
     /* ── Date d'expiration ── */
-    .btn-date-exp {
+    .exp-btn-wrap {
+      position: relative;
       display: inline-block;
       vertical-align: middle;
+      margin-left: 0.4rem;
+    }
+    .btn-date-exp {
+      display: block;
       font-size: 0.6rem;
       padding: 0.1rem 0.35rem;
-      margin: 0 0 0 0.4rem;
       border: 1px solid #2a3a2a;
       border-radius: 5px;
       background: transparent;
       color: #556655;
       white-space: nowrap;
       width: auto;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      pointer-events: none; /* visuel — le wrapper et l'overlay captent les événements */
       user-select: none;
     }
     .item-exp-trigger {
       position: absolute;
+      inset: 0;
       opacity: 0;
-      width: 1px;
-      height: 1px;
-      pointer-events: none;
+      cursor: pointer;
+      /* pas de pointer-events:none — iOS a besoin de toucher cet input directement */
     }
     .item-exp-display {
       font-size: 0.7rem;

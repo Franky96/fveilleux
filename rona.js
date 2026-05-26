@@ -233,18 +233,25 @@ function renderGrille() {
       const expDateStr = expirations[item.id] || '';
       const expStatus  = getExpirationStatus(expDateStr);
 
+      // Wrapper : showPicker() pour desktop, overlay opacity:0 pour iOS
+      const expWrapper = document.createElement('span');
+      expWrapper.className = 'exp-btn-wrap';
+      expWrapper.addEventListener('click', () => {
+        try { expInput.showPicker(); } catch(e) { /* iOS gère via touch sur l'overlay */ }
+      });
+
+      const btnDate = document.createElement('span');
+      btnDate.className = 'btn-date-exp';
+      btnDate.textContent = '📅';
+
       const expInput = document.createElement('input');
       expInput.type = 'date';
       expInput.className = 'item-exp-trigger';
       if (expDateStr) expInput.value = expDateStr;
-      nomDiv.appendChild(expInput);
 
-      const btnDate = document.createElement('button');
-      btnDate.type = 'button';
-      btnDate.className = 'btn-date-exp';
-      btnDate.textContent = '📅';
-      btnDate.addEventListener('click', () => expInput.showPicker());
-      nomDiv.appendChild(btnDate);
+      expWrapper.appendChild(btnDate);
+      expWrapper.appendChild(expInput);
+      nomDiv.appendChild(expWrapper);
 
       // Affichage de la date sous le nom
       const expDisplay = document.createElement('div');
