@@ -233,22 +233,21 @@ function renderGrille() {
       const expDateStr = expirations[item.id] || '';
       const expStatus  = getExpirationStatus(expDateStr);
 
-      // Wrapper : bouton visible + input transparent par-dessus (fiable iOS Safari)
-      const expWrapper = document.createElement('span');
-      expWrapper.className = 'exp-btn-wrap';
-
-      const btnDate = document.createElement('button');
-      btnDate.className = 'btn-date-exp';
-      btnDate.textContent = '📅';
+      // Label lié à l'input — clic sur label = ouvre le picker, desktop et iOS
+      const expInputId = `exp-input-${item.id}`;
 
       const expInput = document.createElement('input');
       expInput.type = 'date';
+      expInput.id = expInputId;
       expInput.className = 'item-exp-trigger';
       if (expDateStr) expInput.value = expDateStr;
+      nomDiv.appendChild(expInput);
 
-      expWrapper.appendChild(btnDate);
-      expWrapper.appendChild(expInput);
-      nomDiv.appendChild(expWrapper);
+      const btnDate = document.createElement('label');
+      btnDate.htmlFor = expInputId;
+      btnDate.className = 'btn-date-exp';
+      btnDate.textContent = '📅';
+      nomDiv.appendChild(btnDate);
 
       // Affichage de la date sous le nom
       const expDisplay = document.createElement('div');
