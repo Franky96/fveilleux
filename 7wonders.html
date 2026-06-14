@@ -359,7 +359,7 @@ function buildTable() {
 
       if (def.type === 'simple') {
         const inp = document.createElement('input');
-        inp.type='number'; inp.inputMode='numeric'; inp.className='score-inp'; inp.value=s[def.key];
+        inp.type='number'; inp.inputMode='numeric'; inp.className='score-inp'; if(s[def.key]) inp.value=s[def.key];
         if (!def.neg) inp.min=0;
         inp.oninput = () => { s[def.key]=parseInt(inp.value)||0; updateTotaux(); };
         td.appendChild(inp);
@@ -367,7 +367,7 @@ function buildTable() {
       } else if (def.type === 'tresor') {
         const wrap=document.createElement('div'); wrap.className='tresor-cell';
         const inp=document.createElement('input');
-        inp.type='number'; inp.inputMode='numeric'; inp.className='score-inp'; inp.min=0; inp.value=s.pieces;
+        inp.type='number'; inp.inputMode='numeric'; inp.className='score-inp'; inp.min=0; if(s.pieces) inp.value=s.pieces;
         const pts=document.createElement('div'); pts.className='tresor-pts'; pts.id=`trp-${idx}`;
         pts.textContent=`= ${tresorPts(s.pieces)} pts`;
         inp.oninput=()=>{ s.pieces=parseInt(inp.value)||0; pts.textContent=`= ${tresorPts(s.pieces)} pts`; updateTotaux(); };
@@ -382,7 +382,7 @@ function buildTable() {
           const sw=document.createElement('div'); sw.className='sci-sym';
           sw.innerHTML=`<span>${ico}</span>`;
           const inp=document.createElement('input');
-          inp.type='number'; inp.inputMode='numeric'; inp.min=0; inp.value=s[k];
+          inp.type='number'; inp.inputMode='numeric'; inp.min=0; if(s[k]) inp.value=s[k];
           inp.oninput=()=>{ s[k]=parseInt(inp.value)||0; pDiv.textContent=`${sciPts(s.gear,s.compass,s.tablet)} pts`; updateTotaux(); };
           sw.appendChild(inp); row.appendChild(sw);
         });
