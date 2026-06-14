@@ -18,15 +18,36 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
+  { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
+    { key: '7wonders',  icon: '🏛️', label: '7 Wonders'     },
+    { key: 'qwirkle',   icon: '🎯', label: 'Qwirkle'        },
+  ]},
+];
+
+const SECTIONS_INVITABLES = [
+  { key: 'ena',           icon: '🛠️', label: 'ÉNA'            },
+  { key: 'aviation',      icon: '✈️', label: 'Aviation'        },
+  { key: 'bieres',        icon: '🍺', label: 'Bières'          },
+  { key: 'scifi',         icon: '🚀', label: 'Science-Fiction' },
+  { key: 'hockey',        icon: '🏒', label: 'Hockey'          },
+  { key: 'liens',         icon: '🌍', label: 'Liens utiles'    },
+  { key: 'films',         icon: '🎬', label: 'Films & Séries'  },
+  { key: 'informatique',  icon: '💻', label: 'Informatique'    },
+  { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société' },
+  { key: 'rona',          icon: '👷', label: 'RONA S&S'        },
+  { key: 'osint',         icon: '🌐', label: 'OSINT Map'       },
 ];
 
 const configRef = doc(db, "systeme", "config");
 let archivedSections = [];
+let guestPermissions = [];
 
 // Live sync: re-render the archive grid whenever config changes
 onSnapshot(configRef, (snap) => {
-  archivedSections = snap.exists() ? (snap.data().archivedSections || []) : [];
+  archivedSections   = snap.exists() ? (snap.data().archivedSections  || []) : [];
+  guestPermissions   = snap.exists() ? (snap.data().guestPermissions   || []) : [];
   renderArchiveGrid();
+  renderGuestPerms();
   // Re-rendre les permissions si le modal est ouvert
   const modal = document.getElementById('modal-user');
   if (modal && !modal.classList.contains('hidden')) {
@@ -103,6 +124,41 @@ function renderArchiveGrid() {
     }
   });
 }
+
+function renderGuestPerms() {
+  const grid = document.getElementById('guest-perms-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  SECTIONS_INVITABLES.forEach(s => {
+    const on = guestPermissions.includes(s.key);
+    const card = document.createElement('div');
+    card.style.cssText = [
+      'background:' + (on ? '#0f2a0f' : '#0f1a0f'),
+      'border:1px solid ' + (on ? '#27ae60' : '#2a3a2a'),
+      'border-radius:10px',
+      'padding:1rem 0.8rem',
+      'cursor:pointer',
+      'transition:all 0.15s',
+      'text-align:center',
+      'user-select:none',
+    ].join(';');
+    card.innerHTML = `
+      <div style="font-size:1.6rem; margin-bottom:0.3rem;">${s.icon}</div>
+      <div style="font-weight:bold; color:${on ? '#27ae60' : '#556655'}; font-size:0.88rem; margin-bottom:0.25rem;">${s.label}</div>
+      <div style="font-size:0.65rem; color:${on ? '#1a6a1a' : '#2a3a2a'}; letter-spacing:0.03rem;">${on ? '✅ Accessible' : '🔒 Bloqué'}</div>`;
+    card.onmouseenter = () => { card.style.opacity = '0.75'; };
+    card.onmouseleave = () => { card.style.opacity = '1'; };
+    card.onclick = () => toggleGuestPerm(s.key);
+    grid.appendChild(card);
+  });
+}
+
+window.toggleGuestPerm = async function(key) {
+  const idx = guestPermissions.indexOf(key);
+  if (idx === -1) guestPermissions.push(key);
+  else guestPermissions.splice(idx, 1);
+  await setDoc(configRef, { guestPermissions }, { merge: true });
+};
 
 window.toggleArchive = async function(key, children = []) {
   const idx = archivedSections.indexOf(key);
@@ -250,6 +306,10 @@ const PERMS_STRUCTURE = [
     { key: 'converter', label: 'Convertisseur' },
     { key: 'crypteur',  label: 'Encodeur BNR' },
     { key: 'tcpip',     label: 'TCP/IP' },
+  ]},
+  { key: 'jeuxdesociete', label: 'Jeux de société', children: [
+    { key: '7wonders',  label: '7 Wonders' },
+    { key: 'qwirkle',   label: 'Qwirkle'   },
   ]},
 ];
 

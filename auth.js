@@ -24,7 +24,40 @@ document.addEventListener('DOMContentLoaded', () => {
   
   initDB(); // Lancement silencieux au démarrage
 
-  // 2. On attache l'action au bouton IMMÉDIATEMENT
+  // 2. Bouton invité
+  const guestBtn = document.getElementById('guest-btn');
+  if (guestBtn) {
+    guestBtn.addEventListener('mouseenter', () => {
+      guestBtn.style.borderColor = '#80cc80'; guestBtn.style.color = '#80cc80';
+    });
+    guestBtn.addEventListener('mouseleave', () => {
+      guestBtn.style.borderColor = '#2a3a2a'; guestBtn.style.color = '#556655';
+    });
+    guestBtn.addEventListener('click', async () => {
+      guestBtn.textContent = '⏳ Chargement...';
+      guestBtn.disabled = true;
+      try {
+        const configSnap = await getDoc(doc(db, "systeme", "config"));
+        const guestPerms = configSnap.exists() ? (configSnap.data().guestPermissions || []) : [];
+        sessionStorage.setItem('loggedIn', 'true');
+        sessionStorage.setItem('userId', 'guest');
+        sessionStorage.setItem('userName', 'Invité');
+        sessionStorage.setItem('userRole', 'guest');
+        sessionStorage.setItem('userPermissions', JSON.stringify(guestPerms));
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        console.error(err);
+        sessionStorage.setItem('loggedIn', 'true');
+        sessionStorage.setItem('userId', 'guest');
+        sessionStorage.setItem('userName', 'Invité');
+        sessionStorage.setItem('userRole', 'guest');
+        sessionStorage.setItem('userPermissions', '[]');
+        window.location.href = 'dashboard.html';
+      }
+    });
+  }
+
+  // 3. On attache l'action au bouton IMMÉDIATEMENT
   if (loginForm) {
     loginForm.addEventListener('submit', async function(e) {
       e.preventDefault(); // 🛑 BLOQUE LE RECHARGEMENT DE LA PAGE IMMÉDIATEMENT !
