@@ -14,166 +14,194 @@
   </script>
   <style>
     body { align-items: flex-start; }
-
-    .w7 {
-      max-width: 600px;
-      margin: 0 auto;
-      padding-bottom: 4rem;
-    }
+    .w7 { max-width: 100%; padding-bottom: 2rem; }
 
     /* ── Topbar ── */
     .w7-topbar {
       position: sticky; top: 0; z-index: 100;
-      background: #0f1a0f;
-      border-bottom: 1px solid #2a3a2a;
-      padding: 0.65rem 1rem;
+      background: #0f1a0f; border-bottom: 1px solid #2a3a2a;
+      padding: 0.6rem 1rem;
       display: flex; align-items: center; gap: 0.75rem;
     }
-    .w7-topbar a { color: #80cc80; text-decoration: none; font-size: 1.3rem; padding: 0.2rem; }
+    .w7-topbar a { color: #80cc80; text-decoration: none; font-size: 1.3rem; }
     .w7-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
 
     /* ── Tabs ── */
-    .w7-tabs {
-      display: flex;
-      border-bottom: 1px solid #2a3a2a;
-    }
+    .w7-tabs { display: flex; border-bottom: 1px solid #2a3a2a; }
     .w7-tab {
-      flex: 1; padding: 0.7rem; background: transparent;
+      flex: 1; padding: 0.65rem; background: transparent;
       border: none; border-bottom: 2px solid transparent;
       color: #556655; font-size: 0.9rem; cursor: pointer;
-      margin-bottom: -1px; transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
     }
     .w7-tab.active { color: #c9a84c; border-bottom-color: #c9a84c; font-weight: bold; }
 
     /* ── Setup ── */
-    .w7-setup { padding: 1rem; }
-    .setup-label { font-size: 0.75rem; color: #556655; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
-    .nb-btns { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; }
+    .w7-setup { padding: 1.25rem; max-width: 500px; margin: 0 auto; }
+    .setup-lbl { font-size: 0.72rem; color: #556655; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .nb-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
     .nb-btn {
-      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      width: 2.6rem; height: 2.6rem; border-radius: 50%;
       border: 2px solid #2a3a2a; background: transparent;
-      color: #556655; font-size: 1rem; font-weight: bold; cursor: pointer;
-      transition: all 0.15s;
+      color: #556655; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.15s;
     }
     .nb-btn.active { border-color: #c9a84c; color: #c9a84c; background: rgba(201,168,76,0.1); }
     .name-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
     .name-num {
-      width: 1.6rem; height: 1.6rem; border-radius: 50%;
+      width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
       font-size: 0.75rem; font-weight: bold;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
     }
     .btn-start {
       display: block; width: 100%; margin-top: 1.25rem;
-      padding: 0.85rem; background: #c9a84c; color: #0a0f0a;
+      padding: 0.9rem; background: #c9a84c; color: #0a0f0a;
       border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
     }
 
-    /* ── Player cards ── */
-    .p-card {
-      margin: 0.75rem 1rem 0;
-      border-radius: 12px; overflow: hidden;
-      border: 1px solid #2a3a2a;
+    /* ── Score table ── */
+    .score-outer {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .p-card-header {
-      padding: 0.6rem 1rem; font-weight: bold; font-size: 0.95rem;
-      display: flex; align-items: center; gap: 0.5rem;
+    .score-table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 320px;
     }
-    .p-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-    .score-row {
-      display: flex; align-items: center;
-      padding: 0.55rem 1rem; gap: 0.75rem;
-      border-top: 1px solid #1a2a1a;
+    /* Sticky header row */
+    .score-table thead th {
+      position: sticky; top: 0; z-index: 10;
+      background: #0f1a0f;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.82rem; font-weight: bold;
+      text-align: center;
+      border-bottom: 2px solid #2a3a2a;
+      white-space: nowrap;
     }
-    .score-lbl { flex: 1; min-width: 0; }
-    .score-lbl .sn { font-size: 0.82rem; }
-    .score-lbl .sh { font-size: 0.67rem; color: #445544; margin-top: 0.05rem; }
+    /* Sticky first column */
+    .score-table .cat-col {
+      position: sticky; left: 0; z-index: 5;
+      background: #0a0f0a;
+      padding: 0.55rem 0.85rem;
+      border-right: 1px solid #2a3a2a;
+      min-width: 145px; max-width: 145px;
+      text-align: left;
+    }
+    /* Corner */
+    .score-table thead .cat-col { z-index: 20; background: #0f1a0f; }
+
+    .score-table td {
+      padding: 0.45rem 0.6rem;
+      text-align: center;
+      border-bottom: 1px solid #1a2a1a;
+      vertical-align: middle;
+      min-width: 105px;
+    }
+    /* Row color accents */
+    .row-merveille .cat-col { border-left: 3px solid #a07840; }
+    .row-tresor    .cat-col { border-left: 3px solid #c9a84c; }
+    .row-militaire .cat-col { border-left: 3px solid #c0392b; }
+    .row-bleu      .cat-col { border-left: 3px solid #3b7fc1; }
+    .row-jaune     .cat-col { border-left: 3px solid #c9a824; }
+    .row-science   .cat-col { border-left: 3px solid #3a8a4a; }
+    .row-violet    .cat-col { border-left: 3px solid #7b4fa0; }
+    .row-total .cat-col,
+    .row-total td { background: #0f1a0f; border-top: 2px solid #2a3a2a; }
+    .row-total .cat-col { border-left: 3px solid #c9a84c; }
+
+    .cat-name { font-size: 0.82rem; }
+    .cat-hint { font-size: 0.63rem; color: #445544; margin-top: 0.08rem; }
+
+    /* Inputs */
     .score-inp {
-      width: 3.5rem; text-align: center; padding: 0.4rem;
-      background: #0a0f0a; border: 1px solid #2a3a2a; border-radius: 8px;
-      color: #f0ede6; font-size: 1rem; font-weight: bold; margin: 0;
+      width: 4rem; text-align: center;
+      padding: 0.45rem 0.3rem;
+      background: #0a0f0a; border: 1px solid #2a3a2a;
+      border-radius: 8px; color: #f0ede6; font-size: 1.05rem; font-weight: bold; margin: 0;
     }
     .score-inp:focus { border-color: #80cc80; outline: none; }
-    .score-calc {
-      min-width: 3rem; text-align: right;
-      font-size: 0.8rem; font-weight: bold; color: #80cc80;
-      flex-shrink: 0;
-    }
 
-    /* Sciences */
-    .sci-wrap { display: flex; gap: 0.5rem; align-items: center; }
-    .sci-sym { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
-    .sci-sym .si { font-size: 0.85rem; line-height: 1; }
+    /* Trésor cell */
+    .tresor-cell { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+    .tresor-pts  { font-size: 0.72rem; color: #c9a84c; white-space: nowrap; }
+
+    /* Science cell */
+    .sci-cell   { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+    .sci-inputs { display: flex; gap: 0.3rem; }
+    .sci-sym    { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+    .sci-sym span { font-size: 0.8rem; line-height: 1; }
     .sci-sym input {
-      width: 2.6rem; text-align: center; padding: 0.35rem 0.2rem;
+      width: 2.1rem; text-align: center; padding: 0.3rem 0.1rem;
       background: #0a0f0a; border: 1px solid #2a3a2a; border-radius: 6px;
-      color: #f0ede6; font-size: 0.95rem; margin: 0;
+      color: #f0ede6; font-size: 0.88rem; margin: 0;
     }
     .sci-sym input:focus { border-color: #3a8a4a; outline: none; }
+    .sci-pts { font-size: 0.72rem; color: #3a8a4a; font-weight: bold; }
 
     /* Total */
-    .total-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.7rem 1rem; border-top: 2px solid #2a3a2a;
-      background: #0f1a0f;
-    }
-    .total-lbl { font-size: 0.75rem; color: #80cc80; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase; }
-    .total-val { font-size: 1.8rem; font-weight: bold; color: #c9a84c; }
+    .total-val { font-size: 1.5rem; font-weight: bold; color: #c9a84c; }
+    .row-total .cat-col .cat-name { color: #c9a84c; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
 
-    /* Summary */
-    .w7-summary {
-      margin: 0.75rem 1rem 0;
-      border: 1px solid #2a3a2a; border-radius: 12px; overflow: hidden;
+    /* Ranking strip */
+    .ranking-strip {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #2a3a2a;
     }
-    .sum-header {
-      padding: 0.6rem 1rem; background: #1a2e1a;
-      font-size: 0.75rem; color: #80cc80; font-weight: bold; letter-spacing: 0.1em; text-transform: uppercase;
+    .rank-chip {
+      padding: 0.3rem 0.75rem; border-radius: 20px;
+      font-size: 0.82rem; font-weight: bold;
+      border: 1px solid #2a3a2a; color: #a89f94;
     }
-    .sum-row {
-      display: flex; align-items: center; padding: 0.6rem 1rem;
-      border-top: 1px solid #1a2a1a; gap: 0.6rem;
-    }
-    .sum-row.winner { background: rgba(201,168,76,0.08); }
-    .sum-medal { font-size: 1rem; width: 1.5rem; flex-shrink: 0; }
-    .sum-name { flex: 1; font-size: 0.9rem; }
-    .sum-score { font-size: 1.1rem; font-weight: bold; color: #c9a84c; }
+    .rank-chip.winner { background: rgba(201,168,76,0.12); border-color: #c9a84c; color: #c9a84c; }
 
-    /* Reset btn */
     .btn-reset {
-      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
-      padding: 0.7rem; background: transparent;
+      display: block; width: calc(100% - 2rem); margin: 0 1rem;
+      padding: 0.65rem; background: transparent;
       border: 1px solid #2a3a2a; border-radius: 10px;
-      color: #556655; font-size: 0.9rem; cursor: pointer;
+      color: #556655; font-size: 0.88rem; cursor: pointer;
     }
 
-    /* ── Règles ── */
-    .reg-sec { margin: 0.5rem 1rem 0; border: 1px solid #2a3a2a; border-radius: 10px; overflow: hidden; }
-    .reg-btn {
-      width: 100%; text-align: left; padding: 0.75rem 1rem;
-      background: #0f1a0f; border: none; color: #f0ede6;
-      font-size: 0.88rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: space-between;
+    /* ── Règles deux panneaux ── */
+    .rules-pane {
+      display: flex;
+      height: calc(100vh - 115px); /* viewport minus topbar + tabs */
+      min-height: 300px;
+      overflow: hidden;
     }
-    .reg-btn.open { color: #c9a84c; }
-    .reg-chev { transition: transform 0.2s; font-style: normal; }
-    .reg-btn.open .reg-chev { transform: rotate(90deg); }
-    .reg-body {
-      display: none; padding: 0.75rem 1rem;
-      font-size: 0.82rem; color: #a89f94; line-height: 1.65;
-      border-top: 1px solid #1a2a1a; background: #0a0f0a;
+    .rules-sidebar {
+      width: 175px; flex-shrink: 0;
+      overflow-y: auto;
+      border-right: 1px solid #2a3a2a;
+      background: #0a0f0a;
     }
-    .reg-body.open { display: block; }
-    .reg-body b { color: #f0ede6; }
-    .reg-body .sci-table {
+    .rules-side-btn {
+      display: block; width: 100%; text-align: left;
+      padding: 0.75rem 0.85rem;
+      background: transparent; border: none; border-bottom: 1px solid #1a2a1a;
+      color: #a89f94; font-size: 0.78rem; line-height: 1.35; cursor: pointer;
+    }
+    .rules-side-btn:hover { color: #f0ede6; background: #1a2a1a; }
+    .rules-side-btn.active { color: #c9a84c; background: #0f1a0f; padding-left: 0.6rem; border-left: 3px solid #c9a84c; }
+    .rules-content {
+      flex: 1; overflow-y: auto;
+      padding: 1.1rem 1.25rem;
+      font-size: 0.83rem; color: #a89f94; line-height: 1.7;
+    }
+    .rules-content h3 { color: #c9a84c; font-size: 0.9rem; margin-bottom: 0.85rem; }
+    .rules-content b  { color: #f0ede6; }
+    .rules-content ol, .rules-content ul { padding-left: 1.2rem; }
+    .rules-content li { margin-bottom: 0.35rem; }
+    .rules-content p  { margin-bottom: 0.55rem; }
+    .rules-content .exemple { color: #80cc80; font-style: italic; }
+    .rules-content table {
       width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8rem;
     }
-    .reg-body .sci-table th, .reg-body .sci-table td {
-      padding: 0.3rem 0.5rem; border: 1px solid #2a3a2a; text-align: center;
+    .rules-content th, .rules-content td {
+      padding: 0.3rem 0.6rem; border: 1px solid #2a3a2a; text-align: center;
     }
-    .reg-body .sci-table th { background: #1a2e1a; color: #80cc80; }
-    .reg-body .exemple { margin-top: 0.5rem; color: #80cc80; font-style: italic; }
-    .reg-body ol, .reg-body ul { padding-left: 1.2rem; }
-    .reg-body li { margin-bottom: 0.3rem; }
+    .rules-content th { background: #1a2e1a; color: #80cc80; }
   </style>
 </head>
 <body>
@@ -193,23 +221,30 @@
   <div id="tab-score">
 
     <div id="w7-setup" class="w7-setup">
-      <div class="setup-label">Nombre de joueurs</div>
+      <div class="setup-lbl">Nombre de joueurs</div>
       <div class="nb-btns" id="nb-btns"></div>
-      <div class="setup-label">Noms des joueurs</div>
+      <div class="setup-lbl">Noms des joueurs</div>
       <div id="noms"></div>
       <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
     </div>
 
     <div id="w7-score" style="display:none;">
-      <div id="player-cards"></div>
-      <div id="summary"></div>
+      <div class="score-outer">
+        <table class="score-table" id="score-table"></table>
+      </div>
+      <div class="ranking-strip" id="ranking"></div>
       <button class="btn-reset" onclick="reinitialiser()">🔄 Nouvelle partie</button>
     </div>
 
   </div>
 
   <!-- ── Tab Règles ── -->
-  <div id="tab-regles" style="display:none; padding-bottom:1rem;"></div>
+  <div id="tab-regles" style="display:none;">
+    <div class="rules-pane">
+      <div class="rules-sidebar" id="rules-sidebar"></div>
+      <div class="rules-content" id="rules-content"></div>
+    </div>
+  </div>
 
 </div>
 
@@ -218,7 +253,7 @@ const COULEURS = ['#c9a84c','#5fb3ff','#c0392b','#27ae60','#9b59b6','#e67e22','#
 let nbJ = 3, joueurs = [];
 
 // ── Calculs ──────────────────────────────────────────
-const sciPts = (g,c,t) => g*g + c*c + t*t + 7*Math.min(g,c,t);
+const sciPts    = (g,c,t) => g*g + c*c + t*t + 7*Math.min(g,c,t);
 const tresorPts = p => Math.floor(p/3);
 function total(s) {
   return s.merveille + tresorPts(s.pieces) + s.militaire + s.bleu + s.jaune + sciPts(s.gear,s.compass,s.tablet) + s.violet;
@@ -231,14 +266,9 @@ function initSetup() {
   btns.innerHTML = '';
   [2,3,4,5,6,7].forEach(n => {
     const b = document.createElement('button');
-    b.className = 'nb-btn' + (n === nbJ ? ' active' : '');
+    b.className = 'nb-btn' + (n===nbJ?' active':'');
     b.textContent = n;
-    b.onclick = () => {
-      nbJ = n;
-      btns.querySelectorAll('.nb-btn').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      renderNoms();
-    };
+    b.onclick = () => { nbJ=n; btns.querySelectorAll('.nb-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderNoms(); };
     btns.appendChild(b);
   });
   renderNoms();
@@ -246,9 +276,9 @@ function initSetup() {
 
 function renderNoms() {
   const div = document.getElementById('noms');
-  const vals = Array.from(div.querySelectorAll('input')).map(i => i.value);
+  const vals = Array.from(div.querySelectorAll('input')).map(i=>i.value);
   div.innerHTML = '';
-  for (let i = 0; i < nbJ; i++) {
+  for (let i=0; i<nbJ; i++) {
     const row = document.createElement('div');
     row.className = 'name-row';
     const num = document.createElement('div');
@@ -256,268 +286,228 @@ function renderNoms() {
     num.style.cssText = `background:${COULEURS[i]}22;color:${COULEURS[i]}`;
     num.textContent = i+1;
     const inp = document.createElement('input');
-    inp.className = 'player-name-input';
-    inp.type = 'text';
-    inp.placeholder = `Joueur ${i+1}`;
-    inp.value = vals[i] || '';
-    row.appendChild(num);
-    row.appendChild(inp);
+    inp.className = 'player-name-input'; inp.type = 'text';
+    inp.placeholder = `Joueur ${i+1}`; inp.value = vals[i]||'';
+    row.appendChild(num); row.appendChild(inp);
     div.appendChild(row);
   }
 }
 
 function demarrer() {
   const inputs = document.querySelectorAll('#noms input');
-  joueurs = Array.from(inputs).map((inp, i) => ({
+  joueurs = Array.from(inputs).map((inp,i) => ({
     nom: inp.value.trim() || `Joueur ${i+1}`,
     scores: newScores()
   }));
   document.getElementById('w7-setup').style.display = 'none';
   document.getElementById('w7-score').style.display  = '';
-  renderCards();
+  buildTable();
 }
 
-// ── Score cards ───────────────────────────────────────
-function updateAll() {
-  joueurs.forEach((j, idx) => {
+// ── Table ─────────────────────────────────────────────
+const ROWS = [
+  { cls:'merveille', label:'🏛️ Merveille',  hint:'Points des étapes',         key:'merveille', color:'#a07840', type:'simple' },
+  { cls:'tresor',    label:'💰 Trésor',       hint:'Pièces ÷ 3 = points',       key:'pieces',    color:'#c9a84c', type:'tresor' },
+  { cls:'militaire', label:'⚔️ Militaires', hint:'Jetons (peut être négatif)', key:'militaire', color:'#c0392b', type:'simple', neg:true },
+  { cls:'bleu',      label:'🔵 Civils',       hint:'Cartes Bleues',              key:'bleu',      color:'#3b7fc1', type:'simple' },
+  { cls:'jaune',     label:'🟡 Commerce',     hint:'Cartes Jaunes',              key:'jaune',     color:'#c9a824', type:'simple' },
+  { cls:'science',   label:'🔬 Sciences',     hint:'⚙️ 📐 📜 — Cartes Vertes',  key:null,        color:'#3a8a4a', type:'science' },
+  { cls:'violet',    label:'🟣 Guildes',      hint:'Cartes Violettes',           key:'violet',    color:'#7b4fa0', type:'simple' },
+  { cls:'total',     label:'TOTAL',           hint:'',                           key:null,        color:'#c9a84c', type:'total' },
+];
+
+function buildTable() {
+  const table = document.getElementById('score-table');
+  table.innerHTML = '';
+
+  // ── THEAD ──
+  const thead = document.createElement('thead');
+  const headTr = document.createElement('tr');
+  const cornerTh = document.createElement('th');
+  cornerTh.className = 'cat-col';
+  cornerTh.textContent = 'Catégorie';
+  headTr.appendChild(cornerTh);
+  joueurs.forEach((j,i) => {
+    const th = document.createElement('th');
+    th.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${COULEURS[i]};margin-right:5px;vertical-align:middle;"></span><span style="color:${COULEURS[i]}">${j.nom}</span>`;
+    headTr.appendChild(th);
+  });
+  thead.appendChild(headTr);
+  table.appendChild(thead);
+
+  // ── TBODY ──
+  const tbody = document.createElement('tbody');
+  ROWS.forEach(def => {
+    const tr = document.createElement('tr');
+    tr.className = `row-${def.cls}`;
+
+    // Category cell
+    const catTd = document.createElement('td');
+    catTd.className = 'cat-col';
+    catTd.innerHTML = `<div class="cat-name" style="color:${def.color}">${def.label}</div>${def.hint?`<div class="cat-hint">${def.hint}</div>`:''}`;
+    tr.appendChild(catTd);
+
+    // Player cells
+    joueurs.forEach((j,idx) => {
+      const td = document.createElement('td');
+      const s = j.scores;
+
+      if (def.type === 'simple') {
+        const inp = document.createElement('input');
+        inp.type='number'; inp.inputMode='numeric'; inp.className='score-inp'; inp.value=s[def.key];
+        if (!def.neg) inp.min=0;
+        inp.oninput = () => { s[def.key]=parseInt(inp.value)||0; updateTotaux(); };
+        td.appendChild(inp);
+
+      } else if (def.type === 'tresor') {
+        const wrap=document.createElement('div'); wrap.className='tresor-cell';
+        const inp=document.createElement('input');
+        inp.type='number'; inp.inputMode='numeric'; inp.className='score-inp'; inp.min=0; inp.value=s.pieces;
+        const pts=document.createElement('div'); pts.className='tresor-pts'; pts.id=`trp-${idx}`;
+        pts.textContent=`= ${tresorPts(s.pieces)} pts`;
+        inp.oninput=()=>{ s.pieces=parseInt(inp.value)||0; pts.textContent=`= ${tresorPts(s.pieces)} pts`; updateTotaux(); };
+        wrap.appendChild(inp); wrap.appendChild(pts); td.appendChild(wrap);
+
+      } else if (def.type === 'science') {
+        const cell=document.createElement('div'); cell.className='sci-cell';
+        const row=document.createElement('div'); row.className='sci-inputs';
+        const pDiv=document.createElement('div'); pDiv.className='sci-pts'; pDiv.id=`scp-${idx}`;
+        pDiv.textContent=`${sciPts(s.gear,s.compass,s.tablet)} pts`;
+        [['gear','⚙️'],['compass','📐'],['tablet','📜']].forEach(([k,ico])=>{
+          const sw=document.createElement('div'); sw.className='sci-sym';
+          sw.innerHTML=`<span>${ico}</span>`;
+          const inp=document.createElement('input');
+          inp.type='number'; inp.inputMode='numeric'; inp.min=0; inp.value=s[k];
+          inp.oninput=()=>{ s[k]=parseInt(inp.value)||0; pDiv.textContent=`${sciPts(s.gear,s.compass,s.tablet)} pts`; updateTotaux(); };
+          sw.appendChild(inp); row.appendChild(sw);
+        });
+        cell.appendChild(row); cell.appendChild(pDiv); td.appendChild(cell);
+
+      } else if (def.type === 'total') {
+        const v=document.createElement('div'); v.className='total-val'; v.id=`tot-${idx}`;
+        v.textContent=total(s); td.appendChild(v);
+      }
+
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  renderRanking();
+}
+
+function updateTotaux() {
+  joueurs.forEach((j,idx) => {
     const el = document.getElementById(`tot-${idx}`);
     if (el) el.textContent = total(j.scores);
   });
-  renderSummary();
+  renderRanking();
 }
 
-function renderCards() {
-  const container = document.getElementById('player-cards');
-  container.innerHTML = '';
-
-  joueurs.forEach((j, idx) => {
-    const c = COULEURS[idx];
-    const s = j.scores;
-    const card = document.createElement('div');
-    card.className = 'p-card';
-    card.style.borderColor = c + '55';
-
-    // Header
-    const hdr = document.createElement('div');
-    hdr.className = 'p-card-header';
-    hdr.style.background = c + '18';
-    hdr.innerHTML = `<span class="p-dot" style="background:${c}"></span>${j.nom}`;
-    card.appendChild(hdr);
-
-    // Rows config
-    const rows = [
-      { key:'merveille', label:'🏛️ Merveille',          hint:'Points des étapes construites',             color:'#a07840', type:'simple' },
-      { key:'pieces',    label:'💰 Trésor',               hint:'Nombre de pièces (÷3 = pts)',               color:'#c9a84c', type:'tresor' },
-      { key:'militaire', label:'⚔️ Conflits militaires', hint:'Somme des jetons (peut être négatif)',       color:'#c0392b', type:'simple', neg:true },
-      { key:'bleu',      label:'🔵 Civils',               hint:'Points des cartes Bleues',                  color:'#3b7fc1', type:'simple' },
-      { key:'jaune',     label:'🟡 Commerce',             hint:'Points des cartes Jaunes',                  color:'#c9a824', type:'simple' },
-      { key:'science',   label:'🔬 Sciences',             hint:'Cartes Vertes — ⚙️ 📐 📜',                  color:'#3a8a4a', type:'science' },
-      { key:'violet',    label:'🟣 Guildes',              hint:'Points des cartes Violettes',               color:'#7b4fa0', type:'simple' },
-    ];
-
-    rows.forEach(r => {
-      const row = document.createElement('div');
-      row.className = 'score-row';
-
-      const lbl = document.createElement('div');
-      lbl.className = 'score-lbl';
-      lbl.innerHTML = `<div class="sn" style="color:${r.color}">${r.label}</div><div class="sh">${r.hint}</div>`;
-      row.appendChild(lbl);
-
-      if (r.type === 'simple') {
-        const inp = document.createElement('input');
-        inp.type = 'number'; inp.inputMode = 'numeric';
-        inp.className = 'score-inp'; inp.value = s[r.key];
-        if (!r.neg) inp.min = 0;
-        inp.oninput = () => { s[r.key] = parseInt(inp.value) || 0; updateAll(); };
-        row.appendChild(inp);
-
-      } else if (r.type === 'tresor') {
-        const inp = document.createElement('input');
-        inp.type = 'number'; inp.inputMode = 'numeric';
-        inp.className = 'score-inp'; inp.min = 0; inp.value = s.pieces;
-        const calc = document.createElement('div');
-        calc.className = 'score-calc'; calc.style.color = r.color;
-        calc.textContent = `= ${tresorPts(s.pieces)} pts`;
-        inp.oninput = () => {
-          s.pieces = parseInt(inp.value) || 0;
-          calc.textContent = `= ${tresorPts(s.pieces)} pts`;
-          updateAll();
-        };
-        row.appendChild(inp);
-        row.appendChild(calc);
-
-      } else if (r.type === 'science') {
-        const syms = [
-          { k:'gear',    icon:'⚙️'  },
-          { k:'compass', icon:'📐' },
-          { k:'tablet',  icon:'📜' },
-        ];
-        const wrap = document.createElement('div');
-        wrap.className = 'sci-wrap';
-        const calc = document.createElement('div');
-        calc.className = 'score-calc'; calc.style.color = r.color;
-        calc.textContent = `${sciPts(s.gear,s.compass,s.tablet)} pts`;
-
-        syms.forEach(sym => {
-          const box = document.createElement('div');
-          box.className = 'sci-sym';
-          box.innerHTML = `<span class="si">${sym.icon}</span>`;
-          const inp = document.createElement('input');
-          inp.type = 'number'; inp.inputMode = 'numeric'; inp.min = 0; inp.value = s[sym.k];
-          inp.oninput = () => {
-            s[sym.k] = parseInt(inp.value) || 0;
-            calc.textContent = `${sciPts(s.gear,s.compass,s.tablet)} pts`;
-            updateAll();
-          };
-          box.appendChild(inp);
-          wrap.appendChild(box);
-        });
-        row.appendChild(wrap);
-        row.appendChild(calc);
-      }
-
-      card.appendChild(row);
-    });
-
-    // Total
-    const totRow = document.createElement('div');
-    totRow.className = 'total-row';
-    totRow.innerHTML = `<span class="total-lbl">Total</span><span class="total-val" id="tot-${idx}">${total(s)}</span>`;
-    card.appendChild(totRow);
-
-    container.appendChild(card);
-  });
-
-  renderSummary();
-}
-
-function renderSummary() {
-  const div = document.getElementById('summary');
+function renderRanking() {
+  const div = document.getElementById('ranking');
   if (!div) return;
-  const ranked = joueurs
-    .map((j, i) => ({ nom:j.nom, pts:total(j.scores), c:COULEURS[i] }))
-    .sort((a,b) => b.pts - a.pts);
-
-  div.innerHTML = '';
-  const box = document.createElement('div');
-  box.className = 'w7-summary';
-  const hdr = document.createElement('div');
-  hdr.className = 'sum-header'; hdr.textContent = '🏆 Classement';
-  box.appendChild(hdr);
-
   const medals = ['🥇','🥈','🥉'];
-  ranked.forEach((r, i) => {
-    const row = document.createElement('div');
-    row.className = 'sum-row' + (i===0 ? ' winner' : '');
-    row.innerHTML = `
-      <span class="sum-medal">${medals[i] || (i+1)+'.'}</span>
-      <span class="sum-name" style="color:${r.c}">${r.nom}</span>
-      <span class="sum-score">${r.pts}</span>`;
-    box.appendChild(row);
-  });
-  div.appendChild(box);
+  const ranked = joueurs.map((j,i)=>({nom:j.nom,pts:total(j.scores),c:COULEURS[i]})).sort((a,b)=>b.pts-a.pts);
+  div.innerHTML = ranked.map((r,i)=>
+    `<span class="rank-chip${i===0?' winner':''}" style="${i===0?`color:${r.c};border-color:${r.c}40`:`color:${r.c}80;border-color:${r.c}30`}">${medals[i]||`${i+1}.`} ${r.nom} — ${r.pts}</span>`
+  ).join('');
 }
 
 function reinitialiser() {
-  joueurs = [];
-  document.getElementById('w7-score').style.display  = 'none';
-  document.getElementById('w7-setup').style.display  = '';
+  joueurs=[];
+  document.getElementById('w7-score').style.display='none';
+  document.getElementById('w7-setup').style.display='';
   initSetup();
 }
 
 // ── Tabs ─────────────────────────────────────────────
-function showTab(name, btn) {
+function showTab(name,btn) {
   document.getElementById('tab-score').style.display  = name==='score'  ? '' : 'none';
   document.getElementById('tab-regles').style.display = name==='regles' ? '' : 'none';
-  document.querySelectorAll('.w7-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.w7-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
 
-// ── Règles ────────────────────────────────────────────
-function renderRegles() {
-  const div = document.getElementById('tab-regles');
-  const sections = [
-    {
-      t: '🏆 Décompte des points — ordre officiel',
-      b: `<ol>
-        <li><b>🏛️ Merveille</b> — Points des étapes construites</li>
-        <li><b>💰 Trésor</b> — 1 pt par lot complet de 3 Pièces</li>
-        <li><b>⚔️ Conflits militaires</b> — Somme de tous les jetons Victoire et Défaite</li>
-        <li><b>🔵 Cartes Bleues</b> — Points des bâtiments civils</li>
-        <li><b>🟡 Cartes Jaunes</b> — Points des cartes commerciales</li>
-        <li><b>🔬 Sciences (Vertes)</b> — Symboles identiques² + lots de 3 différents</li>
-        <li><b>🟣 Cartes Violettes</b> — Points des guildes</li>
-      </ol>
-      <p style="margin-top:0.5rem;"><b>Égalité :</b> le joueur ayant le plus gros Trésor l'emporte.</p>`
-    },
-    {
-      t: '🔬 Calcul des sciences (Cartes Vertes)',
-      b: `<p>Additionner les deux méthodes :</p>
-      <p style="margin-top:0.5rem;"><b>Par type de symbole</b> — nombre de symboles au carré :</p>
-      <table class="sci-table">
-        <tr><th>Symboles identiques</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>
-        <tr><td>Points de victoire</td><td>1</td><td>4</td><td>9</td><td>16</td><td>25</td><td>36</td></tr>
-      </table>
-      <p style="margin-top:0.5rem;"><b>Lot de 3 symboles différents</b> (⚙️ + 📐 + 📜) : <b>+7 pts</b> par lot complet</p>
-      <p class="exemple">Ex. : 3⚙️ + 2📐 + 2📜 → 9+4+4 = 17 pts + 2 lots×7 = 14 pts = <b>31 pts</b></p>`
-    },
-    {
-      t: '⚔️ Conflits militaires',
-      b: `<p>À la fin de chaque Âge, compare ta force militaire avec chacun de tes 2 voisins :</p>
-      <table class="sci-table" style="margin-top:0.5rem;">
-        <tr><th>Âge</th><th>Victoire</th><th>Défaite</th><th>Égalité</th></tr>
-        <tr><td>I</td><td style="color:#27ae60;">+1 pt</td><td style="color:#c0392b;">-1 pt</td><td>0</td></tr>
-        <tr><td>II</td><td style="color:#27ae60;">+3 pts</td><td style="color:#c0392b;">-1 pt</td><td>0</td></tr>
-        <tr><td>III</td><td style="color:#27ae60;">+5 pts</td><td style="color:#c0392b;">-1 pt</td><td>0</td></tr>
-      </table>
-      <p style="margin-top:0.5rem;">Le score militaire total peut être <b>négatif</b> (plusieurs défaites).</p>`
-    },
-    {
-      t: '💰 Ressources et achat chez un voisin',
-      b: `<p><b>Ressources disponibles :</b> ressource de départ (plateau Merveille) + cartes Marrons et Grises construites + étapes de Merveille + certaines cartes Jaunes.</p>
-      <p style="margin-top:0.5rem;"><b>Acheter à un voisin :</b> 2 Pièces par ressource achetée (payées au voisin). Certaines cartes Jaunes réduisent ce coût à 1 Pièce.</p>
-      <p style="margin-top:0.5rem;"><b>Ressource au choix</b> (carte produisant « 1 parmi X ») : une seule ressource choisie au moment de la construction.</p>
-      <p style="margin-top:0.5rem;"><b>Chaque ressource ne peut être utilisée qu'une seule fois par tour.</b></p>`
-    },
-    {
-      t: '🔗 Chaînage — construction gratuite',
-      b: `<p>À partir de l'Âge II, certaines cartes ont un <b>symbole de chaînage</b> dans leur zone de coût (coin supérieur droit).</p>
-      <p style="margin-top:0.5rem;">Si tu possèdes déjà une carte avec ce même symbole, tu construis la nouvelle carte <b>gratuitement</b> (sans ressources, sans Pièces).</p>
-      <p style="margin-top:0.5rem;">Certaines cartes ont <b>deux symboles de chaînage</b> : l'un pour la recevoir gratuitement, l'autre pour en débloquer une autre.</p>`
-    },
-    {
-      t: '🔄 Vendre une carte (défausser)',
-      b: `<p>À chaque tour tu peux choisir de <b>défausser ta carte</b> (face cachée au centre de la table) plutôt que de la construire.</p>
-      <p style="margin-top:0.5rem;">Tu reçois immédiatement <b>3 Pièces</b> de la réserve.</p>
-      <p style="margin-top:0.5rem;">C'est une action toujours disponible, même si tu n'as pas les ressources pour construire.</p>`
-    },
-    {
-      t: '🏗️ Construire une étape de Merveille',
-      b: `<p>Pour construire une étape de ta Merveille, place <b>n'importe quelle carte de ta main face cachée</b> sous ton plateau en payant le coût de l'étape.</p>
-      <p style="margin-top:0.5rem;">Les étapes se construisent <b>de gauche à droite</b> (dans l'ordre obligatoirement).</p>
-      <p style="margin-top:0.5rem;">La construction est <b>optionnelle</b> — tu n'es pas obligé de construire toutes les étapes.</p>
-      <p style="margin-top:0.5rem;">Tu peux construire plusieurs étapes dans la même partie, mais <b>une seule par tour</b>.</p>`
-    },
-  ];
+// ── Règles deux panneaux ──────────────────────────────
+const REGLES = [
+  {
+    t: '🏆 Décompte officiel',
+    b: `<ol>
+      <li><b>🏛️ Merveille</b> — Points des étapes construites</li>
+      <li><b>💰 Trésor</b> — 1 pt par lot complet de 3 Pièces</li>
+      <li><b>⚔️ Conflits militaires</b> — Somme de tous les jetons Victoire et Défaite</li>
+      <li><b>🔵 Cartes Bleues</b> — Points des bâtiments civils</li>
+      <li><b>🟡 Cartes Jaunes</b> — Points des cartes commerciales</li>
+      <li><b>🔬 Sciences (Vertes)</b> — Symboles identiques² + lots de 3 différents</li>
+      <li><b>🟣 Cartes Violettes</b> — Points des guildes</li>
+    </ol>
+    <p><b>Égalité :</b> le joueur avec le plus gros Trésor l'emporte.</p>`
+  },
+  {
+    t: '🔬 Sciences — calcul',
+    b: `<p>Les deux méthodes s'additionnent :</p>
+    <p><b>Par type de symbole</b> — n² points :</p>
+    <table><tr><th>Symboles</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>
+    <tr><td>Points</td><td>1</td><td>4</td><td>9</td><td>16</td><td>25</td><td>36</td></tr></table>
+    <p><b>Lot complet</b> (⚙️+📐+📜) : <b>+7 pts</b> par lot</p>
+    <p class="exemple">Ex. : 3⚙️ + 2📐 + 2📜 → 9+4+4 = 17 + 2×7 = 14 = <b>31 pts</b></p>`
+  },
+  {
+    t: '⚔️ Conflits militaires',
+    b: `<p>À la fin de chaque Âge, compare ta force avec chacun de tes 2 voisins :</p>
+    <table><tr><th>Âge</th><th>Victoire</th><th>Défaite</th><th>Égalité</th></tr>
+    <tr><td>I</td><td style="color:#27ae60">+1 pt</td><td style="color:#c0392b">-1 pt</td><td>0</td></tr>
+    <tr><td>II</td><td style="color:#27ae60">+3 pts</td><td style="color:#c0392b">-1 pt</td><td>0</td></tr>
+    <tr><td>III</td><td style="color:#27ae60">+5 pts</td><td style="color:#c0392b">-1 pt</td><td>0</td></tr></table>
+    <p>Le score militaire total peut être <b>négatif</b>.</p>`
+  },
+  {
+    t: '💰 Ressources et achat',
+    b: `<p><b>Ressources disponibles :</b> ressource de départ (plateau) + cartes Marrons et Grises + étapes de Merveille + certaines cartes Jaunes.</p>
+    <p><b>Acheter à un voisin :</b> 2 Pièces par ressource (au voisin). Certaines cartes Jaunes réduisent à 1 Pièce.</p>
+    <p><b>Ressource au choix :</b> une seule ressource choisie au moment de la construction.</p>
+    <p><b>Chaque ressource ne peut être utilisée qu'une seule fois par tour.</b></p>`
+  },
+  {
+    t: '🔗 Chaînage gratuit',
+    b: `<p>À partir de l'Âge II, certaines cartes ont un <b>symbole de chaînage</b> dans leur zone de coût.</p>
+    <p>Si tu possèdes déjà une carte avec ce même symbole → construction <b>gratuite</b> (sans ressources ni Pièces).</p>
+    <p>Certaines cartes ont <b>deux symboles</b> : l'un pour être reçue gratuitement, l'autre pour en débloquer une autre.</p>`
+  },
+  {
+    t: '🔄 Vendre une carte',
+    b: `<p>À chaque tour, tu peux <b>défausser ta carte</b> (face cachée au centre) plutôt que de la construire.</p>
+    <p>Tu reçois immédiatement <b>3 Pièces</b> de la réserve.</p>
+    <p>Toujours disponible, même sans ressources.</p>`
+  },
+  {
+    t: '🏗️ Construire la Merveille',
+    b: `<p>Place <b>n'importe quelle carte de ta main face cachée</b> sous ton plateau en payant le coût de l'étape.</p>
+    <p>Les étapes se construisent <b>de gauche à droite</b> (ordre obligatoire).</p>
+    <p>Construction <b>optionnelle</b> — tu n'es pas obligé de tout construire.</p>
+    <p><b>Une seule étape par tour</b> maximum.</p>`
+  },
+];
 
-  sections.forEach(sec => {
-    const wrap = document.createElement('div');
-    wrap.className = 'reg-sec';
+function renderRegles() {
+  const sidebar = document.getElementById('rules-sidebar');
+  const content = document.getElementById('rules-content');
+
+  function showRule(idx) {
+    content.innerHTML = `<h3>${REGLES[idx].t}</h3>${REGLES[idx].b}`;
+    sidebar.querySelectorAll('.rules-side-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  }
+
+  REGLES.forEach((r, i) => {
     const btn = document.createElement('button');
-    btn.className = 'reg-btn';
-    btn.innerHTML = `<span>${sec.t}</span><i class="reg-chev">›</i>`;
-    const body = document.createElement('div');
-    body.className = 'reg-body';
-    body.innerHTML = sec.b;
-    btn.onclick = () => {
-      const open = body.classList.toggle('open');
-      btn.classList.toggle('open', open);
-    };
-    wrap.appendChild(btn);
-    wrap.appendChild(body);
-    div.appendChild(wrap);
+    btn.className = 'rules-side-btn' + (i===0?' active':'');
+    btn.textContent = r.t;
+    btn.onclick = () => showRule(i);
+    sidebar.appendChild(btn);
   });
+
+  showRule(0);
 }
 
 initSetup();
