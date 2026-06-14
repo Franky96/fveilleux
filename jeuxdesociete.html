@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Jeux de société</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _permsJeux = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsJeux.includes('jeuxdesociete') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <header>
+      <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <h1>Jeux de société</h1>
+      <p class="subtitle">Outils et compagnons de jeux</p>
+    </header>
+
+    <main>
+      <p class="welcome-text">Les Outils</p>
+
+      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+
+        <!-- Cartes à venir -->
+
+      </nav>
+    </main>
+
+  </div>
+
+  <script type="module" src="jeuxdesociete.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+</body>
+</html>
