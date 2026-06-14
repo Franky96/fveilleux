@@ -53,39 +53,39 @@
       border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
     }
 
-    /* Grid de cartes */
-    .qwk-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem;
-      padding: 1rem;
+    /* Tableau */
+    .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .qwk-table {
+      width: 100%; border-collapse: collapse; table-layout: fixed;
     }
 
-    .qwk-card {
+    .qwk-table thead th {
+      padding: 0.85rem 0.5rem;
+      font-size: 1rem; font-weight: bold; text-align: center;
       background: #0f1a0f;
-      border: 2px solid #1a2a1a;
-      border-radius: 16px;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      transition: border-color 0.2s;
-    }
-    .qwk-card.leader { border-color: rgba(201,168,76,0.5); }
-
-    .qwk-header { display: flex; align-items: center; justify-content: space-between; }
-    .qwk-nom { font-size: 1rem; font-weight: bold; }
-
-    .qwk-total {
-      font-size: 4rem; font-weight: bold; color: #f0ede6;
-      text-align: center; line-height: 1; padding: 0.4rem 0;
+      border-bottom: 2px solid #2a3a2a;
     }
 
-    .qwk-add-row { display: flex; gap: 0.5rem; }
+    .qwk-table tbody td {
+      padding: 0.5rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #1a2a1a;
+      background: #0a0f0a;
+    }
+
+    .qwk-total-cell {
+      font-size: 3.5rem; font-weight: bold; color: #f0ede6;
+      padding: 0.6rem 0.5rem !important;
+    }
+    .qwk-total-cell.leader { color: #c9a84c; }
+
     .qwk-pts-input {
-      flex: 1; text-align: center; padding: 0.65rem;
-      background: #0a0f0a; border: 1px solid #2a3a2a;
-      border-radius: 10px; color: #f0ede6; font-size: 1.2rem; font-weight: bold; margin: 0;
+      width: 100%; max-width: 7rem; text-align: center;
+      padding: 0.65rem 0.3rem;
+      background: #0f1a0f; border: 1px solid #2a3a2a;
+      border-radius: 10px; color: #f0ede6; font-size: 1.1rem; font-weight: bold; margin: 0;
+      box-sizing: border-box;
     }
     .qwk-pts-input:focus { border-color: #80cc80; outline: none; }
     .qwk-pts-input::-webkit-inner-spin-button,
@@ -93,25 +93,25 @@
     .qwk-pts-input { -moz-appearance: textfield; }
 
     .qwk-btn-add {
-      width: 3rem; height: 3rem; flex-shrink: 0;
+      width: 3rem; height: 3rem;
       background: #0f2a0f; border: 1px solid #27ae60;
       border-radius: 10px; color: #27ae60; font-size: 1.5rem;
       font-weight: bold; cursor: pointer; margin: 0; padding: 0;
-      display: flex; align-items: center; justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
     }
 
     .qwk-btn-qwirkle {
-      width: 100%;
+      width: calc(100% - 1rem);
       background: rgba(201,168,76,0.08);
       border: 2px solid #c9a84c;
       border-radius: 12px;
       color: #c9a84c;
-      font-size: 1rem;
+      font-size: 0.88rem;
       font-weight: bold;
-      padding: 0.8rem;
+      padding: 0.7rem 0.4rem;
       cursor: pointer;
       margin: 0;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
       transition: background 0.1s, transform 0.1s;
     }
     .qwk-btn-qwirkle:active { transform: scale(0.97); }
@@ -121,8 +121,10 @@
     }
     .qwk-btn-qwirkle.flash { animation: qwirkle-flash 0.6s ease-out; }
 
+    .qwk-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
+
     .btn-new-game {
-      display: block; width: calc(100% - 2rem); margin: 0.25rem 1rem 0;
+      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
       padding: 0.65rem; background: transparent;
       border: 1px solid #2a3a2a; border-radius: 10px;
       color: #556655; font-size: 0.88rem; cursor: pointer;
@@ -146,7 +148,9 @@
   </div>
 
   <div id="qwk-game" style="display:none;">
-    <div class="qwk-grid" id="qwk-grid"></div>
+    <div class="score-outer">
+      <table class="qwk-table" id="qwk-table"></table>
+    </div>
     <button class="btn-new-game" onclick="reinitialiser()">🔄 Nouvelle partie</button>
   </div>
 
@@ -202,63 +206,79 @@ function demarrer() {
   }));
   document.getElementById('qwk-setup').style.display = 'none';
   document.getElementById('qwk-game').style.display = '';
-  renderCartes();
+  renderTableau();
 }
 
-function renderCartes() {
-  const grid = document.getElementById('qwk-grid');
-  grid.innerHTML = '';
-  const maxScore = Math.max(...joueurs.map(j => j.total));
+function renderTableau() {
+  const table = document.getElementById('qwk-table');
+  table.innerHTML = '';
 
+  // En-tête : noms des joueurs
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
   joueurs.forEach((j, i) => {
-    const isLeader = j.total > 0 && j.total === maxScore;
+    const th = document.createElement('th');
+    th.style.color = j.couleur;
+    th.textContent = j.nom;
+    th.id = `qwk-th-${i}`;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead);
+  table.appendChild(thead);
 
-    const card = document.createElement('div');
-    card.className = 'qwk-card' + (isLeader ? ' leader' : '');
-    card.id = `qwk-card-${i}`;
+  const tbody = document.createElement('tbody');
 
-    const header = document.createElement('div');
-    header.className = 'qwk-header';
-    const nom = document.createElement('div');
-    nom.className = 'qwk-nom';
-    nom.style.color = j.couleur;
-    nom.textContent = j.nom;
-    header.appendChild(nom);
-    if (isLeader) {
-      const badge = document.createElement('span');
-      badge.className = 'qwk-leader-badge';
-      badge.textContent = '🏆';
-      header.appendChild(badge);
-    }
+  // Ligne totaux
+  const trTotal = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    td.className = 'qwk-total-cell';
+    td.id = `qwk-total-${i}`;
+    td.textContent = j.total;
+    trTotal.appendChild(td);
+  });
+  tbody.appendChild(trTotal);
 
-    const totalDiv = document.createElement('div');
-    totalDiv.className = 'qwk-total';
-    totalDiv.id = `qwk-total-${i}`;
-    totalDiv.textContent = j.total;
-
-    const addRow = document.createElement('div');
-    addRow.className = 'qwk-add-row';
+  // Ligne inputs
+  const trInput = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
     const inp = document.createElement('input');
     inp.type = 'text'; inp.inputMode = 'numeric';
     inp.className = 'qwk-pts-input'; inp.id = `qwk-inp-${i}`;
-    inp.placeholder = 'pts ce tour';
+    inp.placeholder = 'pts';
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') ajouterPoints(i); });
-    const btnAdd = document.createElement('button');
-    btnAdd.className = 'qwk-btn-add'; btnAdd.textContent = '+';
-    btnAdd.onclick = () => ajouterPoints(i);
-    addRow.appendChild(inp); addRow.appendChild(btnAdd);
-
-    const btnQ = document.createElement('button');
-    btnQ.className = 'qwk-btn-qwirkle'; btnQ.id = `qwk-btn-q-${i}`;
-    btnQ.textContent = '🎯 Qwirkle ! +6';
-    btnQ.onclick = () => faireQwirkle(i);
-
-    card.appendChild(header);
-    card.appendChild(totalDiv);
-    card.appendChild(addRow);
-    card.appendChild(btnQ);
-    grid.appendChild(card);
+    td.appendChild(inp);
+    trInput.appendChild(td);
   });
+  tbody.appendChild(trInput);
+
+  // Ligne boutons +
+  const trAdd = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'qwk-btn-add'; btn.textContent = '+';
+    btn.onclick = () => ajouterPoints(i);
+    td.appendChild(btn);
+    trAdd.appendChild(td);
+  });
+  tbody.appendChild(trAdd);
+
+  // Ligne boutons Qwirkle
+  const trQ = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'qwk-btn-qwirkle'; btn.id = `qwk-btn-q-${i}`;
+    btn.textContent = '🎯 Qwirkle ! +6';
+    btn.onclick = () => faireQwirkle(i);
+    td.appendChild(btn);
+    trQ.appendChild(td);
+  });
+  tbody.appendChild(trQ);
+
+  table.appendChild(tbody);
 }
 
 function ajouterPoints(i) {
@@ -282,20 +302,12 @@ function faireQwirkle(i) {
 function mettreAJour() {
   const maxScore = Math.max(...joueurs.map(j => j.total));
   joueurs.forEach((j, i) => {
-    document.getElementById(`qwk-total-${i}`).textContent = j.total;
-    const card = document.getElementById(`qwk-card-${i}`);
+    const cell = document.getElementById(`qwk-total-${i}`);
     const isLeader = j.total > 0 && j.total === maxScore;
-    card.classList.toggle('leader', isLeader);
-    const header = card.querySelector('.qwk-header');
-    const existing = header.querySelector('.qwk-leader-badge');
-    if (isLeader && !existing) {
-      const badge = document.createElement('span');
-      badge.className = 'qwk-leader-badge';
-      badge.textContent = '🏆';
-      header.appendChild(badge);
-    } else if (!isLeader && existing) {
-      existing.remove();
-    }
+    cell.textContent = j.total;
+    cell.classList.toggle('leader', isLeader);
+    const th = document.getElementById(`qwk-th-${i}`);
+    th.textContent = j.nom + (isLeader ? ' 🏆' : '');
   });
 }
 
