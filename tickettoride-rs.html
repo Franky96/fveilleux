@@ -98,16 +98,16 @@
       border-bottom: none !important;
     }
     .rs-lbl-train td {
-      color: #e07060;
-      background: rgba(192,57,43,0.18) !important;
-      border-top: 2px solid rgba(192,57,43,0.5) !important;
+      color: #e67e22;
+      background: rgba(211,84,0,0.18) !important;
+      border-top: 2px solid rgba(211,84,0,0.5) !important;
     }
     .rs-lbl-ship td {
       color: #5fb3ff;
       background: rgba(52,152,219,0.18) !important;
       border-top: 2px solid rgba(52,152,219,0.5) !important;
     }
-    .rs-train-row td { background: rgba(192,57,43,0.06) !important; }
+    .rs-train-row td { background: rgba(211,84,0,0.06) !important; }
     .rs-ship-row  td { background: rgba(52,152,219,0.06) !important; }
 
     /* Route buttons (4 cols for 8 routes) */
@@ -118,13 +118,13 @@
       border-radius: 7px; cursor: pointer; gap: 0.02rem;
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-route.train { border: 1px solid rgba(192,57,43,0.4); background: rgba(192,57,43,0.08); }
+    .btn-route.train { border: 1px solid rgba(211,84,0,0.4); background: rgba(211,84,0,0.08); }
     .btn-route.ship  { border: 1px solid rgba(52,152,219,0.4); background: rgba(52,152,219,0.08); }
     .btn-route .r-len { font-size: 1rem; font-weight: bold; color: #f0ede6; line-height: 1; }
     .btn-route .r-pts { font-size: 0.6rem; font-weight: bold; }
-    .btn-route.train .r-pts { color: #e07060; }
+    .btn-route.train .r-pts { color: #e67e22; }
     .btn-route.ship  .r-pts { color: #5fb3ff; }
-    @keyframes flash-train { 0% { background: rgba(192,57,43,0.35); border-color:#c0392b; } 100% { background:#080f1a; border-color:#1a2a3a; } }
+    @keyframes flash-train { 0% { background: rgba(211,84,0,0.45); border-color:#e67e22; } 100% { background:rgba(211,84,0,0.08); border-color:rgba(211,84,0,0.4); } }
     @keyframes flash-ship  { 0% { background: rgba(52,152,219,0.35); border-color:#3498db; } 100% { background:#080f1a; border-color:#1a2a3a; } }
     .btn-route.train.flash { animation: flash-train 0.45s ease-out forwards; }
     .btn-route.ship.flash  { animation: flash-ship  0.45s ease-out forwards; }
