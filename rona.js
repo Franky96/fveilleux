@@ -99,12 +99,22 @@ const EMPLACEMENTS_DEFAUT = [
 let ronaData = { locations: [] };
 let locationActive = null;
 
+// Retire les items qui sont à la fois dans manquants ET complets (état corrompu)
+function sanitiserLocation(loc) {
+  if (!loc.complets || !loc.manquants) return;
+  loc.complets = loc.complets.filter(id => !(id in loc.manquants));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   onSnapshot(ronaDocRef, (snap) => {
+    // Ne pas écraser les changements locaux non encore sauvegardés
+    if (_saveTimer !== null || _saving || _needsSave) return;
+
     if (snap.exists()) {
       ronaData = snap.data();
-      afficherCompletes();
       if (!ronaData.locations) ronaData.locations = [];
+      ronaData.locations.forEach(sanitiserLocation);
+      afficherCompletes();
     } else {
       ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
         id: Math.random().toString(36).slice(2) + Date.now().toString(36),
@@ -127,14 +137,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Debounce 300ms : évite les sauvegardes concurrentes qui arriveraient dans le désordre
+// Sauvegarde séquentielle : jamais deux POSTs simultanés vers MySQL.
+// _saveTimer = debounce 300ms ; _saving = POST en cours ; _needsSave = changement arrivé pendant le POST.
 let _saveTimer = null;
+let _saving    = false;
+let _needsSave = false;
+
+async function _executeSave() {
+  if (_saving) { _needsSave = true; return; }
+  _saving = true; _needsSave = false;
+  try {
+    await setDoc(ronaDocRef, ronaData);
+    afficherCompletes();
+  } catch (e) { console.error('[RONA] save error:', e); }
+  finally {
+    _saving = false;
+    if (_needsSave) _executeSave();
+  }
+}
+
 function sauvegarder() {
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => {
-    setDoc(ronaDocRef, ronaData);
-    afficherCompletes();
-  }, 300);
+  _saveTimer = setTimeout(() => { _saveTimer = null; _executeSave(); }, 300);
 }
 
 // ── Sélection emplacement ─────────────────────────────
