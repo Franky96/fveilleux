@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rails &amp; Sails — Score</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pRS = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pRS.includes('jeuxdesociete') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+  <style>
+    body { align-items: flex-start; }
+    .rs { width: 100%; padding-bottom: 2rem; }
+
+    .rs-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #080f1a; border-bottom: 1px solid #1a2a3a;
+      padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .rs-topbar a { color: #5fb3ff; text-decoration: none; font-size: 1.3rem; }
+    .rs-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
+
+    /* ── Setup ── */
+    .rs-setup { padding: 1.25rem; max-width: 460px; margin: 0 auto; }
+    .setup-lbl { font-size: 0.72rem; color: #2a4a5a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; margin-top: 1rem; }
+    .nb-btns { display: flex; gap: 0.5rem; }
+    .nb-btn {
+      width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      border: 2px solid #1a2a3a; background: transparent;
+      color: #2a4a5a; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.15s;
+    }
+    .nb-btn.active { border-color: #3498db; color: #3498db; background: rgba(52,152,219,0.1); }
+    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .config-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .config-item label { font-size: 0.65rem; color: #2a4a5a; text-transform: uppercase; letter-spacing: 0.05em; }
+    .config-input {
+      padding: 0.5rem; background: #080f1a; border: 1px solid #1a2a3a;
+      border-radius: 8px; color: #f0ede6; font-size: 0.95rem; font-weight: bold;
+      text-align: center; margin: 0; width: 100%; box-sizing: border-box;
+    }
+    .config-input:focus { border-color: #3498db; outline: none; }
+    .config-hint { font-size: 0.7rem; color: #2a4a5a; margin: 0.3rem 0 0.5rem; }
+
+    .player-setup-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+    .name-num {
+      width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
+      font-size: 0.75rem; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-name-input {
+      flex: 1; min-width: 6rem; padding: 0.6rem 0.75rem;
+      background: #080f1a; border: 1px solid #1a2a3a; border-radius: 8px;
+      color: #f0ede6; font-size: 0.95rem; margin: 0;
+    }
+    .player-name-input:focus { border-color: #3498db; outline: none; }
+    .split-ctrl { display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0; }
+    .split-btn {
+      width: 1.8rem; height: 1.8rem; border-radius: 6px;
+      border: 1px solid #1a2a3a; background: transparent;
+      color: #2a4a5a; font-size: 1rem; font-weight: bold;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      padding: 0; margin: 0;
+    }
+    .split-train-val { font-size: 0.82rem; font-weight: bold; color: #c0392b; min-width: 3rem; text-align: center; }
+    .split-ship-val  { font-size: 0.82rem; font-weight: bold; color: #5fb3ff; min-width: 3rem; text-align: center; }
+
+    .btn-start {
+      display: block; width: 100%; margin-top: 1.25rem;
+      padding: 0.9rem; background: #3498db; color: #fff;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
+
+    /* ── Table ── */
+    .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .rs-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .rs-table th, .rs-table td { min-width: 140px; }
+    .rs-table thead th {
+      padding: 0.85rem 0.5rem; font-size: 1.3rem; font-weight: bold; text-align: center;
+      background: #080f1a; border-bottom: 2px solid #1a2a3a;
+    }
+    .rs-table tbody td {
+      padding: 0.4rem 0.3rem; text-align: center;
+      border-bottom: 1px solid #0d1a26; background: #050c14;
+    }
+
+    .rs-total-cell { font-size: 3.5rem; font-weight: bold; color: #f0ede6; padding: 0.5rem 0.3rem !important; }
+    .rs-total-cell.leader { color: #3498db; }
+
+    /* Section labels */
+    .rs-section-lbl td {
+      padding: 0.3rem 0.5rem !important; background: #080f1a !important;
+      font-size: 0.65rem; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase;
+      border-top: 1px solid #0d1a26 !important; border-bottom: none !important;
+    }
+    .rs-lbl-train td { color: #c0392b; }
+    .rs-lbl-ship  td { color: #3498db; }
+
+    /* Route buttons (4 cols for 8 routes) */
+    .route-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.2rem; padding: 0.2rem; }
+    .btn-route {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0.35rem 0.05rem; min-height: 2.6rem;
+      border-radius: 7px; border: 1px solid #1a2a3a;
+      background: #080f1a; cursor: pointer; gap: 0.02rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-route .r-len { font-size: 1rem; font-weight: bold; color: #f0ede6; line-height: 1; }
+    .btn-route .r-pts { font-size: 0.6rem; font-weight: bold; }
+    .btn-route.train .r-pts { color: #c0392b; }
+    .btn-route.ship  .r-pts { color: #5fb3ff; }
+    @keyframes flash-train { 0% { background: rgba(192,57,43,0.35); border-color:#c0392b; } 100% { background:#080f1a; border-color:#1a2a3a; } }
+    @keyframes flash-ship  { 0% { background: rgba(52,152,219,0.35); border-color:#3498db; } 100% { background:#080f1a; border-color:#1a2a3a; } }
+    .btn-route.train.flash { animation: flash-train 0.45s ease-out forwards; }
+    .btn-route.ship.flash  { animation: flash-ship  0.45s ease-out forwards; }
+
+    /* Undo + counters */
+    .undo-piece-cell { display: flex; align-items: center; justify-content: center; gap: 0.3rem; flex-wrap: wrap; }
+    .rs-btn-undo {
+      width: 2.8rem; height: 2.6rem; background: transparent; border: 1px solid #1a2a3a;
+      border-radius: 10px; color: #2a4a5a; font-size: 1.1rem;
+      cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .rs-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
+    .rs-btn-undo:disabled { opacity: 0.25; cursor: default; }
+    .piece-badge {
+      display: inline-flex; flex-direction: column; align-items: center;
+      padding: 0.2rem 0.5rem; border: 1px solid #1a2a3a;
+      border-radius: 8px; background: #080f1a; line-height: 1.2; min-width: 2.8rem;
+    }
+    .piece-badge .pb-icon { font-size: 0.8rem; }
+    .piece-badge .pb-count { font-size: 1.3rem; font-weight: bold; color: #a89f94; }
+    .piece-badge.warning { border-color: #f39c12; }
+    .piece-badge.warning .pb-count { color: #f39c12; }
+    .piece-badge.danger  { border-color: #c0392b; }
+    .piece-badge.danger  .pb-count { color: #c0392b; }
+
+    /* Exchange */
+    .exchange-cell { display: flex; align-items: center; justify-content: center; gap: 0.3rem; padding: 0.1rem; }
+    .btn-exchange {
+      padding: 0.35rem 0.4rem; border-radius: 7px; border: 1px solid #1a2a3a;
+      background: transparent; font-size: 0.72rem; font-weight: bold; cursor: pointer;
+      line-height: 1.3; text-align: center;
+    }
+    .btn-exchange.t2s { color: #5fb3ff; border-color: #1a2a3a; }
+    .btn-exchange.s2t { color: #c0392b; border-color: #1a2a3a; }
+
+    /* Fin de partie divider */
+    .rs-divider td {
+      padding: 0.55rem 0.5rem 0.35rem !important; background: #040a12 !important;
+      font-size: 0.68rem; color: #1a3a5a; font-weight: bold;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border-top: 2px solid #1a2a4a !important; border-bottom: 1px solid #1a2a4a !important;
+      cursor: pointer; user-select: none;
+    }
+    .rs-divider td:hover { color: #5fb3ff; }
+    .rs-chevron { display: inline-block; transition: transform 0.2s; margin-right: 0.4rem; }
+    .rs-divider.open .rs-chevron { transform: rotate(90deg); }
+
+    /* Tickets */
+    .ticket-cell { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.3rem 0.25rem; }
+    .ticket-lbl { font-size: 0.62rem; color: #1a3a5a; text-transform: uppercase; letter-spacing: 0.08em; }
+    .ticket-input {
+      width: 5rem; text-align: center; padding: 0.5rem 0.2rem;
+      background: #050c14; border: 1px solid #1a2a3a; border-radius: 8px;
+      color: #f0ede6; font-size: 1.05rem; font-weight: bold; margin: 0;
+    }
+    .ticket-input:focus { border-color: #3498db; outline: none; }
+    .ticket-input::-webkit-inner-spin-button, .ticket-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .ticket-input { -moz-appearance: textfield; }
+    .ticket-btns { display: flex; gap: 0.3rem; width: 100%; }
+    .btn-ticket-ok   { flex:1; padding:0.45rem 0.1rem; border-radius:8px; border:1px solid #27ae60; background:rgba(39,174,96,0.08); color:#27ae60; font-size:0.8rem; font-weight:bold; cursor:pointer; }
+    .btn-ticket-fail { flex:1; padding:0.45rem 0.1rem; border-radius:8px; border:1px solid #c0392b; background:rgba(192,57,43,0.08); color:#c0392b; font-size:0.8rem; font-weight:bold; cursor:pointer; }
+
+    /* Ports */
+    .harbor-cell { display: flex; align-items: center; justify-content: center; gap: 0.35rem; flex-wrap: wrap; padding: 0.3rem; }
+    .btn-harbor {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0.35rem 0.45rem; border-radius: 8px; border: 1px dashed #1a2a3a;
+      background: #050c14; cursor: pointer; min-width: 3rem; gap: 0.1rem; transition: border-color 0.15s;
+    }
+    .btn-harbor .h-icon { font-size: 1rem; line-height: 1; }
+    .btn-harbor .h-pts  { font-size: 0.65rem; font-weight: bold; }
+    .btn-harbor[data-state="null"] .h-pts { color: #2a4a5a; }
+    .btn-harbor[data-state="0"]  { border-color:#c0392b; background:rgba(192,57,43,0.08); }
+    .btn-harbor[data-state="0"]  .h-pts { color:#c0392b; }
+    .btn-harbor[data-state="1"]  { border-color:#3498db; background:rgba(52,152,219,0.08); border-style:solid; }
+    .btn-harbor[data-state="1"]  .h-pts { color:#5fb3ff; }
+    .btn-harbor[data-state="2"]  { border-color:#3498db; background:rgba(52,152,219,0.15); border-style:solid; }
+    .btn-harbor[data-state="2"]  .h-pts { color:#5fb3ff; }
+    .btn-harbor[data-state="3"]  { border-color:#c9a84c; background:rgba(201,168,76,0.12); border-style:solid; }
+    .btn-harbor[data-state="3"]  .h-pts { color:#c9a84c; }
+
+    .rs-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
+    .btn-new-game {
+      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
+      padding: 0.65rem; background: transparent;
+      border: 1px solid #1a2a3a; border-radius: 10px;
+      color: #2a4a5a; font-size: 0.88rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="rs">
+
+  <div class="rs-topbar">
+    <a href="jeuxdesociete.html">&#8592;</a>
+    <h1>⛵ Ticket to Ride : Rails &amp; Sails — Score</h1>
+  </div>
+
+  <div id="rs-setup" class="rs-setup">
+    <div class="setup-lbl">Nombre de joueurs</div>
+    <div class="nb-btns" id="rs-nb-btns"></div>
+
+    <div class="setup-lbl">Configuration des pièces</div>
+    <div class="config-grid">
+      <div class="config-item">
+        <label>Total pièces / joueur</label>
+        <input type="text" inputmode="numeric" id="rs-total" class="config-input" value="60" oninput="renderNoms()">
+      </div>
+      <div class="config-item">
+        <label>Ports / joueur</label>
+        <input type="text" inputmode="numeric" id="rs-harbors" class="config-input" value="3">
+      </div>
+      <div class="config-item">
+        <label>Max 🚂 trains</label>
+        <input type="text" inputmode="numeric" id="rs-max-trains" class="config-input" value="25" oninput="renderNoms()">
+      </div>
+      <div class="config-item">
+        <label>Max ⛵ bateaux</label>
+        <input type="text" inputmode="numeric" id="rs-max-ships" class="config-input" value="50" oninput="renderNoms()">
+      </div>
+    </div>
+    <div class="config-hint">Carte Monde recommandée (1ère partie) : 20 trains + 40 bateaux</div>
+
+    <div class="setup-lbl">Joueurs &amp; répartition trains / bateaux</div>
+    <div id="rs-noms"></div>
+    <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
+  </div>
+
+  <div id="rs-game" style="display:none;">
+    <div class="score-outer">
+      <table class="rs-table" id="rs-table"></table>
+    </div>
+    <button class="btn-new-game" onclick="reinitialiser()">🔄 Nouvelle partie</button>
+  </div>
+
+</div>
+<script>
+const COULEURS   = ['#c0392b','#3498db','#27ae60','#f1c40f','#a89f94'];
+const ROUTE_PTS  = [0,1,2,4,7,10,15,18,21]; // index = longueur
+const HARBOR_CYCLE  = ['null','0','1','2','3'];
+const HARBOR_PT_MAP = { 'null':0, '0':-4, '1':20, '2':30, '3':40 };
+const HARBOR_LABELS = {
+  'null': { icon:'🏛',    pts:'?' },
+  '0':   { icon:'🏚',    pts:'−4' },
+  '1':   { icon:'⚓',    pts:'+20' },
+  '2':   { icon:'⚓⚓',  pts:'+30' },
+  '3':   { icon:'⚓⚓⚓', pts:'+40' },
+};
+
+let nbJ = 2, nbHarbors = 3, totalPieces = 60, maxTrainsG = 25, maxShipsG = 50;
+let joueurs = [];
+let trainSplits = {};
+
+function getConfig() {
+  return {
+    total: parseInt(document.getElementById('rs-total').value)      || 60,
+    maxT:  parseInt(document.getElementById('rs-max-trains').value) || 25,
+    maxS:  parseInt(document.getElementById('rs-max-ships').value)  || 50,
+    ports: parseInt(document.getElementById('rs-harbors').value)    || 3,
+  };
+}
+
+function initSetup() {
+  const btns = document.getElementById('rs-nb-btns');
+  btns.innerHTML = '';
+  [2,3,4,5].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'nb-btn' + (n === nbJ ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => {
+      nbJ = n;
+      btns.querySelectorAll('.nb-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderNoms();
+    };
+    btns.appendChild(b);
+  });
+  renderNoms();
+}
+
+function renderNoms() {
+  const cfg = getConfig();
+  const minT = Math.max(0, cfg.total - cfg.maxS);
+  const maxT = Math.min(cfg.maxT, cfg.total);
+  const defT = Math.max(minT, Math.min(20, maxT));
+
+  const div = document.getElementById('rs-noms');
+  const prevNames = Array.from(div.querySelectorAll('.player-name-input')).map(i => i.value);
+  div.innerHTML = '';
+
+  for (let i = 0; i < nbJ; i++) {
+    if (trainSplits[i] === undefined) trainSplits[i] = defT;
+    trainSplits[i] = Math.max(minT, Math.min(maxT, trainSplits[i]));
+
+    const row = document.createElement('div');
+    row.className = 'player-setup-row';
+
+    const num = document.createElement('div');
+    num.className = 'name-num';
+    num.style.cssText = `background:${COULEURS[i]}22;color:${COULEURS[i]}`;
+    num.textContent = i + 1;
+
+    const inp = document.createElement('input');
+    inp.className = 'player-name-input'; inp.type = 'text';
+    inp.placeholder = `Joueur ${i+1}`; inp.value = prevNames[i] || '';
+
+    const ctrl = document.createElement('div');
+    ctrl.className = 'split-ctrl';
+
+    const btnM = document.createElement('button');
+    btnM.className = 'split-btn'; btnM.textContent = '−';
+
+    const tVal = document.createElement('span');
+    tVal.className = 'split-train-val'; tVal.id = `rs-tv-${i}`;
+    tVal.textContent = `🚂 ${trainSplits[i]}`;
+
+    const btnP = document.createElement('button');
+    btnP.className = 'split-btn'; btnP.textContent = '+';
+
+    const sVal = document.createElement('span');
+    sVal.className = 'split-ship-val'; sVal.id = `rs-sv-${i}`;
+    sVal.textContent = `⛵ ${cfg.total - trainSplits[i]}`;
+
+    const updateSplit = () => {
+      const c = getConfig();
+      const mn = Math.max(0, c.total - c.maxS);
+      const mx = Math.min(c.maxT, c.total);
+      trainSplits[i] = Math.max(mn, Math.min(mx, trainSplits[i]));
+      document.getElementById(`rs-tv-${i}`).textContent = `🚂 ${trainSplits[i]}`;
+      document.getElementById(`rs-sv-${i}`).textContent = `⛵ ${c.total - trainSplits[i]}`;
+    };
+    btnM.onclick = () => { trainSplits[i]--; updateSplit(); };
+    btnP.onclick = () => { trainSplits[i]++; updateSplit(); };
+
+    ctrl.appendChild(btnM); ctrl.appendChild(tVal);
+    ctrl.appendChild(btnP); ctrl.appendChild(sVal);
+    row.appendChild(num); row.appendChild(inp); row.appendChild(ctrl);
+    div.appendChild(row);
+  }
+}
+
+function demarrer() {
+  const cfg = getConfig();
+  totalPieces = cfg.total; maxTrainsG = cfg.maxT; maxShipsG = cfg.maxS; nbHarbors = cfg.ports;
+  const inputs = document.querySelectorAll('#rs-noms .player-name-input');
+  joueurs = Array.from(inputs).map((inp, i) => {
+    const t = trainSplits[i] ?? 20;
+    return {
+      nom: inp.value.trim() || `Joueur ${i+1}`,
+      couleur: COULEURS[i], total: 0,
+      trains: t, ships: totalPieces - t,
+      harborStates: Array(nbHarbors).fill('null'),
+      history: [],
+    };
+  });
+  document.getElementById('rs-setup').style.display = 'none';
+  document.getElementById('rs-game').style.display = '';
+  renderTableau();
+}
+
+function renderTableau() {
+  const table = document.getElementById('rs-table');
+  table.innerHTML = '';
+
+  // En-tête
+  const thead = document.createElement('thead');
+  const trH = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const th = document.createElement('th');
+    th.style.color = j.couleur; th.textContent = j.nom; th.id = `rs-th-${i}`;
+    trH.appendChild(th);
+  });
+  thead.appendChild(trH); table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+
+  // Totaux
+  const trTot = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    td.className = 'rs-total-cell'; td.id = `rs-total-${i}`; td.textContent = j.total;
+    trTot.appendChild(td);
+  });
+  tbody.appendChild(trTot);
+
+  // Label trains
+  addSectionLabel(tbody, '🚂 Routes Trains', 'rs-section-lbl rs-lbl-train');
+
+  // Boutons routes train
+  const trRT = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const grid = document.createElement('div'); grid.className = 'route-grid';
+    for (let len = 1; len <= 8; len++) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-route train';
+      btn.innerHTML = `<span class="r-len">${len}</span><span class="r-pts">${ROUTE_PTS[len]}pt</span>`;
+      btn.onclick = () => ajouterRoute(i, ROUTE_PTS[len], len, 'train', btn);
+      grid.appendChild(btn);
+    }
+    td.appendChild(grid); trRT.appendChild(td);
+  });
+  tbody.appendChild(trRT);
+
+  // Label bateaux
+  addSectionLabel(tbody, '⛵ Routes Bateaux', 'rs-section-lbl rs-lbl-ship');
+
+  // Boutons routes bateau
+  const trRS = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const grid = document.createElement('div'); grid.className = 'route-grid';
+    for (let len = 1; len <= 8; len++) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-route ship';
+      btn.innerHTML = `<span class="r-len">${len}</span><span class="r-pts">${ROUTE_PTS[len]}pt</span>`;
+      btn.onclick = () => ajouterRoute(i, ROUTE_PTS[len], len, 'ship', btn);
+      grid.appendChild(btn);
+    }
+    td.appendChild(grid); trRS.appendChild(td);
+  });
+  tbody.appendChild(trRS);
+
+  // Undo + compteurs
+  const trUndo = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div'); cell.className = 'undo-piece-cell';
+    const undo = document.createElement('button');
+    undo.className = 'rs-btn-undo'; undo.id = `rs-undo-${i}`;
+    undo.textContent = '↩'; undo.disabled = true;
+    undo.onclick = () => annuler(i);
+    const bT = document.createElement('div');
+    bT.className = 'piece-badge'; bT.id = `rs-badge-t-${i}`;
+    bT.innerHTML = `<span class="pb-icon">🚂</span><span class="pb-count" id="rs-ct-${i}">${j.trains}</span>`;
+    const bS = document.createElement('div');
+    bS.className = 'piece-badge'; bS.id = `rs-badge-s-${i}`;
+    bS.innerHTML = `<span class="pb-icon">⛵</span><span class="pb-count" id="rs-cs-${i}">${j.ships}</span>`;
+    cell.appendChild(undo); cell.appendChild(bT); cell.appendChild(bS);
+    td.appendChild(cell); trUndo.appendChild(td);
+  });
+  tbody.appendChild(trUndo);
+
+  // Échange de pièces
+  const trEx = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div'); cell.className = 'exchange-cell';
+    const bt = document.createElement('button');
+    bt.className = 'btn-exchange t2s'; bt.innerHTML = '🚂→⛵<br><small>−1pt</small>';
+    bt.onclick = () => echangerPiece(i, 'train');
+    const bs = document.createElement('button');
+    bs.className = 'btn-exchange s2t'; bs.innerHTML = '⛵→🚂<br><small>−1pt</small>';
+    bs.onclick = () => echangerPiece(i, 'ship');
+    cell.appendChild(bt); cell.appendChild(bs);
+    td.appendChild(cell); trEx.appendChild(td);
+  });
+  tbody.appendChild(trEx);
+
+  // Séparateur fin de partie
+  const trDiv = document.createElement('tr');
+  trDiv.className = 'rs-divider'; trDiv.id = 'rs-divider';
+  const tdDiv = document.createElement('td');
+  tdDiv.colSpan = joueurs.length;
+  tdDiv.innerHTML = '<span class="rs-chevron">▶</span>🏁 Fin de partie — Tickets &amp; Ports';
+  tdDiv.onclick = () => {
+    const open = trDiv.classList.toggle('open');
+    document.getElementById('rs-tr-tickets').style.display = open ? '' : 'none';
+    document.getElementById('rs-tr-harbors').style.display = open ? '' : 'none';
+  };
+  trDiv.appendChild(tdDiv); tbody.appendChild(trDiv);
+
+  // Tickets
+  const trTk = document.createElement('tr');
+  trTk.id = 'rs-tr-tickets'; trTk.style.display = 'none';
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div'); cell.className = 'ticket-cell';
+    const lbl = document.createElement('div'); lbl.className = 'ticket-lbl'; lbl.textContent = 'valeur du ticket';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'numeric';
+    inp.className = 'ticket-input'; inp.id = `rs-ticket-${i}`; inp.placeholder = 'pts';
+    const btns = document.createElement('div'); btns.className = 'ticket-btns';
+    const bok = document.createElement('button'); bok.className = 'btn-ticket-ok'; bok.textContent = '✓ Réussi';
+    bok.onclick = () => ajouterTicket(i, 1);
+    const bfl = document.createElement('button'); bfl.className = 'btn-ticket-fail'; bfl.textContent = '✗ Raté';
+    bfl.onclick = () => ajouterTicket(i, -1);
+    btns.appendChild(bok); btns.appendChild(bfl);
+    cell.appendChild(lbl); cell.appendChild(inp); cell.appendChild(btns);
+    td.appendChild(cell); trTk.appendChild(td);
+  });
+  tbody.appendChild(trTk);
+
+  // Ports
+  const trHb = document.createElement('tr');
+  trHb.id = 'rs-tr-harbors'; trHb.style.display = 'none';
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div'); cell.className = 'harbor-cell';
+    for (let h = 0; h < nbHarbors; h++) {
+      const btn = document.createElement('button');
+      btn.className = 'btn-harbor'; btn.id = `rs-h-${i}-${h}`;
+      updateHarborBtn(btn, 'null');
+      btn.onclick = () => cyclerPort(i, h);
+      cell.appendChild(btn);
+    }
+    td.appendChild(cell); trHb.appendChild(td);
+  });
+  tbody.appendChild(trHb);
+
+  table.appendChild(tbody);
+}
+
+function addSectionLabel(tbody, text, cls) {
+  const tr = document.createElement('tr'); tr.className = cls;
+  const td = document.createElement('td'); td.colSpan = joueurs.length; td.textContent = text;
+  tr.appendChild(td); tbody.appendChild(tr);
+}
+
+function updateHarborBtn(btn, state) {
+  const lbl = HARBOR_LABELS[state] || HARBOR_LABELS['null'];
+  btn.innerHTML = `<span class="h-icon">${lbl.icon}</span><span class="h-pts">${lbl.pts}</span>`;
+  btn.dataset.state = state;
+}
+
+function ajouterRoute(i, pts, wagons, type, btn) {
+  joueurs[i].history.push({ pts, type: 'route', subtype: type, wagons });
+  joueurs[i].total += pts;
+  if (type === 'train') joueurs[i].trains = Math.max(0, joueurs[i].trains - wagons);
+  else                  joueurs[i].ships  = Math.max(0, joueurs[i].ships  - wagons);
+  btn.classList.remove('flash'); void btn.offsetWidth; btn.classList.add('flash');
+  mettreAJour();
+}
+
+function ajouterTicket(i, sign) {
+  const inp = document.getElementById(`rs-ticket-${i}`);
+  const val = parseInt(inp.value) || 0;
+  if (val <= 0) return;
+  const pts = sign * val;
+  joueurs[i].history.push({ pts, type: 'ticket' });
+  joueurs[i].total += pts;
+  inp.value = '';
+  mettreAJour();
+}
+
+function echangerPiece(i, from) {
+  const j = joueurs[i];
+  if (from === 'train' && j.trains <= 0) return;
+  if (from === 'ship'  && j.ships  <= 0) return;
+  if (from === 'train') { j.trains--; j.ships++;  }
+  else                  { j.ships--;  j.trains++; }
+  j.total -= 1;
+  j.history.push({ pts: -1, type: 'exchange', from });
+  mettreAJour();
+}
+
+function cyclerPort(playerIdx, harborIdx) {
+  const j = joueurs[playerIdx];
+  const cur  = j.harborStates[harborIdx];
+  const next = HARBOR_CYCLE[(HARBOR_CYCLE.indexOf(cur) + 1) % HARBOR_CYCLE.length];
+  const delta = (HARBOR_PT_MAP[next] ?? 0) - (HARBOR_PT_MAP[cur] ?? 0);
+  j.harborStates[harborIdx] = next;
+  j.total += delta;
+  j.history.push({ pts: delta, type: 'harbor', hIdx: harborIdx, from: cur, to: next });
+  const btn = document.getElementById(`rs-h-${playerIdx}-${harborIdx}`);
+  if (btn) updateHarborBtn(btn, next);
+  mettreAJour();
+}
+
+function annuler(i) {
+  if (!joueurs[i].history.length) return;
+  const e = joueurs[i].history.pop();
+  const j = joueurs[i];
+  j.total -= e.pts;
+  if (e.type === 'route') {
+    if (e.subtype === 'train') j.trains = Math.min(maxTrainsG, j.trains + e.wagons);
+    else                       j.ships  = Math.min(maxShipsG,  j.ships  + e.wagons);
+  } else if (e.type === 'exchange') {
+    if (e.from === 'train') { j.trains++; j.ships--;  }
+    else                    { j.ships++;  j.trains--; }
+  } else if (e.type === 'harbor') {
+    j.harborStates[e.hIdx] = e.from;
+    const btn = document.getElementById(`rs-h-${i}-${e.hIdx}`);
+    if (btn) updateHarborBtn(btn, e.from);
+  }
+  mettreAJour();
+}
+
+function mettreAJour() {
+  const maxScore = Math.max(...joueurs.map(j => j.total));
+  joueurs.forEach((j, i) => {
+    const cell = document.getElementById(`rs-total-${i}`);
+    const isLeader = j.total > 0 && j.total === maxScore;
+    cell.textContent = j.total;
+    cell.classList.toggle('leader', isLeader);
+    document.getElementById(`rs-th-${i}`).textContent = j.nom + (isLeader ? ' 🏆' : '');
+    const undo = document.getElementById(`rs-undo-${i}`);
+    if (undo) undo.disabled = j.history.length === 0;
+    const total = j.trains + j.ships;
+    ['t','s'].forEach(type => {
+      const count = type === 't' ? j.trains : j.ships;
+      const el = document.getElementById(`rs-c${type}-${i}`);
+      const badge = document.getElementById(`rs-badge-${type}-${i}`);
+      if (el) el.textContent = count;
+      if (badge) {
+        badge.classList.toggle('danger',  total <= 6);
+        badge.classList.toggle('warning', total > 6 && total <= 10);
+      }
+    });
+  });
+}
+
+function reinitialiser() {
+  if (!confirm('Commencer une nouvelle partie ?')) return;
+  joueurs = []; trainSplits = {};
+  document.getElementById('rs-game').style.display = 'none';
+  document.getElementById('rs-setup').style.display = '';
+  initSetup();
+}
+
+initSetup();
+</script>
+
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="version.js"></script>
+</body>
+</html>
