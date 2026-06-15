@@ -67,7 +67,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Déconnexion
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', async () => {
+      await fetch('/api/login.php', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      }).catch(() => {});
       sessionStorage.clear();
       window.location.href = 'index.html';
     });
