@@ -93,25 +93,36 @@
 
     /* Section labels */
     .rs-section-lbl td {
-      padding: 0.3rem 0.5rem !important; background: #080f1a !important;
-      font-size: 0.65rem; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase;
-      border-top: 1px solid #0d1a26 !important; border-bottom: none !important;
+      padding: 0.4rem 0.75rem !important;
+      font-size: 0.72rem; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase;
+      border-bottom: none !important;
     }
-    .rs-lbl-train td { color: #c0392b; }
-    .rs-lbl-ship  td { color: #3498db; }
+    .rs-lbl-train td {
+      color: #e07060;
+      background: rgba(192,57,43,0.18) !important;
+      border-top: 2px solid rgba(192,57,43,0.5) !important;
+    }
+    .rs-lbl-ship td {
+      color: #5fb3ff;
+      background: rgba(52,152,219,0.18) !important;
+      border-top: 2px solid rgba(52,152,219,0.5) !important;
+    }
+    .rs-train-row td { background: rgba(192,57,43,0.06) !important; }
+    .rs-ship-row  td { background: rgba(52,152,219,0.06) !important; }
 
     /* Route buttons (4 cols for 8 routes) */
     .route-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.2rem; padding: 0.2rem; }
     .btn-route {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 0.35rem 0.05rem; min-height: 2.6rem;
-      border-radius: 7px; border: 1px solid #1a2a3a;
-      background: #080f1a; cursor: pointer; gap: 0.02rem;
+      border-radius: 7px; cursor: pointer; gap: 0.02rem;
       -webkit-tap-highlight-color: transparent;
     }
+    .btn-route.train { border: 1px solid rgba(192,57,43,0.4); background: rgba(192,57,43,0.08); }
+    .btn-route.ship  { border: 1px solid rgba(52,152,219,0.4); background: rgba(52,152,219,0.08); }
     .btn-route .r-len { font-size: 1rem; font-weight: bold; color: #f0ede6; line-height: 1; }
     .btn-route .r-pts { font-size: 0.6rem; font-weight: bold; }
-    .btn-route.train .r-pts { color: #c0392b; }
+    .btn-route.train .r-pts { color: #e07060; }
     .btn-route.ship  .r-pts { color: #5fb3ff; }
     @keyframes flash-train { 0% { background: rgba(192,57,43,0.35); border-color:#c0392b; } 100% { background:#080f1a; border-color:#1a2a3a; } }
     @keyframes flash-ship  { 0% { background: rgba(52,152,219,0.35); border-color:#3498db; } 100% { background:#080f1a; border-color:#1a2a3a; } }
@@ -130,11 +141,11 @@
     .rs-btn-undo:disabled { opacity: 0.25; cursor: default; }
     .piece-badge {
       display: inline-flex; flex-direction: column; align-items: center;
-      padding: 0.2rem 0.5rem; border: 1px solid #1a2a3a;
-      border-radius: 8px; background: #080f1a; line-height: 1.2; min-width: 2.8rem;
+      padding: 0.3rem 0.8rem; border: 1px solid #1a2a3a;
+      border-radius: 8px; background: #080f1a; line-height: 1.2; min-width: 3.5rem;
     }
-    .piece-badge .pb-icon { font-size: 0.8rem; }
-    .piece-badge .pb-count { font-size: 1.3rem; font-weight: bold; color: #a89f94; }
+    .piece-badge .pb-icon { font-size: 1.3rem; }
+    .piece-badge .pb-count { font-size: 2rem; font-weight: bold; color: #a89f94; }
     .piece-badge.warning { border-color: #f39c12; }
     .piece-badge.warning .pb-count { color: #f39c12; }
     .piece-badge.danger  { border-color: #c0392b; }
@@ -404,6 +415,7 @@ function renderTableau() {
 
   // Boutons routes train
   const trRT = document.createElement('tr');
+  trRT.className = 'rs-train-row';
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const grid = document.createElement('div'); grid.className = 'route-grid';
@@ -423,6 +435,7 @@ function renderTableau() {
 
   // Boutons routes bateau
   const trRS = document.createElement('tr');
+  trRS.className = 'rs-ship-row';
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const grid = document.createElement('div'); grid.className = 'route-grid';
