@@ -189,16 +189,16 @@
     .btn-ticket-fail { flex:1; padding:0.45rem 0.1rem; border-radius:8px; border:1px solid #c0392b; background:rgba(192,57,43,0.08); color:#c0392b; font-size:0.8rem; font-weight:bold; cursor:pointer; }
 
     /* Ports */
-    .harbor-cell { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.3rem; }
-    .harbor-btns { display: flex; align-items: center; justify-content: center; gap: 0.35rem; flex-wrap: wrap; }
-    .harbor-hint { font-size: 0.6rem; color: #1a3a5a; text-align: center; line-height: 1.5; }
+    .harbor-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.3rem; }
     .btn-harbor {
       display: flex; flex-direction: column; align-items: center;
-      padding: 0.35rem 0.45rem; border-radius: 8px; border: 1px dashed #1a2a3a;
-      background: #050c14; cursor: pointer; min-width: 3rem; gap: 0.1rem; transition: border-color 0.15s;
+      padding: 0.45rem 0.55rem; border-radius: 8px; border: 1px dashed #1a2a3a;
+      background: #050c14; cursor: pointer; gap: 0.15rem; transition: border-color 0.15s;
+      min-width: 5rem;
     }
-    .btn-harbor .h-icon { font-size: 1rem; line-height: 1; }
-    .btn-harbor .h-pts  { font-size: 0.65rem; font-weight: bold; }
+    .btn-harbor .h-icon  { font-size: 1.1rem; line-height: 1; }
+    .btn-harbor .h-label { font-size: 0.65rem; color: #a89f94; font-weight: bold; white-space: nowrap; }
+    .btn-harbor .h-pts   { font-size: 0.7rem; font-weight: bold; }
     .btn-harbor[data-state="null"] .h-pts { color: #2a4a5a; }
     .btn-harbor[data-state="0"]  { border-color:#c0392b; background:rgba(192,57,43,0.08); }
     .btn-harbor[data-state="0"]  .h-pts { color:#c0392b; }
@@ -270,11 +270,11 @@ const ROUTE_PTS  = [0,1,2,4,7,10,15,18,21]; // index = longueur
 const HARBOR_CYCLE  = ['null','0','1','2','3'];
 const HARBOR_PT_MAP = { 'null':0, '0':-4, '1':20, '2':30, '3':40 };
 const HARBOR_LABELS = {
-  'null': { icon:'🏛',    pts:'?' },
-  '0':   { icon:'🏚',    pts:'−4' },
-  '1':   { icon:'⚓',    pts:'+20' },
-  '2':   { icon:'⚓⚓',  pts:'+30' },
-  '3':   { icon:'⚓⚓⚓', pts:'+40' },
+  'null': { icon:'🏛',    label:'Port',          pts:'' },
+  '0':   { icon:'🏚',    label:'Non construit',  pts:'−4 pts' },
+  '1':   { icon:'⚓',    label:'1 ticket',       pts:'+20 pts' },
+  '2':   { icon:'⚓⚓',  label:'2 tickets',      pts:'+30 pts' },
+  '3':   { icon:'⚓⚓⚓', label:'3+ tickets',     pts:'+40 pts' },
 };
 
 let nbJ = 2, nbHarbors = 3, totalPieces = 60, maxTrainsG = 25, maxShipsG = 50;
@@ -531,17 +531,13 @@ function renderTableau() {
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div'); cell.className = 'harbor-cell';
-    const btnsWrap = document.createElement('div'); btnsWrap.className = 'harbor-btns';
     for (let h = 0; h < nbHarbors; h++) {
       const btn = document.createElement('button');
       btn.className = 'btn-harbor'; btn.id = `rs-h-${i}-${h}`;
       updateHarborBtn(btn, 'null');
       btn.onclick = () => cyclerPort(i, h);
-      btnsWrap.appendChild(btn);
+      cell.appendChild(btn);
     }
-    const hint = document.createElement('div'); hint.className = 'harbor-hint';
-    hint.textContent = '🏚 Non construit −4 · ⚓ 1 ticket +20 · ⚓⚓ 2 tickets +30 · ⚓⚓⚓ 3+ tickets +40';
-    cell.appendChild(btnsWrap); cell.appendChild(hint);
     td.appendChild(cell); trHb.appendChild(td);
   });
   tbody.appendChild(trHb);
@@ -557,7 +553,7 @@ function addSectionLabel(tbody, text, cls) {
 
 function updateHarborBtn(btn, state) {
   const lbl = HARBOR_LABELS[state] || HARBOR_LABELS['null'];
-  btn.innerHTML = `<span class="h-icon">${lbl.icon}</span><span class="h-pts">${lbl.pts}</span>`;
+  btn.innerHTML = `<span class="h-icon">${lbl.icon}</span><span class="h-label">${lbl.label}</span>${lbl.pts ? `<span class="h-pts">${lbl.pts}</span>` : ''}`;
   btn.dataset.state = state;
 }
 
