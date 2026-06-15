@@ -100,6 +100,19 @@
       display: inline-flex; align-items: center; justify-content: center;
     }
 
+    .qwk-btn-undo {
+      width: 3rem; height: 3rem;
+      background: transparent; border: 1px solid #3a3a2a;
+      border-radius: 10px; color: #556655; font-size: 1.2rem;
+      cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .qwk-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
+    .qwk-btn-undo:disabled { opacity: 0.25; cursor: default; }
+
+    .qwk-add-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+
     .qwk-btn-qwirkle {
       width: calc(100% - 1rem);
       background: rgba(201,168,76,0.08);
@@ -202,7 +215,8 @@ function demarrer() {
   joueurs = Array.from(inputs).map((inp, i) => ({
     nom: inp.value.trim() || `Joueur ${i+1}`,
     couleur: COULEURS[i],
-    total: 0
+    total: 0,
+    history: []
   }));
   document.getElementById('qwk-setup').style.display = 'none';
   document.getElementById('qwk-game').style.display = '';
@@ -253,14 +267,21 @@ function renderTableau() {
   });
   tbody.appendChild(trInput);
 
-  // Ligne boutons +
+  // Ligne boutons undo + +
   const trAdd = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.className = 'qwk-btn-add'; btn.textContent = '+';
-    btn.onclick = () => ajouterPoints(i);
-    td.appendChild(btn);
+    const cell = document.createElement('div');
+    cell.className = 'qwk-add-cell';
+    const undo = document.createElement('button');
+    undo.className = 'qwk-btn-undo'; undo.id = `qwk-btn-undo-${i}`;
+    undo.textContent = '↩'; undo.disabled = true;
+    undo.onclick = () => annuler(i);
+    const add = document.createElement('button');
+    add.className = 'qwk-btn-add'; add.textContent = '+';
+    add.onclick = () => ajouterPoints(i);
+    cell.appendChild(undo); cell.appendChild(add);
+    td.appendChild(cell);
     trAdd.appendChild(td);
   });
   tbody.appendChild(trAdd);
@@ -285,17 +306,26 @@ function ajouterPoints(i) {
   const inp = document.getElementById(`qwk-inp-${i}`);
   const pts = parseInt(inp.value) || 0;
   if (pts <= 0) return;
+  joueurs[i].history.push(pts);
   joueurs[i].total += pts;
   inp.value = '';
   mettreAJour();
 }
 
 function faireQwirkle(i) {
+  joueurs[i].history.push(6);
   joueurs[i].total += 6;
   const btn = document.getElementById(`qwk-btn-q-${i}`);
   btn.classList.remove('flash');
   void btn.offsetWidth;
   btn.classList.add('flash');
+  mettreAJour();
+}
+
+function annuler(i) {
+  if (!joueurs[i].history.length) return;
+  const pts = joueurs[i].history.pop();
+  joueurs[i].total = Math.max(0, joueurs[i].total - pts);
   mettreAJour();
 }
 
@@ -308,6 +338,8 @@ function mettreAJour() {
     cell.classList.toggle('leader', isLeader);
     const th = document.getElementById(`qwk-th-${i}`);
     th.textContent = j.nom + (isLeader ? ' 🏆' : '');
+    const undo = document.getElementById(`qwk-btn-undo-${i}`);
+    if (undo) undo.disabled = j.history.length === 0;
   });
 }
 
