@@ -1,5 +1,10 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 
+// Vérification admin avant toute opération Firebase
+if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
+  window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+}
+
 // ── Archive management ───────────────────────────────
 const SECTIONS_ARCHIVABLES = [
   { key: 'ena',          icon: '🛠️', label: 'ÉNA'            },

@@ -334,7 +334,11 @@ function buildTable() {
   headTr.appendChild(cornerTh);
   joueurs.forEach((j,i) => {
     const th = document.createElement('th');
-    th.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${COULEURS[i]};margin-right:5px;vertical-align:middle;"></span><span style="color:${COULEURS[i]}">${j.nom}</span>`;
+    const dot = document.createElement('span');
+    dot.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:50%;background:${COULEURS[i]};margin-right:5px;vertical-align:middle;`;
+    const nameSpan = document.createElement('span');
+    nameSpan.style.color = COULEURS[i]; nameSpan.textContent = j.nom;
+    th.appendChild(dot); th.appendChild(nameSpan);
     headTr.appendChild(th);
   });
   thead.appendChild(headTr);
@@ -413,9 +417,14 @@ function renderRanking() {
   if (!div) return;
   const medals = ['🥇','🥈','🥉'];
   const ranked = joueurs.map((j,i)=>({nom:j.nom,pts:total(j.scores),c:COULEURS[i]})).sort((a,b)=>b.pts-a.pts);
-  div.innerHTML = ranked.map((r,i)=>
-    `<span class="rank-chip${i===0?' winner':''}" style="${i===0?`color:${r.c};border-color:${r.c}40`:`color:${r.c}80;border-color:${r.c}30`}">${medals[i]||`${i+1}.`} ${r.nom} — ${r.pts}</span>`
-  ).join('');
+  div.innerHTML = '';
+  ranked.forEach((r,i) => {
+    const chip = document.createElement('span');
+    chip.className = 'rank-chip' + (i===0 ? ' winner' : '');
+    chip.style.cssText = i===0 ? `color:${r.c};border-color:${r.c}40` : `color:${r.c}80;border-color:${r.c}30`;
+    chip.textContent = `${medals[i]||`${i+1}.`} ${r.nom} — ${r.pts}`;
+    div.appendChild(chip);
+  });
 }
 
 function reinitialiser() {

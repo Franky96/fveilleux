@@ -86,7 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
           sessionStorage.setItem('userName', utilisateurs[user].nom);
           sessionStorage.setItem('userRole', utilisateurs[user].role);
           sessionStorage.setItem('userPermissions', JSON.stringify(utilisateurs[user].permissions));
-          const pageAccueil = utilisateurs[user].pageAccueil || 'dashboard.html';
+          const PAGES_VALIDES = ['dashboard.html','rona.html','aeronefs.html','arinc429.html','ena.html','aviation.html','hockey.html','liens.html','films.html','scifi.html','pageTest.html','informatique.html','jeuxdesociete.html'];
+          const pageAccueil = PAGES_VALIDES.includes(utilisateurs[user].pageAccueil) ? utilisateurs[user].pageAccueil : 'dashboard.html';
           sessionStorage.setItem('pageAccueil', pageAccueil);
 
           window.location.href = pageAccueil;
