@@ -130,7 +130,11 @@
       letter-spacing: 0.1em; text-transform: uppercase;
       border-top: 2px solid #1a3a1a !important;
       border-bottom: 1px solid #1a3a1a !important;
+      cursor: pointer; user-select: none;
     }
+    .ttr-divider td:hover { color: #80cc80; }
+    .ttr-chevron { display: inline-block; transition: transform 0.2s; margin-right: 0.4rem; }
+    .ttr-divider.open .ttr-chevron { transform: rotate(90deg); }
 
     /* ── Destination Tickets ── */
     .ticket-cell {
@@ -351,17 +355,25 @@ function renderTableau() {
   });
   tbody.appendChild(trUndo);
 
-  // Séparateur Fin de partie
+  // Séparateur Fin de partie (collapsible)
   const trDiv = document.createElement('tr');
   trDiv.className = 'ttr-divider';
+  trDiv.id = 'ttr-divider';
   const tdDiv = document.createElement('td');
   tdDiv.colSpan = joueurs.length;
-  tdDiv.textContent = '🏁 Fin de partie — Destination Tickets';
+  tdDiv.innerHTML = '<span class="ttr-chevron">▶</span>🏁 Fin de partie — Destination Tickets';
+  tdDiv.onclick = () => {
+    const open = trDiv.classList.toggle('open');
+    document.getElementById('ttr-tr-tickets').style.display = open ? '' : 'none';
+    document.getElementById('ttr-tr-train').style.display   = open ? '' : 'none';
+  };
   trDiv.appendChild(tdDiv);
   tbody.appendChild(trDiv);
 
   // Destination Tickets
   const trTickets = document.createElement('tr');
+  trTickets.id = 'ttr-tr-tickets';
+  trTickets.style.display = 'none';
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div');
@@ -389,6 +401,8 @@ function renderTableau() {
 
   // Longest Train (plusieurs joueurs possibles en cas d'égalité)
   const trTrain = document.createElement('tr');
+  trTrain.id = 'ttr-tr-train';
+  trTrain.style.display = 'none';
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const btn = document.createElement('button');
