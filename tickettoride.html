@@ -170,14 +170,14 @@
     /* ── Longest Train ── */
     .ttr-btn-train {
       width: calc(100% - 0.5rem);
-      background: rgba(192,57,43,0.08);
-      border: 2px solid #c0392b; border-radius: 10px;
-      color: #c0392b; font-size: 0.78rem; font-weight: bold;
+      background: rgba(39,174,96,0.08);
+      border: 2px solid #27ae60; border-radius: 10px;
+      color: #27ae60; font-size: 0.78rem; font-weight: bold;
       padding: 0.65rem 0.3rem; cursor: pointer; margin: 0;
       transition: background 0.15s, color 0.15s;
       line-height: 1.3;
     }
-    .ttr-btn-train.active { background: #c0392b; color: #fff; }
+    .ttr-btn-train.active { background: #27ae60; color: #fff; }
 
     .ttr-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
     .btn-new-game {
@@ -408,7 +408,7 @@ function renderTableau() {
     const btn = document.createElement('button');
     btn.className = 'ttr-btn-train' + (trainOwners.has(i) ? ' active' : '');
     btn.id = `ttr-btn-train-${i}`;
-    btn.innerHTML = '🚂 Longest Train<br>+10 pts';
+    btn.innerHTML = '🚂 Chemin le plus long<br>+10 pts';
     btn.onclick = () => toggleTrain(i);
     td.appendChild(btn);
     trTrain.appendChild(td);
