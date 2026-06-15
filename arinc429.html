@@ -6,8 +6,10 @@
   <title>Décodeur ARINC 429 — Outils de Frank</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    if (!sessionStorage.getItem('loggedIn')) {
-      document.location.href = 'index.html';
+    const _pA = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pA.includes('arinc429') && !_pA.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
     }
   </script>
   <style>

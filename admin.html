@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Outils de Frank — Administration</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
+      window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+    }
+  </script>
   <style>
     .admin-header {
       display: flex;

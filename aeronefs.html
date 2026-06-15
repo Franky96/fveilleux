@@ -8,7 +8,7 @@
 <script>
   const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_p.includes('aeronefs') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_p.includes('aeronefs') && !_p.includes('aviation') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>
