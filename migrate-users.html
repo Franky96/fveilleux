@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Migration utilisateurs</title>
+<script>
+  if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
+    window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+  }
+</script>
+<style>
+  body { background:#111; color:#ccc; font-family:monospace; padding:2rem; }
+  h1 { color:#c0392b; }
+  button { background:#1a3a1a; color:#80cc80; border:1px solid #3a6a3a; padding:0.7rem 1.5rem; font-size:1rem; border-radius:6px; cursor:pointer; margin-top:1rem; }
+  button:hover { background:#3a6a3a; }
+  button:disabled { opacity:0.4; cursor:default; }
+  #log { margin-top:1.5rem; line-height:1.8; }
+  .ok  { color:#27ae60; }
+  .err { color:#e74c3c; }
+  .inf { color:#3498db; }
+  .warn{ color:#f39c12; }
+</style>
+</head>
+<body>
+<h1>Migration utilisateurs Firebase → MySQL</h1>
+<p style="color:#f39c12;">⚠️ À utiliser une seule fois. Supprime ce fichier après la migration.</p>
+<button id="btn" onclick="migrer()">Lancer la migration</button>
+<div id="log"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDSaYgjA5Uv_9RsoCt7sRTqo4ALT2dLDPc",
+  authDomain: "outils-de-frank.firebaseapp.com",
+  projectId: "outils-de-frank",
+  storageBucket: "outils-de-frank.firebasestorage.app",
+  messagingSenderId: "675563680392",
+  appId: "1:675563680392:web:673ffb948b184b8f45e53d"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const fbDb  = getFirestore(fbApp);
+
+const logEl = document.getElementById('log');
+function ligne(msg, cls = '') {
+  const p = document.createElement('p');
+  p.style.margin = '0.2rem 0';
+  p.className = cls;
+  p.textContent = msg;
+  logEl.appendChild(p);
+}
+
+window.migrer = async function() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  logEl.innerHTML = '';
+
+  ligne('⏳ Lecture Firebase : systeme/utilisateurs', 'inf');
+  let usersData;
+  try {
+    const snap = await getDoc(doc(fbDb, 'systeme', 'utilisateurs'));
+    if (!snap.exists()) { ligne('❌ Document introuvable dans Firebase.', 'err'); btn.disabled=false; return; }
+    usersData = snap.data();
+    ligne(`✅ ${Object.keys(usersData).length} utilisateur(s) trouvé(s)`, 'ok');
+  } catch (e) {
+    ligne('❌ Erreur Firebase : ' + e.message, 'err'); btn.disabled=false; return;
+  }
+
+  for (const [uid, u] of Object.entries(usersData)) {
+    if (uid === 'frank') { ligne(`⏭️  frank ignoré (déjà créé lors du setup)`, 'warn'); continue; }
+    ligne(`⏳ Création de "${uid}" (${u.nom})`, 'inf');
+    try {
+      const res  = await fetch('/api/users.php', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action:      'save',
+          userId:      uid,
+          nom:         u.nom,
+          role:        u.role || 'user',
+          permissions: u.permissions || [],
+          pageAccueil: u.pageAccueil || 'dashboard.html',
+          motDePasse:  u.motDePasse || '',
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur PHP');
+      ligne(`  ✅ Créé`, 'ok');
+    } catch (e) {
+      ligne(`  ❌ Erreur : ${e.message}`, 'err');
+    }
+  }
+
+  ligne('', '');
+  ligne('✅ Migration utilisateurs terminée ! Tu peux supprimer ce fichier.', 'ok');
+  btn.textContent = 'Terminé';
+};
+</script>
+</body>
+</html>
