@@ -106,14 +106,24 @@ function sanitiserLocation(loc) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  onSnapshot(ronaDocRef, (snap) => {
-    // Ne pas écraser les changements locaux non encore sauvegardés
-    if (_saveTimer !== null || _saving || _needsSave) return;
+  // On s'abonne une seule fois pour le chargement initial, puis on arrête le poll.
+  // Sans poll continu, aucun re-render externe ne peut écraser les changements locaux.
+  const unsubscribe = onSnapshot(ronaDocRef, (snap) => {
+    unsubscribe(); // stop polling after first load
 
     if (snap.exists()) {
       ronaData = snap.data();
       if (!ronaData.locations) ronaData.locations = [];
-      ronaData.locations.forEach(sanitiserLocation);
+
+      // Détecter et corriger la corruption (item dans manquants ET complets)
+      let corrompu = false;
+      ronaData.locations.forEach(loc => {
+        const avant = (loc.complets || []).length;
+        sanitiserLocation(loc);
+        if ((loc.complets || []).length !== avant) corrompu = true;
+      });
+      if (corrompu) setDoc(ronaDocRef, ronaData); // persister le nettoyage en MySQL
+
       afficherCompletes();
     } else {
       ronaData.locations = EMPLACEMENTS_DEFAUT.map(nom => ({
@@ -132,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLocationSelect();
     renderGrille();
   }, (err) => {
-    console.error('Firebase RONA:', err);
+    console.error('RONA onSnapshot:', err);
     afficherErreurFirebase(err.code);
   });
 });
@@ -441,7 +451,9 @@ function masquerMessageValidation() {
 }
 
 function mettreAJourQte(item, loc, qteInput, info) {
-  if (!loc.manquants) loc.manquants = {};
+  // Guard : si l'item n'est plus dans manquants (ex: blur déclenché par display:none
+  // dans clickerChk/clickerX), ne pas le ré-ajouter accidentellement.
+  if (!loc.manquants || !(item.id in loc.manquants)) return;
   const { type } = getManquantInfo(loc.manquants[item.id]);
   const val = parseInt(qteInput.value);
   if (!isNaN(val) && val > 0) {
