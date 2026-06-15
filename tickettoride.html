@@ -394,7 +394,10 @@ function renderTableau() {
     btnFail.className = 'btn-ticket-fail'; btnFail.textContent = '✗ Raté';
     btnFail.onclick = () => ajouterTicket(i, -1);
     btns.appendChild(btnOk); btns.appendChild(btnFail);
-    cell.appendChild(lbl); cell.appendChild(inp); cell.appendChild(btns);
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:0.6rem;color:#445544;text-align:center;line-height:1.4;';
+    hint.textContent = 'Entrer la valeur du ticket puis ✓ pour ajouter ou ✗ pour soustraire';
+    cell.appendChild(lbl); cell.appendChild(inp); cell.appendChild(btns); cell.appendChild(hint);
     td.appendChild(cell);
     trTickets.appendChild(td);
   });
