@@ -189,7 +189,9 @@
     .btn-ticket-fail { flex:1; padding:0.45rem 0.1rem; border-radius:8px; border:1px solid #c0392b; background:rgba(192,57,43,0.08); color:#c0392b; font-size:0.8rem; font-weight:bold; cursor:pointer; }
 
     /* Ports */
-    .harbor-cell { display: flex; align-items: center; justify-content: center; gap: 0.35rem; flex-wrap: wrap; padding: 0.3rem; }
+    .harbor-cell { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.3rem; }
+    .harbor-btns { display: flex; align-items: center; justify-content: center; gap: 0.35rem; flex-wrap: wrap; }
+    .harbor-hint { font-size: 0.6rem; color: #1a3a5a; text-align: center; line-height: 1.5; }
     .btn-harbor {
       display: flex; flex-direction: column; align-items: center;
       padding: 0.35rem 0.45rem; border-radius: 8px; border: 1px dashed #1a2a3a;
@@ -529,13 +531,17 @@ function renderTableau() {
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div'); cell.className = 'harbor-cell';
+    const btnsWrap = document.createElement('div'); btnsWrap.className = 'harbor-btns';
     for (let h = 0; h < nbHarbors; h++) {
       const btn = document.createElement('button');
       btn.className = 'btn-harbor'; btn.id = `rs-h-${i}-${h}`;
       updateHarborBtn(btn, 'null');
       btn.onclick = () => cyclerPort(i, h);
-      cell.appendChild(btn);
+      btnsWrap.appendChild(btn);
     }
+    const hint = document.createElement('div'); hint.className = 'harbor-hint';
+    hint.textContent = '🏚 Non construit −4 · ⚓ 1 ticket +20 · ⚓⚓ 2 tickets +30 · ⚓⚓⚓ 3+ tickets +40';
+    cell.appendChild(btnsWrap); cell.appendChild(hint);
     td.appendChild(cell); trHb.appendChild(td);
   });
   tbody.appendChild(trHb);
