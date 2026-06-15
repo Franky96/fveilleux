@@ -25,7 +25,7 @@
     .ttr-topbar a { color: #80cc80; text-decoration: none; font-size: 1.3rem; }
     .ttr-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
 
-    /* Setup */
+    /* ── Setup ── */
     .ttr-setup { padding: 1.25rem; max-width: 400px; margin: 0 auto; }
     .setup-lbl { font-size: 0.72rem; color: #556655; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
     .nb-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
@@ -53,57 +53,55 @@
       border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
     }
 
-    /* Tableau */
+    /* ── Table ── */
     .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    .ttr-table {
-      width: 100%; border-collapse: collapse; table-layout: fixed;
-    }
+    .ttr-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .ttr-table th, .ttr-table td { min-width: 120px; }
 
     .ttr-table thead th {
       padding: 0.85rem 0.5rem;
       font-size: 1.3rem; font-weight: bold; text-align: center;
-      background: #0f1a0f;
-      border-bottom: 2px solid #2a3a2a;
+      background: #0f1a0f; border-bottom: 2px solid #2a3a2a;
     }
-
     .ttr-table tbody td {
-      padding: 0.5rem 0.5rem;
-      text-align: center;
-      border-bottom: 1px solid #1a2a1a;
-      background: #0a0f0a;
+      padding: 0.4rem 0.3rem; text-align: center;
+      border-bottom: 1px solid #1a2a1a; background: #0a0f0a;
     }
 
+    /* ── Total ── */
     .ttr-total-cell {
       font-size: 3.5rem; font-weight: bold; color: #f0ede6;
-      padding: 0.6rem 0.5rem !important;
+      padding: 0.5rem 0.3rem !important;
     }
     .ttr-total-cell.leader { color: #c0392b; }
 
-    .ttr-pts-input {
-      width: 100%; max-width: 7rem; text-align: center;
-      padding: 0.65rem 0.3rem;
-      background: #0f1a0f; border: 1px solid #2a3a2a;
-      border-radius: 10px; color: #f0ede6; font-size: 1.1rem; font-weight: bold; margin: 0;
-      box-sizing: border-box;
+    /* ── Route buttons ── */
+    .route-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.25rem; padding: 0.25rem;
     }
-    .ttr-pts-input:focus { border-color: #80cc80; outline: none; }
-    .ttr-pts-input::-webkit-inner-spin-button,
-    .ttr-pts-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    .ttr-pts-input { -moz-appearance: textfield; }
-
-    .ttr-btn-add {
-      width: 3rem; height: 3rem;
-      background: #0f2a0f; border: 1px solid #27ae60;
-      border-radius: 10px; color: #27ae60; font-size: 1.5rem;
-      font-weight: bold; cursor: pointer; margin: 0; padding: 0;
-      display: inline-flex; align-items: center; justify-content: center;
+    .btn-route {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0.45rem 0.1rem; min-height: 3rem;
+      border-radius: 8px; border: 1px solid #2a3a2a;
+      background: #0f1a0f; cursor: pointer; gap: 0.05rem;
+      transition: border-color 0.1s;
+      -webkit-tap-highlight-color: transparent;
     }
+    .btn-route:active { background: #162816; border-color: #27ae60; }
+    .btn-route .r-len { font-size: 1.1rem; font-weight: bold; color: #f0ede6; line-height: 1; }
+    .btn-route .r-pts { font-size: 0.65rem; color: #80cc80; font-weight: bold; letter-spacing: 0.02em; }
+    @keyframes route-flash {
+      0%   { background: rgba(39,174,96,0.35); border-color: #27ae60; }
+      100% { background: #0f1a0f; border-color: #2a3a2a; }
+    }
+    .btn-route.flash { animation: route-flash 0.45s ease-out forwards; }
 
+    /* ── Undo ── */
     .ttr-btn-undo {
-      width: 3rem; height: 3rem;
+      width: 3rem; height: 2.6rem;
       background: transparent; border: 1px solid #3a3a2a;
-      border-radius: 10px; color: #556655; font-size: 1.2rem;
+      border-radius: 10px; color: #556655; font-size: 1.1rem;
       cursor: pointer; margin: 0; padding: 0;
       display: inline-flex; align-items: center; justify-content: center;
       transition: all 0.15s;
@@ -111,44 +109,60 @@
     .ttr-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
     .ttr-btn-undo:disabled { opacity: 0.25; cursor: default; }
 
-    .ttr-add-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+    /* ── Section divider ── */
+    .ttr-divider td {
+      padding: 0.55rem 0.5rem 0.35rem !important;
+      background: #050a05 !important;
+      font-size: 0.68rem; color: #445544; font-weight: bold;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      border-top: 2px solid #1a3a1a !important;
+      border-bottom: 1px solid #1a3a1a !important;
+    }
 
-    /* Bouton Longest Train */
+    /* ── Destination Tickets ── */
+    .ticket-cell {
+      display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.25rem;
+    }
+    .ticket-lbl { font-size: 0.62rem; color: #445544; text-transform: uppercase; letter-spacing: 0.08em; }
+    .ticket-input {
+      width: 5rem; text-align: center;
+      padding: 0.5rem 0.2rem;
+      background: #0a0f0a; border: 1px solid #2a3a2a;
+      border-radius: 8px; color: #f0ede6;
+      font-size: 1.05rem; font-weight: bold; margin: 0;
+    }
+    .ticket-input:focus { border-color: #80cc80; outline: none; }
+    .ticket-input::-webkit-inner-spin-button,
+    .ticket-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .ticket-input { -moz-appearance: textfield; }
+    .ticket-btns { display: flex; gap: 0.3rem; width: 100%; justify-content: center; }
+    .btn-ticket-ok {
+      flex: 1; padding: 0.45rem 0.1rem;
+      border-radius: 8px; border: 1px solid #27ae60;
+      background: rgba(39,174,96,0.08); color: #27ae60;
+      font-size: 0.8rem; font-weight: bold; cursor: pointer;
+    }
+    .btn-ticket-fail {
+      flex: 1; padding: 0.45rem 0.1rem;
+      border-radius: 8px; border: 1px solid #c0392b;
+      background: rgba(192,57,43,0.08); color: #c0392b;
+      font-size: 0.8rem; font-weight: bold; cursor: pointer;
+    }
+
+    /* ── Longest Train ── */
     .ttr-btn-train {
-      width: calc(100% - 1rem);
+      width: calc(100% - 0.5rem);
       background: rgba(192,57,43,0.08);
-      border: 2px solid #c0392b;
-      border-radius: 12px;
-      color: #c0392b;
-      font-size: 0.88rem;
-      font-weight: bold;
-      padding: 0.7rem 0.4rem;
-      cursor: pointer;
-      margin: 0;
-      letter-spacing: 0.03em;
-      transition: background 0.15s, transform 0.1s;
+      border: 2px solid #c0392b; border-radius: 10px;
+      color: #c0392b; font-size: 0.78rem; font-weight: bold;
+      padding: 0.65rem 0.3rem; cursor: pointer; margin: 0;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1.3;
     }
-    .ttr-btn-train.active {
-      background: #c0392b;
-      color: #fff;
-    }
-    .ttr-btn-train:active { transform: scale(0.97); }
-    @keyframes train-flash {
-      0%   { background: rgba(192,57,43,0.55); }
-      100% { background: rgba(192,57,43,0.08); }
-    }
-    .ttr-btn-train.flash { animation: train-flash 0.6s ease-out; }
+    .ttr-btn-train.active { background: #c0392b; color: #fff; }
 
     .ttr-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
-
-    /* Hint tickets */
-    .ttr-hint {
-      text-align: center;
-      font-size: 0.72rem;
-      color: #445544;
-      padding: 0.3rem 0.5rem 0;
-    }
-
     .btn-new-game {
       display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
       padding: 0.65rem; background: transparent;
@@ -183,9 +197,18 @@
 </div>
 
 <script>
-const COULEURS = ['#c0392b','#5fb3ff','#c9a84c','#27ae60','#9b59b6','#e67e22'];
+const COULEURS = ['#c0392b','#3498db','#27ae60','#f1c40f','#a89f94'];
+const ROUTES = [
+  { len: 1, pts: 1 },
+  { len: 2, pts: 2 },
+  { len: 3, pts: 4 },
+  { len: 4, pts: 7 },
+  { len: 5, pts: 10 },
+  { len: 6, pts: 15 },
+];
+
 let nbJ = 2, joueurs = [];
-let trainOwner = -1; // index du joueur qui a le longest train
+let trainOwners = new Set(); // plusieurs joueurs peuvent l'avoir en cas d'égalité
 
 function initSetup() {
   const btns = document.getElementById('ttr-nb-btns');
@@ -230,9 +253,9 @@ function demarrer() {
     nom: inp.value.trim() || `Joueur ${i+1}`,
     couleur: COULEURS[i],
     total: 0,
-    history: []
+    history: [] // { pts, type: 'route'|'ticket'|'train' }
   }));
-  trainOwner = -1;
+  trainOwners = new Set();
   document.getElementById('ttr-setup').style.display = 'none';
   document.getElementById('ttr-game').style.display = '';
   renderTableau();
@@ -257,7 +280,7 @@ function renderTableau() {
 
   const tbody = document.createElement('tbody');
 
-  // Ligne totaux
+  // Totaux
   const trTotal = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
@@ -268,57 +291,81 @@ function renderTableau() {
   });
   tbody.appendChild(trTotal);
 
-  // Ligne inputs
-  const trInput = document.createElement('tr');
+  // Boutons de routes (1–6 wagons)
+  const trRoutes = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
-    const inp = document.createElement('input');
-    inp.type = 'text'; inp.inputMode = 'numeric';
-    inp.className = 'ttr-pts-input'; inp.id = `ttr-inp-${i}`;
-    inp.placeholder = 'pts';
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ajouterPoints(i); });
-    td.appendChild(inp);
-    trInput.appendChild(td);
+    const grid = document.createElement('div');
+    grid.className = 'route-grid';
+    ROUTES.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-route';
+      btn.innerHTML = `<span class="r-len">${r.len}</span><span class="r-pts">${r.pts} pt</span>`;
+      btn.onclick = () => ajouterRoute(i, r.pts, btn);
+      grid.appendChild(btn);
+    });
+    td.appendChild(grid);
+    trRoutes.appendChild(td);
   });
-  tbody.appendChild(trInput);
+  tbody.appendChild(trRoutes);
 
-  // Hint tickets négatifs
-  const trHint = document.createElement('tr');
-  joueurs.forEach(() => {
+  // Undo
+  const trUndo = document.createElement('tr');
+  joueurs.forEach((j, i) => {
     const td = document.createElement('td');
-    td.className = 'ttr-hint';
-    td.textContent = 'tickets négatifs : entrer -pts';
-    trHint.appendChild(td);
+    const btn = document.createElement('button');
+    btn.className = 'ttr-btn-undo'; btn.id = `ttr-btn-undo-${i}`;
+    btn.textContent = '↩'; btn.disabled = true;
+    btn.onclick = () => annuler(i);
+    td.appendChild(btn);
+    trUndo.appendChild(td);
   });
-  tbody.appendChild(trHint);
+  tbody.appendChild(trUndo);
 
-  // Ligne boutons undo + +
-  const trAdd = document.createElement('tr');
+  // Séparateur Fin de partie
+  const trDiv = document.createElement('tr');
+  trDiv.className = 'ttr-divider';
+  const tdDiv = document.createElement('td');
+  tdDiv.colSpan = joueurs.length;
+  tdDiv.textContent = '🏁 Fin de partie — Destination Tickets';
+  trDiv.appendChild(tdDiv);
+  tbody.appendChild(trDiv);
+
+  // Destination Tickets
+  const trTickets = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div');
-    cell.className = 'ttr-add-cell';
-    const undo = document.createElement('button');
-    undo.className = 'ttr-btn-undo'; undo.id = `ttr-btn-undo-${i}`;
-    undo.textContent = '↩'; undo.disabled = true;
-    undo.onclick = () => annuler(i);
-    const add = document.createElement('button');
-    add.className = 'ttr-btn-add'; add.textContent = '+';
-    add.onclick = () => ajouterPoints(i);
-    cell.appendChild(undo); cell.appendChild(add);
+    cell.className = 'ticket-cell';
+    const lbl = document.createElement('div');
+    lbl.className = 'ticket-lbl'; lbl.textContent = 'valeur du ticket';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'numeric';
+    inp.className = 'ticket-input'; inp.id = `ttr-ticket-${i}`;
+    inp.placeholder = 'pts';
+    const btns = document.createElement('div');
+    btns.className = 'ticket-btns';
+    const btnOk = document.createElement('button');
+    btnOk.className = 'btn-ticket-ok'; btnOk.textContent = '✓ Réussi';
+    btnOk.onclick = () => ajouterTicket(i, 1);
+    const btnFail = document.createElement('button');
+    btnFail.className = 'btn-ticket-fail'; btnFail.textContent = '✗ Raté';
+    btnFail.onclick = () => ajouterTicket(i, -1);
+    btns.appendChild(btnOk); btns.appendChild(btnFail);
+    cell.appendChild(lbl); cell.appendChild(inp); cell.appendChild(btns);
     td.appendChild(cell);
-    trAdd.appendChild(td);
+    trTickets.appendChild(td);
   });
-  tbody.appendChild(trAdd);
+  tbody.appendChild(trTickets);
 
-  // Ligne Longest Train
+  // Longest Train (plusieurs joueurs possibles en cas d'égalité)
   const trTrain = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const btn = document.createElement('button');
-    btn.className = 'ttr-btn-train' + (trainOwner === i ? ' active' : '');
+    btn.className = 'ttr-btn-train' + (trainOwners.has(i) ? ' active' : '');
     btn.id = `ttr-btn-train-${i}`;
-    btn.textContent = '🚂 Longest Train +10';
+    btn.innerHTML = '🚂 Longest Train<br>+10 pts';
     btn.onclick = () => toggleTrain(i);
     td.appendChild(btn);
     trTrain.appendChild(td);
@@ -328,40 +375,46 @@ function renderTableau() {
   table.appendChild(tbody);
 }
 
-function ajouterPoints(i) {
-  const inp = document.getElementById(`ttr-inp-${i}`);
-  const pts = parseInt(inp.value) || 0;
-  if (pts === 0) return;
-  joueurs[i].history.push(pts);
+function ajouterRoute(i, pts, btn) {
+  joueurs[i].history.push({ pts, type: 'route' });
+  joueurs[i].total += pts;
+  btn.classList.remove('flash');
+  void btn.offsetWidth;
+  btn.classList.add('flash');
+  mettreAJour();
+}
+
+function ajouterTicket(i, sign) {
+  const inp = document.getElementById(`ttr-ticket-${i}`);
+  const val = parseInt(inp.value) || 0;
+  if (val <= 0) return;
+  const pts = sign * val;
+  joueurs[i].history.push({ pts, type: 'ticket' });
   joueurs[i].total += pts;
   inp.value = '';
   mettreAJour();
 }
 
-function annuler(i) {
-  if (!joueurs[i].history.length) return;
-  const pts = joueurs[i].history.pop();
-  joueurs[i].total -= pts;
+function toggleTrain(i) {
+  if (trainOwners.has(i)) {
+    trainOwners.delete(i);
+    joueurs[i].history.push({ pts: -10, type: 'train' });
+    joueurs[i].total -= 10;
+  } else {
+    trainOwners.add(i);
+    joueurs[i].history.push({ pts: 10, type: 'train' });
+    joueurs[i].total += 10;
+  }
   mettreAJour();
 }
 
-function toggleTrain(i) {
-  const prev = trainOwner;
-  if (trainOwner === i) {
-    // retirer
-    trainOwner = -1;
-    joueurs[i].total -= 10;
-    joueurs[i].history.push(-10);
-  } else {
-    // retirer à l'ancien
-    if (prev !== -1) {
-      joueurs[prev].total -= 10;
-      joueurs[prev].history.push(-10);
-    }
-    // donner au nouveau
-    trainOwner = i;
-    joueurs[i].total += 10;
-    joueurs[i].history.push(10);
+function annuler(i) {
+  if (!joueurs[i].history.length) return;
+  const entry = joueurs[i].history.pop();
+  joueurs[i].total -= entry.pts;
+  if (entry.type === 'train') {
+    if (entry.pts === 10)  trainOwners.delete(i); // annuler un ajout
+    if (entry.pts === -10) trainOwners.add(i);    // annuler un retrait
   }
   mettreAJour();
 }
@@ -373,22 +426,19 @@ function mettreAJour() {
     const isLeader = j.total > 0 && j.total === maxScore;
     cell.textContent = j.total;
     cell.classList.toggle('leader', isLeader);
-
     const th = document.getElementById(`ttr-th-${i}`);
     th.textContent = j.nom + (isLeader ? ' 🏆' : '');
-
     const undo = document.getElementById(`ttr-btn-undo-${i}`);
     if (undo) undo.disabled = j.history.length === 0;
-
     const train = document.getElementById(`ttr-btn-train-${i}`);
-    if (train) train.classList.toggle('active', trainOwner === i);
+    if (train) train.classList.toggle('active', trainOwners.has(i));
   });
 }
 
 function reinitialiser() {
   if (!confirm('Commencer une nouvelle partie ?')) return;
   joueurs = [];
-  trainOwner = -1;
+  trainOwners = new Set();
   document.getElementById('ttr-game').style.display = 'none';
   document.getElementById('ttr-setup').style.display = '';
   initSetup();
