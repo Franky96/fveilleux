@@ -1,4 +1,5 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
+// Note: gestion des utilisateurs via /api/users.php (PHP + MySQL)
 
 // Vérification admin avant toute opération Firebase
 if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
@@ -184,32 +185,28 @@ window.toggleArchive = async function(key, children = []) {
   await setDoc(configRef, { archivedSections }, { merge: true });
 };
 
-// Sécurité : Uniquement l'Admin
-if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
-  alert("Accès refusé à l'administration.");
-  window.location.href = 'dashboard.html';
-}
-
-const usersRef = doc(db, "systeme", "utilisateurs");
 let usersData = {};
 let editModeId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Le Cloud avertit automatiquement la page si un utilisateur est ajouté/supprimé
-  onSnapshot(usersRef, (docSnap) => {
-    if (docSnap.exists()) {
-      usersData = docSnap.data();
-      chargerUtilisateurs();
-    }
-  });
+document.addEventListener('DOMContentLoaded', async () => {
+  await chargerUtilisateurs();
 });
 
-function chargerUtilisateurs() {
+async function chargerUtilisateurs() {
   const tbody = document.getElementById('users-tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // 1. Transformer l'objet Firebase en tableau
+  try {
+    const res  = await fetch('/api/users.php', { credentials: 'include' });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error ?? 'Erreur');
+    usersData = json.users ?? {};
+  } catch (e) {
+    console.error('[admin] Erreur chargement utilisateurs:', e);
+  }
+
+  // 1. Transformer l'objet en tableau
   const listeBrute = Object.keys(usersData).map(id => {
     return { id: id, ...usersData[id] };
   });
@@ -467,7 +464,8 @@ window.sauvegarderUser = async function() {
   const nom = document.getElementById('user-name').value.trim();
   const role = document.getElementById('user-role').value;
   
-  if (!id || !pass || !nom) { alert("Veuillez remplir les champs."); return; }
+  if (!id || !nom) { alert("Veuillez remplir les champs."); return; }
+  if (!editModeId && !pass) { alert("Mot de passe requis pour un nouvel utilisateur."); return; }
 
   const perms = [];
   document.querySelectorAll('.chk-perm:checked').forEach(chk => perms.push(chk.value));
@@ -476,9 +474,18 @@ window.sauvegarderUser = async function() {
   if (!editModeId && usersData[id]) { alert("Identifiant déjà pris !"); return; }
 
   const targetId = editModeId || id;
-  usersData[targetId] = { motDePasse: pass, nom: nom, role: role, permissions: perms, pageAccueil };
-
-  await setDoc(usersRef, usersData);
+  try {
+    const res  = await fetch('/api/users.php', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', userId: targetId, nom, role, permissions: perms, pageAccueil, motDePasse: pass }),
+    });
+    const json = await res.json();
+    if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur');
+  } catch (e) {
+    alert('Erreur : ' + e.message);
+    return;
+  }
 
   // Si on modifie notre propre compte, on met à jour la session immédiatement
   if (targetId === sessionStorage.getItem('userId')) {
@@ -488,14 +495,25 @@ window.sauvegarderUser = async function() {
     sessionStorage.setItem('pageAccueil', pageAccueil);
   }
 
+  await chargerUtilisateurs();
   window.fermerModalUser();
 };
 
 window.supprimerUser = async function(id) {
   if (id === 'frank') return;
   if (confirm(`Supprimer l'utilisateur "${id}" ?`)) {
-    delete usersData[id];
-    await setDoc(usersRef, usersData); // Envoi au Cloud
+    try {
+      const res  = await fetch('/api/users.php', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur');
+      await chargerUtilisateurs();
+    } catch (e) {
+      alert('Erreur : ' + e.message);
+    }
   }
 };
 
