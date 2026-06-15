@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket to Ride — Score</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pT = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pT.includes('jeuxdesociete') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+  <style>
+    body { align-items: flex-start; }
+    .ttr { width: 100%; padding-bottom: 2rem; }
+
+    .ttr-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #0f1a0f; border-bottom: 1px solid #2a3a2a;
+      padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .ttr-topbar a { color: #80cc80; text-decoration: none; font-size: 1.3rem; }
+    .ttr-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
+
+    /* Setup */
+    .ttr-setup { padding: 1.25rem; max-width: 400px; margin: 0 auto; }
+    .setup-lbl { font-size: 0.72rem; color: #556655; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .nb-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .nb-btn {
+      width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      border: 2px solid #2a3a2a; background: transparent;
+      color: #556655; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.15s;
+    }
+    .nb-btn.active { border-color: #c0392b; color: #c0392b; background: rgba(192,57,43,0.1); }
+    .name-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+    .name-num {
+      width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
+      font-size: 0.75rem; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-name-input {
+      flex: 1; padding: 0.6rem 0.75rem;
+      background: #0f1a0f; border: 1px solid #2a3a2a; border-radius: 8px;
+      color: #f0ede6; font-size: 0.95rem; margin: 0;
+    }
+    .player-name-input:focus { border-color: #80cc80; outline: none; }
+    .btn-start {
+      display: block; width: 100%; margin-top: 1.25rem;
+      padding: 0.9rem; background: #c0392b; color: #fff;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
+
+    /* Tableau */
+    .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    .ttr-table {
+      width: 100%; border-collapse: collapse; table-layout: fixed;
+    }
+
+    .ttr-table thead th {
+      padding: 0.85rem 0.5rem;
+      font-size: 1.3rem; font-weight: bold; text-align: center;
+      background: #0f1a0f;
+      border-bottom: 2px solid #2a3a2a;
+    }
+
+    .ttr-table tbody td {
+      padding: 0.5rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #1a2a1a;
+      background: #0a0f0a;
+    }
+
+    .ttr-total-cell {
+      font-size: 3.5rem; font-weight: bold; color: #f0ede6;
+      padding: 0.6rem 0.5rem !important;
+    }
+    .ttr-total-cell.leader { color: #c0392b; }
+
+    .ttr-pts-input {
+      width: 100%; max-width: 7rem; text-align: center;
+      padding: 0.65rem 0.3rem;
+      background: #0f1a0f; border: 1px solid #2a3a2a;
+      border-radius: 10px; color: #f0ede6; font-size: 1.1rem; font-weight: bold; margin: 0;
+      box-sizing: border-box;
+    }
+    .ttr-pts-input:focus { border-color: #80cc80; outline: none; }
+    .ttr-pts-input::-webkit-inner-spin-button,
+    .ttr-pts-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .ttr-pts-input { -moz-appearance: textfield; }
+
+    .ttr-btn-add {
+      width: 3rem; height: 3rem;
+      background: #0f2a0f; border: 1px solid #27ae60;
+      border-radius: 10px; color: #27ae60; font-size: 1.5rem;
+      font-weight: bold; cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    .ttr-btn-undo {
+      width: 3rem; height: 3rem;
+      background: transparent; border: 1px solid #3a3a2a;
+      border-radius: 10px; color: #556655; font-size: 1.2rem;
+      cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .ttr-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
+    .ttr-btn-undo:disabled { opacity: 0.25; cursor: default; }
+
+    .ttr-add-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+
+    /* Bouton Longest Train */
+    .ttr-btn-train {
+      width: calc(100% - 1rem);
+      background: rgba(192,57,43,0.08);
+      border: 2px solid #c0392b;
+      border-radius: 12px;
+      color: #c0392b;
+      font-size: 0.88rem;
+      font-weight: bold;
+      padding: 0.7rem 0.4rem;
+      cursor: pointer;
+      margin: 0;
+      letter-spacing: 0.03em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .ttr-btn-train.active {
+      background: #c0392b;
+      color: #fff;
+    }
+    .ttr-btn-train:active { transform: scale(0.97); }
+    @keyframes train-flash {
+      0%   { background: rgba(192,57,43,0.55); }
+      100% { background: rgba(192,57,43,0.08); }
+    }
+    .ttr-btn-train.flash { animation: train-flash 0.6s ease-out; }
+
+    .ttr-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
+
+    /* Hint tickets */
+    .ttr-hint {
+      text-align: center;
+      font-size: 0.72rem;
+      color: #445544;
+      padding: 0.3rem 0.5rem 0;
+    }
+
+    .btn-new-game {
+      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
+      padding: 0.65rem; background: transparent;
+      border: 1px solid #2a3a2a; border-radius: 10px;
+      color: #556655; font-size: 0.88rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="ttr">
+
+  <div class="ttr-topbar">
+    <a href="jeuxdesociete.html">&#8592;</a>
+    <h1>🚂 Ticket to Ride — Score</h1>
+  </div>
+
+  <div id="ttr-setup" class="ttr-setup">
+    <div class="setup-lbl">Nombre de joueurs</div>
+    <div class="nb-btns" id="ttr-nb-btns"></div>
+    <div class="setup-lbl">Noms des joueurs</div>
+    <div id="ttr-noms"></div>
+    <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
+  </div>
+
+  <div id="ttr-game" style="display:none;">
+    <div class="score-outer">
+      <table class="ttr-table" id="ttr-table"></table>
+    </div>
+    <button class="btn-new-game" onclick="reinitialiser()">🔄 Nouvelle partie</button>
+  </div>
+
+</div>
+
+<script>
+const COULEURS = ['#c0392b','#5fb3ff','#c9a84c','#27ae60','#9b59b6','#e67e22'];
+let nbJ = 2, joueurs = [];
+let trainOwner = -1; // index du joueur qui a le longest train
+
+function initSetup() {
+  const btns = document.getElementById('ttr-nb-btns');
+  btns.innerHTML = '';
+  [2,3,4,5].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'nb-btn' + (n === nbJ ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => {
+      nbJ = n;
+      btns.querySelectorAll('.nb-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderNoms();
+    };
+    btns.appendChild(b);
+  });
+  renderNoms();
+}
+
+function renderNoms() {
+  const div = document.getElementById('ttr-noms');
+  const vals = Array.from(div.querySelectorAll('input')).map(i => i.value);
+  div.innerHTML = '';
+  for (let i = 0; i < nbJ; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const num = document.createElement('div');
+    num.className = 'name-num';
+    num.style.cssText = `background:${COULEURS[i]}22;color:${COULEURS[i]}`;
+    num.textContent = i + 1;
+    const inp = document.createElement('input');
+    inp.className = 'player-name-input'; inp.type = 'text';
+    inp.placeholder = `Joueur ${i+1}`; inp.value = vals[i] || '';
+    row.appendChild(num); row.appendChild(inp);
+    div.appendChild(row);
+  }
+}
+
+function demarrer() {
+  const inputs = document.querySelectorAll('#ttr-noms input');
+  joueurs = Array.from(inputs).map((inp, i) => ({
+    nom: inp.value.trim() || `Joueur ${i+1}`,
+    couleur: COULEURS[i],
+    total: 0,
+    history: []
+  }));
+  trainOwner = -1;
+  document.getElementById('ttr-setup').style.display = 'none';
+  document.getElementById('ttr-game').style.display = '';
+  renderTableau();
+}
+
+function renderTableau() {
+  const table = document.getElementById('ttr-table');
+  table.innerHTML = '';
+
+  // En-tête
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const th = document.createElement('th');
+    th.style.color = j.couleur;
+    th.textContent = j.nom;
+    th.id = `ttr-th-${i}`;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+
+  // Ligne totaux
+  const trTotal = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    td.className = 'ttr-total-cell';
+    td.id = `ttr-total-${i}`;
+    td.textContent = j.total;
+    trTotal.appendChild(td);
+  });
+  tbody.appendChild(trTotal);
+
+  // Ligne inputs
+  const trInput = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'numeric';
+    inp.className = 'ttr-pts-input'; inp.id = `ttr-inp-${i}`;
+    inp.placeholder = 'pts';
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ajouterPoints(i); });
+    td.appendChild(inp);
+    trInput.appendChild(td);
+  });
+  tbody.appendChild(trInput);
+
+  // Hint tickets négatifs
+  const trHint = document.createElement('tr');
+  joueurs.forEach(() => {
+    const td = document.createElement('td');
+    td.className = 'ttr-hint';
+    td.textContent = 'tickets négatifs : entrer -pts';
+    trHint.appendChild(td);
+  });
+  tbody.appendChild(trHint);
+
+  // Ligne boutons undo + +
+  const trAdd = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div');
+    cell.className = 'ttr-add-cell';
+    const undo = document.createElement('button');
+    undo.className = 'ttr-btn-undo'; undo.id = `ttr-btn-undo-${i}`;
+    undo.textContent = '↩'; undo.disabled = true;
+    undo.onclick = () => annuler(i);
+    const add = document.createElement('button');
+    add.className = 'ttr-btn-add'; add.textContent = '+';
+    add.onclick = () => ajouterPoints(i);
+    cell.appendChild(undo); cell.appendChild(add);
+    td.appendChild(cell);
+    trAdd.appendChild(td);
+  });
+  tbody.appendChild(trAdd);
+
+  // Ligne Longest Train
+  const trTrain = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'ttr-btn-train' + (trainOwner === i ? ' active' : '');
+    btn.id = `ttr-btn-train-${i}`;
+    btn.textContent = '🚂 Longest Train +10';
+    btn.onclick = () => toggleTrain(i);
+    td.appendChild(btn);
+    trTrain.appendChild(td);
+  });
+  tbody.appendChild(trTrain);
+
+  table.appendChild(tbody);
+}
+
+function ajouterPoints(i) {
+  const inp = document.getElementById(`ttr-inp-${i}`);
+  const pts = parseInt(inp.value) || 0;
+  if (pts === 0) return;
+  joueurs[i].history.push(pts);
+  joueurs[i].total += pts;
+  inp.value = '';
+  mettreAJour();
+}
+
+function annuler(i) {
+  if (!joueurs[i].history.length) return;
+  const pts = joueurs[i].history.pop();
+  joueurs[i].total -= pts;
+  mettreAJour();
+}
+
+function toggleTrain(i) {
+  const prev = trainOwner;
+  if (trainOwner === i) {
+    // retirer
+    trainOwner = -1;
+    joueurs[i].total -= 10;
+    joueurs[i].history.push(-10);
+  } else {
+    // retirer à l'ancien
+    if (prev !== -1) {
+      joueurs[prev].total -= 10;
+      joueurs[prev].history.push(-10);
+    }
+    // donner au nouveau
+    trainOwner = i;
+    joueurs[i].total += 10;
+    joueurs[i].history.push(10);
+  }
+  mettreAJour();
+}
+
+function mettreAJour() {
+  const maxScore = Math.max(...joueurs.map(j => j.total));
+  joueurs.forEach((j, i) => {
+    const cell = document.getElementById(`ttr-total-${i}`);
+    const isLeader = j.total > 0 && j.total === maxScore;
+    cell.textContent = j.total;
+    cell.classList.toggle('leader', isLeader);
+
+    const th = document.getElementById(`ttr-th-${i}`);
+    th.textContent = j.nom + (isLeader ? ' 🏆' : '');
+
+    const undo = document.getElementById(`ttr-btn-undo-${i}`);
+    if (undo) undo.disabled = j.history.length === 0;
+
+    const train = document.getElementById(`ttr-btn-train-${i}`);
+    if (train) train.classList.toggle('active', trainOwner === i);
+  });
+}
+
+function reinitialiser() {
+  if (!confirm('Commencer une nouvelle partie ?')) return;
+  joueurs = [];
+  trainOwner = -1;
+  document.getElementById('ttr-game').style.display = 'none';
+  document.getElementById('ttr-setup').style.display = '';
+  initSetup();
+}
+
+initSetup();
+</script>
+
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="version.js"></script>
+</body>
+</html>
