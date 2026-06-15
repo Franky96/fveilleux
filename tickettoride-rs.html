@@ -107,6 +107,12 @@
       background: rgba(52,152,219,0.18) !important;
       border-top: 2px solid rgba(52,152,219,0.5) !important;
     }
+    .rs-lbl-ticket td {
+      color: #888;
+      background: rgba(80,80,80,0.18) !important;
+      border-top: 2px solid rgba(80,80,80,0.4) !important;
+    }
+    .rs-ticket-row td { background: rgba(80,80,80,0.06) !important; }
     .rs-lbl-port td {
       color: #a89f94;
       background: rgba(168,159,148,0.12) !important;
@@ -503,15 +509,24 @@ function renderTableau() {
   tdDiv.onclick = () => {
     const open = trDiv.classList.toggle('open');
     const d = open ? '' : 'none';
-    document.getElementById('rs-tr-tickets').style.display  = d;
-    document.getElementById('rs-tr-port-lbl').style.display = d;
-    document.getElementById('rs-tr-harbors').style.display  = d;
+    document.getElementById('rs-tr-ticket-lbl').style.display = d;
+    document.getElementById('rs-tr-tickets').style.display    = d;
+    document.getElementById('rs-tr-port-lbl').style.display   = d;
+    document.getElementById('rs-tr-harbors').style.display    = d;
   };
   trDiv.appendChild(tdDiv); tbody.appendChild(trDiv);
 
+  // Label tickets
+  const trTicketLbl = document.createElement('tr');
+  trTicketLbl.className = 'rs-section-lbl rs-lbl-ticket';
+  trTicketLbl.id = 'rs-tr-ticket-lbl'; trTicketLbl.style.display = 'none';
+  const tdTicketLbl = document.createElement('td');
+  tdTicketLbl.colSpan = joueurs.length; tdTicketLbl.textContent = '🎫 Destination Tickets';
+  trTicketLbl.appendChild(tdTicketLbl); tbody.appendChild(trTicketLbl);
+
   // Tickets
   const trTk = document.createElement('tr');
-  trTk.id = 'rs-tr-tickets'; trTk.style.display = 'none';
+  trTk.id = 'rs-tr-tickets'; trTk.className = 'rs-ticket-row'; trTk.style.display = 'none';
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div'); cell.className = 'ticket-cell';
