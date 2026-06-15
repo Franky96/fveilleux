@@ -127,9 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-function sauvegarder() { 
-  setDoc(ronaDocRef, ronaData); 
-  afficherCompletes();
+// Debounce 300ms : évite les sauvegardes concurrentes qui arriveraient dans le désordre
+let _saveTimer = null;
+function sauvegarder() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    setDoc(ronaDocRef, ronaData);
+    afficherCompletes();
+  }, 300);
 }
 
 // ── Sélection emplacement ─────────────────────────────
@@ -458,6 +463,8 @@ function sauvegarderLocation() {
   const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
   ronaData.locations.push({ id, nom, manquants: {}, expirations: {} });
   locationActive = id;
+  renderLocationSelect();
+  renderGrille();
   sauvegarder();
   fermerModalLocation();
 }
@@ -766,9 +773,9 @@ window.resetGlobal = function() {
   ronaData.locations.forEach(loc => { loc.manquants = {}; loc.complets = []; });
   ronaData.completes = [];
   masquerMessageValidation();
-  
-  sauvegarder();
+  renderGrille();
   afficherCompletes();
+  sauvegarder();
 };
 
 // ── Erreur Firebase ───────────────────────────────────
