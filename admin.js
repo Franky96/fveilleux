@@ -163,25 +163,25 @@ window.toggleGuestPerm = async function(key) {
   const idx = guestPermissions.indexOf(key);
   if (idx === -1) guestPermissions.push(key);
   else guestPermissions.splice(idx, 1);
+  renderGuestPerms();
   await setDoc(configRef, { guestPermissions }, { merge: true });
 };
 
 window.toggleArchive = async function(key, children = []) {
   const idx = archivedSections.indexOf(key);
   if (idx === -1) {
-    // Archiver parent + enfants
     archivedSections.push(key);
     children.forEach(child => {
       if (!archivedSections.includes(child.key)) archivedSections.push(child.key);
     });
   } else {
-    // Désarchiver parent + enfants
     archivedSections.splice(idx, 1);
     children.forEach(child => {
       const ci = archivedSections.indexOf(child.key);
       if (ci !== -1) archivedSections.splice(ci, 1);
     });
   }
+  renderArchiveGrid();
   await setDoc(configRef, { archivedSections }, { merge: true });
 };
 
