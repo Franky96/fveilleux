@@ -107,8 +107,14 @@
       background: rgba(52,152,219,0.18) !important;
       border-top: 2px solid rgba(52,152,219,0.5) !important;
     }
+    .rs-lbl-port td {
+      color: #a89f94;
+      background: rgba(168,159,148,0.12) !important;
+      border-top: 2px solid rgba(168,159,148,0.35) !important;
+    }
     .rs-train-row td { background: rgba(211,84,0,0.06) !important; }
     .rs-ship-row  td { background: rgba(52,152,219,0.06) !important; }
+    .rs-port-row  td { background: rgba(168,159,148,0.06) !important; }
 
     /* Route buttons (4 cols for 8 routes) */
     .route-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.2rem; padding: 0.2rem; }
@@ -496,8 +502,10 @@ function renderTableau() {
   tdDiv.innerHTML = '<span class="rs-chevron">▶</span>🏁 Fin de partie — Tickets &amp; Ports';
   tdDiv.onclick = () => {
     const open = trDiv.classList.toggle('open');
-    document.getElementById('rs-tr-tickets').style.display = open ? '' : 'none';
-    document.getElementById('rs-tr-harbors').style.display = open ? '' : 'none';
+    const d = open ? '' : 'none';
+    document.getElementById('rs-tr-tickets').style.display  = d;
+    document.getElementById('rs-tr-port-lbl').style.display = d;
+    document.getElementById('rs-tr-harbors').style.display  = d;
   };
   trDiv.appendChild(tdDiv); tbody.appendChild(trDiv);
 
@@ -525,9 +533,17 @@ function renderTableau() {
   });
   tbody.appendChild(trTk);
 
+  // Label ports
+  const trPortLbl = document.createElement('tr');
+  trPortLbl.className = 'rs-section-lbl rs-lbl-port';
+  trPortLbl.id = 'rs-tr-port-lbl'; trPortLbl.style.display = 'none';
+  const tdPortLbl = document.createElement('td');
+  tdPortLbl.colSpan = joueurs.length; tdPortLbl.textContent = '⚓ Ports';
+  trPortLbl.appendChild(tdPortLbl); tbody.appendChild(trPortLbl);
+
   // Ports
   const trHb = document.createElement('tr');
-  trHb.id = 'rs-tr-harbors'; trHb.style.display = 'none';
+  trHb.id = 'rs-tr-harbors'; trHb.className = 'rs-port-row'; trHb.style.display = 'none';
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div'); cell.className = 'harbor-cell';
