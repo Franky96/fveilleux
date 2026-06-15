@@ -97,7 +97,8 @@
     }
     .btn-route.flash { animation: route-flash 0.45s ease-out forwards; }
 
-    /* ── Undo ── */
+    /* ── Undo + compteur wagons ── */
+    .undo-wagon-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
     .ttr-btn-undo {
       width: 3rem; height: 2.6rem;
       background: transparent; border: 1px solid #3a3a2a;
@@ -108,6 +109,18 @@
     }
     .ttr-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
     .ttr-btn-undo:disabled { opacity: 0.25; cursor: default; }
+    .wagon-badge {
+      display: inline-flex; flex-direction: column; align-items: center;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid #2a3a2a; border-radius: 8px;
+      background: #0f1a0f; line-height: 1.2;
+    }
+    .wagon-badge .wb-icon { font-size: 0.75rem; }
+    .wagon-badge .wb-count { font-size: 1rem; font-weight: bold; color: #a89f94; }
+    .wagon-badge.warning { border-color: #f39c12; }
+    .wagon-badge.warning .wb-count { color: #f39c12; }
+    .wagon-badge.danger  { border-color: #c0392b; }
+    .wagon-badge.danger  .wb-count { color: #c0392b; }
 
     /* ── Section divider ── */
     .ttr-divider td {
@@ -184,6 +197,14 @@
     <div class="nb-btns" id="ttr-nb-btns"></div>
     <div class="setup-lbl">Noms des joueurs</div>
     <div id="ttr-noms"></div>
+    <div class="setup-lbl" style="margin-top:1.25rem;">Trains par joueur</div>
+    <div class="name-row" style="margin-bottom:0;">
+      <span style="font-size:1.2rem;">🚂</span>
+      <input type="text" inputmode="numeric" id="ttr-max-trains"
+        class="player-name-input" style="max-width:5rem; text-align:center;"
+        value="45" placeholder="45" />
+      <span style="font-size:0.8rem; color:#556655;">wagons au départ</span>
+    </div>
     <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
   </div>
 
@@ -207,7 +228,7 @@ const ROUTES = [
   { len: 6, pts: 15 },
 ];
 
-let nbJ = 2, joueurs = [];
+let nbJ = 2, joueurs = [], maxTrains = 45;
 let trainOwners = new Set(); // plusieurs joueurs peuvent l'avoir en cas d'égalité
 
 function initSetup() {
@@ -248,12 +269,14 @@ function renderNoms() {
 }
 
 function demarrer() {
+  maxTrains = parseInt(document.getElementById('ttr-max-trains').value) || 45;
   const inputs = document.querySelectorAll('#ttr-noms input');
   joueurs = Array.from(inputs).map((inp, i) => ({
     nom: inp.value.trim() || `Joueur ${i+1}`,
     couleur: COULEURS[i],
     total: 0,
-    history: [] // { pts, type: 'route'|'ticket'|'train' }
+    trains: maxTrains,
+    history: [] // { pts, type: 'route'|'ticket'|'train', wagons }
   }));
   trainOwners = new Set();
   document.getElementById('ttr-setup').style.display = 'none';
@@ -301,7 +324,7 @@ function renderTableau() {
       const btn = document.createElement('button');
       btn.className = 'btn-route';
       btn.innerHTML = `<span class="r-len">${r.len}</span><span class="r-pts">${r.pts} pt</span>`;
-      btn.onclick = () => ajouterRoute(i, r.pts, btn);
+      btn.onclick = () => ajouterRoute(i, r.pts, r.len, btn);
       grid.appendChild(btn);
     });
     td.appendChild(grid);
@@ -309,15 +332,21 @@ function renderTableau() {
   });
   tbody.appendChild(trRoutes);
 
-  // Undo
+  // Undo + compteur wagons
   const trUndo = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.className = 'ttr-btn-undo'; btn.id = `ttr-btn-undo-${i}`;
-    btn.textContent = '↩'; btn.disabled = true;
-    btn.onclick = () => annuler(i);
-    td.appendChild(btn);
+    const cell = document.createElement('div');
+    cell.className = 'undo-wagon-cell';
+    const undo = document.createElement('button');
+    undo.className = 'ttr-btn-undo'; undo.id = `ttr-btn-undo-${i}`;
+    undo.textContent = '↩'; undo.disabled = true;
+    undo.onclick = () => annuler(i);
+    const badge = document.createElement('div');
+    badge.className = 'wagon-badge'; badge.id = `ttr-wagons-${i}`;
+    badge.innerHTML = `<span class="wb-icon">🚂</span><span class="wb-count" id="ttr-wcount-${i}">${j.trains}</span>`;
+    cell.appendChild(undo); cell.appendChild(badge);
+    td.appendChild(cell);
     trUndo.appendChild(td);
   });
   tbody.appendChild(trUndo);
@@ -375,9 +404,10 @@ function renderTableau() {
   table.appendChild(tbody);
 }
 
-function ajouterRoute(i, pts, btn) {
-  joueurs[i].history.push({ pts, type: 'route' });
+function ajouterRoute(i, pts, wagons, btn) {
+  joueurs[i].history.push({ pts, type: 'route', wagons });
   joueurs[i].total += pts;
+  joueurs[i].trains = Math.max(0, joueurs[i].trains - wagons);
   btn.classList.remove('flash');
   void btn.offsetWidth;
   btn.classList.add('flash');
@@ -412,9 +442,10 @@ function annuler(i) {
   if (!joueurs[i].history.length) return;
   const entry = joueurs[i].history.pop();
   joueurs[i].total -= entry.pts;
+  if (entry.wagons) joueurs[i].trains = Math.min(maxTrains, joueurs[i].trains + entry.wagons);
   if (entry.type === 'train') {
-    if (entry.pts === 10)  trainOwners.delete(i); // annuler un ajout
-    if (entry.pts === -10) trainOwners.add(i);    // annuler un retrait
+    if (entry.pts === 10)  trainOwners.delete(i);
+    if (entry.pts === -10) trainOwners.add(i);
   }
   mettreAJour();
 }
@@ -432,6 +463,13 @@ function mettreAJour() {
     if (undo) undo.disabled = j.history.length === 0;
     const train = document.getElementById(`ttr-btn-train-${i}`);
     if (train) train.classList.toggle('active', trainOwners.has(i));
+    const badge = document.getElementById(`ttr-wagons-${i}`);
+    const wcount = document.getElementById(`ttr-wcount-${i}`);
+    if (badge && wcount) {
+      wcount.textContent = j.trains;
+      badge.classList.toggle('danger',  j.trains <= 2);
+      badge.classList.toggle('warning', j.trains > 2 && j.trains <= 5);
+    }
   });
 }
 
