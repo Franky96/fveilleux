@@ -89,6 +89,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     .btn-route:active { background: #162816; border-color: #27ae60; }
+    .btn-route:disabled { opacity: 0.25; cursor: not-allowed; }
     .btn-route .r-len { font-size: 1.1rem; font-weight: bold; color: #f0ede6; line-height: 1; }
     .btn-route .r-pts { font-size: 0.65rem; color: #80cc80; font-weight: bold; letter-spacing: 0.02em; }
     @keyframes route-flash {
@@ -328,6 +329,7 @@ function renderTableau() {
     ROUTES.forEach(r => {
       const btn = document.createElement('button');
       btn.className = 'btn-route';
+      btn.id = `ttr-route-${i}-${r.len}`;
       btn.innerHTML = `<span class="r-len">${r.len}</span><span class="r-pts">${r.pts} pt</span>`;
       btn.onclick = () => ajouterRoute(i, r.pts, r.len, btn);
       grid.appendChild(btn);
@@ -488,6 +490,10 @@ function mettreAJour() {
       badge.classList.toggle('danger',  j.trains <= 2);
       badge.classList.toggle('warning', j.trains > 2 && j.trains <= 5);
     }
+    ROUTES.forEach(r => {
+      const btn = document.getElementById(`ttr-route-${i}-${r.len}`);
+      if (btn) btn.disabled = j.trains < r.len;
+    });
   });
 }
 

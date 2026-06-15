@@ -140,6 +140,7 @@
     @keyframes flash-ship  { 0% { background: rgba(52,152,219,0.35); border-color:#3498db; } 100% { background:rgba(52,152,219,0.08); border-color:rgba(52,152,219,0.4); } }
     .btn-route.train.flash { animation: flash-train 0.45s ease-out forwards; }
     .btn-route.ship.flash  { animation: flash-ship  0.45s ease-out forwards; }
+    .btn-route:disabled { opacity: 0.25; cursor: not-allowed; }
 
     /* Undo + counters */
     .undo-piece-cell { display: flex; align-items: center; justify-content: center; gap: 0.3rem; flex-wrap: wrap; }
@@ -436,6 +437,7 @@ function renderTableau() {
     for (let len = 1; len <= 8; len++) {
       const btn = document.createElement('button');
       btn.className = 'btn-route train';
+      btn.id = `rs-rt-${i}-${len}`;
       btn.innerHTML = `<span class="r-len">${len}</span><span class="r-pts">${ROUTE_PTS[len]}pt</span>`;
       btn.onclick = () => ajouterRoute(i, ROUTE_PTS[len], len, 'train', btn);
       grid.appendChild(btn);
@@ -456,6 +458,7 @@ function renderTableau() {
     for (let len = 1; len <= 8; len++) {
       const btn = document.createElement('button');
       btn.className = 'btn-route ship';
+      btn.id = `rs-rs-${i}-${len}`;
       btn.innerHTML = `<span class="r-len">${len}</span><span class="r-pts">${ROUTE_PTS[len]}pt</span>`;
       btn.onclick = () => ajouterRoute(i, ROUTE_PTS[len], len, 'ship', btn);
       grid.appendChild(btn);
@@ -672,6 +675,12 @@ function mettreAJour() {
         badge.classList.toggle('warning', total > 6 && total <= 10);
       }
     });
+    for (let len = 1; len <= 8; len++) {
+      const bt = document.getElementById(`rs-rt-${i}-${len}`);
+      if (bt) bt.disabled = j.trains < len;
+      const bs = document.getElementById(`rs-rs-${i}-${len}`);
+      if (bs) bs.disabled = j.ships < len;
+    }
   });
 }
 
