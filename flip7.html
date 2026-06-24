@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flip 7 — Score</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pF7 = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pF7.includes('jeuxdesociete') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+  <style>
+    body { align-items: flex-start; }
+    .f7 { width: 100%; padding-bottom: 2rem; }
+
+    .f7-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #0f0f1a; border-bottom: 1px solid #2a2a3a;
+      padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .f7-topbar a { color: #a088ff; text-decoration: none; font-size: 1.3rem; }
+    .f7-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
+
+    /* Setup */
+    .f7-setup { padding: 1.25rem; max-width: 400px; margin: 0 auto; }
+    .setup-lbl { font-size: 0.72rem; color: #5a556a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; margin-top: 1rem; }
+    .nb-btns { display: flex; gap: 0.5rem; margin-bottom: 0.25rem; }
+    .nb-btn {
+      width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      border: 2px solid #2a2a3a; background: transparent;
+      color: #5a556a; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.15s;
+    }
+    .nb-btn.active { border-color: #7c5cbf; color: #a088ff; background: rgba(160,136,255,0.1); }
+    .name-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+    .name-num {
+      width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
+      font-size: 0.75rem; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-name-input {
+      flex: 1; padding: 0.6rem 0.75rem;
+      background: #0f0f1a; border: 1px solid #2a2a3a; border-radius: 8px;
+      color: #f0ede6; font-size: 0.95rem; margin: 0;
+    }
+    .player-name-input:focus { border-color: #a088ff; outline: none; }
+
+    .target-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; }
+    .target-input {
+      width: 5rem; text-align: center; padding: 0.6rem 0.5rem;
+      background: #0f0f1a; border: 1px solid #2a2a3a; border-radius: 8px;
+      color: #f0ede6; font-size: 1rem; font-weight: bold; margin: 0;
+    }
+    .target-input:focus { border-color: #a088ff; outline: none; }
+    .target-input::-webkit-inner-spin-button,
+    .target-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .target-input { -moz-appearance: textfield; }
+    .target-hint { font-size: 0.8rem; color: #5a556a; }
+
+    .btn-start {
+      display: block; width: 100%; margin-top: 1.25rem;
+      padding: 0.9rem; background: #7c5cbf; color: #fff;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
+
+    /* Table */
+    .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .f7-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .f7-table th, .f7-table td { min-width: 120px; }
+    .f7-table thead th {
+      padding: 0.85rem 0.5rem; font-size: 1.3rem; font-weight: bold; text-align: center;
+      background: #0f0f1a; border-bottom: 2px solid #2a2a3a;
+    }
+    .f7-table tbody td {
+      padding: 0.4rem 0.3rem; text-align: center;
+      border-bottom: 1px solid #1a1a2a; background: #0a0a0f;
+    }
+
+    /* Total */
+    .f7-total-cell {
+      font-size: 3.5rem; font-weight: bold; color: #f0ede6;
+      padding: 0.5rem 0.3rem !important;
+    }
+    .f7-total-cell.leader { color: #a088ff; }
+    .f7-total-cell.winner { color: #f1c40f; }
+
+    /* Target bar */
+    .f7-bar-cell { padding: 0.3rem 0.6rem !important; }
+    .f7-bar-bg {
+      background: #1a1a2a; border-radius: 4px; height: 6px; overflow: hidden;
+    }
+    .f7-bar-fill {
+      height: 100%; background: #7c5cbf; border-radius: 4px; transition: width 0.3s;
+    }
+    .f7-bar-fill.leader { background: #a088ff; }
+    .f7-bar-fill.winner { background: #f1c40f; }
+
+    /* Input row */
+    .f7-input-cell { padding: 0.45rem 0.3rem !important; }
+    .f7-pts-input {
+      width: 100%; max-width: 7rem; text-align: center;
+      padding: 0.65rem 0.3rem;
+      background: #0f0f1a; border: 1px solid #2a2a3a;
+      border-radius: 10px; color: #f0ede6; font-size: 1.1rem; font-weight: bold; margin: 0;
+      box-sizing: border-box;
+    }
+    .f7-pts-input:focus { border-color: #a088ff; outline: none; }
+    .f7-pts-input::-webkit-inner-spin-button,
+    .f7-pts-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .f7-pts-input { -moz-appearance: textfield; }
+
+    /* Undo + Add */
+    .f7-add-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+    .f7-btn-undo {
+      width: 3rem; height: 3rem; background: transparent; border: 1px solid #2a2a3a;
+      border-radius: 10px; color: #5a556a; font-size: 1.2rem;
+      cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .f7-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
+    .f7-btn-undo:disabled { opacity: 0.25; cursor: default; }
+    .f7-btn-add {
+      width: 3rem; height: 3rem; background: #150f2a; border: 1px solid #7c5cbf;
+      border-radius: 10px; color: #a088ff; font-size: 1.5rem;
+      font-weight: bold; cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* Flip 7 bonus button */
+    .f7-btn-flip {
+      width: auto;
+      background: rgba(241,196,15,0.08);
+      border: 2px solid #f1c40f;
+      border-radius: 12px;
+      color: #f1c40f;
+      font-size: 0.85rem;
+      font-weight: bold;
+      padding: 0.65rem 0.5rem;
+      cursor: pointer; margin: 0;
+      letter-spacing: 0.03em;
+      transition: background 0.1s, transform 0.1s;
+    }
+    .f7-btn-flip:active { transform: scale(0.97); }
+    @keyframes flip-flash {
+      0%   { background: rgba(241,196,15,0.5); }
+      100% { background: rgba(241,196,15,0.08); }
+    }
+    .f7-btn-flip.flash { animation: flip-flash 0.7s ease-out; }
+
+    /* Round counter */
+    .f7-round-row td {
+      padding: 0.3rem 0.5rem 0.2rem !important;
+      background: #080810 !important;
+      font-size: 0.65rem; color: #3a3550; font-weight: bold;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      border-bottom: 1px solid #1a1a2a !important;
+    }
+
+    .f7-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
+    .btn-new-game {
+      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
+      padding: 0.65rem; background: transparent;
+      border: 1px solid #2a2a3a; border-radius: 10px;
+      color: #5a556a; font-size: 0.88rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="f7">
+
+  <div class="f7-topbar">
+    <a href="jeuxdesociete.html">&#8592;</a>
+    <h1>🃏 Flip 7 — Score</h1>
+  </div>
+
+  <div id="f7-setup" class="f7-setup">
+    <div class="setup-lbl">Nombre de joueurs</div>
+    <div class="nb-btns" id="f7-nb-btns"></div>
+    <div class="setup-lbl">Noms des joueurs</div>
+    <div id="f7-noms"></div>
+    <div class="setup-lbl">Score cible</div>
+    <div class="target-row">
+      <input type="text" inputmode="numeric" id="f7-target" class="target-input" value="200">
+      <span class="target-hint">points pour gagner</span>
+    </div>
+    <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
+  </div>
+
+  <div id="f7-game" style="display:none;">
+    <div class="score-outer">
+      <table class="f7-table" id="f7-table"></table>
+    </div>
+    <button class="btn-new-game" onclick="reinitialiser()">🔄 Nouvelle partie</button>
+  </div>
+
+</div>
+
+<script>
+const COULEURS = ['#a088ff','#ff7070','#50d0a0','#f1c40f','#5fb3ff','#ff9f43'];
+let nbJ = 2, joueurs = [], targetScore = 200, round = 1;
+
+function initSetup() {
+  const btns = document.getElementById('f7-nb-btns');
+  btns.innerHTML = '';
+  [2,3,4,5,6].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'nb-btn' + (n === nbJ ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => {
+      nbJ = n;
+      btns.querySelectorAll('.nb-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderNoms();
+    };
+    btns.appendChild(b);
+  });
+  renderNoms();
+}
+
+function renderNoms() {
+  const div = document.getElementById('f7-noms');
+  const vals = Array.from(div.querySelectorAll('input')).map(i => i.value);
+  div.innerHTML = '';
+  for (let i = 0; i < nbJ; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const num = document.createElement('div');
+    num.className = 'name-num';
+    num.style.cssText = `background:${COULEURS[i]}22;color:${COULEURS[i]}`;
+    num.textContent = i + 1;
+    const inp = document.createElement('input');
+    inp.className = 'player-name-input'; inp.type = 'text';
+    inp.placeholder = `Joueur ${i+1}`; inp.value = vals[i] || '';
+    row.appendChild(num); row.appendChild(inp);
+    div.appendChild(row);
+  }
+}
+
+function demarrer() {
+  targetScore = parseInt(document.getElementById('f7-target').value) || 200;
+  const inputs = document.querySelectorAll('#f7-noms input');
+  joueurs = Array.from(inputs).map((inp, i) => ({
+    nom: inp.value.trim() || `Joueur ${i+1}`,
+    couleur: COULEURS[i],
+    total: 0,
+    history: [],
+  }));
+  round = 1;
+  document.getElementById('f7-setup').style.display = 'none';
+  document.getElementById('f7-game').style.display = '';
+  renderTableau();
+}
+
+function renderTableau() {
+  const table = document.getElementById('f7-table');
+  table.innerHTML = '';
+
+  // En-tête
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const th = document.createElement('th');
+    th.style.color = j.couleur; th.textContent = j.nom; th.id = `f7-th-${i}`;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead); table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+
+  // Totaux
+  const trTotal = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    td.className = 'f7-total-cell'; td.id = `f7-total-${i}`; td.textContent = j.total;
+    trTotal.appendChild(td);
+  });
+  tbody.appendChild(trTotal);
+
+  // Barre de progression vers le score cible
+  const trBar = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    td.className = 'f7-bar-cell';
+    const bg = document.createElement('div'); bg.className = 'f7-bar-bg';
+    const fill = document.createElement('div'); fill.className = 'f7-bar-fill'; fill.id = `f7-bar-${i}`;
+    fill.style.width = Math.min(100, Math.round(j.total / targetScore * 100)) + '%';
+    bg.appendChild(fill); td.appendChild(bg); trBar.appendChild(td);
+  });
+  tbody.appendChild(trBar);
+
+  // Round label
+  const trRound = document.createElement('tr');
+  trRound.className = 'f7-round-row'; trRound.id = 'f7-round-row';
+  const tdRound = document.createElement('td');
+  tdRound.colSpan = joueurs.length; tdRound.id = 'f7-round-lbl';
+  tdRound.textContent = `Manche ${round}`;
+  trRound.appendChild(tdRound); tbody.appendChild(trRound);
+
+  // Input scores
+  const trInput = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td'); td.className = 'f7-input-cell';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'numeric';
+    inp.className = 'f7-pts-input'; inp.id = `f7-inp-${i}`;
+    inp.placeholder = 'pts';
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ajouterPoints(i); });
+    td.appendChild(inp); trInput.appendChild(td);
+  });
+  tbody.appendChild(trInput);
+
+  // Undo + Add
+  const trAdd = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div'); cell.className = 'f7-add-cell';
+    const undo = document.createElement('button');
+    undo.className = 'f7-btn-undo'; undo.id = `f7-undo-${i}`;
+    undo.textContent = '↩'; undo.disabled = true;
+    undo.onclick = () => annuler(i);
+    const add = document.createElement('button');
+    add.className = 'f7-btn-add'; add.textContent = '+';
+    add.onclick = () => ajouterPoints(i);
+    cell.appendChild(undo); cell.appendChild(add); td.appendChild(cell); trAdd.appendChild(td);
+  });
+  tbody.appendChild(trAdd);
+
+  // Flip 7 bonus
+  const trFlip = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.className = 'f7-btn-flip'; btn.id = `f7-btn-flip-${i}`;
+    btn.textContent = '🃏 Flip 7 ! +15';
+    btn.onclick = () => faireFlip7(i);
+    td.appendChild(btn); trFlip.appendChild(td);
+  });
+  tbody.appendChild(trFlip);
+
+  table.appendChild(tbody);
+}
+
+function ajouterPoints(i) {
+  const inp = document.getElementById(`f7-inp-${i}`);
+  const pts = parseInt(inp.value) || 0;
+  if (pts <= 0) return;
+  joueurs[i].history.push({ pts, type: 'score' });
+  joueurs[i].total += pts;
+  inp.value = '';
+  mettreAJour();
+}
+
+function faireFlip7(i) {
+  joueurs[i].history.push({ pts: 15, type: 'flip7' });
+  joueurs[i].total += 15;
+  const btn = document.getElementById(`f7-btn-flip-${i}`);
+  btn.classList.remove('flash'); void btn.offsetWidth; btn.classList.add('flash');
+  mettreAJour();
+}
+
+function annuler(i) {
+  if (!joueurs[i].history.length) return;
+  const e = joueurs[i].history.pop();
+  joueurs[i].total = Math.max(0, joueurs[i].total - e.pts);
+  mettreAJour();
+}
+
+function mettreAJour() {
+  const maxScore = Math.max(...joueurs.map(j => j.total));
+  const hasWinner = joueurs.some(j => j.total >= targetScore);
+  joueurs.forEach((j, i) => {
+    const isWinner = j.total >= targetScore;
+    const isLeader = !isWinner && j.total > 0 && j.total === maxScore && !hasWinner;
+    const cell = document.getElementById(`f7-total-${i}`);
+    cell.textContent = j.total;
+    cell.classList.toggle('winner', isWinner);
+    cell.classList.toggle('leader', isLeader);
+    const th = document.getElementById(`f7-th-${i}`);
+    th.textContent = j.nom + (isWinner ? ' 🏆' : isLeader ? ' 👑' : '');
+    const undo = document.getElementById(`f7-undo-${i}`);
+    if (undo) undo.disabled = j.history.length === 0;
+    const bar = document.getElementById(`f7-bar-${i}`);
+    if (bar) {
+      bar.style.width = Math.min(100, Math.round(j.total / targetScore * 100)) + '%';
+      bar.classList.toggle('winner', isWinner);
+      bar.classList.toggle('leader', isLeader);
+    }
+  });
+}
+
+function reinitialiser() {
+  if (!confirm('Commencer une nouvelle partie ?')) return;
+  joueurs = []; round = 1;
+  document.getElementById('f7-game').style.display = 'none';
+  document.getElementById('f7-setup').style.display = '';
+  initSetup();
+}
+
+initSetup();
+</script>
+
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="version.js"></script>
+</body>
+</html>

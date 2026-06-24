@@ -27,6 +27,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
     { key: '7wonders',  icon: '🏛️', label: '7 Wonders'     },
     { key: 'qwirkle',   icon: '🎯', label: 'Qwirkle'        },
+    { key: 'flip7',     icon: '🃏', label: 'Flip 7'         },
   ]},
 ];
 
@@ -312,6 +313,7 @@ const PERMS_STRUCTURE = [
   { key: 'jeuxdesociete', label: 'Jeux de société', children: [
     { key: '7wonders',  label: '7 Wonders' },
     { key: 'qwirkle',   label: 'Qwirkle'   },
+    { key: 'flip7',     label: 'Flip 7'    },
   ]},
 ];
 
