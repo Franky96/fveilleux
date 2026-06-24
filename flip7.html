@@ -47,7 +47,6 @@
       color: #f0ede6; font-size: 0.95rem; margin: 0;
     }
     .player-name-input:focus { border-color: #a088ff; outline: none; }
-
     .target-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; }
     .target-input {
       width: 5rem; text-align: center; padding: 0.6rem 0.5rem;
@@ -59,7 +58,6 @@
     .target-input::-webkit-outer-spin-button { -webkit-appearance: none; }
     .target-input { -moz-appearance: textfield; }
     .target-hint { font-size: 0.8rem; color: #5a556a; }
-
     .btn-start {
       display: block; width: 100%; margin-top: 1.25rem;
       padding: 0.9rem; background: #7c5cbf; color: #fff;
@@ -69,7 +67,7 @@
     /* Table */
     .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .f7-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .f7-table th, .f7-table td { min-width: 120px; }
+    .f7-table th, .f7-table td { min-width: 130px; }
     .f7-table thead th {
       padding: 0.85rem 0.5rem; font-size: 1.3rem; font-weight: bold; text-align: center;
       background: #0f0f1a; border-bottom: 2px solid #2a2a3a;
@@ -87,70 +85,14 @@
     .f7-total-cell.leader { color: #a088ff; }
     .f7-total-cell.winner { color: #f1c40f; }
 
-    /* Target bar */
+    /* Progress bar */
     .f7-bar-cell { padding: 0.3rem 0.6rem !important; }
-    .f7-bar-bg {
-      background: #1a1a2a; border-radius: 4px; height: 6px; overflow: hidden;
-    }
-    .f7-bar-fill {
-      height: 100%; background: #7c5cbf; border-radius: 4px; transition: width 0.3s;
-    }
+    .f7-bar-bg { background: #1a1a2a; border-radius: 4px; height: 6px; overflow: hidden; }
+    .f7-bar-fill { height: 100%; background: #7c5cbf; border-radius: 4px; transition: width 0.3s; }
     .f7-bar-fill.leader { background: #a088ff; }
     .f7-bar-fill.winner { background: #f1c40f; }
 
-    /* Input row */
-    .f7-input-cell { padding: 0.45rem 0.3rem !important; }
-    .f7-pts-input {
-      width: 100%; max-width: 7rem; text-align: center;
-      padding: 0.65rem 0.3rem;
-      background: #0f0f1a; border: 1px solid #2a2a3a;
-      border-radius: 10px; color: #f0ede6; font-size: 1.1rem; font-weight: bold; margin: 0;
-      box-sizing: border-box;
-    }
-    .f7-pts-input:focus { border-color: #a088ff; outline: none; }
-    .f7-pts-input::-webkit-inner-spin-button,
-    .f7-pts-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-    .f7-pts-input { -moz-appearance: textfield; }
-
-    /* Undo + Add */
-    .f7-add-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
-    .f7-btn-undo {
-      width: 3rem; height: 3rem; background: transparent; border: 1px solid #2a2a3a;
-      border-radius: 10px; color: #5a556a; font-size: 1.2rem;
-      cursor: pointer; margin: 0; padding: 0;
-      display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
-    }
-    .f7-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
-    .f7-btn-undo:disabled { opacity: 0.25; cursor: default; }
-    .f7-btn-add {
-      width: 3rem; height: 3rem; background: #150f2a; border: 1px solid #7c5cbf;
-      border-radius: 10px; color: #a088ff; font-size: 1.5rem;
-      font-weight: bold; cursor: pointer; margin: 0; padding: 0;
-      display: inline-flex; align-items: center; justify-content: center;
-    }
-
-    /* Flip 7 bonus button */
-    .f7-btn-flip {
-      width: auto;
-      background: rgba(241,196,15,0.08);
-      border: 2px solid #f1c40f;
-      border-radius: 12px;
-      color: #f1c40f;
-      font-size: 0.85rem;
-      font-weight: bold;
-      padding: 0.65rem 0.5rem;
-      cursor: pointer; margin: 0;
-      letter-spacing: 0.03em;
-      transition: background 0.1s, transform 0.1s;
-    }
-    .f7-btn-flip:active { transform: scale(0.97); }
-    @keyframes flip-flash {
-      0%   { background: rgba(241,196,15,0.5); }
-      100% { background: rgba(241,196,15,0.08); }
-    }
-    .f7-btn-flip.flash { animation: flip-flash 0.7s ease-out; }
-
-    /* Round counter */
+    /* Round label */
     .f7-round-row td {
       padding: 0.3rem 0.5rem 0.2rem !important;
       background: #080810 !important;
@@ -159,6 +101,26 @@
       border-bottom: 1px solid #1a1a2a !important;
     }
 
+    /* Action row */
+    .f7-action-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem 0.3rem !important; }
+    .f7-btn-undo {
+      width: 2.8rem; height: 2.8rem; background: transparent; border: 1px solid #2a2a3a;
+      border-radius: 10px; color: #5a556a; font-size: 1.2rem;
+      cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .f7-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
+    .f7-btn-undo:disabled { opacity: 0.25; cursor: default; }
+    .f7-btn-score {
+      flex: 1; padding: 0.65rem 0.3rem;
+      background: rgba(124,92,191,0.15); border: 1px solid #7c5cbf;
+      border-radius: 10px; color: #a088ff;
+      font-size: 0.82rem; font-weight: bold; cursor: pointer;
+      transition: background 0.1s;
+    }
+    .f7-btn-score:active { background: rgba(124,92,191,0.3); }
+
     .f7-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
     .btn-new-game {
       display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
@@ -166,6 +128,120 @@
       border: 1px solid #2a2a3a; border-radius: 10px;
       color: #5a556a; font-size: 0.88rem; cursor: pointer;
     }
+
+    /* ── Modal ── */
+    .f7-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+    }
+    .f7-modal {
+      background: #0f0f1a; border: 1px solid #2a2a3a;
+      border-radius: 20px 20px 0 0;
+      width: 100%; max-width: 520px;
+      padding: 1.25rem 1rem 2rem;
+      max-height: 92vh; overflow-y: auto;
+    }
+    .f7-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .f7-modal-name { font-size: 1.1rem; font-weight: bold; }
+    .f7-modal-close {
+      width: 2rem; height: 2rem; border-radius: 50%;
+      border: 1px solid #2a2a3a; background: transparent;
+      color: #5a556a; font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Total affiché dans le modal */
+    .f7-modal-total {
+      font-size: 3rem; font-weight: bold; text-align: center;
+      margin: 0.5rem 0 1rem; line-height: 1;
+    }
+    .f7-modal-total-lbl {
+      font-size: 0.65rem; color: #5a556a; letter-spacing: 0.1em;
+      text-transform: uppercase; text-align: center; margin-bottom: 1rem;
+    }
+
+    /* Section labels dans le modal */
+    .f7-modal-section-lbl {
+      font-size: 0.65rem; color: #5a556a; letter-spacing: 0.1em;
+      text-transform: uppercase; margin: 1rem 0 0.5rem;
+    }
+
+    /* Grille de cartes numérotées */
+    .f7-cards-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem;
+    }
+    .f7-card-btn {
+      aspect-ratio: 3/4; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      border-radius: 8px; border: 2px solid #2a2a3a;
+      background: #0a0a0f; cursor: pointer; gap: 0.05rem;
+      transition: all 0.1s; -webkit-tap-highlight-color: transparent;
+    }
+    .f7-card-btn .card-num { font-size: 1.3rem; font-weight: bold; color: #f0ede6; line-height: 1; }
+    .f7-card-btn .card-pts { font-size: 0.58rem; color: #5a556a; font-weight: bold; }
+    .f7-card-btn.selected { border-width: 2px; background: rgba(124,92,191,0.15); }
+    .f7-card-btn.selected .card-num { color: #a088ff; }
+    .f7-card-btn.selected .card-pts { color: #7c5cbf; }
+
+    /* Cartes spéciales */
+    .f7-special-row {
+      display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;
+    }
+    .f7-special-btn {
+      flex: 1; padding: 0.6rem 0.4rem;
+      border-radius: 10px; border: 2px solid #2a2a3a;
+      background: #0a0a0f; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.5rem; transition: all 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .f7-special-btn .sp-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .f7-special-btn .sp-info { text-align: left; flex: 1; }
+    .f7-special-btn .sp-name { font-size: 0.8rem; font-weight: bold; color: #a89f94; line-height: 1.2; }
+    .f7-special-btn .sp-effect { font-size: 0.62rem; color: #5a556a; }
+    .f7-counter { display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+    .f7-counter-btn {
+      width: 1.8rem; height: 1.8rem; border-radius: 6px;
+      border: 1px solid #2a2a3a; background: transparent;
+      color: #5a556a; font-size: 1rem; font-weight: bold;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      padding: 0; margin: 0;
+    }
+    .f7-counter-val { font-size: 1rem; font-weight: bold; color: #f0ede6; min-width: 1.2rem; text-align: center; }
+
+    /* Flip 7 toggle */
+    .f7-flip7-btn {
+      width: 100%; padding: 0.75rem;
+      border-radius: 10px; border: 2px solid #2a2a3a;
+      background: #0a0a0f; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      font-size: 0.9rem; font-weight: bold; color: #5a556a;
+      transition: all 0.1s; -webkit-tap-highlight-color: transparent;
+      margin-bottom: 1.25rem;
+    }
+    .f7-flip7-btn.active {
+      border-color: #f1c40f; background: rgba(241,196,15,0.08); color: #f1c40f;
+    }
+    .f7-flip7-badge { font-size: 1.1rem; }
+
+    /* Boutons du modal */
+    .f7-modal-btns { display: flex; gap: 0.5rem; }
+    .f7-btn-cancel {
+      flex: 0 0 auto; padding: 0.85rem 1rem;
+      border-radius: 10px; border: 1px solid #2a2a3a;
+      background: transparent; color: #5a556a;
+      font-size: 0.9rem; cursor: pointer;
+    }
+    .f7-btn-confirm {
+      flex: 1; padding: 0.85rem;
+      border-radius: 10px; border: none;
+      background: #7c5cbf; color: #fff;
+      font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
+    .f7-btn-confirm:disabled { opacity: 0.3; cursor: default; }
   </style>
 </head>
 <body>
@@ -198,9 +274,59 @@
 
 </div>
 
+<!-- Modal de sélection des cartes -->
+<div id="f7-overlay" class="f7-overlay" style="display:none;" onclick="overlayClick(event)">
+  <div class="f7-modal" id="f7-modal">
+    <div class="f7-modal-header">
+      <div class="f7-modal-name" id="f7-modal-name">Joueur</div>
+      <button class="f7-modal-close" onclick="fermerModal()">✕</button>
+    </div>
+
+    <div class="f7-modal-total" id="f7-modal-total">0</div>
+    <div class="f7-modal-total-lbl">points cette manche</div>
+
+    <div class="f7-modal-section-lbl">Cartes numérotées</div>
+    <div class="f7-cards-grid" id="f7-cards-grid"></div>
+
+    <div class="f7-modal-section-lbl">Cartes spéciales</div>
+
+    <div class="f7-special-row">
+      <div class="f7-special-btn">
+        <span class="sp-icon">➕</span>
+        <div class="sp-info">
+          <div class="sp-name">Carte +2</div>
+          <div class="sp-effect">+2 pts par carte</div>
+        </div>
+        <div class="f7-counter">
+          <button class="f7-counter-btn" onclick="changerPlus2(-1)">−</button>
+          <span class="f7-counter-val" id="f7-plus2-val">0</span>
+          <button class="f7-counter-btn" onclick="changerPlus2(1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="f7-modal-section-lbl">Bonus</div>
+    <button class="f7-flip7-btn" id="f7-flip7-toggle" onclick="toggleFlip7()">
+      <span class="f7-flip7-badge">🃏</span>
+      Flip 7 ! &nbsp;<span style="font-size:0.78rem;opacity:0.7;">+15 pts bonus</span>
+    </button>
+
+    <div class="f7-modal-btns">
+      <button class="f7-btn-cancel" onclick="fermerModal()">Annuler</button>
+      <button class="f7-btn-confirm" id="f7-btn-confirm" onclick="confirmerModal()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const COULEURS = ['#a088ff','#ff7070','#50d0a0','#f1c40f','#5fb3ff','#ff9f43'];
-let nbJ = 2, joueurs = [], targetScore = 200, round = 1;
+let nbJ = 2, joueurs = [], targetScore = 200;
+
+// État du modal
+let modalPlayer = -1;
+let modalCards = new Set();
+let modalPlus2 = 0;
+let modalFlip7 = false;
 
 function initSetup() {
   const btns = document.getElementById('f7-nb-btns');
@@ -248,7 +374,6 @@ function demarrer() {
     total: 0,
     history: [],
   }));
-  round = 1;
   document.getElementById('f7-setup').style.display = 'none';
   document.getElementById('f7-game').style.display = '';
   renderTableau();
@@ -278,11 +403,10 @@ function renderTableau() {
   });
   tbody.appendChild(trTotal);
 
-  // Barre de progression vers le score cible
+  // Barre de progression
   const trBar = document.createElement('tr');
   joueurs.forEach((j, i) => {
-    const td = document.createElement('td');
-    td.className = 'f7-bar-cell';
+    const td = document.createElement('td'); td.className = 'f7-bar-cell';
     const bg = document.createElement('div'); bg.className = 'f7-bar-bg';
     const fill = document.createElement('div'); fill.className = 'f7-bar-fill'; fill.id = `f7-bar-${i}`;
     fill.style.width = Math.min(100, Math.round(j.total / targetScore * 100)) + '%';
@@ -290,74 +414,117 @@ function renderTableau() {
   });
   tbody.appendChild(trBar);
 
-  // Round label
-  const trRound = document.createElement('tr');
-  trRound.className = 'f7-round-row'; trRound.id = 'f7-round-row';
-  const tdRound = document.createElement('td');
-  tdRound.colSpan = joueurs.length; tdRound.id = 'f7-round-lbl';
-  tdRound.textContent = `Manche ${round}`;
-  trRound.appendChild(tdRound); tbody.appendChild(trRound);
-
-  // Input scores
-  const trInput = document.createElement('tr');
-  joueurs.forEach((j, i) => {
-    const td = document.createElement('td'); td.className = 'f7-input-cell';
-    const inp = document.createElement('input');
-    inp.type = 'text'; inp.inputMode = 'numeric';
-    inp.className = 'f7-pts-input'; inp.id = `f7-inp-${i}`;
-    inp.placeholder = 'pts';
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ajouterPoints(i); });
-    td.appendChild(inp); trInput.appendChild(td);
-  });
-  tbody.appendChild(trInput);
-
-  // Undo + Add
-  const trAdd = document.createElement('tr');
+  // Boutons : Undo + Score
+  const trAction = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
-    const cell = document.createElement('div'); cell.className = 'f7-add-cell';
+    const cell = document.createElement('div'); cell.className = 'f7-action-cell';
     const undo = document.createElement('button');
     undo.className = 'f7-btn-undo'; undo.id = `f7-undo-${i}`;
     undo.textContent = '↩'; undo.disabled = true;
     undo.onclick = () => annuler(i);
-    const add = document.createElement('button');
-    add.className = 'f7-btn-add'; add.textContent = '+';
-    add.onclick = () => ajouterPoints(i);
-    cell.appendChild(undo); cell.appendChild(add); td.appendChild(cell); trAdd.appendChild(td);
+    const score = document.createElement('button');
+    score.className = 'f7-btn-score';
+    score.innerHTML = '🃏 Entrer<br>les cartes';
+    score.onclick = () => ouvrirModal(i);
+    cell.appendChild(undo); cell.appendChild(score);
+    td.appendChild(cell); trAction.appendChild(td);
   });
-  tbody.appendChild(trAdd);
-
-  // Flip 7 bonus
-  const trFlip = document.createElement('tr');
-  joueurs.forEach((j, i) => {
-    const td = document.createElement('td');
-    const btn = document.createElement('button');
-    btn.className = 'f7-btn-flip'; btn.id = `f7-btn-flip-${i}`;
-    btn.textContent = '🃏 Flip 7 ! +15';
-    btn.onclick = () => faireFlip7(i);
-    td.appendChild(btn); trFlip.appendChild(td);
-  });
-  tbody.appendChild(trFlip);
+  tbody.appendChild(trAction);
 
   table.appendChild(tbody);
 }
 
-function ajouterPoints(i) {
-  const inp = document.getElementById(`f7-inp-${i}`);
-  const pts = parseInt(inp.value) || 0;
-  if (pts <= 0) return;
-  joueurs[i].history.push({ pts, type: 'score' });
-  joueurs[i].total += pts;
-  inp.value = '';
-  mettreAJour();
+// ── Modal ──────────────────────────────────────────────
+
+function ouvrirModal(i) {
+  modalPlayer = i;
+  modalCards = new Set();
+  modalPlus2 = 0;
+  modalFlip7 = false;
+  const j = joueurs[i];
+
+  // Titre + couleur
+  const nameEl = document.getElementById('f7-modal-name');
+  nameEl.textContent = j.nom;
+  nameEl.style.color = j.couleur;
+
+  // Construire la grille de cartes 0–12
+  const grid = document.getElementById('f7-cards-grid');
+  grid.innerHTML = '';
+  for (let n = 0; n <= 12; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'f7-card-btn';
+    btn.id = `f7-mc-${n}`;
+    btn.innerHTML = `<span class="card-num">${n}</span><span class="card-pts">${n} pt${n !== 1 ? 's' : ''}</span>`;
+    btn.onclick = () => toggleCarte(n);
+    grid.appendChild(btn);
+  }
+
+  document.getElementById('f7-plus2-val').textContent = '0';
+  document.getElementById('f7-flip7-toggle').classList.remove('active');
+  updateModalTotal();
+  document.getElementById('f7-overlay').style.display = 'flex';
 }
 
-function faireFlip7(i) {
-  joueurs[i].history.push({ pts: 15, type: 'flip7' });
-  joueurs[i].total += 15;
-  const btn = document.getElementById(`f7-btn-flip-${i}`);
-  btn.classList.remove('flash'); void btn.offsetWidth; btn.classList.add('flash');
+function fermerModal() {
+  document.getElementById('f7-overlay').style.display = 'none';
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('f7-overlay')) fermerModal();
+}
+
+function toggleCarte(n) {
+  if (modalCards.has(n)) modalCards.delete(n);
+  else modalCards.add(n);
+  const btn = document.getElementById(`f7-mc-${n}`);
+  if (btn) {
+    btn.classList.toggle('selected', modalCards.has(n));
+    btn.style.borderColor = modalCards.has(n) ? joueurs[modalPlayer].couleur : '';
+    btn.style.color = modalCards.has(n) ? joueurs[modalPlayer].couleur : '';
+  }
+  updateModalTotal();
+}
+
+function changerPlus2(delta) {
+  modalPlus2 = Math.max(0, modalPlus2 + delta);
+  document.getElementById('f7-plus2-val').textContent = modalPlus2;
+  updateModalTotal();
+}
+
+function toggleFlip7() {
+  modalFlip7 = !modalFlip7;
+  document.getElementById('f7-flip7-toggle').classList.toggle('active', modalFlip7);
+  updateModalTotal();
+}
+
+function updateModalTotal() {
+  let pts = 0;
+  modalCards.forEach(n => pts += n);
+  pts += modalPlus2 * 2;
+  if (modalFlip7) pts += 15;
+  const totalEl = document.getElementById('f7-modal-total');
+  totalEl.textContent = pts;
+  totalEl.style.color = joueurs[modalPlayer]?.couleur || '#f0ede6';
+  document.getElementById('f7-btn-confirm').disabled = pts === 0;
+}
+
+function confirmerModal() {
+  let pts = 0;
+  modalCards.forEach(n => pts += n);
+  pts += modalPlus2 * 2;
+  if (modalFlip7) pts += 15;
+  if (pts === 0) return;
+  joueurs[modalPlayer].history.push({
+    pts,
+    cards: [...modalCards],
+    plus2: modalPlus2,
+    flip7: modalFlip7,
+  });
+  joueurs[modalPlayer].total += pts;
   mettreAJour();
+  fermerModal();
 }
 
 function annuler(i) {
@@ -392,7 +559,7 @@ function mettreAJour() {
 
 function reinitialiser() {
   if (!confirm('Commencer une nouvelle partie ?')) return;
-  joueurs = []; round = 1;
+  joueurs = [];
   document.getElementById('f7-game').style.display = 'none';
   document.getElementById('f7-setup').style.display = '';
   initSetup();
