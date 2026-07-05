@@ -25,9 +25,10 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
-    { key: '7wonders',  icon: '🏛️', label: '7 Wonders'     },
-    { key: 'qwirkle',   icon: '🎯', label: 'Qwirkle'        },
-    { key: 'flip7',     icon: '🃏', label: 'Flip 7'         },
+    { key: '7wonders',    icon: '🏛️', label: '7 Wonders'       },
+    { key: 'qwirkle',     icon: '🎯', label: 'Qwirkle'          },
+    { key: 'flip7',       icon: '🃏', label: 'Flip 7'           },
+    { key: 'ladamepique', icon: '♠️', label: 'La Dame de Pique' },
   ]},
 ];
 
@@ -311,9 +312,10 @@ const PERMS_STRUCTURE = [
     { key: 'tcpip',     label: 'TCP/IP' },
   ]},
   { key: 'jeuxdesociete', label: 'Jeux de société', children: [
-    { key: '7wonders',  label: '7 Wonders' },
-    { key: 'qwirkle',   label: 'Qwirkle'   },
-    { key: 'flip7',     label: 'Flip 7'    },
+    { key: '7wonders',    label: '7 Wonders'       },
+    { key: 'qwirkle',     label: 'Qwirkle'         },
+    { key: 'flip7',       label: 'Flip 7'          },
+    { key: 'ladamepique', label: 'La Dame de Pique' },
   ]},
 ];
 

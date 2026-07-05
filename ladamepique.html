@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Dame de Pique — Score</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pDP = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pDP.includes('jeuxdesociete') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+  <style>
+    body { align-items: flex-start; }
+    .dp { width: 100%; padding-bottom: 2rem; }
+
+    .dp-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: #0f0a0a; border-bottom: 1px solid #3a1a1a;
+      padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .dp-topbar a { color: #c0392b; text-decoration: none; font-size: 1.3rem; }
+    .dp-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
+
+    /* Setup */
+    .dp-setup { padding: 1.25rem; max-width: 400px; margin: 0 auto; }
+    .setup-lbl { font-size: 0.72rem; color: #6a3a3a; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .nb-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .nb-btn {
+      width: 2.6rem; height: 2.6rem; border-radius: 50%;
+      border: 2px solid #2a1a1a; background: transparent;
+      color: #6a3a3a; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.15s;
+    }
+    .nb-btn.active { border-color: #c0392b; color: #e05050; background: rgba(192,57,43,0.1); }
+    .name-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+    .name-num {
+      width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
+      font-size: 0.75rem; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-name-input {
+      flex: 1; padding: 0.6rem 0.75rem;
+      background: #0f0a0a; border: 1px solid #2a1a1a; border-radius: 8px;
+      color: #f0ede6; font-size: 0.95rem; margin: 0;
+    }
+    .player-name-input:focus { border-color: #c0392b; outline: none; }
+    .btn-start {
+      display: block; width: 100%; margin-top: 1.25rem;
+      padding: 0.9rem; background: #8b1a1a; color: #fff;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
+
+    /* Table */
+    .score-outer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dp-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .dp-table th, .dp-table td { min-width: 120px; }
+
+    .dp-table thead th {
+      padding: 0.85rem 0.5rem;
+      font-size: 1.3rem; font-weight: bold; text-align: center;
+      background: #0f0a0a; border-bottom: 2px solid #2a1a1a;
+    }
+    .dp-table tbody td {
+      padding: 0.5rem 0.5rem; text-align: center;
+      border-bottom: 1px solid #1a0f0f; background: #0a0707;
+    }
+
+    /* Total — plus grand que Qwirkle (3.5rem) */
+    .dp-total-cell {
+      font-size: 5.5rem; font-weight: bold; color: #f0ede6;
+      padding: 0.4rem 0.5rem !important; line-height: 1;
+    }
+    .dp-total-cell.leader { color: #c9a84c; }
+    .dp-total-cell.winner { color: #e05050; }
+
+    /* Barre de progression */
+    .dp-bar-cell { padding: 0.2rem 0.6rem !important; }
+    .dp-bar-bg { background: #1a0f0f; border-radius: 4px; height: 5px; overflow: hidden; }
+    .dp-bar-fill { height: 100%; background: #8b1a1a; border-radius: 4px; transition: width 0.3s; }
+    .dp-bar-fill.leader { background: #c9a84c; }
+    .dp-bar-fill.winner { background: #e05050; }
+
+    /* Input */
+    .dp-pts-input {
+      width: 100%; max-width: 7rem; text-align: center;
+      padding: 0.65rem 0.3rem;
+      background: #0f0a0a; border: 1px solid #2a1a1a;
+      border-radius: 10px; color: #f0ede6; font-size: 1.1rem; font-weight: bold; margin: 0;
+      box-sizing: border-box;
+    }
+    .dp-pts-input:focus { border-color: #c0392b; outline: none; }
+    .dp-pts-input::-webkit-inner-spin-button,
+    .dp-pts-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .dp-pts-input { -moz-appearance: textfield; }
+
+    /* Boutons */
+    .dp-btn-cell { display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+
+    .dp-btn-undo {
+      width: 3rem; height: 3rem;
+      background: transparent; border: 1px solid #2a1a1a;
+      border-radius: 10px; color: #6a3a3a; font-size: 1.2rem;
+      cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .dp-btn-undo:not(:disabled):hover { border-color: #c0392b; color: #c0392b; }
+    .dp-btn-undo:disabled { opacity: 0.25; cursor: default; }
+
+    .dp-btn-minus {
+      width: 3rem; height: 3rem;
+      background: rgba(192,57,43,0.08); border: 1px solid #c0392b;
+      border-radius: 10px; color: #e05050; font-size: 1.5rem;
+      font-weight: bold; cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .dp-btn-plus {
+      width: 3rem; height: 3rem;
+      background: rgba(39,174,96,0.08); border: 1px solid #27ae60;
+      border-radius: 10px; color: #27ae60; font-size: 1.5rem;
+      font-weight: bold; cursor: pointer; margin: 0; padding: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    .dp-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
+    .btn-new-game {
+      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
+      padding: 0.65rem; background: transparent;
+      border: 1px solid #2a1a1a; border-radius: 10px;
+      color: #6a3a3a; font-size: 0.88rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="dp">
+
+  <div class="dp-topbar">
+    <a href="jeuxdesociete.html">&#8592;</a>
+    <h1>♠️ La Dame de Pique — Score</h1>
+  </div>
+
+  <div id="dp-setup" class="dp-setup">
+    <div class="setup-lbl">Nombre de joueurs</div>
+    <div class="nb-btns" id="dp-nb-btns"></div>
+    <div class="setup-lbl">Noms des joueurs</div>
+    <div id="dp-noms"></div>
+    <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
+  </div>
+
+  <div id="dp-game" style="display:none;">
+    <div class="score-outer">
+      <table class="dp-table" id="dp-table"></table>
+    </div>
+    <button class="btn-new-game" onclick="reinitialiser()">🔄 Nouvelle partie</button>
+  </div>
+
+</div>
+<script>
+const COULEURS = ['#e05050','#5fb3ff','#50d090','#f1c40f','#a088ff','#ff9f43'];
+const CIBLE = 2000;
+let nbJ = 2, joueurs = [];
+
+function initSetup() {
+  const btns = document.getElementById('dp-nb-btns');
+  btns.innerHTML = '';
+  [2,3,4,5,6].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'nb-btn' + (n === nbJ ? ' active' : '');
+    b.textContent = n;
+    b.onclick = () => {
+      nbJ = n;
+      btns.querySelectorAll('.nb-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderNoms();
+    };
+    btns.appendChild(b);
+  });
+  renderNoms();
+}
+
+function renderNoms() {
+  const div = document.getElementById('dp-noms');
+  const vals = Array.from(div.querySelectorAll('input')).map(i => i.value);
+  div.innerHTML = '';
+  for (let i = 0; i < nbJ; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const num = document.createElement('div');
+    num.className = 'name-num';
+    num.style.cssText = `background:${COULEURS[i]}22;color:${COULEURS[i]}`;
+    num.textContent = i + 1;
+    const inp = document.createElement('input');
+    inp.className = 'player-name-input'; inp.type = 'text';
+    inp.placeholder = `Joueur ${i+1}`; inp.value = vals[i] || '';
+    row.appendChild(num); row.appendChild(inp);
+    div.appendChild(row);
+  }
+}
+
+function demarrer() {
+  const inputs = document.querySelectorAll('#dp-noms input');
+  joueurs = Array.from(inputs).map((inp, i) => ({
+    nom: inp.value.trim() || `Joueur ${i+1}`,
+    couleur: COULEURS[i],
+    total: 0,
+    history: [],
+  }));
+  document.getElementById('dp-setup').style.display = 'none';
+  document.getElementById('dp-game').style.display = '';
+  renderTableau();
+}
+
+function renderTableau() {
+  const table = document.getElementById('dp-table');
+  table.innerHTML = '';
+
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const th = document.createElement('th');
+    th.style.color = j.couleur; th.textContent = j.nom; th.id = `dp-th-${i}`;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead); table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+
+  // Totaux
+  const trTotal = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    td.className = 'dp-total-cell'; td.id = `dp-total-${i}`; td.textContent = j.total;
+    trTotal.appendChild(td);
+  });
+  tbody.appendChild(trTotal);
+
+  // Barre de progression
+  const trBar = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td'); td.className = 'dp-bar-cell';
+    const bg = document.createElement('div'); bg.className = 'dp-bar-bg';
+    const fill = document.createElement('div'); fill.className = 'dp-bar-fill'; fill.id = `dp-bar-${i}`;
+    fill.style.width = Math.min(100, Math.round(j.total / CIBLE * 100)) + '%';
+    bg.appendChild(fill); td.appendChild(bg); trBar.appendChild(td);
+  });
+  tbody.appendChild(trBar);
+
+  // Input
+  const trInput = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'numeric';
+    inp.className = 'dp-pts-input'; inp.id = `dp-inp-${i}`;
+    inp.placeholder = 'pts';
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ajouterPoints(i, 1); });
+    td.appendChild(inp); trInput.appendChild(td);
+  });
+  tbody.appendChild(trInput);
+
+  // Undo + − + +
+  const trBtns = document.createElement('tr');
+  joueurs.forEach((j, i) => {
+    const td = document.createElement('td');
+    const cell = document.createElement('div'); cell.className = 'dp-btn-cell';
+
+    const undo = document.createElement('button');
+    undo.className = 'dp-btn-undo'; undo.id = `dp-undo-${i}`;
+    undo.textContent = '↩'; undo.disabled = true;
+    undo.onclick = () => annuler(i);
+
+    const minus = document.createElement('button');
+    minus.className = 'dp-btn-minus'; minus.textContent = '−';
+    minus.onclick = () => ajouterPoints(i, -1);
+
+    const plus = document.createElement('button');
+    plus.className = 'dp-btn-plus'; plus.textContent = '+';
+    plus.onclick = () => ajouterPoints(i, 1);
+
+    cell.appendChild(undo); cell.appendChild(minus); cell.appendChild(plus);
+    td.appendChild(cell); trBtns.appendChild(td);
+  });
+  tbody.appendChild(trBtns);
+
+  table.appendChild(tbody);
+}
+
+function ajouterPoints(i, signe) {
+  const inp = document.getElementById(`dp-inp-${i}`);
+  const val = parseInt(inp.value) || 0;
+  if (val <= 0) return;
+  const pts = signe * val;
+  joueurs[i].history.push(pts);
+  joueurs[i].total += pts;
+  inp.value = '';
+  mettreAJour();
+}
+
+function annuler(i) {
+  if (!joueurs[i].history.length) return;
+  const pts = joueurs[i].history.pop();
+  joueurs[i].total -= pts;
+  mettreAJour();
+}
+
+function mettreAJour() {
+  const maxScore = Math.max(...joueurs.map(j => j.total));
+  const hasWinner = joueurs.some(j => j.total >= CIBLE);
+  joueurs.forEach((j, i) => {
+    const isWinner = j.total >= CIBLE;
+    const isLeader = !isWinner && j.total > 0 && j.total === maxScore && !hasWinner;
+    const cell = document.getElementById(`dp-total-${i}`);
+    cell.textContent = j.total;
+    cell.classList.toggle('winner', isWinner);
+    cell.classList.toggle('leader', isLeader);
+    document.getElementById(`dp-th-${i}`).textContent = j.nom + (isWinner ? ' 🏆' : isLeader ? ' 👑' : '');
+    const undo = document.getElementById(`dp-undo-${i}`);
+    if (undo) undo.disabled = j.history.length === 0;
+    const bar = document.getElementById(`dp-bar-${i}`);
+    if (bar) {
+      bar.style.width = Math.max(0, Math.min(100, Math.round(j.total / CIBLE * 100))) + '%';
+      bar.classList.toggle('winner', isWinner);
+      bar.classList.toggle('leader', isLeader);
+    }
+  });
+}
+
+function reinitialiser() {
+  if (!confirm('Commencer une nouvelle partie ?')) return;
+  joueurs = [];
+  document.getElementById('dp-game').style.display = 'none';
+  document.getElementById('dp-setup').style.display = '';
+  initSetup();
+}
+
+initSetup();
+</script>
+
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="version.js"></script>
+</body>
+</html>
