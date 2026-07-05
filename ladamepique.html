@@ -168,7 +168,7 @@
 
   <div class="dp-slider-bar" id="dp-slider-bar" style="display:none;">
     <span>A</span>
-    <input type="range" class="dp-slider" id="dp-slider" min="2" max="10" step="0.5" value="5.5">
+    <input type="range" class="dp-slider" id="dp-slider" min="2" max="20" step="0.5" value="5.5">
     <span style="font-size:1rem;">A</span>
     <span class="dp-slider-val" id="dp-slider-val">5.5</span>
   </div>
@@ -199,7 +199,7 @@ let nbJ = 2, joueurs = [];
   const slider = document.getElementById('dp-slider');
   const val    = document.getElementById('dp-slider-val');
   const root   = document.documentElement;
-  const MIN = 2, MAX = 10;
+  const MIN = 2, MAX = 20;
 
   function applySize(v) {
     root.style.setProperty('--score-size', v + 'rem');
