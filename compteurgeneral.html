@@ -53,6 +53,20 @@
     /* Setup */
     .cg-setup { padding: 1.25rem; max-width: 430px; margin: 0 auto; }
     .setup-lbl { font-size: 0.72rem; color: #3a6a78; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+
+    /* Mode de jeu (individuel / équipes) */
+    .modejeu-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .modejeu-btn {
+      flex: 1; padding: 0.65rem 0.5rem; border-radius: 10px; cursor: pointer;
+      background: transparent; border: 1.5px solid #1a3a4a;
+      color: #3a6a78; font-size: 0.9rem; font-weight: bold;
+      display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+      transition: all 0.15s;
+    }
+    .modejeu-btn small { font-size: 0.7rem; font-weight: normal; color: #2a5060; line-height: 1.2; text-align: center; }
+    .modejeu-btn.active { border-color: #20b8c8; color: #20b8c8; background: rgba(32,184,200,0.08); }
+    .modejeu-btn.active small { color: #1a7a8a; }
+
     .nb-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
     .nb-btn {
       width: 2.6rem; height: 2.6rem; border-radius: 50%;
@@ -60,7 +74,8 @@
       color: #3a6a78; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.15s;
     }
     .nb-btn.active { border-color: #20b8c8; color: #20b8c8; background: rgba(32,184,200,0.1); }
-    .name-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+
+    .name-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; }
     .name-num {
       width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
       font-size: 0.75rem; font-weight: bold;
@@ -73,7 +88,17 @@
     }
     .player-name-input:focus { border-color: #20b8c8; outline: none; }
 
-    /* Mode + cible */
+    /* Membres d'équipe */
+    .membre-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; padding-left: 2.3rem; }
+    .membre-input {
+      flex: 1; padding: 0.45rem 0.65rem;
+      background: #080f12; border: 1px solid #132832; border-radius: 7px;
+      color: #7aabb8; font-size: 0.78rem; margin: 0;
+    }
+    .membre-input::placeholder { color: #2a5060; }
+    .membre-input:focus { border-color: #20b8c8; outline: none; }
+
+    /* Condition de victoire */
     .mode-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
     .mode-btn {
       flex: 1; padding: 0.65rem 0.5rem; border-radius: 10px; cursor: pointer;
@@ -108,10 +133,13 @@
     .cg-table th, .cg-table td { min-width: 120px; }
 
     .cg-table thead th {
-      padding: 0.85rem 0.5rem;
-      font-size: 1.3rem; font-weight: bold; text-align: center;
+      padding: 0.85rem 0.5rem 0.6rem;
+      font-size: 1.2rem; font-weight: bold; text-align: center;
       background: #080f12; border-bottom: 2px solid #1a3a4a;
+      line-height: 1.2;
     }
+    .cg-th-membres { font-size: 0.65rem; font-weight: normal; color: #3a6a78; margin-top: 0.25rem; }
+
     .cg-table tbody td {
       padding: 0.5rem 0.5rem; text-align: center;
       border-bottom: 1px solid #0f1c22; background: #060d10;
@@ -129,7 +157,6 @@
     .cg-bar-fill { height: 100%; background: #1a5a6a; border-radius: 4px; transition: width 0.3s; }
     .cg-bar-fill.leader { background: #c9a84c; }
     .cg-bar-fill.winner { background: #20b8c8; }
-    /* En mode MIN la barre = danger (ne pas vouloir remplir) */
     .mode-min .cg-bar-fill { background: #6a3a1a; }
     .mode-min .cg-bar-fill.leader { background: #20b8c8; }
     .mode-min .cg-bar-fill.busted { background: #c0392b; }
@@ -195,10 +222,23 @@
   </div>
 
   <div id="cg-setup" class="cg-setup">
-    <div class="setup-lbl">Nombre de joueurs</div>
+
+    <div class="setup-lbl">Mode de jeu</div>
+    <div class="modejeu-btns" id="cg-modejeu-btns">
+      <button class="modejeu-btn active" data-mj="individuel" onclick="setModeJeu('individuel')">
+        👤 Individuel
+        <small>Joueurs en compétition individuelle</small>
+      </button>
+      <button class="modejeu-btn" data-mj="equipes" onclick="setModeJeu('equipes')">
+        👥 Équipes
+        <small>Tournoi par équipes avec membres</small>
+      </button>
+    </div>
+
+    <div class="setup-lbl" id="lbl-nb">Nombre de joueurs</div>
     <div class="nb-btns" id="cg-nb-btns"></div>
 
-    <div class="setup-lbl">Noms des joueurs</div>
+    <div class="setup-lbl" id="lbl-noms">Noms des joueurs</div>
     <div id="cg-noms"></div>
 
     <div class="setup-lbl" style="margin-top:1rem;">Condition de victoire</div>
@@ -229,7 +269,7 @@
 </div>
 <script>
 const COULEURS = ['#a088ff','#ff7070','#50d0a0','#f1c40f','#5fb3ff','#ff9f43'];
-let nbJ = 2, joueurs = [], mode = 'max', CIBLE = 100;
+let nbJ = 2, joueurs = [], mode = 'max', modeJeu = 'individuel', CIBLE = 100;
 
 // Slider taille des scores
 (function() {
@@ -246,6 +286,17 @@ let nbJ = 2, joueurs = [], mode = 'max', CIBLE = 100;
   slider.addEventListener('input', () => applySize(parseFloat(slider.value)));
   applySize(parseFloat(slider.value));
 })();
+
+function setModeJeu(mj) {
+  modeJeu = mj;
+  document.querySelectorAll('#cg-modejeu-btns .modejeu-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mj === mj);
+  });
+  const estEquipes = mj === 'equipes';
+  document.getElementById('lbl-nb').textContent   = estEquipes ? 'Nombre d\'équipes' : 'Nombre de joueurs';
+  document.getElementById('lbl-noms').textContent = estEquipes ? 'Noms des équipes' : 'Noms des joueurs';
+  renderNoms();
+}
 
 function setMode(m) {
   mode = m;
@@ -274,9 +325,13 @@ function initSetup() {
 
 function renderNoms() {
   const div = document.getElementById('cg-noms');
-  const vals = Array.from(div.querySelectorAll('input')).map(i => i.value);
+  const nameVals = Array.from(div.querySelectorAll('.player-name-input')).map(i => i.value);
+  const memVals  = Array.from(div.querySelectorAll('.membre-input')).map(i => i.value);
   div.innerHTML = '';
+  const estEquipes = modeJeu === 'equipes';
+
   for (let i = 0; i < nbJ; i++) {
+    // Ligne nom
     const row = document.createElement('div');
     row.className = 'name-row';
     const num = document.createElement('div');
@@ -285,26 +340,46 @@ function renderNoms() {
     num.textContent = i + 1;
     const inp = document.createElement('input');
     inp.className = 'player-name-input'; inp.type = 'text';
-    inp.placeholder = `Joueur ${i+1}`; inp.value = vals[i] || '';
+    inp.placeholder = estEquipes ? `Équipe ${i+1}` : `Joueur ${i+1}`;
+    inp.value = nameVals[i] || '';
     row.appendChild(num); row.appendChild(inp);
     div.appendChild(row);
+
+    // Ligne membres (mode équipes seulement)
+    if (estEquipes) {
+      const memRow = document.createElement('div');
+      memRow.className = 'membre-row';
+      const memInp = document.createElement('input');
+      memInp.className = 'membre-input'; memInp.type = 'text';
+      memInp.placeholder = 'Membres (ex: Alice, Bob)';
+      memInp.value = memVals[i] || '';
+      memRow.appendChild(memInp);
+      div.appendChild(memRow);
+    }
   }
 }
 
 function demarrer() {
   CIBLE = parseInt(document.getElementById('cg-target').value) || 100;
-  const inputs = document.querySelectorAll('#cg-noms input');
-  joueurs = Array.from(inputs).map((inp, i) => ({
-    nom: inp.value.trim() || `Joueur ${i+1}`,
+  const nameInputs = document.querySelectorAll('#cg-noms .player-name-input');
+  const memInputs  = document.querySelectorAll('#cg-noms .membre-input');
+  const estEquipes = modeJeu === 'equipes';
+
+  joueurs = Array.from(nameInputs).map((inp, i) => ({
+    nom:     inp.value.trim() || (estEquipes ? `Équipe ${i+1}` : `Joueur ${i+1}`),
     couleur: COULEURS[i],
-    total: 0,
+    membres: estEquipes && memInputs[i] ? memInputs[i].value.trim() : '',
+    total:   0,
     history: [],
   }));
+
   document.getElementById('cg-setup').style.display = 'none';
   document.getElementById('cg-game').style.display = '';
   document.getElementById('cg-slider-bar').style.display = '';
-  document.getElementById('cg-title').textContent =
-    (mode === 'max' ? '🏆' : '🥅') + ' Compteur — Cible : ' + CIBLE;
+
+  const icon = estEquipes ? '👥' : (mode === 'max' ? '🏆' : '🥅');
+  document.getElementById('cg-title').textContent = `${icon} Compteur — Cible : ${CIBLE}`;
+
   const root = document.getElementById('cg-root');
   root.classList.toggle('mode-min', mode === 'min');
   root.classList.toggle('mode-max', mode === 'max');
@@ -320,7 +395,15 @@ function renderTableau() {
   const trHead = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const th = document.createElement('th');
-    th.style.color = j.couleur; th.textContent = j.nom; th.id = `cg-th-${i}`;
+    th.style.color = j.couleur; th.id = `cg-th-${i}`;
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'cg-th-name'; nameDiv.textContent = j.nom;
+    th.appendChild(nameDiv);
+    if (j.membres) {
+      const memDiv = document.createElement('div');
+      memDiv.className = 'cg-th-membres'; memDiv.textContent = j.membres;
+      th.appendChild(memDiv);
+    }
     trHead.appendChild(th);
   });
   thead.appendChild(trHead); table.appendChild(thead);
@@ -336,7 +419,7 @@ function renderTableau() {
   });
   tbody.appendChild(trTotal);
 
-  // Barre de progression
+  // Barres de progression
   const trBar = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td'); td.className = 'cg-bar-cell';
@@ -347,7 +430,7 @@ function renderTableau() {
   });
   tbody.appendChild(trBar);
 
-  // Input
+  // Inputs
   const trInput = document.createElement('tr');
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
@@ -431,7 +514,12 @@ function mettreAJour() {
     cell.classList.toggle('leader', isLeader && !isWinner);
 
     const th = document.getElementById(`cg-th-${i}`);
-    if (th) th.textContent = j.nom + (isWinner ? ' 🏆' : isLeader ? ' 👑' : '');
+    if (th) {
+      const nameEl = th.querySelector('.cg-th-name');
+      const suffix = isWinner ? ' 🏆' : isLeader ? ' 👑' : '';
+      if (nameEl) nameEl.textContent = j.nom + suffix;
+      else th.firstChild.textContent = j.nom + suffix;
+    }
 
     const undo = document.getElementById(`cg-undo-${i}`);
     if (undo) undo.disabled = j.history.length === 0;
@@ -453,8 +541,7 @@ function reinitialiser() {
   document.getElementById('cg-slider-bar').style.display = 'none';
   document.getElementById('cg-setup').style.display = '';
   document.getElementById('cg-title').textContent = '🎯 Compteur Général';
-  const root = document.getElementById('cg-root');
-  root.classList.remove('mode-min', 'mode-max');
+  document.getElementById('cg-root').classList.remove('mode-min', 'mode-max');
   initSetup();
 }
 
