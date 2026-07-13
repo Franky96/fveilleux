@@ -16,6 +16,8 @@
     body { align-items: flex-start; }
     .dp { width: 100%; padding-bottom: 2rem; }
 
+    :root { --score-size: 5.5rem; }
+
     .dp-topbar {
       position: sticky; top: 0; z-index: 100;
       background: #0f0a0a; border-bottom: 1px solid #3a1a1a;
@@ -24,6 +26,29 @@
     }
     .dp-topbar a { color: #c0392b; text-decoration: none; font-size: 1.3rem; }
     .dp-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
+
+    .dp-slider-bar {
+      position: sticky; top: 2.75rem; z-index: 99;
+      background: #0f0a0a; border-bottom: 1px solid #2a1a1a;
+      padding: 0.35rem 1rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .dp-slider-bar span { font-size: 0.65rem; color: #6a3a3a; white-space: nowrap; }
+    .dp-slider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 2px;
+      background: linear-gradient(to right, #8b1a1a var(--slider-pct, 50%), #2a1a1a var(--slider-pct, 50%));
+      outline: none; cursor: pointer;
+    }
+    .dp-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px;
+      border-radius: 50%; background: #c0392b; cursor: pointer;
+    }
+    .dp-slider::-moz-range-thumb {
+      width: 16px; height: 16px; border: none;
+      border-radius: 50%; background: #c0392b; cursor: pointer;
+    }
+    .dp-slider-val { font-size: 0.7rem; color: #8b3a3a; font-weight: bold; min-width: 2.5rem; text-align: right; }
 
     /* Setup */
     .dp-setup { padding: 1.25rem; max-width: 400px; margin: 0 auto; }
@@ -68,9 +93,9 @@
       border-bottom: 1px solid #1a0f0f; background: #0a0707;
     }
 
-    /* Total — plus grand que Qwirkle (3.5rem) */
+    /* Total — taille contrôlée par slider */
     .dp-total-cell {
-      font-size: 5.5rem; font-weight: bold; color: #f0ede6;
+      font-size: var(--score-size); font-weight: bold; color: #f0ede6;
       padding: 0.4rem 0.5rem !important; line-height: 1;
     }
     .dp-total-cell.leader { color: #c9a84c; }
@@ -131,6 +156,29 @@
       border: 1px solid #2a1a1a; border-radius: 10px;
       color: #6a3a3a; font-size: 0.88rem; cursor: pointer;
     }
+
+    /* ─── Mode clair ─── */
+    html.light body { background: #fdfaf7; }
+    html.light .dp-topbar { background: #f8f3ee; border-bottom-color: #e8ddd5; }
+    html.light .dp-topbar h1 { color: #3a2218; }
+    html.light .dp-slider-bar { background: #f8f3ee; border-bottom-color: #ede4dc; }
+    html.light .dp-slider-bar span { color: #9a6a60; }
+    html.light .dp-slider { background: linear-gradient(to right, #c0392b var(--slider-pct, 50%), #e8d0c8 var(--slider-pct, 50%)); }
+    html.light .dp-slider-val { color: #c0392b; }
+    html.light .setup-lbl { color: #9a5050; }
+    html.light .nb-btn { border-color: #e0cec5; color: #9a7068; background: transparent; }
+    html.light .nb-btn.active { border-color: #c0392b; color: #c0392b; background: rgba(192,57,43,0.08); }
+    html.light .player-name-input { background: #fff; border-color: #e0cec5; color: #2a1a18; }
+    html.light .btn-start { background: #c0392b; }
+    html.light .dp-table thead th { background: #f8f3ee; border-bottom-color: #e0cec5; }
+    html.light .dp-table tbody td { background: #fdfaf7; border-bottom-color: #f0e5de; }
+    html.light .dp-total-cell { color: #2a1a18; }
+    html.light .dp-bar-bg { background: #f0ddd5; }
+    html.light .dp-pts-input { background: #fff; border-color: #e0cec5; color: #2a1a18; }
+    html.light .dp-btn-undo { border-color: #e0cec5; color: #b09088; background: transparent; }
+    html.light .dp-btn-minus { background: rgba(192,57,43,0.06); }
+    html.light .dp-btn-plus { background: rgba(39,174,96,0.06); }
+    html.light .btn-new-game { border-color: #e0cec5; color: #9a7068; }
   </style>
 </head>
 <body>
@@ -139,6 +187,13 @@
   <div class="dp-topbar">
     <a href="jeuxdesociete.html">&#8592;</a>
     <h1>♠️ La Dame de Pique — Score</h1>
+  </div>
+
+  <div class="dp-slider-bar" id="dp-slider-bar" style="display:none;">
+    <span>A</span>
+    <input type="range" class="dp-slider" id="dp-slider" min="2" max="20" step="0.5" value="5.5">
+    <span style="font-size:1rem;">A</span>
+    <span class="dp-slider-val" id="dp-slider-val">5.5</span>
   </div>
 
   <div id="dp-setup" class="dp-setup">
@@ -161,6 +216,24 @@
 const COULEURS = ['#e05050','#5fb3ff','#50d090','#f1c40f','#a088ff','#ff9f43'];
 const CIBLE = 2000;
 let nbJ = 2, joueurs = [];
+
+// Slider taille des scores
+(function() {
+  const slider = document.getElementById('dp-slider');
+  const val    = document.getElementById('dp-slider-val');
+  const root   = document.documentElement;
+  const MIN = 2, MAX = 20;
+
+  function applySize(v) {
+    root.style.setProperty('--score-size', v + 'rem');
+    val.textContent = v;
+    const pct = ((v - MIN) / (MAX - MIN) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--slider-pct', pct);
+  }
+
+  slider.addEventListener('input', () => applySize(parseFloat(slider.value)));
+  applySize(parseFloat(slider.value));
+})();
 
 function initSetup() {
   const btns = document.getElementById('dp-nb-btns');
@@ -209,6 +282,7 @@ function demarrer() {
   }));
   document.getElementById('dp-setup').style.display = 'none';
   document.getElementById('dp-game').style.display = '';
+  document.getElementById('dp-slider-bar').style.display = '';
   renderTableau();
 }
 
@@ -330,6 +404,7 @@ function reinitialiser() {
   if (!confirm('Commencer une nouvelle partie ?')) return;
   joueurs = [];
   document.getElementById('dp-game').style.display = 'none';
+  document.getElementById('dp-slider-bar').style.display = 'none';
   document.getElementById('dp-setup').style.display = '';
   initSetup();
 }

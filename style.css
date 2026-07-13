@@ -2797,3 +2797,76 @@ body.films-page .etoile.etoile-survol {
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* ─── Bouton toggle thème ─────────────────────────────── */
+#theme-toggle {
+  position: fixed; top: 0.5rem; right: 0.75rem; z-index: 9999;
+  background: rgba(10,20,10,0.55); border: 1px solid rgba(128,204,128,0.2);
+  border-radius: 20px; color: #80aa80; font-size: 0.72rem;
+  padding: 0.3rem 0.7rem; cursor: pointer; backdrop-filter: blur(6px);
+  width: auto; transition: background 0.2s, border-color 0.2s, color 0.2s;
+  display: inline-flex; align-items: center; gap: 0.25rem;
+}
+html.light #theme-toggle {
+  background: rgba(230,245,230,0.92); border-color: rgba(58,122,58,0.3); color: #3a6a3a;
+}
+
+/* ─── Mode clair — pages dashboard / navigation ───────── */
+html.light body {
+  background: #f0f4f0;
+  color: #1a2a1a;
+}
+html.light .dashboard-container {
+  background: #f0f4f0;
+}
+html.light .login-container {
+  background: #fff;
+  border-color: #c8d8c0;
+  box-shadow: 0 4px 20px rgba(0,80,0,0.08);
+}
+html.light .login-container h1 { color: #1a3a1a; }
+html.light .login-container input {
+  background: #f5faf5; border-color: #b8d0b0; color: #1a2a1a;
+}
+html.light .login-container input:focus { border-color: #4a8a4a; }
+html.light .login-container button {
+  background: #3a7a3a; color: #fff;
+}
+html.light header { border-color: #c0d4b8; }
+html.light header h1 { color: #1a3a1a; }
+html.light .subtitle { color: #4a6a44; }
+html.light .welcome-text { color: #2a4a28; }
+html.light .menu-card {
+  background: #fff; border-color: #c4d8bc; color: #2a3a28;
+}
+html.light .menu-card:hover {
+  background: #eef8ec; border-color: #4a8a44;
+  transform: translateY(-2px);
+}
+html.light .menu-card h2 { color: #1a3a1a; }
+html.light .menu-card p { color: #4a6a44; }
+html.light .menu-card .icon { filter: none; }
+html.light #logoutBtn {
+  color: #4a6a44; border-color: #c0d4b8; background: transparent;
+}
+html.light #logoutBtn:hover { border-color: #4a8a44; color: #1a3a1a; }
+html.light .back-btn-dash {
+  color: #3a6a38; border-color: #c0d4b8; background: transparent;
+}
+html.light .back-btn-dash:hover { border-color: #4a8a44; color: #1a3a1a; }
+html.light .sidebar {
+  background: #e8f0e4; border-color: #c0d4b8;
+}
+html.light .sidebar-link {
+  color: #2a4a28;
+}
+html.light .sidebar-link:hover,
+html.light .sidebar-link.active {
+  background: #d4e8cc; color: #1a3a1a;
+}
+html.light .archive-btn {
+  color: #6a8a68 !important; border-color: #c0d4b8;
+}
+html.light [data-version-badge] {
+  background: #c0392b !important;
+}
