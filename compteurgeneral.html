@@ -53,8 +53,8 @@
     /* Setup */
     .cg-setup { padding: 1.25rem; max-width: 430px; margin: 0 auto; }
     .setup-lbl { font-size: 0.72rem; color: #3a6a78; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .setup-lbl small { font-size: 0.85em; font-weight: normal; text-transform: none; color: #2a5060; }
 
-    /* Mode de jeu (individuel / équipes) */
     .modejeu-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
     .modejeu-btn {
       flex: 1; padding: 0.65rem 0.5rem; border-radius: 10px; cursor: pointer;
@@ -88,7 +88,6 @@
     }
     .player-name-input:focus { border-color: #20b8c8; outline: none; }
 
-    /* Membres d'équipe */
     .membre-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; padding-left: 2.3rem; }
     .membre-input {
       flex: 1; padding: 0.45rem 0.65rem;
@@ -98,7 +97,6 @@
     .membre-input::placeholder { color: #2a5060; }
     .membre-input:focus { border-color: #20b8c8; outline: none; }
 
-    /* Condition de victoire */
     .mode-btns { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
     .mode-btn {
       flex: 1; padding: 0.65rem 0.5rem; border-radius: 10px; cursor: pointer;
@@ -135,8 +133,7 @@
     .cg-table thead th {
       padding: 0.85rem 0.5rem 0.6rem;
       font-size: 1.2rem; font-weight: bold; text-align: center;
-      background: #080f12; border-bottom: 2px solid #1a3a4a;
-      line-height: 1.2;
+      background: #080f12; border-bottom: 2px solid #1a3a4a; line-height: 1.2;
     }
     .cg-th-membres { font-size: 0.65rem; font-weight: normal; color: #3a6a78; margin-top: 0.25rem; }
 
@@ -144,6 +141,15 @@
       padding: 0.5rem 0.5rem; text-align: center;
       border-bottom: 1px solid #0f1c22; background: #060d10;
     }
+
+    /* Ligne victoires */
+    .cg-wins-cell { background: #07100f !important; padding: 0.4rem 0.5rem !important; }
+    .cg-wins-val {
+      font-size: 1.05rem; font-weight: bold; color: #2a5060;
+      display: flex; align-items: center; justify-content: center; gap: 0.25rem;
+    }
+    .cg-wins-val.has-wins { color: #c9a84c; }
+    .cg-wins-val.champion { color: #20b8c8; font-size: 1.1rem; }
 
     .cg-total-cell {
       font-size: var(--score-size); font-weight: bold; color: #e0f0f4;
@@ -198,8 +204,16 @@
     }
 
     .cg-table tbody tr:last-child td { border-bottom: none; padding-bottom: 1rem; }
+
+    .btn-partie-suite {
+      display: none;
+      width: calc(100% - 2rem); margin: 0.6rem 1rem 0;
+      padding: 0.8rem; background: #0f2a32; color: #20b8c8;
+      border: 2px solid #20b8c8; border-radius: 10px;
+      font-size: 1rem; font-weight: bold; cursor: pointer;
+    }
     .btn-new-game {
-      display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0;
+      display: block; width: calc(100% - 2rem); margin: 0.5rem 1rem 0;
       padding: 0.65rem; background: transparent;
       border: 1px solid #1a3a4a; border-radius: 10px;
       color: #3a6a78; font-size: 0.88rem; cursor: pointer;
@@ -241,11 +255,17 @@
     <div class="setup-lbl" id="lbl-noms">Noms des joueurs</div>
     <div id="cg-noms"></div>
 
+    <!-- Section tournoi (mode équipes seulement) -->
+    <div id="cg-tournoi-section" style="display:none; margin-top:1rem;">
+      <div class="setup-lbl">Victoires pour gagner le tournoi <small>(0 = sans limite)</small></div>
+      <input type="text" inputmode="numeric" class="cg-target-input" id="cg-victoires" value="3">
+    </div>
+
     <div class="setup-lbl" style="margin-top:1rem;">Condition de victoire</div>
     <div class="mode-btns" id="cg-mode-btns">
       <button class="mode-btn active" data-mode="max" onclick="setMode('max')">
         ↑ Maximum
-        <small>Premier à atteindre X pts gagne</small>
+        <small>Premier à atteindre X pts gagne la partie</small>
       </button>
       <button class="mode-btn" data-mode="min" onclick="setMode('min')">
         ↓ Minimum
@@ -253,7 +273,7 @@
       </button>
     </div>
 
-    <div class="setup-lbl">Cible de points</div>
+    <div class="setup-lbl">Cible de points par partie</div>
     <input type="text" inputmode="numeric" class="cg-target-input" id="cg-target" value="100">
 
     <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
@@ -263,13 +283,14 @@
     <div class="score-outer">
       <table class="cg-table" id="cg-table"></table>
     </div>
+    <button class="btn-partie-suite" id="cg-btn-suite" onclick="partieSuivante()">Partie suivante →</button>
     <button class="btn-new-game" onclick="reinitialiser()">🔄 Nouvelle partie</button>
   </div>
 
 </div>
 <script>
 const COULEURS = ['#a088ff','#ff7070','#50d0a0','#f1c40f','#5fb3ff','#ff9f43'];
-let nbJ = 2, joueurs = [], mode = 'max', modeJeu = 'individuel', CIBLE = 100;
+let nbJ = 2, joueurs = [], mode = 'max', modeJeu = 'individuel', CIBLE = 100, CIBLE_VICTOIRES = 0;
 
 // Slider taille des scores
 (function() {
@@ -293,8 +314,9 @@ function setModeJeu(mj) {
     b.classList.toggle('active', b.dataset.mj === mj);
   });
   const estEquipes = mj === 'equipes';
-  document.getElementById('lbl-nb').textContent   = estEquipes ? 'Nombre d\'équipes' : 'Nombre de joueurs';
+  document.getElementById('lbl-nb').textContent   = estEquipes ? "Nombre d'équipes" : 'Nombre de joueurs';
   document.getElementById('lbl-noms').textContent = estEquipes ? 'Noms des équipes' : 'Noms des joueurs';
+  document.getElementById('cg-tournoi-section').style.display = estEquipes ? '' : 'none';
   renderNoms();
 }
 
@@ -329,9 +351,7 @@ function renderNoms() {
   const memVals  = Array.from(div.querySelectorAll('.membre-input')).map(i => i.value);
   div.innerHTML = '';
   const estEquipes = modeJeu === 'equipes';
-
   for (let i = 0; i < nbJ; i++) {
-    // Ligne nom
     const row = document.createElement('div');
     row.className = 'name-row';
     const num = document.createElement('div');
@@ -344,8 +364,6 @@ function renderNoms() {
     inp.value = nameVals[i] || '';
     row.appendChild(num); row.appendChild(inp);
     div.appendChild(row);
-
-    // Ligne membres (mode équipes seulement)
     if (estEquipes) {
       const memRow = document.createElement('div');
       memRow.className = 'membre-row';
@@ -361,34 +379,32 @@ function renderNoms() {
 
 function demarrer() {
   CIBLE = parseInt(document.getElementById('cg-target').value) || 100;
+  const estEquipes = modeJeu === 'equipes';
+  CIBLE_VICTOIRES = estEquipes ? (parseInt(document.getElementById('cg-victoires').value) || 0) : 0;
   const nameInputs = document.querySelectorAll('#cg-noms .player-name-input');
   const memInputs  = document.querySelectorAll('#cg-noms .membre-input');
-  const estEquipes = modeJeu === 'equipes';
-
   joueurs = Array.from(nameInputs).map((inp, i) => ({
-    nom:     inp.value.trim() || (estEquipes ? `Équipe ${i+1}` : `Joueur ${i+1}`),
-    couleur: COULEURS[i],
-    membres: estEquipes && memInputs[i] ? memInputs[i].value.trim() : '',
-    total:   0,
-    history: [],
+    nom:      inp.value.trim() || (estEquipes ? `Équipe ${i+1}` : `Joueur ${i+1}`),
+    couleur:  COULEURS[i],
+    membres:  estEquipes && memInputs[i] ? memInputs[i].value.trim() : '',
+    total:    0,
+    victoires: 0,
+    history:  [],
   }));
-
   document.getElementById('cg-setup').style.display = 'none';
-  document.getElementById('cg-game').style.display = '';
+  document.getElementById('cg-game').style.display  = '';
   document.getElementById('cg-slider-bar').style.display = '';
-
-  const icon = estEquipes ? '👥' : (mode === 'max' ? '🏆' : '🥅');
+  const icon = estEquipes ? '🏆' : (mode === 'max' ? '🏆' : '🥅');
   document.getElementById('cg-title').textContent = `${icon} Compteur — Cible : ${CIBLE}`;
-
-  const root = document.getElementById('cg-root');
-  root.classList.toggle('mode-min', mode === 'min');
-  root.classList.toggle('mode-max', mode === 'max');
+  document.getElementById('cg-root').classList.toggle('mode-min', mode === 'min');
+  document.getElementById('cg-root').classList.toggle('mode-max', mode === 'max');
   renderTableau();
 }
 
 function renderTableau() {
   const table = document.getElementById('cg-table');
   table.innerHTML = '';
+  const estEquipes = modeJeu === 'equipes';
 
   // En-têtes
   const thead = document.createElement('thead');
@@ -407,8 +423,20 @@ function renderTableau() {
     trHead.appendChild(th);
   });
   thead.appendChild(trHead); table.appendChild(thead);
-
   const tbody = document.createElement('tbody');
+
+  // Ligne victoires (mode équipes seulement)
+  if (estEquipes) {
+    const trWins = document.createElement('tr');
+    joueurs.forEach((j, i) => {
+      const td = document.createElement('td'); td.className = 'cg-wins-cell';
+      const div = document.createElement('div');
+      div.className = 'cg-wins-val'; div.id = `cg-wins-${i}`;
+      div.textContent = '—';
+      td.appendChild(div); trWins.appendChild(td);
+    });
+    tbody.appendChild(trWins);
+  }
 
   // Totaux
   const trTotal = document.createElement('tr');
@@ -448,25 +476,20 @@ function renderTableau() {
   joueurs.forEach((j, i) => {
     const td = document.createElement('td');
     const cell = document.createElement('div'); cell.className = 'cg-btn-cell';
-
     const undo = document.createElement('button');
     undo.className = 'cg-btn-undo'; undo.id = `cg-undo-${i}`;
     undo.textContent = '↩'; undo.disabled = true;
     undo.onclick = () => annuler(i);
-
     const minus = document.createElement('button');
     minus.className = 'cg-btn-minus'; minus.textContent = '−';
     minus.onclick = () => ajouterPoints(i, -1);
-
     const plus = document.createElement('button');
     plus.className = 'cg-btn-plus'; plus.textContent = '+';
     plus.onclick = () => ajouterPoints(i, 1);
-
     cell.appendChild(undo); cell.appendChild(minus); cell.appendChild(plus);
     td.appendChild(cell); trBtns.appendChild(td);
   });
   tbody.appendChild(trBtns);
-
   table.appendChild(tbody);
   mettreAJour();
 }
@@ -492,10 +515,12 @@ function mettreAJour() {
   const maxScore = Math.max(...scores);
   const minScore = Math.min(...scores);
   const gameOver = joueurs.some(j => j.total >= CIBLE);
+  const estEquipes = modeJeu === 'equipes';
+  const tournamentOver = estEquipes && CIBLE_VICTOIRES > 0 &&
+    joueurs.some(j => j.victoires >= CIBLE_VICTOIRES);
 
   joueurs.forEach((j, i) => {
     let isWinner = false, isLeader = false, isBusted = false;
-
     if (mode === 'max') {
       isWinner = j.total >= CIBLE;
       isLeader = !gameOver && j.total > 0 && j.total === maxScore;
@@ -508,22 +533,25 @@ function mettreAJour() {
       }
     }
 
+    // Score
     const cell = document.getElementById(`cg-total-${i}`);
     cell.textContent = j.total;
     cell.classList.toggle('winner', isWinner);
     cell.classList.toggle('leader', isLeader && !isWinner);
 
+    // En-tête
     const th = document.getElementById(`cg-th-${i}`);
     if (th) {
       const nameEl = th.querySelector('.cg-th-name');
       const suffix = isWinner ? ' 🏆' : isLeader ? ' 👑' : '';
       if (nameEl) nameEl.textContent = j.nom + suffix;
-      else th.firstChild.textContent = j.nom + suffix;
     }
 
+    // Undo
     const undo = document.getElementById(`cg-undo-${i}`);
     if (undo) undo.disabled = j.history.length === 0;
 
+    // Barre
     const bar = document.getElementById(`cg-bar-${i}`);
     if (bar) {
       bar.style.width = Math.min(100, Math.max(0, Math.round(j.total / CIBLE * 100))) + '%';
@@ -531,14 +559,48 @@ function mettreAJour() {
       bar.classList.toggle('leader', isLeader && !isWinner);
       bar.classList.toggle('busted', isBusted);
     }
+
+    // Victoires (mode équipes)
+    if (estEquipes) {
+      const winsEl = document.getElementById(`cg-wins-${i}`);
+      if (winsEl) {
+        const v = j.victoires;
+        const isChampion = CIBLE_VICTOIRES > 0 && v >= CIBLE_VICTOIRES;
+        winsEl.textContent = v === 0 ? '—' : (v + ' 🏆' + (isChampion ? ' CHAMPION' : ''));
+        winsEl.classList.toggle('has-wins', v > 0 && !isChampion);
+        winsEl.classList.toggle('champion', isChampion);
+      }
+    }
   });
+
+  // Bouton "Partie suivante" : visible si la partie est terminée, pas le tournoi
+  const btnSuite = document.getElementById('cg-btn-suite');
+  if (btnSuite) btnSuite.style.display = (estEquipes && gameOver && !tournamentOver) ? 'block' : 'none';
+}
+
+function partieSuivante() {
+  // Déterminer le(s) gagnant(s) de la partie
+  const scores = joueurs.map(j => j.total);
+  let gagnants = [];
+  if (mode === 'max') {
+    gagnants = joueurs.filter(j => j.total >= CIBLE);
+  } else {
+    const min = Math.min(...scores);
+    gagnants = joueurs.filter(j => j.total === min);
+  }
+  gagnants.forEach(j => j.victoires++);
+
+  // Réinitialiser les scores de la partie
+  joueurs.forEach(j => { j.total = 0; j.history = []; });
+  mettreAJour();
 }
 
 function reinitialiser() {
-  if (!confirm('Commencer une nouvelle partie ?')) return;
+  if (!confirm('Recommencer complètement (remet aussi les victoires à zéro) ?')) return;
   joueurs = [];
   document.getElementById('cg-game').style.display = 'none';
   document.getElementById('cg-slider-bar').style.display = 'none';
+  document.getElementById('cg-btn-suite').style.display = 'none';
   document.getElementById('cg-setup').style.display = '';
   document.getElementById('cg-title').textContent = '🎯 Compteur Général';
   document.getElementById('cg-root').classList.remove('mode-min', 'mode-max');
