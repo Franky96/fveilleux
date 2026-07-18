@@ -18,6 +18,26 @@
     <header>
       <h1>Outils de Frank</h1>
       <p class="subtitle">Bienvenue, Francis 👋</p>
+      <div class="header-controls">
+        <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div id="hamburger-menu">
+          <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">
+            ✉️ Webmail
+          </a>
+          <button id="toggle-version-btn" class="hbg-item" onclick="toggleVersionBadge(); closeHamburger();">
+            🏷️ Badge version
+          </button>
+          <a id="btn-construction" href="beta/dashboard.html" class="hbg-item" onclick="closeHamburger()">
+            🚧 En construction
+          </a>
+          <div class="hbg-sep" id="admin-sep"></div>
+          <button id="logoutBtn" class="hbg-item">
+            🚪 Déconnexion
+          </button>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -107,27 +127,6 @@
   <!-- Bouton Archives — fixé en bas à droite -->
   <a href="archive.html" class="archive-btn">📁 Archives</a>
 
-  <!-- Menu hamburger -->
-  <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-
-  <div id="hamburger-menu">
-    <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">
-      ✉️ Webmail
-    </a>
-    <button id="toggle-version-btn" class="hbg-item" onclick="toggleVersionBadge(); closeHamburger();">
-      🏷️ Badge version
-    </button>
-    <a id="btn-construction" href="beta/dashboard.html" class="hbg-item" onclick="closeHamburger()">
-      🚧 En construction
-    </a>
-    <div class="hbg-sep" id="admin-sep"></div>
-    <button id="logoutBtn" class="hbg-item">
-      🚪 Déconnexion
-    </button>
-  </div>
-
   <script>
     function toggleHamburger() {
       const menu = document.getElementById('hamburger-menu');
@@ -150,5 +149,13 @@
 
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
   <script src="version.js"></script>
+  <script>
+    // Déplace le toggle dans le header pour l'aligner avec h1 et subtitle
+    (function () {
+      const toggle = document.getElementById('theme-toggle');
+      const controls = document.querySelector('.header-controls');
+      if (toggle && controls) controls.prepend(toggle);
+    })();
+  </script>
 </body>
 </html>

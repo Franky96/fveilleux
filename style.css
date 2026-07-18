@@ -96,6 +96,21 @@ header {
   border-bottom: 1px solid #2a3a2a;
   padding-bottom: 1.5rem;
 }
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  position: relative;
+}
+header #theme-toggle {
+  position: static !important;
+  top: auto; right: auto;
+}
+header #hamburger-btn {
+  position: static;
+  top: auto; right: auto;
+}
 
 header h1 {
   font-size: 1.5rem;
@@ -2837,7 +2852,7 @@ body.films-page .etoile.etoile-survol {
 
 #hamburger-menu {
   display: none;
-  position: fixed; top: 3.3rem; right: 0.75rem; z-index: 9999;
+  position: absolute; top: calc(100% + 0.4rem); right: 0; z-index: 9999;
   background: #111e11; border: 1px solid #2a4a2a;
   border-radius: 12px; padding: 0.4rem;
   min-width: 195px; box-shadow: 0 8px 32px rgba(0,0,0,0.55);
