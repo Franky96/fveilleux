@@ -154,7 +154,10 @@
     (function () {
       const toggle = document.getElementById('theme-toggle');
       const controls = document.querySelector('.header-controls');
-      if (toggle && controls) controls.prepend(toggle);
+      if (toggle && controls) {
+        toggle.classList.remove('theme-toggle--fixed');
+        controls.prepend(toggle);
+      }
     })();
   </script>
 </body>
