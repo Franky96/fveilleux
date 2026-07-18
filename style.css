@@ -103,10 +103,6 @@ header {
   justify-content: flex-end;
   position: relative;
 }
-header #theme-toggle {
-  position: relative !important;
-  top: auto; right: auto;
-}
 header #hamburger-btn {
   position: static;
   top: auto; right: auto;
