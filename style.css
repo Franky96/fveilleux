@@ -103,9 +103,19 @@ header {
   justify-content: flex-end;
   position: relative;
 }
-header #hamburger-btn {
+header #hamburger-btn,
+.page-topbar-controls #hamburger-btn {
   position: static;
   top: auto; right: auto;
+}
+.page-topbar-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex-shrink: 0;
+  justify-self: end;
 }
 
 header h1 {

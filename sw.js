@@ -12,6 +12,7 @@ const FILES_TO_CACHE = [
   '/style.css',
   '/version.js',
   '/theme-toggle.js',
+  '/page-controls.js',
   '/sw-register.js',
 ];
 
