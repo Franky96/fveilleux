@@ -104,7 +104,7 @@ header {
   position: relative;
 }
 header #theme-toggle {
-  position: static !important;
+  position: relative !important;
   top: auto; right: auto;
 }
 header #hamburger-btn {
