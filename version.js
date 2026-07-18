@@ -24,9 +24,19 @@ const SITE_VERSION = '1.3.2';
   toggle.setAttribute('aria-label', 'Basculer mode clair/sombre');
   const isLight = document.documentElement.classList.contains('light');
   toggle.setAttribute('aria-checked', isLight ? 'true' : 'false');
+  const moon = document.createElement('span');
+  moon.className = 'tg-icon';
+  moon.textContent = '🌙';
+  toggle.appendChild(moon);
+
   const knob = document.createElement('span');
   knob.id = 'theme-toggle-knob';
   toggle.appendChild(knob);
+
+  const sun = document.createElement('span');
+  sun.className = 'tg-icon';
+  sun.textContent = '☀️';
+  toggle.appendChild(sun);
   toggle.onclick = function () {
     const nowLight = document.documentElement.classList.toggle('light');
     localStorage.setItem('theme', nowLight ? 'light' : 'dark');
