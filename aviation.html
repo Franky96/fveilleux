@@ -130,6 +130,7 @@
       const backBtn = document.querySelector('.sidebar .back-btn-dash');
       if (toggle && backBtn) {
         toggle.classList.remove('theme-toggle--fixed');
+        backBtn.style.display = 'block';
         backBtn.after(toggle);
       }
     })();
