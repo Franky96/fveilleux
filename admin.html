@@ -22,18 +22,20 @@
       grid-template-columns: 1fr 1fr;
       gap: 0.5rem;
       margin-top: 0.5rem;
-      background: #f5f2eb;
+      background: #111a11;
       padding: 1rem;
       border-radius: 8px;
-      border: 1px solid #d5d0c8;
+      border: 1px solid #2a3a2a;
     }
+    html.light .perms-grid { background: #f5f2eb; border-color: #d5d0c8; }
     .perm-item {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: #1a1a1a;
+      color: #c0d8c0;
       font-size: 0.9rem;
     }
+    html.light .perm-item { color: #1a1a1a; }
     .perm-item input {
       width: auto;
       margin: 0;
@@ -41,10 +43,11 @@
     }
     .perm-group {
       grid-column: 1 / -1;
-      border-top: 1px solid #d5d0c8;
+      border-top: 1px solid #2a3a2a;
       padding-top: 0.5rem;
       margin-top: 0.2rem;
     }
+    html.light .perm-group { border-top-color: #d5d0c8; }
     .perm-parent {
       font-weight: bold;
     }
