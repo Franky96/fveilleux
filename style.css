@@ -2824,8 +2824,8 @@ body.films-page .etoile.etoile-survol {
 }
 #hamburger-btn:hover { background: rgba(128,200,128,0.08); }
 #hamburger-btn span {
-  display: block; width: 22px; height: 2px;
-  background: #60a060; border-radius: 2px;
+  display: block; width: 22px; height: 2.5px;
+  background: #c8e8c0; border-radius: 2px;
   transition: transform 0.3s ease, opacity 0.3s ease, background 0.2s;
   transform-origin: center;
 }
@@ -2863,7 +2863,7 @@ body.films-page .etoile.etoile-survol {
   height: 1px; background: #2a4a2a; margin: 0.3rem 0.5rem;
 }
 
-html.light #hamburger-btn span { background: #3a6a3a; }
+html.light #hamburger-btn span { background: #2a5a2a; }
 html.light #hamburger-btn:hover { background: rgba(58,106,58,0.08); }
 html.light #hamburger-menu {
   background: #fff; border-color: #c4d8bc;
