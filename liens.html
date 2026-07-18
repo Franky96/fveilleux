@@ -80,5 +80,17 @@
   <script type="module" src="liens.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
   <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script>
+    (function () {
+      const toggle = document.getElementById('theme-toggle');
+      const backBtn = document.querySelector('.sidebar .back-btn-dash') || document.querySelector('.sidebar .back-btn');
+      if (toggle && backBtn) {
+        toggle.classList.remove('theme-toggle--fixed');
+        backBtn.style.display = 'block';
+        backBtn.after(toggle);
+      }
+    })();
+  </script>
 </body>
 </html>
