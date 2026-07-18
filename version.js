@@ -17,17 +17,31 @@ const SITE_VERSION = '1.3.2';
     if (!isAdmin || hidden) badge.style.display = 'none';
   }
 
-  // Bouton toggle thème
-  const btn = document.createElement('button');
-  btn.id = 'theme-toggle';
+  // Toggle thème (style interrupteur iOS)
+  const toggle = document.createElement('div');
+  toggle.id = 'theme-toggle';
+  toggle.setAttribute('role', 'switch');
+  toggle.setAttribute('aria-label', 'Basculer mode clair/sombre');
   const isLight = document.documentElement.classList.contains('light');
-  btn.textContent = isLight ? '🌙 Sombre' : '☀️ Clair';
-  btn.onclick = function () {
+  toggle.setAttribute('aria-checked', isLight ? 'true' : 'false');
+  const knob = document.createElement('span');
+  knob.id = 'theme-toggle-knob';
+  toggle.appendChild(knob);
+  toggle.onclick = function () {
     const nowLight = document.documentElement.classList.toggle('light');
     localStorage.setItem('theme', nowLight ? 'light' : 'dark');
-    btn.textContent = nowLight ? '🌙 Sombre' : '☀️ Clair';
+    toggle.setAttribute('aria-checked', nowLight ? 'true' : 'false');
   };
-  document.body.appendChild(btn);
+
+  // Sur les pages avec bouton déconnexion : insère le toggle juste avant
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn && logoutBtn.parentNode) {
+    toggle.classList.add('theme-toggle--inline');
+    logoutBtn.parentNode.insertBefore(toggle, logoutBtn);
+  } else {
+    toggle.classList.add('theme-toggle--fixed');
+    document.body.appendChild(toggle);
+  }
 })();
 
 window.toggleVersionBadge = function () {
