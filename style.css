@@ -2816,7 +2816,7 @@ body.films-page .etoile.etoile-survol {
 /* ─── Menu hamburger ──────────────────────────────────── */
 #hamburger-btn {
   position: fixed; top: 0.65rem; right: 5.2rem; z-index: 10000;
-  background: transparent; border: none; cursor: pointer;
+  width: auto; background: transparent; border: none; cursor: pointer;
   display: flex; flex-direction: column; gap: 5px;
   padding: 7px; border-radius: 8px;
   transition: background 0.2s;
