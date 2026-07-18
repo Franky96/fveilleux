@@ -1549,6 +1549,8 @@ header .subtitle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  justify-self: start;
+  white-space: nowrap;
 }
 
 .back-btn-dash:hover {
