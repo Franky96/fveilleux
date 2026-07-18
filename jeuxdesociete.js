@@ -31,4 +31,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Révéler le menu maintenant que les permissions sont appliquées
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
+
+  // Webmail
+  const btnWebmail = document.getElementById('btn-webmail');
+  if (btnWebmail) btnWebmail.style.display = permissions.includes('webmail') ? 'flex' : 'none';
+
+  // Items admin
+  if (role === 'admin') {
+    const adminSep = document.getElementById('admin-sep');
+    if (adminSep) adminSep.style.display = 'block';
+  }
+
+  // Déconnexion
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      await fetch('/api/login.php', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      }).catch(() => {});
+      sessionStorage.clear();
+      window.location.href = 'index.html';
+    });
+  }
 });

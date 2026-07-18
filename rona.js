@@ -99,10 +99,18 @@ const EMPLACEMENTS_DEFAUT = [
 let ronaData = { locations: [] };
 let locationActive = null;
 
-// Retire les items qui sont à la fois dans manquants ET complets (état corrompu)
+// Retire les incohérences : item dans manquants ET complets, ou manquant sans quantité saisie
 function sanitiserLocation(loc) {
-  if (!loc.complets || !loc.manquants) return;
+  if (!loc.complets) loc.complets = [];
+  if (!loc.manquants) loc.manquants = {};
+  const avantC = loc.complets.length;
   loc.complets = loc.complets.filter(id => !(id in loc.manquants));
+  const avantM = Object.keys(loc.manquants).length;
+  Object.keys(loc.manquants).forEach(id => {
+    const { qte } = getManquantInfo(loc.manquants[id]);
+    if ((qte || 0) <= 0) delete loc.manquants[id];
+  });
+  return loc.complets.length !== avantC || Object.keys(loc.manquants).length !== avantM;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -118,9 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Détecter et corriger la corruption (item dans manquants ET complets)
       let corrompu = false;
       ronaData.locations.forEach(loc => {
-        const avant = (loc.complets || []).length;
-        sanitiserLocation(loc);
-        if ((loc.complets || []).length !== avant) corrompu = true;
+        if (sanitiserLocation(loc)) corrompu = true;
       });
       if (corrompu) setDoc(ronaDocRef, ronaData); // persister le nettoyage en MySQL
 
@@ -157,7 +163,17 @@ async function _executeSave() {
   if (_saving) { _needsSave = true; return; }
   _saving = true; _needsSave = false;
   try {
-    await setDoc(ronaDocRef, ronaData);
+    // Copie propre : ne pas persister les items manquants sans quantité saisie
+    const payload = JSON.parse(JSON.stringify(ronaData));
+    payload.locations.forEach(loc => {
+      if (loc.manquants) {
+        Object.keys(loc.manquants).forEach(id => {
+          const { qte } = getManquantInfo(loc.manquants[id]);
+          if ((qte || 0) <= 0) delete loc.manquants[id];
+        });
+      }
+    });
+    await setDoc(ronaDocRef, payload);
     afficherCompletes();
   } catch (e) { console.error('[RONA] save error:', e); }
   finally {
