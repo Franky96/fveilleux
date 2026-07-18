@@ -11,6 +11,7 @@ const FILES_TO_CACHE = [
   '/compteurgeneral.html',
   '/style.css',
   '/version.js',
+  '/theme-toggle.js',
   '/sw-register.js',
 ];
 
