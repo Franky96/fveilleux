@@ -2813,10 +2813,67 @@ body.films-page .etoile.etoile-survol {
 #theme-toggle.theme-toggle--fixed {
   position: fixed; top: 0.75rem; right: 0.85rem; z-index: 9999;
 }
-#theme-toggle.theme-toggle--inline {
-  align-self: center;
-  margin-bottom: 0;
+/* ─── Menu hamburger ──────────────────────────────────── */
+#hamburger-btn {
+  position: fixed; top: 0.65rem; right: 5.2rem; z-index: 10000;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 7px; border-radius: 8px;
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
+#hamburger-btn:hover { background: rgba(128,200,128,0.08); }
+#hamburger-btn span {
+  display: block; width: 22px; height: 2px;
+  background: #60a060; border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease, background 0.2s;
+  transform-origin: center;
+}
+#hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+#hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+#hamburger-menu {
+  display: none;
+  position: fixed; top: 3.3rem; right: 0.75rem; z-index: 9999;
+  background: #111e11; border: 1px solid #2a4a2a;
+  border-radius: 12px; padding: 0.4rem;
+  min-width: 195px; box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+}
+#hamburger-menu.open { display: block; }
+
+.hbg-item {
+  display: none;
+  align-items: center; gap: 0.65rem;
+  width: 100%; padding: 0.65rem 0.85rem;
+  background: transparent; border: none; border-radius: 8px;
+  color: #90c890; font-size: 0.88rem; cursor: pointer;
+  text-decoration: none; text-align: left;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap; margin: 0; box-sizing: border-box;
+  font-family: inherit;
+}
+.hbg-item:hover { background: rgba(255,255,255,0.06); color: #c0e8c0; }
+/* Déconnexion toujours visible */
+#logoutBtn.hbg-item { display: flex; color: #d07070; }
+#logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.1); color: #e09090; }
+
+.hbg-sep {
+  display: none;
+  height: 1px; background: #2a4a2a; margin: 0.3rem 0.5rem;
+}
+
+html.light #hamburger-btn span { background: #3a6a3a; }
+html.light #hamburger-btn:hover { background: rgba(58,106,58,0.08); }
+html.light #hamburger-menu {
+  background: #fff; border-color: #c4d8bc;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+html.light .hbg-item { color: #2a5a2a; }
+html.light .hbg-item:hover { background: rgba(0,0,0,0.04); color: #1a3a1a; }
+html.light #logoutBtn.hbg-item { color: #b03030; }
+html.light #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.06); }
+html.light .hbg-sep { background: #c4d8bc; }
 .tg-icon {
   font-size: 0.62rem; line-height: 1;
   pointer-events: none; flex-shrink: 0;
