@@ -229,6 +229,25 @@
       border: 1px solid #1a2a3a; border-radius: 10px;
       color: #2a4a5a; font-size: 0.88rem; cursor: pointer;
     }
+
+    /* ── Mode clair ── */
+    html.light body { background: #f0f4f8; }
+    html.light .rs-topbar { background: #e8eef5; border-bottom-color: #ccd8e5; }
+    html.light .rs-topbar a { color: #1a5a8a; }
+    html.light .rs-topbar h1 { color: #0a1a2a; }
+    html.light .setup-lbl { color: #0a1a2a; }
+    html.light .config-item label { color: #0a1a2a; }
+    html.light .config-hint { color: #5a7080; }
+    html.light .nb-btn { border-color: #ccd8e5; color: #4a6070; }
+    html.light .nb-btn.active { border-color: #3498db; color: #3498db; background: rgba(52,152,219,0.08); }
+    html.light .player-name-input,
+    html.light .config-input { background: #fff; border-color: #ccd8e5; color: #0a1a2a; }
+    html.light .split-btn { border-color: #ccd8e5; color: #4a6070; }
+    html.light .rs-table thead th { background: #e8eef5; border-bottom-color: #ccd8e5; }
+    html.light .rs-table tbody td { background: #f0f4f8; border-bottom-color: #dde8f0; }
+    html.light .rs-total-cell { color: #0a1a2a; }
+    html.light .btn-new-game { border-color: #ccd8e5; color: #4a6070; }
+    html.light .btn-harbor .h-label { color: #5a7080; }
   </style>
 </head>
 <body>
@@ -696,6 +715,7 @@ initSetup();
 </script>
 
 <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="sw-register.js"></script>
 <script src="version.js"></script>
 </body>
 </html>

@@ -505,6 +505,18 @@
     /* parity badges */
     .parity-ok  { color: #80cc80 !important; font-weight: bold; }
     .parity-err { color: #ff6b6b !important; font-weight: bold; }
+
+    /* ── Strapping panel ── */
+    .strap-desc { font-size: 0.75rem; color: #7a8a7a; text-align: center; margin-bottom: 0.45rem; }
+    .strap-btn {
+      flex: 1; padding: 0.4rem 0.5rem; font-size: 0.78rem; font-weight: bold;
+      background: transparent; border: 1px solid #2a3a2a; color: #556655; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .strap-btn:first-child { border-radius: 6px 0 0 6px; }
+    .strap-btn:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
+    .strap-btn.active { background: #0f2a0f; border-color: #80cc80; color: #80cc80; }
+    .strap-status { font-size: 0.72rem; color: #80cc80; text-align: center; margin-top: 0.45rem; font-weight: bold; letter-spacing: 0.05em; }
   </style>
 </head>
 <body>
