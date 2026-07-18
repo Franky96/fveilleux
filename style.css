@@ -2824,7 +2824,7 @@ body.films-page .etoile.etoile-survol {
   -webkit-tap-highlight-color: transparent;
 }
 #theme-toggle.theme-toggle--fixed {
-  position: fixed; top: 0.75rem; right: 3.5rem; z-index: 9999;
+  position: fixed; top: 0.75rem; right: 0.75rem; z-index: 9999;
 }
 /* ─── Menu hamburger ──────────────────────────────────── */
 #hamburger-btn {
