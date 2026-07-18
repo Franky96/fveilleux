@@ -52,16 +52,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
 
-  // Boutons admin seulement
+  // Items admin dans le menu hamburger
   if (role === 'admin') {
     const btnVersion = document.getElementById('toggle-version-btn');
     if (btnVersion) {
-      btnVersion.style.display = 'inline-block';
+      btnVersion.style.display = 'flex';
       const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
       updateToggleBtn(btnVersion, hidden);
     }
     const btnConstruction = document.getElementById('btn-construction');
-    if (btnConstruction) btnConstruction.style.display = 'inline-flex';
+    if (btnConstruction) btnConstruction.style.display = 'flex';
+    const adminSep = document.getElementById('admin-sep');
+    if (adminSep) adminSep.style.display = 'block';
   }
 
   // Déconnexion

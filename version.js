@@ -43,15 +43,8 @@ const SITE_VERSION = '1.3.2';
     toggle.setAttribute('aria-checked', nowLight ? 'true' : 'false');
   };
 
-  // Sur les pages avec bouton déconnexion : insère le toggle juste avant
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn && logoutBtn.parentNode) {
-    toggle.classList.add('theme-toggle--inline');
-    logoutBtn.parentNode.insertBefore(toggle, logoutBtn);
-  } else {
-    toggle.classList.add('theme-toggle--fixed');
-    document.body.appendChild(toggle);
-  }
+  toggle.classList.add('theme-toggle--fixed');
+  document.body.appendChild(toggle);
 })();
 
 window.toggleVersionBadge = function () {
