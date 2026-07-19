@@ -32,15 +32,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
 
-  // Webmail
+  // Items admin seulement
+  const isAdmin = role === 'admin';
   const btnWebmail = document.getElementById('btn-webmail');
-  if (btnWebmail) btnWebmail.style.display = permissions.includes('webmail') ? 'flex' : 'none';
-
-  // Items admin
-  if (role === 'admin') {
-    const adminSep = document.getElementById('admin-sep');
-    if (adminSep) adminSep.style.display = 'block';
+  if (btnWebmail) btnWebmail.style.display = isAdmin ? 'flex' : 'none';
+  const badgeBtn = document.getElementById('toggle-version-btn');
+  if (badgeBtn) {
+    badgeBtn.style.display = isAdmin ? 'flex' : 'none';
+    if (isAdmin && window.updateToggleBtn) window.updateToggleBtn(badgeBtn, localStorage.getItem('versionBadgeHidden') === 'true');
   }
+  const constructionBtn = document.getElementById('btn-construction');
+  if (constructionBtn) constructionBtn.style.display = isAdmin ? 'flex' : 'none';
+  const adminSep = document.getElementById('admin-sep');
+  if (adminSep) adminSep.style.display = isAdmin ? 'block' : 'none';
 
   // Déconnexion
   const logoutBtn = document.getElementById('logoutBtn');
