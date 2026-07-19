@@ -2887,8 +2887,8 @@ body.films-page .etoile.etoile-survol {
   display: flex;
   color: #d07070;
   margin-top: 0.3rem;
+  padding-top: 0.85rem;
   border-top: 1px solid #2a4a2a;
-  border-radius: 0 0 8px 8px;
 }
 #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.08); color: #e09090; }
 
