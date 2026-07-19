@@ -1,4 +1,4 @@
-const SITE_VERSION = '1.3.3';
+const SITE_VERSION = '1.3.4';
 
 // Applique le thème sauvegardé le plus tôt possible pour éviter le flash
 (function () {
