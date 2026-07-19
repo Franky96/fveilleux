@@ -2883,8 +2883,14 @@ body.films-page .etoile.etoile-survol {
 }
 .hbg-item:hover { background: rgba(255,255,255,0.06); color: #c0e8c0; }
 /* Déconnexion toujours visible */
-#logoutBtn.hbg-item { display: flex; color: #d07070; }
-#logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.1); color: #e09090; }
+#logoutBtn.hbg-item {
+  display: flex;
+  color: #d07070;
+  margin-top: 0.3rem;
+  border-top: 1px solid #2a4a2a;
+  border-radius: 0 0 8px 8px;
+}
+#logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.08); color: #e09090; }
 
 .hbg-sep {
   display: none;
@@ -2899,7 +2905,7 @@ html.light #hamburger-menu {
 }
 html.light .hbg-item { color: #2a5a2a; }
 html.light .hbg-item:hover { background: rgba(0,0,0,0.04); color: #1a3a1a; }
-html.light #logoutBtn.hbg-item { color: #b03030; }
+html.light #logoutBtn.hbg-item { color: #b03030; border-top-color: #e0d0d0; }
 html.light #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.06); }
 html.light .hbg-sep { background: #c4d8bc; }
 .tg-icon {
