@@ -37,11 +37,13 @@
   btn.onclick = window.toggleHamburger;
   btn.innerHTML = '<span></span><span></span><span></span>';
 
-  // Dropdown
+  // Dropdown — admin items hidden by default, shown in wireControls()
   const menu = document.createElement('div');
   menu.id = 'hamburger-menu';
   menu.innerHTML =
     '<a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>' +
+    '<button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>' +
+    '<a id="btn-construction" href="beta/dashboard.html" class="hbg-item" onclick="closeHamburger()">🚧 En construction</a>' +
     '<div class="hbg-sep" id="admin-sep"></div>' +
     '<button id="logoutBtn" class="hbg-item">🚪 Déconnexion</button>';
 
@@ -54,16 +56,25 @@
 
   // Wire permissions + logout
   function wireControls() {
-    const perms = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-    const role  = sessionStorage.getItem('userRole');
+    const role    = sessionStorage.getItem('userRole');
+    const isAdmin = role === 'admin';
 
     const webmailBtn = document.getElementById('btn-webmail');
-    if (webmailBtn) webmailBtn.style.display = perms.includes('webmail') ? 'flex' : 'none';
+    if (webmailBtn) webmailBtn.style.display = isAdmin ? 'flex' : 'none';
 
-    if (role === 'admin') {
-      const sep = document.getElementById('admin-sep');
-      if (sep) sep.style.display = 'block';
+    const badgeBtn = document.getElementById('toggle-version-btn');
+    if (badgeBtn) {
+      badgeBtn.style.display = isAdmin ? 'flex' : 'none';
+      if (isAdmin && window.updateToggleBtn) {
+        window.updateToggleBtn(badgeBtn, localStorage.getItem('versionBadgeHidden') === 'true');
+      }
     }
+
+    const constructionBtn = document.getElementById('btn-construction');
+    if (constructionBtn) constructionBtn.style.display = isAdmin ? 'flex' : 'none';
+
+    const sep = document.getElementById('admin-sep');
+    if (sep) sep.style.display = isAdmin ? 'block' : 'none';
 
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
