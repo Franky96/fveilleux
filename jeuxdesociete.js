@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
 
+  // Archives — visible pour tous
+  const archivesBtn = document.getElementById('btn-archives');
+  if (archivesBtn) archivesBtn.style.display = 'flex';
+
   // Items admin seulement
   const isAdmin = role === 'admin';
   const btnWebmail = document.getElementById('btn-webmail');

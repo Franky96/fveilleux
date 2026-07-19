@@ -41,6 +41,7 @@
   const menu = document.createElement('div');
   menu.id = 'hamburger-menu';
   menu.innerHTML =
+    '<a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>' +
     '<a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>' +
     '<button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>' +
     '<a id="btn-construction" href="beta/dashboard.html" class="hbg-item" onclick="closeHamburger()">🚧 En construction</a>' +
@@ -58,6 +59,9 @@
   function wireControls() {
     const role    = sessionStorage.getItem('userRole');
     const isAdmin = role === 'admin';
+
+    const archivesBtn = document.getElementById('btn-archives');
+    if (archivesBtn) archivesBtn.style.display = 'flex';
 
     const webmailBtn = document.getElementById('btn-webmail');
     if (webmailBtn) webmailBtn.style.display = isAdmin ? 'flex' : 'none';

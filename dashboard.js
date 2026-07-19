@@ -42,6 +42,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // 4a. Archives — visible pour tous
+  const archivesBtn = document.getElementById('btn-archives');
+  if (archivesBtn) archivesBtn.style.display = 'flex';
+
   // 4. Gérer l'affichage du bouton Webmail (admin seulement)
   const btnWebmail = document.getElementById('btn-webmail');
   if (btnWebmail) {
