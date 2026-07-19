@@ -42,10 +42,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 4. Gérer l'affichage du bouton Webmail
+  // 4. Gérer l'affichage du bouton Webmail (admin seulement)
   const btnWebmail = document.getElementById('btn-webmail');
   if (btnWebmail) {
-    btnWebmail.style.display = permissions.includes('webmail') ? 'flex' : 'none';
+    btnWebmail.style.display = role === 'admin' ? 'flex' : 'none';
   }
 
   // Rendre le menu visible maintenant que tout est appliqué
