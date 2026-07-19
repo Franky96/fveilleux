@@ -2885,9 +2885,8 @@ body.films-page .etoile.etoile-survol {
 }
 .hbg-item:hover { background: rgba(255,255,255,0.06); color: #c0e8c0; }
 /* Déconnexion toujours visible */
-#logoutBtn.hbg-item { display: flex; color: #d07070; }
+#logoutBtn.hbg-item { display: flex; color: #d07070; margin-top: 0.4rem; }
 #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.08); color: #e09090; }
-.hbg-sep--logout { display: block !important; }
 
 .hbg-sep {
   display: none;
