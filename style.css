@@ -2874,7 +2874,9 @@ body.films-page .etoile.etoile-survol {
   display: none;
   align-items: center; gap: 0.65rem;
   width: 100%; padding: 0.65rem 0.85rem;
-  background: transparent; border: none; border-radius: 8px;
+  background: transparent; border: none; outline: none;
+  -webkit-appearance: none; appearance: none;
+  border-radius: 8px;
   color: #90c890; font-size: 0.88rem; cursor: pointer;
   text-decoration: none; text-align: left;
   transition: background 0.15s, color 0.15s;
@@ -2883,14 +2885,9 @@ body.films-page .etoile.etoile-survol {
 }
 .hbg-item:hover { background: rgba(255,255,255,0.06); color: #c0e8c0; }
 /* Déconnexion toujours visible */
-#logoutBtn.hbg-item {
-  display: flex;
-  color: #d07070;
-  margin-top: 0.3rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid #2a4a2a;
-}
+#logoutBtn.hbg-item { display: flex; color: #d07070; }
 #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.08); color: #e09090; }
+.hbg-sep--logout { display: block !important; }
 
 .hbg-sep {
   display: none;
