@@ -22,6 +22,22 @@
     --blue: #5fb3ff;
   }
 
+  html.light {
+    --bg-deep: #f0f4f0;
+    --bg-panel: #ffffff;
+    --bg-elev: #e8f0e8;
+    --border: #c4d4c4;
+    --border-hot: #4a9a4a;
+    --text: #1a2a1a;
+    --text-dim: #556655;
+    --text-mute: #99aa99;
+    --amber: #2a7a2a;
+    --amber-glow: #3a8a3a;
+    --green: #2a7a2a;
+    --red: #cc3333;
+    --blue: #2a6aaa;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body {
@@ -45,6 +61,28 @@
         rgba(255,255,255,0.005) 3px
       );
   }
+
+  html.light body {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(42, 122, 42, 0.05), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(42, 122, 42, 0.03), transparent 40%);
+  }
+
+  /* Corrections light — couleurs hardcodées */
+  html.light .btn.primary { color: #ffffff; }
+  html.light .btn.primary:hover { color: #ffffff; }
+  html.light .hero h1 { text-shadow: 0 0 24px rgba(42, 122, 42, 0.2); }
+  html.light .qr-mode-btn.active,
+  html.light .no-ack-btn.active { background: rgba(42, 122, 42, 0.1); }
+  html.light .panel-header { background: rgba(0,0,0,0.02); }
+  html.light #hamburger-menu { background: #fff; border-color: #c4d4c4; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+  html.light .hbg-item { color: #2a5a2a; }
+  html.light .hbg-item:hover { background: rgba(0,0,0,0.04); color: #1a3a1a; }
+  html.light #logoutBtn.hbg-item { color: #b03030; }
+  html.light #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.06); }
+  html.light .hbg-sep { background: #c4d4c4; }
+  html.light #hamburger-btn span { background: #2a5a2a; }
+  html.light #hamburger-btn:hover { background: rgba(42,90,42,0.08); }
 
   /* ============ LAYOUT ============ */
 
