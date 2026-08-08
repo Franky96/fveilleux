@@ -26,16 +26,6 @@
     .w7-topbar a { color: #80cc80; text-decoration: none; font-size: 1.3rem; }
     .w7-topbar h1 { font-size: 1rem; color: #f0ede6; margin: 0; flex: 1; }
 
-    /* ── Tabs ── */
-    .w7-tabs { display: flex; border-bottom: 1px solid #2a3a2a; }
-    .w7-tab {
-      flex: 1; padding: 0.65rem; background: transparent;
-      border: none; border-bottom: 2px solid transparent;
-      color: #556655; font-size: 0.9rem; cursor: pointer;
-      margin-bottom: -1px;
-    }
-    .w7-tab.active { color: #c9a84c; border-bottom-color: #c9a84c; font-weight: bold; }
-
     /* ── Setup ── */
     .w7-setup { padding: 1.25rem; max-width: 500px; margin: 0 auto; }
     .setup-lbl { font-size: 0.72rem; color: #556655; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
@@ -202,54 +192,11 @@
     }
     .btn-cities.active { border-color: #888; color: #ccc; background: rgba(255,255,255,0.05); }
 
-    /* ── Règles deux panneaux ── */
-    .rules-pane {
-      display: flex;
-      height: calc(100vh - 115px); /* viewport minus topbar + tabs */
-      min-height: 300px;
-      overflow: hidden;
-    }
-    .rules-sidebar {
-      width: 175px; flex-shrink: 0;
-      overflow-y: auto;
-      border-right: 1px solid #2a3a2a;
-      background: #0a0f0a;
-    }
-    .rules-side-btn {
-      display: block; width: 100%; text-align: left;
-      padding: 0.75rem 0.85rem;
-      background: transparent; border: none; border-bottom: 1px solid #1a2a1a;
-      color: #a89f94; font-size: 0.78rem; line-height: 1.35; cursor: pointer;
-    }
-    .rules-side-btn:hover { color: #f0ede6; background: #1a2a1a; }
-    .rules-side-btn.active { color: #c9a84c; background: #0f1a0f; padding-left: 0.6rem; border-left: 3px solid #c9a84c; }
-    .rules-content {
-      flex: 1; overflow-y: auto;
-      padding: 1.1rem 1.25rem;
-      font-size: 0.83rem; color: #a89f94; line-height: 1.7;
-    }
-    .rules-content h3 { color: #c9a84c; font-size: 0.9rem; margin-bottom: 0.85rem; }
-    .rules-content b  { color: #f0ede6; }
-    .rules-content ol, .rules-content ul { padding-left: 1.2rem; }
-    .rules-content li { margin-bottom: 0.35rem; }
-    .rules-content p  { margin-bottom: 0.55rem; }
-    .rules-content .exemple { color: #80cc80; font-style: italic; }
-    .rules-content table {
-      width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8rem;
-    }
-    .rules-content th, .rules-content td {
-      padding: 0.3rem 0.6rem; border: 1px solid #2a3a2a; text-align: center;
-    }
-    .rules-content th { background: #1a2e1a; color: #80cc80; }
-
     /* ── Mode clair ── */
     html.light body { background: #f5f3e8; }
     html.light .w7-topbar { background: #f0ede0; border-bottom-color: #dbd5c0; }
     html.light .w7-topbar a { color: #5a7a3a; }
     html.light .w7-topbar h1 { color: #2a1a00; }
-    html.light .w7-tabs { border-bottom-color: #dbd5c0; }
-    html.light .w7-tab { color: #8a7a50; }
-    html.light .w7-tab.active { color: #7a5800; border-bottom-color: #7a5800; }
     html.light .setup-lbl { color: #8a7a50; }
     html.light .nb-btn { border-color: #dbd5c0; color: #8a7a50; }
     html.light .nb-btn.active { border-color: #c9a84c; color: #7a5800; background: rgba(201,168,76,0.1); }
@@ -271,15 +218,6 @@
     html.light .btn-reset { border-color: #dbd5c0; color: #8a7a50; }
     html.light .btn-cities { border-color: #bbb; color: #777; }
     html.light .btn-cities.active { border-color: #888; color: #333; background: rgba(0,0,0,0.04); }
-    html.light .rules-sidebar { background: #f0ede0; border-right-color: #dbd5c0; }
-    html.light .rules-side-btn { color: #8a7a50; }
-    html.light .rules-side-btn:hover { color: #2a1a00; background: #e8e2d0; }
-    html.light .rules-side-btn.active { color: #7a5800; background: #f0ede0; border-left-color: #c9a84c; }
-    html.light .rules-content { color: #5a4a30; }
-    html.light .rules-content h3 { color: #7a5800; }
-    html.light .rules-content b { color: #2a1a00; }
-    html.light .rules-content th { background: #e8e2d0; color: #7a5800; }
-    html.light .rules-content td { border-color: #dbd5c0; }
   </style>
 </head>
 <body>
@@ -290,15 +228,7 @@
     <h1>🏛️ 7 Wonders — Score</h1>
   </div>
 
-  <div class="w7-tabs">
-    <button class="w7-tab active" onclick="showTab('score',this)">🏆 Score</button>
-    <button class="w7-tab"        onclick="showTab('regles',this)">📖 Règles</button>
-  </div>
-
-  <!-- ── Tab Score ── -->
-  <div id="tab-score">
-
-    <div id="w7-setup" class="w7-setup">
+  <div id="w7-setup" class="w7-setup">
       <div class="setup-lbl">Nombre de joueurs</div>
       <div class="nb-btns" id="nb-btns"></div>
       <div class="setup-lbl">Noms des joueurs</div>
@@ -317,16 +247,6 @@
         <button class="btn-reset" onclick="reinitialiser()">🔄 Nouvelle partie</button>
       </div>
     </div>
-
-  </div>
-
-  <!-- ── Tab Règles ── -->
-  <div id="tab-regles" style="display:none;">
-    <div class="rules-pane">
-      <div class="rules-sidebar" id="rules-sidebar"></div>
-      <div class="rules-content" id="rules-content"></div>
-    </div>
-  </div>
 
 </div>
 
@@ -454,11 +374,9 @@ function buildPlayerHeader() {
 
 function updatePlayerHeaderTop() {
   const topbar = document.querySelector('.w7-topbar');
-  const tabs   = document.querySelector('.w7-tabs');
   const bar    = document.getElementById('player-header');
   if (!bar) return;
-  const offset = (topbar ? topbar.offsetHeight : 0) + (tabs ? tabs.offsetHeight : 0);
-  bar.style.top = offset + 'px';
+  bar.style.top = (topbar ? topbar.offsetHeight : 0) + 'px';
 }
 
 // ── Table ─────────────────────────────────────────────
@@ -588,97 +506,7 @@ function reinitialiser() {
   initSetup();
 }
 
-// ── Tabs ─────────────────────────────────────────────
-function showTab(name,btn) {
-  document.getElementById('tab-score').style.display  = name==='score'  ? '' : 'none';
-  document.getElementById('tab-regles').style.display = name==='regles' ? '' : 'none';
-  document.querySelectorAll('.w7-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-// ── Règles deux panneaux ──────────────────────────────
-const REGLES = [
-  {
-    t: '🏆 Décompte officiel',
-    b: `<ol>
-      <li><b>🏛️ Merveille</b> — Points des étapes construites</li>
-      <li><b>💰 Trésor</b> — 1 pt par lot complet de 3 Pièces</li>
-      <li><b>⚔️ Conflits militaires</b> — Somme de tous les jetons Victoire et Défaite</li>
-      <li><b>🔵 Cartes Bleues</b> — Points des bâtiments civils</li>
-      <li><b>🟡 Cartes Jaunes</b> — Points des cartes commerciales</li>
-      <li><b>🔬 Sciences (Vertes)</b> — Symboles identiques² + lots de 3 différents</li>
-      <li><b>🟣 Cartes Violettes</b> — Points des guildes</li>
-    </ol>
-    <p><b>Égalité :</b> le joueur avec le plus gros Trésor l'emporte.</p>`
-  },
-  {
-    t: '🔬 Sciences — calcul',
-    b: `<p>Les deux méthodes s'additionnent :</p>
-    <p><b>Par type de symbole</b> — n² points :</p>
-    <table><tr><th>Symboles</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>
-    <tr><td>Points</td><td>1</td><td>4</td><td>9</td><td>16</td><td>25</td><td>36</td></tr></table>
-    <p><b>Lot complet</b> (⚙️+📐+📜) : <b>+7 pts</b> par lot</p>
-    <p class="exemple">Ex. : 3⚙️ + 2📐 + 2📜 → 9+4+4 = 17 + 2×7 = 14 = <b>31 pts</b></p>`
-  },
-  {
-    t: '⚔️ Conflits militaires',
-    b: `<p>À la fin de chaque Âge, compare ta force avec chacun de tes 2 voisins :</p>
-    <table><tr><th>Âge</th><th>Victoire</th><th>Défaite</th><th>Égalité</th></tr>
-    <tr><td>I</td><td style="color:#27ae60">+1 pt</td><td style="color:#c0392b">-1 pt</td><td>0</td></tr>
-    <tr><td>II</td><td style="color:#27ae60">+3 pts</td><td style="color:#c0392b">-1 pt</td><td>0</td></tr>
-    <tr><td>III</td><td style="color:#27ae60">+5 pts</td><td style="color:#c0392b">-1 pt</td><td>0</td></tr></table>
-    <p>Le score militaire total peut être <b>négatif</b>.</p>`
-  },
-  {
-    t: '💰 Ressources et achat',
-    b: `<p><b>Ressources disponibles :</b> ressource de départ (plateau) + cartes Marrons et Grises + étapes de Merveille + certaines cartes Jaunes.</p>
-    <p><b>Acheter à un voisin :</b> 2 Pièces par ressource (au voisin). Certaines cartes Jaunes réduisent à 1 Pièce.</p>
-    <p><b>Ressource au choix :</b> une seule ressource choisie au moment de la construction.</p>
-    <p><b>Chaque ressource ne peut être utilisée qu'une seule fois par tour.</b></p>`
-  },
-  {
-    t: '🔗 Chaînage gratuit',
-    b: `<p>À partir de l'Âge II, certaines cartes ont un <b>symbole de chaînage</b> dans leur zone de coût.</p>
-    <p>Si tu possèdes déjà une carte avec ce même symbole → construction <b>gratuite</b> (sans ressources ni Pièces).</p>
-    <p>Certaines cartes ont <b>deux symboles</b> : l'un pour être reçue gratuitement, l'autre pour en débloquer une autre.</p>`
-  },
-  {
-    t: '🔄 Vendre une carte',
-    b: `<p>À chaque tour, tu peux <b>défausser ta carte</b> (face cachée au centre) plutôt que de la construire.</p>
-    <p>Tu reçois immédiatement <b>3 Pièces</b> de la réserve.</p>
-    <p>Toujours disponible, même sans ressources.</p>`
-  },
-  {
-    t: '🏗️ Construire la Merveille',
-    b: `<p>Place <b>n'importe quelle carte de ta main face cachée</b> sous ton plateau en payant le coût de l'étape.</p>
-    <p>Les étapes se construisent <b>de gauche à droite</b> (ordre obligatoire).</p>
-    <p>Construction <b>optionnelle</b> — tu n'es pas obligé de tout construire.</p>
-    <p><b>Une seule étape par tour</b> maximum.</p>`
-  },
-];
-
-function renderRegles() {
-  const sidebar = document.getElementById('rules-sidebar');
-  const content = document.getElementById('rules-content');
-
-  function showRule(idx) {
-    content.innerHTML = `<h3>${REGLES[idx].t}</h3>${REGLES[idx].b}`;
-    sidebar.querySelectorAll('.rules-side-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
-  }
-
-  REGLES.forEach((r, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'rules-side-btn' + (i===0?' active':'');
-    btn.textContent = r.t;
-    btn.onclick = () => showRule(i);
-    sidebar.appendChild(btn);
-  });
-
-  showRule(0);
-}
-
 initSetup();
-renderRegles();
 syncCitiesBtn();
 
 // ── Fix iOS Safari : sticky échappe au viewport visuel quand le clavier apparaît ──
@@ -690,12 +518,10 @@ function fixStickyiOS() {
   const topbar = document.querySelector('.w7-topbar');
   if (topbar) topbar.style.top = vvTop + 'px';
 
-  const tabs = document.querySelector('.w7-tabs');
   const topbarH = topbar ? topbar.offsetHeight : 0;
-  const tabsH   = tabs   ? tabs.offsetHeight   : 0;
 
   const bar = document.getElementById('player-header');
-  if (bar) bar.style.top = (vvTop + topbarH + tabsH) + 'px';
+  if (bar) bar.style.top = (vvTop + topbarH) + 'px';
 }
 
 if (window.visualViewport) {
