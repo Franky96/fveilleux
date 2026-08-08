@@ -664,7 +664,30 @@ function renderRegles() {
 initSetup();
 renderRegles();
 syncCitiesBtn();
-window.addEventListener('resize', updatePlayerHeaderTop);
+
+// ── Fix iOS Safari : sticky échappe au viewport visuel quand le clavier apparaît ──
+function fixStickyiOS() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const vvTop = Math.round(vv.offsetTop);
+
+  const topbar = document.querySelector('.w7-topbar');
+  if (topbar) topbar.style.top = vvTop + 'px';
+
+  const tabs = document.querySelector('.w7-tabs');
+  const topbarH = topbar ? topbar.offsetHeight : 0;
+  const tabsH   = tabs   ? tabs.offsetHeight   : 0;
+
+  const bar = document.getElementById('player-header');
+  if (bar) bar.style.top = (vvTop + topbarH + tabsH) + 'px';
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('scroll', fixStickyiOS, { passive: true });
+  window.visualViewport.addEventListener('resize', fixStickyiOS, { passive: true });
+} else {
+  window.addEventListener('resize', updatePlayerHeaderTop);
+}
 </script>
 
 <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
