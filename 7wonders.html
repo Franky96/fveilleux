@@ -427,6 +427,22 @@ function buildPlayerHeader() {
     bar.appendChild(cell);
   });
 
+  // Sync largeurs sur les colonnes réelles du tableau (après rendu)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const firstRow = document.querySelector('#score-table tbody tr');
+    if (!firstRow) return;
+    const tds = firstRow.querySelectorAll('td');
+    const hcells = bar.querySelectorAll('.ph-corner, .ph-cell');
+    tds.forEach((td, i) => {
+      if (hcells[i]) {
+        const w = td.getBoundingClientRect().width;
+        hcells[i].style.minWidth = w + 'px';
+        hcells[i].style.maxWidth = w + 'px';
+        hcells[i].style.width    = w + 'px';
+      }
+    });
+  }));
+
   // Sync horizontal scroll avec le tableau
   const outer = document.getElementById('score-outer');
   if (outer) {
