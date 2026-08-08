@@ -58,13 +58,34 @@
       border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer;
     }
 
-    /* ── Score table ── */
-    .score-wrap {
+    /* ── Bandeau noms joueurs (sticky viewport, hors overflow) ── */
+    #player-header {
+      position: sticky;
+      top: 0; /* mis à jour par JS */
+      z-index: 50;
+      background: #0f1a0f;
+      border-bottom: 2px solid #2a3a2a;
       display: flex;
-      flex-direction: column;
+      overflow-x: hidden; /* scroll synchronisé par JS */
     }
+    .ph-cell {
+      min-width: 105px; flex-shrink: 0;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.82rem; font-weight: bold;
+      text-align: center; white-space: nowrap;
+    }
+    .ph-corner {
+      min-width: 145px; max-width: 145px; flex-shrink: 0;
+      text-align: left;
+      position: sticky; left: 0; z-index: 5;
+      background: #0f1a0f;
+      border-right: 1px solid #2a3a2a;
+      padding: 0.6rem 0.85rem;
+    }
+
+    /* ── Score table ── */
     .score-outer {
-      overflow: auto;
+      overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
     .score-table {
@@ -73,15 +94,11 @@
       min-width: 320px;
     }
 
-    /* Sticky header row — sticks inside score-outer */
+    /* thead invisible — garde les largeurs de colonnes */
     .score-table thead th {
-      position: sticky; top: 0; z-index: 10;
-      background: #0f1a0f;
-      padding: 0.6rem 0.75rem;
-      font-size: 0.82rem; font-weight: bold;
-      text-align: center;
-      border-bottom: 2px solid #2a3a2a;
-      white-space: nowrap;
+      visibility: hidden;
+      padding: 0; height: 0; line-height: 0;
+      border: none; font-size: 0;
     }
     /* Sticky first column */
     .score-table .cat-col {
@@ -92,8 +109,6 @@
       min-width: 145px; max-width: 145px;
       text-align: left;
     }
-    /* Corner */
-    .score-table thead .cat-col { z-index: 20; background: #0f1a0f; }
 
     .score-table td {
       padding: 0.45rem 0.6rem;
@@ -240,6 +255,8 @@
     html.light .nb-btn.active { border-color: #c9a84c; color: #7a5800; background: rgba(201,168,76,0.1); }
     html.light .score-inp { background: #fff; border-color: #dbd5c0; color: #2a1a00; }
     html.light .sci-sym input { background: #fff; border-color: #dbd5c0; color: #2a1a00; }
+    html.light #player-header { background: #f0ede0; border-bottom-color: #dbd5c0; }
+    html.light .ph-corner { background: #f0ede0; border-right-color: #dbd5c0; }
     html.light .score-table thead th { background: #f0ede0; border-bottom-color: #dbd5c0; }
     html.light .score-table .cat-col { background: #f5f3e8; border-right-color: #dbd5c0; }
     html.light .score-table thead .cat-col { background: #f0ede0; }
@@ -289,7 +306,8 @@
       <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
     </div>
 
-    <div id="w7-score" style="display:none;" class="score-wrap">
+    <div id="w7-score" style="display:none;">
+      <div id="player-header"></div>
       <div class="score-outer" id="score-outer">
         <table class="score-table" id="score-table"></table>
       </div>
@@ -367,7 +385,8 @@ function demarrer() {
   document.getElementById('w7-setup').style.display = 'none';
   document.getElementById('w7-score').style.display  = '';
   buildTable();
-  updateScoreHeight();
+  buildPlayerHeader();
+  updatePlayerHeaderTop();
   syncCitiesBtn();
 }
 
@@ -375,7 +394,7 @@ function toggleCities() {
   citiesActive = !citiesActive;
   localStorage.setItem('w7cities', citiesActive);
   syncCitiesBtn();
-  if (joueurs.length) buildTable();
+  if (joueurs.length) { buildTable(); buildPlayerHeader(); }
 }
 
 function syncCitiesBtn() {
@@ -385,13 +404,45 @@ function syncCitiesBtn() {
   btn.textContent = citiesActive ? '⬛ Cities : ON' : '⬛ Cities';
 }
 
-function updateScoreHeight() {
+function buildPlayerHeader() {
+  const bar = document.getElementById('player-header');
+  if (!bar) return;
+  bar.innerHTML = '';
+
+  const corner = document.createElement('div');
+  corner.className = 'ph-corner';
+  corner.textContent = 'Catégorie';
+  bar.appendChild(corner);
+
+  joueurs.forEach((j, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'ph-cell';
+    const dot = document.createElement('span');
+    dot.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:50%;background:${COULEURS[i]};margin-right:5px;vertical-align:middle;`;
+    const nameSpan = document.createElement('span');
+    nameSpan.style.color = COULEURS[i];
+    nameSpan.textContent = j.nom;
+    cell.appendChild(dot);
+    cell.appendChild(nameSpan);
+    bar.appendChild(cell);
+  });
+
+  // Sync horizontal scroll avec le tableau
+  const outer = document.getElementById('score-outer');
+  if (outer) {
+    outer.addEventListener('scroll', function () {
+      bar.scrollLeft = this.scrollLeft;
+    }, { passive: true });
+  }
+}
+
+function updatePlayerHeaderTop() {
   const topbar = document.querySelector('.w7-topbar');
   const tabs   = document.querySelector('.w7-tabs');
-  const outer  = document.getElementById('score-outer');
-  if (!outer) return;
+  const bar    = document.getElementById('player-header');
+  if (!bar) return;
   const offset = (topbar ? topbar.offsetHeight : 0) + (tabs ? tabs.offsetHeight : 0);
-  outer.style.maxHeight = `calc(100vh - ${offset}px - 120px)`;
+  bar.style.top = offset + 'px';
 }
 
 // ── Table ─────────────────────────────────────────────
@@ -613,7 +664,7 @@ function renderRegles() {
 initSetup();
 renderRegles();
 syncCitiesBtn();
-window.addEventListener('resize', updateScoreHeight);
+window.addEventListener('resize', updatePlayerHeaderTop);
 </script>
 
 <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
