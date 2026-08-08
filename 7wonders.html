@@ -59,8 +59,12 @@
     }
 
     /* ── Score table ── */
+    .score-wrap {
+      display: flex;
+      flex-direction: column;
+    }
     .score-outer {
-      overflow-x: auto;
+      overflow: auto;
       -webkit-overflow-scrolling: touch;
     }
     .score-table {
@@ -69,7 +73,7 @@
       min-width: 320px;
     }
 
-    /* Sticky header row */
+    /* Sticky header row — sticks inside score-outer */
     .score-table thead th {
       position: sticky; top: 0; z-index: 10;
       background: #0f1a0f;
@@ -161,12 +165,27 @@
     }
     .rank-chip.winner { background: rgba(201,168,76,0.12); border-color: #c9a84c; color: #c9a84c; }
 
+    .row-cities .cat-col { border-left: 3px solid #666; }
+
+    .score-actions {
+      display: flex; gap: 0.6rem;
+      padding: 0.5rem 1rem 0;
+      align-items: center; flex-wrap: wrap;
+    }
     .btn-reset {
-      display: block; width: calc(100% - 2rem); margin: 0 1rem;
+      flex: 1;
+      display: block; min-width: 120px;
       padding: 0.65rem; background: transparent;
       border: 1px solid #2a3a2a; border-radius: 10px;
       color: #556655; font-size: 0.88rem; cursor: pointer;
     }
+    .btn-cities {
+      padding: 0.65rem 1rem; background: transparent;
+      border: 1px solid #444; border-radius: 10px;
+      color: #888; font-size: 0.85rem; cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-cities.active { border-color: #888; color: #ccc; background: rgba(255,255,255,0.05); }
 
     /* ── Règles deux panneaux ── */
     .rules-pane {
@@ -233,6 +252,8 @@
     html.light .rank-chip { border-color: #dbd5c0; color: #8a7a50; }
     html.light .rank-chip.winner { background: rgba(201,168,76,0.1); border-color: #c9a84c; color: #7a5800; }
     html.light .btn-reset { border-color: #dbd5c0; color: #8a7a50; }
+    html.light .btn-cities { border-color: #bbb; color: #777; }
+    html.light .btn-cities.active { border-color: #888; color: #333; background: rgba(0,0,0,0.04); }
     html.light .rules-sidebar { background: #f0ede0; border-right-color: #dbd5c0; }
     html.light .rules-side-btn { color: #8a7a50; }
     html.light .rules-side-btn:hover { color: #2a1a00; background: #e8e2d0; }
@@ -268,12 +289,15 @@
       <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
     </div>
 
-    <div id="w7-score" style="display:none;">
-      <div class="score-outer">
+    <div id="w7-score" style="display:none;" class="score-wrap">
+      <div class="score-outer" id="score-outer">
         <table class="score-table" id="score-table"></table>
       </div>
       <div class="ranking-strip" id="ranking"></div>
-      <button class="btn-reset" onclick="reinitialiser()">🔄 Nouvelle partie</button>
+      <div class="score-actions">
+        <button class="btn-cities" id="btn-cities" onclick="toggleCities()">⬛ Cities</button>
+        <button class="btn-reset" onclick="reinitialiser()">🔄 Nouvelle partie</button>
+      </div>
     </div>
 
   </div>
@@ -291,14 +315,15 @@
 <script>
 const COULEURS = ['#c9a84c','#5fb3ff','#c0392b','#27ae60','#9b59b6','#e67e22','#e91e8c'];
 let nbJ = 3, joueurs = [];
+let citiesActive = localStorage.getItem('w7cities') === 'true';
 
 // ── Calculs ──────────────────────────────────────────
 const sciPts    = (g,c,t) => g*g + c*c + t*t + 7*Math.min(g,c,t);
 const tresorPts = p => Math.floor(p/3);
 function total(s) {
-  return s.merveille + tresorPts(s.pieces) + s.militaire + s.bleu + s.jaune + sciPts(s.gear,s.compass,s.tablet) + s.violet;
+  return s.merveille + tresorPts(s.pieces) + s.militaire + s.bleu + s.jaune + sciPts(s.gear,s.compass,s.tablet) + s.violet + (citiesActive ? (s.cities||0) : 0);
 }
-const newScores = () => ({ merveille:0, pieces:0, militaire:0, bleu:0, jaune:0, gear:0, compass:0, tablet:0, violet:0 });
+const newScores = () => ({ merveille:0, pieces:0, militaire:0, bleu:0, jaune:0, gear:0, compass:0, tablet:0, violet:0, cities:0 });
 
 // ── Setup ─────────────────────────────────────────────
 function initSetup() {
@@ -342,10 +367,35 @@ function demarrer() {
   document.getElementById('w7-setup').style.display = 'none';
   document.getElementById('w7-score').style.display  = '';
   buildTable();
+  updateScoreHeight();
+  syncCitiesBtn();
+}
+
+function toggleCities() {
+  citiesActive = !citiesActive;
+  localStorage.setItem('w7cities', citiesActive);
+  syncCitiesBtn();
+  if (joueurs.length) buildTable();
+}
+
+function syncCitiesBtn() {
+  const btn = document.getElementById('btn-cities');
+  if (!btn) return;
+  btn.classList.toggle('active', citiesActive);
+  btn.textContent = citiesActive ? '⬛ Cities : ON' : '⬛ Cities';
+}
+
+function updateScoreHeight() {
+  const topbar = document.querySelector('.w7-topbar');
+  const tabs   = document.querySelector('.w7-tabs');
+  const outer  = document.getElementById('score-outer');
+  if (!outer) return;
+  const offset = (topbar ? topbar.offsetHeight : 0) + (tabs ? tabs.offsetHeight : 0);
+  outer.style.maxHeight = `calc(100vh - ${offset}px - 120px)`;
 }
 
 // ── Table ─────────────────────────────────────────────
-const ROWS = [
+const ROWS_BASE = [
   { cls:'merveille', label:'🏛️ Merveille',  hint:'Points des étapes',         key:'merveille', color:'#a07840', type:'simple' },
   { cls:'tresor',    label:'💰 Trésor',       hint:'Pièces ÷ 3 = points',       key:'pieces',    color:'#c9a84c', type:'tresor' },
   { cls:'militaire', label:'⚔️ Militaires', hint:'Jetons (peut être négatif)', key:'militaire', color:'#c0392b', type:'simple', neg:true },
@@ -353,8 +403,10 @@ const ROWS = [
   { cls:'jaune',     label:'🟡 Commerce',     hint:'Cartes Jaunes',              key:'jaune',     color:'#c9a824', type:'simple' },
   { cls:'science',   label:'🔬 Sciences',     hint:'⚙️ 📐 📜 — Cartes Vertes',  key:null,        color:'#3a8a4a', type:'science' },
   { cls:'violet',    label:'🟣 Guildes',      hint:'Cartes Violettes',           key:'violet',    color:'#7b4fa0', type:'simple' },
-  { cls:'total',     label:'TOTAL',           hint:'',                           key:null,        color:'#c9a84c', type:'total' },
 ];
+const ROW_CITIES = { cls:'cities', label:'⬛ Cités', hint:'Extension Cities', key:'cities', color:'#888', type:'simple', neg:true };
+const ROW_TOTAL  = { cls:'total',  label:'TOTAL',    hint:'',                  key:null,     color:'#c9a84c', type:'total' };
+const getRows = () => [...ROWS_BASE, ...(citiesActive ? [ROW_CITIES] : []), ROW_TOTAL];
 
 function buildTable() {
   const table = document.getElementById('score-table');
@@ -381,7 +433,7 @@ function buildTable() {
 
   // ── TBODY ──
   const tbody = document.createElement('tbody');
-  ROWS.forEach(def => {
+  getRows().forEach(def => {
     const tr = document.createElement('tr');
     tr.className = `row-${def.cls}`;
 
@@ -560,6 +612,8 @@ function renderRegles() {
 
 initSetup();
 renderRegles();
+syncCitiesBtn();
+window.addEventListener('resize', updateScoreHeight);
 </script>
 
 <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
