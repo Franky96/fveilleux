@@ -395,7 +395,9 @@ const CANVAS_SZ = GRID_N * CELL_PX;  // 544
 
 const N_SHAPES  = 5;
 const N_COLORS  = 4;
-const N_SYMS    = N_SHAPES * N_COLORS; // 20
+// 4-color encoding: each cell carries 2 bits (color index 0-3)
+// 4 cells per byte, 220 data cells → 55 bytes per frame
+const CELLS_PER_BYTE = 4;
 
 const SHAPE_NAMES  = ['circle','square','triangle','pentagon','hexagon'];
 const DATA_COLORS_HEX = ['#ee2222','#22bb22','#2266ee','#ddcc00'];
@@ -416,29 +418,29 @@ const ANC_RGB = {
   BR: [0,255,255],
 };
 
-const CHUNK_SIZE = 103; // data bytes per DATA frame
+const CHUNK_SIZE = 47; // data bytes per DATA frame (55 - 4 header - 4 CRC)
 const FRAME_MS_DEFAULT = 333;
 let frameMs = FRAME_MS_DEFAULT;
 
 /* ── ENCODING ─────────────────────────────────────── */
 
-// symbol value 0-19: shape = s%5, color = floor(s/5)
-function symToShapeColor(s) { return { sh: s % N_SHAPES, ci: Math.floor(s / N_SHAPES) }; }
-function shapeColorToSym(sh, ci) { return sh + N_SHAPES * ci; }
-
+// Each byte → 4 cells (2 bits each, color index 0-3)
 function encodeBytes(bytes) {
   const out = [];
   for (const b of bytes) {
-    out.push(Math.floor(b / N_SYMS)); // high symbol 0-12
-    out.push(b % N_SYMS);             // low symbol 0-19
+    out.push((b >> 6) & 3);
+    out.push((b >> 4) & 3);
+    out.push((b >> 2) & 3);
+    out.push(b & 3);
   }
   return out;
 }
 
-function decodeSymbols(syms) {
+// Each 4 color indices → 1 byte
+function decodeCells(colorIdxs) {
   const out = [];
-  for (let i = 0; i + 1 < syms.length; i += 2) {
-    out.push(syms[i] * N_SYMS + syms[i + 1]);
+  for (let i = 0; i + 3 < colorIdxs.length; i += 4) {
+    out.push((colorIdxs[i] << 6) | (colorIdxs[i+1] << 4) | (colorIdxs[i+2] << 2) | colorIdxs[i+3]);
   }
   return new Uint8Array(out);
 }
@@ -458,7 +460,7 @@ for (let r = 0; r < GRID_N; r++)
     if (!isAnchor(r, c)) DATA_CELLS.push([r, c]);
 // DATA_CELLS.length == 220
 
-const BYTES_PER_FRAME = Math.floor(DATA_CELLS.length / 2); // 110
+const BYTES_PER_FRAME = Math.floor(DATA_CELLS.length / CELLS_PER_BYTE); // 55
 
 /* ── CRC-32 ────────────────────────────────────────── */
 
@@ -484,50 +486,47 @@ function crc32Bytes(val) {
 
 /* ── FRAME BUILDING ────────────────────────────────── */
 
+// All frames: payload bytes 0..(BYTES_PER_FRAME-5), CRC at bytes (BYTES_PER_FRAME-4)..(BYTES_PER_FRAME-1)
+function makeFrame(payloadBytes) {
+  const frame = new Uint8Array(BYTES_PER_FRAME);
+  const body = payloadBytes.slice(0, BYTES_PER_FRAME - 4);
+  frame.set(body);
+  const crc = crc32(frame.subarray(0, BYTES_PER_FRAME - 4));
+  const cb = crc32Bytes(crc);
+  frame[BYTES_PER_FRAME - 4] = cb[0]; frame[BYTES_PER_FRAME - 3] = cb[1];
+  frame[BYTES_PER_FRAME - 2] = cb[2]; frame[BYTES_PER_FRAME - 1] = cb[3];
+  return frame;
+}
+
 function buildHelloFrame(name, size, totalFrames, mime) {
-  const nameB = new TextEncoder().encode(name);
-  const mimeB = new TextEncoder().encode(mime);
-  const payload = [
+  const nameB = new TextEncoder().encode(name.slice(0, 28));
+  const mimeB = new TextEncoder().encode((mime||'').slice(0, 10));
+  return makeFrame([
     0xAA, 0x01,
     (totalFrames >> 8) & 0xff, totalFrames & 0xff,
     (size >>> 24) & 0xff, (size >>> 16) & 0xff, (size >>> 8) & 0xff, size & 0xff,
     nameB.length, ...nameB,
     mimeB.length, ...mimeB,
-  ];
-  const crc = crc32(payload);
-  const frame = [...payload, ...crc32Bytes(crc)];
-  // Pad to BYTES_PER_FRAME
-  while (frame.length < BYTES_PER_FRAME) frame.push(0);
-  return new Uint8Array(frame.slice(0, BYTES_PER_FRAME));
+  ]);
 }
 
 function buildDataFrame(index, chunk) {
-  const header = [0xAA, 0x02, (index >> 8) & 0xff, index & 0xff];
-  const data = Array.from(chunk);
-  const payload = [...header, ...data];
-  const crc = crc32(payload);
-  const frame = [...payload, ...crc32Bytes(crc)];
-  while (frame.length < BYTES_PER_FRAME) frame.push(0);
-  return new Uint8Array(frame.slice(0, BYTES_PER_FRAME));
+  return makeFrame([0xAA, 0x02, (index >> 8) & 0xff, index & 0xff, ...chunk]);
 }
 
 function buildDoneFrame(fileCrc) {
-  const frame = new Uint8Array(BYTES_PER_FRAME);
-  frame[0] = 0xAA; frame[1] = 0x03;
-  const cb = crc32Bytes(fileCrc);
-  frame[2] = cb[0]; frame[3] = cb[1]; frame[4] = cb[2]; frame[5] = cb[3];
-  return frame;
+  return makeFrame([0xAA, 0x03, ...crc32Bytes(fileCrc)]);
 }
 
 function parseFrame(bytes) {
   if (bytes[0] !== 0xAA) return null;
   const type = bytes[1];
+  // CRC always occupies the last 4 bytes; covers everything before it (including zero padding)
+  const crcOff = bytes.length - 4;
+  const storedCrc = (bytes[crcOff] << 24 | bytes[crcOff+1] << 16 | bytes[crcOff+2] << 8 | bytes[crcOff+3]) >>> 0;
+  const calcCrc = crc32(bytes.subarray(0, crcOff));
+  if (storedCrc !== calcCrc) return null;
   if (type === 0x01) {
-    // HELLO
-    const payloadEnd = bytes.length - 4;
-    const storedCrc = (bytes[payloadEnd] << 24 | bytes[payloadEnd+1] << 16 | bytes[payloadEnd+2] << 8 | bytes[payloadEnd+3]) >>> 0;
-    const calcCrc = crc32(bytes.slice(0, payloadEnd));
-    if (storedCrc !== calcCrc) return null;
     const totalFrames = (bytes[2] << 8) | bytes[3];
     const size = (bytes[4] << 24 | bytes[5] << 16 | bytes[6] << 8 | bytes[7]) >>> 0;
     let i = 8;
@@ -538,12 +537,8 @@ function parseFrame(bytes) {
     return { type: 'HELLO', totalFrames, size, name, mime };
   }
   if (type === 0x02) {
-    const payloadEnd = bytes.length - 4;
-    const storedCrc = (bytes[payloadEnd] << 24 | bytes[payloadEnd+1] << 16 | bytes[payloadEnd+2] << 8 | bytes[payloadEnd+3]) >>> 0;
-    const calcCrc = crc32(bytes.slice(0, payloadEnd));
-    if (storedCrc !== calcCrc) return null;
     const index = (bytes[2] << 8) | bytes[3];
-    const data = bytes.slice(4, payloadEnd);
+    const data = bytes.slice(4, crcOff);
     return { type: 'DATA', index, data };
   }
   if (type === 0x03) {
@@ -607,41 +602,19 @@ function renderGrid(canvas, frameBytes) {
     ctx.fillRect(ac * CELL_PX, ar * CELL_PX, ANC_N * CELL_PX, ANC_N * CELL_PX);
   }
 
-  // Encode frame bytes to symbols
-  const symbols = encodeBytes(frameBytes);
+  // Encode frame bytes to color indices (2 bits each, 4 per byte)
+  const colorIdxs = encodeBytes(frameBytes);
 
-  // Draw data cells
-  const r = CELL_PX * 0.38;
+  // Draw data cells: color carries the data, shape is decorative (position-based)
+  const rad = CELL_PX * 0.38;
   DATA_CELLS.forEach(([row, col], i) => {
-    if (i >= symbols.length) return;
-    const { sh, ci } = symToShapeColor(symbols[i]);
+    if (i >= colorIdxs.length) return;
     const cx = col * CELL_PX + CELL_PX / 2;
     const cy = row * CELL_PX + CELL_PX / 2;
-    drawShape(ctx, sh, cx, cy, r, DATA_COLORS_HEX[ci]);
+    drawShape(ctx, i % N_SHAPES, cx, cy, rad, DATA_COLORS_HEX[colorIdxs[i]]);
   });
 }
 
-/* ── REFERENCE SILHOUETTES (for receiver) ──────────── */
-
-const REF_SZ = 16;
-const shapeSilhouettes = (() => {
-  const tmp = document.createElement('canvas');
-  tmp.width = tmp.height = REF_SZ;
-  const ctx = tmp.getContext('2d');
-  const refs = [];
-  const r = REF_SZ * 0.38;
-  const cx = REF_SZ / 2, cy = REF_SZ / 2;
-  for (let sh = 0; sh < N_SHAPES; sh++) {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, REF_SZ, REF_SZ);
-    drawShape(ctx, sh, cx, cy, r, '#fff');
-    const img = ctx.getImageData(0, 0, REF_SZ, REF_SZ);
-    const mask = new Uint8Array(REF_SZ * REF_SZ);
-    for (let i = 0; i < mask.length; i++) mask[i] = img.data[i * 4] > 128 ? 1 : 0;
-    refs.push(mask);
-  }
-  return refs;
-})();
 
 /* ── UTIL ──────────────────────────────────────────── */
 
@@ -753,74 +726,36 @@ function tryDecodeGrid(ctx, imgW, imgH) {
     return n ? [rv/n,gv/n,bv/n] : [0,0,0];
   }
 
-  // Calibrate colors using data cells near anchors
-  // (Use TL anchor as white reference for brightness)
-  const tlSample = sampleCell(ANC_N/2, ANC_N/2);
-  const brightRef = Math.max(1, Math.max(...tlSample));
-
-  // Classify color by hue
-  function rgbToHue(r,g,b) {
-    const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
-    if (d < 10) return -1; // achromatic
+  // Classify data color by hue — always returns 0-3 (best guess)
+  function classifyColor([r, g, b]) {
+    const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+    if (d < 20) {
+      // achromatic: pick dominant channel
+      if (r >= g && r >= b) return 0;
+      if (g >= r && g >= b) return 1;
+      return 2;
+    }
     let h;
-    if (max===r) h = ((g-b)/d) % 6;
-    else if (max===g) h = (b-r)/d + 2;
-    else h = (r-g)/d + 4;
-    return (h * 60 + 360) % 360;
+    if (max === r) h = (((g-b)/d) % 6 + 6) % 6 * 60;
+    else if (max === g) h = ((b-r)/d + 2) * 60;
+    else h = ((r-g)/d + 4) * 60;
+    if (h >= 330 || h < 35) return 0; // red
+    if (h >= 75 && h < 165) return 1; // green
+    if (h >= 185 && h < 275) return 2; // blue
+    if (h >= 35 && h < 75) return 3;  // yellow
+    // hue in transition zones: nearest neighbor
+    if (h < 75) return 0; // orange → red
+    if (h < 185) return 1; // yellow-green → green
+    return 2; // purple/magenta → blue
   }
 
-  function classifyColor([r,g,b]) {
-    const sat = Math.max(r,g,b) - Math.min(r,g,b);
-    if (sat < 30) return -1; // too gray
-    const h = rgbToHue(r,g,b);
-    if (h < 0) return -1;
-    if (h >= 330 || h < 30) return 0; // red
-    if (h >= 80 && h < 160) return 1; // green
-    if (h >= 190 && h < 270) return 2; // blue
-    if (h >= 40 && h < 80) return 3;  // yellow
-    return -1;
-  }
-
-  // Extract cell patch as grayscale 16×16 mask and match shape
-  function extractMask(col, row) {
-    const cx = gx + (col + 0.5) * cw;
-    const cy = gy + (row + 0.5) * ch;
-    const cs = Math.min(cw, ch);
-    const mask = new Uint8Array(REF_SZ * REF_SZ);
-    for (let i = 0; i < REF_SZ; i++) {
-      for (let j = 0; j < REF_SZ; j++) {
-        const sx = cx + (j/REF_SZ - 0.5) * cs;
-        const sy = cy + (i/REF_SZ - 0.5) * cs;
-        const pi = (Math.max(0,Math.min(imgH-1,0|sy))*imgW + Math.max(0,Math.min(imgW-1,0|sx)))*4;
-        const brightness = (px[pi] + px[pi+1] + px[pi+2]) / 3;
-        mask[i*REF_SZ+j] = brightness > 40 ? 1 : 0;
-      }
-    }
-    return mask;
-  }
-
-  function classifyShape(mask) {
-    let best = 0, bestDist = Infinity;
-    for (let s = 0; s < N_SHAPES; s++) {
-      let dist = 0;
-      for (let k = 0; k < mask.length; k++) dist += (mask[k] !== shapeSilhouettes[s][k]) ? 1 : 0;
-      if (dist < bestDist) { bestDist = dist; best = s; }
-    }
-    return best;
-  }
-
-  // Decode all data cells
-  const symbols = [];
+  // Decode all data cells — color only, shapes are decorative
+  const colorIdxs = [];
   for (const [row, col] of DATA_CELLS) {
-    const rgb = sampleCell(col, row);
-    const ci = classifyColor(rgb);
-    if (ci < 0) { symbols.push(0); continue; }
-    const mask = extractMask(col, row);
-    const sh = classifyShape(mask);
-    symbols.push(shapeColorToSym(sh, ci));
+    colorIdxs.push(classifyColor(sampleCell(col, row)));
   }
 
-  const frameBytes = decodeSymbols(symbols);
+  const frameBytes = decodeCells(colorIdxs);
   return parseFrame(frameBytes);
 }
 
