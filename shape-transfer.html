@@ -401,18 +401,19 @@ const SHAPE_NAMES  = ['circle','square','triangle','pentagon','hexagon'];
 const DATA_COLORS_HEX = ['#ee2222','#22bb22','#2266ee','#ddcc00'];
 const DATA_COLORS_RGB = [[238,34,34],[34,187,34],[34,102,238],[221,204,0]];
 
-// Anchor corner fill colors
+// Anchor corner fill colors — chosen to NOT conflict with any data color
+// Data colors: red #ee2222, green #22bb22, blue #2266ee, yellow #ddcc00
 const ANC = {
-  TL: '#eeeeee',  // top-left: white/light
-  TR: '#ff6600',  // top-right: orange
-  BL: '#cc00cc',  // bottom-left: magenta
-  BR: '#00cccc',  // bottom-right: cyan
+  TL: '#ffffff',  // top-left: pure white
+  TR: '#ff00ff',  // top-right: pure magenta
+  BL: '#ff8000',  // bottom-left: orange
+  BR: '#00ffff',  // bottom-right: pure cyan
 };
 const ANC_RGB = {
-  TL: [238,238,238],
-  TR: [255,102,0],
-  BL: [204,0,204],
-  BR: [0,204,204],
+  TL: [255,255,255],
+  TR: [255,0,255],
+  BL: [255,128,0],
+  BR: [0,255,255],
 };
 
 const CHUNK_SIZE = 103; // data bytes per DATA frame
@@ -604,10 +605,6 @@ function renderGrid(canvas, frameBytes) {
   for (const [ar, ac, color] of anchorMap) {
     ctx.fillStyle = color;
     ctx.fillRect(ac * CELL_PX, ar * CELL_PX, ANC_N * CELL_PX, ANC_N * CELL_PX);
-    // Small dark inner marker
-    ctx.fillStyle = '#111';
-    const m = CELL_PX * 0.25;
-    ctx.fillRect(ac * CELL_PX + m, ar * CELL_PX + m, ANC_N * CELL_PX - 2*m, ANC_N * CELL_PX - 2*m);
   }
 
   // Encode frame bytes to symbols
@@ -704,27 +701,28 @@ function stopCamera(video) {
 
 /* ── GRID DETECTION ────────────────────────────────── */
 
-function findAnchorBlock(px, w, h, x0, y0, x1, y1, scoreFunc) {
+function findAnchorBlock(px, w, h, x0, y0, x1, y1, matchFunc) {
   let sumX = 0, sumY = 0, n = 0;
   for (let y = y0; y < y1; y += 2) {
     for (let x = x0; x < x1; x += 2) {
       const pi = (Math.min(h-1,y)*w + Math.min(w-1,x)) * 4;
       const r = px[pi], g = px[pi+1], b = px[pi+2];
-      if (scoreFunc(r, g, b) > 50) { sumX += x; sumY += y; n++; }
+      if (matchFunc(r, g, b)) { sumX += x; sumY += y; n++; }
     }
   }
-  return n > 8 ? { x: sumX/n, y: sumY/n } : null;
+  return n > 4 ? { x: sumX/n, y: sumY/n } : null;
 }
 
 function tryDecodeGrid(ctx, imgW, imgH) {
   const px = ctx.getImageData(0, 0, imgW, imgH).data;
   const qw = imgW/2, qh = imgH/2;
 
-  // Find the 4 anchor blocks
-  const tl = findAnchorBlock(px, imgW, imgH, 0,  0,  qw,   qh,   (r,g,b) => Math.min(r,g,b) - 60);
-  const tr = findAnchorBlock(px, imgW, imgH, qw, 0,  imgW, qh,   (r,g,b) => r - Math.max(g,b));
-  const bl = findAnchorBlock(px, imgW, imgH, 0,  qh, qw,   imgH, (r,g,b) => Math.max(r,b) - g - 60);
-  const br = findAnchorBlock(px, imgW, imgH, qw, qh, imgW, imgH, (r,g,b) => Math.max(g,b) - r - 60);
+  // Find the 4 anchor blocks using boolean match functions that don't conflict with data colors
+  // TL=white, TR=magenta, BL=orange, BR=cyan
+  const tl = findAnchorBlock(px, imgW, imgH, 0,  0,  qw,   qh,   (r,g,b) => Math.min(r,g,b) > 150);
+  const tr = findAnchorBlock(px, imgW, imgH, qw, 0,  imgW, qh,   (r,g,b) => r>140 && b>140 && g<110);
+  const bl = findAnchorBlock(px, imgW, imgH, 0,  qh, qw,   imgH, (r,g,b) => r>170 && g>60 && g<160 && b<60 && r>g+70);
+  const br = findAnchorBlock(px, imgW, imgH, qw, qh, imgW, imgH, (r,g,b) => g>120 && b>120 && r<90);
 
   if (!tl || !tr || !bl || !br) return null;
 
