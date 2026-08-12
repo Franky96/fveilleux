@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jeux-v7';
+const CACHE_NAME = 'jeux-v8';
 const FILES_TO_CACHE = [
   '/jeuxdesociete.html',
   '/jeuxdesociete.js',
@@ -14,6 +14,7 @@ const FILES_TO_CACHE = [
   '/theme-toggle.js',
   '/page-controls.js',
   '/sw-register.js',
+  '/shape-transfer.html',
 ];
 
 const CACHED_PATHS = new Set(FILES_TO_CACHE);

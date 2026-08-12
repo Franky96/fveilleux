@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f0a">
+<title>SHAPE-LINK — Transmission optique par symboles</title>
+<style>
+  :root {
+    --bg-deep: #0a0f0a;
+    --bg-panel: #0f1a0f;
+    --bg-elev: #1a2e1a;
+    --border: #2a3a2a;
+    --border-hot: #3a7a3a;
+    --text: #f0ede6;
+    --text-dim: #a89f94;
+    --text-mute: #556655;
+    --amber: #80cc80;
+    --amber-glow: #60aa60;
+    --green: #80cc80;
+    --red: #ff6b6b;
+    --blue: #5fb3ff;
+  }
+  html.light {
+    --bg-deep: #f0f4f0; --bg-panel: #ffffff; --bg-elev: #e8f0e8;
+    --border: #c4d4c4; --border-hot: #4a9a4a; --text: #1a2a1a;
+    --text-dim: #556655; --text-mute: #99aa99; --amber: #2a7a2a;
+    --amber-glow: #3a8a3a; --green: #2a7a2a; --red: #cc3333; --blue: #2a6aaa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg-deep); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: hidden; }
+  body { background-image: radial-gradient(circle at 20% 10%, rgba(128,204,128,0.04), transparent 40%), radial-gradient(circle at 80% 90%, rgba(128,204,128,0.02), transparent 40%); }
+  html.light body { background-image: radial-gradient(circle at 20% 10%, rgba(42,122,42,0.05), transparent 40%); }
+  html.light .btn.primary { color: #fff; }
+  html.light .mode-btn { color: var(--text); }
+  html.light #hamburger-menu { background: #fff; border-color: #c4d4c4; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+  html.light .hbg-item { color: #2a5a2a; }
+  html.light .hbg-item:hover { background: rgba(0,0,0,0.04); color: #1a3a1a; }
+  html.light #logoutBtn.hbg-item { color: #b03030; }
+  html.light .hbg-sep { background: #c4d4c4; }
+  html.light #hamburger-btn span { background: #2a5a2a; }
+
+  .app { min-height: 100vh; display: flex; flex-direction: column; padding: 16px; max-width: 1400px; margin: 0 auto; }
+  .screen { display: none; flex: 1; flex-direction: column; gap: 16px; }
+  .screen.active { display: flex; }
+
+  .topbar { display: flex; align-items: center; padding: 8px 16px; border: 1px solid var(--border); background: var(--bg-panel); position: relative; }
+  .topbar::before, .topbar::after { content: ''; position: absolute; width: 10px; height: 10px; border-color: var(--amber); border-style: solid; }
+  .topbar::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .topbar::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+  .brand { font-size: 16px; font-weight: 700; letter-spacing: 0.15em; color: var(--amber); text-transform: uppercase; }
+  .brand .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); margin-right: 8px; animation: pulse 1.5s ease-in-out infinite; vertical-align: middle; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .status-strip { display: flex; gap: 16px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 1.5rem; }
+  .status-strip span b { color: var(--text); font-weight: 500; }
+
+  .mode-select { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 32px; padding: 32px 16px; }
+  .hero { text-align: center; max-width: 600px; }
+  .hero h1 { font-size: clamp(28px,5vw,48px); font-weight: 700; letter-spacing: 0.1em; color: var(--amber); margin-bottom: 8px; text-shadow: 0 0 24px rgba(128,204,128,0.25); }
+  .hero .subtitle { color: var(--text-dim); font-size: 13px; letter-spacing: 0.05em; line-height: 1.6; }
+  .hero .subtitle b { color: var(--text); font-weight: 500; }
+
+  .mode-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 600px; }
+  @media (max-width: 500px) { .mode-buttons { grid-template-columns: 1fr; } }
+
+  .mode-btn { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); font-family: inherit; padding: 32px 24px; cursor: pointer; text-align: left; transition: all 0.2s ease; position: relative; }
+  .mode-btn:hover { border-color: var(--amber); background: var(--bg-elev); transform: translateY(-2px); }
+  .mode-btn::before, .mode-btn::after { content: ''; position: absolute; width: 12px; height: 12px; border: 1px solid var(--amber); opacity: 0; transition: opacity 0.2s; }
+  .mode-btn::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .mode-btn::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+  .mode-btn:hover::before, .mode-btn:hover::after { opacity: 1; }
+  .mode-btn .glyph { font-size: 32px; color: var(--amber); margin-bottom: 12px; display: block; }
+  .mode-btn h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .mode-btn p { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  .panel { background: var(--bg-panel); border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; }
+  .panel::before, .panel::after { content: ''; position: absolute; width: 8px; height: 8px; border-color: var(--border-hot); border-style: solid; }
+  .panel::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .panel::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+  .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim); background: rgba(255,255,255,0.01); }
+  .panel-header .led { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+  .led.idle { background: var(--text-mute); }
+  .led.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1s infinite; }
+  .led.send { background: var(--amber); box-shadow: 0 0 6px var(--amber); animation: pulse 1s infinite; }
+
+  .panel-body { flex: 1; display: flex; justify-content: center; align-items: center; padding: 16px; min-height: 0; }
+
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; min-height: 0; }
+  @media (max-width: 800px) { .stage { grid-template-columns: 1fr; } }
+  .stage.solo { grid-template-columns: 1fr; }
+
+  .shape-frame { background: #111; display: flex; justify-content: center; align-items: center; aspect-ratio: 1/1; width: 100%; max-width: 560px; margin: 0 auto; }
+  .shape-frame canvas { display: block; width: 100% !important; aspect-ratio: 1/1; image-rendering: pixelated; }
+  .shape-frame.empty { background: var(--bg-elev); color: var(--text-mute); font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; text-align: center; padding: 24px; }
+
+  .camera-frame { width: 100%; max-width: 560px; margin: 0 auto; aspect-ratio: 1/1; background: #000; position: relative; overflow: hidden; }
+  .camera-frame video { width: 100%; height: 100%; object-fit: cover; }
+  .camera-frame .scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--amber), transparent); box-shadow: 0 0 12px var(--amber); animation: scan 2.5s linear infinite; }
+  @keyframes scan { 0%{top:0} 50%{top:calc(100% - 2px)} 100%{top:0} }
+  .camera-frame .corners::before, .camera-frame .corners::after, .camera-frame .corners > span::before, .camera-frame .corners > span::after { content: ''; position: absolute; width: 24px; height: 24px; border: 2px solid var(--amber); pointer-events: none; }
+  .camera-frame .corners::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+  .camera-frame .corners::after  { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+  .camera-frame .corners > span::before { content:''; bottom: 8px; left: 8px; border-width: 0 0 2px 2px; position: absolute; }
+  .camera-frame .corners > span::after  { content:''; bottom: 8px; right: 8px; border-width: 0 2px 2px 0; position: absolute; }
+
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; padding: 10px 18px; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { border-color: var(--amber); color: var(--amber); }
+  .btn.primary { background: var(--amber); color: #0a0f0a; border-color: var(--amber); font-weight: 500; }
+  .btn.primary:hover { background: var(--amber-glow); border-color: var(--amber-glow); }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: var(--border); color: var(--text); }
+
+  .cam-flip-btn { background: none; border: 1px solid var(--border-hot); color: var(--text-dim); border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s; }
+  .cam-flip-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  .telemetry { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .telemetry .cell { background: var(--bg-panel); padding: 10px 14px; }
+  .telemetry .cell .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; }
+  .telemetry .cell .value { font-size: 15px; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+  .telemetry .cell .value.amber { color: var(--amber); }
+  .telemetry .cell .value.green { color: var(--green); }
+
+  .progress-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-panel); border: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
+  .progress-bar { flex: 1; height: 6px; background: var(--bg-elev); position: relative; overflow: hidden; }
+  .progress-bar > div { position: absolute; top: 0; left: 0; bottom: 0; background: linear-gradient(90deg, var(--amber), var(--amber-glow)); box-shadow: 0 0 8px rgba(128,204,128,0.5); transition: width 0.2s ease; }
+  .progress-text { color: var(--text); font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+
+  .file-zone { border: 1px dashed var(--border-hot); background: var(--bg-elev); padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .file-zone:hover { border-color: var(--amber); background: rgba(128,204,128,0.04); }
+  .file-zone.has-file { border-style: solid; border-color: var(--green); text-align: left; }
+  .file-zone .glyph { font-size: 28px; color: var(--amber); margin-bottom: 8px; }
+  .file-zone .hint { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .file-zone .file-info { color: var(--text); font-size: 13px; }
+  .file-zone .file-info .meta { color: var(--text-dim); font-size: 11px; margin-top: 4px; }
+
+  .complete-card { background: var(--bg-panel); border: 1px solid var(--green); padding: 24px; text-align: center; box-shadow: 0 0 32px rgba(128,204,128,0.15); }
+  .complete-card .glyph { font-size: 36px; color: var(--green); margin-bottom: 8px; }
+  .complete-card h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text); margin-bottom: 4px; }
+  .complete-card .meta { color: var(--text-dim); font-size: 12px; margin-bottom: 16px; }
+
+  .fs-btn { background: none; border: 1px solid var(--border-hot); color: var(--text-dim); border-radius: 4px; padding: 1px 6px; font-size: 14px; cursor: pointer; line-height: 1.4; transition: all 0.15s; flex-shrink: 0; }
+  .fs-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  #fs-overlay { display: none; position: fixed; inset: 0; z-index: 9999; background: #000; flex-direction: column; align-items: center; justify-content: center; }
+  #fs-overlay.active { display: flex; }
+  #fs-main-slot { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 0; padding: 8px; }
+  #fs-main-slot .shape-frame { width: min(100vw, calc(100vh - 16px)) !important; height: min(100vw, calc(100vh - 16px)) !important; max-width: none !important; aspect-ratio: 1/1 !important; margin: 0 auto !important; }
+  #fs-main-slot .camera-frame { width: 100vw !important; height: 100vh !important; max-width: none !important; aspect-ratio: auto !important; margin: 0 !important; }
+  #fs-main-slot .camera-frame video { object-fit: contain !important; }
+  #fs-close-btn { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  #fs-close-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  #scan-canvas { display: none; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--bg-panel); border: 1px solid var(--border-hot); color: var(--text); padding: 12px 20px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; transition: transform 0.3s ease; z-index: 100; box-shadow: 0 4px 24px rgba(0,0,0,0.5); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: var(--red); color: var(--red); }
+  .toast.ok { border-color: var(--green); color: var(--green); }
+
+  /* Hamburger */
+  .page-topbar-controls { position: relative; display: flex; align-items: center; gap: 0.5rem; }
+  #theme-toggle { width: 68px; height: 26px; border-radius: 13px; background: #2a3a2a; border: 1.5px solid #3a5a3a; cursor: pointer; transition: background 0.35s ease, border-color 0.35s ease; display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+  html.light #theme-toggle { background: #34c759; border-color: #28a045; }
+  .tg-icon { font-size: 0.62rem; line-height: 1; flex-shrink: 0; position: relative; z-index: 2; }
+  #theme-toggle-knob { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #c8e8c0; left: 3px; top: 50%; transform: translateY(-50%); transition: left 0.3s ease, background 0.3s ease; pointer-events: none; z-index: 3; }
+  html.light #theme-toggle-knob { left: 45px; background: #ffffff; }
+  #hamburger-btn { position: static; width: auto; background: transparent; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 7px; border-radius: 8px; transition: background 0.2s; -webkit-tap-highlight-color: transparent; }
+  #hamburger-btn:hover { background: rgba(128,200,128,0.08); }
+  #hamburger-btn span { display: block; width: 22px; height: 2.5px; background: #c8e8c0; border-radius: 2px; transition: transform 0.25s ease, opacity 0.2s; transform-origin: center; }
+  #hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  #hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  #hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  #hamburger-menu { display: none; position: absolute; top: calc(100% + 0.4rem); right: 0; z-index: 9999; background: #111e11; border: 1px solid #2a4a2a; border-radius: 12px; padding: 0.4rem; min-width: 195px; box-shadow: 0 8px 32px rgba(0,0,0,0.55); }
+  #hamburger-menu.open { display: block; }
+  .hbg-item { display: none; align-items: center; gap: 0.65rem; width: 100%; padding: 0.65rem 0.85rem; background: transparent; border: none; border-radius: 8px; color: #90c890; font-size: 0.88rem; cursor: pointer; text-decoration: none; text-align: left; transition: background 0.15s, color 0.15s; white-space: nowrap; margin: 0; box-sizing: border-box; font-family: inherit; appearance: none; -webkit-appearance: none; outline: none; }
+  .hbg-item:hover { background: rgba(255,255,255,0.06); color: #c0e8c0; }
+  #logoutBtn.hbg-item { display: flex; color: #d07070; margin-top: 0.4rem; }
+  #logoutBtn.hbg-item:hover { background: rgba(192,57,43,0.1); color: #e09090; }
+  .hbg-sep { display: none; height: 1px; background: #2a4a2a; margin: 0.3rem 0.5rem; }
+  html.light #logoutBtn.hbg-item { color: #b03030; }
+</style>
+<script>
+  const _perms = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_perms.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- MODE SELECTION -->
+  <section id="screen-mode" class="screen active">
+    <div class="topbar" data-topbar>
+      <div style="display:flex;align-items:center;gap:12px;flex:1;">
+        <a href="informatique.html" class="btn" style="font-size:11px;padding:4px 10px;white-space:nowrap;">← Informatique</a>
+        <div class="brand"><span class="dot"></span>SHAPE-LINK</div>
+      </div>
+      <div class="status-strip"><span>SYS <b>READY</b></span></div>
+    </div>
+
+    <div class="mode-select">
+      <div class="hero">
+        <h1>SHAPE-LINK</h1>
+        <div class="subtitle">
+          Transfert de fichier <b>optique</b> par grille de symboles géométriques colorés.<br>
+          <b>5 formes × 4 couleurs</b> = 20 symboles par cellule · aucune bibliothèque externe.
+        </div>
+      </div>
+
+      <div class="mode-buttons">
+        <button class="mode-btn" id="btn-mode-tx">
+          <span class="glyph">▲■●</span>
+          <h3>Émetteur</h3>
+          <p>Charger un fichier et l'émettre sous forme de grilles de symboles successives vers un récepteur.</p>
+        </button>
+        <button class="mode-btn" id="btn-mode-rx">
+          <span class="glyph">⬠⬡◆</span>
+          <h3>Récepteur</h3>
+          <p>Utiliser la caméra pour scanner les grilles de l'émetteur et reconstituer le fichier.</p>
+        </button>
+      </div>
+
+      <div style="margin-top:1.2rem;background:var(--bg-panel);border:1px solid var(--border);padding:14px 18px;max-width:600px;width:100%;">
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;">Paramètres</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label style="font-size:12px;color:var(--text-dim);letter-spacing:0.05em;">Vitesse</label>
+          <select id="fps-select" style="background:var(--bg-elev);border:1px solid var(--border-hot);color:var(--text);padding:4px 10px;font-size:12px;font-family:inherit;">
+            <option value="500">2 fps (stable)</option>
+            <option value="333" selected>3 fps (normal)</option>
+            <option value="200">5 fps (rapide)</option>
+            <option value="150">7 fps (expérimental)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRANSMITTER -->
+  <section id="screen-tx" class="screen">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>SHAPE-LINK <span style="color:var(--text-dim);letter-spacing:0.1em;">// TX</span></div>
+      <div class="status-strip">
+        <span id="tx-state-label">STATE <b>IDLE</b></span>
+        <button class="btn danger" id="tx-back">← Retour</button>
+      </div>
+    </div>
+
+    <div id="tx-pre" class="panel" style="padding:20px;">
+      <label for="tx-file" class="file-zone" id="tx-drop">
+        <div id="tx-drop-content">
+          <div class="glyph">▲■●</div>
+          <div class="hint">Sélectionner un fichier à transmettre</div>
+        </div>
+      </label>
+      <input type="file" id="tx-file" style="display:none">
+      <div class="controls" style="margin-top:16px;">
+        <button class="btn primary" id="tx-start" disabled>▶ Démarrer</button>
+      </div>
+    </div>
+
+    <div id="tx-active" style="display:none;flex-direction:column;gap:16px;flex:1;min-height:0;">
+      <div class="stage solo">
+        <div class="panel">
+          <div class="panel-header">
+            <div><span class="led send"></span>GRILLE ÉMISE</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="tx-frame-label">— / —</span>
+              <button class="fs-btn" onclick="goFS('tx-shape-frame')" title="Plein écran">⛶</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="shape-frame" id="tx-shape-frame">
+              <canvas id="tx-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="telemetry">
+        <div class="cell"><div class="label">Fichier</div><div class="value" id="tx-tel-name">—</div></div>
+        <div class="cell"><div class="label">Taille</div><div class="value" id="tx-tel-size">—</div></div>
+        <div class="cell"><div class="label">Trames</div><div class="value amber" id="tx-tel-frames">—</div></div>
+        <div class="cell"><div class="label">Émises</div><div class="value green" id="tx-tel-sent">0</div></div>
+        <div class="cell"><div class="label">Débit</div><div class="value" id="tx-tel-rate">—</div></div>
+      </div>
+
+      <div class="progress-row">
+        <span>Progression</span>
+        <div class="progress-bar"><div id="tx-progress" style="width:0%"></div></div>
+        <span class="progress-text" id="tx-progress-text">0%</span>
+      </div>
+
+      <div class="controls">
+        <button class="btn danger" id="tx-stop">■ Arrêter</button>
+        <button class="btn" id="tx-restart" style="display:none;">↺ Rejouer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECEIVER -->
+  <section id="screen-rx" class="screen">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>SHAPE-LINK <span style="color:var(--text-dim);letter-spacing:0.1em;">// RX</span></div>
+      <div class="status-strip">
+        <span id="rx-state-label">STATE <b>SCAN</b></span>
+        <button class="btn danger" id="rx-back">← Retour</button>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;flex:1;min-height:0;">
+      <div class="stage solo">
+        <div class="panel">
+          <div class="panel-header">
+            <div><span class="led live"></span>SCAN</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="cam-flip-btn" id="rx-flip">⟳ caméra</button>
+              <span id="rx-frame-label">en attente HELLO…</span>
+              <button class="fs-btn" onclick="goFS('rx-cam-frame')" title="Plein écran">⛶</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="camera-frame" id="rx-cam-frame">
+              <video id="rx-video" autoplay playsinline muted></video>
+              <div class="scanline"></div>
+              <div class="corners"><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="telemetry">
+        <div class="cell"><div class="label">Fichier</div><div class="value" id="rx-tel-name">—</div></div>
+        <div class="cell"><div class="label">Taille</div><div class="value" id="rx-tel-size">—</div></div>
+        <div class="cell"><div class="label">Trames</div><div class="value amber" id="rx-tel-frames">—</div></div>
+        <div class="cell"><div class="label">Reçues</div><div class="value green" id="rx-tel-received">0</div></div>
+        <div class="cell"><div class="label">Taux erreur</div><div class="value" id="rx-tel-err">—</div></div>
+      </div>
+
+      <div class="progress-row">
+        <span>Progression</span>
+        <div class="progress-bar"><div id="rx-progress" style="width:0%"></div></div>
+        <span class="progress-text" id="rx-progress-text">0%</span>
+      </div>
+
+      <div id="rx-complete" style="display:none;" class="complete-card">
+        <div class="glyph">[OK]</div>
+        <h3>Transfert complété</h3>
+        <div class="meta" id="rx-complete-meta">—</div>
+        <button class="btn primary" id="rx-download">⤓ Télécharger</button>
+      </div>
+
+      <canvas id="scan-canvas"></canvas>
+    </div>
+  </section>
+
+</div>
+
+<div id="fs-overlay">
+  <div id="fs-main-slot"></div>
+  <button id="fs-close-btn" onclick="closeFS()">✕</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   SHAPE-LINK — Optical file transfer using geometric shapes
+   Protocol:
+     5 shapes × 4 colors = 20 symbols per cell
+     1 byte → 2 symbols  (base-20, 20²=400 > 256)
+     Grid: 16×16 = 256 cells, 3×3 anchor at each corner
+     Data cells: 256−36 = 220 → 110 bytes per frame
+     Chunk size: 110 − 7 (header+CRC) = 103 bytes
+   Anchor colors (top-left, top-right, bottom-left, bottom-right):
+     TL=#eeeeee  TR=#ff6600  BL=#cc00cc  BR=#00cccc
+   Frame format:
+     HELLO [0xAA,0x01, frames_hi,frames_lo, size×4, namelen, name..., mimelen, mime..., crc×4]
+     DATA  [0xAA,0x02, idx_hi,idx_lo, data×103, crc×4]
+     DONE  [0xAA,0x03, file_crc×4, 0×103]
+   ============================================================ */
+
+const GRID_N    = 16;
+const CELL_PX   = 34;
+const ANC_N     = 3;
+const CANVAS_SZ = GRID_N * CELL_PX;  // 544
+
+const N_SHAPES  = 5;
+const N_COLORS  = 4;
+const N_SYMS    = N_SHAPES * N_COLORS; // 20
+
+const SHAPE_NAMES  = ['circle','square','triangle','pentagon','hexagon'];
+const DATA_COLORS_HEX = ['#ee2222','#22bb22','#2266ee','#ddcc00'];
+const DATA_COLORS_RGB = [[238,34,34],[34,187,34],[34,102,238],[221,204,0]];
+
+// Anchor corner fill colors
+const ANC = {
+  TL: '#eeeeee',  // top-left: white/light
+  TR: '#ff6600',  // top-right: orange
+  BL: '#cc00cc',  // bottom-left: magenta
+  BR: '#00cccc',  // bottom-right: cyan
+};
+const ANC_RGB = {
+  TL: [238,238,238],
+  TR: [255,102,0],
+  BL: [204,0,204],
+  BR: [0,204,204],
+};
+
+const CHUNK_SIZE = 103; // data bytes per DATA frame
+const FRAME_MS_DEFAULT = 333;
+let frameMs = FRAME_MS_DEFAULT;
+
+/* ── ENCODING ─────────────────────────────────────── */
+
+// symbol value 0-19: shape = s%5, color = floor(s/5)
+function symToShapeColor(s) { return { sh: s % N_SHAPES, ci: Math.floor(s / N_SHAPES) }; }
+function shapeColorToSym(sh, ci) { return sh + N_SHAPES * ci; }
+
+function encodeBytes(bytes) {
+  const out = [];
+  for (const b of bytes) {
+    out.push(Math.floor(b / N_SYMS)); // high symbol 0-12
+    out.push(b % N_SYMS);             // low symbol 0-19
+  }
+  return out;
+}
+
+function decodeSymbols(syms) {
+  const out = [];
+  for (let i = 0; i + 1 < syms.length; i += 2) {
+    out.push(syms[i] * N_SYMS + syms[i + 1]);
+  }
+  return new Uint8Array(out);
+}
+
+/* ── DATA CELLS ────────────────────────────────────── */
+
+function isAnchor(r, c) {
+  return (r < ANC_N && c < ANC_N) ||
+         (r < ANC_N && c >= GRID_N - ANC_N) ||
+         (r >= GRID_N - ANC_N && c < ANC_N) ||
+         (r >= GRID_N - ANC_N && c >= GRID_N - ANC_N);
+}
+
+const DATA_CELLS = [];
+for (let r = 0; r < GRID_N; r++)
+  for (let c = 0; c < GRID_N; c++)
+    if (!isAnchor(r, c)) DATA_CELLS.push([r, c]);
+// DATA_CELLS.length == 220
+
+const BYTES_PER_FRAME = Math.floor(DATA_CELLS.length / 2); // 110
+
+/* ── CRC-32 ────────────────────────────────────────── */
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c;
+  }
+  return t;
+})();
+
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (const b of bytes) c = CRC_TABLE[(c ^ b) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function crc32Bytes(val) {
+  return [(val >>> 24) & 0xff, (val >>> 16) & 0xff, (val >>> 8) & 0xff, val & 0xff];
+}
+
+/* ── FRAME BUILDING ────────────────────────────────── */
+
+function buildHelloFrame(name, size, totalFrames, mime) {
+  const nameB = new TextEncoder().encode(name);
+  const mimeB = new TextEncoder().encode(mime);
+  const payload = [
+    0xAA, 0x01,
+    (totalFrames >> 8) & 0xff, totalFrames & 0xff,
+    (size >>> 24) & 0xff, (size >>> 16) & 0xff, (size >>> 8) & 0xff, size & 0xff,
+    nameB.length, ...nameB,
+    mimeB.length, ...mimeB,
+  ];
+  const crc = crc32(payload);
+  const frame = [...payload, ...crc32Bytes(crc)];
+  // Pad to BYTES_PER_FRAME
+  while (frame.length < BYTES_PER_FRAME) frame.push(0);
+  return new Uint8Array(frame.slice(0, BYTES_PER_FRAME));
+}
+
+function buildDataFrame(index, chunk) {
+  const header = [0xAA, 0x02, (index >> 8) & 0xff, index & 0xff];
+  const data = Array.from(chunk);
+  const payload = [...header, ...data];
+  const crc = crc32(payload);
+  const frame = [...payload, ...crc32Bytes(crc)];
+  while (frame.length < BYTES_PER_FRAME) frame.push(0);
+  return new Uint8Array(frame.slice(0, BYTES_PER_FRAME));
+}
+
+function buildDoneFrame(fileCrc) {
+  const frame = new Uint8Array(BYTES_PER_FRAME);
+  frame[0] = 0xAA; frame[1] = 0x03;
+  const cb = crc32Bytes(fileCrc);
+  frame[2] = cb[0]; frame[3] = cb[1]; frame[4] = cb[2]; frame[5] = cb[3];
+  return frame;
+}
+
+function parseFrame(bytes) {
+  if (bytes[0] !== 0xAA) return null;
+  const type = bytes[1];
+  if (type === 0x01) {
+    // HELLO
+    const payloadEnd = bytes.length - 4;
+    const storedCrc = (bytes[payloadEnd] << 24 | bytes[payloadEnd+1] << 16 | bytes[payloadEnd+2] << 8 | bytes[payloadEnd+3]) >>> 0;
+    const calcCrc = crc32(bytes.slice(0, payloadEnd));
+    if (storedCrc !== calcCrc) return null;
+    const totalFrames = (bytes[2] << 8) | bytes[3];
+    const size = (bytes[4] << 24 | bytes[5] << 16 | bytes[6] << 8 | bytes[7]) >>> 0;
+    let i = 8;
+    const nameLen = bytes[i++];
+    const name = new TextDecoder().decode(bytes.slice(i, i + nameLen)); i += nameLen;
+    const mimeLen = bytes[i++];
+    const mime = new TextDecoder().decode(bytes.slice(i, i + mimeLen));
+    return { type: 'HELLO', totalFrames, size, name, mime };
+  }
+  if (type === 0x02) {
+    const payloadEnd = bytes.length - 4;
+    const storedCrc = (bytes[payloadEnd] << 24 | bytes[payloadEnd+1] << 16 | bytes[payloadEnd+2] << 8 | bytes[payloadEnd+3]) >>> 0;
+    const calcCrc = crc32(bytes.slice(0, payloadEnd));
+    if (storedCrc !== calcCrc) return null;
+    const index = (bytes[2] << 8) | bytes[3];
+    const data = bytes.slice(4, payloadEnd);
+    return { type: 'DATA', index, data };
+  }
+  if (type === 0x03) {
+    const fileCrc = (bytes[2] << 24 | bytes[3] << 16 | bytes[4] << 8 | bytes[5]) >>> 0;
+    return { type: 'DONE', fileCrc };
+  }
+  return null;
+}
+
+/* ── SHAPE DRAWING ─────────────────────────────────── */
+
+function drawShape(ctx, sh, cx, cy, r, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  switch (sh) {
+    case 0: // circle
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      break;
+    case 1: // square
+      ctx.rect(cx - r, cy - r, r * 2, r * 2);
+      break;
+    case 2: // triangle up
+      ctx.moveTo(cx, cy - r);
+      ctx.lineTo(cx + r * 0.866, cy + r * 0.5);
+      ctx.lineTo(cx - r * 0.866, cy + r * 0.5);
+      break;
+    case 3: // pentagon
+      for (let i = 0; i < 5; i++) {
+        const a = (Math.PI * 2 * i / 5) - Math.PI / 2;
+        i === 0 ? ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
+                : ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      }
+      break;
+    case 4: // hexagon flat-top
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI * i / 3;
+        i === 0 ? ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a))
+                : ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      }
+      break;
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ── GRID RENDERING ────────────────────────────────── */
+
+function renderGrid(canvas, frameBytes) {
+  canvas.width = canvas.height = CANVAS_SZ;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, CANVAS_SZ, CANVAS_SZ);
+
+  // Draw anchor corners
+  const anchorMap = [
+    [0, 0, ANC.TL], [0, GRID_N - ANC_N, ANC.TR],
+    [GRID_N - ANC_N, 0, ANC.BL], [GRID_N - ANC_N, GRID_N - ANC_N, ANC.BR],
+  ];
+  for (const [ar, ac, color] of anchorMap) {
+    ctx.fillStyle = color;
+    ctx.fillRect(ac * CELL_PX, ar * CELL_PX, ANC_N * CELL_PX, ANC_N * CELL_PX);
+    // Small dark inner marker
+    ctx.fillStyle = '#111';
+    const m = CELL_PX * 0.25;
+    ctx.fillRect(ac * CELL_PX + m, ar * CELL_PX + m, ANC_N * CELL_PX - 2*m, ANC_N * CELL_PX - 2*m);
+  }
+
+  // Encode frame bytes to symbols
+  const symbols = encodeBytes(frameBytes);
+
+  // Draw data cells
+  const r = CELL_PX * 0.38;
+  DATA_CELLS.forEach(([row, col], i) => {
+    if (i >= symbols.length) return;
+    const { sh, ci } = symToShapeColor(symbols[i]);
+    const cx = col * CELL_PX + CELL_PX / 2;
+    const cy = row * CELL_PX + CELL_PX / 2;
+    drawShape(ctx, sh, cx, cy, r, DATA_COLORS_HEX[ci]);
+  });
+}
+
+/* ── REFERENCE SILHOUETTES (for receiver) ──────────── */
+
+const REF_SZ = 16;
+const shapeSilhouettes = (() => {
+  const tmp = document.createElement('canvas');
+  tmp.width = tmp.height = REF_SZ;
+  const ctx = tmp.getContext('2d');
+  const refs = [];
+  const r = REF_SZ * 0.38;
+  const cx = REF_SZ / 2, cy = REF_SZ / 2;
+  for (let sh = 0; sh < N_SHAPES; sh++) {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, REF_SZ, REF_SZ);
+    drawShape(ctx, sh, cx, cy, r, '#fff');
+    const img = ctx.getImageData(0, 0, REF_SZ, REF_SZ);
+    const mask = new Uint8Array(REF_SZ * REF_SZ);
+    for (let i = 0; i < mask.length; i++) mask[i] = img.data[i * 4] > 128 ? 1 : 0;
+    refs.push(mask);
+  }
+  return refs;
+})();
+
+/* ── UTIL ──────────────────────────────────────────── */
+
+const $ = sel => document.querySelector(sel);
+
+function fmtBytes(n) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024*1024) return `${(n/1024).toFixed(1)} KB`;
+  return `${(n/1024/1024).toFixed(2)} MB`;
+}
+
+function toast(msg, kind = '') {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + kind;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function showScreen(name) {
+  ['mode','tx','rx'].forEach(n => $(`#screen-${n}`).classList.remove('active'));
+  $(`#screen-${name}`).classList.add('active');
+}
+
+const _fs = {};
+function goFS(id) {
+  const el = document.getElementById(id);
+  _fs.el = el; _fs.parent = el.parentNode; _fs.next = el.nextSibling;
+  $('#fs-main-slot').appendChild(el);
+  $('#fs-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeFS() {
+  if (_fs.el) _fs.parent.insertBefore(_fs.el, _fs.next);
+  Object.keys(_fs).forEach(k => delete _fs[k]);
+  $('#fs-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+/* ── CAMERA ────────────────────────────────────────── */
+
+async function startCamera(video, facing = 'environment') {
+  const s = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    audio: false
+  });
+  video.srcObject = s;
+  await video.play();
+  return s;
+}
+
+function stopCamera(video) {
+  const s = video.srcObject;
+  if (s) s.getTracks().forEach(t => t.stop());
+  video.srcObject = null;
+}
+
+/* ── GRID DETECTION ────────────────────────────────── */
+
+function findAnchorBlock(px, w, h, x0, y0, x1, y1, scoreFunc) {
+  let sumX = 0, sumY = 0, n = 0;
+  for (let y = y0; y < y1; y += 2) {
+    for (let x = x0; x < x1; x += 2) {
+      const pi = (Math.min(h-1,y)*w + Math.min(w-1,x)) * 4;
+      const r = px[pi], g = px[pi+1], b = px[pi+2];
+      if (scoreFunc(r, g, b) > 50) { sumX += x; sumY += y; n++; }
+    }
+  }
+  return n > 8 ? { x: sumX/n, y: sumY/n } : null;
+}
+
+function tryDecodeGrid(ctx, imgW, imgH) {
+  const px = ctx.getImageData(0, 0, imgW, imgH).data;
+  const qw = imgW/2, qh = imgH/2;
+
+  // Find the 4 anchor blocks
+  const tl = findAnchorBlock(px, imgW, imgH, 0,  0,  qw,   qh,   (r,g,b) => Math.min(r,g,b) - 60);
+  const tr = findAnchorBlock(px, imgW, imgH, qw, 0,  imgW, qh,   (r,g,b) => r - Math.max(g,b));
+  const bl = findAnchorBlock(px, imgW, imgH, 0,  qh, qw,   imgH, (r,g,b) => Math.max(r,b) - g - 60);
+  const br = findAnchorBlock(px, imgW, imgH, qw, qh, imgW, imgH, (r,g,b) => Math.max(g,b) - r - 60);
+
+  if (!tl || !tr || !bl || !br) return null;
+
+  // Anchor center is at the inner edge of the 3×3 block
+  // TL inner center ≈ cell (ANC_N/2, ANC_N/2), spanning cells
+  // Distance between TL and TR spans (GRID_N - ANC_N) cells
+  const spanCells = GRID_N - ANC_N;
+  const cw = (tr.x - tl.x) / spanCells;
+  const ch = (bl.y - tl.y) / spanCells;
+  if (cw < 2 || ch < 2) return null;
+
+  // Grid top-left pixel
+  const gx = tl.x - (ANC_N / 2) * cw;
+  const gy = tl.y - (ANC_N / 2) * ch;
+
+  // Sample a cell and return average RGB
+  function sampleCell(col, row) {
+    const cx = gx + (col + 0.5) * cw;
+    const cy = gy + (row + 0.5) * ch;
+    const half = Math.max(1, Math.floor(Math.min(cw, ch) * 0.25));
+    let rv=0,gv=0,bv=0,n=0;
+    for (let dy=-half; dy<=half; dy++) {
+      for (let dx=-half; dx<=half; dx++) {
+        const px2 = (Math.max(0,Math.min(imgH-1,0|cy+dy))*imgW + Math.max(0,Math.min(imgW-1,0|cx+dx)))*4;
+        rv+=px[px2]; gv+=px[px2+1]; bv+=px[px2+2]; n++;
+      }
+    }
+    return n ? [rv/n,gv/n,bv/n] : [0,0,0];
+  }
+
+  // Calibrate colors using data cells near anchors
+  // (Use TL anchor as white reference for brightness)
+  const tlSample = sampleCell(ANC_N/2, ANC_N/2);
+  const brightRef = Math.max(1, Math.max(...tlSample));
+
+  // Classify color by hue
+  function rgbToHue(r,g,b) {
+    const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+    if (d < 10) return -1; // achromatic
+    let h;
+    if (max===r) h = ((g-b)/d) % 6;
+    else if (max===g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    return (h * 60 + 360) % 360;
+  }
+
+  function classifyColor([r,g,b]) {
+    const sat = Math.max(r,g,b) - Math.min(r,g,b);
+    if (sat < 30) return -1; // too gray
+    const h = rgbToHue(r,g,b);
+    if (h < 0) return -1;
+    if (h >= 330 || h < 30) return 0; // red
+    if (h >= 80 && h < 160) return 1; // green
+    if (h >= 190 && h < 270) return 2; // blue
+    if (h >= 40 && h < 80) return 3;  // yellow
+    return -1;
+  }
+
+  // Extract cell patch as grayscale 16×16 mask and match shape
+  function extractMask(col, row) {
+    const cx = gx + (col + 0.5) * cw;
+    const cy = gy + (row + 0.5) * ch;
+    const cs = Math.min(cw, ch);
+    const mask = new Uint8Array(REF_SZ * REF_SZ);
+    for (let i = 0; i < REF_SZ; i++) {
+      for (let j = 0; j < REF_SZ; j++) {
+        const sx = cx + (j/REF_SZ - 0.5) * cs;
+        const sy = cy + (i/REF_SZ - 0.5) * cs;
+        const pi = (Math.max(0,Math.min(imgH-1,0|sy))*imgW + Math.max(0,Math.min(imgW-1,0|sx)))*4;
+        const brightness = (px[pi] + px[pi+1] + px[pi+2]) / 3;
+        mask[i*REF_SZ+j] = brightness > 40 ? 1 : 0;
+      }
+    }
+    return mask;
+  }
+
+  function classifyShape(mask) {
+    let best = 0, bestDist = Infinity;
+    for (let s = 0; s < N_SHAPES; s++) {
+      let dist = 0;
+      for (let k = 0; k < mask.length; k++) dist += (mask[k] !== shapeSilhouettes[s][k]) ? 1 : 0;
+      if (dist < bestDist) { bestDist = dist; best = s; }
+    }
+    return best;
+  }
+
+  // Decode all data cells
+  const symbols = [];
+  for (const [row, col] of DATA_CELLS) {
+    const rgb = sampleCell(col, row);
+    const ci = classifyColor(rgb);
+    if (ci < 0) { symbols.push(0); continue; }
+    const mask = extractMask(col, row);
+    const sh = classifyShape(mask);
+    symbols.push(shapeColorToSym(sh, ci));
+  }
+
+  const frameBytes = decodeSymbols(symbols);
+  return parseFrame(frameBytes);
+}
+
+/* ── TX LOGIC ──────────────────────────────────────── */
+
+const tx = { file: null, buf: null, frames: [], current: 0, intervalId: null, startedAt: 0 };
+
+$('#btn-mode-tx').onclick = () => showScreen('tx');
+$('#btn-mode-rx').onclick = () => startRx();
+
+$('#fps-select').onchange = e => { frameMs = parseInt(e.target.value); };
+$('#tx-back').onclick = txReset;
+$('#tx-stop').onclick = txReset;
+$('#tx-restart').onclick = () => {
+  tx.current = 0;
+  tx.startedAt = performance.now();
+  $('#tx-restart').style.display = 'none';
+  $('#tx-stop').style.display = '';
+  txAdvance();
+};
+
+$('#tx-file').onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  tx.file = f;
+  tx.buf = new Uint8Array(await f.arrayBuffer());
+  const chunks = Math.ceil(tx.buf.length / CHUNK_SIZE);
+  $('#tx-drop').classList.add('has-file');
+  $('#tx-drop-content').innerHTML = `
+    <div class="file-info">
+      <div><b>${f.name}</b></div>
+      <div class="meta">${fmtBytes(f.size)} · ${chunks} trames · ~${fmtBytes(chunks * CHUNK_SIZE / (1000/frameMs))}/s</div>
+    </div>`;
+  $('#tx-start').disabled = false;
+};
+
+$('#tx-start').onclick = () => {
+  const f = tx.file;
+  const totalChunks = Math.ceil(tx.buf.length / CHUNK_SIZE);
+  tx.frames = [buildHelloFrame(f.name, f.size, totalChunks, f.type || 'application/octet-stream')];
+  for (let i = 0, off = 0; off < tx.buf.length; i++, off += CHUNK_SIZE) {
+    tx.frames.push(buildDataFrame(i, tx.buf.slice(off, off + CHUNK_SIZE)));
+  }
+  tx.frames.push(buildDoneFrame(crc32(tx.buf)));
+  tx.current = 0;
+  tx.startedAt = performance.now();
+
+  $('#tx-pre').style.display = 'none';
+  $('#tx-active').style.display = 'flex';
+  $('#tx-tel-name').textContent = f.name.length > 20 ? f.name.slice(0,18)+'…' : f.name;
+  $('#tx-tel-size').textContent = fmtBytes(f.size);
+  $('#tx-tel-frames').textContent = tx.frames.length;
+  txAdvance();
+};
+
+function txAdvance() {
+  if (tx.current >= tx.frames.length) {
+    $('#tx-state-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
+    toast('Transmission terminée ✓', 'ok');
+    $('#tx-stop').style.display = 'none';
+    $('#tx-restart').style.display = '';
+    return;
+  }
+  renderGrid($('#tx-canvas'), tx.frames[tx.current]);
+  const label = tx.current === 0 ? 'HELLO' :
+                tx.current === tx.frames.length-1 ? 'DONE' :
+                `${tx.current} / ${tx.frames.length - 2}`;
+  $('#tx-frame-label').textContent = label;
+  $('#tx-state-label').innerHTML = 'STATE <b style="color:var(--amber)">TX</b>';
+
+  const dataFrames = tx.frames.length - 2;
+  const sent = Math.max(0, tx.current - 1);
+  const pct = dataFrames > 0 ? Math.round(sent / dataFrames * 100) : 0;
+  $('#tx-progress').style.width = pct + '%';
+  $('#tx-progress-text').textContent = pct + '%';
+  $('#tx-tel-sent').textContent = sent;
+  const elapsed = (performance.now() - tx.startedAt) / 1000;
+  const bytesOut = sent * CHUNK_SIZE;
+  $('#tx-tel-rate').textContent = elapsed > 1 ? fmtBytes(bytesOut / elapsed) + '/s' : '—';
+
+  tx.current++;
+  tx.intervalId = setTimeout(txAdvance, frameMs);
+}
+
+function txReset() {
+  clearTimeout(tx.intervalId);
+  tx.file = null; tx.buf = null; tx.frames = []; tx.current = 0;
+  $('#tx-pre').style.display = '';
+  $('#tx-active').style.display = 'none';
+  $('#tx-drop').classList.remove('has-file');
+  $('#tx-drop-content').innerHTML = '<div class="glyph">▲■●</div><div class="hint">Sélectionner un fichier à transmettre</div>';
+  $('#tx-start').disabled = true;
+  $('#tx-file').value = '';
+  $('#tx-stop').style.display = '';
+  $('#tx-restart').style.display = 'none';
+  $('#tx-progress').style.width = '0%';
+  $('#tx-progress-text').textContent = '0%';
+  showScreen('mode');
+}
+
+/* ── RX LOGIC ──────────────────────────────────────── */
+
+const rx = { stream: null, scanner: null, facing: 'environment',
+  info: null, chunks: [], received: new Set(), errors: 0, scans: 0 };
+
+async function startRx() {
+  showScreen('rx');
+  rx.facing = 'environment';
+  try {
+    rx.stream = await startCamera($('#rx-video'), rx.facing);
+    rx.scanner = makeScanner();
+  } catch(e) {
+    toast('Caméra indisponible — ' + (e.message||e), 'err');
+  }
+}
+
+$('#rx-back').onclick = rxReset;
+$('#rx-flip').onclick = async () => {
+  if (rx.scanner) { rx.scanner.stop(); rx.scanner = null; }
+  stopCamera($('#rx-video'));
+  rx.facing = rx.facing === 'environment' ? 'user' : 'environment';
+  try {
+    rx.stream = await startCamera($('#rx-video'), rx.facing);
+    rx.scanner = makeScanner();
+  } catch(e) { toast('Caméra — ' + (e.message||e), 'err'); }
+};
+
+function rxReset() {
+  if (rx.scanner) { rx.scanner.stop(); rx.scanner = null; }
+  stopCamera($('#rx-video'));
+  rx.info = null; rx.chunks = []; rx.received.clear(); rx.errors = 0; rx.scans = 0;
+  $('#rx-complete').style.display = 'none';
+  $('#rx-progress').style.width = '0%';
+  $('#rx-progress-text').textContent = '0%';
+  $('#rx-frame-label').textContent = 'en attente HELLO…';
+  showScreen('mode');
+}
+
+function makeScanner() {
+  const canvas = $('#scan-canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const video = $('#rx-video');
+  let running = true;
+  let lastKey = null, lastAt = 0;
+
+  function tick() {
+    if (!running) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const scale = Math.min(1, 640 / Math.max(vw, vh));
+      const w = Math.floor(vw*scale), h = Math.floor(vh*scale);
+      if (canvas.width !== w) canvas.width = w;
+      if (canvas.height !== h) canvas.height = h;
+      ctx.drawImage(video, 0, 0, w, h);
+
+      try {
+        const decoded = tryDecodeGrid(ctx, w, h);
+        if (decoded) {
+          const key = decoded.type + (decoded.index ?? '');
+          const now = performance.now();
+          if (key !== lastKey || now - lastAt > 400) {
+            lastKey = key; lastAt = now;
+            onDecoded(decoded);
+          }
+        } else {
+          rx.scans++;
+          if (rx.scans % 30 === 0 && !rx.info)
+            $('#rx-frame-label').textContent = 'en attente HELLO…';
+        }
+      } catch(e) { rx.errors++; }
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  return { stop: () => { running = false; } };
+}
+
+function onDecoded(frame) {
+  if (frame.type === 'HELLO' && !rx.info) {
+    rx.info = frame;
+    rx.chunks = new Array(frame.totalFrames);
+    $('#rx-state-label').innerHTML = 'STATE <b style="color:var(--amber)">RX</b>';
+    $('#rx-tel-name').textContent = frame.name.length > 20 ? frame.name.slice(0,18)+'…' : frame.name;
+    $('#rx-tel-size').textContent = fmtBytes(frame.size);
+    $('#rx-tel-frames').textContent = frame.totalFrames;
+    $('#rx-frame-label').textContent = `HELLO reçu · 0 / ${frame.totalFrames}`;
+    toast('HELLO reçu — démarrage réception', 'ok');
+  }
+
+  if (frame.type === 'DATA' && rx.info) {
+    const { index, data } = frame;
+    if (!rx.received.has(index)) {
+      rx.received.add(index);
+      rx.chunks[index] = data;
+      const got = rx.received.size;
+      const total = rx.info.totalFrames;
+      const pct = Math.round(got / total * 100);
+      $('#rx-tel-received').textContent = got;
+      $('#rx-tel-err').textContent = rx.errors > 0 ? `${((rx.errors/(rx.errors+rx.scans))*100).toFixed(1)}%` : '0%';
+      $('#rx-frame-label').textContent = `${got} / ${total}`;
+      $('#rx-progress').style.width = pct + '%';
+      $('#rx-progress-text').textContent = pct + '%';
+      if (got === total) rxFinalize();
+    }
+  }
+
+  if (frame.type === 'DONE' && rx.info && rx.received.size > 0) {
+    if (rx.received.size === rx.info.totalFrames) rxFinalize();
+  }
+}
+
+function rxFinalize() {
+  if (rx.scanner) { rx.scanner.stop(); rx.scanner = null; }
+  stopCamera($('#rx-video'));
+
+  // Reassemble file
+  const totalSize = rx.info.size;
+  const buf = new Uint8Array(totalSize);
+  let off = 0;
+  for (let i = 0; i < rx.info.totalFrames; i++) {
+    if (rx.chunks[i]) {
+      const slice = rx.chunks[i].slice(0, Math.min(rx.chunks[i].length, totalSize - off));
+      buf.set(slice, off);
+      off += slice.length;
+    }
+  }
+
+  const meta = `${fmtBytes(totalSize)} · ${rx.info.totalFrames} trames · ${rx.errors} erreur(s)`;
+  $('#rx-complete-meta').textContent = meta;
+  $('#rx-complete').style.display = '';
+  $('#rx-state-label').innerHTML = 'STATE <b style="color:var(--green)">DONE</b>';
+  toast('Fichier reconstitué ✓', 'ok');
+
+  const blob = new Blob([buf], { type: rx.info.mime || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  $('#rx-download').onclick = () => {
+    const a = document.createElement('a');
+    a.href = url; a.download = rx.info.name; a.click();
+  };
+}
+
+/* ── PAGE CONTROLS ─────────────────────────────────── */
+$('#fps-select').value = '333';
+</script>
+
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;display:none;"></div>
+<script src="sw-register.js"></script>
+<script src="version.js"></script>
+<script src="theme-toggle.js"></script>
+<script src="page-controls.js"></script>
+</body>
+</html>
