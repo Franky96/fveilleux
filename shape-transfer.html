@@ -230,14 +230,25 @@
 
       <div style="margin-top:1.2rem;background:var(--bg-panel);border:1px solid var(--border);padding:14px 18px;max-width:600px;width:100%;">
         <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;">Paramètres</div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <label style="font-size:12px;color:var(--text-dim);letter-spacing:0.05em;">Vitesse</label>
-          <select id="fps-select" style="background:var(--bg-elev);border:1px solid var(--border-hot);color:var(--text);padding:4px 10px;font-size:12px;font-family:inherit;">
-            <option value="500">2 fps (stable)</option>
-            <option value="333" selected>3 fps (normal)</option>
-            <option value="200">5 fps (rapide)</option>
-            <option value="150">7 fps (expérimental)</option>
-          </select>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label style="font-size:12px;color:var(--text-dim);letter-spacing:0.05em;">Densité</label>
+            <select id="density-select" style="background:var(--bg-elev);border:1px solid var(--border-hot);color:var(--text);padding:4px 10px;font-size:12px;font-family:inherit;">
+              <option value="8">8×8 — Très lisible</option>
+              <option value="12">12×12 — Lisible</option>
+              <option value="16" selected>16×16 — Dense</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label style="font-size:12px;color:var(--text-dim);letter-spacing:0.05em;">Vitesse</label>
+            <select id="fps-select" style="background:var(--bg-elev);border:1px solid var(--border-hot);color:var(--text);padding:4px 10px;font-size:12px;font-family:inherit;">
+              <option value="500">2 fps (stable)</option>
+              <option value="333" selected>3 fps (normal)</option>
+              <option value="200">5 fps (rapide)</option>
+              <option value="150">7 fps (expérimental)</option>
+            </select>
+          </div>
+          <div id="density-info" style="font-size:11px;color:var(--text-mute);letter-spacing:0.05em;"></div>
         </div>
       </div>
     </div>
@@ -388,37 +399,51 @@
      DONE  [0xAA,0x03, file_crc×4, 0×103]
    ============================================================ */
 
-const GRID_N    = 16;
-const CELL_PX   = 34;
-const ANC_N     = 3;
-const CANVAS_SZ = GRID_N * CELL_PX;  // 544
+// Density presets: [gridN, ancN]  — CELL_PX = floor(544/gridN)
+const DENSITY_PRESETS = [
+  { key:'8',  label:'8×8  — Très lisible', gridN:  8, ancN: 2 },
+  { key:'12', label:'12×12 — Lisible',      gridN: 12, ancN: 2 },
+  { key:'16', label:'16×16 — Dense',        gridN: 16, ancN: 3 },
+];
+
+// Dynamic layout — updated by applyDensity()
+let GRID_N = 16, ANC_N = 3, CELL_PX = 34, CANVAS_SZ = 544;
+let DATA_CELLS = [], BYTES_PER_FRAME = 55, CHUNK_SIZE = 47;
+
+function isAnchor(r, c) {
+  return (r < ANC_N && c < ANC_N) ||
+         (r < ANC_N && c >= GRID_N - ANC_N) ||
+         (r >= GRID_N - ANC_N && c < ANC_N) ||
+         (r >= GRID_N - ANC_N && c >= GRID_N - ANC_N);
+}
+
+function applyDensity(gridN, ancN) {
+  GRID_N = gridN; ANC_N = ancN;
+  CELL_PX   = Math.floor(544 / GRID_N);
+  CANVAS_SZ = GRID_N * CELL_PX;
+  DATA_CELLS = [];
+  for (let r = 0; r < GRID_N; r++)
+    for (let c = 0; c < GRID_N; c++)
+      if (!isAnchor(r, c)) DATA_CELLS.push([r, c]);
+  BYTES_PER_FRAME = Math.floor(DATA_CELLS.length / CELLS_PER_BYTE);
+  CHUNK_SIZE = Math.max(1, BYTES_PER_FRAME - 8); // 4-byte header + 4-byte CRC
+}
 
 const N_SHAPES  = 5;
 const N_COLORS  = 4;
-// 4-color encoding: each cell carries 2 bits (color index 0-3)
-// 4 cells per byte, 220 data cells → 55 bytes per frame
-const CELLS_PER_BYTE = 4;
+const CELLS_PER_BYTE = 4; // 2 bits per cell, 4 per byte
 
 const SHAPE_NAMES  = ['circle','square','triangle','pentagon','hexagon'];
 const DATA_COLORS_HEX = ['#ee2222','#22bb22','#2266ee','#ddcc00'];
 const DATA_COLORS_RGB = [[238,34,34],[34,187,34],[34,102,238],[221,204,0]];
 
-// Anchor corner fill colors — chosen to NOT conflict with any data color
-// Data colors: red #ee2222, green #22bb22, blue #2266ee, yellow #ddcc00
 const ANC = {
-  TL: '#ffffff',  // top-left: pure white
-  TR: '#ff00ff',  // top-right: pure magenta
-  BL: '#ff8000',  // bottom-left: orange
-  BR: '#00ffff',  // bottom-right: pure cyan
-};
-const ANC_RGB = {
-  TL: [255,255,255],
-  TR: [255,0,255],
-  BL: [255,128,0],
-  BR: [0,255,255],
+  TL: '#ffffff',
+  TR: '#ff00ff',
+  BL: '#ff8000',
+  BR: '#00ffff',
 };
 
-const CHUNK_SIZE = 47; // data bytes per DATA frame (55 - 4 header - 4 CRC)
 const FRAME_MS_DEFAULT = 333;
 let frameMs = FRAME_MS_DEFAULT;
 
@@ -445,22 +470,7 @@ function decodeCells(colorIdxs) {
   return new Uint8Array(out);
 }
 
-/* ── DATA CELLS ────────────────────────────────────── */
-
-function isAnchor(r, c) {
-  return (r < ANC_N && c < ANC_N) ||
-         (r < ANC_N && c >= GRID_N - ANC_N) ||
-         (r >= GRID_N - ANC_N && c < ANC_N) ||
-         (r >= GRID_N - ANC_N && c >= GRID_N - ANC_N);
-}
-
-const DATA_CELLS = [];
-for (let r = 0; r < GRID_N; r++)
-  for (let c = 0; c < GRID_N; c++)
-    if (!isAnchor(r, c)) DATA_CELLS.push([r, c]);
-// DATA_CELLS.length == 220
-
-const BYTES_PER_FRAME = Math.floor(DATA_CELLS.length / CELLS_PER_BYTE); // 55
+/* ── DATA CELLS ─ populated by applyDensity() ─────── */
 
 /* ── CRC-32 ────────────────────────────────────────── */
 
@@ -530,10 +540,12 @@ function parseFrame(bytes) {
     const totalFrames = (bytes[2] << 8) | bytes[3];
     const size = (bytes[4] << 24 | bytes[5] << 16 | bytes[6] << 8 | bytes[7]) >>> 0;
     let i = 8;
-    const nameLen = bytes[i++];
-    const name = new TextDecoder().decode(bytes.slice(i, i + nameLen)); i += nameLen;
-    const mimeLen = bytes[i++];
-    const mime = new TextDecoder().decode(bytes.slice(i, i + mimeLen));
+    const nameLen = i < crcOff ? bytes[i++] : 0;
+    const nameEnd = Math.min(i + nameLen, crcOff);
+    const name = new TextDecoder().decode(bytes.slice(i, nameEnd)); i = nameEnd;
+    const mimeLen = i < crcOff ? bytes[i++] : 0;
+    const mimeEnd = Math.min(i + mimeLen, crcOff);
+    const mime = new TextDecoder().decode(bytes.slice(i, mimeEnd));
     return { type: 'HELLO', totalFrames, size, name, mime };
   }
   if (type === 0x02) {
@@ -1010,7 +1022,24 @@ function rxFinalize() {
 }
 
 /* ── PAGE CONTROLS ─────────────────────────────────── */
+
+function updateDensityInfo() {
+  const info = $('#density-info');
+  if (!info) return;
+  const cellPx = Math.floor(544 / GRID_N);
+  info.textContent = `cellule ${cellPx}px · ${BYTES_PER_FRAME} octets/trame`;
+}
+
+$('#density-select').onchange = e => {
+  const gridN = parseInt(e.target.value);
+  const ancN = gridN <= 12 ? 2 : 3;
+  applyDensity(gridN, ancN);
+  updateDensityInfo();
+};
+
 $('#fps-select').value = '333';
+applyDensity(16, 3); // default
+updateDensityInfo();
 </script>
 
 <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;display:none;"></div>
