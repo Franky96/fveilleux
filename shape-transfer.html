@@ -299,6 +299,7 @@
       </div>
 
       <div class="controls">
+        <button class="btn primary" id="tx-play" style="display:none;">▶ Lancer</button>
         <button class="btn danger" id="tx-stop">■ Arrêter</button>
         <button class="btn" id="tx-restart" style="display:none;">↺ Rejouer</button>
       </div>
@@ -839,6 +840,7 @@ $('#tx-restart').onclick = () => {
   tx.current = 0;
   tx.startedAt = performance.now();
   $('#tx-restart').style.display = 'none';
+  $('#tx-play').style.display = 'none';
   $('#tx-stop').style.display = '';
   txAdvance();
 };
@@ -867,13 +869,23 @@ $('#tx-start').onclick = () => {
   }
   tx.frames.push(buildDoneFrame(crc32(tx.buf)));
   tx.current = 0;
-  tx.startedAt = performance.now();
 
   $('#tx-pre').style.display = 'none';
   $('#tx-active').style.display = 'flex';
   $('#tx-tel-name').textContent = f.name.length > 20 ? f.name.slice(0,18)+'…' : f.name;
   $('#tx-tel-size').textContent = fmtBytes(f.size);
   $('#tx-tel-frames').textContent = tx.frames.length;
+
+  // Show HELLO frame statically — wait for user to click Play
+  renderGrid($('#tx-canvas'), tx.frames[0]);
+  $('#tx-frame-label').textContent = 'HELLO';
+  $('#tx-state-label').innerHTML = 'STATE <b style="color:var(--text-dim)">PRÊT</b>';
+  $('#tx-play').style.display = '';
+};
+
+$('#tx-play').onclick = () => {
+  $('#tx-play').style.display = 'none';
+  tx.startedAt = performance.now();
   txAdvance();
 };
 
@@ -909,6 +921,7 @@ function txAdvance() {
 function txReset() {
   clearTimeout(tx.intervalId);
   tx.file = null; tx.buf = null; tx.frames = []; tx.current = 0;
+  $('#tx-play').style.display = 'none';
   $('#tx-pre').style.display = '';
   $('#tx-active').style.display = 'none';
   $('#tx-drop').classList.remove('has-file');
