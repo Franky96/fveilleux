@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puces — Simulateurs</title>
+<link rel="stylesheet" href="style.css">
+<script>
+  const _pChip = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pChip.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin'))
+    window.location.href = 'dashboard.html';
+</script>
+<style>
+:root {
+  --sc: #80cc80; --sc2: #60aa60; --sd: #556655; --sb: #2a3a2a;
+  --sp: #0f1a0f; --se: #1a2e1a; --sr: #ff6b6b;
+}
+html.light {
+  --sc: #2a7a2a; --sc2: #1a6a1a; --sd: #667766; --sb: #c4d4c4;
+  --sp: #ffffff; --se: #e8f0e8; --sr: #cc3333;
+}
+
+.sim-topbar {
+  display: flex; align-items: center; gap: 1rem; padding: 0.6rem 1rem;
+  background: var(--sp); border-bottom: 1px solid var(--sb); flex-shrink: 0;
+}
+.sim-back { font-size: 0.8rem; padding: 0.25rem 0.7rem; white-space: nowrap; }
+.sim-title { font-weight: 700; letter-spacing: 0.12em; font-size: 0.9rem; color: var(--sc); }
+.sim-body { flex: 1; overflow: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+.sim-panel { display: none; }
+.sim-panel.active { display: flex; flex-direction: column; gap: 1rem; }
+.sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 700px) { .sim-grid { grid-template-columns: 1fr; } }
+
+.scard { background: var(--sp); border: 1px solid var(--sb); padding: 1rem; }
+.scard h3 { margin-bottom: 0.75rem; font-size: 0.8rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--sc); border-bottom: 1px solid var(--sb); padding-bottom: 0.4rem; }
+.srow { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.srow label { font-size: 0.78rem; color: var(--sd); min-width: 90px; }
+.srow input[type=number], .srow input[type=text], .srow select {
+  background: var(--se); border: 1px solid var(--sb); color: inherit;
+  padding: 0.3rem 0.6rem; font-size: 0.82rem; font-family: monospace; width: 110px;
+}
+.srow .unit { font-size: 0.75rem; color: var(--sd); }
+.ritem { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.35rem;
+  font-family: monospace; font-size: 0.82rem; }
+.ritem .rk { color: var(--sd); min-width: 150px; }
+.ritem .rv { color: var(--sc); font-weight: 700; font-size: 0.9rem; }
+
+/* 555 */
+.ic555 { display: inline-grid; grid-template-columns: auto 80px auto;
+  border: 2px solid var(--sc); font-family: monospace; font-size: 0.72rem; }
+.ic555-top { grid-column: 1/-1; background: var(--sc); color: #0a0f0a;
+  text-align: center; padding: 2px; font-weight: 700; letter-spacing: 0.2em; }
+.ic555-pins { display: flex; flex-direction: column; }
+.ic555-pins.right { align-items: flex-end; }
+.ic555-pin { display: flex; align-items: center; gap: 4px; padding: 2px 6px; min-height: 22px; }
+.ic555-pins.right .ic555-pin { flex-direction: row-reverse; }
+.ic555-pn { color: var(--sc); font-weight: 700; width: 14px; text-align: center; }
+.ic555-mid { border-left: 1px solid var(--sc); border-right: 1px solid var(--sc);
+  display: flex; align-items: center; justify-content: center; color: var(--sc); font-size: 1.1rem; }
+
+/* Logic Gates */
+.gate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); gap: 0.75rem; }
+.gate-card { background: var(--sp); border: 1px solid var(--sb); padding: 0.75rem; text-align: center; }
+.gate-card h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--sd); margin-bottom: 0.6rem; }
+.gate-ins { display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 0.4rem; }
+.gbtn { background: var(--se); border: 1px solid var(--sb); color: var(--sd);
+  font-family: monospace; font-size: 0.85rem; padding: 3px 10px; cursor: pointer; transition: all 0.15s; }
+.gbtn.on { background: var(--se); border-color: var(--sc); color: var(--sc);
+  box-shadow: 0 0 6px rgba(128,204,128,0.3); }
+.gate-out { font-size: 1.8rem; margin: 0.2rem 0; }
+.gate-lbl { font-family: monospace; font-size: 0.75rem; color: var(--sd); }
+.gate-lbl.out-1 { color: var(--sc); }
+.gtab { font-family: monospace; font-size: 0.7rem; border-collapse: collapse;
+  margin-top: 0.5rem; width: 100%; }
+.gtab th { border-bottom: 1px solid var(--sb); padding: 1px 3px; color: var(--sd); }
+.gtab td { padding: 1px 3px; }
+.gtab td.t1 { color: var(--sc); }
+
+/* Op-Amp */
+.oa-svg { display: block; max-width: 320px; margin: 0 auto; }
+.oa-formula { font-family: monospace; font-size: 0.9rem; color: var(--sc);
+  padding: 0.5rem 0.8rem; background: var(--se); border-left: 3px solid var(--sc);
+  margin: 0.5rem 0; white-space: pre; }
+
+/* 6502 */
+.cpu-wrap { display: grid; grid-template-columns: 200px 1fr; gap: 1rem; }
+@media (max-width: 760px) { .cpu-wrap { grid-template-columns: 1fr; } }
+.cpu-regs { font-family: monospace; font-size: 0.82rem; }
+.creg { display: flex; justify-content: space-between; padding: 2px 4px;
+  border-bottom: 1px solid var(--se); }
+.creg-n { color: var(--sd); }
+.creg-v { color: var(--sc); font-weight: 700; }
+.cflags { display: flex; gap: 6px; margin-top: 0.5rem; flex-wrap: wrap; }
+.cflag { display: flex; flex-direction: column; align-items: center; font-family: monospace;
+  font-size: 0.7rem; gap: 1px; }
+.cflag-n { color: var(--sd); }
+.cflag-v { color: var(--sc); font-weight: 700; }
+.cflag-v.set { color: var(--sr); }
+.cpu-disasm { font-family: monospace; font-size: 0.78rem; height: 180px; overflow-y: auto;
+  background: var(--se); padding: 0.4rem; border: 1px solid var(--sb); }
+.dline { padding: 1px 3px; color: var(--sd); white-space: nowrap; }
+.dline.cur { background: rgba(128,204,128,0.12); color: var(--sc); }
+.daddr { color: #5a8a5a; margin-right: 6px; }
+.dbytes { color: #445a44; margin-right: 6px; display: inline-block; min-width: 64px; }
+.cpu-mem { font-family: monospace; font-size: 0.7rem; height: 180px; overflow: auto;
+  background: var(--se); padding: 0.4rem; border: 1px solid var(--sb); white-space: nowrap; }
+.mrow { display: block; }
+.maddr { color: #5a8a5a; display: inline-block; width: 38px; }
+.mbyte { display: inline-block; width: 20px; text-align: right; cursor: default; }
+.mbyte.mpc { background: rgba(128,204,128,0.2); color: var(--sc); }
+.mbyte.msp { background: rgba(255,107,107,0.15); }
+.mbyte.mnz { color: #aaa; }
+.cpu-hex { background: var(--se); border: 1px solid var(--sb); color: inherit;
+  font-family: monospace; font-size: 0.78rem; padding: 0.4rem; width: 100%; resize: vertical;
+  min-height: 60px; }
+.cbtn { background: var(--se); border: 1px solid var(--sb); color: var(--sc);
+  font-family: monospace; font-size: 0.75rem; padding: 4px 10px; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.12s; }
+.cbtn:hover { border-color: var(--sc); background: rgba(128,204,128,0.08); }
+.cbtn.danger { color: var(--sr); border-color: #6a3333; }
+.cbtn.danger:hover { background: rgba(255,107,107,0.08); }
+.cbtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.cpu-status { font-family: monospace; font-size: 0.75rem; color: var(--sd); min-height: 1.1rem; }
+.cpu-status .ok { color: var(--sc); }
+.cpu-status .err { color: var(--sr); }
+.cbtn-row { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+
+  <header>
+    <a href="informatique.html" class="back-btn-dash">&#8592; Informatique</a>
+    <div style="text-align:center;">
+      <h1>Puces</h1>
+      <p class="subtitle">Simulateurs de composants électroniques</p>
+    </div>
+    <div class="header-controls">
+      <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div id="hamburger-menu">
+        <a href="archive.html" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
+        <a href="https://mail.hostinger.com/" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
+        <button class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
+        <div class="hbg-sep"></div>
+        <div id="logoutBtn" class="hbg-item" role="button" tabindex="0">↩ Déconnexion</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── CHIP SELECTOR ─────────────────────────────── -->
+  <main id="chip-selector">
+    <p class="welcome-text">Sélectionner un composant</p>
+    <nav class="menu-grid" style="visibility:visible;">
+
+      <a href="#" class="menu-card" onclick="openChip('555');return false;">
+        <span class="icon">⏱</span>
+        <h2>NE555</h2>
+        <p>Minuterie — modes astable et monostable</p>
+      </a>
+
+      <a href="#" class="menu-card" onclick="openChip('gates');return false;">
+        <span class="icon">⊻</span>
+        <h2>Portes logiques</h2>
+        <p>AND · OR · NAND · NOR · XOR · XNOR · NOT</p>
+      </a>
+
+      <a href="#" class="menu-card" onclick="openChip('opamp');return false;">
+        <span class="icon">▷</span>
+        <h2>AO 741</h2>
+        <p>Amplificateur opérationnel — inverseur · non-inverseur · comparateur</p>
+      </a>
+
+      <a href="#" class="menu-card" onclick="openChip('6502');return false;">
+        <span class="icon">⚙️</span>
+        <h2>MOS 6502</h2>
+        <p>Processeur 8 bits — simulateur complet avec éditeur mémoire</p>
+      </a>
+
+    </nav>
+  </main>
+
+  <!-- ── SIMULATOR CONTAINER ──────────────────────── -->
+  <div id="sim-container" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+
+    <div class="sim-topbar">
+      <button class="btn sim-back" onclick="backToSelector()">&#8592; Puces</button>
+      <span class="sim-title" id="sim-title"></span>
+    </div>
+
+    <div class="sim-body">
+
+      <!-- ══════════════════════ NE555 ══════════════════════ -->
+      <div id="panel-555" class="sim-panel">
+        <div class="sim-grid">
+
+          <!-- Controls -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="scard">
+              <h3>Mode</h3>
+              <div style="display:flex;gap:1.5rem;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85rem;">
+                  <input type="radio" name="tm" value="astable" checked onchange="t555calc()"> Astable
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85rem;">
+                  <input type="radio" name="tm" value="mono" onchange="t555calc()"> Monostable
+                </label>
+              </div>
+            </div>
+
+            <div class="scard" id="t555-params">
+              <h3>Paramètres</h3>
+              <div id="t555-astable-in">
+                <div class="srow"><label>R1</label><input type="number" id="t555-r1" value="10" min="0.001" step="any" oninput="t555calc()"><span class="unit">kΩ</span></div>
+                <div class="srow"><label>R2</label><input type="number" id="t555-r2" value="10" min="0.001" step="any" oninput="t555calc()"><span class="unit">kΩ</span></div>
+              </div>
+              <div id="t555-mono-in" style="display:none;">
+                <div class="srow"><label>R</label><input type="number" id="t555-r" value="10" min="0.001" step="any" oninput="t555calc()"><span class="unit">kΩ</span></div>
+              </div>
+              <div class="srow">
+                <label>C</label>
+                <input type="number" id="t555-c" value="100" min="0.001" step="any" oninput="t555calc()">
+                <select id="t555-cu" onchange="t555calc()" style="width:70px;">
+                  <option value="1e-6">µF</option>
+                  <option value="1e-9" selected>nF</option>
+                  <option value="1e-12">pF</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="scard">
+              <h3>Schéma — NE555</h3>
+              <div class="ic555">
+                <div class="ic555-top">NE555</div>
+                <div class="ic555-pins">
+                  <div class="ic555-pin"><span class="ic555-pn">1</span><span>GND</span></div>
+                  <div class="ic555-pin"><span class="ic555-pn">2</span><span>TRIG</span></div>
+                  <div class="ic555-pin"><span class="ic555-pn">3</span><span>OUT</span></div>
+                  <div class="ic555-pin"><span class="ic555-pn">4</span><span>RESET</span></div>
+                </div>
+                <div class="ic555-mid">⬛</div>
+                <div class="ic555-pins right">
+                  <div class="ic555-pin"><span>VCC</span><span class="ic555-pn">8</span></div>
+                  <div class="ic555-pin"><span>DIS</span><span class="ic555-pn">7</span></div>
+                  <div class="ic555-pin"><span>THR</span><span class="ic555-pn">6</span></div>
+                  <div class="ic555-pin"><span>CV</span><span class="ic555-pn">5</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results + waveform -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="scard" id="t555-results">
+              <h3>Résultats</h3>
+              <div id="t555-out"></div>
+            </div>
+            <div class="scard">
+              <h3>Forme d'onde — sortie</h3>
+              <canvas id="t555-wave" style="width:100%;height:120px;display:block;"></canvas>
+            </div>
+            <div class="scard">
+              <h3>Formules</h3>
+              <div id="t555-formulas" style="font-family:monospace;font-size:0.78rem;color:var(--sd);line-height:1.7;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══════════════════════ LOGIC GATES ══════════════════════ -->
+      <div id="panel-gates" class="sim-panel">
+        <div class="scard">
+          <h3>Portes logiques — série 74HC</h3>
+          <div class="gate-grid" id="gate-grid"></div>
+        </div>
+        <div class="scard">
+          <h3>Table de vérité — <span id="gt-name">AND</span></h3>
+          <div style="display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;">
+            <table class="gtab" id="gt-table" style="max-width:200px;"></table>
+            <div style="font-family:monospace;font-size:0.78rem;color:var(--sd);line-height:1.8;" id="gt-info"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════ OP-AMP ══════════════════════ -->
+      <div id="panel-opamp" class="sim-panel">
+        <div class="sim-grid">
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="scard">
+              <h3>Configuration</h3>
+              <div class="srow">
+                <label>Circuit</label>
+                <select id="oa-mode" onchange="oacalc()" style="width:200px;">
+                  <option value="inv">Inverseur</option>
+                  <option value="noninv">Non-inverseur</option>
+                  <option value="diff">Différentiel</option>
+                  <option value="follow">Suiveur (buffer)</option>
+                  <option value="comp">Comparateur</option>
+                </select>
+              </div>
+            </div>
+            <div class="scard" id="oa-inputs">
+              <h3>Valeurs</h3>
+              <div id="oa-fields"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="scard">
+              <h3>Schéma</h3>
+              <svg id="oa-svg" class="oa-svg" viewBox="0 0 320 180" style="height:160px;"></svg>
+            </div>
+            <div class="scard">
+              <h3>Résultats</h3>
+              <div id="oa-results"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════ 6502 ══════════════════════ -->
+      <div id="panel-6502" class="sim-panel">
+
+        <!-- Controls row -->
+        <div class="scard">
+          <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between;">
+            <div class="cbtn-row">
+              <button class="cbtn" id="cpu-step" onclick="cpuStep()">Step</button>
+              <button class="cbtn" id="cpu-run"  onclick="cpuRun()">Run</button>
+              <button class="cbtn" id="cpu-stop" onclick="cpuStop()" disabled>Stop</button>
+              <button class="cbtn danger" onclick="cpuReset()">Reset</button>
+            </div>
+            <div class="cpu-status" id="cpu-status">Prêt — charger un programme et appuyer sur Reset.</div>
+          </div>
+        </div>
+
+        <div class="cpu-wrap">
+
+          <!-- Left: registers + disassembly -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+
+            <div class="scard">
+              <h3>Registres</h3>
+              <div class="cpu-regs" id="cpu-regs"></div>
+              <div class="cflags" id="cpu-flags"></div>
+            </div>
+
+            <div class="scard">
+              <h3>Désassembleur</h3>
+              <div class="cpu-disasm" id="cpu-disasm"></div>
+            </div>
+
+          </div>
+
+          <!-- Right: program loader + memory -->
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+
+            <div class="scard">
+              <h3>Programme (hex brut)</h3>
+              <textarea class="cpu-hex" id="cpu-hex" rows="4"
+                placeholder="ex: A9 05 85 10 A9 00 69 01 C9 0A D0 FB 00"></textarea>
+              <div style="display:flex;gap:0.5rem;margin-top:0.5rem;align-items:center;flex-wrap:wrap;">
+                <div class="srow" style="margin:0;">
+                  <label style="min-width:60px;">Adresse</label>
+                  <input type="text" id="cpu-load-addr" value="0200" style="width:70px;font-family:monospace;" maxlength="4">
+                </div>
+                <button class="cbtn" onclick="cpuLoad()">Charger</button>
+              </div>
+            </div>
+
+            <div class="scard">
+              <h3>Mémoire — <span id="mem-page-lbl">$0200</span>
+                <span style="float:right;display:flex;gap:4px;">
+                  <button class="cbtn" style="padding:1px 6px;font-size:0.7rem;" onclick="memPagePrev()">◀</button>
+                  <button class="cbtn" style="padding:1px 6px;font-size:0.7rem;" onclick="memPageNext()">▶</button>
+                </span>
+              </h3>
+              <div class="cpu-mem" id="cpu-mem"></div>
+            </div>
+
+            <div class="scard">
+              <h3>Exemples</h3>
+              <div class="cbtn-row">
+                <button class="cbtn" onclick="cpuLoadExample('count')">Compteur</button>
+                <button class="cbtn" onclick="cpuLoadExample('fib')">Fibonacci</button>
+                <button class="cbtn" onclick="cpuLoadExample('loop')">Boucle</button>
+                <button class="cbtn" onclick="cpuLoadExample('sort')">Tri</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div><!-- sim-body -->
+  </div><!-- sim-container -->
+
+</div><!-- dashboard-container -->
+
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;display:none;"></div>
+<script src="sw-register.js"></script>
+<script src="version.js"></script>
+<script src="theme-toggle.js"></script>
+
+<script>
+/* ── NAV ─────────────────────────────────────────── */
+function openChip(id) {
+  document.getElementById('chip-selector').style.display = 'none';
+  const sc = document.getElementById('sim-container');
+  sc.style.display = 'flex';
+  document.querySelectorAll('.sim-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  const titles = { '555':'NE555 — Minuterie', gates:'Portes logiques', opamp:'AO 741 — Amplificateur opérationnel', '6502':'MOS 6502 — Processeur 8 bits' };
+  document.getElementById('sim-title').textContent = titles[id] || id;
+  if (id === '555') { t555calc(); t555drawWave(); }
+  if (id === 'gates') initGates();
+  if (id === 'opamp') oacalc();
+  if (id === '6502') { cpuRenderAll(); }
+}
+function backToSelector() {
+  cpuStop();
+  document.getElementById('sim-container').style.display = 'none';
+  document.getElementById('chip-selector').style.display = '';
+}
+function toggleHamburger() {
+  const m = document.getElementById('hamburger-menu');
+  const b = document.getElementById('hamburger-btn');
+  const open = m.classList.toggle('open');
+  b.classList.toggle('open', open);
+}
+function closeHamburger() {
+  document.getElementById('hamburger-menu').classList.remove('open');
+  document.getElementById('hamburger-btn').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#hamburger-btn') && !e.target.closest('#hamburger-menu')) closeHamburger();
+});
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', () => {
+  sessionStorage.clear(); window.location.href = 'index.html';
+});
+
+/* ══════════════════════════════════════════════════
+   NE555 TIMER
+══════════════════════════════════════════════════ */
+function fmtFreq(hz) {
+  if (hz >= 1e6) return (hz/1e6).toPrecision(4) + ' MHz';
+  if (hz >= 1e3) return (hz/1e3).toPrecision(4) + ' kHz';
+  return hz.toPrecision(4) + ' Hz';
+}
+function fmtTime(s) {
+  if (s < 1e-6) return (s*1e9).toPrecision(3) + ' ns';
+  if (s < 1e-3) return (s*1e6).toPrecision(3) + ' µs';
+  if (s < 1)    return (s*1e3).toPrecision(3) + ' ms';
+  return s.toPrecision(4) + ' s';
+}
+
+function t555calc() {
+  const mode = document.querySelector('input[name=tm]:checked').value;
+  const mono = mode === 'mono';
+  document.getElementById('t555-astable-in').style.display = mono ? 'none' : '';
+  document.getElementById('t555-mono-in').style.display   = mono ? '' : 'none';
+
+  const C = parseFloat(document.getElementById('t555-c').value) *
+            parseFloat(document.getElementById('t555-cu').value);
+  if (!C || C <= 0) return;
+
+  const out = document.getElementById('t555-out');
+  const fml = document.getElementById('t555-formulas');
+
+  if (mono) {
+    const R = parseFloat(document.getElementById('t555-r').value) * 1e3;
+    if (!R || R <= 0) return;
+    const t = 1.1 * R * C;
+    out.innerHTML = `
+      <div class="ritem"><span class="rk">Largeur d'impulsion t</span><span class="rv">${fmtTime(t)}</span></div>
+      <div class="ritem"><span class="rk">R</span><span class="rv">${(R/1e3).toPrecision(4)} kΩ</span></div>
+      <div class="ritem"><span class="rk">C</span><span class="rv">${(C*1e9).toPrecision(4)} nF</span></div>`;
+    fml.innerHTML = 't = 1.1 × R × C';
+    t555drawWaveMono(t);
+  } else {
+    const R1 = parseFloat(document.getElementById('t555-r1').value) * 1e3;
+    const R2 = parseFloat(document.getElementById('t555-r2').value) * 1e3;
+    if (!R1 || !R2 || R1 <= 0 || R2 <= 0) return;
+    const Th = 0.693 * (R1 + R2) * C;
+    const Tl = 0.693 * R2 * C;
+    const T  = Th + Tl;
+    const f  = 1 / T;
+    const duty = (R1 + R2) / (R1 + 2*R2) * 100;
+    out.innerHTML = `
+      <div class="ritem"><span class="rk">Fréquence f</span><span class="rv">${fmtFreq(f)}</span></div>
+      <div class="ritem"><span class="rk">Période T</span><span class="rv">${fmtTime(T)}</span></div>
+      <div class="ritem"><span class="rk">Temps haut T<sub>H</sub></span><span class="rv">${fmtTime(Th)}</span></div>
+      <div class="ritem"><span class="rk">Temps bas T<sub>L</sub></span><span class="rv">${fmtTime(Tl)}</span></div>
+      <div class="ritem"><span class="rk">Rapport cyclique</span><span class="rv">${duty.toFixed(1)} %</span></div>`;
+    fml.innerHTML =
+      'f  = 1.44 / ((R1 + 2·R2) · C)\n' +
+      'TH = 0.693 · (R1 + R2) · C\n' +
+      'TL = 0.693 · R2 · C\n' +
+      'D% = (R1+R2) / (R1+2·R2) · 100';
+    t555drawWaveAstable(Th, Tl);
+  }
+}
+
+function t555drawWave() { t555calc(); }
+
+function t555drawWaveAstable(Th, Tl) {
+  const canvas = document.getElementById('t555-wave');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 120;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const T = Th + Tl;
+  const px = w * 0.95, py0 = 20, py1 = h - 20;
+  const cycles = 3.5;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--sc').trim() || '#80cc80';
+  ctx.lineWidth = 2;
+
+  const green = ctx.strokeStyle;
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(10, py1); ctx.lineTo(w-10, py1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(10, py0); ctx.lineTo(w-10, py0); ctx.stroke();
+
+  ctx.strokeStyle = green;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  const totalW = px;
+  const tpx = totalW / (T * cycles);
+  let x = 10, first = true;
+  for (let i = 0; i < cycles + 0.5; i++) {
+    const xH = x + Th * tpx;
+    const xL = xH + Tl * tpx;
+    if (first) { ctx.moveTo(x, py1); first = false; }
+    ctx.lineTo(x, py1);
+    ctx.lineTo(x, py0);
+    ctx.lineTo(Math.min(xH, 10+totalW), py0);
+    if (xH < 10+totalW) {
+      ctx.lineTo(xH, py1);
+      ctx.lineTo(Math.min(xL, 10+totalW), py1);
+    }
+    x = xL;
+    if (x >= 10 + totalW) break;
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = '#556655';
+  ctx.font = '10px monospace';
+  ctx.fillText('VCC', 5, py0 + 4);
+  ctx.fillText('GND', 5, py1 + 4);
+}
+
+function t555drawWaveMono(t) {
+  const canvas = document.getElementById('t555-wave');
+  canvas.width = canvas.offsetWidth || 400;
+  canvas.height = 120;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const py0 = 20, py1 = h - 20;
+  const green = getComputedStyle(document.documentElement).getPropertyValue('--sc').trim() || '#80cc80';
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(10, py1); ctx.lineTo(w-10, py1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(10, py0); ctx.lineTo(w-10, py0); ctx.stroke();
+
+  ctx.strokeStyle = green;
+  ctx.lineWidth = 2.5;
+  const pulseW = (w - 20) * 0.55;
+  ctx.beginPath();
+  ctx.moveTo(10, py1);
+  ctx.lineTo(10 + (w-20)*0.1, py1);
+  ctx.lineTo(10 + (w-20)*0.1, py0);
+  ctx.lineTo(10 + (w-20)*0.1 + pulseW, py0);
+  ctx.lineTo(10 + (w-20)*0.1 + pulseW, py1);
+  ctx.lineTo(w-10, py1);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#5a8a5a';
+  ctx.setLineDash([3,3]);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(10 + (w-20)*0.1, py0 - 5);
+  ctx.lineTo(10 + (w-20)*0.1 + pulseW, py0 - 5);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#5a8a5a';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('t = ' + fmtTime(t), 10 + (w-20)*0.1 + pulseW/2, py0 - 8);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#556655';
+  ctx.fillText('VCC', 5, py0 + 4);
+  ctx.fillText('GND', 5, py1 + 4);
+}
+
+/* ══════════════════════════════════════════════════
+   LOGIC GATES
+══════════════════════════════════════════════════ */
+const GATES = [
+  { id:'and',  name:'AND',  chip:'74HC08', fn:(a,b)=>a&b,  tt:[[0,0,0],[0,1,0],[1,0,0],[1,1,1]], sym:'&', note:'Sortie 1 seulement si A ET B sont 1' },
+  { id:'or',   name:'OR',   chip:'74HC32', fn:(a,b)=>a|b,  tt:[[0,0,0],[0,1,1],[1,0,1],[1,1,1]], sym:'≥1', note:'Sortie 1 si A OU B est 1' },
+  { id:'nand', name:'NAND', chip:'74HC00', fn:(a,b)=>1-(a&b), tt:[[0,0,1],[0,1,1],[1,0,1],[1,1,0]], sym:'&̄', note:'Inverse du AND — universel' },
+  { id:'nor',  name:'NOR',  chip:'74HC02', fn:(a,b)=>1-(a|b), tt:[[0,0,1],[0,1,0],[1,0,0],[1,1,0]], sym:'≥1̄', note:'Inverse du OR — universel' },
+  { id:'xor',  name:'XOR',  chip:'74HC86', fn:(a,b)=>a^b,  tt:[[0,0,0],[0,1,1],[1,0,1],[1,1,0]], sym:'=1', note:'Sortie 1 si A ≠ B' },
+  { id:'xnor', name:'XNOR', chip:'74HC266',fn:(a,b)=>1-(a^b),tt:[[0,0,1],[0,1,0],[1,0,0],[1,1,1]],sym:'=', note:'Sortie 1 si A = B' },
+  { id:'not',  name:'NOT',  chip:'74HC04', fn:(a)=>1-a,    tt:[[0,1],[1,0]], sym:'1', note:'Inverseur — entrée unique', single:true },
+];
+
+let gateState = {};
+GATES.forEach(g => { gateState[g.id] = {a:0, b:0}; });
+let selectedGate = 'and';
+
+function initGates() {
+  const grid = document.getElementById('gate-grid');
+  grid.innerHTML = '';
+  GATES.forEach(g => {
+    const out = g.single ? g.fn(gateState[g.id].a) : g.fn(gateState[g.id].a, gateState[g.id].b);
+    const card = document.createElement('div');
+    card.className = 'gate-card';
+    card.id = 'gc-' + g.id;
+    card.innerHTML = `
+      <h4>${g.name} <span style="color:var(--sd);font-size:0.65rem;">${g.chip}</span></h4>
+      <div style="font-size:2rem;color:var(--sc);margin:0.3rem 0;">${g.sym}</div>
+      <div class="gate-ins">
+        <div>
+          <div style="font-size:0.7rem;color:var(--sd);margin-bottom:2px;">A</div>
+          <button class="gbtn ${gateState[g.id].a ? 'on':''}" id="gbtn-${g.id}-a"
+            onclick="gateToggle('${g.id}','a')">${gateState[g.id].a}</button>
+        </div>
+        ${g.single ? '' : `<div>
+          <div style="font-size:0.7rem;color:var(--sd);margin-bottom:2px;">B</div>
+          <button class="gbtn ${gateState[g.id].b ? 'on':''}" id="gbtn-${g.id}-b"
+            onclick="gateToggle('${g.id}','b')">${gateState[g.id].b}</button>
+        </div>`}
+      </div>
+      <div style="font-size:0.7rem;color:var(--sd);margin-bottom:2px;">Out</div>
+      <div class="gate-out" id="gout-${g.id}" style="color:${out ? 'var(--sc)':'var(--sd)'}">${out}</div>
+      <div class="gate-lbl ${out?'out-1':''}" id="glbl-${g.id}">${out ? 'HAUT (1)' : 'BAS (0)'}</div>`;
+    card.onclick = () => selectGate(g.id);
+    grid.appendChild(card);
+  });
+  selectGate(selectedGate);
+}
+
+function gateToggle(id, inp) {
+  gateState[id][inp] = 1 - gateState[id][inp];
+  const g = GATES.find(x => x.id === id);
+  const out = g.single ? g.fn(gateState[id].a) : g.fn(gateState[id].a, gateState[id].b);
+  const btnA = document.getElementById('gbtn-' + id + '-a');
+  const btnB = document.getElementById('gbtn-' + id + '-b');
+  if (btnA) { btnA.textContent = gateState[id].a; btnA.className = 'gbtn' + (gateState[id].a ? ' on':''); }
+  if (btnB) { btnB.textContent = gateState[id].b; btnB.className = 'gbtn' + (gateState[id].b ? ' on':''); }
+  const outEl = document.getElementById('gout-' + id);
+  const lblEl = document.getElementById('glbl-' + id);
+  if (outEl) { outEl.textContent = out; outEl.style.color = out ? 'var(--sc)' : 'var(--sd)'; }
+  if (lblEl) { lblEl.textContent = out ? 'HAUT (1)' : 'BAS (0)'; lblEl.className = 'gate-lbl' + (out ? ' out-1':''); }
+  if (id === selectedGate) updateTruthTable(g, id);
+}
+
+function selectGate(id) {
+  selectedGate = id;
+  const g = GATES.find(x => x.id === id);
+  updateTruthTable(g, id);
+}
+
+function updateTruthTable(g, id) {
+  document.getElementById('gt-name').textContent = g.name + ' (' + g.chip + ')';
+  const table = document.getElementById('gt-table');
+  const curA = gateState[id].a, curB = gateState[id].b;
+  if (g.single) {
+    table.innerHTML = '<tr><th>A</th><th>Q</th></tr>' +
+      g.tt.map(([a,q]) => `<tr${a===curA?' style="background:rgba(128,204,128,0.1)"':''}>
+        <td class="${a?'t1':''}">${a}</td><td class="${q?'t1':''}">${q}</td></tr>`).join('');
+  } else {
+    table.innerHTML = '<tr><th>A</th><th>B</th><th>Q</th></tr>' +
+      g.tt.map(([a,b,q]) => `<tr${a===curA&&b===curB?' style="background:rgba(128,204,128,0.1)"':''}>
+        <td class="${a?'t1':''}">${a}</td><td class="${b?'t1':''}">${b}</td><td class="${q?'t1':''}">${q}</td></tr>`).join('');
+  }
+  document.getElementById('gt-info').textContent = g.note + '\nPuce: ' + g.chip;
+}
+
+/* ══════════════════════════════════════════════════
+   OP-AMP 741
+══════════════════════════════════════════════════ */
+const OA_MODES = {
+  inv: {
+    label: 'Inverseur',
+    fields: [
+      {id:'oa-rin', label:'Rin', unit:'kΩ', def:10},
+      {id:'oa-rf',  label:'Rf',  unit:'kΩ', def:100},
+      {id:'oa-vin', label:'Vin', unit:'V',  def:1},
+    ],
+    calc(f) {
+      const gain = -f['oa-rf'] / f['oa-rin'];
+      const vout = gain * f['oa-vin'];
+      return {
+        formula: 'Av = −Rf / Rin',
+        results: [
+          ['Gain Av', gain.toFixed(3)],
+          ['Vout', vout.toFixed(3) + ' V'],
+          ['Vout = Av × Vin', (gain.toFixed(2)) + ' × ' + f['oa-vin'] + ' = ' + vout.toFixed(3) + ' V'],
+        ]
+      };
+    },
+    svg: `<svg viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,40 80,140 200,90" stroke="#80cc80" stroke-width="2" fill="none"/>
+      <line x1="20" y1="70" x2="80" y2="70" stroke="#80cc80" stroke-width="2"/>
+      <line x1="20" y1="110" x2="80" y2="110" stroke="#80cc80" stroke-width="2"/>
+      <line x1="200" y1="90" x2="270" y2="90" stroke="#80cc80" stroke-width="2"/>
+      <text x="30" y="65" fill="#5a8a5a" font-size="11" font-family="monospace">Vin</text>
+      <text x="85" y="73" fill="#80cc80" font-size="12" font-family="monospace">−</text>
+      <text x="85" y="115" fill="#80cc80" font-size="12" font-family="monospace">+</text>
+      <line x1="40" y1="30" x2="40" y2="70" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="40" y1="30" x2="230" y2="30" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="230" y1="30" x2="230" y2="90" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="125" y="25" fill="#5a8a5a" font-size="10" font-family="monospace">Rf</text>
+      <line x1="30" y1="110" x2="30" y2="160" stroke="#80cc80" stroke-width="1.5"/>
+      <text x="35" y="158" fill="#5a8a5a" font-size="10" font-family="monospace">GND</text>
+      <text x="240" y="88" fill="#5a8a5a" font-size="11" font-family="monospace">Vout</text>
+      <text x="100" y="140" fill="#80cc80" font-size="11" font-family="monospace">Rin</text>
+    </svg>`
+  },
+  noninv: {
+    label: 'Non-inverseur',
+    fields: [
+      {id:'oa-r1',  label:'R1',  unit:'kΩ', def:10},
+      {id:'oa-r2',  label:'R2',  unit:'kΩ', def:90},
+      {id:'oa-vin', label:'Vin', unit:'V',  def:1},
+    ],
+    calc(f) {
+      const gain = 1 + f['oa-r2'] / f['oa-r1'];
+      const vout = gain * f['oa-vin'];
+      return {
+        formula: 'Av = 1 + R2 / R1',
+        results: [
+          ['Gain Av', gain.toFixed(3)],
+          ['Vout', vout.toFixed(3) + ' V'],
+        ]
+      };
+    },
+    svg: `<svg viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,40 80,140 200,90" stroke="#80cc80" stroke-width="2" fill="none"/>
+      <line x1="20" y1="70" x2="80" y2="70" stroke="#80cc80" stroke-width="2"/>
+      <line x1="20" y1="110" x2="80" y2="110" stroke="#80cc80" stroke-width="2"/>
+      <line x1="200" y1="90" x2="270" y2="90" stroke="#80cc80" stroke-width="2"/>
+      <text x="85" y="73" fill="#80cc80" font-size="12" font-family="monospace">−</text>
+      <text x="85" y="115" fill="#80cc80" font-size="12" font-family="monospace">+</text>
+      <text x="30" y="107" fill="#5a8a5a" font-size="11" font-family="monospace">Vin</text>
+      <line x1="50" y1="70" x2="50" y2="165" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="50" y1="165" x2="230" y2="165" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="230" y1="90" x2="230" y2="165" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="125" y="160" fill="#5a8a5a" font-size="10" font-family="monospace">R2</text>
+      <line x1="50" y1="165" x2="50" y2="175" stroke="#80cc80" stroke-width="1.5"/>
+      <text x="55" y="175" fill="#5a8a5a" font-size="9" font-family="monospace">R1→GND</text>
+      <text x="240" y="88" fill="#5a8a5a" font-size="11" font-family="monospace">Vout</text>
+    </svg>`
+  },
+  diff: {
+    label: 'Différentiel',
+    fields: [
+      {id:'oa-r1',  label:'R1',  unit:'kΩ', def:10},
+      {id:'oa-rf',  label:'Rf',  unit:'kΩ', def:10},
+      {id:'oa-v1',  label:'V1',  unit:'V',  def:2},
+      {id:'oa-v2',  label:'V2',  unit:'V',  def:1},
+    ],
+    calc(f) {
+      const gain = f['oa-rf'] / f['oa-r1'];
+      const vout = gain * (f['oa-v2'] - f['oa-v1']);
+      return {
+        formula: 'Vout = (Rf/R1) × (V2 − V1)',
+        results: [
+          ['Gain Rf/R1', gain.toFixed(3)],
+          ['Vout', vout.toFixed(3) + ' V'],
+        ]
+      };
+    },
+    svg: `<svg viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,40 80,140 200,90" stroke="#80cc80" stroke-width="2" fill="none"/>
+      <line x1="20" y1="70" x2="80" y2="70" stroke="#80cc80" stroke-width="2"/>
+      <line x1="20" y1="110" x2="80" y2="110" stroke="#80cc80" stroke-width="2"/>
+      <line x1="200" y1="90" x2="270" y2="90" stroke="#80cc80" stroke-width="2"/>
+      <text x="85" y="73" fill="#80cc80" font-size="12" font-family="monospace">−</text>
+      <text x="85" y="115" fill="#80cc80" font-size="12" font-family="monospace">+</text>
+      <text x="22" y="65" fill="#5a8a5a" font-size="10" font-family="monospace">V1</text>
+      <text x="22" y="108" fill="#5a8a5a" font-size="10" font-family="monospace">V2</text>
+      <text x="240" y="88" fill="#5a8a5a" font-size="11" font-family="monospace">Vout</text>
+    </svg>`
+  },
+  follow: {
+    label: 'Suiveur (buffer)',
+    fields: [
+      {id:'oa-vin', label:'Vin', unit:'V', def:3.3},
+    ],
+    calc(f) {
+      return {
+        formula: 'Vout = Vin  (Av = 1)',
+        results: [
+          ['Gain Av', '1.000'],
+          ['Vout', f['oa-vin'].toFixed(3) + ' V'],
+          ['Impédance entrée', 'très élevée (MΩ)'],
+          ['Impédance sortie', 'très faible (< 100Ω)'],
+        ]
+      };
+    },
+    svg: `<svg viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,40 80,140 200,90" stroke="#80cc80" stroke-width="2" fill="none"/>
+      <line x1="20" y1="110" x2="80" y2="110" stroke="#80cc80" stroke-width="2"/>
+      <line x1="200" y1="90" x2="270" y2="90" stroke="#80cc80" stroke-width="2"/>
+      <line x1="200" y1="90" x2="230" y2="90" stroke="#80cc80" stroke-width="2"/>
+      <line x1="230" y1="90" x2="230" y2="70" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="230" y1="70" x2="80" y2="70" stroke="#80cc80" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="85" y="73" fill="#80cc80" font-size="12" font-family="monospace">−</text>
+      <text x="85" y="115" fill="#80cc80" font-size="12" font-family="monospace">+</text>
+      <text x="22" y="108" fill="#5a8a5a" font-size="11" font-family="monospace">Vin</text>
+      <text x="240" y="88" fill="#5a8a5a" font-size="11" font-family="monospace">Vout</text>
+    </svg>`
+  },
+  comp: {
+    label: 'Comparateur',
+    fields: [
+      {id:'oa-vref', label:'Vréf', unit:'V', def:2.5},
+      {id:'oa-vin',  label:'Vin',  unit:'V', def:3},
+      {id:'oa-vcc',  label:'Vcc',  unit:'V', def:5},
+    ],
+    calc(f) {
+      const vout = f['oa-vin'] > f['oa-vref'] ? f['oa-vcc'] : 0;
+      return {
+        formula: 'Vout = Vcc si Vin > Vréf\nVout = 0   si Vin < Vréf',
+        results: [
+          ['Vin vs Vréf', f['oa-vin'] > f['oa-vref'] ? 'Vin > Vréf ✓' : 'Vin ≤ Vréf'],
+          ['Vout', vout.toFixed(2) + ' V (' + (vout > 0 ? 'HAUT' : 'BAS') + ')'],
+        ]
+      };
+    },
+    svg: `<svg viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,40 80,140 200,90" stroke="#80cc80" stroke-width="2" fill="none"/>
+      <line x1="20" y1="70" x2="80" y2="70" stroke="#80cc80" stroke-width="2"/>
+      <line x1="20" y1="110" x2="80" y2="110" stroke="#80cc80" stroke-width="2"/>
+      <line x1="200" y1="90" x2="270" y2="90" stroke="#80cc80" stroke-width="2"/>
+      <text x="85" y="73" fill="#80cc80" font-size="12" font-family="monospace">−</text>
+      <text x="85" y="115" fill="#80cc80" font-size="12" font-family="monospace">+</text>
+      <text x="22" y="65" fill="#5a8a5a" font-size="10" font-family="monospace">Vréf</text>
+      <text x="22" y="108" fill="#5a8a5a" font-size="11" font-family="monospace">Vin</text>
+      <text x="240" y="88" fill="#5a8a5a" font-size="11" font-family="monospace">Vout</text>
+    </svg>`
+  },
+};
+
+function oacalc() {
+  const mode = document.getElementById('oa-mode').value;
+  const cfg = OA_MODES[mode];
+  if (!cfg) return;
+
+  const fieldsDiv = document.getElementById('oa-fields');
+  fieldsDiv.innerHTML = cfg.fields.map(f =>
+    `<div class="srow"><label>${f.label}</label>
+      <input type="number" id="${f.id}" value="${f.def}" step="any" oninput="oacalc()">
+      <span class="unit">${f.unit}</span></div>`
+  ).join('');
+
+  const svgDiv = document.getElementById('oa-svg');
+  svgDiv.outerHTML = `<svg id="oa-svg" class="oa-svg" viewBox="0 0 320 180" style="height:160px;">${cfg.svg}</svg>`;
+
+  const vals = {};
+  cfg.fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    vals[f.id] = el ? parseFloat(el.value) || 0 : 0;
+  });
+
+  const res = cfg.calc(vals);
+  const resDiv = document.getElementById('oa-results');
+  resDiv.innerHTML =
+    `<div class="oa-formula">${res.formula}</div>` +
+    res.results.map(([k,v]) =>
+      `<div class="ritem"><span class="rk">${k}</span><span class="rv">${v}</span></div>`
+    ).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   MOS 6502 CPU SIMULATOR
+══════════════════════════════════════════════════ */
+class CPU6502 {
+  constructor() {
+    this.mem = new Uint8Array(65536);
+    this.A = 0; this.X = 0; this.Y = 0; this.SP = 0xFD; this.PC = 0x0200;
+    this.P = 0x24; // N V - B D I Z C  (bit5=1 always, I=1 on reset)
+    this.cycles = 0; this.instrCount = 0; this.halted = false;
+    this._buildOps();
+  }
+
+  get N() { return (this.P>>7)&1; } get V() { return (this.P>>6)&1; }
+  get B() { return (this.P>>4)&1; } get D() { return (this.P>>3)&1; }
+  get I() { return (this.P>>2)&1; } get Z() { return (this.P>>1)&1; }
+  get C() { return this.P&1; }
+  sN(v){if(v)this.P|=0x80;else this.P&=~0x80;} sV(v){if(v)this.P|=0x40;else this.P&=~0x40;}
+  sB(v){if(v)this.P|=0x10;else this.P&=~0x10;} sD(v){if(v)this.P|=0x08;else this.P&=~0x08;}
+  sI(v){if(v)this.P|=0x04;else this.P&=~0x04;} sZ(v){if(v)this.P|=0x02;else this.P&=~0x02;}
+  sC(v){if(v)this.P|=0x01;else this.P&=~0x01;}
+  sNZ(v){ this.sN(v&0x80); this.sZ((v&0xFF)===0); return v&0xFF; }
+
+  rd(a){ return this.mem[a&0xFFFF]; }
+  wr(a,v){ this.mem[a&0xFFFF]=v&0xFF; }
+  rdw(a){ return this.rd(a)|(this.rd((a+1)&0xFFFF)<<8); }
+  fb(){ const v=this.rd(this.PC); this.PC=(this.PC+1)&0xFFFF; return v; }
+  imm(){ return this.fb(); }
+  zp() { return this.fb(); }
+  zpx(){ return (this.fb()+this.X)&0xFF; }
+  zpy(){ return (this.fb()+this.Y)&0xFF; }
+  abs(){ const l=this.fb(),h=this.fb(); return (h<<8)|l; }
+  abx(){ const l=this.fb(),h=this.fb(); return ((h<<8)|l+this.X)&0xFFFF; }
+  aby(){ const l=this.fb(),h=this.fb(); return ((h<<8)|l+this.Y)&0xFFFF; }
+  ind(){ const l=this.fb(),h=this.fb(); const a=(h<<8)|l; return this.rd(a)|(this.rd((a&0xFF00)|((a+1)&0xFF))<<8); }
+  izx(){ const a=(this.fb()+this.X)&0xFF; return this.rdw(a); }
+  izy(){ const a=this.fb(); return (this.rdw(a)+this.Y)&0xFFFF; }
+  push(v){ this.wr(0x0100|this.SP,v); this.SP=(this.SP-1)&0xFF; }
+  pop(){ this.SP=(this.SP+1)&0xFF; return this.rd(0x0100|this.SP); }
+  br(c){ const o=this.fb(); if(c){ const s=o>=0x80?o-256:o; this.PC=(this.PC+s)&0xFFFF; } }
+
+  _adc(v){
+    const r=this.A+v+this.C;
+    this.sV(!((this.A^v)&0x80)&&!!((this.A^r)&0x80)?1:0);
+    this.sC(r>0xFF?1:0);
+    this.A=this.sNZ(r);
+  }
+  _cmp(a,v){ const r=a-v; this.sC(r>=0); this.sNZ(r&0xFF); }
+  _asl(v){ this.sC(v&0x80); return this.sNZ((v<<1)&0xFF); }
+  _lsr(v){ this.sC(v&1); return this.sNZ(v>>1); }
+  _rol(v){ const c=this.C; this.sC(v&0x80); return this.sNZ(((v<<1)|c)&0xFF); }
+  _ror(v){ const c=this.C; this.sC(v&1); return this.sNZ(((v>>1)|(c<<7))&0xFF); }
+
+  _buildOps(){
+    const o=this.ops=new Array(256);
+    // LDA
+    o[0xA9]=()=>{this.A=this.sNZ(this.imm());}; o[0xA5]=()=>{this.A=this.sNZ(this.rd(this.zp()));};
+    o[0xB5]=()=>{this.A=this.sNZ(this.rd(this.zpx()));}; o[0xAD]=()=>{this.A=this.sNZ(this.rd(this.abs()));};
+    o[0xBD]=()=>{this.A=this.sNZ(this.rd(this.abx()));}; o[0xB9]=()=>{this.A=this.sNZ(this.rd(this.aby()));};
+    o[0xA1]=()=>{this.A=this.sNZ(this.rd(this.izx()));}; o[0xB1]=()=>{this.A=this.sNZ(this.rd(this.izy()));};
+    // LDX
+    o[0xA2]=()=>{this.X=this.sNZ(this.imm());}; o[0xA6]=()=>{this.X=this.sNZ(this.rd(this.zp()));};
+    o[0xB6]=()=>{this.X=this.sNZ(this.rd(this.zpy()));}; o[0xAE]=()=>{this.X=this.sNZ(this.rd(this.abs()));};
+    o[0xBE]=()=>{this.X=this.sNZ(this.rd(this.aby()));};
+    // LDY
+    o[0xA0]=()=>{this.Y=this.sNZ(this.imm());}; o[0xA4]=()=>{this.Y=this.sNZ(this.rd(this.zp()));};
+    o[0xB4]=()=>{this.Y=this.sNZ(this.rd(this.zpx()));}; o[0xAC]=()=>{this.Y=this.sNZ(this.rd(this.abs()));};
+    o[0xBC]=()=>{this.Y=this.sNZ(this.rd(this.abx()));};
+    // STA
+    o[0x85]=()=>{this.wr(this.zp(),this.A);}; o[0x95]=()=>{this.wr(this.zpx(),this.A);};
+    o[0x8D]=()=>{this.wr(this.abs(),this.A);}; o[0x9D]=()=>{this.wr(this.abx(),this.A);};
+    o[0x99]=()=>{this.wr(this.aby(),this.A);}; o[0x81]=()=>{this.wr(this.izx(),this.A);};
+    o[0x91]=()=>{this.wr(this.izy(),this.A);};
+    // STX/STY
+    o[0x86]=()=>{this.wr(this.zp(),this.X);}; o[0x96]=()=>{this.wr(this.zpy(),this.X);}; o[0x8E]=()=>{this.wr(this.abs(),this.X);};
+    o[0x84]=()=>{this.wr(this.zp(),this.Y);}; o[0x94]=()=>{this.wr(this.zpx(),this.Y);}; o[0x8C]=()=>{this.wr(this.abs(),this.Y);};
+    // Transfer
+    o[0xAA]=()=>{this.X=this.sNZ(this.A);}; o[0xA8]=()=>{this.Y=this.sNZ(this.A);};
+    o[0x8A]=()=>{this.A=this.sNZ(this.X);}; o[0x98]=()=>{this.A=this.sNZ(this.Y);};
+    o[0xBA]=()=>{this.X=this.sNZ(this.SP);}; o[0x9A]=()=>{this.SP=this.X;};
+    // INX/INY/DEX/DEY
+    o[0xE8]=()=>{this.X=this.sNZ((this.X+1)&0xFF);}; o[0xC8]=()=>{this.Y=this.sNZ((this.Y+1)&0xFF);};
+    o[0xCA]=()=>{this.X=this.sNZ((this.X-1)&0xFF);}; o[0x88]=()=>{this.Y=this.sNZ((this.Y-1)&0xFF);};
+    // INC/DEC mem
+    const inc=(a)=>{const v=this.sNZ((this.rd(a)+1)&0xFF);this.wr(a,v);};
+    const dec=(a)=>{const v=this.sNZ((this.rd(a)-1)&0xFF);this.wr(a,v);};
+    o[0xE6]=()=>inc(this.zp()); o[0xF6]=()=>inc(this.zpx()); o[0xEE]=()=>inc(this.abs()); o[0xFE]=()=>inc(this.abx());
+    o[0xC6]=()=>dec(this.zp()); o[0xD6]=()=>dec(this.zpx()); o[0xCE]=()=>dec(this.abs()); o[0xDE]=()=>dec(this.abx());
+    // ADC/SBC
+    o[0x69]=()=>this._adc(this.imm()); o[0x65]=()=>this._adc(this.rd(this.zp())); o[0x75]=()=>this._adc(this.rd(this.zpx()));
+    o[0x6D]=()=>this._adc(this.rd(this.abs())); o[0x7D]=()=>this._adc(this.rd(this.abx())); o[0x79]=()=>this._adc(this.rd(this.aby()));
+    o[0x61]=()=>this._adc(this.rd(this.izx())); o[0x71]=()=>this._adc(this.rd(this.izy()));
+    o[0xE9]=()=>this._adc(this.imm()^0xFF); o[0xE5]=()=>this._adc(this.rd(this.zp())^0xFF); o[0xF5]=()=>this._adc(this.rd(this.zpx())^0xFF);
+    o[0xED]=()=>this._adc(this.rd(this.abs())^0xFF); o[0xFD]=()=>this._adc(this.rd(this.abx())^0xFF); o[0xF9]=()=>this._adc(this.rd(this.aby())^0xFF);
+    o[0xE1]=()=>this._adc(this.rd(this.izx())^0xFF); o[0xF1]=()=>this._adc(this.rd(this.izy())^0xFF);
+    // AND
+    const and=(v)=>{this.A=this.sNZ(this.A&v);};
+    o[0x29]=()=>and(this.imm()); o[0x25]=()=>and(this.rd(this.zp())); o[0x35]=()=>and(this.rd(this.zpx()));
+    o[0x2D]=()=>and(this.rd(this.abs())); o[0x3D]=()=>and(this.rd(this.abx())); o[0x39]=()=>and(this.rd(this.aby()));
+    o[0x21]=()=>and(this.rd(this.izx())); o[0x31]=()=>and(this.rd(this.izy()));
+    // ORA
+    const ora=(v)=>{this.A=this.sNZ(this.A|v);};
+    o[0x09]=()=>ora(this.imm()); o[0x05]=()=>ora(this.rd(this.zp())); o[0x15]=()=>ora(this.rd(this.zpx()));
+    o[0x0D]=()=>ora(this.rd(this.abs())); o[0x1D]=()=>ora(this.rd(this.abx())); o[0x19]=()=>ora(this.rd(this.aby()));
+    o[0x01]=()=>ora(this.rd(this.izx())); o[0x11]=()=>ora(this.rd(this.izy()));
+    // EOR
+    const eor=(v)=>{this.A=this.sNZ(this.A^v);};
+    o[0x49]=()=>eor(this.imm()); o[0x45]=()=>eor(this.rd(this.zp())); o[0x55]=()=>eor(this.rd(this.zpx()));
+    o[0x4D]=()=>eor(this.rd(this.abs())); o[0x5D]=()=>eor(this.rd(this.abx())); o[0x59]=()=>eor(this.rd(this.aby()));
+    o[0x41]=()=>eor(this.rd(this.izx())); o[0x51]=()=>eor(this.rd(this.izy()));
+    // CMP/CPX/CPY
+    o[0xC9]=()=>this._cmp(this.A,this.imm()); o[0xC5]=()=>this._cmp(this.A,this.rd(this.zp())); o[0xD5]=()=>this._cmp(this.A,this.rd(this.zpx()));
+    o[0xCD]=()=>this._cmp(this.A,this.rd(this.abs())); o[0xDD]=()=>this._cmp(this.A,this.rd(this.abx())); o[0xD9]=()=>this._cmp(this.A,this.rd(this.aby()));
+    o[0xC1]=()=>this._cmp(this.A,this.rd(this.izx())); o[0xD1]=()=>this._cmp(this.A,this.rd(this.izy()));
+    o[0xE0]=()=>this._cmp(this.X,this.imm()); o[0xE4]=()=>this._cmp(this.X,this.rd(this.zp())); o[0xEC]=()=>this._cmp(this.X,this.rd(this.abs()));
+    o[0xC0]=()=>this._cmp(this.Y,this.imm()); o[0xC4]=()=>this._cmp(this.Y,this.rd(this.zp())); o[0xCC]=()=>this._cmp(this.Y,this.rd(this.abs()));
+    // ASL/LSR/ROL/ROR
+    o[0x0A]=()=>{this.A=this._asl(this.A);}; o[0x06]=()=>{const a=this.zp();this.wr(a,this._asl(this.rd(a)));};
+    o[0x16]=()=>{const a=this.zpx();this.wr(a,this._asl(this.rd(a)));}; o[0x0E]=()=>{const a=this.abs();this.wr(a,this._asl(this.rd(a)));};
+    o[0x1E]=()=>{const a=this.abx();this.wr(a,this._asl(this.rd(a)));};
+    o[0x4A]=()=>{this.A=this._lsr(this.A);}; o[0x46]=()=>{const a=this.zp();this.wr(a,this._lsr(this.rd(a)));};
+    o[0x56]=()=>{const a=this.zpx();this.wr(a,this._lsr(this.rd(a)));}; o[0x4E]=()=>{const a=this.abs();this.wr(a,this._lsr(this.rd(a)));};
+    o[0x5E]=()=>{const a=this.abx();this.wr(a,this._lsr(this.rd(a)));};
+    o[0x2A]=()=>{this.A=this._rol(this.A);}; o[0x26]=()=>{const a=this.zp();this.wr(a,this._rol(this.rd(a)));};
+    o[0x36]=()=>{const a=this.zpx();this.wr(a,this._rol(this.rd(a)));}; o[0x2E]=()=>{const a=this.abs();this.wr(a,this._rol(this.rd(a)));};
+    o[0x3E]=()=>{const a=this.abx();this.wr(a,this._rol(this.rd(a)));};
+    o[0x6A]=()=>{this.A=this._ror(this.A);}; o[0x66]=()=>{const a=this.zp();this.wr(a,this._ror(this.rd(a)));};
+    o[0x76]=()=>{const a=this.zpx();this.wr(a,this._ror(this.rd(a)));}; o[0x6E]=()=>{const a=this.abs();this.wr(a,this._ror(this.rd(a)));};
+    o[0x7E]=()=>{const a=this.abx();this.wr(a,this._ror(this.rd(a)));};
+    // BIT
+    o[0x24]=()=>{const v=this.rd(this.zp());this.sN(v&0x80);this.sV(v&0x40);this.sZ((this.A&v)===0);};
+    o[0x2C]=()=>{const v=this.rd(this.abs());this.sN(v&0x80);this.sV(v&0x40);this.sZ((this.A&v)===0);};
+    // JMP/JSR/RTS
+    o[0x4C]=()=>{this.PC=this.abs();}; o[0x6C]=()=>{this.PC=this.ind();};
+    o[0x20]=()=>{const a=this.abs();const r=(this.PC-1)&0xFFFF;this.push(r>>8);this.push(r&0xFF);this.PC=a;};
+    o[0x60]=()=>{const l=this.pop(),h=this.pop();this.PC=((h<<8)|l)+1;};
+    // Branches
+    o[0xF0]=()=>this.br(this.Z);  o[0xD0]=()=>this.br(!this.Z);
+    o[0xB0]=()=>this.br(this.C);  o[0x90]=()=>this.br(!this.C);
+    o[0x30]=()=>this.br(this.N);  o[0x10]=()=>this.br(!this.N);
+    o[0x70]=()=>this.br(this.V);  o[0x50]=()=>this.br(!this.V);
+    // Stack
+    o[0x48]=()=>this.push(this.A); o[0x68]=()=>{this.A=this.sNZ(this.pop());};
+    o[0x08]=()=>this.push(this.P|0x30); o[0x28]=()=>{this.P=(this.pop()&0xEF)|0x20;};
+    // Flags
+    o[0x18]=()=>this.sC(0); o[0x38]=()=>this.sC(1); o[0x58]=()=>this.sI(0); o[0x78]=()=>this.sI(1);
+    o[0xD8]=()=>this.sD(0); o[0xF8]=()=>this.sD(1); o[0xB8]=()=>this.sV(0);
+    // NOP
+    o[0xEA]=()=>{};
+    // BRK
+    o[0x00]=()=>{this.halted=true;};
+  }
+
+  step(){
+    if(this.halted)return;
+    const op=this.fb();
+    if(this.ops[op])this.ops[op]();
+    this.instrCount++;
+  }
+}
+
+// Disassembler
+const DIS = {
+  0xA9:['LDA','#'],0xA5:['LDA','zp'],0xB5:['LDA','zp,X'],0xAD:['LDA','abs'],0xBD:['LDA','abs,X'],0xB9:['LDA','abs,Y'],0xA1:['LDA','(zp,X)'],0xB1:['LDA','(zp),Y'],
+  0xA2:['LDX','#'],0xA6:['LDX','zp'],0xB6:['LDX','zp,Y'],0xAE:['LDX','abs'],0xBE:['LDX','abs,Y'],
+  0xA0:['LDY','#'],0xA4:['LDY','zp'],0xB4:['LDY','zp,X'],0xAC:['LDY','abs'],0xBC:['LDY','abs,X'],
+  0x85:['STA','zp'],0x95:['STA','zp,X'],0x8D:['STA','abs'],0x9D:['STA','abs,X'],0x99:['STA','abs,Y'],0x81:['STA','(zp,X)'],0x91:['STA','(zp),Y'],
+  0x86:['STX','zp'],0x96:['STX','zp,Y'],0x8E:['STX','abs'],
+  0x84:['STY','zp'],0x94:['STY','zp,X'],0x8C:['STY','abs'],
+  0xAA:['TAX','imp'],0xA8:['TAY','imp'],0x8A:['TXA','imp'],0x98:['TYA','imp'],0xBA:['TSX','imp'],0x9A:['TXS','imp'],
+  0xE8:['INX','imp'],0xC8:['INY','imp'],0xCA:['DEX','imp'],0x88:['DEY','imp'],
+  0xE6:['INC','zp'],0xF6:['INC','zp,X'],0xEE:['INC','abs'],0xFE:['INC','abs,X'],
+  0xC6:['DEC','zp'],0xD6:['DEC','zp,X'],0xCE:['DEC','abs'],0xDE:['DEC','abs,X'],
+  0x69:['ADC','#'],0x65:['ADC','zp'],0x75:['ADC','zp,X'],0x6D:['ADC','abs'],0x7D:['ADC','abs,X'],0x79:['ADC','abs,Y'],0x61:['ADC','(zp,X)'],0x71:['ADC','(zp),Y'],
+  0xE9:['SBC','#'],0xE5:['SBC','zp'],0xF5:['SBC','zp,X'],0xED:['SBC','abs'],0xFD:['SBC','abs,X'],0xF9:['SBC','abs,Y'],0xE1:['SBC','(zp,X)'],0xF1:['SBC','(zp),Y'],
+  0x29:['AND','#'],0x25:['AND','zp'],0x35:['AND','zp,X'],0x2D:['AND','abs'],0x3D:['AND','abs,X'],0x39:['AND','abs,Y'],0x21:['AND','(zp,X)'],0x31:['AND','(zp),Y'],
+  0x09:['ORA','#'],0x05:['ORA','zp'],0x15:['ORA','zp,X'],0x0D:['ORA','abs'],0x1D:['ORA','abs,X'],0x19:['ORA','abs,Y'],0x01:['ORA','(zp,X)'],0x11:['ORA','(zp),Y'],
+  0x49:['EOR','#'],0x45:['EOR','zp'],0x55:['EOR','zp,X'],0x4D:['EOR','abs'],0x5D:['EOR','abs,X'],0x59:['EOR','abs,Y'],0x41:['EOR','(zp,X)'],0x51:['EOR','(zp),Y'],
+  0xC9:['CMP','#'],0xC5:['CMP','zp'],0xD5:['CMP','zp,X'],0xCD:['CMP','abs'],0xDD:['CMP','abs,X'],0xD9:['CMP','abs,Y'],0xC1:['CMP','(zp,X)'],0xD1:['CMP','(zp),Y'],
+  0xE0:['CPX','#'],0xE4:['CPX','zp'],0xEC:['CPX','abs'],
+  0xC0:['CPY','#'],0xC4:['CPY','zp'],0xCC:['CPY','abs'],
+  0x0A:['ASL','A'],0x06:['ASL','zp'],0x16:['ASL','zp,X'],0x0E:['ASL','abs'],0x1E:['ASL','abs,X'],
+  0x4A:['LSR','A'],0x46:['LSR','zp'],0x56:['LSR','zp,X'],0x4E:['LSR','abs'],0x5E:['LSR','abs,X'],
+  0x2A:['ROL','A'],0x26:['ROL','zp'],0x36:['ROL','zp,X'],0x2E:['ROL','abs'],0x3E:['ROL','abs,X'],
+  0x6A:['ROR','A'],0x66:['ROR','zp'],0x76:['ROR','zp,X'],0x6E:['ROR','abs'],0x7E:['ROR','abs,X'],
+  0x24:['BIT','zp'],0x2C:['BIT','abs'],
+  0x4C:['JMP','abs'],0x6C:['JMP','(abs)'],
+  0x20:['JSR','abs'],0x60:['RTS','imp'],
+  0xF0:['BEQ','rel'],0xD0:['BNE','rel'],0xB0:['BCS','rel'],0x90:['BCC','rel'],
+  0x30:['BMI','rel'],0x10:['BPL','rel'],0x70:['BVS','rel'],0x50:['BVC','rel'],
+  0x48:['PHA','imp'],0x68:['PLA','imp'],0x08:['PHP','imp'],0x28:['PLP','imp'],
+  0x18:['CLC','imp'],0x38:['SEC','imp'],0x58:['CLI','imp'],0x78:['SEI','imp'],
+  0xD8:['CLD','imp'],0xF8:['SED','imp'],0xB8:['CLV','imp'],
+  0xEA:['NOP','imp'],0x00:['BRK','imp'],
+};
+
+function h2(n){ return (n&0xFF).toString(16).padStart(2,'0').toUpperCase(); }
+function h4(n){ return (n&0xFFFF).toString(16).padStart(4,'0').toUpperCase(); }
+
+function disasm(mem, addr) {
+  const op = mem[addr & 0xFFFF];
+  const info = DIS[op];
+  if (!info) return { str: `??? $${h2(op)}`, bytes: 1, braw: h2(op) };
+  const [name, mode] = info;
+  const b1 = mem[(addr+1)&0xFFFF], b2 = mem[(addr+2)&0xFFFF];
+  switch(mode) {
+    case 'imp': return {str:`${name}`,       bytes:1, braw:h2(op)};
+    case 'A':   return {str:`${name} A`,     bytes:1, braw:h2(op)};
+    case '#':   return {str:`${name} #$${h2(b1)}`,    bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    case 'zp':  return {str:`${name} $${h2(b1)}`,     bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    case 'zp,X':return {str:`${name} $${h2(b1)},X`,   bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    case 'zp,Y':return {str:`${name} $${h2(b1)},Y`,   bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    case 'abs': return {str:`${name} $${h2(b2)}${h2(b1)}`,     bytes:3, braw:`${h2(op)} ${h2(b1)} ${h2(b2)}`};
+    case 'abs,X':return{str:`${name} $${h2(b2)}${h2(b1)},X`,   bytes:3, braw:`${h2(op)} ${h2(b1)} ${h2(b2)}`};
+    case 'abs,Y':return{str:`${name} $${h2(b2)}${h2(b1)},Y`,   bytes:3, braw:`${h2(op)} ${h2(b1)} ${h2(b2)}`};
+    case '(abs)':return{str:`${name} ($${h2(b2)}${h2(b1)})`,   bytes:3, braw:`${h2(op)} ${h2(b1)} ${h2(b2)}`};
+    case '(zp,X)':return{str:`${name} ($${h2(b1)},X)`,         bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    case '(zp),Y':return{str:`${name} ($${h2(b1)}),Y`,         bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    case 'rel': {
+      const s=b1>=0x80?b1-256:b1;
+      const target=(addr+2+s)&0xFFFF;
+      return {str:`${name} $${h4(target)}`,   bytes:2, braw:`${h2(op)} ${h2(b1)}`};
+    }
+    default:    return {str:`${name}`,       bytes:1, braw:h2(op)};
+  }
+}
+
+let cpu = new CPU6502();
+let cpuRunId = null;
+let memPage = 0x0200;
+
+const EXAMPLES = {
+  count: { addr:0x0200, hex:'A9 00 85 00 E6 00 A5 00 C9 0A D0 F8 00', desc:'Compte de 0 à 9 en $00, s\'arrête (BRK).' },
+  fib:   { addr:0x0200, hex:'A9 01 85 00 A9 01 85 01 A5 00 85 02 A5 01 65 00 85 01 A5 02 85 00 C9 E9 90 F2 00', desc:'Suite de Fibonacci dans $00, s\'arrête à overflow.' },
+  loop:  { addr:0x0200, hex:'A2 0A A9 00 18 69 0A CA D0 FB 85 20 00', desc:'Additionne 10 × 10 = 100 ($64) dans $20.' },
+  sort:  { addr:0x0200, hex:'A2 05 86 00 A9 03 85 01 A9 01 85 02 A9 04 85 03 A9 07 85 04 A9 02 85 05 A9 06 85 06 A2 00 A0 05 B5 01 C5 00 30 05 A5 00 95 01 85 00 CA D0 ED 00', desc:'Trouve le min de 6 valeurs en mémoire.' },
+};
+
+function cpuLoad() {
+  const hexStr = document.getElementById('cpu-hex').value;
+  const addr = parseInt(document.getElementById('cpu-load-addr').value, 16) || 0x0200;
+  const bytes = hexStr.replace(/[^0-9A-Fa-f]/g,' ').trim().split(/\s+/).filter(Boolean).map(h=>parseInt(h,16));
+  if (!bytes.length) return cpuSetStatus('<span class="err">Aucun octet valide trouvé.</span>');
+  bytes.forEach((b,i) => cpu.wr(addr+i, b));
+  cpu.mem[0xFFFC] = addr & 0xFF;
+  cpu.mem[0xFFFD] = (addr>>8) & 0xFF;
+  memPage = addr & 0xFF00;
+  cpuSetStatus(`<span class="ok">${bytes.length} octet(s) chargé(s) à $${h4(addr)}.</span>`);
+  cpuRenderAll();
+}
+
+function cpuLoadExample(key) {
+  const ex = EXAMPLES[key];
+  if (!ex) return;
+  document.getElementById('cpu-hex').value = ex.hex;
+  document.getElementById('cpu-load-addr').value = ex.addr.toString(16).toUpperCase().padStart(4,'0');
+  cpu = new CPU6502();
+  cpuLoad();
+  cpu.PC = ex.addr;
+  cpuSetStatus(`<span class="ok">${EXAMPLES[key].desc}</span>`);
+  cpuRenderAll();
+}
+
+function cpuReset() {
+  cpuStop();
+  cpu = new CPU6502();
+  const addrStr = document.getElementById('cpu-load-addr').value;
+  const addr = parseInt(addrStr, 16) || 0x0200;
+  cpu.mem[0xFFFC] = addr & 0xFF;
+  cpu.mem[0xFFFD] = (addr>>8) & 0xFF;
+  const hexStr = document.getElementById('cpu-hex').value;
+  const bytes = hexStr.replace(/[^0-9A-Fa-f]/g,' ').trim().split(/\s+/).filter(Boolean).map(h=>parseInt(h,16));
+  bytes.forEach((b,i) => cpu.wr(addr+i, b));
+  cpu.PC = addr;
+  cpuSetStatus('Reset — prêt.');
+  cpuRenderAll();
+}
+
+function cpuStep() {
+  if (cpu.halted) { cpuSetStatus('<span class="err">BRK — halted. Faire Reset pour redémarrer.</span>'); return; }
+  cpu.step();
+  if (cpu.halted) cpuSetStatus('<span class="err">BRK — halted à $' + h4(cpu.PC-1) + '.</span>');
+  else cpuSetStatus('Step — PC: $' + h4(cpu.PC) + ' · A:$' + h2(cpu.A) + ' X:$' + h2(cpu.X) + ' Y:$' + h2(cpu.Y));
+  cpuRenderAll();
+}
+
+function cpuRun() {
+  if (cpu.halted) { cpuSetStatus('<span class="err">Halted. Reset d\'abord.</span>'); return; }
+  document.getElementById('cpu-run').disabled = true;
+  document.getElementById('cpu-step').disabled = true;
+  document.getElementById('cpu-stop').disabled = false;
+  let steps = 0;
+  function tick() {
+    for (let i=0; i<50 && !cpu.halted; i++) { cpu.step(); steps++; }
+    cpuRenderAll();
+    if (cpu.halted) {
+      cpuStop();
+      cpuSetStatus('<span class="err">BRK — halted après ' + steps + ' instructions.</span>');
+    } else {
+      cpuSetStatus('Exécution… ' + cpu.instrCount + ' instructions · PC: $' + h4(cpu.PC));
+      cpuRunId = setTimeout(tick, 16);
+    }
+  }
+  tick();
+}
+
+function cpuStop() {
+  if (cpuRunId) { clearTimeout(cpuRunId); cpuRunId = null; }
+  document.getElementById('cpu-run').disabled = false;
+  document.getElementById('cpu-step').disabled = false;
+  document.getElementById('cpu-stop').disabled = true;
+  if (!cpu.halted) cpuSetStatus('Arrêté à $' + h4(cpu.PC) + '.');
+}
+
+function cpuSetStatus(html) {
+  document.getElementById('cpu-status').innerHTML = html;
+}
+
+function cpuRenderAll() {
+  cpuRenderRegs();
+  cpuRenderDisasm();
+  cpuRenderMem();
+}
+
+function cpuRenderRegs() {
+  const r = document.getElementById('cpu-regs');
+  const regs = [
+    ['A',  `$${h2(cpu.A)}  (${cpu.A})`],
+    ['X',  `$${h2(cpu.X)}  (${cpu.X})`],
+    ['Y',  `$${h2(cpu.Y)}  (${cpu.Y})`],
+    ['SP', `$${h2(cpu.SP)}  → $${h4(0x0100|cpu.SP)}`],
+    ['PC', `$${h4(cpu.PC)}`],
+    ['P',  `$${h2(cpu.P)}  (${cpu.P.toString(2).padStart(8,'0')})`],
+  ];
+  r.innerHTML = regs.map(([n,v]) =>
+    `<div class="creg"><span class="creg-n">${n}</span><span class="creg-v">${v}</span></div>`
+  ).join('');
+
+  const FLAGS = ['N','V','–','B','D','I','Z','C'];
+  const fl = document.getElementById('cpu-flags');
+  fl.innerHTML = FLAGS.map((name,i) => {
+    const bit = (cpu.P >> (7-i)) & 1;
+    return `<div class="cflag">
+      <span class="cflag-n">${name}</span>
+      <span class="cflag-v ${bit?'set':''}">${bit}</span>
+    </div>`;
+  }).join('');
+}
+
+function cpuRenderDisasm() {
+  const el = document.getElementById('cpu-disasm');
+  let html = '';
+  let addr = cpu.PC;
+  // Show a few instructions before PC if possible
+  const startAddr = Math.max(0, cpu.PC - 12);
+  let scan = startAddr;
+  const lines = [];
+  while (scan < cpu.PC + 40 && lines.length < 20) {
+    const d = disasm(cpu.mem, scan);
+    lines.push({ addr: scan, d, cur: scan === cpu.PC });
+    scan += d.bytes;
+  }
+  html = lines.map(l =>
+    `<div class="dline ${l.cur?'cur':''}">
+      <span class="daddr">$${h4(l.addr)}</span>
+      <span class="dbytes">${l.d.braw}</span>
+      <span>${l.d.str}</span>
+    </div>`
+  ).join('');
+  el.innerHTML = html;
+  const curEl = el.querySelector('.cur');
+  if (curEl) curEl.scrollIntoView({block:'nearest'});
+}
+
+function memPagePrev() { memPage = (memPage - 0x100 + 0x10000) & 0xFF00; cpuRenderMem(); }
+function memPageNext() { memPage = (memPage + 0x100) & 0xFF00; cpuRenderMem(); }
+
+function cpuRenderMem() {
+  document.getElementById('mem-page-lbl').textContent = '$' + h4(memPage);
+  const el = document.getElementById('cpu-mem');
+  const spAddr = 0x0100 | cpu.SP;
+  let html = '';
+  for (let row = 0; row < 16; row++) {
+    const base = memPage + row * 16;
+    html += `<span class="mrow"><span class="maddr">$${h4(base)}</span>`;
+    for (let col = 0; col < 16; col++) {
+      const a = base + col;
+      const v = cpu.mem[a];
+      const isPC = a === cpu.PC;
+      const isSP = a === spAddr;
+      const cls = isPC ? 'mpc' : isSP ? 'msp' : v === 0 ? 'mnz' : '';
+      html += `<span class="mbyte ${cls}">${h2(v)}</span>`;
+    }
+    html += `</span>\n`;
+  }
+  el.innerHTML = html;
+}
+</script>
+</body>
+</html>
