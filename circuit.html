@@ -13,8 +13,16 @@
     }
   </script>
   <style>
-    html, body { height: 100%; margin: 0; overflow: hidden; }
-    body { display: flex; flex-direction: column; background: #060e06; color: #c8c0b4; font-family: 'Courier New', monospace; }
+    html, body { height: 100%; margin: 0; overflow: hidden; width: 100%; }
+    body {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+      background: #060e06;
+      color: #c8c0b4;
+      font-family: 'Courier New', monospace;
+    }
     .top-bar { display:flex; align-items:center; gap:1rem; padding:0.45rem 1rem; background:#0a0f0a; border-bottom:2px solid #2a3a2a; flex-shrink:0; }
     .top-bar a { color:#80cc80; text-decoration:none; font-size:0.85rem; }
     .top-bar h1 { flex:1; margin:0; font-size:0.95rem; color:#80cc80; }
