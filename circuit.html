@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circuit — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _perms = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_perms.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      document.location.href = 'index.html';
+    }
+  </script>
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body { display: flex; flex-direction: column; background: #060e06; color: #c8c0b4; font-family: 'Courier New', monospace; }
+    .top-bar { display:flex; align-items:center; gap:1rem; padding:0.45rem 1rem; background:#0a0f0a; border-bottom:2px solid #2a3a2a; flex-shrink:0; }
+    .top-bar a { color:#80cc80; text-decoration:none; font-size:0.85rem; }
+    .top-bar h1 { flex:1; margin:0; font-size:0.95rem; color:#80cc80; }
+    .sim-controls { display:flex; gap:0.35rem; align-items:center; }
+    .ctrl-btn { background:#0f1a0f; border:1px solid #2a3a2a; border-radius:5px; color:#c8c0b4; font-size:0.78rem; padding:0.22rem 0.55rem; cursor:pointer; transition:border-color 0.15s,color 0.15s; font-family:inherit; }
+    .ctrl-btn:hover { border-color:#80cc80; color:#80cc80; }
+    #btn-play { border-color:#50aa50; color:#50aa50; }
+    #btn-play.paused { border-color:#2a3a2a; color:#c8c0b4; }
+
+    .palette-bar { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; padding:0.3rem 0.8rem; background:#08120a; border-bottom:1px solid #1a2a1a; flex-shrink:0; min-height:40px; }
+    .pal-group { display:flex; align-items:center; gap:0.25rem; }
+    .pal-label { font-size:0.6rem; color:#4a6a4a; text-transform:uppercase; letter-spacing:0.06em; padding-right:0.1rem; }
+    .pal-sep { width:1px; height:20px; background:#1a2a1a; flex-shrink:0; }
+    .pal-btn { background:#0f1a0f; border:1px solid #2a3a2a; border-radius:3px; color:#90a890; font-size:0.72rem; padding:0.18rem 0.4rem; cursor:pointer; font-family:inherit; transition:all 0.1s; white-space:nowrap; }
+    .pal-btn:hover { border-color:#60a060; color:#c0e0c0; }
+    .pal-btn.sel { border-color:#80cc80; color:#80cc80; background:#0f200f; }
+    .tool-btn { background:#0f1a0f; border:1px solid #2a3a2a; border-radius:3px; color:#90a890; font-size:0.72rem; padding:0.18rem 0.45rem; cursor:pointer; font-family:inherit; transition:all 0.1s; }
+    .tool-btn:hover { border-color:#60a060; color:#c0e0c0; }
+    .tool-btn.t-sel  { border-color:#80cc80; color:#80cc80; background:#0f200f; }
+    .tool-btn.t-wire { border-color:#cc8030; color:#cc8030; background:#1a0f00; }
+    .tool-btn.t-del  { border-color:#e05555; color:#e05555; background:#1a0808; }
+
+    .canvas-wrap { flex:1; overflow:hidden; position:relative; }
+    #sim-canvas { display:block; }
+    .status-bar { padding:0.22rem 1rem; font-size:0.7rem; color:#4a6a4a; background:#060e06; border-top:1px solid #1a2a1a; flex-shrink:0; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="informatique.html">&#8592; Informatique</a>
+    <h1>Simulateur de circuits logiques</h1>
+    <div class="sim-controls">
+      <button class="ctrl-btn paused" id="btn-play" onclick="togglePlay()">▶ Démarrer</button>
+      <button class="ctrl-btn" onclick="stepOnce()" title="Avancer d'un tick">⏭</button>
+      <button class="ctrl-btn" onclick="clearCircuit()">✕ Effacer</button>
+    </div>
+  </div>
+
+  <div class="palette-bar">
+    <div class="pal-group">
+      <span class="pal-label">Alim.</span>
+      <button class="pal-btn" data-type="VCC" onclick="setPlaceType('VCC')">VCC</button>
+      <button class="pal-btn" data-type="GND" onclick="setPlaceType('GND')">GND</button>
+    </div>
+    <div class="pal-sep"></div>
+    <div class="pal-group">
+      <span class="pal-label">Entrée</span>
+      <button class="pal-btn" data-type="SW"  onclick="setPlaceType('SW')">Interrupteur</button>
+      <button class="pal-btn" data-type="BTN" onclick="setPlaceType('BTN')">Bouton</button>
+      <button class="pal-btn" data-type="CLK" onclick="setPlaceType('CLK')">Horloge</button>
+    </div>
+    <div class="pal-sep"></div>
+    <div class="pal-group">
+      <span class="pal-label">Portes</span>
+      <button class="pal-btn" data-type="AND"  onclick="setPlaceType('AND')">AND</button>
+      <button class="pal-btn" data-type="OR"   onclick="setPlaceType('OR')">OR</button>
+      <button class="pal-btn" data-type="NOT"  onclick="setPlaceType('NOT')">NOT</button>
+      <button class="pal-btn" data-type="NAND" onclick="setPlaceType('NAND')">NAND</button>
+      <button class="pal-btn" data-type="NOR"  onclick="setPlaceType('NOR')">NOR</button>
+      <button class="pal-btn" data-type="XOR"  onclick="setPlaceType('XOR')">XOR</button>
+      <button class="pal-btn" data-type="XNOR" onclick="setPlaceType('XNOR')">XNOR</button>
+    </div>
+    <div class="pal-sep"></div>
+    <div class="pal-group">
+      <span class="pal-label">Sortie</span>
+      <button class="pal-btn" data-type="LED" onclick="setPlaceType('LED')">LED</button>
+    </div>
+    <div class="pal-sep"></div>
+    <div class="pal-group">
+      <span class="pal-label">Outil</span>
+      <button class="tool-btn t-sel" id="tool-select" onclick="setTool('select')">↖ Sél.</button>
+      <button class="tool-btn" id="tool-wire" onclick="setTool('wire')">∿ Fil</button>
+      <button class="tool-btn" id="tool-delete" onclick="setTool('delete')">✕ Suppr.</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap" id="canvas-wrap">
+    <canvas id="sim-canvas"></canvas>
+  </div>
+  <div class="status-bar" id="status-bar">Choisir un composant dans la palette puis cliquer sur le canvas pour le placer. Clic droit ou Alt+glisser pour déplacer la vue.</div>
+
+  <script src="circuit.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:#222;color:#aaa;font-size:0.65rem;padding:0.2rem 0.4rem;border-radius:3px;z-index:9999;display:none;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+</body>
+</html>
