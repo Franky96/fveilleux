@@ -41,12 +41,14 @@
     .hero {
       min-height: 90vh; display: flex; align-items: center;
       position: relative; overflow: hidden; padding: 4rem 2.5rem;
+      background: url('MGF_Interior.png') center center / cover no-repeat;
     }
     .hero::before {
       content: ''; position: absolute; inset: 0;
       background:
-        radial-gradient(ellipse 60% 80% at 70% 50%, rgba(107,47,160,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 60% at 20% 30%, rgba(107,47,160,0.08) 0%, transparent 60%);
+        rgba(13,13,13,0.72),
+        radial-gradient(ellipse 60% 80% at 70% 50%, rgba(107,47,160,0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 30%, rgba(107,47,160,0.12) 0%, transparent 60%);
     }
     /* Geometric grid accent */
     .hero::after {
