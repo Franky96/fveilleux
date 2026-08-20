@@ -7,8 +7,8 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --purple:  #6b2fa0;
-      --purple2: #7e3dbf;
+      --purple:  #571f8a;
+      --purple2: #6828a8;
       --dark:    #0d0d0d;
       --dark2:   #161616;
       --dark3:   #1f1f1f;
@@ -45,18 +45,18 @@
     }
     .hero::before {
       content: ''; position: absolute; inset: 0;
-      background: linear-gradient(to right, rgba(10,5,20,0.75) 55%, rgba(107,47,160,0.45) 100%);
+      background: linear-gradient(to right, rgba(10,5,20,0.75) 55%, rgba(87,31,138,0.45) 100%);
     }
     /* Geometric grid accent */
     .hero::after {
       content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 50%;
-      background-image: linear-gradient(rgba(107,47,160,0.07) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(107,47,160,0.07) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(87,31,138,0.07) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(87,31,138,0.07) 1px, transparent 1px);
       background-size: 40px 40px;
       mask-image: linear-gradient(to left, transparent, rgba(0,0,0,0.6) 80%);
     }
     .hero-content { position: relative; z-index: 1; max-width: 650px; }
-    .hero-tag { display: inline-block; background: rgba(107,47,160,0.18); border: 1px solid rgba(126,61,191,0.35); color: var(--purple2); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 1.5rem; }
+    .hero-tag { display: inline-block; background: rgba(87,31,138,0.18); border: 1px solid rgba(104,40,168,0.35); color: var(--purple2); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.3rem 0.9rem; border-radius: 999px; margin-bottom: 1.5rem; }
     .hero h1 { font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; text-shadow: 0 2px 20px rgba(0,0,0,0.7); }
     .hero h1 span { color: var(--purple2); }
     .hero p { margin-top: 1.4rem; font-size: 1.1rem; color: #d8d8d8; line-height: 1.7; max-width: 480px; text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
@@ -98,7 +98,7 @@
     .coach-role { font-size: 0.8rem; color: var(--purple2); margin-top: 0.25rem; letter-spacing: 0.04em; }
     .coach-bio { font-size: 0.82rem; color: var(--gray); margin-top: 0.7rem; line-height: 1.6; }
     .coach-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
-    .coach-tag { font-size: 0.68rem; background: rgba(107,47,160,0.14); color: var(--purple2); border: 1px solid rgba(107,47,160,0.3); padding: 0.18rem 0.55rem; border-radius: 999px; letter-spacing: 0.05em; }
+    .coach-tag { font-size: 0.68rem; background: rgba(87,31,138,0.14); color: var(--purple2); border: 1px solid rgba(87,31,138,0.3); padding: 0.18rem 0.55rem; border-radius: 999px; letter-spacing: 0.05em; }
 
     /* ── LOCATION ────────────────────────────────────────────── */
     .location { background: var(--dark2); }
@@ -106,7 +106,7 @@
     .location-info { padding-top: 0.5rem; }
     .location-info h2 { margin-bottom: 1.5rem; }
     .addr-block { display: flex; gap: 1rem; margin-bottom: 1.8rem; align-items: flex-start; }
-    .addr-icon { width: 40px; height: 40px; border-radius: 8px; background: rgba(107,47,160,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
+    .addr-icon { width: 40px; height: 40px; border-radius: 8px; background: rgba(87,31,138,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
     .addr-text { font-size: 0.92rem; line-height: 1.7; color: #ccc; }
     .addr-text strong { color: var(--white); display: block; margin-bottom: 0.2rem; }
     .map-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a; height: 400px; }
