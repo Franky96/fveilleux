@@ -82,11 +82,12 @@
     .coaches { background: var(--dark); }
     .coaches-header { text-align: center; margin-bottom: 3.5rem; }
     .coaches-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .coach-link { text-decoration: none; color: inherit; display: block; }
     .coach-card {
       background: var(--dark2); border: 1px solid #242424; border-radius: 12px;
       overflow: hidden; transition: border-color 0.25s, transform 0.25s;
     }
-    .coach-card:hover { border-color: var(--purple); transform: translateY(-4px); }
+    .coach-link:hover .coach-card { border-color: var(--purple); transform: translateY(-4px); }
     .coach-avatar {
       background: #111; aspect-ratio: 1; display: flex; align-items: flex-end; justify-content: center;
       overflow: hidden; border-bottom: 2px solid var(--purple);
@@ -136,7 +137,7 @@
 <nav>
   <div class="nav-logo"><img src="MGF_LOGO.PNG" alt="MGFitness"></div>
   <ul class="nav-links">
-    <li><a href="#coaches">Coachs</a></li>
+    <li><a href="coach.html">Coachs</a></li>
     <li><a href="#location">Emplacement</a></li>
     <li><a href="#location" class="btn-primary" style="padding:0.4rem 1.1rem;border-radius:5px;font-size:0.82rem;">Nous joindre</a></li>
   </ul>
@@ -172,7 +173,7 @@
   <div class="coaches-grid">
 
     <!-- Coach 1 -->
-    <div class="coach-card">
+    <a href="coach.html#coach1" class="coach-link"><div class="coach-card">
       <div class="coach-avatar">
         <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" fill="none">
           <circle cx="60" cy="32" r="22" fill="#555"/>
@@ -196,10 +197,10 @@
           <span class="coach-tag">Powerlifting</span>
         </div>
       </div>
-    </div>
+    </div></a>
 
     <!-- Coach 2 -->
-    <div class="coach-card">
+    <a href="coach.html#coach2" class="coach-link"><div class="coach-card">
       <div class="coach-avatar">
         <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" fill="none">
           <circle cx="60" cy="32" r="22" fill="#555"/>
@@ -218,7 +219,7 @@
           <span class="coach-tag">Boot Camp</span>
         </div>
       </div>
-    </div>
+    </div></a>
 
   </div>
 </section>
