@@ -20,6 +20,10 @@
       --accent-g: rgba(82,214,128,0.05);
       --amber:    #e8b84a;
       --amber-d:  rgba(232,184,74,0.12);
+      --blue:     #4a80f0;
+      --blue-dk:  #1e3d8a;
+      --blue-d:   rgba(74,128,240,0.13);
+      --blue-ddk: rgba(30,61,138,0.22);
       --text:     #f0f4f1;
       --muted:    #5e7866;
       --warn:     #e8b84a;
@@ -38,6 +42,10 @@
         --accent-g: rgba(30,128,64,0.05);
         --amber:    #b07820;
         --amber-d:  rgba(176,120,32,0.12);
+        --blue:     #2f5cd4;
+        --blue-dk:  #1a3278;
+        --blue-d:   rgba(47,92,212,0.12);
+        --blue-ddk: rgba(26,50,120,0.20);
         --text:     #0f1a12;
         --muted:    #4a6454;
         --warn:     #b07820;
@@ -56,6 +64,10 @@
       --accent-g: rgba(30,128,64,0.05);
       --amber:    #b07820;
       --amber-d:  rgba(176,120,32,0.12);
+      --blue:     #2f5cd4;
+      --blue-dk:  #1a3278;
+      --blue-d:   rgba(47,92,212,0.12);
+      --blue-ddk: rgba(26,50,120,0.20);
       --text:     #0f1a12;
       --muted:    #4a6454;
       --warn:     #b07820;
@@ -73,6 +85,10 @@
       --accent-g: rgba(82,214,128,0.05);
       --amber:    #e8b84a;
       --amber-d:  rgba(232,184,74,0.12);
+      --blue:     #4a80f0;
+      --blue-dk:  #1e3d8a;
+      --blue-d:   rgba(74,128,240,0.13);
+      --blue-ddk: rgba(30,61,138,0.22);
       --text:     #f0f4f1;
       --muted:    #5e7866;
       --warn:     #e8b84a;
@@ -117,7 +133,7 @@
       border-bottom: 2px solid transparent;
       transition: color 0.15s, border-color 0.15s; white-space: nowrap;
     }
-    .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover { color: var(--blue); }
     .nav-links a.active { color: var(--accent); border-bottom-color: var(--accent); }
     .nav-end { display: flex; align-items: center; gap: 0.6rem; margin-left: auto; }
     .nav-badge {
@@ -136,7 +152,7 @@
       padding: 0.28rem 0.55rem; color: var(--muted); font-size: 0.78rem;
       cursor: pointer; transition: all 0.15s; font-family: inherit;
     }
-    .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .theme-btn:hover { border-color: var(--blue); color: var(--blue); }
 
     /* ── LAYOUT ── */
     .wrap { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
@@ -245,7 +261,8 @@
     .inner-sidebar { background: #080c08; border-right: 1px solid rgba(82,214,128,0.08); padding: 1.2rem; }
     .isb-section { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.10em; text-transform: uppercase; color: rgba(82,214,128,0.25); margin-bottom: 0.4rem; margin-top: 0.9rem; }
     .isb-section:first-child { margin-top: 0; }
-    .isb-link { display: flex; align-items: center; gap: 0.4rem; padding: 0.32rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; font-size: 0.73rem; color: #3a5540; }
+    .isb-link { display: flex; align-items: center; gap: 0.4rem; padding: 0.32rem 0.5rem; border-radius: 4px; margin-bottom: 0.1rem; font-size: 0.73rem; color: #3a5540; transition: background 0.13s, color 0.13s; cursor: default; }
+    .isb-link:not(.a):hover { background: rgba(74,128,240,0.10); color: #4a80f0; }
     .isb-link.a { background: rgba(82,214,128,0.08); color: #52d680; border: 1px solid rgba(82,214,128,0.12); }
     .isb-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
     .inner-content { background: #060908; padding: 1.5rem; }
@@ -270,7 +287,8 @@
       border-radius: 8px; padding: 1rem; cursor: default;
       transition: background 0.15s, border-color 0.15s, transform 0.15s;
     }
-    .dash-card:hover { background: rgba(82,214,128,0.07); border-color: rgba(82,214,128,0.28); transform: translateY(-2px); }
+    .dash-card:hover { background: var(--blue-d); border-color: var(--blue); transform: translateY(-2px); }
+    .dash-card:active { background: var(--blue-ddk); border-color: var(--blue-dk); transform: translateY(0); }
     .dash-icon { font-size: 1.3rem; margin-bottom: 0.45rem; }
     .dash-card-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.8rem; color: #f0f4f1; margin-bottom: 0.15rem; }
     .dash-card-sub { font-size: 0.68rem; color: #3a5540; }
@@ -392,6 +410,18 @@
         <div class="swatch-color" style="background:rgba(232,184,74,0.12);"></div>
         <div class="swatch-info"><div class="swatch-name" style="color:var(--amber)">Amber 12%</div><div class="swatch-hex" style="color:var(--amber)">rgba(e8b84a,0.12)</div><div class="swatch-role">Fond badge / tag</div></div>
       </div>
+      <div class="swatch" style="border-color:rgba(74,128,240,0.25);">
+        <div class="swatch-color" style="background:#4a80f0;"></div>
+        <div class="swatch-info"><div class="swatch-name" style="color:#4a80f0">Blue</div><div class="swatch-hex" style="color:#4a80f0">#4a80f0</div><div class="swatch-role">Hover interactif</div></div>
+      </div>
+      <div class="swatch" style="border-color:rgba(30,61,138,0.35);">
+        <div class="swatch-color" style="background:#1e3d8a;"></div>
+        <div class="swatch-info"><div class="swatch-name" style="color:#4a80f0">Navy</div><div class="swatch-hex" style="color:#4a80f0">#1e3d8a</div><div class="swatch-role">Sélectionné / enfoncé</div></div>
+      </div>
+      <div class="swatch" style="border-color:rgba(74,128,240,0.18);">
+        <div class="swatch-color" style="background:rgba(74,128,240,0.13);"></div>
+        <div class="swatch-info"><div class="swatch-name" style="color:#4a80f0">Blue 13%</div><div class="swatch-hex" style="color:#4a80f0">rgba(4a80f0,0.13)</div><div class="swatch-role">Fond hover léger</div></div>
+      </div>
     </div>
 
     <!-- Transparences visualisées -->
@@ -430,6 +460,24 @@
       <div class="trans-tile" style="background:rgba(232,184,74,0.02);border-color:rgba(232,184,74,0.07);">
         <div class="trans-label" style="color:var(--amber)">Amber 2%</div>
         <div class="trans-use">Teinture subtile</div>
+      </div>
+    </div>
+    <div class="trans-demo" style="margin-top:0.5rem;">
+      <div class="trans-tile" style="background:rgba(74,128,240,0.22);border-color:rgba(74,128,240,0.3);">
+        <div class="trans-label" style="color:#4a80f0">Blue 22%</div>
+        <div class="trans-use">Enfoncé / sélectionné</div>
+      </div>
+      <div class="trans-tile" style="background:rgba(74,128,240,0.13);border-color:rgba(74,128,240,0.22);">
+        <div class="trans-label" style="color:#4a80f0">Blue 13%</div>
+        <div class="trans-use">Hover léger</div>
+      </div>
+      <div class="trans-tile" style="background:rgba(74,128,240,0.06);border-color:rgba(74,128,240,0.12);">
+        <div class="trans-label" style="color:#4a80f0">Blue 6%</div>
+        <div class="trans-use">Focus ring subtil</div>
+      </div>
+      <div class="trans-tile" style="background:rgba(30,61,138,0.22);border-color:rgba(30,61,138,0.35);">
+        <div class="trans-label" style="color:#4a80f0">Navy 22%</div>
+        <div class="trans-use">Clic / actif profond</div>
       </div>
     </div>
   </div>
@@ -500,7 +548,7 @@
         <div class="inner-sidebar">
           <div class="isb-section">Informatique</div>
           <div class="isb-link a"><span class="isb-dot" style="background:#52d680"></span>CSDB</div>
-          <div class="isb-link"><span class="isb-dot" style="background:#1a2a1a"></span>Circuit logique</div>
+          <div class="isb-link" style="background:rgba(74,128,240,0.10);color:#4a80f0;"><span class="isb-dot" style="background:#4a80f0"></span>Circuit logique <span style="font-size:0.6rem;opacity:0.6;margin-left:auto">hover</span></div>
           <div class="isb-link"><span class="isb-dot" style="background:#1a2a1a"></span>Simulateurs</div>
           <div class="isb-section">Aviation</div>
           <div class="isb-link"><span class="isb-dot" style="background:#1a2a1a"></span>ARINC 429</div>
@@ -526,7 +574,7 @@
       <div class="anno"><div class="anno-n">1</div>Fond nav très sombre avec bordure verte à 10% — présence sans écraser</div>
       <div class="anno"><div class="anno-n">2</div>Actif en vert plein (#52d680) — seul élément de couleur dans la nav</div>
       <div class="anno"><div class="anno-n">3</div>Sidebar : lien actif en fond rgba(vert, 8%) + texte vert — inactifs invisibles</div>
-      <div class="anno"><div class="anno-n" style="background:rgba(232,184,74,0.12);color:#e8b84a;border-color:rgba(232,184,74,0.2)">4</div>Amber pour les états secondaires (warning, à venir, approche) — se distingue du vert sans casser le thème</div>
+      <div class="anno"><div class="anno-n" style="background:rgba(74,128,240,0.13);color:#4a80f0;border-color:rgba(74,128,240,0.2)">4</div>Hover → bleu (#4a80f0) · Clic → navy (#1e3d8a) · Actif confirmé → vert (#52d680) — trois états, trois couleurs distinctes</div>
     </div>
   </div>
 </section>
