@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSDB — fveilleux</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .addr-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(72px,1fr)); gap:0.4rem; margin-bottom:2rem; }
+    .addr-btn {
+      background: rgba(82,214,128,0.03); border:1px solid var(--border);
+      border-radius:6px; padding:0.45rem 0.2rem; text-align:center;
+      font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--muted);
+      cursor:pointer; transition:all 0.13s;
+    }
+    .addr-btn:hover { background:var(--blue-d); border-color:var(--blue); color:var(--blue); }
+    .addr-btn.sel { background:var(--accent-d); border-color:var(--accent); color:var(--accent); }
+    .addr-btn.multi { border-color:var(--amber-d); color:var(--amber); }
+    .addr-btn.multi.sel { background:var(--accent-d); border-color:var(--accent); color:var(--accent); }
+    .banner {
+      background: var(--surface); border:1px solid var(--border);
+      border-radius:8px; padding:0.8rem 1.2rem; margin-bottom:1.5rem;
+      display:flex; gap:2rem; align-items:center; flex-wrap:wrap;
+    }
+    .banner-val { text-align:center; }
+    .banner-val-num { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent); }
+    .banner-val-num.amber { color:var(--amber); }
+    .banner-val-lbl { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+    .banner-sep { width:1px; height:36px; background:var(--border-s); }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-brand"><div class="nav-brand-mark">fw</div><a href="index.html">fveilleux</a></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Accueil</a></li>
+    <li><a href="informatique.html" class="active">Informatique</a></li>
+    <li><a href="aviation.html">Aviation</a></li>
+    <li><a href="#">Outils</a></li>
+  </ul>
+  <div class="nav-end">
+    <span class="nav-badge">admin</span>
+    <button class="theme-btn" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')">◑</button>
+    <div class="nav-avatar">FV</div>
+  </div>
+</nav>
+
+<div class="page-body">
+
+  <aside class="sidebar">
+    <div class="sb-section">Décodage</div>
+    <a href="csdb.html" class="sb-link active"><span class="sb-dot"></span>CSDB</a>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>ARINC 429</a>
+    <div class="sb-section">Simulation</div>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>Circuit logique</a>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>Puces logiques</a>
+    <div class="sb-section">Référence</div>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>Tables de vérité</a>
+    <a href="#" class="sb-link disabled"><span class="sb-dot"></span>Registres (bientôt)</a>
+  </aside>
+
+  <main class="main main-narrow">
+    <span class="eyebrow">Informatique · CSDB</span>
+    <h1 class="page-title">Décodeur d'adresses</h1>
+    <p class="page-subtitle">Sélectionnez une adresse pour visualiser les données encodées et leurs valeurs décodées.</p>
+
+    <!-- Bande de valeurs (adresse 0x1E sélectionnée) -->
+    <div class="banner" id="banner">
+      <div class="banner-val">
+        <div class="banner-val-num">0x1E</div>
+        <div class="banner-val-lbl">Adresse</div>
+      </div>
+      <div class="banner-sep"></div>
+      <div class="banner-val">
+        <div class="banner-val-num amber">3 350</div>
+        <div class="banner-val-lbl">Altitude (ft)</div>
+      </div>
+      <div class="banner-sep"></div>
+      <div class="banner-val">
+        <div class="banner-val-num">2481</div>
+        <div class="banner-val-lbl">Code ATC</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center">
+        <span class="badge badge-green">décodage OK</span>
+        <span class="badge badge-amber">2 valeurs</span>
+      </div>
+    </div>
+
+    <!-- Sélecteur d'adresse -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.7rem">
+      <span class="label">Sélecteur d'adresse</span>
+      <span class="badge badge-muted">● icône = valeurs multiples</span>
+    </div>
+    <div class="addr-grid">
+      <div class="addr-btn" onclick="selectAddr(this,'0x00')">0x00</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x02')">0x02</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x04')">0x04</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x06')">0x06</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x08')">0x08</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x0A')">0x0A</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x0C')">0x0C</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x0E')">0x0E</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x10')">0x10</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x12')">0x12</div>
+      <div class="addr-btn multi" onclick="selectAddr(this,'0x14')">0x14 ◈</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x16')">0x16</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x18')">0x18</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x1A')">0x1A</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x1C')">0x1C</div>
+      <div class="addr-btn multi sel" id="addr-1E" onclick="selectAddr(this,'0x1E')">0x1E ◈</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x20')">0x20</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x22')">0x22</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x24')">0x24</div>
+      <div class="addr-btn" onclick="selectAddr(this,'0x26')">0x26</div>
+    </div>
+
+    <!-- Détail de l'adresse sélectionnée -->
+    <div class="data-block">
+      <div class="data-block-head">
+        Adresse 0x1E — Transpondeur &amp; altimètre
+        <span class="badge badge-amber">2 valeurs</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Label</span>
+        <span class="data-val">ALT + ATC</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Altitude-pression</span>
+        <span class="data-val">3 350 ft <span class="badge badge-amber">approche</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Code ATC (transpondeur)</span>
+        <span class="data-val">2481 <span class="badge badge-green">actif</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Résolution</span>
+        <span class="data-val">100 ft</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Encodage</span>
+        <span class="data-val">BCD / Gillham</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Fréquence de rafraîchissement</span>
+        <span class="data-val">1 Hz</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Données brutes</span>
+        <span class="data-val" style="color:var(--muted)">A2 3C 0D 1A 00 00 00 00</span>
+      </div>
+    </div>
+
+    <!-- Données d'une seconde adresse -->
+    <div class="data-block">
+      <div class="data-block-head">
+        Adresse 0x22 — Radio VHF COM
+        <span class="badge badge-green">1 valeur</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Fréquence active</span>
+        <span class="data-val">118.700 MHz <span class="badge badge-green">émission</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Fréquence standby</span>
+        <span class="data-val">121.500 MHz</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Encodage</span>
+        <span class="data-val">BCD 8.33 kHz</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Données brutes</span>
+        <span class="data-val" style="color:var(--muted)">11 87 00 12 15 00 00 00</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  <span class="footer-brand">fveilleux</span>
+  <span class="footer-label">concept · 2025</span>
+</footer>
+
+<script>
+  function selectAddr(el, addr) {
+    document.querySelectorAll('.addr-btn').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+  }
+</script>
+</body>
+</html>

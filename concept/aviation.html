@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aviation — fveilleux</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .arinc-row {
+      display:grid; grid-template-columns:80px 60px 60px 1fr 100px;
+      align-items:center; gap:0.75rem;
+      padding:0.55rem 1rem; border-bottom:1px solid var(--border-s); font-size:0.8rem;
+    }
+    .arinc-row:last-child { border-bottom:none; }
+    .arinc-head { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:0.68rem; background:rgba(82,214,128,0.05); }
+    .arinc-lbl { font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--accent); }
+    .arinc-val { font-family:'JetBrains Mono',monospace; font-size:0.78rem; }
+  </style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-brand"><div class="nav-brand-mark">fw</div><a href="index.html">fveilleux</a></div>
+  <ul class="nav-links">
+    <li><a href="index.html">Accueil</a></li>
+    <li><a href="informatique.html">Informatique</a></li>
+    <li><a href="aviation.html" class="active">Aviation</a></li>
+    <li><a href="#">Outils</a></li>
+  </ul>
+  <div class="nav-end">
+    <span class="nav-badge">admin</span>
+    <button class="theme-btn" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')">◑</button>
+    <div class="nav-avatar">FV</div>
+  </div>
+</nav>
+
+<div class="page-body">
+
+  <aside class="sidebar">
+    <div class="sb-section">Outils</div>
+    <a href="#arinc" class="sb-link active"><span class="sb-dot"></span>ARINC 429</a>
+    <a href="csdb.html" class="sb-link"><span class="sb-dot"></span>CSDB</a>
+
+    <div class="sb-section">Documentation</div>
+    <a href="#manuel" class="sb-link"><span class="sb-dot"></span>Manuel CSDB</a>
+    <a href="#etiquettes" class="sb-link"><span class="sb-dot"></span>Étiquettes std.</a>
+
+    <div class="sb-section">Référence</div>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>Formats de données</div>
+    <a href="#" class="sb-link disabled"><span class="sb-dot"></span>FMS (bientôt)</a>
+  </aside>
+
+  <main class="main">
+    <span class="eyebrow">Aviation</span>
+    <h1 class="page-title">Outils avioniques</h1>
+    <p class="page-subtitle">Décodage, référence et documentation pour les bus de données avioniques CSDB et ARINC 429.</p>
+
+    <!-- Cards -->
+    <div class="card-grid" style="margin-bottom:2.5rem">
+      <a href="#arinc" class="card">
+        <span class="card-icon">📡</span>
+        <div class="card-title">ARINC 429</div>
+        <div class="card-desc">Décodeur d'étiquettes, formats BNR, BCD, SSM, SDI</div>
+      </a>
+      <a href="csdb.html" class="card">
+        <span class="card-icon">🔍</span>
+        <div class="card-title">CSDB</div>
+        <div class="card-desc">Décodeur d'adresses bus avionique — visualisation temps réel</div>
+      </a>
+      <a href="#manuel" class="card">
+        <span class="card-icon">📖</span>
+        <div class="card-title">Manuel CSDB</div>
+        <div class="card-desc">Documentation complète des adresses, encodages et formats</div>
+      </a>
+      <a href="#" class="card card-disabled">
+        <span class="card-icon">🛩️</span>
+        <div class="card-title">FMS</div>
+        <div class="card-desc">Bientôt disponible</div>
+      </a>
+    </div>
+
+    <div class="divider" id="arinc"></div>
+
+    <!-- ARINC 429 preview -->
+    <span class="eyebrow" style="margin-bottom:0.5rem">ARINC 429 — Étiquettes décodées</span>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.2rem">Données simulées — connecter une source réelle pour la mise à jour en temps réel.</p>
+
+    <div class="data-block" style="margin-bottom:2rem;overflow-x:auto">
+      <div class="data-block-head">
+        Flux de données · Bus 1
+        <div style="display:flex;gap:0.5rem">
+          <span class="badge badge-green">connecté</span>
+          <span class="badge badge-blue">100 kbps</span>
+        </div>
+      </div>
+      <div class="arinc-row arinc-head">
+        <span>Étiquette</span><span>SSM</span><span>SDI</span><span>Valeur décodée</span><span>État</span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">206 (oct)</span><span>11</span><span>00</span>
+        <span class="arinc-val">Altitude pression : 3 350 ft</span>
+        <span><span class="badge badge-green">normal</span></span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">103 (oct)</span><span>11</span><span>01</span>
+        <span class="arinc-val">Fréquence active : 118.700 MHz</span>
+        <span><span class="badge badge-green">normal</span></span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">027 (oct)</span><span>00</span><span>00</span>
+        <span class="arinc-val">Cap magnétique : 274.5°</span>
+        <span><span class="badge badge-green">normal</span></span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">301 (oct)</span><span>10</span><span>00</span>
+        <span class="arinc-val">Vitesse sol : 142 kts</span>
+        <span><span class="badge badge-amber">NCD</span></span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">361 (oct)</span><span>11</span><span>00</span>
+        <span class="arinc-val">Latitude : N 45° 30.24'</span>
+        <span><span class="badge badge-green">normal</span></span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">362 (oct)</span><span>11</span><span>00</span>
+        <span class="arinc-val">Longitude : W 73° 45.12'</span>
+        <span><span class="badge badge-green">normal</span></span>
+      </div>
+      <div class="arinc-row">
+        <span class="arinc-lbl">350 (oct)</span><span>01</span><span>00</span>
+        <span class="arinc-val">—</span>
+        <span><span class="badge badge-muted">non reçu</span></span>
+      </div>
+    </div>
+
+    <div id="manuel"></div>
+    <div class="divider"></div>
+
+    <!-- Manuel CSDB résumé -->
+    <span class="eyebrow amber" style="margin-bottom:0.8rem">Manuel CSDB — Chapitres</span>
+    <div class="data-block" style="max-width:580px">
+      <div class="data-block-head">Structure du manuel</div>
+      <div class="data-row"><span class="data-key">Chapitre 1</span><span class="data-val">Introduction au bus CSDB <span class="badge badge-green">complet</span></span></div>
+      <div class="data-row"><span class="data-key">Chapitre 2</span><span class="data-val">Format des adresses et encodage <span class="badge badge-green">complet</span></span></div>
+      <div class="data-row"><span class="data-key">Chapitre 3</span><span class="data-val">Étiquettes standard ARINC <span class="badge badge-amber">révision</span></span></div>
+      <div class="data-row"><span class="data-key">Chapitre 4</span><span class="data-val">Valeurs multiples par adresse <span class="badge badge-green">complet</span></span></div>
+      <div class="data-row"><span class="data-key">Chapitre 5</span><span class="data-val">Exemples d'implémentation <span class="badge badge-muted">en cours</span></span></div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  <span class="footer-brand">fveilleux</span>
+  <span class="footer-label">concept · 2025</span>
+</footer>
+
+</body>
+</html>
