@@ -6,57 +6,15 @@
   <title>Aviation — fveilleux</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ARINC table rows */
     .arinc-row {
-      display:grid; grid-template-columns:90px 54px 54px 1fr 100px;
+      display:grid; grid-template-columns:80px 60px 60px 1fr 100px;
       align-items:center; gap:0.75rem;
       padding:0.55rem 1rem; border-bottom:1px solid var(--border-s); font-size:0.8rem;
-      cursor:pointer; transition:background 0.12s;
     }
     .arinc-row:last-child { border-bottom:none; }
-    .arinc-row:hover { background:var(--blue-d); }
-    .arinc-row.sel { background:var(--accent-d); }
-    .arinc-head { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:0.68rem; background:rgba(82,214,128,0.05); cursor:default; }
-    .arinc-head:hover { background:rgba(82,214,128,0.05); }
+    .arinc-head { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:0.68rem; background:rgba(82,214,128,0.05); }
     .arinc-lbl { font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--accent); }
     .arinc-val { font-family:'JetBrains Mono',monospace; font-size:0.78rem; }
-
-    /* ── Bit visualizer ── */
-    .bit-frame {
-      background: var(--surface); border:1px solid var(--border);
-      border-radius:8px; padding:0.85rem 1rem 1rem; margin-bottom:1.5rem;
-      overflow-x:auto;
-    }
-    .bit-frame-head {
-      font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted);
-      text-transform:uppercase; letter-spacing:0.1em;
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:0.8rem;
-    }
-    .bit-row { display:flex; align-items:flex-start; min-width:max-content; }
-    .bit-fgrp { display:flex; flex-direction:column; }
-    .bit-fname {
-      font-family:'JetBrains Mono',monospace; font-size:0.53rem;
-      text-transform:uppercase; letter-spacing:0.05em;
-      margin-bottom:3px; text-align:center; white-space:nowrap;
-    }
-    .bit-cells { display:flex; gap:1px; }
-    .bit-cell {
-      width:19px; height:26px; border-radius:3px;
-      display:flex; align-items:center; justify-content:center;
-      font-family:'JetBrains Mono',monospace; font-size:0.57rem; font-weight:700;
-      border:1px solid; flex-shrink:0; transition:background 0.15s, border-color 0.15s;
-    }
-    .bit-fsep { width:10px; flex-shrink:0; }
-    .bit-num-row {
-      display:flex; align-items:center; min-width:max-content;
-      margin-top:3px; padding-left:0;
-    }
-    .bit-num {
-      width:19px; flex-shrink:0; text-align:center;
-      font-family:'JetBrains Mono',monospace; font-size:0.48rem; color:var(--muted);
-    }
-    .bit-num-gap { width:11px; flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -82,11 +40,13 @@
     <div class="sb-section">Outils</div>
     <a href="#arinc" class="sb-link active"><span class="sb-dot"></span>ARINC 429</a>
     <a href="csdb.html" class="sb-link"><span class="sb-dot"></span>CSDB</a>
+
     <div class="sb-section">Documentation</div>
     <a href="#manuel" class="sb-link"><span class="sb-dot"></span>Manuel CSDB</a>
     <a href="#etiquettes" class="sb-link"><span class="sb-dot"></span>Étiquettes std.</a>
+
     <div class="sb-section">Référence</div>
-    <a href="#" class="sb-link"><span class="sb-dot"></span>Formats de données</a>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>Formats de données</div>
     <a href="#" class="sb-link disabled"><span class="sb-dot"></span>FMS (bientôt)</a>
   </aside>
 
@@ -121,13 +81,10 @@
 
     <div class="divider" id="arinc"></div>
 
-    <span class="eyebrow" style="margin-bottom:0.4rem">ARINC 429 — Visualiseur de mot</span>
-    <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1rem">Cliquez une étiquette dans le tableau pour visualiser son mot 32 bits.</p>
+    <!-- ARINC 429 preview -->
+    <span class="eyebrow" style="margin-bottom:0.5rem">ARINC 429 — Étiquettes décodées</span>
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1.2rem">Données simulées — connecter une source réelle pour la mise à jour en temps réel.</p>
 
-    <!-- ARINC bit visualizer -->
-    <div class="bit-frame" id="arinc-viz"></div>
-
-    <!-- ARINC table -->
     <div class="data-block" style="margin-bottom:2rem;overflow-x:auto">
       <div class="data-block-head">
         Flux de données · Bus 1
@@ -139,38 +96,38 @@
       <div class="arinc-row arinc-head">
         <span>Étiquette</span><span>SSM</span><span>SDI</span><span>Valeur décodée</span><span>État</span>
       </div>
-      <div class="arinc-row sel" data-lbl="206" onclick="selectRow(this,'206')">
+      <div class="arinc-row">
         <span class="arinc-lbl">206 (oct)</span><span>11</span><span>00</span>
         <span class="arinc-val">Altitude pression : 3 350 ft</span>
         <span><span class="badge badge-green">normal</span></span>
       </div>
-      <div class="arinc-row" data-lbl="103" onclick="selectRow(this,'103')">
+      <div class="arinc-row">
         <span class="arinc-lbl">103 (oct)</span><span>11</span><span>01</span>
         <span class="arinc-val">Fréquence active : 118.700 MHz</span>
         <span><span class="badge badge-green">normal</span></span>
       </div>
-      <div class="arinc-row" data-lbl="027" onclick="selectRow(this,'027')">
+      <div class="arinc-row">
         <span class="arinc-lbl">027 (oct)</span><span>00</span><span>00</span>
         <span class="arinc-val">Cap magnétique : 274.5°</span>
         <span><span class="badge badge-green">normal</span></span>
       </div>
-      <div class="arinc-row" data-lbl="301" onclick="selectRow(this,'301')">
+      <div class="arinc-row">
         <span class="arinc-lbl">301 (oct)</span><span>10</span><span>00</span>
         <span class="arinc-val">Vitesse sol : 142 kts</span>
         <span><span class="badge badge-amber">NCD</span></span>
       </div>
-      <div class="arinc-row" data-lbl="361" onclick="selectRow(this,'361')">
+      <div class="arinc-row">
         <span class="arinc-lbl">361 (oct)</span><span>11</span><span>00</span>
         <span class="arinc-val">Latitude : N 45° 30.24'</span>
         <span><span class="badge badge-green">normal</span></span>
       </div>
-      <div class="arinc-row" data-lbl="362" onclick="selectRow(this,'362')">
+      <div class="arinc-row">
         <span class="arinc-lbl">362 (oct)</span><span>11</span><span>00</span>
         <span class="arinc-val">Longitude : W 73° 45.12'</span>
         <span><span class="badge badge-green">normal</span></span>
       </div>
-      <div class="arinc-row" data-lbl="350" onclick="selectRow(this,'350')">
-        <span class="arinc-lbl">350 (oct)</span><span>00</span><span>00</span>
+      <div class="arinc-row">
+        <span class="arinc-lbl">350 (oct)</span><span>01</span><span>00</span>
         <span class="arinc-val">—</span>
         <span><span class="badge badge-muted">non reçu</span></span>
       </div>
@@ -179,7 +136,7 @@
     <div id="manuel"></div>
     <div class="divider"></div>
 
-    <!-- Manuel CSDB -->
+    <!-- Manuel CSDB résumé -->
     <span class="eyebrow amber" style="margin-bottom:0.8rem">Manuel CSDB — Chapitres</span>
     <div class="data-block" style="max-width:580px">
       <div class="data-block-head">Structure du manuel</div>
@@ -198,72 +155,5 @@
   <span class="footer-label">concept · 2025</span>
 </footer>
 
-<script>
-// ── ARINC 429 label data ──
-// word = label(8) | sdi(2)<<8 | data(19)<<10 | ssm(2)<<29 | parity(1)<<31
-// Displayed: bit32 (parity) on left → bit1 (label LSB) on right
-const ARINC = {
-  '206': { word: 0x60345886, desc: 'ALT pression · 3 350 ft',       ssm:'11', sdi:'00' },
-  '103': { word: 0xC02EB143, desc: 'Fréquence VHF · 118.700 MHz',   ssm:'11', sdi:'01' },
-  '027': { word: 0x60889117, desc: 'Cap magnétique · 274.5°',        ssm:'00', sdi:'00' },
-  '301': { word: 0x40D41CC1, desc: 'Vitesse sol · 142 kts (NCD)',    ssm:'10', sdi:'00' },
-  '361': { word: 0x600D7CE9, desc: 'Latitude N · 45°30.24\'',        ssm:'11', sdi:'00' },
-  '362': { word: 0x6015EFF2, desc: 'Longitude W · 73°45.12\'',       ssm:'11', sdi:'00' },
-  '350': { word: 0x000000E8, desc: 'Non reçu (pas de transmission)', ssm:'00', sdi:'00' },
-};
-
-// ARINC 429 32-bit word field layout (bit 32 on left → bit 1 on right)
-const ARINC_FIELDS = [
-  { name:'Parité',   bits: [32],                                         c:'muted'  },
-  { name:'SSM',      bits: [31,30],                                      c:'amber'  },
-  { name:'Données · BNR / BCD',  bits: Array.from({length:19},(_,i)=>29-i), c:'green'  },
-  { name:'SDI',      bits: [10,9],                                       c:'amber'  },
-  { name:'Étiquette (oct)', bits: Array.from({length:8},(_,i)=>8-i),    c:'blue'   },
-];
-
-const FC = { green:'var(--accent)', amber:'var(--amber)', blue:'var(--blue)', muted:'var(--muted)' };
-const BG = { green:'var(--accent-d)', amber:'var(--amber-d)', blue:'var(--blue-d)', muted:'rgba(94,120,102,0.06)' };
-const BD = { green:'rgba(82,214,128,0.22)', amber:'rgba(232,184,74,0.22)', blue:'rgba(74,128,240,0.22)', muted:'var(--border-s)' };
-
-function getBit(word, n) { return (word >>> (n - 1)) & 1; }
-
-function renderARINCBits(lbl) {
-  const entry = ARINC[lbl];
-  const word  = entry ? entry.word : 0;
-  const desc  = entry ? entry.desc : '—';
-
-  let bitsHtml = '<div class="bit-row">';
-  let numsHtml = '<div class="bit-num-row">';
-
-  for (let fi = 0; fi < ARINC_FIELDS.length; fi++) {
-    const f = ARINC_FIELDS[fi];
-    if (fi > 0) { bitsHtml += '<div class="bit-fsep"></div>'; numsHtml += '<div class="bit-num-gap"></div>'; }
-
-    bitsHtml += `<div class="bit-fgrp"><div class="bit-fname" style="color:${FC[f.c]}">${f.name}</div><div class="bit-cells">`;
-    for (const n of f.bits) {
-      const v = getBit(word, n);
-      bitsHtml += `<div class="bit-cell" style="background:${BG[f.c]};border-color:${BD[f.c]};color:${v?FC[f.c]:'var(--muted)'}">${v}</div>`;
-      numsHtml += `<div class="bit-num">${n}</div>`;
-    }
-    bitsHtml += '</div></div>';
-  }
-
-  bitsHtml += '</div>';
-  numsHtml += '</div>';
-
-  document.getElementById('arinc-viz').innerHTML =
-    `<div class="bit-frame-head"><span>Mot 32 bits · étiquette ${lbl} (oct)</span><span style="font-size:0.54rem">${desc}</span></div>` +
-    bitsHtml + numsHtml;
-}
-
-function selectRow(el, lbl) {
-  document.querySelectorAll('.arinc-row:not(.arinc-head)').forEach(r => r.classList.remove('sel'));
-  el.classList.add('sel');
-  renderARINCBits(lbl);
-}
-
-// Init: show label 206 on load
-renderARINCBits('206');
-</script>
 </body>
 </html>

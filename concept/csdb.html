@@ -15,52 +15,18 @@
     }
     .addr-btn:hover { background:var(--blue-d); border-color:var(--blue); color:var(--blue); }
     .addr-btn.sel { background:var(--accent-d); border-color:var(--accent); color:var(--accent); }
-    .addr-btn.multi { border-color:rgba(232,184,74,0.3); color:var(--amber); }
+    .addr-btn.multi { border-color:var(--amber-d); color:var(--amber); }
     .addr-btn.multi.sel { background:var(--accent-d); border-color:var(--accent); color:var(--accent); }
     .banner {
       background: var(--surface); border:1px solid var(--border);
-      border-radius:8px; padding:0.8rem 1.2rem; margin-bottom:1.2rem;
+      border-radius:8px; padding:0.8rem 1.2rem; margin-bottom:1.5rem;
       display:flex; gap:2rem; align-items:center; flex-wrap:wrap;
     }
     .banner-val { text-align:center; }
     .banner-val-num { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent); }
     .banner-val-num.amber { color:var(--amber); }
     .banner-val-lbl { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
-    .banner-sep { width:1px; height:36px; background:var(--border-s); flex-shrink:0; }
-
-    /* ── Bit visualizer ── */
-    .bit-frame {
-      background: var(--surface); border:1px solid var(--border);
-      border-radius:8px; padding:0.85rem 1rem 1rem; margin-bottom:1.5rem;
-      overflow-x:auto;
-    }
-    .bit-frame-head {
-      font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted);
-      text-transform:uppercase; letter-spacing:0.1em;
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:0.8rem;
-    }
-    .bit-rows { display:flex; flex-direction:column; gap:1rem; min-width:max-content; }
-    .bit-row  { display:flex; align-items:flex-start; }
-    .bit-row-lbl {
-      font-family:'JetBrains Mono',monospace; font-size:0.55rem; color:var(--muted);
-      width:60px; flex-shrink:0; padding-top:21px; padding-right:8px; text-align:right;
-    }
-    .bit-fgrp { display:flex; flex-direction:column; }
-    .bit-fname {
-      font-family:'JetBrains Mono',monospace; font-size:0.53rem;
-      text-transform:uppercase; letter-spacing:0.05em;
-      margin-bottom:3px; text-align:center; white-space:nowrap;
-    }
-    .bit-cells { display:flex; gap:1px; }
-    .bit-cell {
-      width:19px; height:26px; border-radius:3px;
-      display:flex; align-items:center; justify-content:center;
-      font-family:'JetBrains Mono',monospace; font-size:0.57rem; font-weight:700;
-      border:1px solid; flex-shrink:0; transition:background 0.15s, border-color 0.15s;
-    }
-    .bit-bsep { width:4px; flex-shrink:0; }
-    .bit-fsep { width:10px; flex-shrink:0; }
+    .banner-sep { width:1px; height:36px; background:var(--border-s); }
   </style>
 </head>
 <body>
@@ -85,7 +51,7 @@
   <aside class="sidebar">
     <div class="sb-section">Décodage</div>
     <a href="csdb.html" class="sb-link active"><span class="sb-dot"></span>CSDB</a>
-    <a href="aviation.html" class="sb-link"><span class="sb-dot"></span>ARINC 429</a>
+    <a href="#" class="sb-link"><span class="sb-dot"></span>ARINC 429</a>
     <div class="sb-section">Simulation</div>
     <a href="#" class="sb-link"><span class="sb-dot"></span>Circuit logique</a>
     <a href="#" class="sb-link"><span class="sb-dot"></span>Puces logiques</a>
@@ -97,25 +63,34 @@
   <main class="main main-narrow">
     <span class="eyebrow">Informatique · CSDB</span>
     <h1 class="page-title">Décodeur d'adresses</h1>
-    <p class="page-subtitle">Sélectionnez une adresse pour visualiser la disposition des bits et les valeurs décodées.</p>
+    <p class="page-subtitle">Sélectionnez une adresse pour visualiser les données encodées et leurs valeurs décodées.</p>
 
-    <!-- Banner (dynamic) -->
+    <!-- Bande de valeurs (adresse 0x1E sélectionnée) -->
     <div class="banner" id="banner">
       <div class="banner-val">
-        <div class="banner-val-num" id="b-addr">0x1E</div>
+        <div class="banner-val-num">0x1E</div>
         <div class="banner-val-lbl">Adresse</div>
       </div>
-      <div id="b-extra" style="display:contents"></div>
-      <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center" id="b-badges"></div>
+      <div class="banner-sep"></div>
+      <div class="banner-val">
+        <div class="banner-val-num amber">3 350</div>
+        <div class="banner-val-lbl">Altitude (ft)</div>
+      </div>
+      <div class="banner-sep"></div>
+      <div class="banner-val">
+        <div class="banner-val-num">2481</div>
+        <div class="banner-val-lbl">Code ATC</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center">
+        <span class="badge badge-green">décodage OK</span>
+        <span class="badge badge-amber">2 valeurs</span>
+      </div>
     </div>
 
-    <!-- Bit visualizer (dynamic) -->
-    <div class="bit-frame" id="bit-viz"></div>
-
-    <!-- Address selector -->
+    <!-- Sélecteur d'adresse -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.7rem">
       <span class="label">Sélecteur d'adresse</span>
-      <span class="badge badge-muted">◈ = valeurs multiples</span>
+      <span class="badge badge-muted">● icône = valeurs multiples</span>
     </div>
     <div class="addr-grid">
       <div class="addr-btn" onclick="selectAddr(this,'0x00')">0x00</div>
@@ -140,31 +115,64 @@
       <div class="addr-btn" onclick="selectAddr(this,'0x26')">0x26</div>
     </div>
 
-    <!-- Data block 0x1E -->
+    <!-- Détail de l'adresse sélectionnée -->
     <div class="data-block">
       <div class="data-block-head">
         Adresse 0x1E — Transpondeur &amp; altimètre
         <span class="badge badge-amber">2 valeurs</span>
       </div>
-      <div class="data-row"><span class="data-key">Label</span><span class="data-val">ALT + ATC</span></div>
-      <div class="data-row"><span class="data-key">Altitude-pression</span><span class="data-val">3 350 ft <span class="badge badge-amber">approche</span></span></div>
-      <div class="data-row"><span class="data-key">Code ATC (transpondeur)</span><span class="data-val">2481 <span class="badge badge-green">actif</span></span></div>
-      <div class="data-row"><span class="data-key">Résolution</span><span class="data-val">100 ft</span></div>
-      <div class="data-row"><span class="data-key">Encodage</span><span class="data-val">BCD / Gillham</span></div>
-      <div class="data-row"><span class="data-key">Fréquence de rafraîchissement</span><span class="data-val">1 Hz</span></div>
-      <div class="data-row"><span class="data-key">Données brutes</span><span class="data-val" style="color:var(--muted)">A2 3C 0D 1A 01 00 00 00</span></div>
+      <div class="data-row">
+        <span class="data-key">Label</span>
+        <span class="data-val">ALT + ATC</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Altitude-pression</span>
+        <span class="data-val">3 350 ft <span class="badge badge-amber">approche</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Code ATC (transpondeur)</span>
+        <span class="data-val">2481 <span class="badge badge-green">actif</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Résolution</span>
+        <span class="data-val">100 ft</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Encodage</span>
+        <span class="data-val">BCD / Gillham</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Fréquence de rafraîchissement</span>
+        <span class="data-val">1 Hz</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Données brutes</span>
+        <span class="data-val" style="color:var(--muted)">A2 3C 0D 1A 00 00 00 00</span>
+      </div>
     </div>
 
-    <!-- Data block 0x22 -->
+    <!-- Données d'une seconde adresse -->
     <div class="data-block">
       <div class="data-block-head">
         Adresse 0x22 — Radio VHF COM
         <span class="badge badge-green">1 valeur</span>
       </div>
-      <div class="data-row"><span class="data-key">Fréquence active</span><span class="data-val">118.700 MHz <span class="badge badge-green">émission</span></span></div>
-      <div class="data-row"><span class="data-key">Fréquence standby</span><span class="data-val">121.500 MHz</span></div>
-      <div class="data-row"><span class="data-key">Encodage</span><span class="data-val">BCD 8.33 kHz</span></div>
-      <div class="data-row"><span class="data-key">Données brutes</span><span class="data-val" style="color:var(--muted)">11 87 00 12 15 80 00 00</span></div>
+      <div class="data-row">
+        <span class="data-key">Fréquence active</span>
+        <span class="data-val">118.700 MHz <span class="badge badge-green">émission</span></span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Fréquence standby</span>
+        <span class="data-val">121.500 MHz</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Encodage</span>
+        <span class="data-val">BCD 8.33 kHz</span>
+      </div>
+      <div class="data-row">
+        <span class="data-key">Données brutes</span>
+        <span class="data-val" style="color:var(--muted)">11 87 00 12 15 00 00 00</span>
+      </div>
     </div>
 
   </main>
@@ -176,137 +184,10 @@
 </footer>
 
 <script>
-// ── Address definitions ──
-const CSDB = {
-  '0x1E': {
-    raw: [0xA2, 0x3C, 0x0D, 0x1A, 0x01, 0x00, 0x00, 0x00],
-    fields: [
-      { bytes:[0,1],   name:'ALT Gillham', c:'green' },
-      { bytes:[2,3],   name:'Code ATC',    c:'amber' },
-      { bytes:[4],     name:'Statut',      c:'blue'  },
-      { bytes:[5,6,7], name:'Réservé',     c:'muted' },
-    ],
-    banner: [
-      { val:'3 350', lbl:'Altitude (ft)', cls:'amber' },
-      { val:'2481',  lbl:'Code ATC',      cls:''      },
-    ],
-    badges: '<span class="badge badge-green">décodage OK</span><span class="badge badge-amber">2 valeurs</span>',
-  },
-  '0x22': {
-    raw: [0x11, 0x87, 0x12, 0x15, 0x80, 0x00, 0x00, 0x00],
-    fields: [
-      { bytes:[0,1], name:'Fréq. active',  c:'green' },
-      { bytes:[2,3], name:'Fréq. standby', c:'amber' },
-      { bytes:[4,5], name:'Flags audio',   c:'blue'  },
-      { bytes:[6,7], name:'Réservé',       c:'muted' },
-    ],
-    banner: [
-      { val:'118.700', lbl:'Fréq. active (MHz)',  cls:''      },
-      { val:'121.500', lbl:'Fréq. standby (MHz)', cls:'amber' },
-    ],
-    badges: '<span class="badge badge-green">décodage OK</span><span class="badge badge-blue">2 fréq.</span>',
-  },
-  '0x14': {
-    raw: [0x43, 0xAC, 0x1B, 0x70, 0x01, 0x00, 0x00, 0x00],
-    fields: [
-      { bytes:[0,1],   name:'Cap vrai',  c:'green' },
-      { bytes:[2,3],   name:'Piste sol', c:'amber' },
-      { bytes:[4],     name:'Statut',    c:'blue'  },
-      { bytes:[5,6,7], name:'Réservé',   c:'muted' },
-    ],
-    banner: [
-      { val:'274.5°', lbl:'Cap vrai',  cls:''      },
-      { val:'271.0°', lbl:'Piste sol', cls:'amber' },
-    ],
-    badges: '<span class="badge badge-green">décodage OK</span><span class="badge badge-amber">2 valeurs</span>',
-  },
-};
-
-const GENERIC = {
-  raw: [0,0,0,0,0,0,0,0],
-  fields: [
-    { bytes:[0,1,2,3,4,5], name:'Données', c:'muted' },
-    { bytes:[6],           name:'Statut',  c:'blue'  },
-    { bytes:[7],           name:'CRC',     c:'amber' },
-  ],
-};
-
-// ── Colour tokens (inline styles to survive theme switches) ──
-const FC = { green:'var(--accent)', amber:'var(--amber)', blue:'var(--blue)', muted:'var(--muted)' };
-const BG = { green:'var(--accent-d)', amber:'var(--amber-d)', blue:'var(--blue-d)', muted:'rgba(94,120,102,0.06)' };
-const BD = { green:'rgba(82,214,128,0.22)', amber:'rgba(232,184,74,0.22)', blue:'rgba(74,128,240,0.22)', muted:'var(--border-s)' };
-
-function buildByteMap(data) {
-  const m = {};
-  for (const f of data.fields)
-    for (const b of f.bytes) m[b] = { name:f.name, c:f.c };
-  return m;
-}
-
-function renderBitRow(raw, bmap, from, to) {
-  // Group consecutive bytes that share the same field
-  const groups = [];
-  let cur = null;
-  for (let b = from; b <= to; b++) {
-    const info = bmap[b] || { name:'Données', c:'muted' };
-    if (!cur || cur.name !== info.name) { cur = { name:info.name, c:info.c, bytes:[b] }; groups.push(cur); }
-    else cur.bytes.push(b);
+  function selectAddr(el, addr) {
+    document.querySelectorAll('.addr-btn').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
   }
-
-  let html = `<div class="bit-row"><div class="bit-row-lbl">oct. ${from}–${to}</div>`;
-  for (let i = 0; i < groups.length; i++) {
-    if (i > 0) html += '<div class="bit-fsep"></div>';
-    const g = groups[i];
-    html += `<div class="bit-fgrp"><div class="bit-fname" style="color:${FC[g.c]}">${g.name}</div><div class="bit-cells">`;
-    for (let bi = 0; bi < g.bytes.length; bi++) {
-      if (bi > 0) html += '<div class="bit-bsep"></div>';
-      const byte = raw[g.bytes[bi]] || 0;
-      for (let bit = 7; bit >= 0; bit--) {
-        const v = (byte >> bit) & 1;
-        html += `<div class="bit-cell" style="background:${BG[g.c]};border-color:${BD[g.c]};color:${v?FC[g.c]:'var(--muted)'}">${v}</div>`;
-      }
-    }
-    html += '</div></div>';
-  }
-  return html + '</div>';
-}
-
-function renderBits(addr) {
-  const data = CSDB[addr] || GENERIC;
-  const bmap = buildByteMap(data);
-  document.getElementById('bit-viz').innerHTML =
-    `<div class="bit-frame-head"><span>${addr} — Disposition des octets</span><span style="font-size:0.54rem">bit 7 → 0 par octet · CSDB 64 bits</span></div>` +
-    '<div class="bit-rows">' +
-    renderBitRow(data.raw, bmap, 0, 3) +
-    renderBitRow(data.raw, bmap, 4, 7) +
-    '</div>';
-}
-
-function updateBanner(addr) {
-  const data = CSDB[addr];
-  document.getElementById('b-addr').textContent = addr;
-  if (data) {
-    let extra = '';
-    for (const v of data.banner)
-      extra += `<div class="banner-sep"></div><div class="banner-val"><div class="banner-val-num ${v.cls}">${v.val}</div><div class="banner-val-lbl">${v.lbl}</div></div>`;
-    document.getElementById('b-extra').innerHTML = extra;
-    document.getElementById('b-badges').innerHTML = data.badges;
-  } else {
-    document.getElementById('b-extra').innerHTML = '';
-    document.getElementById('b-badges').innerHTML = '<span class="badge badge-muted">non documenté</span>';
-  }
-}
-
-function selectAddr(el, addr) {
-  document.querySelectorAll('.addr-btn').forEach(b => b.classList.remove('sel'));
-  el.classList.add('sel');
-  renderBits(addr);
-  updateBanner(addr);
-}
-
-// Init with 0x1E selected
-renderBits('0x1E');
-updateBanner('0x1E');
 </script>
 </body>
 </html>
