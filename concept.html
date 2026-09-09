@@ -18,9 +18,11 @@
       --accent-hi:#70e896;
       --accent-d: rgba(82,214,128,0.11);
       --accent-g: rgba(82,214,128,0.05);
+      --amber:    #e8b84a;
+      --amber-d:  rgba(232,184,74,0.12);
       --text:     #f0f4f1;
       --muted:    #5e7866;
-      --warn:     #e8c53a;
+      --warn:     #e8b84a;
       --danger:   #e05c5c;
     }
     @media (prefers-color-scheme: light) {
@@ -34,9 +36,11 @@
         --accent-hi:#16692f;
         --accent-d: rgba(30,128,64,0.10);
         --accent-g: rgba(30,128,64,0.05);
+        --amber:    #b07820;
+        --amber-d:  rgba(176,120,32,0.12);
         --text:     #0f1a12;
         --muted:    #4a6454;
-        --warn:     #9a720a;
+        --warn:     #b07820;
         --danger:   #b83030;
       }
     }
@@ -50,9 +54,11 @@
       --accent-hi:#16692f;
       --accent-d: rgba(30,128,64,0.10);
       --accent-g: rgba(30,128,64,0.05);
+      --amber:    #b07820;
+      --amber-d:  rgba(176,120,32,0.12);
       --text:     #0f1a12;
       --muted:    #4a6454;
-      --warn:     #9a720a;
+      --warn:     #b07820;
       --danger:   #b83030;
     }
     :root[data-theme="dark"] {
@@ -65,9 +71,11 @@
       --accent-hi:#70e896;
       --accent-d: rgba(82,214,128,0.11);
       --accent-g: rgba(82,214,128,0.05);
+      --amber:    #e8b84a;
+      --amber-d:  rgba(232,184,74,0.12);
       --text:     #f0f4f1;
       --muted:    #5e7866;
-      --warn:     #e8c53a;
+      --warn:     #e8b84a;
       --danger:   #e05c5c;
     }
 
@@ -141,6 +149,7 @@
       letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent);
       margin-bottom: 1rem;
     }
+    .eyebrow.amber { color: var(--amber); }
     .hero h1 {
       font-family: 'Syne', sans-serif; font-weight: 800;
       font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1;
@@ -162,6 +171,7 @@
       letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
       margin-bottom: 0.5rem;
     }
+    .section-label.amber { color: var(--amber); }
     .section-title {
       font-family: 'Syne', sans-serif; font-weight: 700;
       font-size: 1.35rem; letter-spacing: -0.01em;
@@ -325,7 +335,7 @@
     <p class="hero-sub">Vert gardé comme seul accent — utilisé avec transparences et retenue. Noir profond, texte blanc, vert uniquement pour les états actifs et les indicateurs.</p>
     <div class="hero-meta">
       <span class="meta-pill"><span class="meta-dot"></span> Ébauche</span>
-      <span class="meta-pill">Nav · Couleurs · Composants</span>
+      <span class="meta-pill" style="color:var(--amber)">Nav · Couleurs · Composants</span>
     </div>
   </div>
 </section>
@@ -374,6 +384,14 @@
         <div class="swatch-color" style="background:rgba(82,214,128,0.05);border:1px solid rgba(82,214,128,0.08);"></div>
         <div class="swatch-info"><div class="swatch-name">Accent 5%</div><div class="swatch-hex">rgba(52d680,0.05)</div><div class="swatch-role">Fond carte</div></div>
       </div>
+      <div class="swatch" style="border-color:rgba(232,184,74,0.2);">
+        <div class="swatch-color" style="background:#e8b84a;"></div>
+        <div class="swatch-info"><div class="swatch-name" style="color:var(--amber)">Amber</div><div class="swatch-hex" style="color:var(--amber)">#e8b84a</div><div class="swatch-role">Secondaire / avertissement</div></div>
+      </div>
+      <div class="swatch" style="border-color:rgba(232,184,74,0.15);">
+        <div class="swatch-color" style="background:rgba(232,184,74,0.12);"></div>
+        <div class="swatch-info"><div class="swatch-name" style="color:var(--amber)">Amber 12%</div><div class="swatch-hex" style="color:var(--amber)">rgba(e8b84a,0.12)</div><div class="swatch-role">Fond badge / tag</div></div>
+      </div>
     </div>
 
     <!-- Transparences visualisées -->
@@ -394,6 +412,24 @@
       <div class="trans-tile" style="background:rgba(82,214,128,0.02);border-color:rgba(82,214,128,0.08);">
         <div class="trans-label">2 %</div>
         <div class="trans-use">Subtil / divider</div>
+      </div>
+    </div>
+    <div class="trans-demo" style="margin-top:0.5rem;">
+      <div class="trans-tile" style="background:rgba(232,184,74,0.25);border-color:rgba(232,184,74,0.3);">
+        <div class="trans-label" style="color:var(--amber)">Amber 25%</div>
+        <div class="trans-use">Hover warning</div>
+      </div>
+      <div class="trans-tile" style="background:rgba(232,184,74,0.12);border-color:rgba(232,184,74,0.18);">
+        <div class="trans-label" style="color:var(--amber)">Amber 12%</div>
+        <div class="trans-use">Badge / étiquette</div>
+      </div>
+      <div class="trans-tile" style="background:rgba(232,184,74,0.05);border-color:rgba(232,184,74,0.10);">
+        <div class="trans-label" style="color:var(--amber)">Amber 5%</div>
+        <div class="trans-use">Fond secondaire</div>
+      </div>
+      <div class="trans-tile" style="background:rgba(232,184,74,0.02);border-color:rgba(232,184,74,0.07);">
+        <div class="trans-label" style="color:var(--amber)">Amber 2%</div>
+        <div class="trans-use">Teinture subtile</div>
       </div>
     </div>
   </div>
@@ -476,7 +512,7 @@
           <div class="ic-block">
             <div class="ic-row"><span class="ic-key">Adresse</span><span class="ic-val">0x1E</span></div>
             <div class="ic-row"><span class="ic-key">Code ATC</span><span class="ic-val">2481 <span class="ic-badge ok">actif</span></span></div>
-            <div class="ic-row"><span class="ic-key">Altitude</span><span class="ic-val">3 350 ft <span class="ic-badge warn">approche</span></span></div>
+            <div class="ic-row"><span class="ic-key">Altitude</span><span class="ic-val">3 350 ft <span class="ic-badge warn" style="background:rgba(232,184,74,0.12);color:#e8b84a">approche</span></span></div>
           </div>
           <div class="ic-block">
             <div class="ic-row"><span class="ic-key">Adresse</span><span class="ic-val">0x22</span></div>
@@ -490,7 +526,7 @@
       <div class="anno"><div class="anno-n">1</div>Fond nav très sombre avec bordure verte à 10% — présence sans écraser</div>
       <div class="anno"><div class="anno-n">2</div>Actif en vert plein (#52d680) — seul élément de couleur dans la nav</div>
       <div class="anno"><div class="anno-n">3</div>Sidebar : lien actif en fond rgba(vert, 8%) + texte vert — inactifs invisibles</div>
-      <div class="anno"><div class="anno-n">4</div>Blocs de données : fond rgba(vert, 4%) — teinture subtile, pas un vrai vert</div>
+      <div class="anno"><div class="anno-n" style="background:rgba(232,184,74,0.12);color:#e8b84a;border-color:rgba(232,184,74,0.2)">4</div>Amber pour les états secondaires (warning, à venir, approche) — se distingue du vert sans casser le thème</div>
     </div>
   </div>
 </section>
@@ -498,7 +534,7 @@
 <!-- DASHBOARD MOCKUP -->
 <section class="section">
   <div class="wrap">
-    <div class="section-label">04 — Tableau de bord</div>
+    <div class="section-label amber">04 — Tableau de bord</div>
     <div class="section-title">Grille de menu redessinée</div>
     <p class="section-sub">Cartes avec teinture verte à 3% au repos — passez la souris pour voir l'accent s'intensifier progressivement.</p>
 
@@ -515,7 +551,7 @@
           <div class="dash-card"><div class="dash-icon">✈️</div><div class="dash-card-title">Aviation</div><div class="dash-card-sub">ARINC 429, manuel CSDB</div></div>
           <div class="dash-card"><div class="dash-icon">🔧</div><div class="dash-card-title">Outils</div><div class="dash-card-sub">Utilitaires divers</div></div>
           <div class="dash-card"><div class="dash-icon">🏋️</div><div class="dash-card-title">MGFitness</div><div class="dash-card-sub">Site du gym</div></div>
-          <div class="dash-card" style="opacity:0.4;cursor:not-allowed;"><div class="dash-icon">📋</div><div class="dash-card-title">À venir</div><div class="dash-card-sub">Bientôt disponible</div></div>
+          <div class="dash-card" style="background:rgba(232,184,74,0.04);border-color:rgba(232,184,74,0.12);cursor:not-allowed;"><div class="dash-icon">📋</div><div class="dash-card-title" style="color:#e8b84a">À venir</div><div class="dash-card-sub">Bientôt disponible</div></div>
         </div>
       </div>
     </div>
@@ -525,7 +561,7 @@
 <!-- COMPARAISON -->
 <section class="section">
   <div class="wrap">
-    <div class="section-label">05 — Comparaison</div>
+    <div class="section-label amber">05 — Comparaison</div>
     <div class="section-title">Avant / Après</div>
     <p class="section-sub">Ce qui change — et ce qui reste tel quel (outils complexes intacts).</p>
 
