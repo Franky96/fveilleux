@@ -9,7 +9,6 @@
     if (!sessionStorage.getItem('loggedIn')) {
       document.location.href = 'index.html';
     }
-    sessionStorage.removeItem('betaMode');
   </script>
 </head>
 <body>
@@ -30,9 +29,6 @@
           <button id="toggle-version-btn" class="hbg-item" onclick="toggleVersionBadge(); closeHamburger();">
             🏷️ Badge version
           </button>
-          <a id="btn-construction" href="beta/dashboard.html" class="hbg-item" onclick="closeHamburger()">
-            🚧 En construction
-          </a>
           <a href="concept/index.html" class="hbg-item" onclick="closeHamburger()">
             🎨 Concept
           </a>

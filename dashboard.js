@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   subtitleEl.textContent = `Bienvenue, ${nomUser} 👋`;
   if (role === 'admin') {
-    const adminHref = window.location.pathname.includes('/beta/') ? 'beta/admin.html' : 'admin.html';
+    const adminHref = 'admin.html';
     const link = document.createElement('a');
     link.href = adminHref; link.style.textDecoration = 'none'; link.title = "Accéder à l'administration";
     const badge = document.createElement('span');
@@ -64,8 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
       updateToggleBtn(btnVersion, hidden);
     }
-    const btnConstruction = document.getElementById('btn-construction');
-    if (btnConstruction) btnConstruction.style.display = 'flex';
     const adminSep = document.getElementById('admin-sep');
     if (adminSep) adminSep.style.display = 'block';
   }
