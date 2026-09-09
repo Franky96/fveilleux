@@ -3,191 +3,419 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSDB — fveilleux</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Décodeur CSDB — Outils de Frank</title>
+  <link rel="stylesheet" href="../style.css">
   <style>
-    .addr-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(72px,1fr)); gap:0.4rem; margin-bottom:2rem; }
-    .addr-btn {
-      background: rgba(82,214,128,0.03); border:1px solid var(--border);
-      border-radius:6px; padding:0.45rem 0.2rem; text-align:center;
-      font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--muted);
-      cursor:pointer; transition:all 0.13s;
+    body { flex-direction:column; align-items:stretch; justify-content:flex-start; }
+
+    /* ── Top bar ── */
+    .top-bar {
+      width:100%; background:#0a0f0a; border-bottom:2px solid #2a3a2a;
+      display:flex; align-items:center; gap:1rem; padding:0.7rem 1.5rem;
+      box-sizing:border-box; flex-shrink:0; flex-wrap:wrap;
     }
-    .addr-btn:hover { background:var(--blue-d); border-color:var(--blue); color:var(--blue); }
-    .addr-btn.sel { background:var(--accent-d); border-color:var(--accent); color:var(--accent); }
-    .addr-btn.multi { border-color:var(--amber-d); color:var(--amber); }
-    .addr-btn.multi.sel { background:var(--accent-d); border-color:var(--accent); color:var(--accent); }
-    .banner {
-      background: var(--surface); border:1px solid var(--border);
-      border-radius:8px; padding:0.8rem 1.2rem; margin-bottom:1.5rem;
-      display:flex; gap:2rem; align-items:center; flex-wrap:wrap;
+    .top-bar-title { font-size:1rem; font-weight:bold; color:#f0ede6; white-space:nowrap; }
+    .top-bar-title span { color:#80cc80; }
+    .top-bar-back {
+      display:inline-flex; align-items:center; gap:0.4rem; color:#80cc80;
+      text-decoration:none; font-size:0.85rem; border:1px solid #2a3a2a;
+      border-radius:6px; padding:0.3rem 0.8rem; white-space:nowrap;
+      transition:border-color 0.2s; flex-shrink:0;
     }
-    .banner-val { text-align:center; }
-    .banner-val-num { font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent); }
-    .banner-val-num.amber { color:var(--amber); }
-    .banner-val-lbl { font-family:'JetBrains Mono',monospace; font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
-    .banner-sep { width:1px; height:36px; background:var(--border-s); }
+    .top-bar-back:hover { border-color:#80cc80; }
+    .top-bar-divider { width:1px; height:24px; background:#2a3a2a; flex-shrink:0; }
+    .hex-label { color:#556655; font-size:0.72rem; font-weight:bold; letter-spacing:0.08rem; text-transform:uppercase; white-space:nowrap; flex-shrink:0; }
+    #hex-input {
+      font-family:'Courier New',monospace; font-size:1.05rem; letter-spacing:0.12rem;
+      text-transform:uppercase; background:#111811; border:1px solid #2a3a2a;
+      border-radius:8px; color:#f0ede6; padding:0.4rem 1rem; width:280px; flex-shrink:0;
+    }
+    #hex-input:focus { border-color:#80cc80; outline:none; }
+    #decode-btn, #zero-btn { width:auto; padding:0.45rem 1.2rem; font-size:0.9rem; flex-shrink:0; }
+    #zero-btn { background:transparent; border:1px solid #3a3a3a; color:#888; border-radius:6px; cursor:pointer; }
+    #zero-btn:hover { border-color:#666; color:#aaa; }
+    .error-msg { color:#ff6b6b; font-size:0.82rem; flex:1; min-width:0; }
+
+    /* ── Layout ── */
+    .csdb-container { max-width:1380px; margin:0 auto; padding:2rem 1.5rem 3rem; color:#f0ede6; width:100%; }
+    .csdb-header { text-align:center; margin-bottom:2rem; }
+    .csdb-header h1 { font-size:2rem; color:#80cc80; margin-bottom:0.3rem; }
+    .csdb-header p { color:#a89f94; font-size:0.93rem; }
+
+    /* ── Panel ── */
+    .panel { background:#040904; border:1px solid #1a2a1a; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+    .panel h2 { color:#80cc80; font-size:0.85rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1rem; }
+
+    /* ── Byte display (CSS Grid — colonnes parfaitement alignées) ── */
+    .bytes-display {
+      display: grid;
+      grid-template-columns: 92px 60px 36px repeat(8, 42px);
+      column-gap: 4px; row-gap: 4px;
+      padding: 0.8rem 0.4rem;
+      align-items: center;
+      width: fit-content;
+      margin: 0 auto;
+    }
+    .bit-num-hdr { font-size:0.7rem; color:#4a6a8a; font-family:'Courier New',monospace; text-align:center; padding-bottom:2px; }
+    .bit-num-hdr-p { font-size:0.65rem; color:#3a5a3a; font-family:'Courier New',monospace; text-align:center; padding-bottom:2px; }
+    .byte-bit-parity {
+      font-family:'Courier New',monospace; font-size:0.88rem; font-weight:bold;
+      text-align:center; border-radius:4px; padding:0.25rem 0;
+      cursor:default; user-select:none;
+      border:1px solid #1a2a1a; background:rgba(128,204,128,0.04);
+    }
+    .byte-bit-parity.p-one  { color:#4a7a4a; }
+    .byte-bit-parity.p-zero { color:#1e2e1e; }
+    .byte-role-chip { font-size:0.65rem; font-weight:bold; letter-spacing:0.07rem; text-transform:uppercase; padding:4px 8px; border-radius:4px; text-align:center; }
+    .role-addr   { background:rgba(245,158,11,0.25); color:#f59e0b; }
+    .role-status { background:rgba(96,184,200,0.25);  color:#60b8c8; }
+    .role-data   { background:rgba(128,204,128,0.20); color:#80cc80; }
+    .byte-hex-val { font-family:'Courier New',monospace; font-size:0.95rem; font-weight:bold; text-align:right; padding-right:4px; }
+    .addr-color   { color:#f59e0b; }
+    .status-color { color:#60b8c8; }
+    .data-color   { color:#80cc80; }
+    .byte-bit-cell {
+      width:42px; height:46px; display:flex; align-items:center; justify-content:center;
+      font-family:'Courier New',monospace; font-size:1.15rem; font-weight:bold;
+      border-radius:5px; cursor:pointer; user-select:none;
+      transition:filter 0.1s, transform 0.1s; border:2px solid transparent;
+    }
+    .byte-bit-cell:hover { filter:brightness(1.5); transform:scale(1.1); }
+    .bit-addr   { background:rgba(245,158,11,0.18); color:#f59e0b; border-color:rgba(245,158,11,0.6); }
+    .bit-status { background:rgba(96,184,200,0.18);  color:#60b8c8; border-color:rgba(96,184,200,0.6); }
+    .bit-data   { background:rgba(128,204,128,0.18); color:#80cc80; border-color:rgba(128,204,128,0.6); }
+    .bit-pad    { background:rgba(50,50,50,0.15);    color:#556655; border-color:rgba(70,70,70,0.4);   }
+
+    /* ── Field map labels (sous les bits) ── */
+    .csdb-fmap-seg {
+      height:1.5rem; font-size:0.58rem; letter-spacing:0.02rem;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:3px; border:1px solid; overflow:hidden; white-space:nowrap;
+      font-family:'Courier New',monospace;
+    }
+    .csdb-fmap-addr  { background:rgba(245,158,11,0.2);  color:#f59e0b; border-color:rgba(245,158,11,0.5); }
+    .csdb-fmap-valid { background:rgba(128,204,128,0.2); color:#80cc80; border-color:rgba(128,204,128,0.5); }
+    .csdb-fmap-mode  { background:rgba(96,184,200,0.2);  color:#60b8c8; border-color:rgba(96,184,200,0.5); }
+    .csdb-fmap-test  { background:rgba(255,107,107,0.2); color:#ff6b6b; border-color:rgba(255,107,107,0.5); }
+    .csdb-fmap-src   { background:rgba(192,132,252,0.2); color:#c084fc; border-color:rgba(192,132,252,0.5); }
+    .csdb-fmap-ctrl  { background:rgba(251,146,60,0.2);  color:#fb923c; border-color:rgba(251,146,60,0.5); }
+    .csdb-fmap-bcd   { background:rgba(128,204,128,0.2); color:#80cc80; border-color:rgba(128,204,128,0.4); }
+    .csdb-fmap-data  { background:rgba(128,204,128,0.15);color:#6ab86a; border-color:rgba(128,204,128,0.3); }
+    .csdb-fmap-pad   { background:rgba(40,40,40,0.5);    color:#445544; border-color:rgba(60,60,60,0.5); }
+    .csdb-byte-spacer { grid-column:1/-1; height:8px; }
+
+    .legend { display:flex; gap:1.2rem; flex-wrap:wrap; margin-top:1.2rem; justify-content:center; }
+    .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:#c8c4bc; }
+    .legend-dot { width:12px; height:12px; border-radius:3px; }
+    .placeholder-msg { color:#556655; font-size:0.9rem; padding:1.5rem; font-style:italic; text-align:center; }
+
+    /* ── Address banner ── */
+    .address-banner {
+      background:#000000; border:1px solid #1c1c1c; border-left:4px solid #f59e0b;
+      border-radius:10px; padding:1rem 1.5rem; margin-bottom:1.5rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    }
+    .address-banner-left { display:flex; align-items:center; gap:1rem; }
+    .addr-hex-box {
+      background:#f59e0b; color:#0a0f0a; font-family:'Courier New',monospace;
+      font-size:1.2rem; font-weight:bold; padding:0.45rem 1rem; border-radius:8px;
+      min-width:5rem; text-align:center; letter-spacing:0.08rem;
+    }
+    .banner-name { font-size:1.05rem; font-weight:bold; color:#f0ede6; }
+    .banner-sub  { font-size:0.78rem; color:#556680; margin-top:0.25rem; }
+
+    /* ── Banner values ── */
+    .banner-values { display:flex; gap:2rem; align-items:center; flex-wrap:wrap; }
+    .banner-val-item { text-align:right; }
+    .banner-val-label { font-size:0.62rem; color:#556680; text-transform:uppercase; letter-spacing:0.06rem; display:block; margin-bottom:0.1rem; }
+    .banner-val-num { font-family:'Courier New',monospace; font-size:1.35rem; font-weight:bold; color:#80cc80; }
+
+    /* ── Collapsible panels ── */
+    .collapsible {
+      background:#040904; border:1px solid #1a2a1a; border-radius:12px;
+      margin-bottom:1rem; overflow:hidden;
+    }
+    .collapsible summary {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.5rem; cursor:pointer; user-select:none; list-style:none;
+      font-size:0.85rem; font-weight:bold; text-transform:uppercase;
+      letter-spacing:0.1rem; color:#80cc80;
+      border-bottom:1px solid transparent; transition:border-color 0.2s;
+    }
+    .collapsible summary::-webkit-details-marker { display:none; }
+    .collapsible[open] summary { border-bottom-color:#1a2a1a; }
+    .collapsible summary:hover { background:rgba(128,204,128,0.04); }
+    .collapsible summary::after {
+      content:'▶'; font-size:0.7rem; color:#4a6a4a;
+      transition:transform 0.2s; flex-shrink:0;
+    }
+    .collapsible[open] summary::after { transform:rotate(90deg); }
+    .collapsible-body { padding:1.5rem; }
+
+    /* ── Quick status (Valid + SI) ── */
+    .quick-status {
+      background:#000000; border:1px solid #2a3a2a; border-radius:10px;
+      padding:1.1rem 1.8rem; margin-bottom:1rem;
+      display:flex; gap:2.5rem; align-items:center; flex-wrap:wrap;
+    }
+    .qs-group-label { font-size:0.7rem; color:#80cc80; text-transform:uppercase; letter-spacing:0.1rem; font-weight:bold; flex-shrink:0; }
+    .qs-group { display:flex; gap:1.4rem; align-items:center; }
+    .qs-sep { width:1px; height:40px; background:#2a3a2a; flex-shrink:0; }
+    .qs-item { display:flex; flex-direction:column; align-items:center; gap:0.2rem; }
+    .qs-item-label { font-size:0.65rem; color:#6a8a6a; text-transform:uppercase; letter-spacing:0.05rem; }
+    .qs-item-val { font-family:'Courier New',monospace; font-size:1.3rem; font-weight:bold; }
+    .qs-on  { color:#80cc80; }
+    .qs-off { color:#2a3a2a; }
+    .qs-si  { font-family:'Courier New',monospace; font-size:1.5rem; font-weight:bold; color:#c084fc; letter-spacing:0.05rem; }
+    .qs-freqlim { font-family:'Courier New',monospace; font-size:1.1rem; font-weight:bold; color:#f59e0b; letter-spacing:0.03rem; }
+
+    /* ── Tabs ── */
+    .tab-wrap { background:#000000; border:1px solid #1c1c1c; border-radius:10px; margin-bottom:1.5rem; overflow:hidden; }
+    .tab-bar { display:flex; border-bottom:1px solid #1c1c1c; background:#050505; }
+    .tab-btn {
+      flex:1; padding:0.7rem 0.5rem; cursor:pointer; background:none;
+      border:none; border-bottom:2px solid transparent; margin-bottom:-1px;
+      color:#445566; font-size:0.78rem; font-weight:bold; letter-spacing:0.08rem;
+      text-transform:uppercase; transition:color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color:#a89f94; }
+    .tab-btn.tab-active { color:#80cc80; border-bottom-color:#80cc80; }
+    .tab-pane { display:none; padding:1.1rem 1.2rem; }
+    .tab-pane.tab-active { display:block; }
+
+    /* ── Detail rows (inside tabs) ── */
+    .detail-panel-title {
+      font-size:0.78rem; font-weight:bold; letter-spacing:0.08rem; text-transform:uppercase;
+      color:#a89f94; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;
+      border-bottom:1px solid #222222; padding-bottom:0.6rem;
+    }
+    .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dot-orange { background:#f59e0b; box-shadow:0 0 5px #f59e0b88; }
+    .dot-blue   { background:#60b8c8; box-shadow:0 0 5px #60b8c888; }
+    .dot-green  { background:#80cc80; box-shadow:0 0 5px #80cc8088; }
+    .detail-row { display:flex; justify-content:space-between; align-items:baseline; padding:0.45rem 0; border-bottom:1px solid #1a1a1a; gap:1rem; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-key { color:#6a7a8a; font-size:0.82rem; flex-shrink:0; }
+    .detail-val { font-family:'Courier New',monospace; font-size:0.88rem; color:#c8c4bc; text-align:right; word-break:break-all; }
+    .detail-val.ok     { color:#80cc80; font-weight:bold; }
+    .detail-val.err    { color:#ff6b6b; font-weight:bold; }
+    .detail-val.accent { color:#f59e0b; }
+    .detail-val.dim    { color:#556680; font-size:0.8rem; font-family:inherit; }
+
+    /* ── Reference tables ── */
+    .ref-table { width:100%; border-collapse:collapse; font-size:0.85rem; font-family:'Courier New',monospace; margin-top:0.8rem; }
+    .ref-table th { background:#0a1a0a; color:#80cc80; padding:0.5rem 0.8rem; text-align:left; border-bottom:1px solid #2a3a2a; font-size:0.75rem; letter-spacing:0.06rem; text-transform:uppercase; }
+    .ref-table td { padding:0.45rem 0.8rem; border-bottom:1px solid #151f15; color:#c8c4bc; vertical-align:top; }
+    .ref-table tr:last-child td { border-bottom:none; }
+    .ref-table tr:hover td { background:#111c11; }
+    .ref-table td:first-child { color:#f59e0b; font-weight:bold; }
+
+    .addr-table-wrapper { max-height:380px; overflow-y:auto; border:1px solid #1a2a1a; border-radius:6px; margin-top:0.8rem; }
+    .addr-table-wrapper .ref-table { margin-top:0; }
+    .addr-table-wrapper .ref-table th { position:sticky; top:0; z-index:1; }
+    .addr-table-wrapper .ref-table td:first-child { color:#f59e0b; }
+    tr.tr-current td { background:rgba(245,158,11,0.10) !important; }
+
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.2rem; }
+    @media (max-width:700px) { .two-col { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 
-<nav class="site-nav">
-  <div class="nav-brand"><div class="nav-brand-mark">fw</div><a href="index.html">fveilleux</a></div>
-  <ul class="nav-links">
-    <li><a href="index.html">Accueil</a></li>
-    <li><a href="informatique.html" class="active">Informatique</a></li>
-    <li><a href="aviation.html">Aviation</a></li>
-    <li><a href="#">Outils</a></li>
-  </ul>
-  <div class="nav-end">
-    <span class="nav-badge">admin</span>
-    <button class="theme-btn" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='light'?'dark':'light')">◑</button>
-    <div class="nav-avatar">FV</div>
+  <!-- ── Top bar ── -->
+  <div class="top-bar" data-topbar>
+    <span class="top-bar-title"><span>CSDB</span> Décodeur</span>
+    <a href="informatique.html" class="top-bar-back">&#8592; Informatique</a>
+    <div class="top-bar-divider"></div>
+    <span class="hex-label">OCTETS HEX</span>
+    <input type="text" id="hex-input" placeholder="10 80 08 41 00 00"
+           spellcheck="false" autocomplete="off" />
+    <button id="decode-btn" onclick="decodeFromInput()">Décoder</button>
+    <button id="zero-btn" onclick="resetToZero()">Effacer</button>
+    <div class="error-msg" id="error-msg"></div>
   </div>
-</nav>
 
-<div class="page-body">
+  <div class="csdb-container">
 
-  <aside class="sidebar">
-    <div class="sb-section">Décodage</div>
-    <a href="csdb.html" class="sb-link active"><span class="sb-dot"></span>CSDB</a>
-    <a href="#" class="sb-link"><span class="sb-dot"></span>ARINC 429</a>
-    <div class="sb-section">Simulation</div>
-    <a href="#" class="sb-link"><span class="sb-dot"></span>Circuit logique</a>
-    <a href="#" class="sb-link"><span class="sb-dot"></span>Puces logiques</a>
-    <div class="sb-section">Référence</div>
-    <a href="#" class="sb-link"><span class="sb-dot"></span>Tables de vérité</a>
-    <a href="#" class="sb-link disabled"><span class="sb-dot"></span>Registres (bientôt)</a>
-  </aside>
+    <div class="csdb-header">
+      <h1>Décodeur CSDB</h1>
+      <p>Commercial Standard Digital Bus — GAMA Standard 523-0772774<br>
+         <small>Chaque byte = cadre UART 11 bits · Bloc = ADRESSE + STATUS + DONNÉES</small></p>
+    </div>
 
-  <main class="main main-narrow">
-    <span class="eyebrow">Informatique · CSDB</span>
-    <h1 class="page-title">Décodeur d'adresses</h1>
-    <p class="page-subtitle">Sélectionnez une adresse pour visualiser les données encodées et leurs valeurs décodées.</p>
-
-    <!-- Bande de valeurs (adresse 0x1E sélectionnée) -->
-    <div class="banner" id="banner">
-      <div class="banner-val">
-        <div class="banner-val-num">0x1E</div>
-        <div class="banner-val-lbl">Adresse</div>
+    <!-- ── Affichage des octets ── -->
+    <div class="panel">
+      <h2>Bloc de message — octets (8 bits de données chacun)</h2>
+      <div class="bytes-display" id="bytes-display">
+        <div class="placeholder-msg">
+          Entrez des octets hexadécimaux séparés par des espaces<br>
+          <small style="color:#3a5a3a;">Exemple : <code style="color:#80cc80">10 E0 08 41 85 00</code> — VHF COMM FREQ</small>
+        </div>
       </div>
-      <div class="banner-sep"></div>
-      <div class="banner-val">
-        <div class="banner-val-num amber">3 350</div>
-        <div class="banner-val-lbl">Altitude (ft)</div>
-      </div>
-      <div class="banner-sep"></div>
-      <div class="banner-val">
-        <div class="banner-val-num">2481</div>
-        <div class="banner-val-lbl">Code ATC</div>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:0.5rem;align-items:center">
-        <span class="badge badge-green">décodage OK</span>
-        <span class="badge badge-amber">2 valeurs</span>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div><span>Adresse — octet 0</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#60b8c8"></div><span>Status — octet 1</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#80cc80"></div><span>Données — octets 2+</span></div>
+        <div class="legend-item" style="color:#3a5a3a;font-size:0.72rem;">↑ cliquer un bit pour le basculer</div>
       </div>
     </div>
 
-    <!-- Sélecteur d'adresse -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.7rem">
-      <span class="label">Sélecteur d'adresse</span>
-      <span class="badge badge-muted">● icône = valeurs multiples</span>
-    </div>
-    <div class="addr-grid">
-      <div class="addr-btn" onclick="selectAddr(this,'0x00')">0x00</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x02')">0x02</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x04')">0x04</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x06')">0x06</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x08')">0x08</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x0A')">0x0A</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x0C')">0x0C</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x0E')">0x0E</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x10')">0x10</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x12')">0x12</div>
-      <div class="addr-btn multi" onclick="selectAddr(this,'0x14')">0x14 ◈</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x16')">0x16</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x18')">0x18</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x1A')">0x1A</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x1C')">0x1C</div>
-      <div class="addr-btn multi sel" id="addr-1E" onclick="selectAddr(this,'0x1E')">0x1E ◈</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x20')">0x20</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x22')">0x22</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x24')">0x24</div>
-      <div class="addr-btn" onclick="selectAddr(this,'0x26')">0x26</div>
+    <!-- ── Bannière adresse ── -->
+    <div class="address-banner">
+      <div class="address-banner-left">
+        <div class="addr-hex-box" id="banner-addr-box">0x00</div>
+        <div>
+          <div class="banner-name" id="banner-name">—</div>
+          <div class="banner-sub"  id="banner-sub">—</div>
+        </div>
+      </div>
+      <div class="banner-values" id="banner-values"></div>
     </div>
 
-    <!-- Détail de l'adresse sélectionnée -->
-    <div class="data-block">
-      <div class="data-block-head">
-        Adresse 0x1E — Transpondeur &amp; altimètre
-        <span class="badge badge-amber">2 valeurs</span>
+    <!-- ── Status rapide : Valid + SI ── -->
+    <div class="quick-status">
+      <span class="qs-group-label">Valid</span>
+      <div class="qs-group" id="qs-valid">
+        <div class="qs-item"><span class="qs-item-label">—</span><span class="qs-item-val qs-off">—</span></div>
       </div>
-      <div class="data-row">
-        <span class="data-key">Label</span>
-        <span class="data-val">ALT + ATC</span>
+      <div class="qs-sep"></div>
+      <span class="qs-group-label">SI</span>
+      <div id="qs-si"><span class="qs-off">—</span></div>
+      <div class="qs-sep" id="qs-extra-sep" style="display:none"></div>
+      <span class="qs-group-label" id="qs-extra-lbl" style="display:none"></span>
+      <div id="qs-extra"></div>
+    </div>
+
+    <!-- ── Détails (onglets) ── -->
+    <div class="tab-wrap">
+      <div class="tab-bar">
+        <button class="tab-btn tab-active" data-tab="addr"   onclick="switchTab('addr')">Adresse</button>
+        <button class="tab-btn"            data-tab="status" onclick="switchTab('status')">Status</button>
+        <button class="tab-btn"            data-tab="data"   onclick="switchTab('data')">Données</button>
       </div>
-      <div class="data-row">
-        <span class="data-key">Altitude-pression</span>
-        <span class="data-val">3 350 ft <span class="badge badge-amber">approche</span></span>
+
+      <!-- Onglet ADRESSE -->
+      <div class="tab-pane tab-active" id="tab-addr">
+        <div class="detail-row"><span class="detail-key">Hexadécimal</span><span class="detail-val accent" id="addr-hex">—</span></div>
+        <div class="detail-row"><span class="detail-key">Décimal</span><span class="detail-val" id="addr-dec">—</span></div>
+        <div class="detail-row"><span class="detail-key">Binaire</span><span class="detail-val" id="addr-bin">—</span></div>
+        <div class="detail-row"><span class="detail-key">Message</span><span class="detail-val accent" id="addr-name">—</span></div>
+        <div class="detail-row"><span class="detail-key">Système</span><span class="detail-val" id="addr-system">—</span></div>
+        <div class="detail-row"><span class="detail-key">Données attendues</span><span class="detail-val" id="addr-db">—</span></div>
+        <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val dim" id="addr-desc">—</span></div>
       </div>
-      <div class="data-row">
-        <span class="data-key">Code ATC (transpondeur)</span>
-        <span class="data-val">2481 <span class="badge badge-green">actif</span></span>
+
+      <!-- Onglet STATUS -->
+      <div class="tab-pane" id="tab-status">
+        <div id="status-panel-body">
+          <div class="detail-row"><span class="detail-key">—</span><span class="detail-val dim">En attente</span></div>
+        </div>
       </div>
-      <div class="data-row">
-        <span class="data-key">Résolution</span>
-        <span class="data-val">100 ft</span>
-      </div>
-      <div class="data-row">
-        <span class="data-key">Encodage</span>
-        <span class="data-val">BCD / Gillham</span>
-      </div>
-      <div class="data-row">
-        <span class="data-key">Fréquence de rafraîchissement</span>
-        <span class="data-val">1 Hz</span>
-      </div>
-      <div class="data-row">
-        <span class="data-key">Données brutes</span>
-        <span class="data-val" style="color:var(--muted)">A2 3C 0D 1A 00 00 00 00</span>
+
+      <!-- Onglet DONNÉES -->
+      <div class="tab-pane" id="tab-data">
+        <div id="data-panel-body">
+          <div class="detail-row"><span class="detail-key">—</span><span class="detail-val dim">En attente</span></div>
+        </div>
       </div>
     </div>
 
-    <!-- Données d'une seconde adresse -->
-    <div class="data-block">
-      <div class="data-block-head">
-        Adresse 0x22 — Radio VHF COM
-        <span class="badge badge-green">1 valeur</span>
+    <!-- ── Référence protocole ── -->
+    <details class="collapsible">
+      <summary>Référence protocole CSDB</summary>
+      <div class="collapsible-body">
+        <p style="color:#a89f94;font-size:0.88rem;line-height:1.65;margin-bottom:1.5rem;">
+          Le <strong style="color:#80cc80;">Commercial Standard Digital Bus (CSDB)</strong> est un standard avionique
+          série défini par la GAMA (General Aviation Manufacturers Association), standard 523-0772774.
+          Contrairement à l'ARINC 429 (mots de 32 bits), le CSDB est orienté <strong>blocs de messages</strong>.
+          Chaque octet est transmis dans un cadre UART de <strong>11 bits</strong>
+          (1 start + 8 données + 1 parité impaire + 1 stop).
+          Un bloc typique contient un <strong style="color:#f59e0b;">octet d'adresse</strong>,
+          un <strong style="color:#60b8c8;">octet de status</strong>, et jusqu'à 4
+          <strong style="color:#80cc80;">octets de données</strong>.
+        </p>
+        <div class="two-col" style="margin-bottom:1.5rem;">
+          <table class="ref-table">
+            <thead><tr><th colspan="3">Structure d'un bloc de message</th></tr></thead>
+            <tbody>
+              <tr><td style="color:#f59e0b">Octet 0</td><td>ADRESSE</td><td>Type de message</td></tr>
+              <tr><td style="color:#60b8c8">Octet 1</td><td>STATUS</td><td>Validité / mode / source</td></tr>
+              <tr><td style="color:#80cc80">Octets 2–5</td><td>DONNÉES</td><td>BCD, complément à 2, discrets</td></tr>
+            </tbody>
+          </table>
+          <table class="ref-table">
+            <thead><tr><th colspan="2">Cadre UART par octet (11 bits)</th></tr></thead>
+            <tbody>
+              <tr><td>Start bit</td><td>1 bit (toujours 0)</td></tr>
+              <tr><td>Données</td><td>8 bits D0→D7</td></tr>
+              <tr><td>Parité</td><td>1 bit (parité impaire)</td></tr>
+              <tr><td>Stop bit</td><td>1 bit (toujours 1)</td></tr>
+              <tr><td>Débit nominal</td><td style="color:#60b8c8">12,5 kbps</td></tr>
+              <tr><td>Max blocs/trame</td><td style="color:#60b8c8">18 blocs</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="color:#80cc80;font-size:0.8rem;font-weight:bold;letter-spacing:0.08rem;text-transform:uppercase;margin-bottom:0.8rem;">Octet de status — layout standard (Figure 4, §3.4)</p>
+        <table class="ref-table" style="margin-bottom:1rem;">
+          <thead><tr><th>Bit(s)</th><th>Nom</th><th>0</th><th>1</th></tr></thead>
+          <tbody>
+            <tr><td>7</td><td>Données #1 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+            <tr><td>6</td><td>Données #2 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+            <tr><td>5</td><td>Données #3 valides</td><td style="color:#556680">NON</td><td style="color:#80cc80">OUI</td></tr>
+            <tr><td>4–3</td><td>Mode</td><td style="color:#556680">DÉSACTIVÉ</td><td style="color:#80cc80">ACTIVÉ</td></tr>
+            <tr><td>2</td><td>Test</td><td style="color:#80cc80">NORMAL</td><td style="color:#ff6b6b">TEST</td></tr>
+            <tr><td>1–0</td><td>Source</td><td colspan="2">00=INCONNU · 01=UNITÉ#1 · 10=UNITÉ#2 · 11=UNITÉ#3</td></tr>
+          </tbody>
+        </table>
+        <div class="two-col">
+          <table class="ref-table">
+            <thead><tr><th>Caractéristique</th><th>CSDB</th><th>ARINC 429</th></tr></thead>
+            <tbody>
+              <tr><td>Structure</td><td style="color:#60b8c8">Blocs messages</td><td>Mots 32 bits</td></tr>
+              <tr><td>Taille typique</td><td style="color:#60b8c8">6 octets/bloc</td><td>32 bits/mot</td></tr>
+              <tr><td>Débit</td><td style="color:#60b8c8">12,5 kbps</td><td>12,5 / 100 kbps</td></tr>
+              <tr><td>Encodage</td><td style="color:#60b8c8">BCD · 2's comp · DIS</td><td>BCD · BNR · DIS</td></tr>
+              <tr><td>Parité</td><td style="color:#60b8c8">Par octet (UART)</td><td>Bit 32 du mot</td></tr>
+              <tr><td>Topologie</td><td style="color:#60b8c8">Point-à-point</td><td>1 TX → N RX</td></tr>
+              <tr><td>Synchronisation</td><td style="color:#60b8c8">Octet 0xA5 (SYNC)</td><td>Temps de silence bus</td></tr>
+            </tbody>
+          </table>
+          <table class="ref-table">
+            <thead><tr><th colspan="2">Encodages des données</th></tr></thead>
+            <tbody>
+              <tr><td>BCD</td><td>Fréquences radio (VHF, DME, ADF) — 4 bits/chiffre</td></tr>
+              <tr><td>2's complement</td><td>Angles, vitesses, altitudes — 16 bits signé</td></tr>
+              <tr><td>Discret</td><td>Flags, modes, états ON/OFF — bit par bit</td></tr>
+              <tr><td>ASCII</td><td>Messages texte CRT (adresse 0x70)</td></tr>
+              <tr><td>PAD</td><td>Octet de rembourrage (valeur quelconque)</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="data-row">
-        <span class="data-key">Fréquence active</span>
-        <span class="data-val">118.700 MHz <span class="badge badge-green">émission</span></span>
-      </div>
-      <div class="data-row">
-        <span class="data-key">Fréquence standby</span>
-        <span class="data-val">121.500 MHz</span>
-      </div>
-      <div class="data-row">
-        <span class="data-key">Encodage</span>
-        <span class="data-val">BCD 8.33 kHz</span>
-      </div>
-      <div class="data-row">
-        <span class="data-key">Données brutes</span>
-        <span class="data-val" style="color:var(--muted)">11 87 00 12 15 00 00 00</span>
-      </div>
-    </div>
+    </details>
 
-  </main>
-</div>
+    <!-- ── Catalogue des adresses ── -->
+    <details class="collapsible">
+      <summary>Catalogue des adresses — cliquer une ligne pour décoder</summary>
+      <div class="collapsible-body">
+        <div class="addr-table-wrapper">
+          <table class="ref-table">
+            <thead>
+              <tr><th>Adresse</th><th>Nom du message</th><th>Système</th><th>Description</th></tr>
+            </thead>
+            <tbody id="addr-catalog-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
 
-<footer class="site-footer">
-  <span class="footer-brand">fveilleux</span>
-  <span class="footer-label">concept · 2025</span>
-</footer>
+  </div>
 
-<script>
-  function selectAddr(el, addr) {
-    document.querySelectorAll('.addr-btn').forEach(b => b.classList.remove('sel'));
-    el.classList.add('sel');
-  }
-</script>
+  <script src="csdb.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script src="page-controls.js"></script>
 </body>
 </html>
+
