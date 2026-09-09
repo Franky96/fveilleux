@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept — fveilleux.com</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --bg:        #0b0d14;
+      --surface:   #13161f;
+      --card:      #191d2c;
+      --border:    #24293f;
+      --border-s:  #1c2035;
+      --accent:    #6194f4;
+      --accent-d:  rgba(97,148,244,0.13);
+      --accent-g:  rgba(97,148,244,0.07);
+      --text:      #dce3f0;
+      --muted:     #687899;
+      --success:   #4caa74;
+      --warn:      #e8a838;
+      --danger:    #e05c5c;
+    }
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --bg:        #edf0f8;
+        --surface:   #ffffff;
+        --card:      #f4f6fc;
+        --border:    #c8d0e4;
+        --border-s:  #dde3f0;
+        --accent:    #3863d4;
+        --accent-d:  rgba(56,99,212,0.10);
+        --accent-g:  rgba(56,99,212,0.05);
+        --text:      #161c2e;
+        --muted:     #566480;
+        --success:   #2d8a57;
+        --warn:      #b07a15;
+        --danger:    #c03838;
+      }
+    }
+    :root[data-theme="light"] {
+      --bg:        #edf0f8;
+      --surface:   #ffffff;
+      --card:      #f4f6fc;
+      --border:    #c8d0e4;
+      --border-s:  #dde3f0;
+      --accent:    #3863d4;
+      --accent-d:  rgba(56,99,212,0.10);
+      --accent-g:  rgba(56,99,212,0.05);
+      --text:      #161c2e;
+      --muted:     #566480;
+      --success:   #2d8a57;
+      --warn:      #b07a15;
+      --danger:    #c03838;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+
+    /* ── NAV — the proposed design ── */
+    .site-nav {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; gap: 0;
+      height: 52px;
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+      color: var(--text); letter-spacing: -0.01em; white-space: nowrap;
+      margin-right: 2.5rem;
+    }
+    .nav-brand-mark {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 800; color: #fff; letter-spacing: 0;
+      flex-shrink: 0;
+    }
+    .nav-links {
+      display: flex; align-items: stretch; gap: 0; flex: 1;
+      height: 100%; list-style: none;
+    }
+    .nav-links li { display: flex; align-items: stretch; }
+    .nav-links a {
+      display: flex; align-items: center;
+      padding: 0 1rem; font-size: 0.85rem; font-weight: 500;
+      color: var(--muted); letter-spacing: 0.01em;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .nav-end {
+      display: flex; align-items: center; gap: 0.6rem; margin-left: auto;
+    }
+    .nav-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+      background: var(--accent-d); color: var(--accent);
+      border: 1px solid rgba(97,148,244,0.2);
+      padding: 0.18rem 0.5rem; border-radius: 4px;
+    }
+    .nav-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent-d); border: 1px solid rgba(97,148,244,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 600; color: var(--accent);
+      cursor: pointer;
+    }
+    .theme-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.3rem 0.55rem;
+      color: var(--muted); font-size: 0.78rem; cursor: pointer;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── LAYOUT ── */
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 4rem 2rem 3.5rem;
+      border-bottom: 1px solid var(--border-s);
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; }
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1;
+      text-wrap: balance; letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero-sub {
+      color: var(--muted); font-size: 1rem; max-width: 520px; line-height: 1.7;
+    }
+    .hero-meta {
+      display: flex; align-items: center; gap: 1.5rem; margin-top: 1.8rem;
+      flex-wrap: wrap;
+    }
+    .meta-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+      color: var(--muted); display: flex; align-items: center; gap: 0.4rem;
+    }
+    .meta-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); }
+
+    /* ── SECTION ── */
+    .section { padding: 3.5rem 2rem; border-bottom: 1px solid var(--border-s); }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.6rem;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 1.35rem; letter-spacing: -0.01em;
+      margin-bottom: 0.4rem; text-wrap: balance;
+    }
+    .section-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+    /* ── PALETTE ── */
+    .palette-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 0.75rem;
+    }
+    .swatch {
+      border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .swatch-color { height: 64px; }
+    .swatch-info { padding: 0.6rem 0.7rem; background: var(--surface); }
+    .swatch-name { font-size: 0.78rem; font-weight: 600; margin-bottom: 0.15rem; }
+    .swatch-hex {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted);
+    }
+    .swatch-role { font-size: 0.67rem; color: var(--muted); margin-top: 0.1rem; }
+
+    /* ── TYPOGRAPHY ── */
+    .type-scale { display: flex; flex-direction: column; gap: 1.5rem; }
+    .type-row { display: flex; align-items: baseline; gap: 1.5rem; padding: 1rem 0; border-bottom: 1px solid var(--border-s); }
+    .type-row:last-child { border-bottom: none; }
+    .type-meta { flex-shrink: 0; width: 130px; }
+    .type-meta-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+    .type-meta-spec { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--border); margin-top: 0.15rem; }
+    .type-sample { flex: 1; }
+    .t-h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.2rem; letter-spacing: -0.025em; line-height: 1.05; }
+    .t-h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.35rem; letter-spacing: -0.015em; }
+    .t-h3 { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 1.05rem; }
+    .t-body { font-family: 'Outfit', sans-serif; font-weight: 400; font-size: 0.95rem; line-height: 1.7; color: var(--text); }
+    .t-small { font-family: 'Outfit', sans-serif; font-weight: 500; font-size: 0.78rem; color: var(--muted); }
+    .t-mono  { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--accent); }
+
+    /* ── NAV MOCKUP ── */
+    .mockup-frame {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-top: 1.5rem;
+    }
+    .mockup-bar {
+      background: #0a0b11; border-bottom: 1px solid #1c2035;
+      padding: 0.55rem 0.9rem; display: flex; align-items: center; gap: 0.4rem;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot-r { background: #e05c5c; }
+    .dot-y { background: #e8a838; }
+    .dot-g { background: #4caa74; }
+    .mockup-url {
+      flex: 1; text-align: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: #4a5568;
+    }
+    .mockup-nav {
+      display: flex; align-items: center; height: 50px;
+      background: rgba(19,22,31,0.95); border-bottom: 1px solid #24293f;
+      padding: 0 1.2rem; gap: 0;
+    }
+    .mnav-brand {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem;
+      color: #dce3f0; margin-right: 2rem;
+    }
+    .mnav-mark {
+      width: 22px; height: 22px; border-radius: 5px; background: #6194f4;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.62rem; font-weight: 800; color: #fff;
+    }
+    .mnav-links { display: flex; align-items: stretch; height: 100%; gap: 0; }
+    .mnav-link {
+      display: flex; align-items: center; padding: 0 0.8rem;
+      font-size: 0.75rem; font-weight: 500; color: #687899;
+      border-bottom: 2px solid transparent;
+    }
+    .mnav-link.a { color: #6194f4; border-bottom-color: #6194f4; }
+    .mnav-link.h { color: #dce3f0; }
+    .mnav-end { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+    .mnav-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.62rem;
+      background: rgba(97,148,244,0.13); color: #6194f4;
+      padding: 0.14rem 0.4rem; border-radius: 3px;
+    }
+    .mnav-ava {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(97,148,244,0.13); border: 1px solid rgba(97,148,244,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem; font-weight: 700; color: #6194f4;
+    }
+
+    /* annotations */
+    .anno-row { display: flex; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; }
+    .anno {
+      display: flex; align-items: flex-start; gap: 0.55rem;
+      font-size: 0.8rem; color: var(--muted); flex: 1; min-width: 160px;
+    }
+    .anno-n {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+      background: var(--accent-d); color: var(--accent);
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 0.05rem;
+    }
+
+    /* ── DASHBOARD MOCKUP ── */
+    .dash-mock {
+      background: #0b0d14; padding: 1.5rem; min-height: 280px;
+    }
+    .dash-greeting {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+      color: #dce3f0; margin-bottom: 0.3rem;
+    }
+    .dash-sub { font-size: 0.75rem; color: #687899; margin-bottom: 1.5rem; }
+    .dash-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+    }
+    .dash-card {
+      background: #13161f; border: 1px solid #24293f; border-radius: 9px;
+      padding: 1rem; cursor: default;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .dash-card:hover { border-color: #6194f4; transform: translateY(-2px); }
+    .dash-icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .dash-card-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.82rem; color: #dce3f0; margin-bottom: 0.2rem; }
+    .dash-card-sub { font-size: 0.72rem; color: #687899; }
+
+    /* ── INNER PAGE MOCKUP ── */
+    .inner-mock { display: grid; grid-template-columns: 180px 1fr; min-height: 260px; }
+    .inner-sidebar {
+      background: #0f1219; border-right: 1px solid #24293f; padding: 1.2rem;
+    }
+    .isb-section { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: #3a4560; margin-bottom: 0.5rem; margin-top: 1rem; }
+    .isb-section:first-child { margin-top: 0; }
+    .isb-link {
+      display: flex; align-items: center; gap: 0.45rem;
+      padding: 0.35rem 0.5rem; border-radius: 5px; margin-bottom: 0.15rem;
+      font-size: 0.75rem; color: #687899; cursor: default;
+    }
+    .isb-link.a { background: rgba(97,148,244,0.10); color: #6194f4; }
+    .isb-link.h:hover { background: rgba(97,148,244,0.06); color: #a0b4d0; }
+    .isb-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .inner-content { background: #0b0d14; padding: 1.5rem; }
+    .ic-h { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: #dce3f0; margin-bottom: 0.3rem; }
+    .ic-sub { font-size: 0.72rem; color: #687899; margin-bottom: 1rem; }
+    .ic-block { background: #13161f; border: 1px solid #24293f; border-radius: 7px; padding: 1rem; margin-bottom: 0.7rem; }
+    .ic-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .ic-key { font-size: 0.72rem; color: #687899; }
+    .ic-val { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #dce3f0; }
+    .ic-badge {
+      font-size: 0.65rem; padding: 0.12rem 0.4rem; border-radius: 3px;
+    }
+    .ic-badge.ok { background: rgba(76,170,116,0.15); color: #4caa74; }
+    .ic-badge.warn { background: rgba(232,168,56,0.15); color: #e8a838; }
+
+    /* ── COMPARE ── */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+    .compare-panel { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .compare-head {
+      padding: 0.6rem 1rem; font-size: 0.75rem; font-weight: 600;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .compare-head.before { background: #0f1a0f; color: #80cc80; border-bottom: 1px solid #2a3a2a; }
+    .compare-head.after  { background: var(--accent-d); color: var(--accent); border-bottom: 1px solid var(--border); }
+    .compare-body { padding: 1rem; background: var(--card); }
+    .compare-item { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.55rem; font-size: 0.82rem; }
+    .compare-item::before { content: '·'; color: var(--muted); flex-shrink: 0; }
+    .compare-item.bad { color: var(--muted); }
+    .compare-item.good { color: var(--text); }
+    .compare-item span.tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+      padding: 0.08rem 0.35rem; border-radius: 3px; flex-shrink: 0;
+    }
+    .compare-item .tag.g { background: rgba(76,170,116,0.15); color: #4caa74; }
+    .compare-item .tag.r { background: rgba(224,92,92,0.12); color: #e05c5c; }
+
+    @media (max-width: 700px) {
+      .palette-grid { grid-template-columns: repeat(3, 1fr); }
+      .dash-grid { grid-template-columns: 1fr 1fr; }
+      .compare-grid { grid-template-columns: 1fr; }
+      .inner-mock { grid-template-columns: 1fr; }
+      .inner-sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NEW NAV — self-demonstrating ── -->
+<nav class="site-nav" aria-label="Navigation principale">
+  <div class="nav-brand">
+    <div class="nav-brand-mark">fw</div>
+    fveilleux
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" class="active">Concept</a></li>
+    <li><a href="#">Informatique</a></li>
+    <li><a href="#">Aviation</a></li>
+    <li><a href="#">Outils</a></li>
+  </ul>
+  <div class="nav-end">
+    <span class="nav-badge">concept</span>
+    <button class="theme-btn" onclick="toggleTheme()" title="Basculer le thème">◑</button>
+    <div class="nav-avatar">FV</div>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">fveilleux.com / concept</div>
+    <h1>Redesign — <em>navigation</em><br>et système de couleurs</h1>
+    <p class="hero-sub">Proposition de refonte visuelle ciblée sur la cohérence de la navigation et la palette. Les outils complexes restent intacts — seul le cadre change.</p>
+    <div class="hero-meta">
+      <span class="meta-pill"><span class="meta-dot"></span> Ébauche de concept</span>
+      <span class="meta-pill" style="color:var(--muted)">Nav · Couleurs · Typographie</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── PALETTE ── -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">01 — Palette</div>
+    <div class="section-title">Système de couleurs</div>
+    <p class="section-sub">Bleu d'ingénierie sur fond marine — remplace le vert terminal par quelque chose de plus raffiné mais toujours technique.</p>
+
+    <div class="palette-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0b0d14;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Ground</div>
+          <div class="swatch-hex">#0b0d14</div>
+          <div class="swatch-role">Fond principal</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#13161f;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Surface</div>
+          <div class="swatch-hex">#13161f</div>
+          <div class="swatch-role">Nav, panneaux</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#191d2c;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Card</div>
+          <div class="swatch-hex">#191d2c</div>
+          <div class="swatch-role">Cartes, blocs</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#24293f;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Border</div>
+          <div class="swatch-hex">#24293f</div>
+          <div class="swatch-role">Séparateurs</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#6194f4;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Accent</div>
+          <div class="swatch-hex">#6194f4</div>
+          <div class="swatch-role">Liens, actif, focus</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#dce3f0;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Text</div>
+          <div class="swatch-hex">#dce3f0</div>
+          <div class="swatch-role">Texte principal</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#687899;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Muted</div>
+          <div class="swatch-hex">#687899</div>
+          <div class="swatch-role">Secondaire, labels</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#4caa74;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Success</div>
+          <div class="swatch-hex">#4caa74</div>
+          <div class="swatch-role">État positif</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#e8a838;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Warning</div>
+          <div class="swatch-hex">#e8a838</div>
+          <div class="swatch-role">Attention</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TYPOGRAPHY ── -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">02 — Typographie</div>
+    <div class="section-title">Hiérarchie de texte</div>
+    <p class="section-sub">Syne pour les titres (géométrique, confiant) · Outfit pour le corps (lisible, distinct d'Inter) · JetBrains Mono pour les données.</p>
+
+    <div class="type-scale">
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-meta-label">H1 — Titre page</div>
+          <div class="type-meta-spec">Syne 800 / 2.2rem</div>
+        </div>
+        <div class="type-sample t-h1">Tableau de bord</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-meta-label">H2 — Section</div>
+          <div class="type-meta-spec">Syne 700 / 1.35rem</div>
+        </div>
+        <div class="type-sample t-h2">Adresses CSDB disponibles</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-meta-label">H3 — Sous-titre</div>
+          <div class="type-meta-spec">Syne 600 / 1.05rem</div>
+        </div>
+        <div class="type-sample t-h3">Paramètres de simulation</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-meta-label">Corps</div>
+          <div class="type-meta-spec">Outfit 400 / 0.95rem</div>
+        </div>
+        <div class="type-sample t-body">L'adresse 0x1E affiche le code ATC actif et l'altitude-pression associée. Les deux valeurs sont décodables simultanément et s'affichent dans la bande du haut.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-meta-label">Petit / label</div>
+          <div class="type-meta-spec">Outfit 500 / 0.78rem</div>
+        </div>
+        <div class="type-sample t-small">Dernière mise à jour — 2025-09-09 · 14:32 UTC</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">
+          <div class="type-meta-label">Mono / data</div>
+          <div class="type-meta-spec">JetBrains Mono / 0.78rem</div>
+        </div>
+        <div class="type-sample t-mono">0x1E → ALT 3 350 ft · ATC 2481</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── NAV MOCKUP ── -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">03 — Navigation</div>
+    <div class="section-title">Barre de navigation unifiée</div>
+    <p class="section-sub">Une seule barre persistante remplace les en-têtes disparates de chaque page. L'élément actif est marqué par un soulignement accent.</p>
+
+    <div class="mockup-frame">
+      <div class="mockup-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <div class="mockup-url">fveilleux.com / informatique / csdb</div>
+      </div>
+      <!-- Nav en état "Informatique > CSDB" -->
+      <div class="mockup-nav">
+        <div class="mnav-brand">
+          <div class="mnav-mark">fw</div>
+          fveilleux
+        </div>
+        <div class="mnav-links">
+          <div class="mnav-link">Accueil</div>
+          <div class="mnav-link a">Informatique</div>
+          <div class="mnav-link">Aviation</div>
+          <div class="mnav-link">Outils</div>
+          <div class="mnav-link">MGFitness</div>
+        </div>
+        <div class="mnav-end">
+          <span class="mnav-badge">admin</span>
+          <div class="mnav-ava">FV</div>
+        </div>
+      </div>
+
+      <!-- Page intérieure mockup -->
+      <div class="inner-mock">
+        <div class="inner-sidebar">
+          <div class="isb-section">Informatique</div>
+          <div class="isb-link a"><span class="isb-dot" style="background:#6194f4"></span>CSDB</div>
+          <div class="isb-link h"><span class="isb-dot" style="background:#24293f"></span>Circuit logique</div>
+          <div class="isb-link h"><span class="isb-dot" style="background:#24293f"></span>Simulateurs</div>
+          <div class="isb-section">Aviation</div>
+          <div class="isb-link h"><span class="isb-dot" style="background:#24293f"></span>ARINC 429</div>
+          <div class="isb-link h"><span class="isb-dot" style="background:#24293f"></span>Manuel</div>
+        </div>
+        <div class="inner-content">
+          <div class="ic-h">CSDB — Décodeur d'adresses</div>
+          <div class="ic-sub">Sélectionnez une adresse pour voir les valeurs décodées</div>
+          <div class="ic-block">
+            <div class="ic-row"><span class="ic-key">Adresse</span><span class="ic-val">0x1E</span></div>
+            <div class="ic-row"><span class="ic-key">Code ATC</span><span class="ic-val">2481 <span class="ic-badge ok">actif</span></span></div>
+            <div class="ic-row" style="margin-bottom:0"><span class="ic-key">Altitude</span><span class="ic-val">3 350 ft <span class="ic-badge warn">approche</span></span></div>
+          </div>
+          <div class="ic-block">
+            <div class="ic-row"><span class="ic-key">Adresse</span><span class="ic-val">0x22</span></div>
+            <div class="ic-row" style="margin-bottom:0"><span class="ic-key">Fréquence active</span><span class="ic-val">118.700 MHz</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anno-row">
+      <div class="anno"><div class="anno-n">1</div>Logo + nom du site — clic ramène à l'accueil depuis n'importe où</div>
+      <div class="anno"><div class="anno-n">2</div>Section active soulignée en bleu — toujours visible quelle que soit la page</div>
+      <div class="anno"><div class="anno-n">3</div>Sidebar contextuelle par section — même structure, couleurs unifiées</div>
+      <div class="anno"><div class="anno-n">4</div>Badge de rôle + avatar — remplace le bouton « Déconnexion » isolé</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DASHBOARD MOCKUP ── -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">04 — Tableau de bord</div>
+    <div class="section-title">Nouvelle grille de menu</div>
+    <p class="section-sub">Cartes plus légères — moins de bordures, hover avec déplacement subtil. L'accent bleu remplace le vert pour la cohérence.</p>
+
+    <div class="mockup-frame">
+      <div class="mockup-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <div class="mockup-url">fveilleux.com</div>
+      </div>
+      <div class="dash-mock">
+        <div class="dash-greeting">Bonjour, Frank.</div>
+        <div class="dash-sub">Choisissez une section pour commencer</div>
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-icon">💻</div>
+            <div class="dash-card-title">Informatique</div>
+            <div class="dash-card-sub">CSDB, circuits, simulateurs</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-icon">✈️</div>
+            <div class="dash-card-title">Aviation</div>
+            <div class="dash-card-sub">ARINC 429, manuel CSDB</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-icon">🔧</div>
+            <div class="dash-card-title">Outils</div>
+            <div class="dash-card-sub">Utilitaires divers</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-icon">🏋️</div>
+            <div class="dash-card-title">MGFitness</div>
+            <div class="dash-card-sub">Site du gym</div>
+          </div>
+          <div class="dash-card" style="border-color:#24293f;opacity:0.45;">
+            <div class="dash-icon">📋</div>
+            <div class="dash-card-title" style="color:#687899">À venir</div>
+            <div class="dash-card-sub">Prochainement disponible</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AVANT / APRÈS ── -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">05 — Comparaison</div>
+    <div class="section-title">Avant / Après</div>
+    <p class="section-sub">Ce qui change concrètement — et ce qui reste intact.</p>
+
+    <div class="compare-grid">
+      <div class="compare-panel">
+        <div class="compare-head before">Actuel</div>
+        <div class="compare-body">
+          <div class="compare-item bad">Chaque page a son propre en-tête <span class="tag r">incohérent</span></div>
+          <div class="compare-item bad">Vert terminal (#80cc80) — trop saturé <span class="tag r">daté</span></div>
+          <div class="compare-item bad">Sidebar sombre + contenu crème (#f5f2eb) <span class="tag r">split</span></div>
+          <div class="compare-item bad">Roboto chargée mais peu utilisée <span class="tag r">gaspillé</span></div>
+          <div class="compare-item bad">Pas de navigation globale cohérente</div>
+          <div class="compare-item bad">Bouton Déconnexion isolé dans le coin</div>
+        </div>
+      </div>
+      <div class="compare-panel">
+        <div class="compare-head after">Proposé</div>
+        <div class="compare-body">
+          <div class="compare-item good">Nav sticky unifiée sur toutes les pages <span class="tag g">cohérent</span></div>
+          <div class="compare-item good">Bleu ingénierie (#6194f4) — précis, calme <span class="tag g">raffiné</span></div>
+          <div class="compare-item good">Thème dark uniforme — sidebar + contenu <span class="tag g">unifié</span></div>
+          <div class="compare-item good">Syne + Outfit — identité typographique forte <span class="tag g">distinct</span></div>
+          <div class="compare-item good">Section active toujours visible dans la nav</div>
+          <div class="compare-item good">Avatar + badge de rôle dans la nav</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="border-top:1px solid var(--border-s);padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+  <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;">fveilleux <span style="color:var(--muted);font-weight:400;">/ concept</span></span>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--muted);">ébauche — 2025</span>
+</footer>
+
+<script>
+  function toggleTheme() {
+    const r = document.documentElement;
+    const cur = r.getAttribute('data-theme');
+    r.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
+  }
+</script>
+</body>
+</html>
