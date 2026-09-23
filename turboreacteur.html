@@ -30,10 +30,9 @@
       transition:border-color 0.2s; flex-shrink:0;
     }
     .top-bar-back:hover { border-color:#80cc80; }
-    .top-bar-divider { width:1px; height:24px; background:#2a3a2a; flex-shrink:0; }
 
     /* ── Layout ── */
-    .turbo-container { max-width:1440px; margin:0 auto; padding:2rem 1.5rem 3rem; color:#f0ede6; width:100%; }
+    .turbo-container { max-width:1480px; margin:0 auto; padding:2rem 1.5rem 3rem; color:#f0ede6; width:100%; }
     .turbo-header { text-align:center; margin-bottom:1.6rem; }
     .turbo-header h1 { font-size:2rem; color:#80cc80; margin-bottom:0.3rem; }
     .turbo-header p { color:#a89f94; font-size:0.93rem; }
@@ -41,50 +40,65 @@
     .panel { background:#040904; border:1px solid #1a2a1a; border-radius:12px; padding:1.4rem 1.5rem; margin-bottom:1.5rem; }
     .panel h2 { color:#80cc80; font-size:0.8rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1rem; }
 
-    .turbo-layout { display:grid; grid-template-columns: 1fr 320px; gap:1.4rem; align-items:start; }
-    @media (max-width: 940px) { .turbo-layout { grid-template-columns: 1fr; } }
+    .turbo-layout { display:grid; grid-template-columns: minmax(0,1fr) 330px; gap:1.4rem; align-items:start; }
+    @media (max-width: 980px) { .turbo-layout { grid-template-columns: 1fr; } }
 
     /* ── Viewport ── */
     #engine-viewport {
-      position:relative; width:100%; height:56vh; min-height:400px; max-height:620px;
-      border-radius:10px; overflow:hidden; background:radial-gradient(ellipse at center, #0c1416 0%, #05080a 75%);
-      border:1px solid #16211a; cursor:grab;
+      position:relative; width:100%; height:62vh; min-height:420px; max-height:680px;
+      border-radius:10px; overflow:hidden; background:#05080a;
+      border:1px solid #16211a; cursor:grab; touch-action:none;
     }
     #engine-viewport:active { cursor:grabbing; }
     #engine-canvas { width:100%; height:100%; display:block; }
+    #label-layer { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+    .eng-label { position:absolute; left:0; top:0; width:0; height:0; }
+    .lbl-dot {
+      position:absolute; left:-3px; top:-3px; width:6px; height:6px; border-radius:50%;
+      background:#80cc80; box-shadow:0 0 5px #80cc80;
+    }
+    .lbl-line {
+      position:absolute; left:0; top:0; height:1px; background:rgba(128,204,128,0.6);
+      transform-origin:0 0;
+    }
+    .lbl-text {
+      position:absolute; white-space:nowrap; transform:translate(0,-50%);
+      font-size:0.7rem; color:#e8f0e8; letter-spacing:0.02rem;
+      background:rgba(4,9,4,0.8); border:1px solid #2a3a2a; border-left:2px solid #80cc80;
+      padding:0.15rem 0.45rem; border-radius:3px;
+    }
+    .lbl-text.lbl-left { transform:translate(-100%,-50%); border-left:1px solid #2a3a2a; border-right:2px solid #80cc80; }
     .viewport-hint {
-      position:absolute; left:0.9rem; bottom:0.7rem; font-size:0.72rem; color:#5a7a6a;
-      background:rgba(4,9,4,0.55); padding:0.3rem 0.6rem; border-radius:6px; pointer-events:none;
-      letter-spacing:0.02rem;
+      position:absolute; left:0.9rem; bottom:0.7rem; font-size:0.72rem; color:#6a8a7a;
+      background:rgba(4,9,4,0.6); padding:0.3rem 0.6rem; border-radius:6px; pointer-events:none;
     }
     .viewport-loading {
       position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       color:#556655; font-size:0.85rem; letter-spacing:0.05rem;
     }
 
-    /* ── Instrument strip ── */
-    .instr-row { display:flex; gap:0.8rem; margin-top:1rem; flex-wrap:wrap; }
+    /* ── Instruments ── */
+    .instr-row { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:0.6rem; margin-top:1rem; }
+    @media (max-width: 1200px) { .instr-row { grid-template-columns:repeat(3, minmax(0,1fr)); } }
     .instr-item {
-      flex:1; min-width:120px; background:#0a120a; border:1px solid #1a2a1a; border-radius:8px;
-      padding:0.65rem 0.9rem; text-align:center;
+      background:#0a120a; border:1px solid #1a2a1a; border-radius:8px;
+      padding:0.6rem 0.7rem; text-align:center; min-width:0;
     }
-    .instr-label { font-size:0.62rem; color:#556680; text-transform:uppercase; letter-spacing:0.08rem; display:block; margin-bottom:0.25rem; }
-    .instr-value { font-family:'Courier New',monospace; font-size:1.25rem; font-weight:bold; }
-    .instr-n1 .instr-value { color:#4fc3c7; }
-    .instr-n2 .instr-value { color:#c7c7c7; }
-    .instr-egt .instr-value { color:#f59e0b; }
-    .instr-thrust .instr-value { color:#80cc80; }
+    .instr-label { font-size:0.6rem; color:#556680; text-transform:uppercase; letter-spacing:0.08rem; display:block; margin-bottom:0.2rem; }
+    .instr-value { font-family:'Courier New',monospace; font-size:1.2rem; font-weight:bold; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .instr-sub { display:block; font-family:'Courier New',monospace; font-size:0.7rem; color:#6a7a70; margin-top:0.1rem; white-space:nowrap; }
+    .c-n1 { color:#4fc3c7; } .c-n2 { color:#d0d0d0; } .c-egt { color:#f59e0b; }
+    .c-ff { color:#c084fc; } .c-thr { color:#80cc80; } .c-opr { color:#60b8c8; }
 
-    /* ── Side panel controls ── */
-    .ctrl-group { margin-bottom:1.3rem; }
-    .ctrl-group:last-child { margin-bottom:0; }
+    /* ── Commandes ── */
+    .ctrl-group { margin-bottom:1.2rem; }
     .ctrl-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; }
     .ctrl-label { font-size:0.82rem; color:#c8c4bc; }
     .ctrl-live-val { font-family:'Courier New',monospace; font-size:0.85rem; color:#80cc80; font-weight:bold; }
 
     input[type="range"] {
-      -webkit-appearance:none; width:100%; height:6px; border-radius:3px;
-      background:#1a2a1a; outline:none; margin:0.3rem 0;
+      -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px;
+      background:#1a2a1a; outline:none; margin:0.3rem 0; padding:0; border:none;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
@@ -94,12 +108,18 @@
       width:18px; height:18px; border-radius:50%; background:#80cc80; cursor:pointer;
       border:2px solid #0a0f0a; box-shadow:0 0 6px rgba(128,204,128,0.5);
     }
+    .presets { display:grid; grid-template-columns:repeat(3,1fr); gap:0.4rem; margin-top:0.6rem; }
+    .presets button {
+      width:100%; padding:0.4rem 0.2rem; font-size:0.72rem; font-weight:bold; letter-spacing:0.03rem;
+      background:transparent; border:1px solid #2a3a2a; color:#a89f94; border-radius:6px;
+    }
+    .presets button:hover { border-color:#80cc80; color:#80cc80; background:transparent; }
 
-    .switch-row { display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #14201a; }
+    .switch-row { display:flex; align-items:center; justify-content:space-between; padding:0.45rem 0; border-bottom:1px solid #14201a; }
     .switch-row:last-child { border-bottom:none; }
     .switch-label { font-size:0.82rem; color:#c8c4bc; }
     .switch { position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0; }
-    .switch input { opacity:0; width:0; height:0; }
+    .switch input { opacity:0; width:0; height:0; margin:0; padding:0; }
     .switch-slider {
       position:absolute; cursor:pointer; inset:0; background:#1e2e1e; border:1px solid #2a3a2a;
       border-radius:22px; transition:background 0.2s;
@@ -110,30 +130,43 @@
     }
     .switch input:checked + .switch-slider { background:rgba(128,204,128,0.25); border-color:#80cc80; }
     .switch input:checked + .switch-slider::before { transform:translateX(17px); background:#80cc80; }
+    .switch input:focus-visible + .switch-slider { outline:2px solid #80cc80; outline-offset:2px; }
 
     #reset-view {
       width:auto; padding:0.5rem 1rem; font-size:0.8rem; background:transparent;
-      border:1px solid #2a3a2a; color:#a89f94; margin-top:0.4rem;
+      border:1px solid #2a3a2a; color:#a89f94; margin-top:0.6rem;
     }
     #reset-view:hover { border-color:#80cc80; color:#80cc80; background:transparent; }
 
-    /* ── Info box ── */
+    /* ── Pièce sélectionnée ── */
     #part-info { min-height:5.5rem; }
     #part-info .pi-title { font-size:0.92rem; font-weight:bold; color:#f59e0b; margin-bottom:0.35rem; }
     #part-info .pi-desc { font-size:0.8rem; color:#a89f94; line-height:1.5; }
+    #part-info .pi-live {
+      margin-top:0.6rem; font-family:'Courier New',monospace; font-size:0.78rem; color:#80cc80;
+      background:#0a120a; border:1px solid #1a2a1a; border-radius:6px; padding:0.4rem 0.6rem;
+    }
     #part-info .pi-placeholder { font-size:0.8rem; color:#556655; font-style:italic; }
 
-    /* ── Legend ── */
-    .legend { display:flex; flex-direction:column; gap:0.5rem; }
+    /* ── Légende ── */
+    .legend { display:flex; flex-direction:column; gap:0.45rem; transition:opacity 0.2s; }
+    .legend.legend-dim { opacity:0.4; }
     .legend-item { display:flex; align-items:center; gap:0.55rem; font-size:0.78rem; color:#c8c4bc; }
     .legend-dot { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+    .legend-hint { font-size:0.7rem; color:#556680; margin-top:0.6rem; }
 
-    .turbo-note { font-size:0.74rem; color:#556680; text-align:center; margin-top:0.4rem; }
+    /* ── Fiche technique ── */
+    .spec-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+    .spec-table td { padding:0.4rem 0; border-bottom:1px solid #14201a; vertical-align:top; }
+    .spec-table tr:last-child td { border-bottom:none; }
+    .spec-table td:first-child { color:#8a9a90; padding-right:0.8rem; }
+    .spec-table td:last-child { color:#f0ede6; text-align:right; font-family:'Courier New',monospace; font-variant-numeric:tabular-nums; }
+
+    .turbo-note { font-size:0.74rem; color:#556680; text-align:center; margin-top:0.4rem; line-height:1.6; }
   </style>
 </head>
 <body>
 
-  <!-- ── Top bar ── -->
   <div class="top-bar" data-topbar>
     <span class="top-bar-title"><span>Turboréacteur</span> Simulation 3D</span>
     <a href="informatique.html" class="top-bar-back">&#8592; Informatique</a>
@@ -143,43 +176,71 @@
 
     <div class="turbo-header">
       <h1>Simulation de turboréacteur</h1>
-      <p>Turbofan double-corps typique — coupe interactive, régime moteur et débit d'air</p>
+      <p>Turbofan double-corps à flux séparés — modèle de référence : CFM56-7B (Boeing 737NG)</p>
     </div>
 
     <div class="turbo-layout">
 
-      <!-- ── Colonne principale : viewport 3D + instruments ── -->
       <div>
         <div class="panel">
           <h2>Vue moteur</h2>
           <div id="engine-viewport">
             <canvas id="engine-canvas"></canvas>
+            <div id="label-layer"></div>
             <div class="viewport-loading" id="viewport-loading">Chargement du moteur 3D…</div>
             <div class="viewport-hint">Glisser pour orbiter · molette pour zoomer · cliquer une pièce pour l'identifier</div>
           </div>
 
           <div class="instr-row">
-            <div class="instr-item instr-n1">
-              <span class="instr-label">N1 (soufflante)</span>
-              <span class="instr-value" id="instr-n1">— %</span>
+            <div class="instr-item">
+              <span class="instr-label">N1</span>
+              <span class="instr-value c-n1" id="instr-n1">— %</span>
+              <span class="instr-sub" id="instr-n1rpm">— tr/min</span>
             </div>
-            <div class="instr-item instr-n2">
-              <span class="instr-label">N2 (HP)</span>
-              <span class="instr-value" id="instr-n2">— %</span>
+            <div class="instr-item">
+              <span class="instr-label">N2</span>
+              <span class="instr-value c-n2" id="instr-n2">— %</span>
+              <span class="instr-sub" id="instr-n2rpm">— tr/min</span>
             </div>
-            <div class="instr-item instr-egt">
+            <div class="instr-item">
               <span class="instr-label">EGT</span>
-              <span class="instr-value" id="instr-egt">— °C</span>
+              <span class="instr-value c-egt" id="instr-egt">— °C</span>
+              <span class="instr-sub">limite 950 °C</span>
             </div>
-            <div class="instr-item instr-thrust">
+            <div class="instr-item">
+              <span class="instr-label">Débit carburant</span>
+              <span class="instr-value c-ff" id="instr-ff">—</span>
+              <span class="instr-sub">total</span>
+            </div>
+            <div class="instr-item">
               <span class="instr-label">Poussée</span>
-              <span class="instr-value" id="instr-thrust">— %</span>
+              <span class="instr-value c-thr" id="instr-thrust">— kN</span>
+              <span class="instr-sub">max 121,4 kN</span>
+            </div>
+            <div class="instr-item">
+              <span class="instr-label">Taux de compr.</span>
+              <span class="instr-value c-opr" id="instr-opr">—</span>
+              <span class="instr-sub">global (OPR)</span>
             </div>
           </div>
         </div>
+
+        <div class="panel">
+          <h2>Fiche technique — CFM56-7B27</h2>
+          <table class="spec-table">
+            <tr><td>Architecture</td><td>Double-corps, flux séparés</td></tr>
+            <tr><td>Poussée max. au décollage</td><td>121,4 kN (27 300 lbf)</td></tr>
+            <tr><td>Taux de dilution</td><td>5,1 : 1</td></tr>
+            <tr><td>Taux de compression global</td><td>32,8</td></tr>
+            <tr><td>Diamètre de soufflante</td><td>1,55 m (61 po)</td></tr>
+            <tr><td>Étages</td><td>1 fan + 3 booster · 9 HPC · 1 HPT · 4 LPT</td></tr>
+            <tr><td>Chambre de combustion</td><td>Annulaire, 20 injecteurs</td></tr>
+            <tr><td>Régimes à 100 %</td><td>N1 5 380 · N2 14 460 tr/min</td></tr>
+            <tr><td>Masse à sec</td><td>≈ 2 370 kg</td></tr>
+          </table>
+        </div>
       </div>
 
-      <!-- ── Colonne latérale : contrôles ── -->
       <div>
         <div class="panel">
           <h2>Commandes</h2>
@@ -187,9 +248,14 @@
           <div class="ctrl-group">
             <div class="ctrl-label-row">
               <span class="ctrl-label">Manette des gaz</span>
-              <span class="ctrl-live-val" id="throttle-val">35 %</span>
+              <span class="ctrl-live-val" id="throttle-val">Ralenti</span>
             </div>
-            <input type="range" id="throttle" min="0" max="100" value="35">
+            <input type="range" id="throttle" min="0" max="100" value="0" aria-label="Manette des gaz">
+            <div class="presets">
+              <button data-preset="0">Ralenti</button>
+              <button data-preset="80">Montée</button>
+              <button data-preset="100">Décollage</button>
+            </div>
           </div>
 
           <div class="ctrl-group">
@@ -200,6 +266,14 @@
             <div class="switch-row">
               <span class="switch-label">Débit d'air</span>
               <label class="switch"><input type="checkbox" id="toggle-flow" checked><span class="switch-slider"></span></label>
+            </div>
+            <div class="switch-row">
+              <span class="switch-label">Étiquettes</span>
+              <label class="switch"><input type="checkbox" id="toggle-labels" checked><span class="switch-slider"></span></label>
+            </div>
+            <div class="switch-row">
+              <span class="switch-label">Couleurs par section</span>
+              <label class="switch"><input type="checkbox" id="toggle-colors"><span class="switch-slider"></span></label>
             </div>
             <div class="switch-row">
               <span class="switch-label">Rotation automatique</span>
@@ -213,26 +287,32 @@
         <div class="panel">
           <h2>Pièce sélectionnée</h2>
           <div id="part-info">
-            <p class="pi-placeholder">Cliquez sur une pièce du moteur pour afficher sa description.</p>
+            <p class="pi-placeholder">Cliquez sur une pièce du moteur pour afficher sa description et ses valeurs en direct.</p>
           </div>
         </div>
 
         <div class="panel">
-          <h2>Légende</h2>
-          <div class="legend">
-            <div class="legend-item"><span class="legend-dot" style="background:#4fc3c7"></span>Soufflante + booster (arbre N1)</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#9a9a9a"></span>Compresseur HP (arbre N2)</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#ff5522"></span>Chambre de combustion</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#e85d3f"></span>Turbine HP (arbre N2)</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#f0a830"></span>Turbine BP (arbre N1)</div>
-            <div class="legend-item"><span class="legend-dot" style="background:#8fb8d0"></span>Nacelle / carénages</div>
+          <h2>Couleurs par section</h2>
+          <div class="legend legend-dim" id="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#4fc3c7"></span>Soufflante + booster (N1)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#b4b4b4"></span>Compresseur HP (N2)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ff7a3a"></span>Chambre de combustion</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e85d3f"></span>Turbine HP (N2)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f0a830"></span>Turbine BP (N1)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#b8c4d0"></span>Arbre N1</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#d4af37"></span>Arbre N2</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#8fb8d0"></span>Nacelle / capots</div>
           </div>
+          <p class="legend-hint">Activez « Couleurs par section » pour remplacer les teintes métalliques réelles.</p>
         </div>
       </div>
 
     </div>
 
-    <p class="turbo-note">Modèle éducatif stylisé d'un turbofan double-corps typique — proportions, températures et régimes sont illustratifs.</p>
+    <p class="turbo-note">
+      Géométrie et régimes basés sur les données publiques du CFM56-7B. Le nombre d'aubes des étages compresseur et turbine est réduit
+      pour la fluidité, et la rotation affichée est ralentie ×256 en conservant le rapport réel N2/N1.
+    </p>
 
   </div>
 
