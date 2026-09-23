@@ -44,7 +44,6 @@
     '<a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>' +
     '<a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>' +
     '<button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>' +
-    '<a id="btn-construction" href="beta/dashboard.html" class="hbg-item" onclick="closeHamburger()">🚧 En construction</a>' +
     '<div class="hbg-sep" id="admin-sep"></div>' +
     '<div id="logoutBtn" class="hbg-item" role="button" tabindex="0">↩ Déconnexion</div>';
 
@@ -73,9 +72,6 @@
         window.updateToggleBtn(badgeBtn, localStorage.getItem('versionBadgeHidden') === 'true');
       }
     }
-
-    const constructionBtn = document.getElementById('btn-construction');
-    if (constructionBtn) constructionBtn.style.display = isAdmin ? 'flex' : 'none';
 
     const sep = document.getElementById('admin-sep');
     if (sep) sep.style.display = isAdmin ? 'block' : 'none';

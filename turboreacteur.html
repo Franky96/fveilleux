@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turboréacteur 3D — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pT = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pT.includes('turboreacteur') && !_pT.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+  <style>
+    body { flex-direction:column; align-items:stretch; justify-content:flex-start; }
+
+    /* ── Top bar (identique aux autres outils) ── */
+    .top-bar {
+      width:100%; background:#0a0f0a; border-bottom:2px solid #2a3a2a;
+      display:flex; align-items:center; gap:1rem; padding:0.7rem 1.5rem;
+      box-sizing:border-box; flex-shrink:0; flex-wrap:wrap;
+    }
+    .top-bar-title { font-size:1rem; font-weight:bold; color:#f0ede6; white-space:nowrap; }
+    .top-bar-title span { color:#80cc80; }
+    .top-bar-back {
+      display:inline-flex; align-items:center; gap:0.4rem; color:#80cc80;
+      text-decoration:none; font-size:0.85rem; border:1px solid #2a3a2a;
+      border-radius:6px; padding:0.3rem 0.8rem; white-space:nowrap;
+      transition:border-color 0.2s; flex-shrink:0;
+    }
+    .top-bar-back:hover { border-color:#80cc80; }
+    .top-bar-divider { width:1px; height:24px; background:#2a3a2a; flex-shrink:0; }
+
+    /* ── Layout ── */
+    .turbo-container { max-width:1440px; margin:0 auto; padding:2rem 1.5rem 3rem; color:#f0ede6; width:100%; }
+    .turbo-header { text-align:center; margin-bottom:1.6rem; }
+    .turbo-header h1 { font-size:2rem; color:#80cc80; margin-bottom:0.3rem; }
+    .turbo-header p { color:#a89f94; font-size:0.93rem; }
+
+    .panel { background:#040904; border:1px solid #1a2a1a; border-radius:12px; padding:1.4rem 1.5rem; margin-bottom:1.5rem; }
+    .panel h2 { color:#80cc80; font-size:0.8rem; margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1rem; }
+
+    .turbo-layout { display:grid; grid-template-columns: 1fr 320px; gap:1.4rem; align-items:start; }
+    @media (max-width: 940px) { .turbo-layout { grid-template-columns: 1fr; } }
+
+    /* ── Viewport ── */
+    #engine-viewport {
+      position:relative; width:100%; height:56vh; min-height:400px; max-height:620px;
+      border-radius:10px; overflow:hidden; background:radial-gradient(ellipse at center, #0c1416 0%, #05080a 75%);
+      border:1px solid #16211a; cursor:grab;
+    }
+    #engine-viewport:active { cursor:grabbing; }
+    #engine-canvas { width:100%; height:100%; display:block; }
+    .viewport-hint {
+      position:absolute; left:0.9rem; bottom:0.7rem; font-size:0.72rem; color:#5a7a6a;
+      background:rgba(4,9,4,0.55); padding:0.3rem 0.6rem; border-radius:6px; pointer-events:none;
+      letter-spacing:0.02rem;
+    }
+    .viewport-loading {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      color:#556655; font-size:0.85rem; letter-spacing:0.05rem;
+    }
+
+    /* ── Instrument strip ── */
+    .instr-row { display:flex; gap:0.8rem; margin-top:1rem; flex-wrap:wrap; }
+    .instr-item {
+      flex:1; min-width:120px; background:#0a120a; border:1px solid #1a2a1a; border-radius:8px;
+      padding:0.65rem 0.9rem; text-align:center;
+    }
+    .instr-label { font-size:0.62rem; color:#556680; text-transform:uppercase; letter-spacing:0.08rem; display:block; margin-bottom:0.25rem; }
+    .instr-value { font-family:'Courier New',monospace; font-size:1.25rem; font-weight:bold; }
+    .instr-n1 .instr-value { color:#4fc3c7; }
+    .instr-n2 .instr-value { color:#c7c7c7; }
+    .instr-egt .instr-value { color:#f59e0b; }
+    .instr-thrust .instr-value { color:#80cc80; }
+
+    /* ── Side panel controls ── */
+    .ctrl-group { margin-bottom:1.3rem; }
+    .ctrl-group:last-child { margin-bottom:0; }
+    .ctrl-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; }
+    .ctrl-label { font-size:0.82rem; color:#c8c4bc; }
+    .ctrl-live-val { font-family:'Courier New',monospace; font-size:0.85rem; color:#80cc80; font-weight:bold; }
+
+    input[type="range"] {
+      -webkit-appearance:none; width:100%; height:6px; border-radius:3px;
+      background:#1a2a1a; outline:none; margin:0.3rem 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+      background:#80cc80; cursor:pointer; border:2px solid #0a0f0a; box-shadow:0 0 6px rgba(128,204,128,0.5);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width:18px; height:18px; border-radius:50%; background:#80cc80; cursor:pointer;
+      border:2px solid #0a0f0a; box-shadow:0 0 6px rgba(128,204,128,0.5);
+    }
+
+    .switch-row { display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid #14201a; }
+    .switch-row:last-child { border-bottom:none; }
+    .switch-label { font-size:0.82rem; color:#c8c4bc; }
+    .switch { position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0; }
+    .switch input { opacity:0; width:0; height:0; }
+    .switch-slider {
+      position:absolute; cursor:pointer; inset:0; background:#1e2e1e; border:1px solid #2a3a2a;
+      border-radius:22px; transition:background 0.2s;
+    }
+    .switch-slider::before {
+      content:""; position:absolute; width:14px; height:14px; left:2px; top:2px;
+      background:#66806a; border-radius:50%; transition:transform 0.2s, background 0.2s;
+    }
+    .switch input:checked + .switch-slider { background:rgba(128,204,128,0.25); border-color:#80cc80; }
+    .switch input:checked + .switch-slider::before { transform:translateX(17px); background:#80cc80; }
+
+    #reset-view {
+      width:auto; padding:0.5rem 1rem; font-size:0.8rem; background:transparent;
+      border:1px solid #2a3a2a; color:#a89f94; margin-top:0.4rem;
+    }
+    #reset-view:hover { border-color:#80cc80; color:#80cc80; background:transparent; }
+
+    /* ── Info box ── */
+    #part-info { min-height:5.5rem; }
+    #part-info .pi-title { font-size:0.92rem; font-weight:bold; color:#f59e0b; margin-bottom:0.35rem; }
+    #part-info .pi-desc { font-size:0.8rem; color:#a89f94; line-height:1.5; }
+    #part-info .pi-placeholder { font-size:0.8rem; color:#556655; font-style:italic; }
+
+    /* ── Legend ── */
+    .legend { display:flex; flex-direction:column; gap:0.5rem; }
+    .legend-item { display:flex; align-items:center; gap:0.55rem; font-size:0.78rem; color:#c8c4bc; }
+    .legend-dot { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+
+    .turbo-note { font-size:0.74rem; color:#556680; text-align:center; margin-top:0.4rem; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Top bar ── -->
+  <div class="top-bar" data-topbar>
+    <span class="top-bar-title"><span>Turboréacteur</span> Simulation 3D</span>
+    <a href="informatique.html" class="top-bar-back">&#8592; Informatique</a>
+  </div>
+
+  <div class="turbo-container">
+
+    <div class="turbo-header">
+      <h1>Simulation de turboréacteur</h1>
+      <p>Turbofan double-corps typique — coupe interactive, régime moteur et débit d'air</p>
+    </div>
+
+    <div class="turbo-layout">
+
+      <!-- ── Colonne principale : viewport 3D + instruments ── -->
+      <div>
+        <div class="panel">
+          <h2>Vue moteur</h2>
+          <div id="engine-viewport">
+            <canvas id="engine-canvas"></canvas>
+            <div class="viewport-loading" id="viewport-loading">Chargement du moteur 3D…</div>
+            <div class="viewport-hint">Glisser pour orbiter · molette pour zoomer · cliquer une pièce pour l'identifier</div>
+          </div>
+
+          <div class="instr-row">
+            <div class="instr-item instr-n1">
+              <span class="instr-label">N1 (soufflante)</span>
+              <span class="instr-value" id="instr-n1">— %</span>
+            </div>
+            <div class="instr-item instr-n2">
+              <span class="instr-label">N2 (HP)</span>
+              <span class="instr-value" id="instr-n2">— %</span>
+            </div>
+            <div class="instr-item instr-egt">
+              <span class="instr-label">EGT</span>
+              <span class="instr-value" id="instr-egt">— °C</span>
+            </div>
+            <div class="instr-item instr-thrust">
+              <span class="instr-label">Poussée</span>
+              <span class="instr-value" id="instr-thrust">— %</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Colonne latérale : contrôles ── -->
+      <div>
+        <div class="panel">
+          <h2>Commandes</h2>
+
+          <div class="ctrl-group">
+            <div class="ctrl-label-row">
+              <span class="ctrl-label">Manette des gaz</span>
+              <span class="ctrl-live-val" id="throttle-val">35 %</span>
+            </div>
+            <input type="range" id="throttle" min="0" max="100" value="35">
+          </div>
+
+          <div class="ctrl-group">
+            <div class="switch-row">
+              <span class="switch-label">Vue en coupe</span>
+              <label class="switch"><input type="checkbox" id="toggle-cutaway" checked><span class="switch-slider"></span></label>
+            </div>
+            <div class="switch-row">
+              <span class="switch-label">Débit d'air</span>
+              <label class="switch"><input type="checkbox" id="toggle-flow" checked><span class="switch-slider"></span></label>
+            </div>
+            <div class="switch-row">
+              <span class="switch-label">Rotation automatique</span>
+              <label class="switch"><input type="checkbox" id="toggle-autorotate"><span class="switch-slider"></span></label>
+            </div>
+          </div>
+
+          <button id="reset-view">Réinitialiser la vue</button>
+        </div>
+
+        <div class="panel">
+          <h2>Pièce sélectionnée</h2>
+          <div id="part-info">
+            <p class="pi-placeholder">Cliquez sur une pièce du moteur pour afficher sa description.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Légende</h2>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#4fc3c7"></span>Soufflante + booster (arbre N1)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#9a9a9a"></span>Compresseur HP (arbre N2)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ff5522"></span>Chambre de combustion</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e85d3f"></span>Turbine HP (arbre N2)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f0a830"></span>Turbine BP (arbre N1)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#8fb8d0"></span>Nacelle / carénages</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="turbo-note">Modèle éducatif stylisé d'un turbofan double-corps typique — proportions, températures et régimes sont illustratifs.</p>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="turboreacteur.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script src="page-controls.js"></script>
+</body>
+</html>

@@ -45,8 +45,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     badgeBtn.style.display = isAdmin ? 'flex' : 'none';
     if (isAdmin && window.updateToggleBtn) window.updateToggleBtn(badgeBtn, localStorage.getItem('versionBadgeHidden') === 'true');
   }
-  const constructionBtn = document.getElementById('btn-construction');
-  if (constructionBtn) constructionBtn.style.display = isAdmin ? 'flex' : 'none';
   const adminSep = document.getElementById('admin-sep');
   if (adminSep) adminSep.style.display = isAdmin ? 'block' : 'none';
 
