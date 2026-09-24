@@ -1660,7 +1660,8 @@ function setMode(m) {
   for (const k of ['ext', 'cut', 'half', 'xray']) $('m-' + k).setAttribute('aria-pressed', k === m);
   for (const s of shells) {
     const sec = m === 'cut' || m === 'half';
-    s.full.visible = s.solid || !sec; s.cut.visible = !s.solid && m === 'cut'; s.half.visible = !s.solid && m === 'half';
+    const whole = s.solid || s.keep;
+    s.full.visible = whole || !sec; s.cut.visible = !whole && m === 'cut'; s.half.visible = !whole && m === 'half';
   }
   applyGhost();
   for (const o of autoHide) o.visible = !((m === 'cut' && o.userData.hq) || (m === 'half' && o.userData.hh));
@@ -2026,7 +2027,7 @@ function pick(ev) {
     while (o) { if (!o.visible) { vis = false; break; } o = o.parent; }
     if (!vis) continue;
     if (mode === 'xray' && h.object.userData.shell && h.object.userData.shell.casing) continue;
-    if (clippedAway(h.point)) continue;
+    if (h.object.material && h.object.material.clippingPlanes && clippedAway(h.point)) continue;
     return h.object.userData.part;
   }
   return null;
@@ -2324,6 +2325,8 @@ new ResizeObserver(() => { sizeGauges(); sizeTrend(); }).observe(document.queryS
    sont tranchées au même endroit à chaque image, donc la coupe reste figée pendant la rotation.
    Même secteur que les carters : Coupe ¼ retire x > 0 et z > 0, Moitié retire z > 0 (repère moteur). */
 let cutAll = false;
+// Pièces jamais coupées, quel que soit le mode : arbres, roulements et engrenages (comme sur un moteur écorché de musée)
+const KEEP_WHOLE = new Set(['propshaft', 'ptshaft', 'ngshaft', 'bearings', 'gear1', 'gear2', 'agbgears']);
 const CLIP_Q = [new THREE.Plane(), new THREE.Plane()], CLIP_H = [new THREE.Plane()];
 const _clipN = new THREE.Vector3();
 let cutMats = null;
@@ -2366,7 +2369,7 @@ const autoHide = [];
   const cand = new Set([...pickables.filter(o => o.isMesh && !o.isInstancedMesh && !o.userData.shell), ...cutHide]);
   for (const o of cand) {
     let q = o.parent, rot = false; while (q) { if (rotors.includes(q)) { rot = true; break; } q = q.parent; }
-    if (rot || cutHide.includes(o.parent)) continue;
+    if (rot || cutHide.includes(o.parent) || KEEP_WHOLE.has(o.userData.part)) continue;
     if (o.isMesh) { o.geometry.computeBoundingSphere(); v.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld); } else o.getWorldPosition(v);
     eng.worldToLocal(v);
     const r = Math.hypot(v.x, v.z) / S, phi = Math.atan2(v.x, v.z), p2 = ((phi % TAU) + TAU) % TAU;
@@ -2375,7 +2378,18 @@ const autoHide = [];
     autoHide.push(o);
   }
 }
-cutMats = [...new Set(pickables.filter(o => o.isMesh).flatMap(o => Array.isArray(o.material) ? o.material : [o.material]))];
+for (const s of shells) if (KEEP_WHOLE.has(s.full.userData.part)) s.keep = true;
+{
+  // une pièce gardée entière qui partage son matériau avec une pièce coupée reçoit sa propre copie
+  const cutUsed = new Set(pickables.filter(o => o.isMesh && !KEEP_WHOLE.has(o.userData.part)).flatMap(o => [].concat(o.material)));
+  const clones = new Map();
+  for (const o of pickables) {
+    if (!o.isMesh || !KEEP_WHOLE.has(o.userData.part) || Array.isArray(o.material) || !cutUsed.has(o.material)) continue;
+    if (!clones.has(o.material)) { const c = o.material.clone(); clones.set(o.material, c); (partMats[o.userData.part] ||= []).push(c); }
+    o.material = clones.get(o.material);
+  }
+}
+cutMats = [...new Set(pickables.filter(o => o.isMesh && !KEEP_WHOLE.has(o.userData.part)).flatMap(o => [].concat(o.material)))];
 idleState(); setMode('ext'); syncLabels();
 logE('Moteur stabilisé au ralenti sol (52 % Ng). Utilisez « Arrêt auto » puis « Démarrage auto », ou les commandes manuelles.', '');
 
