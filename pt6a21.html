@@ -170,6 +170,24 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 .back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
 .back:hover{border-color:var(--accent)}
+
+/* ---------- écrans ultra-larges (21:9, 32:9) : vue 3D | commandes | instruments sur une seule hauteur d'écran ---------- */
+@media (min-width:1800px) and (min-aspect-ratio:2/1){
+  body{padding-inline:24px}
+  .wrap{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) 360px clamp(440px,21vw,600px);
+    grid-template-areas:"back back back" "top top top" "vp side panel" "lower lower lower" "docs docs docs";column-gap:14px;align-items:start}
+  .wrap>.back{grid-area:back;justify-self:start}
+  .wrap>.top{grid-area:top}
+  .app{display:contents}
+  .app>.viewport{grid-area:vp;margin-top:14px;height:calc(100vh - 190px);max-height:none;min-height:560px}
+  .app>.viewport:fullscreen{height:100%;margin:0}
+  .app>.side{grid-area:side;margin-top:14px}
+  .panel{grid-area:panel;grid-template-columns:1fr;align-content:start}
+  .gauges{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gauges canvas:last-child{grid-column:2}
+  .lower{grid-area:lower}
+  .docs{grid-area:docs}
+}
 </style>
 </head>
 <body>
