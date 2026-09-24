@@ -1005,7 +1005,8 @@ platformRow(3.9, 0.95, 41, 0.14, mPT, 'pt', nfRot, 30.2);
   bladeRow(g, 41, mPT, 'pt', nfRot, 30.2);
 }
 cyl(1.0, 13.6, 29.8, mShaftPT, 'ptshaft', nfRot, 24);
-cyl(0.62, 31.1, 31.7, mShaftPT, 'ptshaft', nfRot, 6);
+// turbine libre : l'arbre Nf s'arrête avant l'arbre Ng, les deux arbres ne se touchent pas
+cyl(0.62, 31.1, 31.2, mShaftPT, 'ptshaft', nfRot, 24);
 // arbre à travers l'alésage du disque de turbine de puissance (visible dans la coupe)
 cyl(0.88, 29.8, 31.1, mShaftPT, 'ptshaft', nfRot, 24);
 bearing(1.02, 1.95, 28.3, 0.7, 14, modPower, true, 'N° 3 · rouleaux');
@@ -1193,7 +1194,7 @@ shell([[2.5, 31.95], [2.7, 31.95], [2.7, 32.3], [2.5, 32.3]], mCT, 'ct', ngRot, 
 shell([[2.5, 33.3], [2.7, 33.3], [2.7, 33.65], [2.5, 33.65]], mCT, 'ct', ngRot, 48);
 bladeRow(bladeGeo({ r0: 4.25, r1: 6.05, chord: 0.85, st0: 0.8, st1: 1.05, camber: 0.24, thick: 0.18 }), 58, mCT, 'ct', ngRot, 32.8);
 platformRow(4.35, 0.95, 58, 0.12, mCT, 'ct', ngRot, 32.8);
-cyl(0.55, 31.3, 31.85, mShaftCT, 'ngshaft', ngRot, 6);
+cyl(0.55, 31.55, 31.85, mShaftCT, 'ngshaft', ngRot, 24);
 // arbre à travers l'alésage du disque de turbine compresseur, puis du rouet et des disques axiaux (visible dans la coupe)
 cyl(0.53, 31.85, 33.3, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(0.88, 39.0, 45.6, mShaftCT, 'ngshaft', ngRot, 24);
