@@ -672,7 +672,8 @@ function bladeGeo({ r0, r1, chord, tipChord = chord, thick = 0.1, st0, st1, camb
     const env = Math.sqrt(Math.max(0, 1 - 4 * v * v));
     const t = (w > 0 ? 1 : -1) * thick * c * 0.5 * (0.15 + 0.85 * env) + camber * c * (1 - 4 * v * v) * 0.5;
     const a = v * c, s = lerp(st0, st1, u);
-    // composante tangentielle inversée : aubes orientées pour Ng antihoraire / Nf horaire vus de l'arrière (AMM 72-50-02, 72-00-00)
+    // composante tangentielle inversée : vu de l'arrière, st > 0 décale le bord de fuite vers l'horaire
+    // et camber > 0 tourne le creux (intrados) vers l'antihoraire (Ng antihoraire, Nf horaire : AMM 72-50-02, 72-00-00)
     p.setXYZ(i, r * S, (a * Math.cos(s) - t * Math.sin(s)) * S, -(a * Math.sin(s) + t * Math.cos(s)) * S);
   }
   const ix = g.index.array; // le miroir inverse l'ordre des sommets : on rétablit l'orientation des faces
@@ -988,7 +989,8 @@ for (const h of [3, 9]) {
   modPower.add(hold); if (Math.cos(phi) > 0.5) cutHide.push(hold);
 }
 // distributeur TP (19 aubes) + déflecteur inter-étages + viroles à léchettes
-const ptStatorGeo = bladeGeo({ r0: 4.25, r1: 6.5, chord: 1.0, st0: 0.95, st1: 0.75, camber: 0.2, thick: 0.16 });
+// distributeur TP : gaz reçu presque axial, rejeté vers l'horaire (sens de la turbine de puissance) ; creux vers l'horaire
+const ptStatorGeo = bladeGeo({ r0: 4.25, r1: 6.5, chord: 1.0, st0: 0.72, st1: 0.66, camber: -0.22, thick: 0.16 });
 bladeRow(ptStatorGeo, 19, mPTS, 'ptstator', modPower, 31.35);
 shell([[4.2, 30.95], [4.2, 31.8]], mPTS, 'ptstator', modPower, 72);
 shell([[6.5, 30.9], [6.75, 31.9]], mPTS, 'ptstator', modPower, 72);
@@ -1003,7 +1005,8 @@ ringShell(6.88, 0.09, 31.75, mT5, 't5', modPower);
 const nfRot = new THREE.Group(); modPower.add(nfRot);
 shell(diskProfile(0.9, 30.2, 1.9, 1.8, 3.2, 0.5, 3.85, 0.9), mPT, 'pt', nfRot, 72);
 shell([[2.35, 29.25], [2.55, 29.25], [2.55, 29.55], [2.35, 29.55]], mPT, 'pt', nfRot, 48);
-bladeRow(bladeGeo({ r0: 3.8, r1: 6.35, chord: 0.8, st0: -0.55, st1: -0.9, camber: -0.22, thick: 0.16 }), 41, mPT, 'pt', nfRot, 30.2);
+// rotor TP (horaire) : renvoie le gaz vers l'antihoraire ; creux et bord de fuite vers l'antihoraire
+bladeRow(bladeGeo({ r0: 3.8, r1: 6.35, chord: 0.8, st0: -0.3, st1: -0.45, camber: 0.32, thick: 0.16 }), 41, mPT, 'pt', nfRot, 30.2);
 platformRow(3.9, 0.95, 41, 0.14, mPT, 'pt', nfRot, 30.2);
 { // talons crantés : 41 segments séparés par une encoche
   const g = new THREE.LatheGeometry([[6.35, 29.9], [6.48, 29.9], [6.48, 30.5], [6.35, 30.5], [6.35, 29.9]].map(([r, z]) => new THREE.Vector2(r * S, AY(z) - AY(30.2))), 3, 0, TAU / 41 * 0.9);
@@ -1055,7 +1058,8 @@ shell([[7.9, 28.3], [7.6, 29.5], [7.4, 33.0], [7.5, 36.0]], flameMat2, null, mod
 const flameLights = [];
 for (const h of [2, 6, 10]) { const l = new THREE.PointLight(0xff7a30, 0, 1.4, 2); l.position.copy(P(7.85, 31.5, clockPhi(h))); modGG.add(l); flameLights.push(l); }
 // distributeur TC (29 aubes classifiées) + plaque-frein et 16 boulons
-bladeRow(bladeGeo({ r0: 4.45, r1: 6.2, chord: 1.05, st0: -1.0, st1: -0.85, camber: -0.22, thick: 0.2 }), 29, mCTS, 'ctvane', modGG, 34.3);
+// distributeur TC : bord d'attaque parallèle à l'axe (OM 72-50-01), gaz rejeté vers l'antihoraire ; creux vers l'antihoraire
+bladeRow(bladeGeo({ r0: 4.45, r1: 6.2, chord: 1.05, st0: -0.62, st1: -0.66, camber: 0.3, thick: 0.2 }), 29, mCTS, 'ctvane', modGG, 34.3);
 shell([[4.45, 33.8], [4.45, 34.85]], mCTS, 'ctvane', modGG, 72);
 shell([[6.2, 33.8], [6.2, 34.85]], mCTS, 'ctvane', modGG, 72);
 shell([[4.45, 34.85], [4.45, 35.3], [3.4, 35.4], [3.4, 35.7]], mCTS, 'ctvane', modGG, 72);
@@ -1108,7 +1112,8 @@ for (const z of [30.5, 36.5]) { radialCyl(9.6, 10.7, z, clockPhi(6), 0.38, mDrai
   const coll = new THREE.TorusGeometry(0.24 * S, 0.06 * S, 8, 20); coll.rotateY(Math.PI / 2); coll.translate(5.8 * S, 0, 0);
   bladeRow(coll, 21, mDiff, 'diffuser', modGG, 39.3, 0.06 - Math.PI / 2); // à l'entrée des tubes (angle de révolution 0,06)
   // aubes redresseuses en sortie des tubes (annulaire autour de la chambre)
-  bladeRow(bladeGeo({ r0: 8.75, r1: 9.46, chord: 0.7, st0: 0.55, st1: 0.5, camber: 0.25, thick: 0.1 }), 42, mDiff, 'diffuser', modGG, 35.7);
+  // redressent le tourbillon antihoraire laissé par les tubes (comme les stators du compresseur) ; creux vers l'horaire
+  bladeRow(bladeGeo({ r0: 8.75, r1: 9.46, chord: 0.7, st0: -0.5, st1: -0.45, camber: -0.22, thick: 0.1 }), 42, mDiff, 'diffuser', modGG, 35.7);
   shell([[5.65, 39.05], [5.9, 39.05], [5.9, 39.6], [5.65, 39.6]], mDiff, 'diffuser', modGG, 96);
 }
 // carénage du compresseur (virole des aubes + couvercle du rouet) et anneaux intérieurs des stators
@@ -1198,7 +1203,8 @@ shell(diskProfile(0.95, 41.85, 1.4, 0.9, 2.1, 0.35, 2.7, 0.55), mAx, 'axial', ng
 shell(diskProfile(0.55, 32.8, 2.0, 1.9, 3.4, 0.5, 4.3, 0.9), mCT, 'ct', ngRot, 72);
 shell([[2.5, 31.95], [2.7, 31.95], [2.7, 32.3], [2.5, 32.3]], mCT, 'ct', ngRot, 48);
 shell([[2.5, 33.3], [2.7, 33.3], [2.7, 33.65], [2.5, 33.65]], mCT, 'ct', ngRot, 48);
-bladeRow(bladeGeo({ r0: 4.25, r1: 6.05, chord: 0.85, st0: 0.8, st1: 1.05, camber: 0.24, thick: 0.18 }), 58, mCT, 'ct', ngRot, 32.8);
+// rotor TC (antihoraire) : renvoie le gaz vers l'horaire ; creux et bord de fuite vers l'horaire
+bladeRow(bladeGeo({ r0: 4.25, r1: 6.05, chord: 0.85, st0: 0.38, st1: 0.48, camber: -0.33, thick: 0.18 }), 58, mCT, 'ct', ngRot, 32.8);
 platformRow(4.35, 0.95, 58, 0.12, mCT, 'ct', ngRot, 32.8);
 cyl(0.55, 31.55, 31.85, mShaftCT, 'ngshaft', ngRot, 24);
 // arbre à travers l'alésage du disque de turbine compresseur, puis du rouet et des disques axiaux (visible dans la coupe)
