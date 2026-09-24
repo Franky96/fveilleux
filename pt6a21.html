@@ -1778,6 +1778,32 @@ let selected = null, hovered = null;
 const MANUEL = 'PT6A-21';
 // Page précise d'une référence dans le PDF de son chapitre, ex. 'AMM 72-30-01': 12
 const MANUAL_PAGES = {};
+// Titres des chapitres (tables des matières gentoc.htm de chaque manuel)
+const MANUAL_TITLES = {
+  AMM: {
+    '61-20': "Régulation d'hélice", '70-00': 'Pratiques standard', '71-00': 'Groupe motopropulseur',
+    '72-00': 'Moteur', '72-01': 'Section de puissance', '72-10': 'Réducteur', '72-20': "Entrée d'air",
+    '72-30': 'Compresseur', '72-40': 'Combustion', '72-50': 'Turbines', '72-60': "Boîtier d'accessoires",
+    '73-00': 'Carburant et régulation', '73-10': 'Distribution carburant', '73-20': 'Régulation carburant',
+    '74-00': 'Allumage', '74-10': 'Allumage', '74-20': "Câbles d'allumage", '75-00': 'Air',
+    '75-30': 'Vanne de décharge', '76-00': 'Commandes moteur', '76-10': "Tringlerie d'inversion",
+    '77-20': 'Indication moteur', '79-00': 'Huile', '79-20': "Distribution d'huile",
+  },
+  IPC: { // IPC 3013244, rév. 60
+    '61-20': "Régulation d'hélice", '72-00': 'Moteur', '72-10': 'Réducteur (-27, -28)', '72-11': 'Réducteur (PT6A-21)',
+    '72-20': "Entrée d'air", '72-30': 'Compresseur', '72-40': 'Combustion', '72-50': 'Turbines',
+    '72-60': "Boîtier d'accessoires", '73-10': 'Carburant et régulation', '73-20': 'Carburant et régulation',
+    '74-00': 'Allumage', '74-10': "Système d'allumage", '74-20': "Système d'allumage", '75-30': 'Air',
+    '76-10': 'Commandes moteur', '77-20': 'Indication moteur', '79-20': 'Huile',
+  },
+  OM: { // OM (Overhaul Manual) 3013243, rév. 35
+    '05-00': 'Limites de temps', '61-20': "Régulation d'hélice", '72-00': 'Moteur', '72-01': 'Section de puissance',
+    '72-10': 'Réducteur (-27, -28)', '72-11': 'Réducteur (PT6A-21)', '72-20': "Entrée d'air", '72-30': 'Compresseur',
+    '72-40': 'Combustion', '72-50': 'Turbines', '72-60': "Boîtier d'accessoires", '73-10': 'Carburant et régulation',
+    '73-20': 'Distribution carburant', '74-10': 'Allumage', '74-20': 'Allumage', '75-30': 'Air',
+    '76-10': 'Commandes moteur', '77-20': 'Indication moteur', '79-20': 'Huile',
+  },
+};
 const manualFiles = { AMM: null, IPC: null, OM: null }; // null = en chargement, false = indisponible
 const manualErr = {};
 for (const doc of Object.keys(manualFiles)) {
@@ -1800,35 +1826,56 @@ function manualRefs(ref) {
   }
   return [...out.values()];
 }
+// Pour le PT6A-21, le réducteur est au chapitre 72-11 dans l'IPC et l'OM (72-10 = PT6A-27/-28)
+const MANUAL_ALIASES = { IPC: { '72-10': '72-11' }, OM: { '72-10': '72-11' } };
+const MANUAL_NAMES = { AMM: "Manuel de maintenance (AMM 3013242)", IPC: 'Catalogue illustré des pièces (IPC 3013244)', OM: 'Manuel de révision (OM 3013243)' };
+function resolveManualFile(doc, chap) {
+  const files = manualFiles[doc];
+  if (!files) return null;
+  const alias = (MANUAL_ALIASES[doc] || {})[chap];
+  // alias PT6A-21, fichier exact, introduction (xx-00), sinon premier fichier du même chapitre (ex. 77-00 → 77-20)
+  return [alias && `${alias}.pdf`, `${chap}.pdf`, `${chap.slice(0, 2)}-00.pdf`].find(f => f && files.has(f))
+    || [...files].sort().find(f => f.startsWith(chap.slice(0, 3))) || null;
+}
+function manualButton(doc, file, refs) {
+  const shown = file.replace(/\.pdf$/i, '');
+  const title = (MANUAL_TITLES[doc] || {})[shown];
+  const page = refs.map(x => MANUAL_PAGES[x]).find(Boolean);
+  const el = document.createElement('a');
+  el.className = 'mref';
+  el.href = `api/manuel.php?m=${MANUEL}&doc=${doc}&f=${encodeURIComponent(file)}` + (page ? `#page=${page}` : '');
+  el.target = '_blank'; el.rel = 'noopener';
+  el.textContent = `${doc} ${shown}` + (title ? ` · ${title}` : '') + ' ↗';
+  el.title = `${MANUAL_NAMES[doc]} — ${refs.length ? refs.join(', ') : 'chapitre ' + shown}` + (page ? ` (page ${page})` : '');
+  return el;
+}
 function renderManualLinks(ref) {
   const box = $('info-body').querySelector('.mlinks'); if (!box) return;
   const refs = manualRefs(ref);
   if (!refs.length) { box.hidden = true; return; }
   box.hidden = false;
   box.innerHTML = '<span class="mlabel">Manuels</span>';
-  for (const r of refs) {
-    const files = manualFiles[r.doc];
-    const file = files ? [`${r.chap}.pdf`, `${r.chap.slice(0, 2)}-00.pdf`].find(f => files.has(f)) : null;
-    const label = `${r.doc} ${r.chap}`;
-    let el;
-    if (file) {
-      const page = r.refs.map(x => MANUAL_PAGES[x]).find(Boolean);
-      el = document.createElement('a');
-      el.className = 'mref';
-      el.href = `api/manuel.php?m=${MANUEL}&doc=${r.doc}&f=${encodeURIComponent(file)}` + (page ? `#page=${page}` : '');
-      el.target = '_blank'; el.rel = 'noopener';
-      el.textContent = label + ' ↗';
-      el.title = 'Ouvrir ' + r.refs.join(', ') + (page ? ` (page ${page})` : '');
-    } else {
-      el = document.createElement('span');
-      el.className = 'mref off';
-      el.textContent = label;
-      el.title = files === null ? 'Vérification…'
-        : manualErr[r.doc] === 401 ? 'Session expirée : reconnectez-vous pour ouvrir les manuels'
-        : manualErr[r.doc] === 403 ? 'Accès aux manuels non autorisé'
-        : 'Chapitre non déposé sur le serveur';
+  const chapters = [...new Set(refs.map(r => r.chap))];
+  const seen = new Set();
+  for (const doc of Object.keys(manualFiles)) {
+    for (const chap of chapters) {
+      const cited = refs.find(r => r.doc === doc && r.chap === chap);
+      const file = resolveManualFile(doc, chap);
+      if (file) {
+        if (seen.has(doc + file)) continue;
+        seen.add(doc + file);
+        box.appendChild(manualButton(doc, file, cited ? cited.refs : []));
+      } else if (cited) { // référence citée explicitement mais indisponible : bouton grisé avec la raison
+        const el = document.createElement('span');
+        el.className = 'mref off';
+        el.textContent = `${doc} ${chap}`;
+        el.title = manualFiles[doc] === null ? 'Vérification…'
+          : manualErr[doc] === 401 ? 'Session expirée : reconnectez-vous pour ouvrir les manuels'
+          : manualErr[doc] === 403 ? 'Accès aux manuels non autorisé'
+          : 'Chapitre non déposé sur le serveur';
+        box.appendChild(el);
+      }
     }
-    box.appendChild(el);
   }
 }
 function showPart(k) {
