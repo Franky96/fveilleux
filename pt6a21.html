@@ -59,6 +59,7 @@ button,input,select{font:inherit;color:inherit}
 .vmenu{display:grid;gap:10px;width:min(430px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;background:rgba(10,14,17,.88);border:1px solid var(--line2);border-radius:6px;padding:10px 12px 12px;backdrop-filter:blur(6px)}
 .vmenu[hidden]{display:none}
 .vmenu section{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.vmenu .mnote{font-size:11px;color:var(--dim);width:100%}
 .vmenu h4 .hint{font-style:normal;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400;color:var(--dim)}
 .vmenu h4{width:100%;margin:0;font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 .vmenu .seg{background:rgba(19,26,31,.9)}
@@ -293,6 +294,11 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
             <button id="cutset-shell" aria-pressed="true" title="Seuls les carters fixes sont coupés ; les pièces tournantes restent entières">Carters seulement</button>
             <button id="cutset-all" aria-pressed="false" title="Toutes les pièces sont coupées ; la coupe reste fixe pendant que les rotors tournent">Toutes les pièces</button>
           </div>
+          <div class="seg" role="group" aria-label="Pièces laissées entières">
+            <button id="keep-brg" aria-pressed="true" title="Laisser les roulements (paliers principaux) entiers dans la coupe">Roulements entiers</button>
+            <button id="keep-gear" aria-pressed="true" title="Laisser les engrenages (réducteur et boîtier d'accessoires) entiers dans la coupe">Engrenages entiers</button>
+          </div>
+          <span class="mnote">Les arbres restent toujours entiers.</span>
         </section>
         <section>
           <h4>Vue caméra</h4>
@@ -617,7 +623,7 @@ function shell(pts, mat, part, parent, segs = 120, opt = {}) {
   const half = new THREE.Mesh(new THREE.LatheGeometry(v, Math.round(segs * 0.5), Math.PI / 2, Math.PI), mat);
   cut.visible = half.visible = false; parent.add(full, cut, half);
   if (part) reg(part, full, cut, half);
-  const s = { full, cut, half, mat, casing: !!opt.casing };
+  const s = { full, cut, half, mat, casing: !!opt.casing, pts: v };
   mat.userData.baseDepthWrite = mat.depthWrite;
   full.userData.shell = cut.userData.shell = half.userData.shell = s; shells.push(s);
   return s;
@@ -1664,7 +1670,7 @@ function setMode(m) {
     s.full.visible = whole || !sec; s.cut.visible = !whole && m === 'cut'; s.half.visible = !whole && m === 'half';
   }
   applyGhost();
-  for (const o of autoHide) o.visible = !((m === 'cut' && o.userData.hq) || (m === 'half' && o.userData.hh));
+  for (const o of autoHide) o.visible = isKept(o.userData.part) || !((m === 'cut' && o.userData.hq) || (m === 'half' && o.userData.hh));
   applyCutAll();
 }
 for (const k of ['ext', 'cut', 'half', 'xray']) $('m-' + k).onclick = () => setMode(k);
@@ -2325,11 +2331,17 @@ new ResizeObserver(() => { sizeGauges(); sizeTrend(); }).observe(document.queryS
    sont tranchées au même endroit à chaque image, donc la coupe reste figée pendant la rotation.
    Même secteur que les carters : Coupe ¼ retire x > 0 et z > 0, Moitié retire z > 0 (repère moteur). */
 let cutAll = false;
-// Pièces jamais coupées, quel que soit le mode : arbres, roulements et engrenages (comme sur un moteur écorché de musée)
-const KEEP_WHOLE = new Set(['propshaft', 'ptshaft', 'ngshaft', 'bearings', 'gear1', 'gear2', 'agbgears']);
+// Pièces pouvant rester entières dans la coupe (comme sur un moteur écorché de musée) :
+// les arbres toujours, les roulements et les engrenages selon les boutons du menu
+const KEEP_GROUP = { propshaft: 'shaft', ptshaft: 'shaft', ngshaft: 'shaft', bearings: 'brg', gear1: 'gear', gear2: 'gear', agbgears: 'gear' };
+const keepOn = { shaft: true, brg: true, gear: true };
+const keepGroup = part => KEEP_GROUP[part] || null;
+const isKept = part => { const g = keepGroup(part); return !!(g && keepOn[g]); };
+const matGroup = new Map(); // matériau → groupe de pièces qui l'utilisent
 const CLIP_Q = [new THREE.Plane(), new THREE.Plane()], CLIP_H = [new THREE.Plane()];
 const _clipN = new THREE.Vector3();
 let cutMats = null;
+const caps = []; // faces de coupe pleines des disques tournants (voir plus bas)
 function cutAllOn() { return cutAll && (mode === 'cut' || mode === 'half'); }
 function updateClipPlanes() {
   eng.updateMatrixWorld(true);
@@ -2346,11 +2358,21 @@ function applyCutAll() {
   const on = cutAllOn();
   if (on) updateClipPlanes();
   const planes = on ? (mode === 'cut' ? CLIP_Q : CLIP_H) : null;
+  for (const c of caps) c.visible = on && !isKept(c.userData.part) && (mode === 'cut' ? c.userData.capPhi < 2 : c.userData.capPhi > 1);
   for (const m of cutMats) {
-    if (m.clippingPlanes === planes && m.clipIntersection === (mode === 'cut')) continue;
-    m.clippingPlanes = planes; m.clipIntersection = mode === 'cut'; m.needsUpdate = true;
+    const g = matGroup.get(m), want = g && keepOn[g] ? null : planes;
+    if (m.clippingPlanes === want && m.clipIntersection === (mode === 'cut')) continue;
+    m.clippingPlanes = want; m.clipIntersection = mode === 'cut'; m.needsUpdate = true;
   }
 }
+function setKeep(g, v) {
+  keepOn[g] = v;
+  $(g === 'brg' ? 'keep-brg' : 'keep-gear').setAttribute('aria-pressed', v);
+  for (const sh of shells) sh.keep = isKept(sh.full.userData.part);
+  setMode(mode);
+}
+$('keep-brg').onclick = () => setKeep('brg', !keepOn.brg);
+$('keep-gear').onclick = () => setKeep('gear', !keepOn.gear);
 function setCutAll(v) {
   cutAll = v;
   $('cutset-shell').setAttribute('aria-pressed', !v); $('cutset-all').setAttribute('aria-pressed', v);
@@ -2369,7 +2391,7 @@ const autoHide = [];
   const cand = new Set([...pickables.filter(o => o.isMesh && !o.isInstancedMesh && !o.userData.shell), ...cutHide]);
   for (const o of cand) {
     let q = o.parent, rot = false; while (q) { if (rotors.includes(q)) { rot = true; break; } q = q.parent; }
-    if (rot || cutHide.includes(o.parent) || KEEP_WHOLE.has(o.userData.part)) continue;
+    if (rot || cutHide.includes(o.parent) || keepGroup(o.userData.part) === 'shaft') continue;
     if (o.isMesh) { o.geometry.computeBoundingSphere(); v.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld); } else o.getWorldPosition(v);
     eng.worldToLocal(v);
     const r = Math.hypot(v.x, v.z) / S, phi = Math.atan2(v.x, v.z), p2 = ((phi % TAU) + TAU) % TAU;
@@ -2378,18 +2400,56 @@ const autoHide = [];
     autoHide.push(o);
   }
 }
-for (const s of shells) if (KEEP_WHOLE.has(s.full.userData.part)) s.keep = true;
+for (const s of shells) s.keep = isKept(s.full.userData.part);
 {
-  // une pièce gardée entière qui partage son matériau avec une pièce coupée reçoit sa propre copie
-  const cutUsed = new Set(pickables.filter(o => o.isMesh && !KEEP_WHOLE.has(o.userData.part)).flatMap(o => [].concat(o.material)));
+  // chaque matériau ne doit servir qu'à un seul groupe (arbres, roulements, engrenages ou autres pièces) :
+  // sinon, le groupe gardé entier reçoit sa propre copie du matériau
+  const groupsOf = new Map();
+  for (const o of pickables) if (o.isMesh) for (const m of [].concat(o.material)) {
+    if (!groupsOf.has(m)) groupsOf.set(m, new Set());
+    groupsOf.get(m).add(keepGroup(o.userData.part) || 'other');
+  }
   const clones = new Map();
   for (const o of pickables) {
-    if (!o.isMesh || !KEEP_WHOLE.has(o.userData.part) || Array.isArray(o.material) || !cutUsed.has(o.material)) continue;
-    if (!clones.has(o.material)) { const c = o.material.clone(); clones.set(o.material, c); (partMats[o.userData.part] ||= []).push(c); }
-    o.material = clones.get(o.material);
+    const g = keepGroup(o.userData.part);
+    if (!o.isMesh || !g || Array.isArray(o.material) || groupsOf.get(o.material).size < 2) continue;
+    const key = o.material.uuid + g;
+    if (!clones.has(key)) { const c = o.material.clone(); clones.set(key, c); (partMats[o.userData.part] ||= []).push(c); }
+    o.material = clones.get(key);
+  }
+  for (const o of pickables) if (o.isMesh) for (const m of [].concat(o.material)) { const g = keepGroup(o.userData.part); if (g) matGroup.set(m, g); }
+}
+cutMats = [...new Set(pickables.filter(o => o.isMesh).flatMap(o => [].concat(o.material)))];
+{
+  /* Faces de coupe des disques de turbine et de compresseur : tranchés par un plan passant par l'axe,
+     un volume de révolution a pour section exactement son profil. Ces faces sont fixes (posées sur le
+     module, pas sur le rotor) : la pièce étant symétrique, la section ne change pas pendant la rotation.
+     Angles : 0 et π/2 bordent le quart retiré (Coupe ¼), π/2 et 3π/2 le plan médian (Moitié). */
+  const CAP_PARTS = new Set(['ct', 'pt', 'axial', 'impeller']), rotors = [propRot, nfRot, ngRot];
+  const rel = new THREE.Matrix4(), capMats = new Map();
+  eng.updateMatrixWorld(true);
+  for (const sh of shells) {
+    const part = sh.full.userData.part, v = sh.pts;
+    if (!CAP_PARTS.has(part) || !sh.solid || !v) continue;
+    const a = v[0], b = v[v.length - 1];
+    if (!(a.distanceTo(b) < 1e-6 || Math.abs(a.x - b.x) < 1e-6 || v.length === 4)) continue; // profils ouverts : pas de section pleine
+    let rotor = sh.full.parent; while (rotor && !rotors.includes(rotor)) rotor = rotor.parent;
+    if (!rotor) continue;
+    const holder = rotor.parent;
+    rel.copy(holder.matrixWorld).invert().multiply(sh.full.parent.matrixWorld);
+    if (!capMats.has(sh.mat)) {
+      const m = M(part, { color: sh.mat.color.clone().lerp(new THREE.Color(0xdfe3e7), 0.3), metalness: 0.35, roughness: 0.62 });
+      capMats.set(sh.mat, m);
+    }
+    const base = new THREE.ShapeGeometry(new THREE.Shape(v.map(p => new THREE.Vector2(p.x, p.y))));
+    for (const phi of [0, Math.PI / 2, 3 * Math.PI / 2]) {
+      const g = base.clone(); g.rotateY(phi - Math.PI / 2);
+      const cap = new THREE.Mesh(g, capMats.get(sh.mat));
+      cap.matrixAutoUpdate = false; cap.matrix.copy(rel); cap.visible = false; cap.userData.capPhi = phi;
+      holder.add(cap); reg(part, cap); caps.push(cap);
+    }
   }
 }
-cutMats = [...new Set(pickables.filter(o => o.isMesh && !KEEP_WHOLE.has(o.userData.part)).flatMap(o => [].concat(o.material)))];
 idleState(); setMode('ext'); syncLabels();
 logE('Moteur stabilisé au ralenti sol (52 % Ng). Utilisez « Arrêt auto » puis « Démarrage auto », ou les commandes manuelles.', '');
 
