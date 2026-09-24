@@ -672,8 +672,11 @@ function bladeGeo({ r0, r1, chord, tipChord = chord, thick = 0.1, st0, st1, camb
     const env = Math.sqrt(Math.max(0, 1 - 4 * v * v));
     const t = (w > 0 ? 1 : -1) * thick * c * 0.5 * (0.15 + 0.85 * env) + camber * c * (1 - 4 * v * v) * 0.5;
     const a = v * c, s = lerp(st0, st1, u);
-    p.setXYZ(i, r * S, (a * Math.cos(s) - t * Math.sin(s)) * S, (a * Math.sin(s) + t * Math.cos(s)) * S);
+    // composante tangentielle inversée : aubes orientées pour Ng antihoraire / Nf horaire vus de l'arrière (AMM 72-50-02, 72-00-00)
+    p.setXYZ(i, r * S, (a * Math.cos(s) - t * Math.sin(s)) * S, -(a * Math.sin(s) + t * Math.cos(s)) * S);
   }
+  const ix = g.index.array; // le miroir inverse l'ordre des sommets : on rétablit l'orientation des faces
+  for (let i = 0; i < ix.length; i += 3) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; }
   g.computeVertexNormals();
   return g;
 }
@@ -1089,7 +1092,8 @@ for (const z of [30.5, 36.5]) { radialCyl(9.6, 10.7, z, clockPhi(6), 0.38, mDrai
 // tubes diffuseurs (21) — sortie tangentielle du rouet, section croissante, virage de 90°
 {
   // départ tangentiel au bout du rouet, col rond, divergent qui s'aplatit en ovale, virage de 90° vers l'avant
-  const pts = [[5.72, 39.3, -0.06], [6.05, 39.3, 0.12], [6.6, 39.28, 0.27], [7.3, 39.2, 0.4], [7.95, 39.0, 0.5], [8.42, 38.6, 0.57], [8.76, 37.85, 0.61], [8.92, 36.95, 0.63], [8.96, 36.3, 0.64]].map(([r, z, a]) => P(r, z, a));
+  // les tubes partent dans le sens de rotation du rouet (Ng antihoraire vu de l'arrière = angle décroissant)
+  const pts = [[5.72, 39.3, -0.06], [6.05, 39.3, 0.12], [6.6, 39.28, 0.27], [7.3, 39.2, 0.4], [7.95, 39.0, 0.5], [8.42, 38.6, 0.57], [8.76, 37.85, 0.61], [8.92, 36.95, 0.63], [8.96, 36.3, 0.64]].map(([r, z, a]) => P(r, z, -a));
   const curve = new THREE.CatmullRomCurve3(pts), seg = 60, rad = 18, pos = [], idx = [];
   for (let i = 0; i <= seg; i++) {
     const t = i / seg, c = curve.getPointAt(t), T = curve.getTangentAt(t).normalize();
@@ -1102,7 +1106,7 @@ for (const z of [30.5, 36.5]) { radialCyl(9.6, 10.7, z, clockPhi(6), 0.38, mDrai
   bladeRow(g, 21, mDiff, 'diffuser', modGG, 38);
   // collerettes d'entrée des tubes sur le carter de diffuseur
   const coll = new THREE.TorusGeometry(0.24 * S, 0.06 * S, 8, 20); coll.rotateY(Math.PI / 2); coll.translate(5.8 * S, 0, 0);
-  bladeRow(coll, 21, mDiff, 'diffuser', modGG, 39.3, -0.06 + Math.PI / 2 - Math.PI / 2);
+  bladeRow(coll, 21, mDiff, 'diffuser', modGG, 39.3, 0.06 - Math.PI / 2); // à l'entrée des tubes (angle de révolution 0,06)
   // aubes redresseuses en sortie des tubes (annulaire autour de la chambre)
   bladeRow(bladeGeo({ r0: 8.75, r1: 9.46, chord: 0.7, st0: 0.55, st1: 0.5, camber: 0.25, thick: 0.1 }), 42, mDiff, 'diffuser', modGG, 35.7);
   shell([[5.65, 39.05], [5.9, 39.05], [5.9, 39.6], [5.65, 39.6]], mDiff, 'diffuser', modGG, 96);
