@@ -59,6 +59,7 @@ button,input,select{font:inherit;color:inherit}
 .vmenu{display:grid;gap:10px;width:min(430px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;background:rgba(10,14,17,.88);border:1px solid var(--line2);border-radius:6px;padding:10px 12px 12px;backdrop-filter:blur(6px)}
 .vmenu[hidden]{display:none}
 .vmenu section{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.vmenu h4 .hint{font-style:normal;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400;color:var(--dim)}
 .vmenu h4{width:100%;margin:0;font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 .vmenu .seg{background:rgba(19,26,31,.9)}
 .vmenu .chipr{background:none;border:0;padding:0 2px;flex:1 1 180px}
@@ -286,6 +287,13 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
         <div class="seg"><button id="t-fs" aria-pressed="false" title="Plein écran (touche F)">⛶ Plein écran</button></div>
       </div>
       <div class="vmenu" id="vmenu">
+        <section>
+          <h4>Coupe <em class="hint">(modes Coupe ¼ et Moitié)</em></h4>
+          <div class="seg" role="group" aria-label="Pièces coupées">
+            <button id="cutset-shell" aria-pressed="true" title="Seuls les carters fixes sont coupés ; les pièces tournantes restent entières">Carters seulement</button>
+            <button id="cutset-all" aria-pressed="false" title="Toutes les pièces sont coupées ; la coupe reste fixe pendant que les rotors tournent">Toutes les pièces</button>
+          </div>
+        </section>
         <section>
           <h4>Vue caméra</h4>
           <div class="seg" role="group" aria-label="Vues">
@@ -561,6 +569,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const view = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.localClippingEnabled = true;
 renderer.setPixelRatio(Math.min(2, devicePixelRatio));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
@@ -1655,6 +1664,7 @@ function setMode(m) {
   }
   applyGhost();
   for (const o of autoHide) o.visible = !((m === 'cut' && o.userData.hq) || (m === 'half' && o.userData.hh));
+  applyCutAll();
 }
 for (const k of ['ext', 'cut', 'half', 'xray']) $('m-' + k).onclick = () => setMode(k);
 let showProp = true, showFlow = false, showSt = false, showBrg = false, flowStyle = 'pts', paused = false, simClock = 0, flowCut = false, flowK = 1;
@@ -2016,6 +2026,7 @@ function pick(ev) {
     while (o) { if (!o.visible) { vis = false; break; } o = o.parent; }
     if (!vis) continue;
     if (mode === 'xray' && h.object.userData.shell && h.object.userData.shell.casing) continue;
+    if (clippedAway(h.point)) continue;
     return h.object.userData.part;
   }
   return null;
@@ -2308,6 +2319,43 @@ function resize() {
 new ResizeObserver(resize).observe(view);
 new ResizeObserver(() => { sizeGauges(); sizeTrend(); }).observe(document.querySelector('.panel'));
 
+/* ---------- coupe « toutes les pièces » ----------
+   Plans de coupe fixes dans la scène : les pièces tournantes (disques, aubes, arbres, hélice)
+   sont tranchées au même endroit à chaque image, donc la coupe reste figée pendant la rotation.
+   Même secteur que les carters : Coupe ¼ retire x > 0 et z > 0, Moitié retire z > 0 (repère moteur). */
+let cutAll = false;
+const CLIP_Q = [new THREE.Plane(), new THREE.Plane()], CLIP_H = [new THREE.Plane()];
+const _clipN = new THREE.Vector3();
+let cutMats = null;
+function cutAllOn() { return cutAll && (mode === 'cut' || mode === 'half'); }
+function updateClipPlanes() {
+  eng.updateMatrixWorld(true);
+  CLIP_Q[0].set(_clipN.set(-1, 0, 0), 0).applyMatrix4(eng.matrixWorld);
+  CLIP_Q[1].set(_clipN.set(0, 0, -1), 0).applyMatrix4(eng.matrixWorld);
+  CLIP_H[0].set(_clipN.set(0, 0, -1), 0).applyMatrix4(eng.matrixWorld);
+}
+function clippedAway(pt) {
+  if (!cutAllOn()) return false;
+  return mode === 'cut' ? CLIP_Q.every(p => p.distanceToPoint(pt) < 0) : CLIP_H[0].distanceToPoint(pt) < 0;
+}
+function applyCutAll() {
+  if (!cutMats) return;
+  const on = cutAllOn();
+  if (on) updateClipPlanes();
+  const planes = on ? (mode === 'cut' ? CLIP_Q : CLIP_H) : null;
+  for (const m of cutMats) {
+    if (m.clippingPlanes === planes && m.clipIntersection === (mode === 'cut')) continue;
+    m.clippingPlanes = planes; m.clipIntersection = mode === 'cut'; m.needsUpdate = true;
+  }
+}
+function setCutAll(v) {
+  cutAll = v;
+  $('cutset-shell').setAttribute('aria-pressed', !v); $('cutset-all').setAttribute('aria-pressed', v);
+  if (v && mode !== 'cut' && mode !== 'half') setMode('cut'); else applyCutAll();
+}
+$('cutset-shell').onclick = () => setCutAll(false);
+$('cutset-all').onclick = () => setCutAll(true);
+
 // les pièces tournantes restent entières en mode coupe (seuls les carters fixes sont coupés)
 for (const s of shells) { let o = s.full.parent; while (o) { if (o === propRot || o === nfRot || o === ngRot) { s.solid = true; break; } o = o.parent; } }
 const casingMats = new Set(shells.filter(s => s.casing).map(s => s.mat).concat(Object.values(boltMats).filter(m => shells.some(s => s.casing && s.mat === m))));
@@ -2327,12 +2375,14 @@ const autoHide = [];
     autoHide.push(o);
   }
 }
+cutMats = [...new Set(pickables.filter(o => o.isMesh).flatMap(o => Array.isArray(o.material) ? o.material : [o.material]))];
 idleState(); setMode('ext'); syncLabels();
 logE('Moteur stabilisé au ralenti sol (52 % Ng). Utilisez « Arrêt auto » puis « Démarrage auto », ou les commandes manuelles.', '');
 
 let last = performance.now(), uiAcc = 0;
 function frame(now) {
   const rdt = clamp((now - last) / 1000, 0, 0.05); last = now;
+  if (cutAllOn()) updateClipPlanes();
   const dt = paused ? 0 : rdt; simClock += dt * 1000;
   if (!paused) { const sub = 8; for (let i = 0; i < sub; i++) step(dt / sub); monitor(dt); runAuto(dt); }
   // rotations (Ng antihoraire vu de l'arrière ; Nf et hélice horaires)
