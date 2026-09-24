@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outils de Frank — Informatique</title>
+  <title>Outils de Frank — Moteurs</title>
   <link rel="stylesheet" href="style.css">
   <script>
-    const _permsInfo = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_permsInfo.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!_permsMot.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>
@@ -19,8 +19,8 @@
     <header>
       <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
       <div style="text-align:center;">
-        <h1>Informatique</h1>
-        <p class="subtitle">Outils techniques</p>
+        <h1>Moteurs</h1>
+        <p class="subtitle">Simulations de turbomachines</p>
       </div>
       <div class="header-controls">
         <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
@@ -37,62 +37,20 @@
     </header>
 
     <main>
-      <p class="welcome-text">Les Outils</p>
+      <p class="welcome-text">Les simulateurs</p>
 
       <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
 
-        <a href="arinc429.html" class="menu-card" data-section="arinc429">
-          <span class="icon">📡</span>
-          <h2>ARINC 429</h2>
-          <p>Décodeur de mots avioniques</p>
+        <a href="turboreacteur.html" class="menu-card" data-section="turboreacteur">
+          <span class="icon">🌀</span>
+          <h2>CFM56-7B</h2>
+          <p>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d'air</p>
         </a>
 
-        <a href="csdb.html" class="menu-card" data-section="csdb">
-          <span class="icon">📶</span>
-          <h2>CSDB</h2>
-          <p>Commercial Standard Digital Bus — décodeur de blocs</p>
-        </a>
-
-        <a href="converter.html" class="menu-card" data-section="converter">
-          <span class="icon">🔢</span>
-          <h2>Convertisseur</h2>
-          <p>Décimal · Binaire · Hex · Octal</p>
-        </a>
-
-        <a href="crypteur.html" class="menu-card" data-section="crypteur">
-          <span class="icon">⚙️</span>
-          <h2>Encodeur BNR</h2>
-          <p>Signe-magnitude · Bit de signe · Valeur par bit</p>
-        </a>
-
-        <a href="tcpip.html" class="menu-card" data-section="tcpip">
-          <span class="icon">🌐</span>
-          <h2>TCP/IP</h2>
-          <p>Calculateur de sous-réseau · CIDR</p>
-        </a>
-
-        <a href="qr-transfer.html" class="menu-card" data-section="qrlink">
-          <span class="icon">📷</span>
-          <h2>QR Transfert</h2>
-          <p>Transfert de fichiers par codes QR — sans réseau</p>
-        </a>
-
-        <a href="shape-transfer.html" class="menu-card" data-section="shapelink">
-          <span class="icon">▲■●</span>
-          <h2>Shape Transfert</h2>
-          <p>Transfert de fichiers par symboles géométriques colorés — sans réseau</p>
-        </a>
-
-        <a href="chips.html" class="menu-card" data-section="chips">
-          <span class="icon">🔧</span>
-          <h2>Simulateurs</h2>
-          <p>NE555 · Portes logiques · AO 741 · MOS 6502</p>
-        </a>
-
-        <a href="circuit.html" class="menu-card" data-section="circuit">
-          <span class="icon">⚡</span>
-          <h2>Circuit logique</h2>
-          <p>Simulateur interactif — placer, connecter, simuler</p>
+        <a href="pt6a21.html" class="menu-card" data-section="pt6a21">
+          <span class="icon">🛩️</span>
+          <h2>PT6A-21</h2>
+          <p>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</p>
         </a>
 
       </nav>
@@ -118,7 +76,7 @@
     });
   </script>
 
-  <script type="module" src="informatique.js"></script>
+  <script type="module" src="moteurs.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>

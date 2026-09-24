@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Turboréacteur 3D — Outils de Frank</title>
+  <title>Simulateur CFM56-7B — Outils de Frank</title>
   <link rel="stylesheet" href="style.css">
   <script>
     const _pT = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_pT.includes('turboreacteur') && !_pT.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!_pT.includes('turboreacteur') && !_pT.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>
@@ -168,8 +168,8 @@
 <body>
 
   <div class="top-bar" data-topbar>
-    <span class="top-bar-title"><span>Turboréacteur</span> Simulation 3D</span>
-    <a href="informatique.html" class="top-bar-back">&#8592; Informatique</a>
+    <span class="top-bar-title"><span>CFM56-7B</span> Simulation 3D</span>
+    <a href="moteurs.html" class="top-bar-back">&#8592; Moteurs</a>
   </div>
 
   <div class="turbo-container">

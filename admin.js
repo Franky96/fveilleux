@@ -21,6 +21,10 @@ const SECTIONS_ARCHIVABLES = [
     { key: 'converter', icon: '🔢', label: 'Convertisseur'  },
     { key: 'crypteur',  icon: '⚙️', label: 'Encodeur BNR'  },
   ]},
+  { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
+    { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
+    { key: 'pt6a21',        icon: '🛩️', label: 'PT6A-21'  },
+  ]},
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
@@ -42,6 +46,7 @@ const SECTIONS_INVITABLES = [
   { key: 'liens',         icon: '🌍', label: 'Liens utiles'    },
   { key: 'films',         icon: '🎬', label: 'Films & Séries'  },
   { key: 'informatique',  icon: '💻', label: 'Informatique'    },
+  { key: 'moteurs',       icon: '🌀', label: 'Moteurs'         },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société' },
   { key: 'rona',          icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',         icon: '🌐', label: 'OSINT Map'       },
@@ -311,6 +316,10 @@ const PERMS_STRUCTURE = [
     { key: 'converter', label: 'Convertisseur' },
     { key: 'crypteur',  label: 'Encodeur BNR' },
     { key: 'tcpip',     label: 'TCP/IP' },
+  ]},
+  { key: 'moteurs', label: 'Moteurs', children: [
+    { key: 'turboreacteur', label: 'CFM56-7B' },
+    { key: 'pt6a21',        label: 'PT6A-21' },
   ]},
   { key: 'jeuxdesociete', label: 'Jeux de société', children: [
     { key: '7wonders',    label: '7 Wonders'       },

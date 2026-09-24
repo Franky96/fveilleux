@@ -7,7 +7,7 @@
 <script>
   const _pP = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_pP.includes('pt6a21') && !_pP.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_pP.includes('pt6a21') && !_pP.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>
@@ -175,7 +175,7 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 <body>
 <div class="wrap">
 
-<a href="informatique.html" class="back">&#8592; Informatique</a>
+<a href="moteurs.html" class="back">&#8592; Moteurs</a>
 
 <header class="top">
   <div class="brand">
