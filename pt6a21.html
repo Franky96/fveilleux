@@ -191,6 +191,13 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 .mref:hover{border-color:var(--accent)}
 .mref.off{background:var(--panel2);border-color:var(--line2);color:var(--dim);cursor:not-allowed}
 
+/* ---------- plein écran de secours (Safari iPhone) ---------- */
+html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
+.viewport.pseudo-fs{position:fixed;inset:0;z-index:1000;height:100vh!important;height:100dvh!important;max-height:none!important;min-height:0!important;margin:0!important;border:0;border-radius:0}
+.viewport.pseudo-fs .vbar{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(34px,calc(env(safe-area-inset-bottom) + 28px))}
+.viewport.pseudo-fs .vfoot{left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom))}
+.viewport.pseudo-fs .hud{right:max(10px,env(safe-area-inset-right));bottom:max(34px,calc(env(safe-area-inset-bottom) + 28px))}
+
 /* ---------- téléphones (iPhone portrait) ---------- */
 @media (max-width:700px){
   body{padding-inline:max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right));padding-bottom:max(28px,env(safe-area-inset-bottom))}
@@ -1764,16 +1771,25 @@ $('cal-reset').onclick = () => { calSc = 1; calDx = 0; calDy = 0; $('cal-sc').va
 
 /* ---------- plein écran ---------- */
 const vpEl = $('vp');
-const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+// Plein écran natif si le navigateur le permet, sinon (Safari iPhone) la vue est agrandie à tout l'écran en CSS
+const nativeFS = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+let pseudoFS = false;
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || (pseudoFS ? vpEl : null);
+function setPseudoFS(v) {
+  pseudoFS = v;
+  vpEl.classList.toggle('pseudo-fs', v);
+  document.documentElement.classList.toggle('pseudo-fs-on', v);
+  onFS();
+}
 function toggleFS() {
+  if (!nativeFS) { setPseudoFS(!pseudoFS); return; }
   try {
     if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     else { const req = vpEl.requestFullscreen || vpEl.webkitRequestFullscreen; const r = req && req.call(vpEl); if (r && r.catch) r.catch(() => logE('Plein écran refusé par le navigateur', 'a')); }
   } catch (err) { logE('Plein écran non disponible dans ce navigateur', 'a'); }
 }
 $('t-fs').onclick = toggleFS;
-// Safari iPhone ne permet pas le plein écran d'un élément : on masque le bouton
-if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) $('t-fs').parentElement.hidden = true;
+addEventListener('keydown', e => { if (e.key === 'Escape' && pseudoFS) setPseudoFS(false); });
 
 /* ---------- menus rétractables (ouvert par défaut sur grand écran, choix mémorisé) ---------- */
 function setMenus(open, remember) {
