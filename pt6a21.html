@@ -170,6 +170,11 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 .back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
 .back:hover{border-color:var(--accent)}
+.mlinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.mlinks .mlabel{width:100%;font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.mref{display:inline-flex;align-items:center;gap:6px;background:var(--accent-d);border:1px solid #3f7f9c;color:#eaf7fd;border-radius:4px;padding:5px 10px;font-family:var(--f-mono);font-size:12px;text-decoration:none}
+.mref:hover{border-color:var(--accent)}
+.mref.off{background:var(--panel2);border-color:var(--line2);color:var(--dim);cursor:not-allowed}
 
 /* ---------- écrans ultra-larges (21:9, 32:9) : vue 3D | commandes | instruments sur une seule hauteur d'écran ---------- */
 @media (min-width:1800px) and (min-aspect-ratio:2/1){
@@ -1769,14 +1774,72 @@ const PARTS = {
 };
 const PART_ORDER = ['propeller', 'propshaft', 'rgb', 'gear1', 'gear2', 'torquemeter', 'propgov', 'exhaust', 'pt', 'ptstator', 't5', 'ct', 'ctshroud', 'ctvane', 'exitduct', 'liner', 'fuelmanifold', 'igniters', 'exciter', 'drains', 'ggcase', 'fireseal', 'diffuser', 'impeller', 'axial', 'stators', 'bleed', 'screen', 'oiltank', 'oilfiller', 'oilfilter', 'oilpump', 'oiltubes', 'oilheater', 'scavpump', 'oilnozzles', 'breather', 'washring', 'bearings', 'reversing', 'agb', 'agbgears', 'starter', 'fcu', 'ngtach', 'accessories', 'tubes'];
 let selected = null, hovered = null;
+/* ---------- manuels (servis par api/manuel.php, réservés aux utilisateurs connectés) ---------- */
+const MANUEL = 'PT6A-21';
+// Page précise d'une référence dans le PDF de son chapitre, ex. 'AMM 72-30-01': 12
+const MANUAL_PAGES = {};
+const manualFiles = { AMM: null, IPC: null, OM: null }; // null = en chargement, false = indisponible
+const manualErr = {};
+for (const doc of Object.keys(manualFiles)) {
+  fetch(`api/manuel.php?m=${MANUEL}&doc=${doc}&list=1`, { credentials: 'same-origin' })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(j => { manualFiles[doc] = new Set(j.files); })
+    .catch(code => { manualFiles[doc] = false; manualErr[doc] = code; })
+    .finally(() => { if (selected) renderManualLinks(PARTS[selected][1]); });
+}
+function manualRefs(ref) {
+  const out = new Map(); let doc = null;
+  for (const tok of String(ref).split('·')) {
+    const t = tok.trim();
+    const md = t.match(/^(AMM|IPC|OM)\b/); if (md) doc = md[1];
+    const mc = t.match(/\b(\d{2})-(\d{2})(?:-(\d{2}))?\b/);
+    if (!doc || !mc) continue;
+    const chap = `${mc[1]}-${mc[2]}`, key = doc + ' ' + chap;
+    if (!out.has(key)) out.set(key, { doc, chap, refs: [] });
+    out.get(key).refs.push(`${doc} ${mc[0]}`);
+  }
+  return [...out.values()];
+}
+function renderManualLinks(ref) {
+  const box = $('info-body').querySelector('.mlinks'); if (!box) return;
+  const refs = manualRefs(ref);
+  if (!refs.length) { box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = '<span class="mlabel">Manuels</span>';
+  for (const r of refs) {
+    const files = manualFiles[r.doc];
+    const file = files ? [`${r.chap}.pdf`, `${r.chap.slice(0, 2)}-00.pdf`].find(f => files.has(f)) : null;
+    const label = `${r.doc} ${r.chap}`;
+    let el;
+    if (file) {
+      const page = r.refs.map(x => MANUAL_PAGES[x]).find(Boolean);
+      el = document.createElement('a');
+      el.className = 'mref';
+      el.href = `api/manuel.php?m=${MANUEL}&doc=${r.doc}&f=${encodeURIComponent(file)}` + (page ? `#page=${page}` : '');
+      el.target = '_blank'; el.rel = 'noopener';
+      el.textContent = label + ' ↗';
+      el.title = 'Ouvrir ' + r.refs.join(', ') + (page ? ` (page ${page})` : '');
+    } else {
+      el = document.createElement('span');
+      el.className = 'mref off';
+      el.textContent = label;
+      el.title = files === null ? 'Vérification…'
+        : manualErr[r.doc] === 401 ? 'Session expirée : reconnectez-vous pour ouvrir les manuels'
+        : manualErr[r.doc] === 403 ? 'Accès aux manuels non autorisé'
+        : 'Chapitre non déposé sur le serveur';
+    }
+    box.appendChild(el);
+  }
+}
 function showPart(k) {
   selected = k;
   const d = PARTS[k]; if (!d) return;
-  $('info-body').innerHTML = `<h3></h3><div class="ref"></div><p></p><dl class="kv"></dl>`;
+  $('info-body').innerHTML = `<h3></h3><div class="ref"></div><p></p><dl class="kv"></dl><div class="mlinks" hidden></div>`;
   $('info-body').querySelector('h3').textContent = d[0];
   $('info-body').querySelector('.ref').textContent = d[1];
   $('info-body').querySelector('p').textContent = d[2];
   $('info-body').querySelector('.kv').innerHTML = d[3].map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
+  renderManualLinks(d[1]);
   document.querySelectorAll('#parts button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
 }
 $('parts').innerHTML = PART_ORDER.map(k => `<button data-k="${k}" aria-pressed="false">${PARTS[k][0].replace(/ \(prise.*\)/, '')}</button>`).join('');
