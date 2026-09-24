@@ -623,7 +623,7 @@ function shell(pts, mat, part, parent, segs = 120, opt = {}) {
   const half = new THREE.Mesh(new THREE.LatheGeometry(v, Math.round(segs * 0.5), Math.PI / 2, Math.PI), mat);
   cut.visible = half.visible = false; parent.add(full, cut, half);
   if (part) reg(part, full, cut, half);
-  const s = { full, cut, half, mat, casing: !!opt.casing, pts: v };
+  const s = { full, cut, half, mat, casing: !!opt.casing, cutWithAll: !!opt.cutWithAll, pts: v };
   mat.userData.baseDepthWrite = mat.depthWrite;
   full.userData.shell = cut.userData.shell = half.userData.shell = s; shells.push(s);
   return s;
@@ -963,7 +963,7 @@ boltRing(9.72, 24.45, 36, 0.22, 'exhaust', modPower, { casing: true });
 // conduit intérieur perforé en « trompette » (IPC 72-50-05) et logement d'arbre TP
 shell([[1.9, 12.8], [2.3, 14.5], [2.7, 18.0], [3.2, 20.6], [3.7, 22.0]], mExhPerf, 'exhaust', modPower, 72);
 shell([[5.7, 20.4], [5.1, 20.7], [4.4, 21.4], [4.0, 22.6], [3.9, 24.5], [4.0, 27.0], [4.15, 29.2]], mExhPerf, 'exhaust', modPower, 96);
-shell([[2.8, 13.4], [2.8, 13.8], [2.2, 13.8], [2.2, 28.75], [2.5, 29.0]], mShaftPT, 'ptshaft', modPower, 64);
+shell([[2.8, 13.4], [2.8, 13.8], [2.2, 13.8], [2.2, 28.75], [2.5, 29.0]], mShaftPT, 'ptshaft', modPower, 64, { cutWithAll: true }); // grand tube extérieur : coupé en mode « Toutes les pièces »
 shell([[6.75, 31.9], [6.8, 29.7], [6.85, 28.3], [7.3, 27.3], [8.3, 26.4], [9.3, 25.0]], mPTS, 'ptstator', modPower, 96);
 boltRing(8.75, 25.9, 24, 0.16, 'ptstator', modPower);
 // orifices d'échappement jumelés opposés (3 h et 9 h) avec brides boulonnées
@@ -1006,6 +1006,8 @@ platformRow(3.9, 0.95, 41, 0.14, mPT, 'pt', nfRot, 30.2);
 }
 cyl(1.0, 13.6, 29.8, mShaftPT, 'ptshaft', nfRot, 24);
 cyl(0.62, 31.1, 31.7, mShaftPT, 'ptshaft', nfRot, 6);
+// arbre à travers l'alésage du disque de turbine de puissance (visible dans la coupe)
+cyl(0.88, 29.8, 31.1, mShaftPT, 'ptshaft', nfRot, 24);
 bearing(1.02, 1.95, 28.3, 0.7, 14, modPower, true, 'N° 3 · rouleaux');
 bearing(1.02, 1.95, 15.3, 0.75, 10, modPower, false, 'N° 4 · billes');
 shell([[2.2, 27.8], [2.2, 28.75], [2.5, 29.0]], mHousing, 'bearings', modPower, 64);
@@ -1191,7 +1193,10 @@ shell([[2.5, 31.95], [2.7, 31.95], [2.7, 32.3], [2.5, 32.3]], mCT, 'ct', ngRot, 
 shell([[2.5, 33.3], [2.7, 33.3], [2.7, 33.65], [2.5, 33.65]], mCT, 'ct', ngRot, 48);
 bladeRow(bladeGeo({ r0: 4.25, r1: 6.05, chord: 0.85, st0: 0.8, st1: 1.05, camber: 0.24, thick: 0.18 }), 58, mCT, 'ct', ngRot, 32.8);
 platformRow(4.35, 0.95, 58, 0.12, mCT, 'ct', ngRot, 32.8);
-cyl(0.55, 31.3, 31.85, mShaftCT, 'ct', ngRot, 6);
+cyl(0.55, 31.3, 31.85, mShaftCT, 'ngshaft', ngRot, 6);
+// arbre à travers l'alésage du disque de turbine compresseur, puis du rouet et des disques axiaux (visible dans la coupe)
+cyl(0.53, 31.85, 33.3, mShaftCT, 'ngshaft', ngRot, 24);
+cyl(0.88, 39.0, 45.6, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(0.95, 33.3, 39.0, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(1.15, 37.3, 39.0, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(1.3, 45.6, 47.3, mShaftCT, 'ngshaft', ngRot, 24);
@@ -2365,10 +2370,12 @@ function applyCutAll() {
     m.clippingPlanes = want; m.clipIntersection = mode === 'cut'; m.needsUpdate = true;
   }
 }
+// enveloppes gardées entières ; le grand tube de l'arbre de turbine de puissance est coupé avec « Toutes les pièces »
+function refreshKeep() { for (const sh of shells) sh.keep = isKept(sh.full.userData.part) && !(sh.cutWithAll && cutAll); }
 function setKeep(g, v) {
   keepOn[g] = v;
   $(g === 'brg' ? 'keep-brg' : 'keep-gear').setAttribute('aria-pressed', v);
-  for (const sh of shells) sh.keep = isKept(sh.full.userData.part);
+  refreshKeep();
   setMode(mode);
 }
 $('keep-brg').onclick = () => setKeep('brg', !keepOn.brg);
@@ -2376,7 +2383,8 @@ $('keep-gear').onclick = () => setKeep('gear', !keepOn.gear);
 function setCutAll(v) {
   cutAll = v;
   $('cutset-shell').setAttribute('aria-pressed', !v); $('cutset-all').setAttribute('aria-pressed', v);
-  if (v && mode !== 'cut' && mode !== 'half') setMode('cut'); else applyCutAll();
+  refreshKeep();
+  setMode(v && mode !== 'cut' && mode !== 'half' ? 'cut' : mode);
 }
 $('cutset-shell').onclick = () => setCutAll(false);
 $('cutset-all').onclick = () => setCutAll(true);
@@ -2400,7 +2408,7 @@ const autoHide = [];
     autoHide.push(o);
   }
 }
-for (const s of shells) s.keep = isKept(s.full.userData.part);
+refreshKeep();
 {
   // chaque matériau ne doit servir qu'à un seul groupe (arbres, roulements, engrenages ou autres pièces) :
   // sinon, le groupe gardé entier reçoit sa propre copie du matériau
