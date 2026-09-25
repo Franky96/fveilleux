@@ -1,0 +1,1850 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulateur O-320 — Outils de Frank</title>
+<script>
+  const _pP = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pP.includes('o320') && !_pP.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0a0e11; --bg2:#0e1418; --panel:#131a1f; --panel2:#18222a; --line:#24313b; --line2:#2f3f4b;
+  --text:#dde4e9; --muted:#8797a3; --dim:#5d6c77;
+  --accent:#7cc4e4; --accent-d:#2d5c73;
+  --green:#3fcf74; --amber:#f0b13a; --red:#ef4b4b; --flame:#ff8a3d;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:14px/1.5 var(--f-body);padding-inline:16px;padding-block:0 40px}
+.wrap{max-width:1560px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- header ---------- */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.brand h1{font-size:40px;line-height:1;font-weight:700;letter-spacing:.01em}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:0;color:var(--muted);font-size:13px;max-width:62ch}
+.plate{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px solid var(--line2);padding:6px 10px;border-radius:3px;line-height:1.45;letter-spacing:.02em}
+.plate b{color:var(--text);font-weight:500}
+
+/* ---------- main grid ---------- */
+.app{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;margin-top:14px}
+@media (max-width:1100px){.app{grid-template-columns:1fr}}
+.viewport{position:relative;background:radial-gradient(120% 90% at 50% 40%,#1a252d 0%,#0c1115 70%);border:1px solid var(--line);border-radius:6px;overflow:hidden;height:min(68vh,720px);min-height:420px}
+#view{position:absolute;inset:0}
+#view canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
+.vbar{position:absolute;left:10px;right:10px;top:10px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none;align-items:flex-start}
+.vbar>*{pointer-events:auto}
+.seg{display:inline-flex;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;overflow:hidden;backdrop-filter:blur(4px)}
+.seg button{background:none;border:0;padding:6px 10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed="true"]{background:var(--accent-d);color:#e9f6fc}
+.seg button:hover{color:var(--text)}
+.chipr{display:inline-flex;align-items:center;gap:8px;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--muted);font-family:var(--f-display);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.chipr input[type=range]{width:110px}
+.vfoot{position:absolute;left:10px;bottom:10px;right:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;pointer-events:none;font-family:var(--f-mono);font-size:11px;color:var(--dim)}
+.vfoot span{background:rgba(10,14,17,.7);padding:3px 7px;border-radius:3px}
+.tip{position:absolute;pointer-events:none;background:#0b1013ee;border:1px solid var(--line2);padding:5px 9px;border-radius:3px;font-size:12px;white-space:nowrap;transform:translate(12px,12px);z-index:5}
+.tip small{display:block;color:var(--muted);font-family:var(--f-mono);font-size:10px}
+.viewport:fullscreen{height:100%;max-height:none;border-radius:0;border:0}
+.viewport:-webkit-full-screen{height:100%;border-radius:0;border:0}
+.hud{position:absolute;right:10px;bottom:34px;display:grid;grid-template-columns:repeat(4,auto);gap:1px;background:var(--line2);border:1px solid var(--line2);border-radius:4px;overflow:hidden;font-family:var(--f-mono);font-size:12px}
+.hud div{background:rgba(10,14,17,.86);padding:5px 10px;display:flex;flex-direction:column;align-items:flex-end;min-width:74px}
+.hud span{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.hud b{font-weight:500;font-variant-numeric:tabular-nums}
+.hud b.x{color:var(--red)}
+.frozen{position:absolute;left:50%;top:58px;transform:translateX(-50%);background:rgba(10,14,17,.86);border:1px solid var(--amber);color:#ffd17a;font-family:var(--f-display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:13px;padding:4px 14px;border-radius:3px;pointer-events:none}
+.chipr output{font-family:var(--f-mono);font-size:11px;color:var(--text);min-width:42px;text-align:right;letter-spacing:0;text-transform:none}
+.calpanel{position:absolute;right:10px;top:110px;width:250px;max-width:calc(100% - 20px);background:rgba(10,14,17,.9);border:1px solid var(--line2);border-top:2px solid #6fe3ff;border-radius:4px;padding:8px 10px;display:grid;gap:6px;font-size:12px;color:var(--muted)}
+.calpanel label{display:grid;grid-template-columns:62px 1fr 58px;align-items:center;gap:6px}
+.calpanel label:nth-of-type(1){grid-template-columns:62px 1fr}
+.calpanel output{font-family:var(--f-mono);font-size:11px;color:var(--text);text-align:right}
+.calhead{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#a9ecff;font-size:12px}
+.calpanel button{background:var(--panel2);border:1px solid var(--line2);border-radius:3px;padding:3px 8px;font-size:11.5px;cursor:pointer;color:var(--text)}
+.calpanel button[aria-pressed="true"]{background:var(--accent-d);border-color:#3f7f9c}
+.calbtns{display:flex;gap:6px;justify-content:space-between}
+.oilkey{position:absolute;left:10px;bottom:66px;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 20px);background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:3px;padding:4px 10px;font-family:var(--f-mono);font-size:11px;color:var(--muted);pointer-events:none}
+.oilkey i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.flowkey{position:absolute;left:10px;bottom:34px;display:flex;align-items:center;gap:8px;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:3px;padding:4px 10px;font-family:var(--f-mono);font-size:11px;color:var(--muted);pointer-events:none}
+.flowkey i{display:block;width:110px;height:8px;border-radius:2px;background:linear-gradient(90deg,#2a6bff,#4f9dff 18%,#d98c59 45%,#ff4d1f 70%,#ff1a0d)}
+.st{position:absolute;pointer-events:none;transform:translate(-50%,-50%);font-family:var(--f-mono);font-size:10.5px;line-height:1.25;background:rgba(8,12,15,.82);border:1px solid var(--line2);border-left:3px solid var(--accent);padding:3px 6px;border-radius:2px;white-space:nowrap;color:var(--text)}
+.st.brg{border-left-color:var(--amber);color:#ffe2a8}
+.st b{font-family:var(--f-display);font-size:13px;color:var(--accent);margin-right:4px}
+
+/* ---------- side panel ---------- */
+.side{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.card h2{font-size:15px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 em{font-style:normal;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.02em;text-transform:none;color:var(--dim)}
+.sw{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tog{background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:8px 6px 7px;cursor:pointer;text-align:center;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);position:relative}
+.tog::before{content:"";display:block;width:26px;height:5px;margin:0 auto 6px;border-radius:2px;background:#26323a;box-shadow:inset 0 0 0 1px #33434f}
+.tog[aria-pressed="true"]{color:var(--text);border-color:#3c5463}
+.tog[aria-pressed="true"]::before{background:var(--green);box-shadow:0 0 8px #3fcf7488}
+.tog.warn[aria-pressed="true"]::before{background:var(--amber);box-shadow:0 0 8px #f0b13a88}
+.lever{margin-top:14px}
+.lever label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;gap:8px}
+.lever label output{font-family:var(--f-mono);color:var(--text)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--f-display);font-size:11px;letter-spacing:.06em;color:var(--dim);text-transform:uppercase;margin-top:2px}
+input[type=range]{width:100%;accent-color:var(--accent);height:22px}
+.fcl{display:grid;grid-template-columns:repeat(3,1fr)}
+.fcl button{padding:7px 4px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{flex:1 1 auto;background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:8px 10px;cursor:pointer;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.btn.pri{background:var(--accent-d);border-color:#3f7f9c;color:#eaf7fd}
+.btn:hover{border-color:var(--accent)}
+.amb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.amb .lever{margin-top:0}
+.note{font-size:12px;color:var(--muted);margin:10px 0 0}
+
+/* ---------- instrument panel ---------- */
+.panel{margin-top:14px;background:linear-gradient(#11171b,#0d1215);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+@media (max-width:1100px){.panel{grid-template-columns:1fr}}
+.gauges{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+@media (max-width:900px){.gauges{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:520px){.gauges{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gauges canvas{width:100%;aspect-ratio:1/1.08;max-width:100%;display:block}
+.ann{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;align-content:start}
+.lamp{font-family:var(--f-display);font-weight:600;font-size:11.5px;letter-spacing:.06em;text-align:center;padding:5px 2px;border-radius:2px;background:#161d22;color:#3b4852;border:1px solid #1f2930;text-transform:uppercase}
+.lamp.on.g{background:#12351f;color:#79f0a4;border-color:#1f6b3b;box-shadow:0 0 10px #3fcf7433}
+.lamp.on.a{background:#3b2c0c;color:#ffd17a;border-color:#7a5b16;box-shadow:0 0 10px #f0b13a33}
+.lamp.on.r{background:#3d1212;color:#ff9a9a;border-color:#8a2a2a;box-shadow:0 0 10px #ef4b4b44}
+.lamp.on.b{background:#10303d;color:#a6e2fa;border-color:#23607a}
+.readouts{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:10px}
+.ro{background:#0f1519;padding:5px 8px;display:flex;justify-content:space-between;gap:6px;font-size:11.5px}
+.ro span{color:var(--muted)}
+.ro b{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ---------- lower ---------- */
+.lower{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:1000px){.lower{grid-template-columns:1fr}}
+.info h3{font-size:26px;line-height:1.1;margin-bottom:2px}
+.info .ref{font-family:var(--f-mono);font-size:11px;color:var(--accent);letter-spacing:.03em}
+.info p{max-width:72ch;margin:10px 0 0;color:#c8d1d7}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin-top:12px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-family:var(--f-mono);font-size:12.5px}
+.parts{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.parts button{background:var(--panel2);border:1px solid var(--line2);border-radius:3px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--muted)}
+.parts button:hover,.parts button[aria-pressed="true"]{color:var(--text);border-color:var(--accent)}
+.log{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;font-size:12.5px}
+.log li{display:grid;grid-template-columns:48px 1fr;gap:8px;padding:5px 0;border-bottom:1px solid #1c262d}
+.log time{font-family:var(--f-mono);color:var(--dim);font-size:11.5px}
+.log li.a span{color:#ffd17a}
+.log li.r span{color:#ff9a9a}
+.log li.g span{color:#8ff0b2}
+#trend{width:100%;height:170px;display:block;margin-top:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+
+/* ---------- docs ---------- */
+.docs{margin-top:28px;border-top:1px solid var(--line);padding-top:22px}
+.docs>h2{font-size:30px;margin-bottom:4px}
+.docs>p{color:var(--muted);max-width:80ch;margin:0 0 18px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
+th{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+td.n{font-family:var(--f-mono);font-size:12px}
+caption{caption-side:top;text-align:left;font-family:var(--f-display);font-size:17px;font-weight:600;padding-bottom:6px}
+caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);font-weight:400;margin-left:8px;letter-spacing:.02em}
+.fine{font-size:12px;color:var(--dim);margin-top:18px;max-width:100ch}
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-family:var(--f-display);letter-spacing:.1em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
+.back:hover{border-color:var(--accent)}
+</style>
+<style>
+.g8{grid-template-columns:repeat(8,minmax(0,1fr))}
+@media (max-width:1250px){.g8{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:520px){.g8{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mags{display:grid;grid-template-columns:repeat(5,1fr)}
+.mags button{padding:7px 2px}
+#mag-start[aria-pressed="true"]{background:#5a3d0c;color:#ffd17a}
+.count{font-family:var(--f-mono);color:var(--amber);margin-left:4px}
+.flowkey2{position:absolute;left:10px;bottom:34px;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 20px);background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:3px;padding:4px 10px;font-family:var(--f-mono);font-size:11px;color:var(--muted);pointer-events:none}
+.flowkey2 i.bar{width:120px;height:6px;background:linear-gradient(90deg,#3380ff,#619eff 16%,#9eb8ff 33%,#ffbd4d 50%,#ff801a 60%,#9e4212 70%,#1a1a1a 80%,#0f0f12);outline:1px solid #3a444c}
+.flowkey2 i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+#cycle{width:100%;height:150px;display:block;margin-top:4px}
+.amb{grid-template-columns:1fr 1fr}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a href="moteurs.html" class="back">&#8592; Moteurs</a>
+
+<header class="top">
+  <div class="brand">
+    <h1>O-320<span>-E2D</span></h1>
+    <p>Lycoming quatre cylindres à plat, refroidi par air, à prise directe — reconstitution 3D et simulation de fonctionnement établies d'après le manuel d'utilisation Lycoming 60297-30, le catalogue de pièces PC-103 et la liste SFN-880.</p>
+  </div>
+  <div class="plate"><b>150 HP</b> à 2700 tr/min · 319,8 po³ · 7,0:1<br>H 22,99 · L 32,24 · Lg 29,05 po · 268 lb</div>
+</header>
+
+<section class="app">
+  <div class="viewport" id="vp">
+    <div id="view"><div class="loading" id="loading">Chargement du modèle 3D…</div></div>
+    <div class="vbar">
+      <div class="seg" role="group" aria-label="Rendu">
+        <button id="m-ext" aria-pressed="true">Extérieur</button>
+        <button id="m-cut" aria-pressed="false">Coupe horizontale</button>
+        <button id="m-xray" aria-pressed="false">Rayons X</button>
+      </div>
+      <div class="seg" role="group" aria-label="Vues">
+        <button id="v-34">3/4</button>
+        <button id="v-top">Dessus</button>
+        <button id="v-left">Gauche</button>
+        <button id="v-front">Avant</button>
+        <button id="v-rear">Arrière</button>
+      </div>
+      <div class="seg" role="group" aria-label="Affichage">
+        <button id="t-prop" aria-pressed="true">Hélice</button>
+        <button id="t-inst" aria-pressed="true">Installation</button>
+        <button id="t-cycle" aria-pressed="false">Cycle 4 temps</button>
+        <button id="t-cyl" aria-pressed="false" title="Affiche ou masque les couleurs des temps et le nuage de gaz dans les cylindres">Couleurs cylindres</button>
+        <button id="t-snd" aria-pressed="false">Son</button>
+      </div>
+      <div class="seg" role="group" aria-label="Flux">
+        <button id="t-gas" aria-pressed="false">Flux mélange / échappement</button>
+        <button id="t-oil" aria-pressed="false">Flux huile</button>
+      </div>
+      <div class="seg" role="group" aria-label="Style du flux">
+        <button id="fs-pts" aria-pressed="false">Particules</button>
+        <button id="fs-arr" aria-pressed="false">Flèches</button>
+        <button id="t-fcut" aria-pressed="false">Couper le flux</button>
+      </div>
+      <label class="chipr" for="flowspd">Vitesse flux <input id="flowspd" type="range" min="0" max="1" step="0.005" value="0.87"><output id="o-flowspd">×1,00</output></label>
+      <label class="chipr" for="slow">Ralenti visuel
+        <select id="slow" style="background:transparent;border:0;color:var(--text)">
+          <option value="0.2">×1/5</option>
+          <option value="0.05" selected>×1/20</option>
+          <option value="0.0167">×1/60</option>
+          <option value="0.005">×1/200</option>
+          <option value="1">temps réel</option>
+        </select></label>
+      <label class="chipr" for="explode">Éclaté <input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
+      <div class="seg"><button id="t-pause" aria-pressed="false" title="Figer / reprendre (Espace)">⏸ Figer</button></div>
+      <div class="seg"><button id="t-fs" aria-pressed="false" title="Plein écran (F)">⛶ Plein écran</button></div>
+    </div>
+    <div class="vfoot"><span id="rot-note">Rotation affichée ×1/20 — vilebrequin horaire vu de l'arrière</span><span>Glisser : orbite · Molette : zoom · Clic : identifier une pièce</span></div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="hud" id="hud" hidden></div>
+    <div class="frozen" id="frozen" hidden>Simulation figée</div>
+    <div class="flowkey2" id="flowkey" hidden><span><i class="bar"></i>mélange frais → compression → combustion → gaz brûlés (noir)</span><span><i style="background:#ff9a29"></i>huile chaude (vers radiateur)</span><span><i style="background:#ffd64d"></i>huile sous pression</span><span><i style="background:#b8611f"></i>retour d'huile</span><span><i style="background:#dbe9f0"></i>reniflard</span></div>
+  </div>
+
+  <aside class="side">
+    <div class="card">
+      <h2>Poste de pilotage <em id="phase">Ralenti</em></h2>
+      <div class="sw">
+        <button class="tog" id="sw-master" aria-pressed="true">Batterie</button>
+        <button class="tog" id="sw-fuel" aria-pressed="true">Carburant</button>
+        <button class="tog warn" id="sw-boost" aria-pressed="false">Pompe élec.</button>
+      </div>
+      <div class="lever">
+        <label>Sélecteur de magnétos <output id="o-mag">BOTH</output></label>
+        <div class="seg mags" role="group" aria-label="Magnétos">
+          <button id="mag-off" aria-pressed="false">Off</button>
+          <button id="mag-r" aria-pressed="false">R</button>
+          <button id="mag-l" aria-pressed="false">L</button>
+          <button id="mag-both" aria-pressed="true">Both</button>
+          <button id="mag-start" aria-pressed="false" title="Maintenir pour lancer le démarreur">Start ▸</button>
+        </div>
+      </div>
+      <div class="lever">
+        <label for="thr">Manette des gaz <output id="o-thr">RALENTI</output></label>
+        <input id="thr" type="range" min="0" max="1" step="0.005" value="0">
+        <div class="ticks"><span>Ralenti</span><span>¼</span><span>½</span><span>¾</span><span>Plein gaz</span></div>
+      </div>
+      <div class="lever">
+        <label for="mix">Mélange <output id="o-mix">PLEIN RICHE</output></label>
+        <input id="mix" type="range" min="0" max="1" step="0.005" value="1">
+        <div class="ticks"><span>Étouffoir</span><span></span><span></span><span>Plein riche</span></div>
+      </div>
+      <div class="sw" style="margin-top:14px">
+        <button class="tog warn" id="sw-heat" aria-pressed="false">Réchauf. carbu</button>
+        <button class="tog" id="b-prime">Primer <span id="o-prime" class="count">0</span></button>
+        <button class="tog" id="b-magchk">Essai magnétos</button>
+      </div>
+      <div class="btns">
+        <button class="btn pri" id="b-start">Démarrage auto</button>
+        <button class="btn" id="b-stop">Arrêt auto</button>
+        <button class="btn" id="b-cold">Moteur froid</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Conditions <em>hélice à pas fixe 76 po</em></h2>
+      <div class="amb">
+        <div class="lever"><label for="oat">OAT <output id="o-oat">15 °C</output></label><input id="oat" type="range" min="-30" max="45" step="1" value="15"></div>
+        <div class="lever"><label for="alt">Altitude <output id="o-alt">0 pi</output></label><input id="alt" type="range" min="0" max="12000" step="250" value="0"></div>
+        <div class="lever"><label for="rh">Humidité <output id="o-rh">60 %</output></label><input id="rh" type="range" min="0" max="100" step="1" value="60"></div>
+        <div class="lever"><label for="ias">Vitesse air <output id="o-ias">0 kt</output></label><input id="ias" type="range" min="0" max="140" step="1" value="0"></div>
+      </div>
+      <p class="note">Au sol (0 kt), le moteur est peu refroidi : le manuel limite le plein gaz au sol à 3 minutes. Humidité &gt; 50 % et air entre −7 et +32 °C : risque de givrage carburateur.</p>
+    </div>
+  </aside>
+</section>
+
+<section class="panel" aria-label="Instruments moteur">
+  <div class="gauges g8">
+    <canvas id="g-rpm"></canvas><canvas id="g-map"></canvas><canvas id="g-op"></canvas><canvas id="g-ot"></canvas>
+    <canvas id="g-cht"></canvas><canvas id="g-egt"></canvas><canvas id="g-ff"></canvas><canvas id="g-fp"></canvas>
+  </div>
+  <div>
+    <div class="ann">
+      <div class="lamp a" id="L-start">Démarreur</div>
+      <div class="lamp g" id="L-magl">Magnéto G</div>
+      <div class="lamp g" id="L-magr">Magnéto D</div>
+      <div class="lamp a" id="L-heat">Réchauf.</div>
+      <div class="lamp r" id="L-ice">Givrage</div>
+      <div class="lamp r" id="L-flood">Noyé</div>
+      <div class="lamp r" id="L-op">Press. huile</div>
+      <div class="lamp r" id="L-cht">CHT</div>
+      <div class="lamp r" id="L-rpm">Régime</div>
+      <div class="lamp a" id="L-boost">Pompe élec.</div>
+      <div class="lamp r" id="L-fuel">Carburant</div>
+      <div class="lamp g" id="L-run">Combustion</div>
+    </div>
+    <div class="readouts">
+      <div class="ro"><span>Puissance</span><b id="r-bhp">0 hp</b></div>
+      <div class="ro"><span>% nominal</span><b id="r-pct">0 %</b></div>
+      <div class="ro"><span>Couple</span><b id="r-trq">0 lb·pi</b></div>
+      <div class="ro"><span>Richesse λ</span><b id="r-lam">—</b></div>
+      <div class="ro"><span>Air carbu</span><b id="r-tcarb">15 °C</b></div>
+      <div class="ro"><span>Givre carbu</span><b id="r-ice">0 %</b></div>
+      <div class="ro"><span>CSP</span><b id="r-sfc">—</b></div>
+      <div class="ro"><span>Vilebrequin</span><b id="r-crank">0°</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="lower">
+  <div class="card info" id="info">
+    <h2>Composant <em>cliquez une pièce dans la vue 3D</em></h2>
+    <div id="info-body"></div>
+    <div class="parts" id="parts"></div>
+  </div>
+  <div class="side">
+    <div class="card">
+      <h2>Cycle à quatre temps <em>ordre d'allumage 1-3-2-4</em></h2>
+      <canvas id="cycle"></canvas>
+      <div class="legend">
+        <span><i style="background:#4aa3ff"></i>Admission</span>
+        <span><i style="background:#9d7bff"></i>Compression</span>
+        <span><i style="background:#ff7a2a"></i>Détente</span>
+        <span><i style="background:#8a929a"></i>Échappement</span>
+        <span><i style="background:#6fbfff"></i>Étincelle 25° avant PMH (point bleu dans la culasse)</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Tendances <em>60 dernières secondes</em></h2>
+      <canvas id="trend"></canvas>
+      <div class="legend">
+        <span><i style="background:#7cc4e4"></i>Régime ÷ 30</span>
+        <span><i style="background:#f0b13a"></i>Pression admission (po Hg × 3)</span>
+        <span><i style="background:#ff6a4a"></i>CHT ÷ 5 °F</span>
+        <span><i style="background:#3fcf74"></i>Pression d'huile</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Journal moteur <em id="clock">00:00</em></h2>
+      <ul class="log" id="log"></ul>
+    </div>
+  </div>
+</section>
+
+<section class="docs">
+  <h2>Fiche technique</h2>
+  <p>Les valeurs de la simulation proviennent de ces tableaux, tirés du manuel d'utilisation Lycoming O-320 (réf. 60297-30, 3e édition, octobre 2006) et du catalogue de pièces PC-103.</p>
+  <div class="dgrid">
+    <div class="card tbl">
+      <table>
+        <caption>Caractéristiques <small>Manuel d'utilisation · section 2</small></caption>
+        <tbody>
+          <tr><td>Type</td><td>4 cylindres opposés à plat, refroidi par air, prise directe</td></tr>
+          <tr><td>Puissance nominale</td><td class="n">150 HP à 2700 tr/min (séries A et E)</td></tr>
+          <tr><td>Alésage × course</td><td class="n">5,125 × 3,875 po</td></tr>
+          <tr><td>Cylindrée</td><td class="n">319,8 po³ (5,24 L)</td></tr>
+          <tr><td>Taux de compression</td><td class="n">7,0:1 (séries A, E) · 8,5:1 (B, D)</td></tr>
+          <tr><td>Ordre d'allumage</td><td class="n">1-3-2-4</td></tr>
+          <tr><td>Avance à l'allumage</td><td class="n">25° avant PMH</td></tr>
+          <tr><td>Rotation de l'hélice</td><td class="n">horaire vue de l'arrière · rapport 1:1</td></tr>
+          <tr><td>Jeu culbuteurs (poussoirs à plat)</td><td class="n">0,028–0,080 po</td></tr>
+          <tr><td>Carburateur</td><td class="n">Marvel-Schebler MA-4SPA à flotteur</td></tr>
+          <tr><td>Magnétos (E2D)</td><td class="n">Slick 4051 (G) · 4050 (D)</td></tr>
+          <tr><td>Masse sèche (E2D)</td><td class="n">268 lb</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tbl">
+      <table>
+        <caption>Conditions de fonctionnement <small>Manuel d'utilisation · section 3</small></caption>
+        <thead><tr><th>Régime</th><th>tr/min</th><th>HP</th><th>Carburant gal/h</th><th>Huile qt/h max</th></tr></thead>
+        <tbody>
+          <tr><td>Nominal</td><td class="n">2700</td><td class="n">150</td><td class="n">—</td><td class="n">0,67</td></tr>
+          <tr><td>Croisière performance (75 %)</td><td class="n">2450</td><td class="n">110</td><td class="n">10,0</td><td class="n">0,37</td></tr>
+          <tr><td>Croisière économique (65 %)</td><td class="n">2350</td><td class="n">97</td><td class="n">8,8</td><td class="n">0,33</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Pression d'huile : 60–90 psi en fonctionnement, 25 psi mini au ralenti, 100 psi maxi au démarrage. Huile à l'entrée : 180 °F souhaité, 245 °F maxi. CHT maxi 500 °F (435 °F conseillé en continu). Carburant à l'entrée du carburateur : 0,5–8 psi. Carter : 8 qt US, minimum 2 qt. Essence 80/87 minimum.</p>
+    </div>
+    <div class="card tbl">
+      <table>
+        <caption>Entraînements d'accessoires <small>Manuel d'utilisation · section 2</small></caption>
+        <thead><tr><th>Accessoire</th><th>Rapport</th><th>Sens (vu face à la prise)</th></tr></thead>
+        <tbody>
+          <tr><td>Démarreur</td><td class="n">13,556:1</td><td>Antihoraire</td></tr>
+          <tr><td>Alternateur</td><td class="n">3,250:1</td><td>Horaire</td></tr>
+          <tr><td>Tachymètre</td><td class="n">0,500:1</td><td>Horaire</td></tr>
+          <tr><td>Magnétos</td><td class="n">1,000:1</td><td>Horaire</td></tr>
+          <tr><td>Pompe à vide</td><td class="n">1,300:1</td><td>Antihoraire</td></tr>
+          <tr><td>Pompe carburant AN20003</td><td class="n">1,000:1</td><td>Antihoraire</td></tr>
+          <tr><td>Régulateur d'hélice (sur boîtier)</td><td class="n">0,866:1</td><td>Horaire</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tbl">
+      <table>
+        <caption>Puissance plein gaz en altitude <small>Manuel d'utilisation · section 8</small></caption>
+        <thead><tr><th>Altitude pi</th><th>% HP niveau mer</th><th>Altitude pi</th><th>% HP niveau mer</th></tr></thead>
+        <tbody>
+          <tr><td class="n">0</td><td class="n">100</td><td class="n">7 000</td><td class="n">78,9</td></tr>
+          <tr><td class="n">2 000</td><td class="n">93,6</td><td class="n">8 000</td><td class="n">76,2</td></tr>
+          <tr><td class="n">4 000</td><td class="n">87,5</td><td class="n">10 000</td><td class="n">70,8</td></tr>
+          <tr><td class="n">5 000</td><td class="n">84,6</td><td class="n">12 000</td><td class="n">65,8</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="fine">Simulation pédagogique : la thermodynamique est un modèle simplifié, calé sur les courbes et limites publiées (puissance au niveau de la mer, consommations, limites d'huile et de culasse), et ne remplace ni le manuel, ni une formation approuvée, ni le manuel de vol de l'avion. Les températures évoluent environ trois fois plus vite qu'en réalité pour rester lisibles. Hélice, échappement, silencieux et prise d'air de réchauffage figurés d'après une installation type Cessna 172 (propres à l'avion). Distribution (calage des soupapes, forme des cames) et cotes internes figurées.</p>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script>
+window.addEventListener('error', e => {
+  const v = document.getElementById('view');
+  if (v && !v.querySelector('.err')) { const d = document.createElement('div'); d.className = 'loading err'; d.textContent = 'Erreur de chargement : ' + (e.message || 'script bloqué'); v.appendChild(d); }
+});
+(function () {
+if (typeof THREE === 'undefined') { document.getElementById('loading').textContent = 'Three.js n\'a pas pu être chargé (connexion internet requise).'; return; }
+const { OrbitControls, RoomEnvironment } = THREE;
+THREE.ColorManagement.legacyMode = false;
+
+/* =====================================================================
+   Repère : x = pouces depuis la bride d'hélice vers l'arrière, y = haut,
+   z = côté gauche (vu de l'arrière) positif. Monde : avant = -X.
+   Cylindres impairs à droite (z < 0), pairs à gauche (z > 0).
+   ===================================================================== */
+const S = 0.05, TAU = Math.PI * 2, XC = 14.5, DEG = Math.PI / 180;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const W = (x, y, z) => new THREE.Vector3((x - XC) * S, y * S, z * S);
+const $ = id => document.getElementById(id);
+const R_CRANK = 1.9375, L_ROD = 6.75, BORE_R = 2.5625;
+const CYL = [
+  { n: 1, s: -1, x: 9.4, off: 0, beta: 0 },
+  { n: 2, s: 1, x: 11.3, off: 360, beta: Math.PI },
+  { n: 3, s: -1, x: 16.2, off: 180, beta: Math.PI },
+  { n: 4, s: 1, x: 18.1, off: 540, beta: 0 },
+];
+
+const view = $('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.localClippingEnabled = true;
+view.appendChild(renderer.domElement);
+$('loading').remove();
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+scene.add(new THREE.HemisphereLight(0xcfe6f5, 0x1a1410, 0.5));
+const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(-3, 5, 4); scene.add(key);
+const rim = new THREE.DirectionalLight(0x88bbdd, 0.7); rim.position.set(4, 1, -4); scene.add(rim);
+const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 200);
+camera.position.set(-3.3, 2.1, 4.1);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 0.8; controls.maxDistance = 14;
+controls.target.set(0, -0.05, 0);
+const grid = new THREE.GridHelper(12, 24, 0x24313b, 0x172026); grid.position.y = -2.55; grid.material.transparent = true; grid.material.opacity = 0.5; scene.add(grid);
+
+const eng = new THREE.Group(); scene.add(eng);
+const modCase = new THREE.Group(), modSump = new THREE.Group(), modAcc = new THREE.Group(), modFront = new THREE.Group(), modInst = new THREE.Group();
+eng.add(modCase, modSump, modAcc, modFront, modInst);
+
+/* ---------- registres ---------- */
+const partMats = {}, pickables = [], staticMats = new Set();
+const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.02 * S);
+function M(part, o, moving = false) {
+  const m = new THREE.MeshStandardMaterial(Object.assign({ metalness: 0.7, roughness: 0.4, side: THREE.DoubleSide }, o));
+  (partMats[part] ||= []).push(m);
+  m.userData.baseOpacity = m.opacity; m.userData.baseTransparent = m.transparent; m.userData.moving = moving;
+  if (!moving) staticMats.add(m);
+  return m;
+}
+function reg(part, ...objs) { for (const o of objs) { o.userData.part = part; pickables.push(o); } }
+const addTo = (parent, part, mesh) => { parent.add(mesh); if (part) reg(part, mesh); return mesh; };
+function box(sx, sy, sz, pos, mat, part, parent, rot) { const m = new THREE.Mesh(new THREE.BoxGeometry(sx * S, sy * S, sz * S), mat); m.position.copy(pos); if (rot) m.rotation.set(rot[0], rot[1], rot[2]); return addTo(parent, part, m); }
+function cylX(r, x0, x1, y, z, mat, part, parent, seg = 32, r2) { const g = new THREE.CylinderGeometry((r2 ?? r) * S, r * S, (x1 - x0) * S, seg); g.rotateZ(Math.PI / 2); const m = new THREE.Mesh(g, mat); m.position.copy(W((x0 + x1) / 2, y, z)); return addTo(parent, part, m); }
+function tubeW(pts, rad, mat, part, parent, seg = 60) { const c = new THREE.CatmullRomCurve3(pts); return addTo(parent, part, new THREE.Mesh(new THREE.TubeGeometry(c, seg, rad * S, 10), mat)); }
+function rrect(w, h, r) { const s = new THREE.Shape(), x = -w / 2, y = -h / 2; s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s; }
+function octShape(w, h, c) { const s = new THREE.Shape(), a = w / 2, b = h / 2; s.moveTo(-a + c, -b); s.lineTo(a - c, -b); s.lineTo(a, -b + c); s.lineTo(a, b - c); s.lineTo(a - c, b); s.lineTo(-a + c, b); s.lineTo(-a, b - c); s.lineTo(-a, -b + c); s.closePath(); return s; }
+function gearGeo(r, teeth, width) {
+  const sh = new THREE.Shape(), h = Math.min(0.12, (TAU * r / teeth) * 0.3);
+  for (let i = 0; i < teeth; i++) { const a = i * TAU / teeth, d = TAU / teeth;
+    [[r - h, a], [r + h, a + d * 0.18], [r + h, a + d * 0.45], [r - h, a + d * 0.63]].forEach(([rr, aa], k) => { const x = rr * S * Math.cos(aa), y = rr * S * Math.sin(aa); (i === 0 && k === 0) ? sh.moveTo(x, y) : sh.lineTo(x, y); }); }
+  sh.closePath(); const hole = new THREE.Path(); hole.absarc(0, 0, r * 0.3 * S, 0, TAU, true); sh.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: width * S, bevelEnabled: false }); g.translate(0, 0, -width * S / 2); g.rotateY(Math.PI / 2); return g;   // axe = X
+}
+// loft le long de X : sections [{ x, pts: [[z, y], ...] }] (contours fermés, même nombre de points)
+function loftX(secs, mat, part, parent, skip) {
+  const K = secs[0].pts.length, pos = [], uv = [], idx = [], x0 = secs[0].x, x1 = secs[secs.length - 1].x;
+  for (const s of secs) s.pts.forEach(([z, y], k) => { pos.push((s.x - XC) * S, y * S, z * S); uv.push(k / K * 6, (s.x - x0) / (x1 - x0) * 3); });
+  for (let i = 0; i < secs.length - 1; i++) for (let k = 0; k < K; k++) { if (skip && skip(i, k, secs)) continue; const a = i * K + k, b = i * K + (k + 1) % K; idx.push(a, a + K, b, b, a + K, b + K); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  return addTo(parent, part, new THREE.Mesh(g, mat));
+}
+// intersection d'un rayon (depuis (0, cy), angle th : 0 = haut, + = z positif) avec un contour (z, y)
+function rayAt(poly, cy, th) {
+  const dz = Math.sin(th), dy = Math.cos(th); let best = 1e9;
+  for (let i = 0; i < poly.length; i++) { const [z1, y1] = poly[i], [z2, y2] = poly[(i + 1) % poly.length], ez = z2 - z1, ey = y2 - y1, det = -dz * ey + ez * dy; if (Math.abs(det) < 1e-9) continue;
+    const ry = y1 - cy, t = (-z1 * ey + ez * ry) / det, u = (dz * ry - dy * z1) / det; if (t > 0 && u >= -1e-6 && u <= 1 + 1e-6 && t < best) best = t; }
+  return [dz * best, cy + dy * best];
+}
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; }
+
+/* =====================================================================
+   MATÉRIAUX
+   ===================================================================== */
+const castTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'), d = x.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = 120 + Math.random() * 50; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } x.putImageData(d, 0, 0); const c2 = document.createElement('canvas'); c2.width = c2.height = 256; const x2 = c2.getContext('2d'); x2.filter = 'blur(2px)'; x2.drawImage(c, 0, 0); x.clearRect(0, 0, 256, 256); x.drawImage(c2, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+const mCase = M('crankcase', { color: 0x5f686e, metalness: 0.18, roughness: 0.72, bumpMap: castTex, bumpScale: 0.03 });
+const mSump = M('sump', { color: 0x5a6369, metalness: 0.18, roughness: 0.72, bumpMap: castTex, bumpScale: 0.03 });
+const mAccH = M('acchousing', { color: 0x5f686e, metalness: 0.18, roughness: 0.72, bumpMap: castTex, bumpScale: 0.03 });
+const mBarrel = M('cylinder', { color: 0x3f4448, metalness: 0.75, roughness: 0.45 });
+const mBore = M('cylinder', { color: 0xb8bdc1, metalness: 0.95, roughness: 0.18 });
+const mHead = M('head', { color: 0x9aa2a7, metalness: 0.55, roughness: 0.45 });
+const coverTex = canvasTex(512, 420, (g, w, h) => { g.fillStyle = '#8b949a'; g.fillRect(0, 0, w, h); g.fillStyle = '#7d868c'; g.font = 'bold 76px Arial Narrow, Arial, sans-serif'; g.textAlign = 'center'; g.fillText('LYCOMING', w / 2, h / 2 + 26); g.fillRect(w * 0.2, h / 2 + 50, w * 0.6, 6); g.fillRect(w * 0.2, h / 2 - 70, w * 0.6, 6); });
+const mCover = M('rockercover', { color: 0xffffff, map: coverTex, metalness: 0.5, roughness: 0.45 });
+const mCoverEdge = M('rockercover', { color: 0x8b949a, metalness: 0.5, roughness: 0.45 });
+const mTubeShroud = M('shroudtube', { color: 0x9aa2a7, metalness: 0.7, roughness: 0.35 });
+const mIntake = M('intake', { color: 0x9aa2a7, metalness: 0.7, roughness: 0.35 });
+const mHose = M('intake', { color: 0x1c1f22, metalness: 0.1, roughness: 0.8 });
+const mExh = M('exhaust', { color: 0x8a7b6a, metalness: 0.8, roughness: 0.45 });
+const mMuffler = M('muffler', { color: 0x9a948c, metalness: 0.8, roughness: 0.4 });
+const mScat = M('muffler', { color: 0xb33a2a, metalness: 0.1, roughness: 0.8 });
+const mMag = M('magneto', { color: 0x2a2e31, metalness: 0.35, roughness: 0.5 });
+const mMagCap = M('magneto', { color: 0xb8bcbf, metalness: 0.7, roughness: 0.35 });
+const mLead = M('harness', { color: 0xc9cdd0, metalness: 0.6, roughness: 0.45 });
+const mPlug = M('plugs', { color: 0xd8dadb, metalness: 0.7, roughness: 0.3 });
+const mPlugBody = M('plugs', { color: 0xe9e6dc, metalness: 0.1, roughness: 0.5 });
+const mCarb = M('carburetor', { color: 0xa8976a, metalness: 0.55, roughness: 0.45, bumpMap: castTex, bumpScale: 0.02 });
+const mAirbox = M('carburetor', { color: 0x40474c, metalness: 0.4, roughness: 0.5 });
+const mStarter = M('starter', { color: 0x2e3337, metalness: 0.4, roughness: 0.5 });
+const mAlt = M('alternator', { color: 0x9aa0a4, metalness: 0.75, roughness: 0.35 });
+const mBelt = M('alternator', { color: 0x1a1a1a, metalness: 0.05, roughness: 0.9 });
+const mFuelPump = M('fuelpump', { color: 0x6d777d, metalness: 0.6, roughness: 0.4 });
+const mOilFit = M('oilsystem', { color: 0xb8a15c, metalness: 0.8, roughness: 0.35 });
+const mOilTube = M('oilsystem', { color: 0xb9bec2, metalness: 0.8, roughness: 0.3 });
+const mFiller = M('oilfiller', { color: 0x6b767d, metalness: 0.5, roughness: 0.45 });
+const mFillerCap = M('oilfiller', { color: 0xc49a3a, metalness: 0.6, roughness: 0.4 });
+const mBaffle = M('baffles', { color: 0x8c9296, metalness: 0.6, roughness: 0.45 });
+const mBolt = M('crankcase', { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
+const honeTex = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#b3b8bc'; g.fillRect(0, 0, w, h); g.lineWidth = 1; for (let i = -h; i < w; i += 7) { g.strokeStyle = i % 14 ? 'rgba(90,96,100,.35)' : 'rgba(235,238,240,.35)'; g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h * 0.55, h); g.stroke(); g.beginPath(); g.moveTo(i + h * 0.55, 0); g.lineTo(i, h); g.stroke(); } });
+honeTex.wrapS = honeTex.wrapT = THREE.RepeatWrapping; honeTex.repeat.set(8, 3); mBore.map = honeTex; mBore.color.set(0xffffff);
+const mBronze = M('rods', { color: 0xb3874a, metalness: 0.9, roughness: 0.35 }, true);
+const mCrankDark = M('crankshaft', { color: 0x2a2d30, metalness: 0.4, roughness: 0.6 }, true);
+const mPistonDark = M('pistons', { color: 0x8f9292, metalness: 0.5, roughness: 0.5 }, true);
+const mMount = M('mounts', { color: 0x2b2e30, metalness: 0.2, roughness: 0.7 });
+const mTach = M('acchousing', { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
+// pièces mobiles (jamais coupées)
+const mCrank = M('crankshaft', { color: 0xc3c8cc, metalness: 0.95, roughness: 0.22 }, true);
+const mRod = M('rods', { color: 0xa9b0b5, metalness: 0.9, roughness: 0.28 }, true);
+const mPiston = M('pistons', { color: 0xd4d6d6, metalness: 0.75, roughness: 0.3 }, true);
+const mRing = M('pistons', { color: 0x55595c, metalness: 0.8, roughness: 0.35 }, true);
+const mCam = M('camshaft', { color: 0xb3b9bd, metalness: 0.95, roughness: 0.25 }, true);
+const mValve = M('valves', { color: 0xc9ccce, metalness: 0.9, roughness: 0.25 }, true);
+const mSpring = M('valves', { color: 0x4a4f53, metalness: 0.8, roughness: 0.35 }, true);
+const mRocker = M('rockers', { color: 0xb3b9bd, metalness: 0.9, roughness: 0.28 }, true);
+const mPushrod = M('pushrods', { color: 0xc9ccce, metalness: 0.9, roughness: 0.25 }, true);
+const mProp = M('propeller', { color: 0x23272a, metalness: 0.2, roughness: 0.55 }, true);
+const mPropTip = M('propeller', { color: 0xe8e8e2, metalness: 0.1, roughness: 0.5 }, true);
+const mSpinner = M('propeller', { color: 0xd6d9db, metalness: 0.6, roughness: 0.3 }, true);
+const mRing2 = M('ringgear', { color: 0xc6cacc, metalness: 0.95, roughness: 0.25 }, true);
+
+/* =====================================================================
+   CARTER (deux demi-carters en alliage d'aluminium, plan de joint vertical)
+   ===================================================================== */
+// contour de la section courante (z, y), sommet arrondi au-dessus de l'arbre à cames, plans d'embase verticaux
+const CASE_R = [[0, 6.5], [1.5, 6.42], [2.8, 6.1], [3.8, 5.45], [4.55, 4.6], [5.2, 3.8], [5.8, 3.1], [5.8, -3.1], [5.5, -3.45], [4.9, -3.6], [3.5, -3.6], [0, -3.6]];
+const CASE_FLAT = 3.1, CASE_X0 = 6.3, CASE_X1 = 21.45;   // flancs plats : remplacés par des tôles percées aux alésages des cylindres
+const CASE_POLY = [...CASE_R, ...CASE_R.slice(1, -1).reverse().map(([z, y]) => [-z, y])];
+const CASE_CY = 1.4;
+const caseAt = th => rayAt(CASE_POLY, CASE_CY, th);            // point du contour dans la direction th (0 = haut, + = côté gauche)
+const onCase = (x, th, off, len, r, mat, part, parent, seg = 16) => {   // bossage cylindrique perpendiculaire à la paroi
+  const [z, y] = caseAt(th), n = new THREE.Vector3(0, Math.cos(th), Math.sin(th));
+  const g = new THREE.CylinderGeometry(r * S, r * S, len * S, seg); const m = new THREE.Mesh(g, mat);
+  m.position.copy(W(x, y + n.y * off, z + n.z * off)); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n); return addTo(parent, part, m);
+};
+{
+  // coque principale : loft du nez rond (joint d'hélice) vers la section du carter
+  const K = 96, circ = (r, cy) => Array.from({ length: K }, (_, k) => { const th = k / K * TAU; return [r * Math.sin(th), cy + r * Math.cos(th)]; });
+  const body = Array.from({ length: K }, (_, k) => caseAt(k / K * TAU));
+  const mix = (a, b, t) => a.map((p, k) => [lerp(p[0], b[k][0], t), lerp(p[1], b[k][1], t)]);
+  const nose = circ(3.35, 0), flange = body.map(([z, y]) => [z * 1.035, CASE_CY + (y - CASE_CY) * 1.035]);
+  const onFlat = ([z, y]) => Math.abs(z) > 5.79 && Math.abs(y) <= CASE_FLAT + 1e-3;
+  loftX([{ x: 4.0, pts: nose }, { x: 5.0, pts: mix(nose, body, 0.6) }, { x: 5.9, pts: mix(nose, body, 0.95) }, { x: CASE_X0, pts: body }, { x: CASE_X1, pts: body }, { x: 21.5, pts: flange }, { x: 21.9, pts: flange }], mCase, 'crankcase', modCase,
+    (i, k, s) => i === 3 && onFlat(s[3].pts[k]) && onFlat(s[3].pts[(k + 1) % K]));
+  // flancs : tôles de fonderie percées aux alésages des jupes de cylindres
+  for (const side of [1, -1]) {
+    const sh = new THREE.Shape(); const u0 = (CASE_X0 - XC) * S, u1 = (CASE_X1 - XC) * S, v = CASE_FLAT * S;
+    sh.moveTo(u0, -v); sh.lineTo(u1, -v); sh.lineTo(u1, v); sh.lineTo(u0, v); sh.closePath();
+    for (const c of CYL) if (c.s === side) sh.holes.push(new THREE.Path().absarc((c.x - XC) * S, 0, 2.9 * S, 0, TAU, true));
+    const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.3 * S, bevelEnabled: false, curveSegments: 24 }), mCase); m.position.z = (side > 0 ? 5.5 : -5.8) * S; addTo(modCase, 'crankcase', m);
+  }
+  // nez (palier avant et joint d'hélice)
+  cylX(3.3, 1.9, 4.2, 0, 0, mCase, 'crankcase', modCase, 40, 2.6);
+  cylX(2.75, 1.75, 2.0, 0, 0, mCase, 'crankcase', modCase, 40);
+  // nervures de fonderie qui raidissent le nez
+  for (const th of [0.75, -0.75, 2.35, -2.35]) {
+    const pts = [4.0, 5.0, 5.9, 6.3, 8.6].map((x, i) => { const t = [0, 0.6, 0.95, 1, 1][i], b = caseAt(th), n = [3.35 * Math.sin(th), 3.35 * Math.cos(th)]; const z = lerp(n[0], b[0], t), y = lerp(n[1], b[1], t); return W(x, y + Math.cos(th) * 0.12, z + Math.sin(th) * 0.12); });
+    tubeW([W(2.6, 2.9 * Math.cos(th), 2.9 * Math.sin(th)), ...pts], 0.2, mCase, 'crankcase', modCase, 24);
+  }
+  // bossages de montage des cylindres (plats d'embase)
+  for (const c of CYL) { const sh = rrect(7.4 * S, 7.6 * S, 0.6 * S); sh.holes.push(new THREE.Path().absarc(0, 0, 2.9 * S, 0, TAU, true));
+    const m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 0.5 * S, bevelEnabled: false, curveSegments: 24 }), mCase); m.position.copy(W(c.x, 0, c.s * 5.95 - 0.25)); addTo(modCase, 'crankcase', m); }
+  // plan de joint : nervure du dessus boulonnée de part en part (boulons transversaux + écrous)
+  box(16.8, 0.8, 0.55, W(13.4, 6.8, 0), mCase, 'crankcase', modCase);
+  box(3.6, 0.5, 0.55, W(6.0, -3.85, 0), mCase, 'crankcase', modCase);
+  { const xs = []; for (let x = 5.8; x <= 21.2; x += 1.28) xs.push([x, 6.85]); for (const x of [4.8, 6.0, 7.2]) xs.push([x, -3.85]);
+    const sh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.17 * S, 0.17 * S, 1.3 * S, 8).rotateX(Math.PI / 2), mBolt, xs.length);
+    const nt = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.32 * S, 0.32 * S, 0.24 * S, 6).rotateX(Math.PI / 2), mBolt, xs.length * 2);
+    xs.forEach(([x, y], i) => { sh.setMatrixAt(i, new THREE.Matrix4().setPosition(W(x, y, 0))); nt.setMatrixAt(i * 2, new THREE.Matrix4().setPosition(W(x, y, 0.4))); nt.setMatrixAt(i * 2 + 1, new THREE.Matrix4().setPosition(W(x, y, -0.4))); });
+    addTo(modCase, 'crankcase', sh); addTo(modCase, 'crankcase', nt); }
+  // écrous d'embase des cylindres (8 par cylindre)
+  const nuts = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28 * S, 0.28 * S, 0.35 * S, 6), mBolt, 32);
+  let k = 0;
+  for (const c of CYL) for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + TAU / 16; const p = W(c.x + 3.3 * Math.cos(a), 3.3 * Math.sin(a), c.s * 6.72); nuts.setMatrixAt(k++, new THREE.Matrix4().makeRotationX(Math.PI / 2).setPosition(p)); }
+  addTo(modCase, 'crankcase', nuts);
+  // bossages des goujons traversants au-dessus / au-dessous des cylindres, avec écrous
+  for (const c of CYL) for (const dx of [-2.5, 2.5]) for (const th of [1.02, 2.05]) {
+    const t = c.s > 0 ? th : -th;
+    onCase(c.x + dx, t, 0.0, 0.5, 0.62, mCase, 'crankcase', modCase, 18);
+    onCase(c.x + dx, t, 0.3, 0.22, 0.34, mBolt, 'crankcase', modCase, 6);
+  }
+  // bossages des poussoirs hydrauliques : les tubes enveloppes entrent ici (joint caoutchouc + ressort)
+  for (const c of CYL) for (const dx of [-0.95, 0.95]) {
+    const dir = new THREE.Vector3(0, -0.55, 6.8 * c.s).normalize(), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.62 * S, 0.7 * S, 0.9 * S, 18), mCase); b.position.copy(W(c.x + dx, 4.03, c.s * 4.95)); b.quaternion.copy(q); addTo(modCase, 'crankcase', b);
+    const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.5 * S, 0.5 * S, 0.3 * S, 16), mHose); sl.position.copy(W(c.x + dx, 3.99, c.s * 5.55)); sl.quaternion.copy(q); addTo(modCase, 'crankcase', sl);
+    const sp = new THREE.Mesh(new THREE.TorusGeometry(0.47 * S, 0.06 * S, 6, 18), mBolt); sp.position.copy(W(c.x + dx, 3.98, c.s * 5.72)); sp.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir)); addTo(modCase, 'crankcase', sp);
+  }
+  // anneau de levage sur le dessus
+  box(1.4, 1.0, 0.3, W(14.4, 7.55, 0), mCase, 'crankcase', modCase);
+  addTo(modCase, 'crankcase', new THREE.Mesh(new THREE.TorusGeometry(0.5 * S, 0.17 * S, 8, 20), mCase)).position.copy(W(14.4, 8.2, 0));
+  // plage de régulateur (non utilisée sur hélice à pas fixe) : couvercle et 4 écrous, avant gauche
+  onCase(6.3, 0.62, 0.1, 0.35, 1.05, mCase, 'crankcase', modCase, 24);
+  for (const [dx, dt] of [[-0.7, -0.12], [0.7, -0.12], [-0.7, 0.12], [0.7, 0.12]]) onCase(6.3 + dx, 0.62 + dt, 0.36, 0.28, 0.2, mBolt, 'crankcase', modCase, 6);
+  // soupape de régulation de pression d'huile (haut droit, devant le boîtier d'accessoires) : bossage + bouchon six pans
+  onCase(20.2, -0.95, 0.1, 0.55, 0.6, mCase, 'crankcase', modCase, 16);
+  onCase(20.2, -0.95, 0.55, 0.45, 0.45, mOilFit, 'oilsystem', modCase, 6);
+  // plaque constructeur rivetée (arrière, dessus droit)
+  { const [z, y] = caseAt(-0.42), tex = canvasTex(256, 140, (g, w, h) => { g.fillStyle = '#c9c4b4'; g.fillRect(0, 0, w, h); g.strokeStyle = '#6b6658'; g.lineWidth = 4; g.strokeRect(6, 6, w - 12, h - 12); g.fillStyle = '#3a372f'; g.textAlign = 'center'; g.font = 'bold 30px Arial'; g.fillText('LYCOMING', w / 2, 44); g.font = '17px Arial'; g.fillText('WILLIAMSPORT, PA  U.S.A.', w / 2, 70); g.font = 'bold 22px Arial'; g.fillText('MODEL  O-320', w / 2, 100); g.font = '16px Arial'; g.fillText('SERIAL No. L-', w / 2, 124); });
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(2.4 * S, 1.3 * S), M('crankcase', { map: tex, color: 0xffffff, metalness: 0.5, roughness: 0.5 }));
+    p.position.copy(W(19.6, y + Math.cos(-0.42) * 0.03, z + Math.sin(-0.42) * 0.03)); p.lookAt(p.position.clone().add(new THREE.Vector3(0, Math.cos(-0.42), Math.sin(-0.42)))); addTo(modCase, 'crankcase', p); }
+  // bossages de support moteur (arrière du carter)
+  for (const [y, z] of [[4.2, 6.0], [4.2, -6.0], [-2.2, 6.0], [-2.2, -6.0]]) { box(1.4, 1.4, 2.2, W(21.1, y, z * 0.94), mCase, 'crankcase', modCase); cylX(0.85, 21.8, 23.2, y, z * 1.08, mMount, 'mounts', modInst, 18); }
+  // cheminée de mise en place de la jauge : raccord de manomètre d'admission / primer (fig. 7-6)
+  box(0.5, 1.4, 0.5, W(7.2, 7.1, 1.8), mCase, 'crankcase', modCase);
+}
+
+/* =====================================================================
+   CARTER D'HUILE (admission centrale noyée dans l'huile) + CARBURATEUR
+   ===================================================================== */
+const carbThr = new THREE.Group(), carbMix = new THREE.Group();
+const sumpBot = x => x < 15.5 ? lerp(-7.0, -8.9, (t => t * t * (3 - 2 * t))(clamp((x - 8.2) / 7.3, 0, 1))) : -8.9;
+{
+  // coque : peu profonde à l'avant, profonde à l'arrière (réserve d'huile), flancs en dépouille
+  const poly = yb => [[5.25, -3.45], [5.1, yb + 1.0], [4.6, yb + 0.25], [3.8, yb], [-3.8, yb], [-4.6, yb + 0.25], [-5.1, yb + 1.0], [-5.25, -3.45]];
+  const K = 64, sec = (x, sc = 1) => { const yb = sumpBot(x), cy = (yb - 3.45) / 2; return { x, pts: Array.from({ length: K }, (_, k) => { const [z, y] = rayAt(poly(yb), cy, k / K * TAU); return [z * sc, cy + (y - cy) * sc]; }) }; };
+  loftX([sec(7.95, 0.2), sec(8.3, 0.85), sec(8.8), sec(10), sec(11.5), sec(13), sec(14.5), sec(15.5), sec(17), sec(24.1), sec(24.3, 0.93), sec(24.42, 0.3)], mSump, 'sump', modSump);
+  // bride supérieure et vis de fixation au carter
+  box(16.4, 0.3, 11.0, W(16.1, -3.6, 0), mSump, 'sump', modSump);
+  { const xs = []; for (let x = 8.8; x <= 23.8; x += 1.5) xs.push(x);
+    const hb = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.26 * S, 0.26 * S, 0.25 * S, 6), mBolt, xs.length * 2);
+    xs.forEach((x, i) => { hb.setMatrixAt(i * 2, new THREE.Matrix4().setPosition(W(x, -3.88, 5.2))); hb.setMatrixAt(i * 2 + 1, new THREE.Matrix4().setPosition(W(x, -3.88, -5.2))); }); addTo(modSump, 'sump', hb); }
+  // nervures verticales de refroidissement sur les flancs
+  for (let x = 12.2; x <= 23.6; x += 1.15) for (const s of [-1, 1]) {
+    const yb = sumpBot(x), h = -3.8 - (yb + 0.9); const r = box(0.28, h, 0.36, W(x, -3.8 - h / 2, s * 5.28), mSump, 'sump', modSump); r.rotation.x = s * 0.035;
+  }
+  // nervures longitudinales sous la partie profonde
+  for (let i = 0; i < 5; i++) box(8.0, 0.35, 0.25, W(20.0, -9.05, -2.0 + i * 1.0), mSump, 'sump', modSump);
+  // bouchons de vidange (2, six pans + fil à freiner) et crépine d'aspiration (arrière)
+  for (const z of [-2.6, 2.6]) { const d = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * S, 0.42 * S, 0.5 * S, 6), mBolt); d.position.copy(W(23.0, -9.15, z)); addTo(modSump, 'sump', d);
+    const wr = new THREE.Mesh(new THREE.TorusGeometry(0.3 * S, 0.04 * S, 5, 12), mBolt); wr.rotation.x = Math.PI / 2; wr.position.copy(W(23.0, -9.42, z)); addTo(modSump, 'sump', wr); }
+  cylX(0.75, 24.2, 25.0, -7.2, 0, mBolt, 'sump', modSump, 6);
+  cylX(0.45, 25.0, 25.3, -7.2, 0, mBolt, 'sump', modSump, 12);
+  // départs des pipes d'admission (4) sur les flancs, manchons caoutchouc et colliers
+  for (const c of CYL) { const p = cylX(0.95, 0, 1.2, 0, 0, mSump, 'sump', modSump, 20); p.rotation.set(Math.PI / 2, 0, 0); p.position.copy(W(c.x + 0.2, -5.4, c.s * 5.7));
+    const fl = cylX(1.2, 0, 0.25, 0, 0, mSump, 'sump', modSump, 20); fl.rotation.set(Math.PI / 2, 0, 0); fl.position.copy(W(c.x + 0.2, -5.4, c.s * 5.35));
+    for (const dz of [6.6, 7.45]) { const cl = new THREE.Mesh(new THREE.TorusGeometry(0.98 * S, 0.08 * S, 6, 24), mBolt); cl.position.copy(W(c.x + 0.25, -5.6, c.s * dz)); addTo(modSump, 'sump', cl);
+      box(0.35, 0.3, 0.3, W(c.x + 0.25, -4.6, c.s * dz), mBolt, 'sump', modSump); } }
+  // colonne d'admission centrale et répartiteurs internes (visibles en rayons X) : noyés dans l'huile
+  addTo(modSump, 'sump', new THREE.Mesh(new THREE.CylinderGeometry(1.15 * S, 1.3 * S, 2.7 * S, 20), mIntake)).position.copy(W(17.2, -7.5, 0));
+  for (const c of CYL) tubeW([W(17.0, -6.3, 0), W(lerp(16.2, c.x, 0.35), -6.0, c.s * 1.2), W(lerp(16.2, c.x, 0.7), -5.9, c.s * 2.6), W(c.x + 0.2, -5.7, c.s * 4.2), W(c.x + 0.2, -5.5, c.s * 5.4)], 0.72, mIntake, 'sump', modSump, 30);
+
+  // ---- carburateur MA-4SPA : bride, corps de papillon, cuve à flotteur, leviers de gaz et de mélange
+  const hx = (r, h, pos, mat, rot) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r * S, r * S, h * S, 6), mat); m.position.copy(pos); if (rot) m.rotation.set(...rot); return addTo(modSump, 'carburetor', m); };
+  { const f = new THREE.Mesh(new THREE.ExtrudeGeometry(rrect(3.7 * S, 3.4 * S, 0.5 * S), { depth: 0.32 * S, bevelEnabled: false }).rotateX(Math.PI / 2), mCarb); f.position.copy(W(17.2, -8.92, 0)); addTo(modSump, 'carburetor', f); }
+  for (const [dx, dz] of [[-1.4, -1.25], [1.4, -1.25], [-1.4, 1.25], [1.4, 1.25]]) hx(0.28, 0.3, W(17.2 + dx, -9.38, dz), mBolt);
+  { const g = new THREE.CylinderGeometry(1.3 * S, 1.4 * S, 1.05 * S, 28); const m = new THREE.Mesh(g, mCarb); m.position.copy(W(17.2, -9.78, 0)); addTo(modSump, 'carburetor', m); }
+  // axe de papillon (travers) et levier de gaz (côté gauche) : animé par la manette
+  { const g = new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 4.4 * S, 10).rotateX(Math.PI / 2); addTo(modSump, 'carburetor', new THREE.Mesh(g, mBolt)).position.copy(W(17.2, -9.8, 0)); }
+  carbThr.position.copy(W(17.2, -9.8, 2.25)); modSump.add(carbThr);
+  { const a = new THREE.Mesh(new THREE.BoxGeometry(0.5 * S, 2.3 * S, 0.18 * S), mCarb); a.position.y = -0.95 * S; carbThr.add(a); reg('carburetor', a);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.2 * S, 10, 8), mBolt); b.position.set(0, -1.9 * S, 0.18 * S); carbThr.add(b); reg('carburetor', b);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.38 * S, 0.38 * S, 0.3 * S, 6).rotateX(Math.PI / 2), mBolt); carbThr.add(hub); reg('carburetor', hub); }
+  // cuve à flotteur (coque arrondie), plan de joint et vis
+  { const g = new THREE.ExtrudeGeometry(rrect(4.2 * S, 3.6 * S, 1.0 * S), { depth: 1.9 * S, bevelEnabled: true, bevelSize: 0.12 * S, bevelThickness: 0.12 * S, bevelSegments: 2, curveSegments: 8 }).rotateX(Math.PI / 2);
+    const m = new THREE.Mesh(g, mCarb); m.position.copy(W(17.0, -10.3, 0)); addTo(modSump, 'carburetor', m);
+    const bnd = new THREE.Mesh(new THREE.ExtrudeGeometry(rrect(4.45 * S, 3.85 * S, 1.1 * S), { depth: 0.14 * S, bevelEnabled: false }).rotateX(Math.PI / 2), mCarb); bnd.position.copy(W(17.0, -10.62, 0)); addTo(modSump, 'carburetor', bnd);
+    for (const [dx, dz] of [[-1.9, -1.55], [1.9, -1.55], [-1.9, 1.55], [1.9, 1.55], [0, -1.8], [0, 1.8]]) hx(0.16, 0.2, W(17.0 + dx, -10.55, dz), mBolt); }
+  // entrée d'essence (côté droit) : raccord coudé et boîtier de filtre à doigt six pans
+  hx(0.42, 0.7, W(16.2, -11.0, -2.25), mBolt, [Math.PI / 2, 0, 0]);
+  { const g = new THREE.CylinderGeometry(0.22 * S, 0.22 * S, 1.1 * S, 10).rotateX(Math.PI / 2); addTo(modSump, 'carburetor', new THREE.Mesh(g, mOilFit)).position.copy(W(16.2, -11.0, -3.1)); }
+  { const g = new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 1.2 * S, 10); addTo(modSump, 'carburetor', new THREE.Mesh(g, mOilFit)).position.copy(W(16.2, -10.4, -3.6)); }
+  // bouchon de vidange de cuve, vis de richesse de ralenti (ressort), étiquette
+  hx(0.36, 0.3, W(16.0, -12.45, 0.6), mBolt);
+  { const g = new THREE.CylinderGeometry(0.12 * S, 0.12 * S, 1.0 * S, 8).rotateZ(Math.PI / 2); addTo(modSump, 'carburetor', new THREE.Mesh(g, mBolt)).position.copy(W(14.75, -9.8, 0.7));
+    for (let i = 0; i < 4; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.2 * S, 0.035 * S, 5, 12).rotateY(Math.PI / 2), mBolt); t.position.copy(W(14.9 + i * 0.12, -9.8, 0.7)); addTo(modSump, 'carburetor', t); } }
+  { const tex = canvasTex(160, 60, (g, w, h) => { g.fillStyle = '#d6d2c4'; g.fillRect(0, 0, w, h); g.fillStyle = '#2d2b25'; g.font = 'bold 18px Arial'; g.textAlign = 'center'; g.fillText('PRECISION', w / 2, 24); g.font = 'bold 20px Arial'; g.fillText('MA-4SPA', w / 2, 48); });
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(1.6 * S, 0.6 * S), M('carburetor', { map: tex, color: 0xffffff, metalness: 0.4, roughness: 0.5 })); p.position.copy(W(17.0, -11.4, 1.95)); addTo(modSump, 'carburetor', p); }
+  // levier de mélange sur la cuve (arrière) : animé par la manette de mélange (étouffoir tout en arrière)
+  carbMix.position.copy(W(18.6, -10.12, -0.9)); modSump.add(carbMix);
+  { const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.34 * S, 0.34 * S, 0.35 * S, 12), mBolt); carbMix.add(hub); reg('carburetor', hub);
+    const a = new THREE.Mesh(new THREE.BoxGeometry(1.7 * S, 0.14 * S, 0.42 * S), mCarb); a.position.set(0.8 * S, 0.12 * S, 0); carbMix.add(a); reg('carburetor', a);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.17 * S, 10, 8), mBolt); b.position.set(1.55 * S, 0.3 * S, 0); carbMix.add(b); reg('carburetor', b); }
+  // bride d'entrée d'air (vers la boîte à air)
+  { const f = new THREE.Mesh(new THREE.ExtrudeGeometry(rrect(3.9 * S, 3.5 * S, 0.6 * S), { depth: 0.28 * S, bevelEnabled: false }).rotateX(Math.PI / 2), mCarb); f.position.copy(W(17.2, -12.25, 0)); addTo(modSump, 'carburetor', f); }
+  box(5.2, 2.6, 5.6, W(17.2, -13.8, 0), mAirbox, 'carburetor', modInst);
+}
+
+/* =====================================================================
+   BOÎTIER D'ACCESSOIRES (arrière) + magnétos, tachy, pompe à essence…
+   ===================================================================== */
+{
+  const sh = new THREE.Shape(); const pts = [[-5.6, -5.4], [5.6, -5.4], [6.2, 0.5], [4.8, 5.4], [1.8, 7.0], [-1.8, 7.0], [-4.8, 5.4], [-6.2, 0.5]];
+  pts.forEach(([z, y], i) => i ? sh.lineTo(z * S, y * S) : sh.moveTo(z * S, y * S)); sh.closePath();
+  const g = new THREE.ExtrudeGeometry(sh, { depth: 2.4 * S, bevelEnabled: true, bevelSize: 0.25 * S, bevelThickness: 0.25 * S, bevelSegments: 2 });
+  g.rotateY(-Math.PI / 2); g.translate(24.3 * S - XC * S, 0, 0);
+  addTo(modAcc, 'acchousing', new THREE.Mesh(g, mAccH));
+  // magnétos gauche (Slick 4051, à accouplement d'impulsion) et droite (4050), vue de l'arrière : gauche = +z
+  const magTex = canvasTex(256, 96, (g, w, h) => { g.fillStyle = '#202326'; g.fillRect(0, 0, w, h); g.fillStyle = '#d0d3d5'; g.font = 'italic bold 56px Arial'; g.textAlign = 'center'; g.fillText('SLICK', w / 2, 64); g.fillRect(40, 78, w - 80, 4); });
+  const mMagLbl = M('magneto', { map: magTex, color: 0xffffff, metalness: 0.3, roughness: 0.5 });
+  const extX = (sh, x0, x1, y, z, mat) => { const g = new THREE.ExtrudeGeometry(sh, { depth: (x1 - x0) * S, bevelEnabled: false, curveSegments: 6 }); g.rotateY(-Math.PI / 2); const m = new THREE.Mesh(g, mat); m.position.copy(W(x1, y, z)); return addTo(modAcc, 'magneto', m); };
+  const rr = (w, h, r) => rrect(w * S, h * S, r * S), Y = 2.0;
+  for (const z of [4.4, -4.4]) {
+    cylX(1.85, 24.5, 24.85, Y, z, mMag, 'magneto', modAcc, 32);                        // bride de montage
+    for (const dy of [1.95, -1.95]) { box(0.3, 0.8, 0.9, W(24.75, Y + dy, z), mBolt, 'magneto', modAcc); cylX(0.3, 24.9, 25.2, Y + dy * 1.08, z, mBolt, 'magneto', modAcc, 6); }   // brides de serrage + écrous
+    cylX(1.35, 24.85, 25.3, Y, z, mMag, 'magneto', modAcc, 28);                        // col d'entraînement
+    extX(rr(3.0, 3.3, 0.8), 25.3, 27.9, Y, z, mMag);                                   // boîtier principal
+    for (const x of [25.9, 27.2]) extX(rr(3.12, 3.42, 0.86), x, x + 0.14, Y, z, mMag);  // cordons de fonderie
+    extX(rr(3.2, 3.5, 0.9), 27.9, 28.55, Y, z, mMag);                                   // boîtier de distributeur
+    extX(rr(2.7, 2.9, 0.6), 28.55, 28.95, Y, z, mMagCap);                               // couvercle de faisceau
+    for (const [dy, dz] of [[1.15, 1.05], [1.15, -1.05], [-1.15, 1.05], [-1.15, -1.05]]) cylX(0.12, 28.95, 29.1, Y + dy, z + dz, mBolt, 'magneto', modAcc, 8);
+    for (const [dy, dz] of [[0.62, 0.58], [0.62, -0.58], [-0.62, 0.58], [-0.62, -0.58]]) { cylX(0.36, 28.95, 29.2, Y + dy, z + dz, mMagCap, 'magneto', modAcc, 6); cylX(0.26, 29.2, 29.75, Y + dy, z + dz, mMagCap, 'magneto', modAcc, 12); }
+    // borne P (masse / contact) sur le dessus, bouchon d'évent dessous
+    { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.22 * S, 0.22 * S, 0.7 * S, 10), mMagCap); t.position.copy(W(28.2, Y + 1.95, z + (z > 0 ? -0.6 : 0.6))); addTo(modAcc, 'magneto', t);
+      const v = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 0.3 * S, 8), mBolt); v.position.copy(W(26.6, Y - 1.72, z)); addTo(modAcc, 'magneto', v); }
+    // plaque SLICK sur le flanc extérieur
+    { const p = new THREE.Mesh(new THREE.PlaneGeometry(1.9 * S, 0.72 * S), mMagLbl); p.position.copy(W(26.6, Y + 0.2, z + Math.sign(z) * 1.52)); p.rotation.y = z > 0 ? 0 : Math.PI; addTo(modAcc, 'magneto', p); }
+  }
+  // prise de tachymètre (haut centre), écran de pression d'huile, raccord de température
+  cylX(0.7, 24.5, 26.0, 5.2, 0, mTach, 'acchousing', modAcc, 6);
+  cylX(0.35, 26.0, 26.8, 5.2, 0, mTach, 'acchousing', modAcc, 12);
+  cylX(1.05, 24.5, 25.9, 1.9, 0, mOilFit, 'oilsystem', modAcc, 6);
+  // pompe à essence AN20003 (bas droit) et prise de pompe à vide / double (haut droit)
+  cylX(1.5, 24.5, 26.4, -3.6, -3.0, mFuelPump, 'fuelpump', modAcc, 24);
+  cylX(1.1, 26.4, 27.2, -3.6, -3.0, mFuelPump, 'fuelpump', modAcc, 24);
+  box(0.4, 2.6, 2.6, W(24.7, 4.1, -3.4), mAccH, 'acchousing', modAcc);
+  // reniflard (haut gauche) et goulotte de remplissage + jauge (arrière droit)
+  tubeW([W(24.8, 5.4, 2.6), W(25.6, 6.3, 3.0), W(26.2, 7.0, 3.3)], 0.35, mOilFit, 'oilsystem', modAcc, 12);
+  tubeW([W(23.4, -2.0, -5.6), W(23.8, 1.5, -7.0), W(24.2, 4.8, -8.4)], 0.6, mFiller, 'oilfiller', modAcc, 20);
+  const cap = cylX(0.8, 0, 0.6, 0, 0, mFillerCap, 'oilfiller', modAcc, 16); cap.rotation.set(0.6, 0, 0.35); cap.position.copy(W(24.3, 5.3, -8.6));
+  // démarreur : sur le Cessna 172 il est à l'avant ; ici prise démarreur non utilisée recouverte
+}
+
+/* =====================================================================
+   VILEBREQUIN, BIELLES, PISTONS, ARBRE À CAMES (pièces mobiles)
+   ===================================================================== */
+const crank = new THREE.Group(); eng.add(crank);
+{
+  // (u, v) du profil -> (y, z) monde ; extrusion -> x
+  const PERM = new THREE.Matrix4().set(0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+  function hullShape(circles, n = 32) {
+    const pts = []; for (const [cu, cv, r] of circles) for (let i = 0; i < n; i++) { const a = i * TAU / n; pts.push([cu + r * Math.cos(a), cv + r * Math.sin(a)]); }
+    pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], hi = []; for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (hi.length >= 2 && cr(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); }
+    const h = lo.slice(0, -1).concat(hi.slice(0, -1)), sh = new THREE.Shape(); h.forEach(([x, y], i) => i ? sh.lineTo(x * S, y * S) : sh.moveTo(x * S, y * S)); sh.closePath(); return sh;
+  }
+  const cm = (r, x0, x1, y = 0, z = 0, mat = mCrank, seg = 40) => { const g = new THREE.CylinderGeometry(r * S, r * S, (x1 - x0) * S, seg); g.rotateZ(Math.PI / 2); const m = new THREE.Mesh(g, mat); m.position.set(((x0 + x1) / 2 - XC) * S, y * S, z * S); crank.add(m); reg('crankshaft', m); return m; };
+  const ring = (r, t, x, y = 0, z = 0, mat = mCrank) => { const g = new THREE.TorusGeometry(r * S, t * S, 8, 40); g.rotateY(Math.PI / 2); const m = new THREE.Mesh(g, mat); m.position.set((x - XC) * S, y * S, z * S); crank.add(m); reg('crankshaft', m); return m; };
+  const cheek = (x0, t, circles) => { const g = new THREE.ExtrudeGeometry(hullShape(circles), { depth: t * S, bevelEnabled: true, bevelSize: 0.08 * S, bevelThickness: 0.08 * S, bevelSegments: 2, curveSegments: 4 }); g.applyMatrix4(PERM); const m = new THREE.Mesh(g, mCrank); m.position.x = (x0 - XC) * S; crank.add(m); reg('crankshaft', m); return m; };
+  const oilHole = (x, r, ang, yc = 0, zc = 0) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.13 * S, 0.13 * S, 0.06 * S, 10), mCrankDark); const d = new THREE.Vector3(0, Math.sin(ang), Math.cos(ang)); m.position.set((x - XC) * S, (yc + d.y * (r - 0.02)) * S, (zc + d.z * (r - 0.02)) * S); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d); crank.add(m); };
+  const R = R_CRANK;
+  // bride d'hélice : moyeu de centrage, 6 bagues, repère « PMH maneton n° 1 »
+  cm(1.05, -0.35, 0.02); cm(3.6, 0, 0.55); cm(2.35, 0.55, 0.95);
+  for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + TAU / 12; cm(0.34, -0.28, 0.02, 2.375 * Math.sin(a), 2.375 * Math.cos(a), mBolt, 14); cm(0.2, -0.3, -0.26, 2.375 * Math.sin(a), 2.375 * Math.cos(a), mCrankDark, 10); }
+  { const mk = new THREE.Mesh(new THREE.BoxGeometry(0.4 * S, 0.14 * S, 0.3 * S), mCrankDark); mk.position.set((0.25 - XC) * S, 0, -3.55 * S); crank.add(mk); }
+  // nez, joint avant, tourillons avant / central / arrière (Ø 2,375 po) avec congés
+  cm(1.5, 0.95, 2.2); ring(1.52, 0.1, 1.6, 0, 0, mCrankDark);
+  cm(1.1875, 2.2, 8.25); cm(1.1875, 12.55, 15.0); cm(1.1875, 19.25, 22.1);
+  for (const x of [8.2, 12.6, 14.95, 19.3]) ring(1.2, 0.09, x);
+  for (const x of [5.2, 13.8, 20.6]) { oilHole(x, 1.1875, 0.7); oilHole(x, 1.1875, 0.7 + Math.PI); }
+  // manetons (Ø 2,125 po) : n° 1 et 4 à -z, n° 2 et 3 à +z quand θ = 0
+  const PIN = { 1: [8.7, 10.1], 2: [10.6, 12.05], 3: [15.45, 16.9], 4: [17.4, 18.8] };
+  for (const c of CYL) { const dir = c.beta === 0 ? -1 : 1, [x0, x1] = PIN[c.n]; cm(1.0625, x0, x1, 0, dir * R); ring(1.08, 0.08, x0 + 0.05, 0, dir * R); ring(1.08, 0.08, x1 - 0.05, 0, dir * R); oilHole((x0 + x1) / 2, 1.0625, -dir * Math.PI / 2 + 0.4, 0, dir * R); }
+  // flasques en goutte (masse d'équilibrage à l'opposé du maneton)
+  cheek(8.2, 0.5, [[0, 0, 1.62], [0, -R, 1.38], [0, 0.95, 1.95]]);
+  cheek(10.1, 0.5, [[0, -R, 1.38], [0, R, 1.38], [0, 0, 1.3]]);
+  cheek(12.05, 0.5, [[0, R, 1.38], [0, 0, 1.62], [0, -0.95, 1.95]]);
+  cheek(14.95, 0.5, [[0, 0, 1.62], [0, R, 1.38], [0, -0.95, 1.95]]);
+  cheek(16.9, 0.5, [[0, R, 1.38], [0, -R, 1.38], [0, 0, 1.3]]);
+  cheek(18.8, 0.5, [[0, -R, 1.38], [0, 0, 1.62], [0, 0.95, 1.95]]);
+  // pignon de distribution arrière : pion de centrage, boulon central, plaque-frein
+  const gg = new THREE.Mesh(gearGeo(1.3, 24, 0.6), mCrank); gg.position.copy(W(22.4, 0, 0)); crank.add(gg); reg('crankshaft', gg);
+  cm(0.42, 22.7, 23.0, 0, 0, mBolt, 6); { const lp = new THREE.Mesh(new THREE.BoxGeometry(0.06 * S, 1.2 * S, 0.5 * S), mBolt); lp.position.set((22.72 - XC) * S, 0.2 * S, 0); crank.add(lp); }
+  cm(0.12, 22.7, 22.85, 0.8, 0, mCrankDark, 8);
+}
+// arbre à cames au-dessus du vilebrequin, tourne à mi-vitesse en sens inverse
+const CAM_Y = 3.95;
+const cam = new THREE.Group(); cam.position.copy(W(0, CAM_Y, 0)); cam.position.x = 0; eng.add(cam);
+{
+  const g = new THREE.CylinderGeometry(0.62 * S, 0.62 * S, 17.4 * S, 16); g.rotateZ(Math.PI / 2);
+  const shaft = new THREE.Mesh(g, mCam); shaft.position.x = (13.5 - XC) * S; cam.add(shaft); reg('camshaft', shaft);
+  const cg = new THREE.Mesh(gearGeo(2.6, 48, 0.5), mCam); cg.position.x = (22.4 - XC) * S; cam.add(cg); reg('camshaft', cg);
+}
+function lobeGeo() { const sh = new THREE.Shape(); sh.absarc(0, 0, 0.7 * S, Math.PI * 0.62, Math.PI * 2.38, false); sh.quadraticCurveTo(0.3 * S, 1.25 * S, 0, 1.28 * S); sh.quadraticCurveTo(-0.3 * S, 1.25 * S, 0.7 * S * Math.cos(Math.PI * 0.62), 0.7 * S * Math.sin(Math.PI * 0.62)); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.55 * S, bevelEnabled: false, curveSegments: 12 }); g.translate(0, 0, -0.275 * S); g.rotateY(Math.PI / 2); return g; }
+const LOBE = lobeGeo();
+
+/* distribution (figurée) : angles du cycle 0–720° (0 = PMH combustion) */
+const VT = { io: 335, ic: 600, eo: 115, ec: 385, lift: 0.42, spark: 695 };
+function liftAt(psi, o, c) { let d = c - o; let t = ((psi - o) % 720 + 720) % 720; if (t > d) return 0; const u = t / d; return 0.5 * (1 - Math.cos(TAU * u)); }
+
+/* ---------- ensemble cylindre (repère local : +y = axe vers l'extérieur, haut = z local négatif×s) ---------- */
+const cylObjs = [];
+const finGeo = new THREE.CylinderGeometry(3.3 * S, 3.3 * S, 0.07 * S, 40);
+const headFinGeo = (() => { const g = new THREE.ExtrudeGeometry(rrect(7.4, 8.2, 1.4), { depth: 0.08 * S, bevelEnabled: false }); g.scale(S, S, 1); g.rotateX(Math.PI / 2); return g; })();
+for (const c of CYL) {
+  const grp = new THREE.Group(); grp.position.copy(W(c.x, 0, 0)); grp.rotation.x = c.s * Math.PI / 2; eng.add(grp);
+  const up = -c.s;                                     // z local du « haut » du moteur
+  const L = (x, y, z) => new THREE.Vector3(x * S, y * S, z * S);
+  const part = 'cylinder';
+  const tube = (r, y0, y1, mat, pt, seg = 40, open = false) => { const g = new THREE.CylinderGeometry(r * S, r * S, (y1 - y0) * S, seg, 1, open); const m = new THREE.Mesh(g, mat); m.position.y = (y0 + y1) / 2 * S; grp.add(m); reg(pt, m); return m; };
+  // embase (plate-forme de fixation, 8 écrous) et jupe usinée engagée dans le carter
+  const flSh = rrect(7.3, 7.3, 1.6); flSh.holes.push(new THREE.Path().absarc(0, 0, 2.62, 0, TAU, true));
+  const flG = new THREE.ExtrudeGeometry(flSh, { depth: 0.35 * S, bevelEnabled: true, bevelSize: 0.05 * S, bevelThickness: 0.05 * S, bevelSegments: 1 });
+  flG.scale(S, S, 1); flG.rotateX(-Math.PI / 2); const fl = new THREE.Mesh(flG, mBarrel); fl.position.y = 6.2 * S; grp.add(fl); reg(part, fl);
+  // fût : un seul profil de révolution (jupe + 18 ailettes plus épaisses à la racine)
+  { const pr = [[2.78, 3.4], [2.83, 3.5], [2.83, 6.2], [2.98, 6.55], [2.98, 6.85]];
+    for (let i = 0; i < 18; i++) { const y0 = 6.95 + i * 0.205; pr.push([2.98, y0 - 0.055], [3.36, y0 - 0.022], [3.38, y0], [3.36, y0 + 0.022], [2.98, y0 + 0.055]); }
+    pr.push([2.98, 10.75], [2.9, 10.8]);
+    const g = new THREE.LatheGeometry(pr.map(([r, y]) => new THREE.Vector2(r * S, y * S)), 72); const m = new THREE.Mesh(g, mBarrel); grp.add(m); reg(part, m); }
+  // chemise rodée (quadrillage de rodage visible en coupe) et joint torique d'embase
+  tube(BORE_R, 3.4, 10.8, mBore, part, 48, true);
+  { const o = new THREE.Mesh(new THREE.TorusGeometry(2.86 * S, 0.07 * S, 6, 40).rotateX(Math.PI / 2), mMount); o.position.y = 6.15 * S; grp.add(o); }
+  // culasse : bloc arrondi + 16 ailettes décroissantes vers le bout
+  { const g = new THREE.ExtrudeGeometry(rrect(5.4, 6.3, 1.4), { depth: 4.1 * S, bevelEnabled: false }); g.scale(S, S, 1); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, mHead); m.position.y = 10.6 * S; grp.add(m); reg('head', m); }
+  { const g = new THREE.ExtrudeGeometry(rrect(7.4, 8.2, 1.6), { depth: 0.065 * S, bevelEnabled: false, curveSegments: 6 }); g.scale(S, S, 1); g.rotateX(Math.PI / 2);
+    const hf = new THREE.InstancedMesh(g, mHead, 16);
+    for (let i = 0; i < 16; i++) { const t = i / 15, sx = lerp(1.0, 0.86, t), sz = lerp(1.0, 0.9, t) * (i < 3 ? 0.93 + i * 0.025 : 1); hf.setMatrixAt(i, new THREE.Matrix4().compose(new THREE.Vector3(0, (10.95 + i * 0.225) * S, 0), new THREE.Quaternion(), new THREE.Vector3(sx, 1, sz))); }
+    grp.add(hf); reg('head', hf); }
+  // boîte à culbuteurs (venue de fonderie, ouverte) et plan de joint
+  { const sh = octShape(6.1, 5.8, 1.05); sh.holes.push(octShape(5.3, 5.0, 0.75)); const g = new THREE.ExtrudeGeometry(sh, { depth: 1.3 * S, bevelEnabled: false }); g.scale(S, S, 1); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, mHead); m.position.y = 14.6 * S; grp.add(m); reg('head', m);
+    const sh2 = octShape(6.35, 6.05, 1.1); sh2.holes.push(octShape(5.3, 5.0, 0.75)); const g2 = new THREE.ExtrudeGeometry(sh2, { depth: 0.12 * S, bevelEnabled: false }); g2.scale(S, S, 1); g2.rotateX(-Math.PI / 2); const m2 = new THREE.Mesh(g2, mHead); m2.position.y = 15.8 * S; grp.add(m2); reg('head', m2);
+    // bossages des axes de culbuteurs
+    for (const dx of [-0.95, 0.95]) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.4 * S, 0.4 * S, 1.3 * S, 14).rotateZ(Math.PI / 2), mHead); b.position.set(dx * S, 15.3 * S, up * 1.2 * S); grp.add(b); reg('head', b); } }
+  // couvre-culbuteurs en bout de culasse (6 vis, nervures) — marqué LYCOMING
+  const cvG = new THREE.ExtrudeGeometry(octShape(6.2, 5.9, 1.05), { depth: 0.22 * S, bevelEnabled: true, bevelSize: 0.14 * S, bevelThickness: 0.12 * S, bevelSegments: 3 });
+  cvG.scale(S, S, 1); cvG.rotateX(-Math.PI / 2);
+  { const p = cvG.attributes.position, uv = cvG.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / (6.2 * S) + 0.5, 0.5 - (c.s > 0 ? 1 : -1) * p.getZ(i) / (5.9 * S)); }
+  const cv = new THREE.Mesh(cvG, [mCover, mCoverEdge]); cv.position.y = 15.95 * S; grp.add(cv); reg('rockercover', cv);
+  for (const dz of [-1.55, 1.55]) { const rb2 = new THREE.Mesh(new THREE.BoxGeometry(4.0 * S, 0.14 * S, 0.22 * S), mCoverEdge); rb2.position.set(0, 16.36 * S, dz * S); grp.add(rb2); reg('rockercover', rb2); }
+  const scr = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22 * S, 0.22 * S, 0.2 * S, 12), mBolt, 6);
+  [[-2.5, -2.1], [2.5, -2.1], [-2.5, 2.1], [2.5, 2.1], [0, -2.7], [0, 2.7]].forEach(([x, z], i) => scr.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x * S, 16.38 * S, z * S)));
+  grp.add(scr); reg('rockercover', scr);
+  // bossages coulés : pipes d'admission et d'échappement (dessous), bougies, sonde CHT à baïonnette, tubes de tiges
+  const bossZ = (r, x, y, z0, z1, mat = mHead, pt = 'head', seg = 18) => { const g = new THREE.CylinderGeometry(r * S, r * S, Math.abs(z1 - z0) * S, seg); g.rotateX(Math.PI / 2); const m = new THREE.Mesh(g, mat); m.position.set(x * S, y * S, (z0 + z1) / 2 * S); grp.add(m); reg(pt, m); return m; };
+  bossZ(1.0, 0.9, 11.6, -up * 3.0, -up * 3.6);
+  bossZ(0.95, -0.9, 13.6, -up * 3.0, -up * 3.62);
+  for (const [x, y, z] of [[0.9 + 0.8, 11.6, -up * 3.95], [0.9 - 0.8, 11.6, -up * 3.95], [-0.9 + 0.9, 13.6 + 0.75, -up * 4.0], [-0.9, 13.6 - 0.75, -up * 4.0]]) bossZ(0.13, x, y, z, z - up * 0.5, mBolt, 'head', 6);
+  bossZ(0.62, 1.2, 12.6, up * 3.05, up * 3.55); bossZ(0.62, -1.2, 12.6, -up * 3.05, -up * 3.55);
+  bossZ(0.3, -2.3, 12.1, -up * 3.1, -up * 3.6); bossZ(0.18, -2.3, 12.1, -up * 3.6, -up * 4.3, mLead, 'head', 8);
+  // bougies : haut et bas de culasse
+  const plugTop = new THREE.Group(), plugBot = new THREE.Group();
+  for (const [g, zz, xx] of [[plugTop, up * 3.6, 1.2], [plugBot, -up * 3.6, -1.2]]) {
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.34 * S, 0.34 * S, 1.1 * S, 12), mPlugBody); b.position.y = 0.9 * S; g.add(b); reg('plugs', b);
+    const hx = new THREE.Mesh(new THREE.CylinderGeometry(0.45 * S, 0.45 * S, 0.4 * S, 6), mPlug); g.add(hx); reg('plugs', hx);
+    g.position.set(xx * S, 12.6 * S, zz * S); g.rotation.x = zz > 0 ? Math.PI / 2 : -Math.PI / 2; grp.add(g);
+  }
+  // étincelle (point lumineux) au bout de chaque bougie
+  const sparkMat = new THREE.MeshBasicMaterial({ color: 0x6fbfff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const sparkT = new THREE.Mesh(new THREE.SphereGeometry(0.3 * S, 10, 8), sparkMat); sparkT.position.set(1.2 * S, 11.6 * S, up * 2.3 * S); grp.add(sparkT);
+  const sparkB = new THREE.Mesh(new THREE.SphereGeometry(0.3 * S, 10, 8), sparkMat.clone()); sparkB.position.set(-1.2 * S, 11.6 * S, -up * 2.3 * S); grp.add(sparkB);
+  // orifices : admission (bas, vers le carter) et échappement (bas, vers l'extérieur)
+  const inFl = new THREE.Mesh(new THREE.BoxGeometry(2.2 * S, 1.8 * S, 0.4 * S), mHead); inFl.position.set(0.9 * S, 11.6 * S, -up * 3.75 * S); grp.add(inFl); reg('head', inFl);
+  const exFl = new THREE.Mesh(new THREE.BoxGeometry(2.4 * S, 2.2 * S, 0.45 * S), mHead); exFl.position.set(-0.9 * S, 13.6 * S, -up * 3.8 * S); grp.add(exFl); reg('head', exFl);
+  // tubes enveloppes des tiges de culbuteurs (dessus)
+  const tubes = [];
+  for (const dx of [-0.95, 0.95]) {
+    const a = L(dx, 4.8, up * 4.0), b = L(dx, 11.6, up * 3.45);
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * S, 0.42 * S, a.distanceTo(b), 14, 1, true), mTubeShroud);
+    t.position.copy(a).add(b).multiplyScalar(0.5); t.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); grp.add(t); reg('shroudtube', t); tubes.push(t);
+  }
+  // tubes de retour d'huile des boîtes à culbuteurs (dessous)
+  { const a = L(0, 11.0, -up * 3.3), b = L(0, 5.2, -up * 2.4); const t = new THREE.Mesh(new THREE.CylinderGeometry(0.28 * S, 0.28 * S, a.distanceTo(b), 10), mOilTube); t.position.copy(a).add(b).multiplyScalar(0.5); t.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); grp.add(t); reg('oilsystem', t); }
+  // soupapes (admission x+, échappement x-), ressorts, culbuteurs, tiges
+  const valves = [], rockers = [], pushrods = [];
+  for (const [dx, kind] of [[0.95, 'in'], [-0.95, 'ex']]) {
+    const v = new THREE.Group(); v.position.set(dx * S, 0, 0); grp.add(v);
+    const head = new THREE.Mesh(new THREE.CylinderGeometry((kind === 'in' ? 1.02 : 0.9) * S, 0.5 * S, 0.22 * S, 24), mValve); head.position.y = 10.95 * S; v.add(head); reg('valves', head);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 3.9 * S, 10), mValve); stem.position.y = 12.95 * S; v.add(stem); reg('valves', stem);
+    const spr = new THREE.Mesh(new THREE.CylinderGeometry(0.55 * S, 0.55 * S, 1.3 * S, 14, 1, true), mSpring); spr.position.y = 14.1 * S; v.add(spr); reg('valves', spr);
+    const ret = new THREE.Mesh(new THREE.CylinderGeometry(0.62 * S, 0.62 * S, 0.14 * S, 14), mValve); ret.position.y = 14.8 * S; v.add(ret); reg('valves', ret);
+    valves.push({ g: v, spr, kind });
+    // culbuteur : pivot sur l'axe, un bras vers la queue de soupape, l'autre vers la tige
+    const rk = new THREE.Group(); rk.position.set(dx * S, 15.3 * S, up * 1.2 * S); grp.add(rk);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.45 * S, 0.5 * S, 3.4 * S), mRocker); arm.position.z = -up * 0.2 * S; rk.add(arm); reg('rockers', arm);
+    const piv = new THREE.Mesh(new THREE.CylinderGeometry(0.32 * S, 0.32 * S, 0.7 * S, 12), mRocker); piv.rotation.z = Math.PI / 2; rk.add(piv); reg('rockers', piv);
+    rockers.push(rk);
+    // tige de culbuteur : du poussoir hydraulique (près de l'arbre à cames) à la boîte à culbuteurs
+    const a = L(dx, 2.2, up * (CAM_Y - 0.1)), b = L(dx, 15.1, up * 2.9);
+    const pr = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * S, 0.15 * S, a.distanceTo(b), 8), mPushrod);
+    pr.position.copy(a).add(b).multiplyScalar(0.5); pr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); grp.add(pr); reg('pushrods', pr);
+    pushrods.push({ m: pr, base: pr.position.clone(), dir: b.clone().sub(a).normalize() });
+    // poussoir hydraulique
+    const tp = new THREE.Mesh(new THREE.CylinderGeometry(0.45 * S, 0.45 * S, 1.2 * S, 14), mPushrod); tp.position.copy(L(dx, 1.4, up * CAM_Y)); grp.add(tp); reg('pushrods', tp);
+    pushrods[pushrods.length - 1].tp = tp; pushrods[pushrods.length - 1].tpBase = tp.position.clone();
+  }
+  // piston : profil de révolution (tête, 3 gorges, jupe creuse), encoches de soupapes, axe flottant à bouchons
+  const pist = new THREE.Group(); grp.add(pist);
+  { const pr = [[0.001, 1.58], [1.6, 1.575], [2.34, 1.555], [2.49, 1.5], [2.5, 1.44],
+      [2.5, 1.38], [2.37, 1.38], [2.37, 1.3], [2.5, 1.3], [2.5, 1.12], [2.37, 1.12], [2.37, 1.04], [2.5, 1.04], [2.5, 0.87], [2.35, 0.87], [2.35, 0.7], [2.5, 0.7],
+      [2.495, 0.1], [2.485, -0.6], [2.47, -1.05], [2.26, -1.05], [2.24, 0.9], [1.4, 1.2], [0.001, 1.25]];
+    const g = new THREE.LatheGeometry(pr.map(([r, y]) => new THREE.Vector2(r * S, y * S)), 56); const m = new THREE.Mesh(g, mPiston); pist.add(m); reg('pistons', m); }
+  for (const dx of [-0.95, 0.95]) { const vr = new THREE.Mesh(new THREE.CylinderGeometry(0.98 * S, 0.98 * S, 0.02 * S, 28), mPistonDark); vr.position.set(dx * S, 1.582 * S, 0); pist.add(vr); }
+  for (const [y, h] of [[1.34, 0.075], [1.08, 0.075]]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2.515 * S, 2.515 * S, h * S, 48, 1, true), mRing); r.position.y = y * S; pist.add(r); reg('pistons', r); }
+  for (const y of [0.74, 0.83]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(2.515 * S, 2.515 * S, 0.04 * S, 48, 1, true), mRing); r.position.y = y * S; pist.add(r); reg('pistons', r); }
+  { const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.55 * S, 0.55 * S, 4.7 * S, 20), mValve); pin.rotation.z = Math.PI / 2; pist.add(pin); reg('pistons', pin);
+    for (const sx of [-1, 1]) { const pl = new THREE.Mesh(new THREE.SphereGeometry(0.55 * S, 16, 8, 0, TAU, 0, Math.PI / 2), mPiston); pl.rotation.z = -sx * Math.PI / 2; pl.position.x = sx * 2.35 * S; pl.scale.set(1, 0.25, 1); pist.add(pl); reg('pistons', pl);
+      const boss = new THREE.Mesh(new THREE.CylinderGeometry(0.85 * S, 0.85 * S, 1.15 * S, 18), mPiston); boss.rotation.z = Math.PI / 2; boss.position.x = sx * 1.55 * S; pist.add(boss); reg('pistons', boss); } }
+  // bielle en H : tête fendue (chapeau, 2 boulons et écrous), fût en H, pied avec bague bronze
+  const rod = new THREE.Group(); grp.add(rod);
+  { const annSeg = (r1, r2, a0, a1, n = 24) => { const sh = new THREE.Shape(); for (let i = 0; i <= n; i++) { const a = lerp(a0, a1, i / n); i ? sh.lineTo(r1 * S * Math.cos(a), r1 * S * Math.sin(a)) : sh.moveTo(r1 * S * Math.cos(a), r1 * S * Math.sin(a)); } for (let i = n; i >= 0; i--) { const a = lerp(a0, a1, i / n); sh.lineTo(r2 * S * Math.cos(a), r2 * S * Math.sin(a)); } sh.closePath(); return sh; };
+    const ext = (sh, w, mat) => { const g = new THREE.ExtrudeGeometry(sh, { depth: w * S, bevelEnabled: true, bevelSize: 0.04 * S, bevelThickness: 0.04 * S, bevelSegments: 1, curveSegments: 12 }); g.translate(0, 0, -w * S / 2); g.rotateY(Math.PI / 2); const m = new THREE.Mesh(g, mat); rod.add(m); reg('rods', m); return m; };
+    ext(annSeg(1.58, 1.075, 0.015, Math.PI - 0.015), 1.05, mRod);                       // demi-tête (côté fût)
+    ext(annSeg(1.58, 1.075, Math.PI + 0.015, TAU - 0.015), 1.05, mRod);                  // chapeau
+    ext(annSeg(1.075, 1.065, 0, TAU, 40), 1.0, mBronze);                                  // coussinets
+    for (const z of [-1.4, 1.4]) {
+      const bb = new THREE.Mesh(new THREE.BoxGeometry(0.95 * S, 1.3 * S, 0.55 * S), mRod); bb.position.set(0, 0.05 * S, z * S); rod.add(bb); reg('rods', bb);
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.17 * S, 0.17 * S, 1.9 * S, 10), mBolt); bolt.position.set(0, 0.05 * S, z * S); rod.add(bolt); reg('rods', bolt);
+      const hd = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * S, 0.3 * S, 0.2 * S, 6), mBolt); hd.position.set(0, 0.8 * S, z * S); rod.add(hd); reg('rods', hd);
+      const nt = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * S, 0.3 * S, 0.26 * S, 6), mBolt); nt.position.set(0, -0.72 * S, z * S); rod.add(nt); reg('rods', nt);
+    }
+    const Lb0 = 1.35, Lb1 = L_ROD - 0.75, Lb = Lb1 - Lb0;
+    const web = new THREE.Mesh(new THREE.BoxGeometry(0.22 * S, Lb * S, 0.95 * S), mRod); web.position.y = (Lb0 + Lb / 2) * S; rod.add(web); reg('rods', web);
+    for (const z of [-0.47, 0.47]) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.82 * S, Lb * S, 0.16 * S), mRod); f.position.set(0, (Lb0 + Lb / 2) * S, z * S); rod.add(f); reg('rods', f); }
+    const wedge = new THREE.Mesh(new THREE.CylinderGeometry(0.62 * S, 1.2 * S, 0.7 * S, 4, 1).rotateY(Math.PI / 4), mRod); wedge.scale.set(0.95, 1, 1); wedge.position.y = 1.45 * S; rod.add(wedge); reg('rods', wedge);
+    ext(annSeg(0.86, 0.56, 0, TAU, 32), 0.9, mRod);
+    const se = rod.children[rod.children.length - 1]; se.position.y = L_ROD * S;
+    const bu = ext(annSeg(0.56, 0.552, 0, TAU, 32), 0.95, mBronze); bu.position.y = L_ROD * S;
+    const neck = new THREE.Mesh(new THREE.BoxGeometry(0.82 * S, 0.5 * S, 1.1 * S), mRod); neck.position.y = (L_ROD - 0.72) * S; rod.add(neck); reg('rods', neck); }
+  const chamberMat = new THREE.MeshBasicMaterial({ color: 0x4aa3ff, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+  const chamber = new THREE.Mesh(new THREE.CylinderGeometry(2.5 * S, 2.5 * S, 1, 32, 1), chamberMat); grp.add(chamber);
+  // lobes de came de ce cylindre (orientés pour que la levée tombe au bon angle)
+  for (const v of valves) {
+    const peakPsi = v.kind === 'in' ? (VT.io + VT.ic) / 2 : (VT.eo + VT.ec) / 2;
+    const thetaPeak = (peakPsi + c.off) * DEG;               // angle vilebrequin au maximum de levée
+    const lobe = new THREE.Mesh(LOBE, mCam); reg('camshaft', lobe);
+    const holder = new THREE.Group(); holder.position.x = (c.x + (v.kind === 'in' ? 0.95 : -0.95) - XC) * S; cam.add(holder);
+    // le lobe pointe vers le poussoir (±z) quand la came a tourné de θ/2 (sens inverse du vilebrequin)
+    lobe.rotation.x = c.s * Math.PI / 2 - thetaPeak / 2;
+    holder.add(lobe);
+  }
+  cylObjs.push({ c, grp, up, valves, rockers, pushrods, pist, rod, chamber, chamberMat, sparkT, sparkB, tubes });
+}
+
+/* =====================================================================
+   ADMISSION (pipes), ÉCHAPPEMENT, DÉFLECTEURS, ALLUMAGE
+   ===================================================================== */
+const intakeCurves = [], exhaustCurves = [];
+for (const c of CYL) {
+  const pts = [W(c.x + 0.2, -5.4, c.s * 6.3), W(c.x + 0.4, -6.4, c.s * 8.2), W(c.x + 0.7, -5.6, c.s * 10.2), W(c.x + 0.9, -4.4, c.s * 11.5), W(c.x + 0.9, -3.75, c.s * 11.6)];
+  tubeW(pts, 0.8, mIntake, 'intake', eng, 40); intakeCurves.push(new THREE.CatmullRomCurve3(pts));
+  const hose = cylX(0.95, 0, 1.3, 0, 0, mHose, 'intake', eng, 20); hose.rotation.set(Math.PI / 2, 0, 0); hose.position.copy(W(c.x + 0.25, -5.6, c.s * 7.0));
+  // échappement : orifice bas de culasse -> collecteur vers le silencieux (installation type)
+  const ex = [W(c.x - 0.9, -3.8, c.s * 13.6), W(c.x - 0.9, -6.8, c.s * 13.7), W(c.x - 1.4, -9.6, c.s * 12.2), W(lerp(c.x, 6.5, 0.5), -11.2, c.s * 9.8), W(6.5, -11.6, c.s * 7.2)];
+  tubeW(ex, 0.72, mExh, 'exhaust', modInst, 50); exhaustCurves.push(new THREE.CatmullRomCurve3(ex));
+  box(2.6, 0.35, 2.4, W(c.x - 0.9, -4.1, c.s * 13.6), mExh, 'exhaust', modInst);
+  // déflecteurs inter-cylindres (tôle, sous les fûts)
+  const bf = new THREE.Mesh(new THREE.CylinderGeometry(3.5 * S, 3.5 * S, 0.9 * S, 20, 1, true, Math.PI * 0.6, Math.PI * 0.8), mBaffle);
+  bf.rotation.x = Math.PI / 2; bf.position.copy(W(c.x, -0.4, c.s * 8.6)); eng.add(bf); reg('baffles', bf);
+}
+// prise d'air froid : filtre derrière l'entrée du capot, conduit sous le silencieux vers la boîte à air
+const AIR_DUCT = [W(2.6, -14.6, -5.6), W(5.0, -15.9, -5.2), W(8.0, -16.1, -4.6), W(11.0, -15.9, -3.6), W(13.4, -15.1, -2.4), W(14.9, -14.2, -1.6)];
+{ const mFilt = M('carburetor', { color: 0x2a2f33, metalness: 0.3, roughness: 0.7 });
+  box(1.8, 2.4, 3.0, W(1.7, -14.6, -5.6), mFilt, 'carburetor', modInst);
+  const gr = new THREE.Mesh(new THREE.PlaneGeometry(2.2 * S, 2.6 * S).rotateY(-Math.PI / 2), M('carburetor', { color: 0x6c757b, metalness: 0.7, roughness: 0.4, wireframe: true })); gr.position.copy(W(0.78, -14.6, -5.6)); modInst.add(gr);
+  tubeW(AIR_DUCT, 0.95, mAirbox, 'carburetor', modInst, 60); }
+// silencieux transversal + manchon de réchauffage + gaine SCAT vers la boîte à air
+{ const g = new THREE.CylinderGeometry(2.0 * S, 2.0 * S, 16.0 * S, 28); g.rotateX(Math.PI / 2); const m = new THREE.Mesh(g, mMuffler); m.position.copy(W(6.5, -12.6, 0)); addTo(modInst, 'muffler', m);
+  const g2 = new THREE.CylinderGeometry(2.35 * S, 2.35 * S, 7.0 * S, 28, 1, true); g2.rotateX(Math.PI / 2); addTo(modInst, 'muffler', new THREE.Mesh(g2, mScat)).position.copy(W(6.5, -12.6, -3.0));
+  tubeW([W(6.5, -14.6, -3.0), W(9.5, -15.6, -2.4), W(14.4, -14.8, -1.0), W(15.0, -13.8, 0)], 0.9, mScat, 'muffler', modInst, 30);
+  tubeW([W(6.5, -12.6, 8.0), W(6.0, -13.4, 9.5), W(4.5, -14.6, 10.5)], 1.0, mMuffler, 'muffler', modInst, 20); }
+// faisceau d'allumage (fig. 5-1) : magnéto G -> bougies du haut à gauche (2,4) et du bas à droite (1,3) ; D -> inverse
+function plugWorld(o, top) { const g = top ? o.grp : o.grp; const v = new THREE.Vector3((top ? 1.2 : -1.2) * S, 13.8 * S, (top ? o.up : -o.up) * 3.9 * S); o.grp.updateMatrixWorld(true); return eng.worldToLocal(o.grp.localToWorld(v)); }
+eng.updateMatrixWorld(true);
+for (const o of cylObjs) {
+  const left = o.c.s > 0;
+  for (const top of [true, false]) {
+    const magZ = (left === top) ? 4.4 : -4.4;              // gauche : hauts gauches + bas droits
+    const dy = top ? 0.62 : -0.62, dz = (o.c.n <= 2 ? 0.58 : -0.58) * Math.sign(magZ);
+    const end = plugWorld(o, top), start = W(29.75, 2.0 + dy, magZ + dz);
+    const back = W(30.6, 2.0 + dy * 1.6, magZ + dz * 1.4), over = W(29.4, top ? 4.4 : -0.6, magZ * 1.3 + dz);
+    const mid1 = W(22.5, top ? 6.2 : -3.6, magZ * 1.4), mid2 = W(o.c.x + 1.0, top ? 6.8 : -4.8, o.c.s * 9.5);
+    tubeW([start, back, over, mid1, mid2, end], 0.13, mLead, 'harness', eng, 70);
+  }
+}
+
+/* =====================================================================
+   AVANT : couronne de démarreur, poulie, alternateur, démarreur, hélice
+   ===================================================================== */
+const ringGear = new THREE.Group(); ringGear.position.copy(W(1.45, 0, 0)); eng.add(ringGear);
+{
+  const g = gearGeo(6.6, 149, 0.5); const r = new THREE.Mesh(g, mRing2); ringGear.add(r); reg('ringgear', r);
+  const disk = new THREE.Mesh(new THREE.CylinderGeometry(6.4 * S, 6.4 * S, 0.12 * S, 48).rotateZ(Math.PI / 2), mRing2); ringGear.add(disk); reg('ringgear', disk);
+  const pul = new THREE.Mesh(new THREE.CylinderGeometry(3.4 * S, 3.4 * S, 0.7 * S, 40).rotateZ(Math.PI / 2), mRing2); pul.position.x = 0.5 * S; ringGear.add(pul); reg('ringgear', pul);
+  const grv = new THREE.Mesh(new THREE.TorusGeometry(3.3 * S, 0.18 * S, 8, 48).rotateY(Math.PI / 2), mBelt); grv.position.x = 0.5 * S; ringGear.add(grv);
+}
+// alternateur (avant droit, bas) entraîné par courroie
+const altPul = new THREE.Group(); altPul.position.copy(W(1.95, -4.6, -6.2)); modFront.add(altPul);
+{ cylX(2.7, 2.4, 7.6, -4.6, -6.2, mAlt, 'alternator', modFront, 32);
+  for (let i = 0; i < 8; i++) box(5.0, 0.2, 0.5, W(5.0, -4.6 + 2.72 * Math.sin(i * TAU / 8), -6.2 + 2.72 * Math.cos(i * TAU / 8)), mAlt, 'alternator', modFront);
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(1.25 * S, 1.25 * S, 0.7 * S, 28).rotateZ(Math.PI / 2), mAlt); altPul.add(p); reg('alternator', p);
+  const fan = new THREE.Mesh(new THREE.CylinderGeometry(2.3 * S, 2.3 * S, 0.3 * S, 12).rotateZ(Math.PI / 2), mAlt); fan.position.x = 0.5 * S; altPul.add(fan); reg('alternator', fan);
+  // courroie : deux brins tangents entre la poulie de couronne (r 3,4) et la poulie d'alternateur (r 1,25)
+  const c1 = new THREE.Vector2(0, 0), c2 = new THREE.Vector2(-4.6, -6.2), r1 = 3.4, r2 = 1.25; // (y, z)
+  const d = c2.clone().sub(c1), L = d.length(), ang = Math.atan2(d.y, d.x), off = Math.acos((r1 - r2) / L);
+  const pts = [];
+  for (let i = 0; i <= 24; i++) { const a = ang + off + (TAU - 2 * off) * i / 24; pts.push(W(1.95, c1.x + r1 * Math.cos(a), c1.y + r1 * Math.sin(a))); }
+  for (let i = 0; i <= 12; i++) { const a = ang - off + 2 * off * i / 12; pts.push(W(1.95, c2.x + r2 * Math.cos(a), c2.y + r2 * Math.sin(a))); }
+  const beltC = new THREE.CatmullRomCurve3(pts, true); addTo(modFront, 'alternator', new THREE.Mesh(new THREE.TubeGeometry(beltC, 120, 0.2 * S, 6, true), mBelt));
+}
+// démarreur (avant gauche, bas) avec pignon Bendix engrenant la couronne
+const starterPinion = new THREE.Group(); starterPinion.position.copy(W(1.45, -5.26, 4.94)); modFront.add(starterPinion);
+{ cylX(1.9, 2.6, 9.6, -5.6, 5.3, mStarter, 'starter', modFront, 28); cylX(1.2, 1.9, 2.6, -5.35, 5.05, mStarter, 'starter', modFront, 24);
+  const pg = new THREE.Mesh(gearGeo(0.62, 11, 0.5), mRing2); starterPinion.add(pg); reg('starter', pg); }
+// hélice bipale à pas fixe (installation type : McCauley 1C160, 76 po) et cône
+const prop = new THREE.Group(); prop.position.copy(W(-0.3, 0, 0)); eng.add(prop);
+{
+  const spin = new THREE.LatheGeometry([[0.01, -9], [2.2, -8], [3.6, -5.6], [4.5, -2.6], [4.8, 0]].map(([r, x]) => new THREE.Vector2(r * S, x * S)), 40); spin.rotateZ(-Math.PI / 2);
+  const sp = new THREE.Mesh(spin, mSpinner); prop.add(sp); reg('propeller', sp);
+  const g = new THREE.BoxGeometry(1, 1, 1, 16, 6, 1), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const u = p.getX(i) + 0.5, v = p.getY(i), w = p.getZ(i), r = lerp(3.5, 38, u);
+    const cch = u < 0.1 ? lerp(3.0, 5.6, u / 0.1) : lerp(5.6, 3.2, (u - 0.1) / 0.9) * (u > 0.94 ? Math.sqrt(Math.max(0.05, (1 - u) / 0.06)) * 0.6 + 0.4 : 1);
+    const env = Math.sqrt(Math.max(0, 1 - 4 * v * v)), t = (w > 0 ? 1 : -1) * cch * 0.1 * (0.15 + 0.85 * env) + 0.05 * cch * (1 - 4 * v * v);
+    const pitch = Math.atan(64 / (TAU * r));                   // pas fixe ≈ 64 po (1C160 type)
+    const a = v * cch;
+    p.setXYZ(i, -(a * Math.sin(pitch) + t * Math.cos(pitch)) * S, r * S, (a * Math.cos(pitch) - t * Math.sin(pitch)) * S);
+  }
+  g.computeVertexNormals();
+  for (let k = 0; k < 2; k++) { const b = new THREE.Mesh(g, mProp); b.rotation.x = k * Math.PI + 0.4; prop.add(b); reg('propeller', b);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.4 * S, 3.2 * S, 3.4 * S), mPropTip); tip.position.y = 36.2 * S; const h = new THREE.Group(); h.rotation.x = k * Math.PI + 0.4; h.add(tip); prop.add(h); reg('propeller', tip); }
+}
+
+/* =====================================================================
+   RADIATEUR D'HUILE (installation type, manuel fig. 7-3) et durites
+   ===================================================================== */
+const mCooler = M('oilcooler', { color: 0x3d4449, metalness: 0.6, roughness: 0.45 });
+const mCoolerFin = M('oilcooler', { color: 0x8c9398, metalness: 0.8, roughness: 0.35 });
+const mHoseOil = M('oilcooler', { color: 0x202326, metalness: 0.1, roughness: 0.8 });
+{ box(2.6, 4.2, 5.2, W(24.2, 7.4, 8.2), mCooler, 'oilcooler', modInst);
+  const fins = new THREE.InstancedMesh(new THREE.BoxGeometry(2.72 * S, 0.06 * S, 4.5 * S), mCoolerFin, 15);
+  for (let i = 0; i < 15; i++) fins.setMatrixAt(i, new THREE.Matrix4().makeTranslation((24.2 - XC) * S, (5.55 + i * 0.26) * S, 8.2 * S));
+  addTo(modInst, 'oilcooler', fins); }
+const OIL_TO_COOLER = [W(24.4, -2.4, -3.6), W(26.0, -3.2, -2.2), W(27.6, -1.0, 1.0), W(27.6, 4.3, 2.8), W(26.4, 6.2, 6.0), W(25.3, 6.4, 7.4)];
+const OIL_FROM_COOLER = [W(23.2, 8.9, 6.0), W(23.6, 7.4, 3.8), W(24.4, 5.2, 2.4), W(24.6, 3.3, 1.8)];
+tubeW(OIL_TO_COOLER, 0.3, mHoseOil, 'oilcooler', modInst, 60);
+tubeW(OIL_FROM_COOLER, 0.3, mHoseOil, 'oilcooler', modInst, 40);
+cylX(0.36, 24.3, 24.9, -2.4, -3.6, mOilFit, 'oilsystem', modAcc, 6); cylX(0.36, 24.3, 24.9, 3.3, 1.8, mOilFit, 'oilsystem', modAcc, 6);
+
+/* =====================================================================
+   TRAJETS DES FLUX
+   Huile (manuel, section 1) : crépine -> pompe -> radiateur -> écran de pression -> soupape de
+   régulation -> galerie principale (demi-carter droit) -> paliers, manetons, pignons, arbre à cames,
+   poussoirs -> tiges creuses -> culbuteurs -> retour par gravité au carter d'huile ; reniflard.
+   Mélange : prise d'air -> carburateur -> colonne d'admission noyée -> pipes -> soupape -> cylindre ;
+   échappement : soupape -> collecteur -> silencieux -> sortie.
+   ===================================================================== */
+const OILF = [];   // { pts, kind : h (chaude), p (pression), s (retour), a (air du reniflard), n }
+OILF.push({ kind: 's', n: 10, pts: [W(21.2, -8.0, 0.0), W(22.6, -7.4, 0.3), W(23.5, -5.8, 0.6), W(24.0, -3.8, 0.6)] });                                  // aspiration par la crépine
+OILF.push({ kind: 'h', n: 30, pts: [W(24.0, -3.8, 0.6), W(24.3, -3.0, -2.4), ...OIL_TO_COOLER] });                                                       // pompe -> radiateur
+OILF.push({ kind: 'h', n: 12, pts: [W(25.3, 6.4, 7.4), W(24.6, 6.0, 9.8), W(23.8, 7.6, 10.2), W(23.2, 8.9, 8.6), W(23.2, 8.9, 6.0)] });                  // traversée du radiateur
+OILF.push({ kind: 'p', n: 16, pts: [...OIL_FROM_COOLER, W(25.1, 2.5, 0.8), W(25.3, 1.9, 0)] });                                                           // retour -> écran de pression
+OILF.push({ kind: 'p', n: 14, pts: [W(25.3, 1.9, 0), W(24.6, 3.4, -1.6), W(22.4, 4.9, -4.0), W(20.5, 5.3, -5.0)] });                                     // écran -> soupape de régulation
+OILF.push({ kind: 's', n: 8, pts: [W(20.5, 5.3, -5.0), W(20.8, 3.0, -3.2), W(20.8, -2.0, -2.2), W(20.0, -6.2, -1.0)] });                                 // excédent -> carter d'huile
+OILF.push({ kind: 'p', n: 30, pts: [W(20.5, 5.3, -5.0), W(19.6, 2.3, -4.6), W(13.0, 2.0, -4.6), W(6.0, 2.0, -4.6), W(4.0, 2.0, -4.2)] });                // galerie principale
+for (const [x, pin, pz] of [[5.2, 9.4, -R_CRANK], [13.8, 11.3, R_CRANK], [13.8, 16.2, R_CRANK], [20.6, 18.1, -R_CRANK]]) {                               // paliers -> manetons
+  OILF.push({ kind: 'p', n: 10, pts: [W(x, 2.0, -4.6), W(x, 1.4, -2.6), W(x, 0.3, -0.9), W((x + pin) / 2, 0.1, pz * 0.4), W(pin, 0, pz)] });
+}
+OILF.push({ kind: 'p', n: 8, pts: [W(20.6, 0.3, -0.9), W(21.8, 1.2, -0.5), W(22.4, 2.4, 0), W(22.4, CAM_Y - 1.2, 0)] });                                 // palier arrière -> pignons
+OILF.push({ kind: 'p', n: 7, pts: [W(13.8, 2.0, -4.6), W(13.8, 3.3, -2.6), W(13.8, CAM_Y - 0.25, -0.75)] });                                          // paliers d'arbre à cames
+for (const o of cylObjs) {                                                                                                                             // poussoirs, tiges, culbuteurs, retour
+  const up = o.up; o.grp.updateMatrixWorld(true);
+  const Lp = (x, y, z) => eng.worldToLocal(o.grp.localToWorld(new THREE.Vector3(x * S, y * S, z * S)));
+  for (const dx of [-0.95, 0.95]) {
+    const tap = Lp(dx, 1.4, up * CAM_Y), gx = (tap.x / S) + XC;
+    const feed = o.c.s < 0 ? [W(gx, 2.0, -4.6), W(gx, 3.3, -3.0)] : [W(gx, 2.0, -4.6), W(gx, 5.4, -1.5), W(gx, 5.2, 1.4)];
+    OILF.push({ kind: 'p', n: 22, pts: [...feed, tap, Lp(dx, 2.2, up * CAM_Y), Lp(dx, 8.0, up * 3.4), Lp(dx, 15.1, up * 2.9), Lp(dx, 15.3, up * 1.2), Lp(dx, 14.9, 0.2)] });
+  }
+  OILF.push({ kind: 's', n: 14, pts: [Lp(0, 14.6, -up * 1.5), Lp(0, 13.4, -up * 3.0), Lp(0, 11.0, -up * 3.3), Lp(0, 5.2, -up * 2.4), Lp(0, 3.0, -up * 3.0), W(o.c.x, -3.2, o.c.s * 2.4), W(o.c.x, -5.8, o.c.s * 1.6)] });
+}
+OILF.push({ kind: 's', n: 10, pts: [W(12.0, -1.2, 0.8), W(13.2, -3.4, 0.4), W(14.2, -5.6, 0.2), W(15.4, -7.4, 0.2)] });                                   // brouillard du carter -> carter d'huile
+OILF.push({ kind: 'a', n: 12, pts: [W(21.4, 5.2, 1.0), W(23.2, 5.7, 2.0), W(24.8, 5.4, 2.6), W(25.6, 6.3, 3.0), W(26.2, 7.0, 3.3), W(27.6, 7.8, 3.7)] });  // reniflard -> air libre
+
+const GASF = [];   // { pts, kind : in (air froid), hot (réchauffage), ex, c, t0, t1 }
+const AIR_COLD = [W(-3.5, -14.6, -5.6), W(-1.2, -14.6, -5.6), W(0.9, -14.6, -5.6), ...AIR_DUCT, W(15.8, -13.8, -0.8), W(16.9, -13.2, 0), W(17.2, -12.3, 0), W(17.2, -11.2, 0), W(17.2, -9.6, 0), W(17.2, -8.2, 0), W(17.1, -7.2, 0), W(16.6, -6.4, 0), W(16.2, -6.1, 0)];
+const AIR_HOT = [W(6.5, -12.6, -3.0), W(6.5, -13.8, -3.0), W(6.5, -14.6, -3.0), W(7.6, -15.3, -2.8), W(9.5, -15.6, -2.4), W(12.0, -15.4, -1.7), W(14.4, -14.8, -1.0), W(15.0, -13.8, 0), W(16.4, -13.3, 0), W(17.2, -12.3, 0), W(17.2, -11.2, 0), W(17.2, -9.6, 0), W(17.2, -8.2, 0), W(17.1, -7.2, 0), W(16.6, -6.4, 0), W(16.2, -6.1, 0)];
+for (const o of cylObjs) {
+  const c = o.c, up = o.up, Lp = (x, y, z) => eng.worldToLocal(o.grp.localToWorld(new THREE.Vector3(x * S, y * S, z * S)));
+  const lead = [W(lerp(16.2, c.x, 0.35), -6.0, c.s * 1.2), W(lerp(16.2, c.x, 0.7), -5.9, c.s * 2.6), W(c.x + 0.2, -5.7, c.s * 4.2), W(c.x + 0.2, -5.5, c.s * 5.4)];
+  const pipe = intakeCurves[c.n - 1].points;
+  const tail = [Lp(0.9, 11.6, -up * 3.2), Lp(0.95, 11.35, -up * 1.0), Lp(0.95, 11.25, 0)];   // s'arrête au-dessus de la soupape : le nuage du cylindre prend le relais
+  GASF.push({ kind: 'in', c, t0: 0, t1: 0.12, split: AIR_COLD.length + lead.length, pts: [...AIR_COLD, ...lead, ...pipe, ...tail] });
+  GASF.push({ kind: 'hot', c, t0: 0.26, t1: 0.3, split: AIR_HOT.length + lead.length, pts: [...AIR_HOT, ...lead, ...pipe, ...tail] });
+  const exh = exhaustCurves[c.n - 1].points;
+  GASF.push({ kind: 'ex', c, t0: 0.78, t1: 1.0, split: 3 + exh.length, pts: [Lp(-0.95, 11.25, 0), Lp(-0.95, 11.6, -up * 1.1), Lp(-0.95, 13.6, -up * 3.2), ...exh, W(6.5, -12.6, c.s * 3.0), W(6.5, -12.6, 6.5), W(6.5, -12.8, 8.0), W(6.0, -13.4, 9.5), W(4.5, -14.6, 10.5), W(3.3, -15.6, 11.2), W(1.8, -17.0, 12.3), W(0.2, -18.6, 13.4)] });
+}
+
+/* =====================================================================
+   SIMULATION — calée sur le manuel d'utilisation O-320 (séries A/E)
+   ===================================================================== */
+const inp = { master: true, fuel: true, boost: false, mag: 'both', thr: 0, mix: 1, heat: false, oat: 15, alt: 0, rh: 60, ias: 0 };
+const st = {};
+const K_HP = 150 / ((28.77 - 4.5) * 2700);          // 150 HP à 2700 tr/min plein gaz niveau mer
+const PROP_K = 131.2 / Math.pow(2350, 3), PROP_J0 = 1.41, PROP_D = 1.93, I_ROT = 1.9;
+function coldState() { Object.assign(st, { t: 0, rpm: 0, running: false, theta: 0, prime: 0, flooded: false, cht: fOf(inp.oat), oilT: fOf(inp.oat), oilP: 0, egt: fOf(inp.oat), ff: 0, fp: 0, map: 29.92, bhp: 0, q: 0, lam: 0, bowl: 1, ice: 0, tcarb: inp.oat, crankT: 0, restT: 999, groundFT: 0, rough: 0, stopT: 0 }); }
+function idleState() { coldState(); Object.assign(st, { rpm: 720, running: true, cht: 265, oilT: 150, oilP: 58, egt: 1180, ff: 1.2, fp: 4, map: 10.2, bowl: 1 }); }
+function fOf(c) { return c * 9 / 5 + 32; }
+function amb() {
+  const d = Math.pow(1 - 6.8756e-6 * inp.alt, 5.2559), T = inp.oat + 273.15, th = T / 288.15;
+  return { d, th, sig: d / th, pamb: 29.92 * d, T };
+}
+function throttleArea() { return (0.010 + 3 * Math.pow(inp.thr, 1.8)) * (1 - 0.9 * st.ice); }
+function mapOf(n, a, pamb) { return n < 5 ? pamb : pamb * a / (a + 0.12 * n / 2700); }
+function mixFactor(l) {
+  if (l <= 0) return 0;
+  if (l >= 1.15) return Math.max(0, 1 - 0.8 * (l - 1.15) ** 2 - (l > 1.6 ? (l - 1.6) * 1.8 : 0));
+  if (l >= 0.85) return 1 - 1.5 * (1.15 - l) ** 2;
+  return Math.max(0, 0.865 - 3 * (0.85 - l));
+}
+function magFactor() { return inp.mag === 'both' ? 1 : (inp.mag === 'l' || inp.mag === 'r') ? 0.94 : inp.mag === 'start' ? 1 : 0; }
+const magsOn = () => inp.mag !== 'off' && inp.master !== undefined;
+
+function step(dt) {
+  const a = amb(); st.t += dt;
+  const cranking = inp.mag === 'start' && inp.master;
+  const n = st.rpm;
+  // --- carburant : cuve du carburateur ---
+  const pumpP = (st.running || cranking) ? 2.5 + 2.5 * Math.min(1, n / 2000) : 0;
+  const fpT = inp.fuel ? pumpP + (inp.boost && inp.master ? 2.6 : 0) : 0;
+  st.fp += (fpT - st.fp) * (1 - Math.exp(-dt / 0.4));
+  if (inp.fuel && st.fp > 0.5) st.bowl = Math.min(1, st.bowl + dt * 0.5); else st.bowl = Math.max(0, st.bowl - st.ff * dt / 60);
+  // --- réchauffage carburateur et givrage ---
+  const flowing = st.running && n > 300;
+  const drop = flowing ? 9 + 26 * Math.pow(1 - inp.thr, 0.7) : 0;
+  const heatRise = inp.heat ? 45 * (0.4 + 0.6 * Math.min(1, n / 2200)) : 0;
+  st.tcarb += ((inp.oat + heatRise - drop) - st.tcarb) * (1 - Math.exp(-dt / 2));
+  if (flowing) {
+    const inBand = st.tcarb > -12 && st.tcarb < 4 && inp.oat > -7 && inp.oat < 32;
+    const rate = inBand ? Math.max(0, (inp.rh - 50) / 50) * 0.012 * (1.1 - inp.thr) : 0;
+    const melt = st.tcarb > 4 ? 0.02 + 0.004 * (st.tcarb - 4) : 0;
+    const was = st.ice; st.ice = clamp(st.ice + (rate - melt) * dt, 0, 1);
+    if (was < 0.15 && st.ice >= 0.15) logE('Givrage carburateur : baisse de régime — appliquer le réchauffage à fond', 'a');
+    if (was > 0.1 && st.ice < 0.02 && inp.heat) logE('Glace fondue : le régime remonte (brève irrégularité normale)', 'g');
+    if (melt > 0 && st.ice > 0.02) st.rough = Math.max(st.rough, 0.35);
+  } else if (st.tcarb > 2) st.ice = Math.max(0, st.ice - dt * 0.02);
+  // --- pression d'admission, débit d'air, richesse ---
+  const aT = throttleArea();
+  st.map = mapOf(n, aT, a.pamb);
+  const tAir = st.tcarb + 273.15;
+  let lam = inp.mix < 0.03 ? 0 : lerp(0.62, 1.30, inp.mix) / Math.sqrt(a.sig) * Math.sqrt(tAir / a.T);
+  if (st.running && n < 1100) lam *= 1.08;                         // circuit de ralenti un peu riche
+  lam *= clamp(st.bowl * 4, 0, 1);
+  // --- démarrage : amorçage (primer) et cuve ---
+  if (cranking) {
+    st.crankT += dt; st.restT = 0;
+    if (!st.running) {
+      const warm = st.cht > 200;
+      const carbFuel = inp.fuel && inp.mix > 0.5 && inp.thr < 0.5 && st.bowl > 0.2 ? (warm ? 1.2 : 0.35) : 0;
+      const charge = st.prime + carbFuel;
+      if (inp.thr > 0.8 && inp.mix < 0.05) st.prime = Math.max(0, st.prime - dt * 0.6);   // purge d'un moteur noyé
+      else st.prime = Math.max(0, st.prime - dt * 0.07);
+      st.flooded = charge > 3.8;
+      if (inp.mag !== 'off' && n > 90 && st.crankT > 1.0 && charge >= 0.8 && charge <= 3.8 && lam > 0) {
+        st.running = true; st.prime = 0; st.flooded = false; logE(`Le moteur démarre (${Math.round(st.crankT)} s de lancement)`, 'g');
+      }
+    }
+  } else { if (st.crankT > 0) st.restT = 0; st.crankT = 0; st.restT += dt; }
+  // --- combustion ---
+  const ignOk = inp.mag !== 'off' && inp.master !== null;
+  if (st.running) {
+    if (!ignOk) { st.running = false; logE('Magnétos sur OFF : arrêt du moteur', ''); }
+    else if (lam < 0.55 || lam > 1.85) { st.running = false; logE(inp.mix < 0.03 ? 'Étouffoir : arrêt par coupure du mélange' : st.bowl < 0.1 ? 'Panne sèche : plus d\'essence dans la cuve du carburateur' : 'Mélange hors limites : le moteur s\'étouffe', inp.mix < 0.03 ? '' : 'r'); }
+    else if (n < 180 && !cranking && st.runT > 2) { st.running = false; logE('Le moteur cale (régime trop bas)', 'a'); }
+  }
+  st.runT = st.running ? (st.runT || 0) + dt : 0;
+  st.lam = st.running ? lam : 0;
+  // --- couple moteur ---
+  let bhp = 0;
+  if (st.running) {
+    const dens = Math.sqrt(288.15 / tAir);
+    bhp = K_HP * Math.max(0, st.map - 4.5) * n * mixFactor(lam) * magFactor() * dens;
+    if (lam < 0.85 || lam > 1.6) st.rough = Math.max(st.rough, 0.6);
+    if (inp.mag === 'l' || inp.mag === 'r') st.rough = Math.max(st.rough, 0.12);
+  }
+  st.rough = Math.max(0, st.rough - dt * 0.8);
+  const qe = st.running ? bhp * 5252 / Math.max(n, 250) : 0;
+  const qs = cranking ? 40 * Math.max(0, 1 - n / 260) : 0;
+  const qf = st.running ? 0 : (n > 0.5 ? 12 + 0.006 * n : 0);
+  // --- hélice à pas fixe ---
+  const J = n > 30 ? (inp.ias * 0.5144) / (n / 60 * PROP_D) : 0;
+  const g = Math.max(-0.5, 1 - (J / PROP_J0) ** 2);
+  const pprop = PROP_K * a.sig * n * n * n * g;
+  const qp = n > 1 ? pprop * 5252 / n : 0;
+  // vent relatif : l'hélice moulinet entraîne le moteur en vol
+  let dn = (qe + qs - qp - qf) / I_ROT * 9.549 * dt;
+  st.rpm = Math.max(0, n + dn);
+  if (!st.running && !cranking && st.rpm < 30 && inp.ias < 40) st.rpm = Math.max(0, st.rpm - 60 * dt);
+  st.bhp = bhp; st.q = qe;
+  // --- débit carburant ---
+  const ffT = st.running ? 1.337e-4 * st.map * n * lam * Math.sqrt(288.15 / tAir) : 0;
+  st.ff += (ffT - st.ff) * (1 - Math.exp(-dt / 0.5));
+  // --- températures (accélérées ×3 environ) ---
+  const oatF = fOf(inp.oat);
+  const cool = 0.35 + 0.65 * Math.min(1.3, inp.ias / 100 + (n / 2700) * 0.35);
+  const mixC = st.running ? (lam >= 1.05 ? 1 - 0.4 * (lam - 1.05) : 1 - 0.7 * (1.05 - lam)) : 0;
+  const chtT = oatF + (st.running ? 20 + Math.pow(Math.max(0, bhp) / 150, 0.75) * 420 * mixC / Math.pow(cool, 0.6) + 60 : 0);
+  st.cht += (chtT - st.cht) * (1 - Math.exp(-dt / (st.running ? 40 : 120)));
+  const otT = oatF + (n > 50 ? 30 + 0.33 * (st.cht - oatF) : 0);
+  st.oilT += (otT - st.oilT) * (1 - Math.exp(-dt / 70));
+  const egtPeak = 1150 + 350 * Math.sqrt(Math.max(0, bhp) / 150);
+  const egtT = st.running ? (lam >= 1 ? egtPeak - 700 * (lam - 1) : egtPeak - 1100 * (1 - lam)) : st.cht;
+  st.egt += (egtT - st.egt) * (1 - Math.exp(-dt / (st.running ? 2 : 20)));
+  const relief = 80 + (st.oilT < 140 ? Math.min(20, (140 - st.oilT) * 0.45) : 0);
+  const opT = n > 10 ? Math.min(relief, (n / 1000) * 78) : 0;
+  st.oilP += (opT - st.oilP) * (1 - Math.exp(-dt / 0.8));
+  if (st.running && inp.ias < 20 && inp.thr > 0.9) st.groundFT += dt; else st.groundFT = 0;
+}
+
+/* ---------- surveillance des limites (manuel, section 3) ---------- */
+const watches = {}, lamp = {};
+function watch(k, cond, delay, lvl, msg, dt) {
+  const w = watches[k] ||= { t: 0, off: 0, fired: false };
+  if (cond) { w.t += dt; w.off = 0; if (w.t >= delay && !w.fired) { w.fired = true; logE(msg, lvl); } } else { w.t = 0; w.off += dt; if (w.off > 3) w.fired = false; }
+  return cond;
+}
+function monitor(dt) {
+  const n = st.rpm;
+  lamp.op = lamp.cht = lamp.rpm = false;
+  if (watch('rpm', n > 2700 * 1.01, 1, 'r', 'Régime > 2700 tr/min : survitesse (ligne rouge)', dt) || n > 2727) lamp.rpm = true;
+  if (watch('cht5', st.cht > 500, 0, 'r', 'CHT > 500 °F : limite maximale dépassée', dt) || st.cht > 500) lamp.cht = true;
+  watch('cht4', st.cht > 435, 5, 'a', 'CHT > 435 °F : au-delà de la valeur conseillée en continu', dt);
+  watch('ot', st.oilT > 245, 1, 'r', 'Température d\'huile > 245 °F', dt);
+  const lowIdle = st.running && st.oilP < 25, lowRun = st.running && n > 1600 && st.oilP < 60;
+  if (watch('op1', lowIdle, 1, 'r', 'Pression d\'huile < 25 psi', dt) | watch('op2', lowRun, 3, 'a', 'Pression d\'huile < 60 psi en fonctionnement', dt)) lamp.op = true;
+  if (lowIdle || lowRun) lamp.op = true;
+  watch('op3', st.oilP > 100.5, 1, 'a', 'Pression d\'huile > 100 psi (démarrage à froid)', dt);
+  watch('oilstart', st.running && st.t > 0 && st.oilP < 10, 30, 'r', 'Pas de pression d\'huile en 30 s : arrêter le moteur', dt);
+  watch('crank', inp.mag === 'start', 12, 'a', 'Démarreur > 12 s : relâcher et laisser refroidir 5 min', dt);
+  watch('gft', st.groundFT > 0, 180, 'a', 'Plein gaz au sol > 3 min : risque de surchauffe', dt);
+  watch('ground', st.running && inp.ias < 20 && n > 2200 && inp.thr < 0.9, 20, 'a', 'Régime > 2200 tr/min au sol : à éviter hors essai', dt);
+  watch('fp', st.running && st.fp < 0.5, 1, 'r', 'Pression carburant < 0,5 psi', dt);
+}
+
+/* ---------- journal ---------- */
+const logEl = $('log');
+const fmtT = t => `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+function logE(msg, lvl) { const li = document.createElement('li'); if (lvl) li.className = lvl; li.innerHTML = `<time>${fmtT(st.t || 0)}</time><span></span>`; li.querySelector('span').textContent = msg; logEl.prepend(li); while (logEl.children.length > 60) logEl.lastChild.remove(); }
+
+/* ---------- séquences automatiques (manuel, section 3) ---------- */
+let auto = null, magChk = null;
+function runAuto(dt) {
+  if (magChk) {
+    magChk.t += dt; const m = magChk;
+    if (m.step === 0) { m.ref = st.rpm; setInput('mag', 'r'); m.step = 1; m.t = 0; }
+    else if (m.step === 1 && m.t > 3) { m.dropR = m.ref - st.rpm; setInput('mag', 'both'); m.step = 2; m.t = 0; }
+    else if (m.step === 2 && m.t > 3) { m.ref2 = st.rpm; setInput('mag', 'l'); m.step = 3; m.t = 0; }
+    else if (m.step === 3 && m.t > 3) {
+      m.dropL = m.ref2 - st.rpm; setInput('mag', 'both');
+      const ok = m.dropR <= 175 && m.dropL <= 175 && Math.abs(m.dropR - m.dropL) <= 50;
+      logE(`Essai magnétos à ${Math.round(m.ref)} tr/min : chute D ${Math.round(m.dropR)}, G ${Math.round(m.dropL)}, écart ${Math.round(Math.abs(m.dropR - m.dropL))} tr/min — ${ok ? 'conforme (≤ 175, écart ≤ 50)' : 'hors limites'}`, ok ? 'g' : 'r');
+      magChk = null;
+    }
+  }
+  if (!auto) return;
+  auto.t += dt; const s = auto;
+  if (s.type === 'start') {
+    if (s.step === 0) { setInput('heat', false); setInput('fuel', true); setInput('mix', 1); setInput('boost', true); setInput('thr', 0.25); logE('Réchauffage carbu froid, carburant ouvert, mélange plein riche, pompe électrique, gaz ¼', ''); s.step = 1; s.t = 0; }
+    else if (s.step === 1 && s.t > 0.8) { const strokes = st.cht > 200 ? 0 : st.cht > 100 ? 1 : 2; for (let i = 0; i < strokes; i++) prime(); logE(strokes ? `Amorçage : ${strokes} coup(s) de primer` : 'Moteur chaud : pas d\'amorçage', ''); s.step = 2; s.t = 0; }
+    else if (s.step === 2 && s.t > 0.8) { setInput('mag', 'start'); logE('Démarreur engagé', ''); s.step = 3; s.t = 0; }
+    else if (s.step === 3 && st.running && st.rpm > 500) { setInput('mag', 'both'); setInput('thr', 0.065); logE('Magnétos sur BOTH, gaz réduits (réchauffage 1000–1200 tr/min)', ''); s.step = 4; s.t = 0; }
+    else if (s.step === 3 && !st.running && s.t > 11) { setInput('mag', 'both'); logE('Pas de démarrage en 11 s : attendre avant un nouvel essai (moteur noyé ?)', 'a'); auto = null; }
+    else if (s.step === 4 && s.t > 3) { setInput('boost', false); logE(st.oilP > 25 ? `Pression d'huile ${Math.round(st.oilP)} psi : OK` : 'Surveiller la pression d\'huile', st.oilP > 25 ? 'g' : 'a'); auto = null; }
+  } else if (s.type === 'stop') {
+    if (s.step === 0) { setInput('thr', 0.04); logE('Ralenti jusqu\'à baisse nette de la CHT (abrégé)', ''); s.step = 1; s.t = 0; }
+    else if (s.step === 1 && s.t > 5) { setInput('mix', 0); logE('Mélange sur étouffoir (idle cut-off)', ''); s.step = 2; s.t = 0; }
+    else if (s.step === 2 && st.rpm < 5) { setInput('mag', 'off'); setInput('boost', false); logE('Moteur arrêté : magnétos OFF', ''); auto = null; }
+  }
+}
+function prime() { if (!inp.fuel || !inp.master) { logE('Primer sans effet : carburant fermé', 'a'); return; } st.prime += st.cht > 200 ? 0.6 : 1.0; $('o-prime').textContent = Math.round(st.prime * 10) / 10; }
+
+/* =====================================================================
+   INTERFACE
+   ===================================================================== */
+const magNames = { off: 'OFF', r: 'R (droite)', l: 'L (gauche)', both: 'BOTH', start: 'START' };
+function setInput(k, v) {
+  inp[k] = v;
+  if (k === 'master') $('sw-master').setAttribute('aria-pressed', v);
+  if (k === 'fuel') $('sw-fuel').setAttribute('aria-pressed', v);
+  if (k === 'boost') $('sw-boost').setAttribute('aria-pressed', v);
+  if (k === 'heat') $('sw-heat').setAttribute('aria-pressed', v);
+  if (k === 'mag') { for (const m of ['off', 'r', 'l', 'both', 'start']) $('mag-' + m).setAttribute('aria-pressed', m === v); $('o-mag').textContent = magNames[v]; }
+  if (k === 'thr') $('thr').value = v;
+  if (k === 'mix') $('mix').value = v;
+  syncLabels();
+}
+function syncLabels() {
+  $('o-thr').textContent = inp.thr < 0.02 ? 'RALENTI' : inp.thr > 0.98 ? 'PLEIN GAZ' : Math.round(inp.thr * 100) + ' %';
+  $('o-mix').textContent = inp.mix < 0.03 ? 'ÉTOUFFOIR' : inp.mix > 0.98 ? 'PLEIN RICHE' : 'APPAUVRI ' + Math.round((1 - inp.mix) * 100) + ' %';
+  $('o-oat').textContent = `${inp.oat} °C`; $('o-alt').textContent = `${inp.alt.toLocaleString('fr-CA')} pi`; $('o-rh').textContent = `${inp.rh} %`; $('o-ias').textContent = `${inp.ias} kt`;
+}
+const userAct = () => { auto = null; };
+$('sw-master').onclick = () => { userAct(); setInput('master', !inp.master); };
+$('sw-fuel').onclick = () => { userAct(); setInput('fuel', !inp.fuel); logE(`Robinet carburant ${inp.fuel ? 'ouvert' : 'fermé'}`, inp.fuel ? '' : 'a'); };
+$('sw-boost').onclick = () => { userAct(); setInput('boost', !inp.boost); };
+$('sw-heat').onclick = () => { userAct(); setInput('heat', !inp.heat); logE(`Réchauffage carburateur ${inp.heat ? 'CHAUD' : 'FROID'}`, ''); };
+for (const m of ['off', 'r', 'l', 'both']) $('mag-' + m).onclick = () => { userAct(); magChk = null; setInput('mag', m); };
+{ const b = $('mag-start'); const on = e => { e.preventDefault(); userAct(); if (!inp.master) { logE('Démarreur sans effet : batterie coupée', 'a'); return; } setInput('mag', 'start'); }; const off = () => { if (inp.mag === 'start' && !auto) setInput('mag', 'both'); };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') on(e); }); b.addEventListener('keyup', off); }
+$('thr').oninput = e => { userAct(); inp.thr = +e.target.value; syncLabels(); };
+$('mix').oninput = e => { userAct(); inp.mix = +e.target.value; syncLabels(); };
+$('b-prime').onclick = () => { userAct(); prime(); };
+$('b-magchk').onclick = () => { if (!st.running) { logE('Essai magnétos : démarrer le moteur d\'abord', 'a'); return; } if (st.rpm < 1700 || st.rpm > 2150) { logE('Essai magnétos : régler 2000–2100 tr/min (hélice à pas fixe)', 'a'); } magChk = { step: 0, t: 0 }; };
+for (const k of ['oat', 'alt', 'rh', 'ias']) $(k).oninput = e => { inp[k] = +e.target.value; syncLabels(); };
+$('b-start').onclick = () => { if (st.running) { logE('Moteur déjà en marche', 'a'); return; } if (!inp.master) setInput('master', true); auto = { type: 'start', step: 0, t: 0 }; };
+$('b-stop').onclick = () => { if (!st.running) return; auto = { type: 'stop', step: 0, t: 0 }; };
+$('b-cold').onclick = () => { auto = null; magChk = null; setInput('mag', 'off'); setInput('thr', 0); setInput('mix', 1); setInput('heat', false); setInput('boost', false); coldState(); $('o-prime').textContent = 0; logE('Moteur froid, à l\'arrêt — prêt pour la mise en route', ''); };
+
+/* ---------- modes d'affichage ---------- */
+let mode = 'ext';
+function setMode(m) {
+  mode = m; for (const k of ['ext', 'cut', 'xray']) $('m-' + k).setAttribute('aria-pressed', k === m);
+  for (const mat of staticMats) {
+    mat.clippingPlanes = m === 'cut' ? [clipPlane] : null;
+    const x = m === 'xray' && !['plugs', 'harness'].includes(mat.userData.partKey);
+    mat.transparent = x || mat.userData.baseTransparent; mat.opacity = x ? 0.12 : mat.userData.baseOpacity; mat.depthWrite = !x; mat.needsUpdate = true;
+  }
+  if (typeof applyFlowDepth === 'function') applyFlowDepth();
+}
+for (const [k, mats] of Object.entries(partMats)) for (const m of mats) m.userData.partKey = k;
+for (const k of ['ext', 'cut', 'xray']) $('m-' + k).onclick = () => setMode(k);
+let showCylCol = false, showProp = true, showInst = true, showCycle = false, showGas = false, showOil = false, flowCut = false, flowK = 1, paused = false, simClock = 0;
+$('t-prop').onclick = e => { showProp = !showProp; e.currentTarget.setAttribute('aria-pressed', showProp); prop.visible = showProp; };
+$('t-inst').onclick = e => { showInst = !showInst; e.currentTarget.setAttribute('aria-pressed', showInst); modInst.visible = showInst; };
+function setCycle(v) { showCycle = v; $('t-cycle').setAttribute('aria-pressed', v); updKey(); }
+$('t-cycle').onclick = () => setCycle(!showCycle);
+$('t-cyl').onclick = e => { showCylCol = !showCylCol; e.currentTarget.setAttribute('aria-pressed', showCylCol); };
+function updKey() { $('flowkey').hidden = !((showGas || showOil) && (showPts || showArr)); }
+$('t-gas').onclick = e => { showGas = !showGas; e.currentTarget.setAttribute('aria-pressed', showGas); updKey(); };
+$('t-oil').onclick = e => { showOil = !showOil; e.currentTarget.setAttribute('aria-pressed', showOil); updKey(); };
+$('t-fcut').onclick = e => { flowCut = !flowCut; e.currentTarget.setAttribute('aria-pressed', flowCut); for (const m of flowMats) { m.clippingPlanes = flowCut ? [clipPlane] : null; m.needsUpdate = true; } };
+$('flowspd').oninput = e => { flowK = Math.pow(10, lerp(-2, 0.301, +e.target.value)); $('o-flowspd').textContent = '×' + (flowK < 0.1 ? flowK.toFixed(3) : flowK.toFixed(2)).replace('.', ','); };
+let slow = 0.05;
+$('slow').onchange = e => { slow = +e.target.value; $('rot-note').textContent = slow === 1 ? 'Rotation en temps réel (effet stroboscopique)' : `Rotation affichée ×1/${Math.round(1 / slow)} — vilebrequin horaire vu de l'arrière`; };
+let explode = 0; $('explode').oninput = e => explode = +e.target.value;
+function setPaused(v) { paused = v; $('t-pause').setAttribute('aria-pressed', v); $('t-pause').textContent = v ? '▶ Reprendre' : '⏸ Figer'; $('frozen').hidden = !v; if (au && au.on) v ? au.ctx.suspend() : au.ctx.resume(); }
+$('t-pause').onclick = () => setPaused(!paused);
+addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return; if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); setPaused(!paused); } if (e.key === 'f' || e.key === 'F') toggleFS(); });
+/* plein écran */
+const vpEl = $('vp'), fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+function toggleFS() { try { if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else { const r = (vpEl.requestFullscreen || vpEl.webkitRequestFullscreen).call(vpEl); if (r && r.catch) r.catch(() => logE('Plein écran refusé par le navigateur', 'a')); } } catch (e) { logE('Plein écran non disponible', 'a'); } }
+$('t-fs').onclick = toggleFS;
+function onFS() { const on = !!fsEl(); $('t-fs').setAttribute('aria-pressed', on); $('t-fs').textContent = on ? '✕ Quitter' : '⛶ Plein écran'; $('hud').hidden = !on; }
+document.addEventListener('fullscreenchange', onFS); document.addEventListener('webkitfullscreenchange', onFS);
+/* vues */
+let camTween = null;
+const views = { '34': [new THREE.Vector3(-3.3, 2.1, 4.1), new THREE.Vector3(0, -0.05, 0)], top: [new THREE.Vector3(-0.05, 3.9, 0.02), new THREE.Vector3(0, 0, 0)], left: [new THREE.Vector3(0, 0.1, 3.8), new THREE.Vector3(0, -0.1, 0)], front: [new THREE.Vector3(-3.8, 0.6, 0.4), new THREE.Vector3(0, -0.1, 0)], rear: [new THREE.Vector3(3.8, 0.7, -0.6), new THREE.Vector3(0, -0.1, 0)] };
+for (const [k, id] of [['34', 'v-34'], ['top', 'v-top'], ['left', 'v-left'], ['front', 'v-front'], ['rear', 'v-rear']]) $(id).onclick = () => { camTween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: views[k][0], t1: views[k][1], k: 0 }; };
+
+/* ---------- fiches des pièces ---------- */
+const PARTS = {
+  crankcase: ['Carter moteur', 'Manuel · sect. 1 · PC-103 fig. 1-1', 'Deux demi-carters en alliage d\'aluminium renforcés, assemblés par goujons, boulons et écrous, sans joint au plan de joint. Les alésages des paliers reçoivent des coussinets de précision. La soupape de régulation de pression d\'huile est en haut à droite, devant le boîtier d\'accessoires. Modélisé : nez conique nervuré, plan de joint supérieur boulonné de part en part, bossages des goujons traversants, bossages des poussoirs où entrent les tubes enveloppes (joint + ressort), anneau de levage, couvercle de plage de régulateur, plaque constructeur.', [['Construction', '2 moulages aluminium'], ['Plan de joint', 'vertical, sans joint']]],
+  crankshaft: ['Vilebrequin', 'Manuel · sect. 1 · PC-103 fig. 1-3', 'Forgé en acier chrome-nickel-molybdène, portées nitrurées. Quatre manetons : 1 et 4 en phase, 2 et 3 à 180°, ce qui donne l\'ordre d\'allumage 1-3-2-4 avec une explosion tous les 180°. Des trous obliques amènent l\'huile des paliers aux manetons. Rotation horaire vue de l\'arrière, prise directe de l\'hélice.', [['Course', '3,875 po'], ['Rotation', 'horaire (vue arrière)'], ['Rapport hélice', '1:1']]],
+  rods: ['Bielles', 'Manuel · sect. 1 · PC-103 fig. 1-4', 'Section en H, forgées en acier allié. Coussinets remplaçables côté vilebrequin, bague en bronze côté piston. Chapeau tenu par deux boulons et écrous.', [['Nombre', '4']]],
+  pistons: ['Pistons', 'Manuel · sect. 1 · SFN-880', 'Usinés en alliage d\'aluminium, axe flottant avec bouchon à chaque extrémité. Segments en demi-coin ou coin complet selon le cylindre (SI 1037).', [['Alésage', '5,125 po']]],
+  camshaft: ['Arbre à cames', 'Manuel · sect. 1 · PC-103 fig. 1-4', 'Arbre classique situé au-dessus du vilebrequin et parallèle à lui. Entraîné par pignons, il tourne à mi-régime en sens inverse et actionne des poussoirs hydrauliques. Calage des cames figuré.', [['Régime', '½ du vilebrequin']]],
+  pushrods: ['Poussoirs hydrauliques et tiges', 'Manuel · sect. 1', 'Les poussoirs hydrauliques transmettent la levée des cames aux tiges creuses, par lesquelles l\'huile monte jusqu\'aux culbuteurs. Jeu culbuteur, poussoir écrasé : 0,028 à 0,080 po.', [['Jeu', '0,028–0,080 po']]],
+  shroudtube: ['Tubes enveloppes des tiges', 'Manuel · sect. 1', 'Les tubes enveloppes des tiges de culbuteurs sont sur le dessus du moteur : c\'est même ce qui définit le « haut » dans le manuel.', []],
+  rockers: ['Culbuteurs', 'Manuel · sect. 1 · PC-103 fig. 3-4', 'Culbuteurs sur axes flottants en acier, dans les boîtes à culbuteurs coulées avec la culasse.', []],
+  valves: ['Soupapes et ressorts', 'Manuel · sect. 1 · PC-103 fig. 3-3', 'Les ressorts s\'appuient sur des sièges en acier trempé et sont retenus sur les queues de soupape par des clavettes fendues. Une soupape d\'admission et une d\'échappement par cylindre. Calage figuré : admission 25° avant PMH à 60° après PMB, échappement 65° avant PMB à 25° après PMH.', []],
+  cylinder: ['Cylindres', 'Manuel · sect. 1 · PC-103 fig. 3-2', 'Construction classique refroidie par air : culasse et fût vissés et frettés ensemble. Fût usiné dans une forge en acier chrome-nickel-molybdène, ailettes profondes intégrées, alésage rectifié et rodé. Numérotés de l\'avant vers l\'arrière : impairs à droite, pairs à gauche.', [['Alésage × course', '5,125 × 3,875 po'], ['Cylindrée', '319,8 po³']]],
+  head: ['Culasses', 'Manuel · sect. 1', 'Moulage en alliage d\'aluminium, chambre de combustion entièrement usinée. Les supports d\'axes de culbuteurs et les boîtes à culbuteurs sont venus de fonderie. Admission et échappement en dessous.', []],
+  rockercover: ['Couvre-culbuteurs', 'PC-103 fig. 3-4', 'Couvercle marqué LYCOMING, fixé par six vis en bout de culasse, qui ferme la boîte à culbuteurs.', []],
+  sump: ['Carter d\'huile et admission centrale', 'Manuel · sect. 1 · PC-103 fig. 2-8', 'Le carter d\'huile porte le bouchon de vidange, la crépine d\'aspiration, le plan du carburateur et la colonne d\'admission. L\'admission centrale est noyée dans l\'huile : elle vaporise mieux le mélange et refroidit l\'huile. Contenance 8 qt US, minimum 2 qt. Peu profond à l\'avant, profond à l\'arrière (réserve d\'huile), nervures de refroidissement verticales, 4 départs de pipes avec manchons caoutchouc et colliers ; en rayons X, la colonne et les répartiteurs internes baignent dans l\'huile.', [['Contenance', '8 qt US'], ['Minimum', '2 qt US']]],
+  intake: ['Pipes d\'admission', 'Manuel · sect. 1 · PC-103 fig. 3-4', 'Depuis la colonne d\'admission du carter d\'huile, une pipe individuelle mène le mélange à chaque cylindre. Raccords souples côté carter.', [['Pipes', '4']]],
+  carburetor: ['Carburateur MA-4SPA', 'Manuel · sect. 1 · fig. 7-1', 'Carburateur à flotteur, un seul corps, avec commande manuelle de mélange et étouffoir de ralenti. Monté sous le carter d\'huile. Entrée d\'essence 0,5–8 psi. En air humide, l\'évaporation de l\'essence peut refroidir le mélange jusqu\'à 70 °F et faire givrer le papillon. Modélisé : bride à 4 goujons, corps de papillon avec levier de gaz (suit la manette), cuve à flotteur, levier de mélange (suit la manette, étouffoir tout en arrière), entrée d\'essence avec filtre à doigt, vis de richesse de ralenti, bouchon de vidange.', [['Pression essence', '0,5–8 psi (3 souhaité)']]],
+  magneto: ['Magnétos Slick 4051 (G) et 4050 (D)', 'Manuel · sect. 1, 5 · tableau 1', 'Double allumage par deux magnétos. Avance de 25° avant PMH. Essai : chute ≤ 175 tr/min et écart ≤ 50 tr/min entre les deux. La magnéto gauche alimente les bougies du haut des cylindres gauches et celles du bas des cylindres droits ; la droite, l\'inverse. Chaque magnéto : bride et 2 brides de serrage, boîtier, bloc distributeur, couvercle de faisceau à 4 sorties, borne P (coupure par le contact) et évent.', [['Rapport', '1,000:1 · horaire'], ['Chute max', '175 tr/min']]],
+  harness: ['Faisceau d\'allumage', 'Manuel fig. 5-1', 'Huit fils blindés, deux bougies par cylindre. Câblage selon la figure 5-1 ; tracé figuré.', []],
+  plugs: ['Bougies', 'Manuel · sect. 5', 'Deux bougies par cylindre, une en haut et une en bas de la culasse. L\'éclair bleu montre l\'étincelle à 25° avant le PMH de combustion.', []],
+  acchousing: ['Boîtier d\'accessoires', 'Manuel · sect. 1 · PC-103 fig. 2-2', 'Fonderie d\'aluminium fixée à l\'arrière du carter et au haut arrière du carter d\'huile. Loge la pompe à huile et les entraînements : magnétos, tachymètre, pompe à essence, prise de pompe à vide. L\'écran de pression d\'huile est sous la prise de tachymètre.', []],
+  fuelpump: ['Pompe à essence AN20003', 'Manuel · sect. 2', 'Pompe à membrane entraînée par le boîtier d\'accessoires (rapport 1:1, antihoraire vue face à la prise). Complétée au démarrage par la pompe électrique de l\'avion.', []],
+  oilsystem: ['Circuit d\'huile', 'Manuel · sect. 1', 'Carter humide sous pression. La pompe du boîtier aspire par la crépine du carter d\'huile et refoule vers le radiateur, puis vers l\'écran de pression et la soupape de régulation (haut droit), qui renvoie l\'excédent au carter. La galerie principale du demi-carter droit alimente les paliers, les manetons, l\'arbre à cames et les poussoirs. L\'huile monte par les tiges creuses aux culbuteurs, puis redescend par gravité au carter.', [['Pression', '60–90 psi'], ['Ralenti', '25 psi mini'], ['Température', '180 °F souhaité · 245 °F maxi']]],
+  oilcooler: ['Radiateur d\'huile', 'Manuel · sect. 1 · fig. 7-3', 'La pompe refoule l\'huile par une durite vers le radiateur extérieur ; elle revient au boîtier d\'accessoires par un second raccord, puis passe par l\'écran de pression. Un clapet de dérivation contourne le radiateur si l\'huile est froide ou si le radiateur est obstrué. Emplacement et forme figurés (installation avion).', [['Raccords', 'vers / depuis le radiateur, boîtier d\'accessoires']]],
+  oilfiller: ['Remplissage et jauge d\'huile', 'Manuel fig. 7-7', 'Goulotte de remplissage avec jauge de niveau, à l\'arrière droit du moteur.', []],
+  baffles: ['Déflecteurs inter-cylindres', 'Manuel · sect. 1', 'Le moteur est refroidi par pression d\'air : les déflecteurs forcent l\'air à traverser les ailettes. L\'air est ensuite évacué par les volets ou les tubes d\'éjection du capot.', []],
+  ringgear: ['Couronne de démarreur et poulie', 'PC-103', 'Couronne dentée (149 dents, figurée) fixée derrière la bride d\'hélice, avec la poulie de courroie d\'alternateur.', []],
+  starter: ['Démarreur', 'Manuel · sect. 3', 'Son pignon s\'engage sur la couronne pendant le lancement. Lancement limité à 10–12 s, puis 5 min de repos.', [['Lancement max', '10–12 s']]],
+  alternator: ['Alternateur', 'Manuel · sect. 2', 'Entraîné par courroie depuis la poulie de la couronne (installation avant). Les rapports du boîtier (3,250:1) s\'appliquent aux montages sur boîtier.', []],
+  propeller: ['Hélice à pas fixe', 'Installation avion', 'Bipale métallique à pas fixe (type McCauley 1C160, 76 po) en prise directe. Le régime dépend de la puissance et de la vitesse : au sol plein gaz, environ 2300–2400 tr/min.', []],
+  exhaust: ['Échappement', 'PC-103 fig. 7-2', 'Brides d\'échappement sous chaque culasse. Tracé des tubes figuré (installation avion).', []],
+  muffler: ['Silencieux et réchauffage', 'Manuel · sect. 3', 'Le réchauffeur d\'air est une gaine autour du silencieux ; l\'air réchauffé va au carburateur par une gaine souple. Figuré d\'après une installation Cessna 172.', []],
+  mounts: ['Supports moteur', 'Installation avion', 'Plots amortisseurs sur les bossages arrière du carter. Figurés.', []],
+};
+const PART_ORDER = ['crankcase', 'crankshaft', 'rods', 'pistons', 'camshaft', 'pushrods', 'rockers', 'valves', 'cylinder', 'head', 'rockercover', 'shroudtube', 'plugs', 'magneto', 'harness', 'sump', 'intake', 'carburetor', 'acchousing', 'fuelpump', 'oilsystem', 'oilcooler', 'oilfiller', 'baffles', 'ringgear', 'starter', 'alternator', 'propeller', 'exhaust', 'muffler'];
+let selected = null, hovered = null;
+function showPart(k) {
+  selected = k; const d = PARTS[k]; if (!d) return;
+  $('info-body').innerHTML = '<h3></h3><div class="ref"></div><p></p><dl class="kv"></dl>';
+  $('info-body').querySelector('h3').textContent = d[0]; $('info-body').querySelector('.ref').textContent = d[1]; $('info-body').querySelector('p').textContent = d[2];
+  $('info-body').querySelector('.kv').innerHTML = d[3].map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
+  document.querySelectorAll('#parts button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+}
+$('parts').innerHTML = PART_ORDER.map(k => `<button data-k="${k}" aria-pressed="false">${PARTS[k][0].split(' (')[0]}</button>`).join('');
+$('parts').onclick = e => { const b = e.target.closest('button'); if (b) showPart(b.dataset.k); };
+$('info-body').innerHTML = `<h3>Un quatre cylindres à plat</h3><div class="ref">Manuel d'utilisation O-320 · section 1</div><p>L'avant est le côté de l'hélice ; le haut est le côté des tubes de tiges de culbuteurs. Les cylindres sont numérotés de l'avant vers l'arrière, impairs à droite et pairs à gauche (vu de l'arrière). Le vilebrequin tourne dans le sens horaire vu de l'arrière et entraîne l'hélice en direct. Activez « Cycle 4 temps » et la coupe horizontale pour voir les pistons et les soupapes suivre l'ordre d'allumage 1-3-2-4.</p><dl class="kv"><dt>Explosions</dt><dd>2 par tour de vilebrequin</dd><dt>Cylindre 1</dt><dd>avant droit</dd><dt>Admission</dt><dd>centrale, sous le moteur</dd></dl>`;
+
+/* ---------- sélection 3D ---------- */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tipEl = $('tip');
+function pick(ev) {
+  const r = renderer.domElement.getBoundingClientRect(); mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  for (const h of ray.intersectObjects(pickables, false)) {
+    let o = h.object, vis = true; while (o) { if (!o.visible) { vis = false; break; } o = o.parent; } if (!vis) continue;
+    const mat = Array.isArray(h.object.material) ? h.object.material[0] : h.object.material;
+    if (mode === 'xray' && !mat.userData.moving) continue;
+    if (mode === 'cut' && !mat.userData.moving && h.point.y > clipPlane.constant) continue;
+    return h.object.userData.part;
+  }
+  return null;
+}
+let downAt = null;
+renderer.domElement.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => { if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return; const k = pick(e); if (k && PARTS[k]) showPart(k); });
+let lastMove = 0;
+renderer.domElement.addEventListener('pointermove', e => { const now = performance.now(); if (now - lastMove < 50 || e.buttons) return; lastMove = now; const k = pick(e); hovered = k;
+  if (k && PARTS[k]) { const r = vpEl.getBoundingClientRect(); tipEl.hidden = false; tipEl.style.left = (e.clientX - r.left) + 'px'; tipEl.style.top = (e.clientY - r.top) + 'px'; tipEl.innerHTML = `${PARTS[k][0]}<small>${PARTS[k][1]}</small>`; renderer.domElement.style.cursor = 'pointer'; }
+  else { tipEl.hidden = true; renderer.domElement.style.cursor = ''; } });
+renderer.domElement.addEventListener('pointerleave', () => { tipEl.hidden = true; hovered = null; });
+
+/* =====================================================================
+   INSTRUMENTS
+   ===================================================================== */
+const C = { g: '#3fcf74', a: '#f0b13a', r: '#ef4b4b', t: '#dde4e9', m: '#8797a3', face: '#0c1114', ring: '#26323b' };
+const GAUGES = [
+  { id: 'g-rpm', label: 'TACHYMÈTRE', unit: 'tr/min', min: 0, max: 3500, arcs: [[2200, 2700, C.g]], red: [2700], ticks: 7, val: () => st.rpm, fmt: v => Math.round(v / 10) * 10, sub: v => (v / 27).toFixed(0) + ' % régime' },
+  { id: 'g-map', label: 'PRESS. ADMISSION', unit: 'po Hg', min: 10, max: 35, arcs: [], red: [], ticks: 5, val: () => st.map, fmt: v => v.toFixed(1), sub: () => 'ambiante ' + amb().pamb.toFixed(1) },
+  { id: 'g-op', label: 'PRESS. HUILE', unit: 'psi', min: 0, max: 120, arcs: [[0, 25, C.r], [25, 60, C.a], [60, 90, C.g], [90, 100, C.a]], red: [25, 100], ticks: 6, val: () => st.oilP, fmt: v => Math.round(v), sub: () => '60–90 psi' },
+  { id: 'g-ot', label: 'TEMP. HUILE', unit: '°F', min: 50, max: 260, arcs: [[100, 245, C.g]], red: [245], ticks: 7, val: () => st.oilT, fmt: v => Math.round(v), sub: v => Math.round((v - 32) * 5 / 9) + ' °C' },
+  { id: 'g-cht', label: 'CHT', unit: '°F', min: 100, max: 550, arcs: [[150, 435, C.g], [435, 500, C.a]], red: [500], ticks: 9, val: () => st.cht, fmt: v => Math.round(v), sub: v => Math.round((v - 32) * 5 / 9) + ' °C' },
+  { id: 'g-egt', label: 'EGT', unit: '°F', min: 800, max: 1700, arcs: [], red: [], ticks: 9, val: () => st.egt, fmt: v => Math.round(v), sub: () => st.running ? (st.lam > 1.02 ? 'côté riche du pic' : st.lam < 0.98 ? 'côté pauvre du pic' : 'au pic') : '—' },
+  { id: 'g-ff', label: 'DÉBIT CARBU.', unit: 'gal/h', min: 0, max: 16, arcs: [], red: [], ticks: 8, val: () => st.ff, fmt: v => v.toFixed(1), sub: v => (v * 3.785).toFixed(1) + ' L/h' },
+  { id: 'g-fp', label: 'PRESS. ESSENCE', unit: 'psi', min: 0, max: 10, arcs: [[0, 0.5, C.r], [0.5, 8, C.g]], red: [0.5, 8], ticks: 5, val: () => st.fp, fmt: v => v.toFixed(1), sub: () => '0,5–8 psi' },
+];
+for (const g of GAUGES) { g.cv = $(g.id); g.ctx = g.cv.getContext('2d'); g.disp = g.min; }
+function sizeGauges() { const dpr = Math.min(2, devicePixelRatio); for (const g of GAUGES) { const w = g.cv.clientWidth; g.cv.width = w * dpr; g.cv.height = w * 1.08 * dpr; } }
+function drawGauge(g, dt) {
+  const v = g.val(); g.disp += (v - g.disp) * Math.min(1, dt * 12);
+  const c = g.ctx, W2 = g.cv.width, H = g.cv.height, s = W2 / 140;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W2, H); c.setTransform(s, 0, 0, s, 0, 0);
+  const cx = 70, cy = 68, R = 58, a0 = Math.PI * 0.75, sw = Math.PI * 1.5, ang = x => a0 + clamp((x - g.min) / (g.max - g.min), -0.02, 1.03) * sw;
+  c.fillStyle = C.face; c.beginPath(); c.arc(cx, cy, R + 6, 0, TAU); c.fill(); c.strokeStyle = C.ring; c.lineWidth = 2; c.stroke();
+  for (const [x0, x1, col] of g.arcs) { c.strokeStyle = col; c.lineWidth = 5; c.beginPath(); c.arc(cx, cy, R - 3, ang(x0), ang(x1)); c.stroke(); }
+  c.strokeStyle = C.m; c.lineWidth = 1.2; for (let i = 0; i <= g.ticks; i++) { const a = a0 + i / g.ticks * sw; c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 8), cy + Math.sin(a) * (R - 8)); c.lineTo(cx + Math.cos(a) * (R - 14), cy + Math.sin(a) * (R - 14)); c.stroke(); }
+  for (const rv of g.red) { const a = ang(rv); c.strokeStyle = C.r; c.lineWidth = 3; c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 16), cy + Math.sin(a) * (R - 16)); c.lineTo(cx + Math.cos(a) * (R + 2), cy + Math.sin(a) * (R + 2)); c.stroke(); }
+  const over = (g.id === 'g-rpm' && v > 2727) || (g.id === 'g-cht' && v > 500) || (g.id === 'g-ot' && v > 245);
+  c.fillStyle = C.m; c.font = '600 11px "Barlow Condensed",sans-serif'; c.textAlign = 'center'; c.fillText(g.label, cx, cy - 20);
+  c.font = '500 17px "IBM Plex Mono",monospace'; c.fillStyle = over ? C.r : C.t; c.fillText(g.fmt(v), cx, cy + 26);
+  c.font = '9.5px "IBM Plex Mono",monospace'; c.fillStyle = C.m; c.fillText(g.unit, cx, cy + 38);
+  const a = ang(g.disp); c.strokeStyle = '#f4f7f9'; c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx - Math.cos(a) * 8, cy - Math.sin(a) * 8); c.lineTo(cx + Math.cos(a) * (R - 10), cy + Math.sin(a) * (R - 10)); c.stroke();
+  c.fillStyle = '#2a363f'; c.beginPath(); c.arc(cx, cy, 5, 0, TAU); c.fill();
+  c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = C.m; c.fillText(g.sub(v), cx, 146);
+}
+/* ---------- diagramme du cycle à 4 temps ---------- */
+const cycCv = $('cycle'), cyc = cycCv.getContext('2d');
+const STROKE_COL = ['#ff7a2a', '#8a929a', '#4aa3ff', '#9d7bff'];   // détente, échappement, admission, compression
+const STROKE_NAME = ['Détente', 'Échappement', 'Admission', 'Compression'];
+function sizeCycle() { const dpr = Math.min(2, devicePixelRatio); cycCv.width = cycCv.clientWidth * dpr; cycCv.height = cycCv.clientHeight * dpr; }
+function drawCycle(thetaDeg) {
+  const dpr = cycCv.width / cycCv.clientWidth, w = cycCv.clientWidth, h = cycCv.clientHeight, c = cyc;
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cycCv.width, cycCv.height); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const L0 = 34, R0 = w - 8, rowH = (h - 20) / 4, x = deg => L0 + (deg / 720) * (R0 - L0);
+  c.font = '10px "IBM Plex Mono",monospace'; c.textAlign = 'center'; c.fillStyle = '#5d6c77';
+  for (let d = 0; d <= 720; d += 180) { c.fillText(d + '°', x(d), h - 4); c.strokeStyle = '#1e2931'; c.beginPath(); c.moveTo(x(d), 0); c.lineTo(x(d), h - 14); c.stroke(); }
+  CYL.forEach((cy, i) => {
+    const y0 = i * rowH + 3, hh = rowH - 6;
+    c.textAlign = 'right'; c.fillStyle = '#dde4e9'; c.font = '600 12px "Barlow Condensed",sans-serif'; c.fillText('Cyl ' + cy.n, L0 - 5, y0 + hh / 2 + 4);
+    for (let k = 0; k < 4; k++) {  // les temps sont exprimés en angle vilebrequin absolu
+      const a0 = ((k * 180 + cy.off) % 720);
+      c.fillStyle = STROKE_COL[k]; c.globalAlpha = 0.55;
+      const segs = a0 + 180 <= 720 ? [[a0, a0 + 180]] : [[a0, 720], [0, a0 + 180 - 720]];
+      for (const [p, q] of segs) c.fillRect(x(p), y0, x(q) - x(p), hh);
+      c.globalAlpha = 1;
+    }
+    // étincelle
+    const sp = (VT.spark + cy.off) % 720; c.fillStyle = '#fff'; c.fillRect(x(sp) - 1, y0 - 1, 2, hh + 2);
+    // curseur
+    const t = ((thetaDeg % 720) + 720) % 720, psi = ((t - cy.off) % 720 + 720) % 720, k = Math.floor(psi / 180);
+    c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.moveTo(x(t), y0 - 2); c.lineTo(x(t), y0 + hh + 2); c.stroke();
+    c.textAlign = 'left'; c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = '#0a0e11'; c.fillText(STROKE_NAME[k], Math.min(x(t) + 4, R0 - 70), y0 + hh / 2 + 4);
+  });
+}
+/* ---------- tendances ---------- */
+const trendCv = $('trend'), tctx = trendCv.getContext('2d'), hist = []; let histT = 0;
+function sizeTrend() { const dpr = Math.min(2, devicePixelRatio); trendCv.width = trendCv.clientWidth * dpr; trendCv.height = trendCv.clientHeight * dpr; }
+function drawTrend() {
+  const W2 = trendCv.width, dpr = W2 / trendCv.clientWidth, c = tctx; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W2, trendCv.height); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = trendCv.clientWidth, h = trendCv.clientHeight, L = 30, B = 16, T = 6, y = v => T + (1 - v / 120) * (h - T - B);
+  c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = '#5d6c77'; c.strokeStyle = '#1e2931'; c.lineWidth = 1; c.textAlign = 'right';
+  for (const v of [0, 40, 80, 120]) { c.beginPath(); c.moveTo(L, y(v)); c.lineTo(w, y(v)); c.stroke(); c.fillText(v, L - 5, y(v) + 3); }
+  c.textAlign = 'center'; for (const s of [60, 40, 20, 0]) c.fillText(s ? `-${s} s` : '0', L + (1 - s / 60) * (w - L - 8), h - 3);
+  for (const [col, f] of [['#7cc4e4', o => o.rpm / 30], ['#f0b13a', o => o.map * 3], ['#ff6a4a', o => o.cht / 5], ['#3fcf74', o => o.op]]) {
+    c.strokeStyle = col; c.lineWidth = 1.6; c.beginPath(); hist.forEach((o, i) => { const xx = L + (1 - (hist.length - 1 - i) / 240) * (w - L - 8), yy = y(clamp(f(o), 0, 120)); i ? c.lineTo(xx, yy) : c.moveTo(xx, yy); }); c.stroke();
+  }
+}
+
+/* =====================================================================
+   FLUX : particules ou flèches, dégradé bleu -> violet -> rouge -> noir
+   ===================================================================== */
+const flowMats = [];
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.55, 'rgba(255,255,255,1)'); gr.addColorStop(0.75, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+const RAMP = [[0, [0.2, 0.5, 1]], [0.16, [0.38, 0.62, 1]], [0.33, [0.62, 0.72, 1]], [0.5, [1, 0.74, 0.3]], [0.6, [1, 0.5, 0.1]], [0.7, [0.62, 0.26, 0.07]], [0.8, [0.05, 0.05, 0.05]], [1, [0.04, 0.04, 0.045]]];
+// sprite flou pour le nuage de gaz et la fumée d'échappement
+const puffTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(0.4, 'rgba(255,255,255,0.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+function ramp(t, out) { for (let i = 1; i < RAMP.length; i++) if (t <= RAMP[i][0]) { const [a0, c0] = RAMP[i - 1], [a1, c1] = RAMP[i], k = clamp((t - a0) / (a1 - a0), 0, 1); out[0] = lerp(c0[0], c1[0], k); out[1] = lerp(c0[1], c1[1], k); out[2] = lerp(c0[2], c1[2], k); return out; } const c = RAMP[RAMP.length - 1][1]; out[0] = c[0]; out[1] = c[1]; out[2] = c[2]; return out; }
+const OILCOL = { h: [1, 0.6, 0.16], p: [1, 0.84, 0.3], s: [0.72, 0.38, 0.12], a: [0.86, 0.92, 0.95] };
+let showPts = false, showArr = false;
+const coneGeo = new THREE.ConeGeometry(0.3 * S, 0.75 * S, 10); coneGeo.translate(0, 0.45 * S, 0);
+function mkFlow(pts, n, opts) {
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal'), L = curve.getLength() / S;
+  const g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const smoke = opts.kind === 'ex';
+  const pm = new THREE.PointsMaterial(smoke ? { size: 0.06, map: puffTex, vertexColors: true, transparent: true, opacity: 0.8, depthWrite: false } : { size: 0.036, map: dotTex, alphaTest: 0.3, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false }); flowMats.push(pm);
+  const points = new THREE.Points(g, pm); points.frustumCulled = false; points.visible = false; eng.add(points);
+  const na = Math.max(2, Math.round(n / 2.5)), am = new THREE.MeshBasicMaterial({ toneMapped: false }); flowMats.push(am);
+  const arrows = new THREE.InstancedMesh(coneGeo, am, na); arrows.frustumCulled = false; arrows.visible = false; for (let i = 0; i < na; i++) arrows.setColorAt(i, new THREE.Color(1, 1, 1)); eng.add(arrows);
+  const u = new Float32Array(n), jx = new Float32Array(n), jy = new Float32Array(n), au = new Float32Array(na);
+  for (let i = 0; i < n; i++) { u[i] = (i + Math.random()) / n; const a = Math.random() * TAU, r = Math.sqrt(Math.random()); jx[i] = r * Math.cos(a); jy[i] = r * Math.sin(a); }
+  for (let i = 0; i < na; i++) au[i] = i / na;
+  // u de séparation (collecteur commun / pipe individuelle) à partir de l'index du point de contrôle
+  let uS = 1; if (opts.split) { const Ls = curve.getLengths(1000), k = Math.round(opts.split / (pts.length - 1) * 1000); uS = Ls[k] / Ls[1000]; }
+  return Object.assign({ curve, L, n, na, g, pos, col, points, arrows, u, jx, jy, au, uS, spread: 0.3 }, opts);
+}
+const gasFlows = GASF.map(f => mkFlow(f.pts, f.kind === 'ex' ? 160 : 140, f));
+const oilFlows = OILF.map(f => mkFlow(f.pts, f.n * 2, { oil: f.kind, spread: 0.12 }));
+const _c = [0, 0, 0], _t = new THREE.Vector3(), _n1 = new THREE.Vector3(), _n2 = new THREE.Vector3(), _Y = new THREE.Vector3(0, 1, 0), _X = new THREE.Vector3(1, 0, 0), _q = new THREE.Quaternion(), _m = new THREE.Matrix4(), _s = new THREE.Vector3(), _cl = new THREE.Color();
+const colorAt = (F, u, out) => { if (F.oil) { const c = OILCOL[F.oil]; out[0] = c[0]; out[1] = c[1]; out[2] = c[2]; return out; } return ramp(lerp(F.t0, F.t1, u), out); };
+function updFlow(F, on, spA, spB, dt) {
+  const P = on && showPts, A = on && showArr;
+  F.points.visible = P; F.arrows.visible = A; if (!on) return;
+  const duA = spA * dt / F.L, duB = spB * dt / F.L;   // A : avant la séparation, B : après
+  if (P) {
+    for (let i = 0; i < F.n; i++) {
+      const u = F.u[i] = (F.u[i] + (F.u[i] < F.uS ? duA : duB)) % 1, p = F.curve.getPointAt(u); F.curve.getTangentAt(u, _t);
+      _n1.crossVectors(_t, Math.abs(_t.y) > 0.9 ? _X : _Y).normalize(); _n2.crossVectors(_t, _n1);
+      const k = F.spread * S; F.pos[i * 3] = p.x + (_n1.x * F.jx[i] + _n2.x * F.jy[i]) * k; F.pos[i * 3 + 1] = p.y + (_n1.y * F.jx[i] + _n2.y * F.jy[i]) * k; F.pos[i * 3 + 2] = p.z + (_n1.z * F.jx[i] + _n2.z * F.jy[i]) * k;
+      colorAt(F, u, _c); F.col[i * 3] = _c[0]; F.col[i * 3 + 1] = _c[1]; F.col[i * 3 + 2] = _c[2];
+    }
+    F.g.attributes.position.needsUpdate = true; F.g.attributes.color.needsUpdate = true;
+  }
+  if (A) {
+    for (let i = 0; i < F.na; i++) {
+      const u = F.au[i] = (F.au[i] + (F.au[i] < F.uS ? duA : duB)) % 1, p = F.curve.getPointAt(u); F.curve.getTangentAt(u, _t); _q.setFromUnitVectors(_Y, _t);
+      _m.compose(p, _q, _s.set(0.9, 0.9, 0.9)); F.arrows.setMatrixAt(i, _m); colorAt(F, u, _c); F.arrows.setColorAt(i, _cl.setRGB(_c[0], _c[1], _c[2]));
+    }
+    F.arrows.instanceMatrix.needsUpdate = true; F.arrows.instanceColor.needsUpdate = true;
+  }
+}
+// nuage de gaz dans chaque cylindre : chaque particule entre par la soupape d'admission, brûle quand
+// le front de flamme parti des bougies l'atteint et ressort par la soupape d'échappement.
+// Tout est calculé à partir de l'angle du cycle (psi) : synchronisé sur le piston, même figé ou ralenti.
+const RESID = 0.14;   // gaz résiduel (volume mort, taux de compression 7:1)
+const clouds = cylObjs.map(o => {
+  const n = 800, g = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({ size: 0.08, map: puffTex, vertexColors: true, transparent: true, opacity: 0.62, depthWrite: false }); flowMats.push(mat);
+  const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.visible = false; o.grp.add(pts);
+  const r = new Float32Array(n), a = new Float32Array(n), f = new Float32Array(n), vx = new Float32Array(n), vz = new Float32Array(n), v = new Float32Array(n);
+  const dEx = [], dIn = [], dT = new Float32Array(n), dB = new Float32Array(n), up = o.up;
+  for (let i = 0; i < n; i++) {
+    r[i] = Math.sqrt(Math.random()) * 2.3; a[i] = Math.random() * TAU; f[i] = Math.random(); v[i] = 0.82 + 0.36 * Math.random();
+    const q = Math.random() * TAU, k = Math.sqrt(Math.random()) * 0.75; vx[i] = k * Math.cos(q); vz[i] = k * Math.sin(q);   // point de passage sur le rideau de la soupape
+    const x = r[i] * Math.cos(a[i]), z = r[i] * Math.sin(a[i]), h = (1 - f[i]) * 3;
+    dEx.push(Math.hypot(x + 0.95, z, h)); dIn.push(Math.hypot(x - 0.95, z, h));
+    dT[i] = Math.hypot(x - 1.2, z - up * 2.3, h * 0.8); dB[i] = Math.hypot(x + 1.2, z + up * 2.3, h * 0.8);   // bougies haute et basse
+  }
+  // ordre de sortie : les plus proches de la soupape d'échappement partent en premier ; les derniers restent (résiduel)
+  const NA = Math.round(n * (1 - RESID)), eR = new Int32Array(n), iR = new Int32Array(n).fill(-1);
+  [...Array(n).keys()].sort((p, q) => dEx[p] - dEx[q]).forEach((idx, k) => { eR[idx] = k; });
+  // ordre d'entrée : la charge fraîche remplit d'abord le côté admission
+  [...Array(n).keys()].filter(i => eR[i] < NA).sort((p, q) => dIn[p] - dIn[q]).forEach((idx, k) => { iR[idx] = k; });
+  let D0 = 0; for (let i = 0; i < n; i++) D0 = Math.max(D0, Math.min(dT[i], dB[i])); for (let i = 0; i < n; i++) { dT[i] /= D0; dB[i] /= D0; }
+  const cl = { o, g, pos, col, pts, r, a, f, vx, vz, v, eR, iR, dT, dB, NA, n, avg: [0.3, 0.5, 1] }; o.cloud = cl; return cl;
+});
+// fraction de course du piston : 0 au PMH, 1 au PMB (bielle-manivelle exacte)
+const dispF = psi => { const q = psi * DEG, sn = R_CRANK * Math.sin(q); return (R_CRANK + L_ROD - R_CRANK * Math.cos(q) - Math.sqrt(L_ROD * L_ROD - sn * sn)) / (2 * R_CRANK); };
+// fraction de la charge sortie (bouffée à l'ouverture puis poussée du piston) et entrée (aspiration du piston + effet d'inertie)
+const phiEx = P => P < VT.eo ? 0 : P < 180 ? 0.52 * (1 - Math.exp(-(P - VT.eo) / 18)) / (1 - Math.exp(-(180 - VT.eo) / 18)) : P < 360 ? 0.52 + 0.48 * (1 - dispF(P)) : 1;
+const phiIn = P => P < 360 ? 0 : P <= 540 ? 0.93 * dispF(P) : P < VT.ic ? 0.93 + 0.07 * (P - 540) / (VT.ic - 540) : 1;
+// vitesse du gaz dans la pipe (fraction de charge par degré), dérivée des mêmes lois
+const rateIn = P => P >= VT.io && P < 360 ? 0.0012 : P >= 360 && P < VT.ic ? Math.max(0.0012, phiIn(P + 0.5) - phiIn(P - 0.5)) : 0;
+const rateEx = P => P >= VT.eo && P < 360 ? Math.max(0.0012, phiEx(P + 0.5) - phiEx(P - 0.5)) : P >= 360 && P < VT.ec ? 0.0012 : 0;
+const easeO = t => 1 - (1 - t) * (1 - t), easeI = t => t * t;
+const _rA = [0, 0, 0], _rB = [0, 0, 0];
+function updCloud(cl, psi, crown, roof, fired, topOn, botOn) {
+  const P = psi, M = cl.NA, WIN = 0.18;
+  const pE = phiEx(P), pI = phiIn(P), tC = P >= 540 ? lerp(0.1, 0.36, 1 - dispF(P)) : 0.36;
+  const flame = P >= VT.spark || P < VT.eo, rel = (P - VT.spark + 720) % 720, Rf = fired ? Math.pow(rel / 55, 1.2) : -1;
+  const exBase = fired ? 0.62 + 0.1 * clamp((P - VT.eo) / 245, 0, 1) : 0.33;
+  let sr = 0, sg = 0, sb = 0, nv = 0;
+  for (let i = 0; i < cl.n; i++) {
+    const A = cl.eR[i] < M, aa = cl.a[i] + 0.12 * Math.sin(simClock * 1.3 + i);
+    let x = cl.r[i] * Math.cos(aa), y = lerp(crown, roof, cl.f[i]), z = cl.r[i] * Math.sin(aa), hide = false, t;
+    let mix = -1;
+    if (flame) {
+      // front de flamme : parti de chaque bougie alimentée ; une seule magnéto = combustion plus lente
+      const dn = Math.min(topOn ? cl.dT[i] : 9, botOn ? cl.dB[i] : 9);
+      if (Rf >= dn) t = lerp(0.46, 0.6, clamp((Rf - dn) / 0.4, 0, 1)) + (P < VT.eo ? 0.05 * P / VT.eo : 0);
+      else t = fired ? 0.36 : (P < VT.eo ? 0.33 : 0.36);
+    } else if (P < 360) {
+      // échappement : la particule glisse vers la soupape en noircissant, puis disparaît dans le conduit
+      if (A) {
+        const k = clamp((pE * (1 + WIN) * M - cl.eR[i]) / (WIN * M), 0, 1);
+        if (k >= 1) hide = true;
+        else { const e = easeI(k), yy = roof - 0.08; x = lerp(x, -0.95 + cl.vx[i], e); y = lerp(y, yy, e); z = lerp(z, cl.vz[i], e); }
+        t = fired ? lerp(exBase, 0.8, k) : exBase;
+      } else t = fired ? exBase + 0.04 : exBase;
+    } else if (P < 540 || (A && P < VT.ic && cl.iR[i] >= 0)) {
+      // admission : la charge fraîche arrive par le rideau de la soupape et se répand ; le résiduel se dilue
+      if (A) {
+        const k = clamp((pI * (1 + WIN) * M - cl.iR[i]) / (WIN * M), 0, 1);
+        if (k <= 0) hide = true;
+        else { const e = easeO(k), yy = roof - 0.08; x = lerp(0.95 + cl.vx[i], x, e); y = lerp(yy, y, e); z = lerp(cl.vz[i], z, e); }
+        t = P < 540 ? 0.1 : tC;
+      } else { mix = Math.pow(pI, 1.2); t = 0; }
+    } else t = tC;
+    if (hide) { cl.pos[i * 3] = 0; cl.pos[i * 3 + 1] = -1e4; cl.pos[i * 3 + 2] = 0; continue; }
+    cl.pos[i * 3] = x * S; cl.pos[i * 3 + 1] = y * S; cl.pos[i * 3 + 2] = z * S;
+    if (mix >= 0) { ramp(fired ? 0.72 : 0.33, _rA); ramp(0.1, _rB); for (let j = 0; j < 3; j++) _c[j] = lerp(_rA[j], _rB[j], mix); }
+    else ramp(t, _c);
+    const vv = cl.v[i]; cl.col[i * 3] = Math.min(1, _c[0] * vv); cl.col[i * 3 + 1] = Math.min(1, _c[1] * vv); cl.col[i * 3 + 2] = Math.min(1, _c[2] * vv);
+    sr += _c[0]; sg += _c[1]; sb += _c[2]; nv++;
+  }
+  if (nv) { cl.avg[0] = sr / nv; cl.avg[1] = sg / nv; cl.avg[2] = sb / nv; }
+  cl.g.attributes.position.needsUpdate = true; cl.g.attributes.color.needsUpdate = true;
+}
+function strokeT(psi, fired) {
+  if (psi < 180) return fired ? (psi < 25 ? lerp(0.5, 0.6, psi / 25) : lerp(0.6, 0.66, psi / 180)) : 0.33;
+  if (psi < 360) return fired ? lerp(0.66, 0.74, (psi - 180) / 180) : 0.3;
+  if (psi < 540) return 0.16;
+  return lerp(0.16, 0.33, (psi - 540) / 180);
+}
+// en vue extérieure, le flux est dessiné par-dessus les carters pour rester visible
+function applyFlowDepth() { const onTop = false; for (const m of flowMats) { m.depthTest = !onTop; m.needsUpdate = true; } for (const F of [...gasFlows, ...oilFlows]) { F.points.renderOrder = F.arrows.renderOrder = onTop ? 30 : 0; } for (const cl of clouds) cl.pts.renderOrder = onTop ? 30 : 0; }
+function ensureCircuit() { if (!showGas && !showOil) { showGas = showOil = true; $('t-gas').setAttribute('aria-pressed', true); $('t-oil').setAttribute('aria-pressed', true); updKey(); } }
+function setPts(v) { showPts = v; $('fs-pts').setAttribute('aria-pressed', v); if (v) ensureCircuit(); }
+function setArr(v) { showArr = v; $('fs-arr').setAttribute('aria-pressed', v); if (v) ensureCircuit(); }
+$('fs-pts').onclick = () => setPts(!showPts); $('fs-arr').onclick = () => setArr(!showArr);
+applyFlowDepth();
+
+/* =====================================================================
+   SON (après interaction) : impulsions d'allumage à la fréquence réelle
+   ===================================================================== */
+let au = null;
+function initAudio() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)(), out = ctx.createGain(); out.gain.value = 0.55; out.connect(ctx.destination);
+  const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const noise = ctx.createBufferSource(); noise.buffer = nb; noise.loop = true; noise.start();
+  const fire = ctx.createOscillator(); fire.type = 'sawtooth'; const ff = ctx.createBiquadFilter(); ff.type = 'lowpass'; ff.Q.value = 3; const fg = ctx.createGain(); fg.gain.value = 0; fire.connect(ff).connect(fg).connect(out); fire.start();
+  const sub = ctx.createOscillator(); sub.type = 'square'; const sg = ctx.createGain(); sg.gain.value = 0; const sf = ctx.createBiquadFilter(); sf.type = 'lowpass'; sf.frequency.value = 180; sub.connect(sf).connect(sg).connect(out); sub.start();
+  const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 900; nf.Q.value = 0.8; const ng = ctx.createGain(); ng.gain.value = 0; noise.connect(nf).connect(ng).connect(out);
+  const stt = ctx.createOscillator(); stt.type = 'square'; const stg = ctx.createGain(); stg.gain.value = 0; const stf = ctx.createBiquadFilter(); stf.type = 'lowpass'; stf.frequency.value = 700; stt.connect(stf).connect(stg).connect(out); stt.start();
+  au = { ctx, fire, ff, fg, sub, sg, nf, ng, stt, stg, on: true };
+}
+function updAudio() {
+  if (!au || !au.on) return; const t = au.ctx.currentTime, k = 0.06, n = st.rpm, fireHz = n / 60 * 2;
+  au.fire.frequency.setTargetAtTime(Math.max(5, fireHz), t, k); au.ff.frequency.setTargetAtTime(150 + n * 0.35, t, k);
+  au.fg.gain.setTargetAtTime(st.running ? 0.12 + 0.12 * (st.bhp / 150) : 0.02 * Math.min(1, n / 150), t, k);
+  au.sub.frequency.setTargetAtTime(Math.max(3, fireHz / 2 * (1 + st.rough * 0.3 * Math.sin(t * 13))), t, k); au.sg.gain.setTargetAtTime(st.running ? 0.08 + st.rough * 0.1 : 0, t, k);
+  au.nf.frequency.setTargetAtTime(400 + n * 0.8, t, k); au.ng.gain.setTargetAtTime(0.02 + 0.12 * Math.pow(n / 2700, 2), t, k);
+  au.stt.frequency.setTargetAtTime(60 + n * 1.5, t, k); au.stg.gain.setTargetAtTime(inp.mag === 'start' ? 0.05 : 0, t, 0.05);
+}
+$('t-snd').onclick = e => { if (!au) initAudio(); else { au.on = !au.on; (au.on && !paused) ? au.ctx.resume() : au.ctx.suspend(); } e.currentTarget.setAttribute('aria-pressed', au.on); };
+
+/* =====================================================================
+   BOUCLE
+   ===================================================================== */
+const hl = new THREE.Color(0x3a8fb5), tmpV = new THREE.Vector3();
+function emissives() {
+  const glow = clamp((st.egt - 1150) / 450, 0, 1) * (st.running ? 1 : 0);
+  for (const [k, mats] of Object.entries(partMats)) {
+    const sel = k === selected ? 0.45 : k === hovered ? 0.22 : 0;
+    for (const m of mats) { m.emissive.setRGB(0, 0, 0); if (k === 'exhaust') m.emissive.setRGB(glow * 0.45, glow * 0.1, 0); if (sel) m.emissive.lerp(hl, sel); }
+  }
+}
+function uiTick() {
+  $('r-bhp').textContent = Math.round(st.bhp) + ' hp'; $('r-pct').textContent = Math.round(st.bhp / 1.5) + ' %'; $('r-trq').textContent = Math.round(st.q) + ' lb·pi';
+  $('r-lam').textContent = st.running ? st.lam.toFixed(2).replace('.', ',') : '—';
+  $('r-tcarb').textContent = Math.round(st.tcarb) + ' °C'; $('r-ice').textContent = Math.round(st.ice * 100) + ' %';
+  $('r-sfc').textContent = st.bhp > 20 ? (st.ff * 6 / st.bhp).toFixed(2).replace('.', ',') + ' lb/hp·h' : '—';
+  $('r-crank').textContent = Math.round(((thetaV % 720) + 720) % 720) + '° / 720';
+  const L = { start: inp.mag === 'start', magl: ['l', 'both', 'start'].includes(inp.mag), magr: ['r', 'both', 'start'].includes(inp.mag), heat: inp.heat, ice: st.ice > 0.1, flood: st.flooded, op: lamp.op, cht: lamp.cht, rpm: lamp.rpm, boost: inp.boost && inp.master, fuel: !inp.fuel || st.bowl < 0.3, run: st.running };
+  for (const [k, v] of Object.entries(L)) $('L-' + k).classList.toggle('on', !!v);
+  let ph = 'Arrêt';
+  if (inp.mag === 'start') ph = 'Lancement'; else if (st.running) ph = st.rpm < 900 ? 'Ralenti' : inp.ias > 40 ? 'Vol' : st.rpm > 2000 ? 'Point fixe' : 'Roulage / chauffe'; else if (st.rpm > 20) ph = 'Décélération';
+  $('phase').textContent = ph; $('clock').textContent = fmtT(st.t);
+  if (fsEl()) { const cell = (l, v, x) => `<div><span>${l}</span><b class="${x ? 'x' : ''}">${v}</b></div>`; $('hud').innerHTML = cell('Régime', Math.round(st.rpm) + ' tr/min', st.rpm > 2727) + cell('Admission', st.map.toFixed(1) + ' po', false) + cell('CHT', Math.round(st.cht) + ' °F', st.cht > 500) + cell('Huile', Math.round(st.oilP) + ' psi', lamp.op); }
+}
+function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); sizeGauges(); sizeTrend(); sizeCycle(); }
+new ResizeObserver(resize).observe(view);
+new ResizeObserver(() => { sizeGauges(); sizeTrend(); sizeCycle(); }).observe(document.querySelector('.panel'));
+
+idleState(); setMode('ext'); syncLabels();
+logE('Moteur au ralenti. « Arrêt auto » puis « Démarrage auto », ou utilisez les commandes (maintenir START pour lancer).', '');
+
+let last = performance.now(), uiAcc = 0, thetaV = 0, lastPsi = CYL.map(() => 0);
+const pinVec = (th, beta) => ({ y: -R_CRANK * Math.sin(th + beta), z: -R_CRANK * Math.cos(th + beta) });
+function frame(now) {
+  const rdt = clamp((now - last) / 1000, 0, 0.05); last = now;
+  const dt = paused ? 0 : rdt; simClock += dt;
+  if (!paused) { for (let i = 0; i < 8; i++) step(dt / 8); monitor(dt); runAuto(dt); }
+  // angle vilebrequin affiché (ralenti visuel)
+  thetaV += st.rpm / 60 * 360 * dt * slow;
+  const th = thetaV * DEG;
+  crank.rotation.x = -th; cam.rotation.x = th / 2; ringGear.rotation.x = -th; prop.rotation.x = -th;
+  altPul.rotation.x = -th * (3.4 / 1.25);
+  starterPinion.position.x = ((inp.mag === 'start' ? 1.45 : 2.3) - XC) * S; if (inp.mag === 'start') starterPinion.rotation.x = th * (6.6 / 0.62);
+  const e = explode * explode * (3 - 2 * explode);
+  // cylindres : pistons, bielles, soupapes, culbuteurs, chambre
+  for (const o of cylObjs) {
+    const c = o.c, p = pinVec(th, c.beta), au_ = c.s * p.z, b = p.y, d = au_ + Math.sqrt(L_ROD * L_ROD - b * b);
+    o.grp.position.z = c.s * e * 9 * S;
+    o.pist.position.y = d * S;
+    o.rod.position.set(0, au_ * S, -c.s * b * S); o.rod.rotation.x = Math.atan2(c.s * b, d - au_);
+    const psi = ((thetaV - c.off) % 720 + 720) % 720;
+    for (let i = 0; i < 2; i++) {
+      const v = o.valves[i], lift = VT.lift * (v.kind === 'in' ? liftAt(psi, VT.io, VT.ic) : liftAt(psi, VT.eo, VT.ec));
+      v.g.position.y = -lift * S; v.spr.scale.y = 1 - lift / 1.6;
+      o.rockers[i].rotation.x = (v.kind === 'in' ? 1 : 1) * o.up * lift * 0.35;
+      const pr = o.pushrods[i]; pr.m.position.copy(pr.base).addScaledVector(pr.dir, lift * 0.9 * S); pr.tp.position.copy(pr.tpBase); pr.tp.position.y += lift * 0.9 * S;
+    }
+    // chambre : couleur selon le temps, éclair à la combustion
+    const crown = d + 1.58, roof = 10.88;
+    o.chamber.position.y = (crown + roof) / 2 * S; o.chamber.scale.set(1, Math.max(0.02, (roof - crown)) * S, 1);
+    const k = Math.floor(psi / 180), fired = st.running && inp.mag !== 'off';
+    let col = STROKE_COL[k], op = showCycle && showCylCol ? 0.42 : 0;
+    if (k === 0 && fired) { const f = Math.max(0, 1 - psi / 70); o.chamberMat.color.setRGB(1, 0.45 + 0.5 * f, 0.1 + 0.6 * f); op = showCycle && showCylCol ? 0.5 + 0.4 * f : 0; }
+    else if (k === 0 && !fired) o.chamberMat.color.set('#9d7bff');
+    else o.chamberMat.color.set(col);
+    o.chamberMat.opacity = op;
+    // avec le nuage de gaz : teinte de la chambre dans la même couleur (bleu -> orange)
+    if (showGas && showPts && showCylCol && st.rpm > 20) { const av = o.cloud.avg; o.chamberMat.color.setRGB(av[0], av[1], av[2]); o.chamberMat.opacity = 0.14; }
+    // étincelles : haut et bas selon les magnétos (G : hauts gauches + bas droits)
+    const sp = VT.spark, crossed = (lastPsi[c.n - 1] < sp && psi >= sp) || (psi >= sp && psi < sp + 12);
+    const left = c.s > 0, magL = ['l', 'both', 'start'].includes(inp.mag), magR = ['r', 'both', 'start'].includes(inp.mag);
+    const topOn = left ? magL : magR, botOn = left ? magR : magL;
+    const fl = crossed && st.rpm > 60 ? 1 : 0;
+    o.sparkT.material.opacity = fl && topOn && showCylCol ? 0.9 : Math.max(0, o.sparkT.material.opacity - rdt * 6);
+    o.sparkB.material.opacity = fl && botOn && showCylCol ? 0.9 : Math.max(0, o.sparkB.material.opacity - rdt * 6);
+    lastPsi[c.n - 1] = psi;
+  }
+  carbThr.rotation.z = 0.35 - inp.thr * 1.25; carbMix.rotation.y = (1 - inp.mix) * 0.9;   // leviers du carburateur
+  modSump.position.y = -e * 6 * S; modAcc.position.x = e * 7 * S; modFront.position.x = -e * 5 * S; modInst.position.y = -e * 9 * S;
+  // flux : mélange et échappement synchronisés sur les soupapes, huile, nuage dans les cylindres
+  const vis = st.rpm > 20 && explode < 0.05;
+  // gaz : déplacement lié à l'angle du vilebrequin affiché (pouces de conduit par charge complète)
+  const wdeg = paused ? 0 : st.rpm * 6 * slow;   // °/s affichés
+  for (const F of gasFlows) {
+    const psi = ((thetaV - F.c.off) % 720 + 720) % 720;
+    const on = showGas && vis && (F.kind === 'ex' || (F.kind === 'hot') === inp.heat);
+    const G = (F.kind === 'ex' ? 40 : 30) * flowK, mean = G / 720 * wdeg;
+    // admission : collecteur commun à débit moyen, pipe pulsée par le piston ; échappement : pipe pulsée, silencieux à débit moyen
+    // pipe : débit continu (45 %) + pulsation liée au piston et aux soupapes (55 %), même débit moyen
+    const pulse = 0.45 * mean + 0.55 * G * (F.kind === 'ex' ? rateEx(psi) : rateIn(psi)) * wdeg;
+    if (F.kind === 'ex') updFlow(F, on, pulse, mean, dt);
+    else updFlow(F, on, mean, pulse, dt);
+  }
+  for (const F of oilFlows) {
+    const sp = F.oil === 's' ? 4.5 * Math.min(1, st.rpm / 1500) : F.oil === 'a' ? 6 * st.rpm / 2700 : 9 * st.oilP / 80;
+    updFlow(F, showOil && vis, sp * flowK, sp * flowK, dt);
+  }
+  for (const cl of clouds) {
+    const on = showGas && vis && showPts && showCylCol; cl.pts.visible = on; if (!on) continue;
+    const o = cl.o, c = o.c, p = pinVec(th, c.beta), au2 = c.s * p.z, d = au2 + Math.sqrt(L_ROD * L_ROD - p.y * p.y);
+    const psi = ((thetaV - c.off) % 720 + 720) % 720, left = c.s > 0;
+    const magL = ['l', 'both', 'start'].includes(inp.mag), magR = ['r', 'both', 'start'].includes(inp.mag);
+    updCloud(cl, psi, d + 1.66, 10.8, st.running && inp.mag !== 'off', left ? magL : magR, left ? magR : magL);
+  }
+  emissives();
+  if (camTween) { camTween.k = Math.min(1, camTween.k + rdt * 1.4); const k = camTween.k * camTween.k * (3 - 2 * camTween.k); camera.position.lerpVectors(camTween.p0, camTween.p1, k); controls.target.lerpVectors(camTween.t0, camTween.t1, k); if (camTween.k >= 1) camTween = null; }
+  // légère vibration si le moteur tourne mal
+  eng.position.y = st.running ? Math.sin(simClock * 90) * st.rough * 0.004 : 0;
+  controls.update(); renderer.render(scene, camera);
+  for (const g of GAUGES) drawGauge(g, rdt);
+  drawCycle(thetaV);
+  histT += dt; if (histT > 0.25) { histT = 0; hist.push({ rpm: st.rpm, map: st.map, cht: st.cht, op: st.oilP }); if (hist.length > 240) hist.shift(); drawTrend(); }
+  uiAcc += rdt; if (uiAcc > 0.1) { uiAcc = 0; uiTick(); }
+  updAudio();
+  requestAnimationFrame(frame);
+}
+resize();
+requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>
