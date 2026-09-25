@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Simulateur PW1500G — Outils de Frank</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pG = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pG.includes('pw1500g') && !_pG.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+  <style>
+    body { flex-direction:column; align-items:stretch; justify-content:flex-start; }
+
+    .top-bar {
+      width:100%; background:#0a0f0a; border-bottom:2px solid #2a3a2a;
+      display:flex; align-items:center; gap:1rem; padding:0.7rem 1.5rem;
+      box-sizing:border-box; flex-shrink:0; flex-wrap:wrap;
+    }
+    .top-bar-title { font-size:1rem; font-weight:bold; color:#f0ede6; white-space:nowrap; }
+    .top-bar-title span { color:#80cc80; }
+    .top-bar-back {
+      display:inline-flex; align-items:center; gap:0.4rem; color:#80cc80;
+      text-decoration:none; font-size:0.85rem; border:1px solid #2a3a2a;
+      border-radius:6px; padding:0.3rem 0.8rem; white-space:nowrap; transition:border-color 0.2s; flex-shrink:0;
+    }
+    .top-bar-back:hover { border-color:#80cc80; }
+
+    .gtf-container { max-width:1560px; margin:0 auto; padding:1.6rem 1.5rem 3rem; color:#f0ede6; width:100%; }
+    .gtf-header { margin-bottom:1.3rem; display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:0.8rem 2rem; }
+    .gtf-header h1 { font-size:2rem; color:#80cc80; margin-bottom:0.25rem; }
+    .gtf-header p { color:#a89f94; font-size:0.9rem; max-width:70ch; }
+    .plate { font-family:'Courier New',monospace; font-size:0.75rem; color:#8a9a90; border:1px solid #2a3a2a; border-radius:6px; padding:0.45rem 0.7rem; line-height:1.5; }
+    .plate b { color:#f0ede6; }
+
+    .panel { background:#040904; border:1px solid #1a2a1a; border-radius:12px; padding:1.3rem 1.4rem; margin-bottom:1.3rem; }
+    .panel h2 { color:#80cc80; font-size:0.8rem; margin-bottom:0.9rem; text-transform:uppercase; letter-spacing:0.1rem; }
+
+    .gtf-layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:1.3rem; align-items:start; }
+    @media (max-width:1000px) { .gtf-layout { grid-template-columns:1fr; } }
+
+    #engine-viewport {
+      position:relative; width:100%; height:62vh; min-height:420px; max-height:700px;
+      border-radius:10px; overflow:hidden; background:#05080a; border:1px solid #16211a;
+      cursor:grab; touch-action:none;
+    }
+    #engine-viewport:active { cursor:grabbing; }
+    #engine-canvas { width:100%; height:100%; display:block; }
+    #label-layer { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+    .eng-label { position:absolute; left:0; top:0; width:0; height:0; }
+    .lbl-dot { position:absolute; left:-3px; top:-3px; width:6px; height:6px; border-radius:50%; background:#80cc80; box-shadow:0 0 5px #80cc80; }
+    .lbl-line { position:absolute; left:0; top:0; height:1px; background:rgba(128,204,128,0.6); transform-origin:0 0; }
+    .lbl-text {
+      position:absolute; white-space:nowrap; transform:translate(0,-50%);
+      font-size:0.7rem; color:#e8f0e8; background:rgba(4,9,4,0.82); border:1px solid #2a3a2a;
+      border-left:2px solid #80cc80; padding:0.15rem 0.45rem; border-radius:3px;
+    }
+    .lbl-text.lbl-left { transform:translate(-100%,-50%); border-left:1px solid #2a3a2a; border-right:2px solid #80cc80; }
+    .vp-tools { position:absolute; top:0.7rem; right:0.7rem; display:flex; gap:0.4rem; }
+    .vp-tools button {
+      width:auto; padding:0.35rem 0.7rem; font-size:0.75rem; font-weight:bold; background:rgba(4,9,4,0.8);
+      border:1px solid #2a3a2a; color:#c8c4bc; border-radius:6px;
+    }
+    .vp-tools button:hover { border-color:#80cc80; color:#80cc80; background:rgba(4,9,4,0.8); }
+    .viewport-hint {
+      position:absolute; left:0.8rem; bottom:0.6rem; font-size:0.7rem; color:#6a8a7a;
+      background:rgba(4,9,4,0.6); padding:0.25rem 0.55rem; border-radius:6px; pointer-events:none;
+    }
+    .hint-touch { display:none; }
+    @media (pointer:coarse) { .hint-mouse { display:none; } .hint-touch { display:inline; } }
+    .viewport-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#556655; font-size:0.85rem; }
+    #engine-viewport.pseudo-fs { position:fixed; inset:0; z-index:1000; height:100vh!important; height:100dvh!important; max-height:none; min-height:0; border:0; border-radius:0; }
+    #engine-viewport.pseudo-fs .vp-tools { top:max(0.7rem, env(safe-area-inset-top)); right:max(0.7rem, env(safe-area-inset-right)); }
+    #engine-viewport.pseudo-fs .viewport-hint { bottom:max(0.6rem, env(safe-area-inset-bottom)); }
+    html.pseudo-fs-on, html.pseudo-fs-on body { overflow:hidden; }
+
+    .instr-row { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:0.55rem; margin-top:0.9rem; }
+    @media (max-width:1250px) { .instr-row { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+    @media (max-width:520px) { .instr-row { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+    .instr-item { background:#0a120a; border:1px solid #1a2a1a; border-radius:8px; padding:0.55rem 0.6rem; text-align:center; min-width:0; }
+    .instr-item.warn { border-color:#f59e0b; }
+    .instr-label { font-size:0.6rem; color:#556680; text-transform:uppercase; letter-spacing:0.08rem; display:block; margin-bottom:0.2rem; }
+    .instr-value { font-family:'Courier New',monospace; font-size:1.15rem; font-weight:bold; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .instr-sub { display:block; font-family:'Courier New',monospace; font-size:0.68rem; color:#6a7a70; margin-top:0.1rem; white-space:nowrap; }
+    .c-n1 { color:#4fc3c7; } .c-fan { color:#8fd8f0; } .c-n2 { color:#d0d0d0; } .c-itt { color:#f59e0b; } .c-ff { color:#c084fc; } .c-thr { color:#80cc80; }
+
+    .ctrl-group { margin-bottom:1.1rem; }
+    .ctrl-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem; gap:0.6rem; }
+    .ctrl-label { font-size:0.82rem; color:#c8c4bc; }
+    .ctrl-live-val { font-family:'Courier New',monospace; font-size:0.85rem; color:#80cc80; font-weight:bold; }
+    input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px; background:#1a2a1a; outline:none; margin:0.3rem 0; padding:0; border:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:#80cc80; cursor:pointer; border:2px solid #0a0f0a; }
+    input[type="range"]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:#80cc80; cursor:pointer; border:2px solid #0a0f0a; }
+    select { background:#0a120a; border:1px solid #2a3a2a; color:#f0ede6; border-radius:6px; padding:0.3rem 0.5rem; font-size:0.8rem; }
+    .presets { display:grid; grid-template-columns:repeat(4,1fr); gap:0.35rem; margin-top:0.55rem; }
+    .presets button { width:100%; padding:0.4rem 0.1rem; font-size:0.66rem; font-weight:bold; background:transparent; border:1px solid #2a3a2a; color:#a89f94; border-radius:6px; }
+    .presets button:hover { border-color:#80cc80; color:#80cc80; background:transparent; }
+    .switch-row { display:flex; align-items:center; justify-content:space-between; padding:0.42rem 0; border-bottom:1px solid #14201a; gap:0.6rem; }
+    .switch-row:last-child { border-bottom:none; }
+    .switch-label { font-size:0.8rem; color:#c8c4bc; }
+    .switch { position:relative; display:inline-block; width:38px; height:21px; flex-shrink:0; }
+    .switch input { opacity:0; width:0; height:0; margin:0; padding:0; }
+    .switch-slider { position:absolute; cursor:pointer; inset:0; background:#1e2e1e; border:1px solid #2a3a2a; border-radius:22px; transition:background 0.2s; }
+    .switch-slider::before { content:""; position:absolute; width:14px; height:14px; left:2px; top:2px; background:#66806a; border-radius:50%; transition:transform 0.2s, background 0.2s; }
+    .switch input:checked + .switch-slider { background:rgba(128,204,128,0.25); border-color:#80cc80; }
+    .switch input:checked + .switch-slider::before { transform:translateX(17px); background:#80cc80; }
+    .switch input:focus-visible + .switch-slider { outline:2px solid #80cc80; outline-offset:2px; }
+
+    #part-info { min-height:5rem; }
+    #part-info .pi-title { font-size:0.92rem; font-weight:bold; color:#f59e0b; margin-bottom:0.3rem; }
+    #part-info .pi-ref { font-family:'Courier New',monospace; font-size:0.7rem; color:#60b8c8; margin-bottom:0.35rem; }
+    #part-info .pi-desc { font-size:0.8rem; color:#a89f94; line-height:1.5; }
+    #part-info .pi-live { margin-top:0.55rem; font-family:'Courier New',monospace; font-size:0.76rem; color:#80cc80; background:#0a120a; border:1px solid #1a2a1a; border-radius:6px; padding:0.4rem 0.6rem; }
+    #part-info .pi-placeholder { font-size:0.8rem; color:#556655; font-style:italic; }
+
+    .legend { display:flex; flex-direction:column; gap:0.4rem; transition:opacity 0.2s; }
+    .legend.legend-dim { opacity:0.4; }
+    .legend-item { display:flex; align-items:center; gap:0.55rem; font-size:0.78rem; color:#c8c4bc; }
+    .legend-dot { width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+
+    .spec-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap:1.3rem; }
+    .spec-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+    .spec-table caption { caption-side:top; text-align:left; color:#80cc80; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08rem; padding-bottom:0.5rem; }
+    .spec-table caption small { color:#60b8c8; text-transform:none; letter-spacing:0; margin-left:0.4rem; font-family:'Courier New',monospace; }
+    .spec-table td, .spec-table th { padding:0.38rem 0.3rem; border-bottom:1px solid #14201a; vertical-align:top; text-align:left; }
+    .spec-table th { color:#556680; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.06rem; font-weight:normal; }
+    .spec-table td:first-child { color:#8a9a90; }
+    .spec-table td.n { color:#f0ede6; font-family:'Courier New',monospace; font-variant-numeric:tabular-nums; }
+    .tag { font-size:0.62rem; padding:0.05rem 0.35rem; border-radius:3px; margin-left:0.3rem; white-space:nowrap; font-family:inherit; }
+    .tag-off { background:rgba(128,204,128,0.15); color:#80cc80; }
+    .tag-est { background:rgba(245,158,11,0.15); color:#f59e0b; }
+    .gtf-note { font-size:0.74rem; color:#556680; line-height:1.6; margin-top:0.6rem; }
+    .gtf-note a { color:#60b8c8; }
+
+    @media (max-width:700px) {
+      .gtf-container { padding:1rem max(10px, env(safe-area-inset-right)) 2rem max(10px, env(safe-area-inset-left)); }
+      .gtf-header h1 { font-size:1.6rem; }
+      #engine-viewport { height:min(64vh, 560px); min-height:340px; }
+      .panel { padding:1rem; }
+    }
+    @media (max-height:500px) and (orientation:landscape) and (pointer:coarse) {
+      #engine-viewport { height:calc(100svh - 16px); min-height:260px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar" data-topbar>
+    <span class="top-bar-title"><span>PW1500G</span> Simulation 3D</span>
+    <a href="moteurs.html" class="top-bar-back">&#8592; Moteurs</a>
+  </div>
+
+  <div class="gtf-container">
+
+    <div class="gtf-header">
+      <div>
+        <h1>Pratt &amp; Whitney PW1500G</h1>
+        <p>Turbofan à réducteur (Geared Turbofan) double corps de l'Airbus A220 — soufflante entraînée par un réducteur épicycloïdal en étoile de rapport 3,0625:1.</p>
+      </div>
+      <div class="plate"><b>1-G-3-8-2-3</b> · soufflante Ø 73 po · dilution 12:1<br>19 775 à 24 400 lbf · 2 177 kg · 3,045 m</div>
+    </div>
+
+    <div class="gtf-layout">
+      <div>
+        <div class="panel">
+          <h2>Vue moteur</h2>
+          <div id="engine-viewport">
+            <canvas id="engine-canvas"></canvas>
+            <div id="label-layer"></div>
+            <div class="viewport-loading" id="viewport-loading">Chargement du moteur 3D…</div>
+            <div class="vp-tools"><button id="btn-fs" title="Plein écran (touche F)">⛶ Plein écran</button></div>
+            <div class="viewport-hint"><span class="hint-mouse">Glisser : orbite · Molette : zoom · Clic : identifier une pièce</span><span class="hint-touch">Glisser : orbite · Pincer : zoom · Toucher : identifier</span></div>
+          </div>
+
+          <div class="instr-row">
+            <div class="instr-item" id="box-n1"><span class="instr-label">N1 (corps BP)</span><span class="instr-value c-n1" id="i-n1">—</span><span class="instr-sub" id="i-n1rpm">— tr/min</span></div>
+            <div class="instr-item"><span class="instr-label">Soufflante</span><span class="instr-value c-fan" id="i-fan">—</span><span class="instr-sub">N1 ÷ 3,0625</span></div>
+            <div class="instr-item" id="box-n2"><span class="instr-label">N2 (corps HP)</span><span class="instr-value c-n2" id="i-n2">—</span><span class="instr-sub" id="i-n2rpm">— tr/min</span></div>
+            <div class="instr-item" id="box-itt"><span class="instr-label">ITT</span><span class="instr-value c-itt" id="i-itt">—</span><span class="instr-sub">limite 1 054 °C</span></div>
+            <div class="instr-item"><span class="instr-label">Débit carburant</span><span class="instr-value c-ff" id="i-ff">—</span><span class="instr-sub">kg/h (estimé)</span></div>
+            <div class="instr-item"><span class="instr-label">Poussée</span><span class="instr-value c-thr" id="i-thr">—</span><span class="instr-sub" id="i-thrmax">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h2>Commandes</h2>
+          <div class="ctrl-group">
+            <div class="ctrl-label-row">
+              <label class="ctrl-label" for="variant">Variante</label>
+              <select id="variant">
+                <option value="PW1519G">PW1519G</option>
+                <option value="PW1521G">PW1521G</option>
+                <option value="PW1524G" selected>PW1524G / 1525G</option>
+              </select>
+            </div>
+          </div>
+          <div class="ctrl-group">
+            <div class="ctrl-label-row"><span class="ctrl-label">Manette de poussée</span><span class="ctrl-live-val" id="thr-val">Ralenti sol</span></div>
+            <input type="range" id="throttle" min="0" max="1000" value="0" aria-label="Manette de poussée">
+            <div class="presets">
+              <button data-preset="gi">Ralenti sol</button>
+              <button data-preset="fi">Ralenti vol</button>
+              <button data-preset="mct">Max cont.</button>
+              <button data-preset="to">Décollage</button>
+            </div>
+          </div>
+          <div class="ctrl-group">
+            <div class="switch-row"><span class="switch-label">Vue en coupe ¼</span><label class="switch"><input type="checkbox" id="t-cut" checked><span class="switch-slider"></span></label></div>
+            <div class="switch-row"><span class="switch-label">Arbres et engrenages entiers</span><label class="switch"><input type="checkbox" id="t-keep" checked><span class="switch-slider"></span></label></div>
+            <div class="switch-row"><span class="switch-label">Débit d'air</span><label class="switch"><input type="checkbox" id="t-flow" checked><span class="switch-slider"></span></label></div>
+            <div class="switch-row"><span class="switch-label">Étiquettes</span><label class="switch"><input type="checkbox" id="t-labels" checked><span class="switch-slider"></span></label></div>
+            <div class="switch-row"><span class="switch-label">Couleurs par section</span><label class="switch"><input type="checkbox" id="t-colors"><span class="switch-slider"></span></label></div>
+            <div class="switch-row"><span class="switch-label">Rotation automatique</span><label class="switch"><input type="checkbox" id="t-auto"><span class="switch-slider"></span></label></div>
+            <div class="switch-row">
+              <label class="switch-label" for="slow">Ralenti visuel</label>
+              <select id="slow">
+                <option value="0.000625">×1/1600</option>
+                <option value="0.00125">×1/800</option>
+                <option value="0.0025" selected>×1/400</option>
+                <option value="0.005">×1/200</option>
+              </select>
+            </div>
+          </div>
+          <div class="ctrl-group" style="margin-bottom:0">
+            <div class="ctrl-label-row"><span class="ctrl-label">Vue</span></div>
+            <div class="presets">
+              <button data-view="34">3/4</button>
+              <button data-view="side">Profil</button>
+              <button data-view="front">Avant</button>
+              <button data-view="rear">Arrière</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Pièce sélectionnée</h2>
+          <div id="part-info"><p class="pi-placeholder">Cliquez sur une pièce du moteur pour afficher sa description et ses valeurs en direct.</p></div>
+        </div>
+
+        <div class="panel">
+          <h2>Couleurs par section</h2>
+          <div class="legend legend-dim" id="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#4fc3c7"></span>Soufflante (vitesse réduite)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#b98cf0"></span>Réducteur de soufflante (FDGS)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#6f8fae"></span>Compresseur BP (corps BP)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#b4b4b4"></span>Compresseur HP (corps HP)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#ff7a3a"></span>Chambre TALON X</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#e85d3f"></span>Turbine HP (corps HP)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f0a830"></span>Turbine BP (corps BP)</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#8fb8d0"></span>Nacelle / carters</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Fiche technique</h2>
+      <div class="spec-grid">
+        <table class="spec-table">
+          <caption>Caractéristiques <small>EASA TCDS IM.E.090</small></caption>
+          <tr><td>Architecture</td><td class="n">Double corps, soufflante à réducteur, FADEC<span class="tag tag-off">TCDS</span></td></tr>
+          <tr><td>Étages</td><td class="n">1 soufflante · réducteur · 3 BP · 8 HP · 2 THP · 3 TBP<span class="tag tag-off">TCDS</span></td></tr>
+          <tr><td>Réducteur (FDGS)</td><td class="n">Épicycloïdal en étoile, 3,0625:1, dentures en chevrons<span class="tag tag-off">TCDS · Kawasaki</span></td></tr>
+          <tr><td>Soufflante</td><td class="n">Ø 73 po (1,854 m), aubes en alliage d'aluminium<span class="tag tag-off">P&amp;W · Kawasaki</span></td></tr>
+          <tr><td>Aubes de soufflante</td><td class="n">18<span class="tag tag-est">valeur citée, non officielle</span></td></tr>
+          <tr><td>Taux de dilution</td><td class="n">12:1<span class="tag tag-off">Kawasaki · Airbus</span></td></tr>
+          <tr><td>Chambre de combustion</td><td class="n">Annulaire TALON X (pauvre, faible NOx)<span class="tag tag-off">P&amp;W</span></td></tr>
+          <tr><td>Longueur</td><td class="n">3,045 m bride à bride · 3,184 m depuis le cône<span class="tag tag-off">TCDS</span></td></tr>
+          <tr><td>Diamètre carter de soufflante</td><td class="n">2,006 m<span class="tag tag-off">TCDS</span></td></tr>
+          <tr><td>Masse à sec</td><td class="n">2 177 kg (4 800 lb)<span class="tag tag-off">TCDS</span></td></tr>
+        </table>
+        <table class="spec-table">
+          <caption>Poussée et limites <small>EASA TCDS IM.E.090</small></caption>
+          <tr><th>Variante</th><th>Décollage</th><th>Max. continu</th></tr>
+          <tr><td>PW1519G</td><td class="n">19 775 lbf · 87,96 kN</td><td class="n">18 685 lbf</td></tr>
+          <tr><td>PW1521G</td><td class="n">21 970 lbf · 97,73 kN</td><td class="n">20 760 lbf</td></tr>
+          <tr><td>PW1524G / 1525G</td><td class="n">24 400 lbf · 108,54 kN</td><td class="n">23 050 lbf</td></tr>
+          <tr><td>N1 max (corps BP)</td><td class="n" colspan="2">10 600 tr/min · soufflante 3 461 tr/min</td></tr>
+          <tr><td>N2 max (corps HP)</td><td class="n" colspan="2">24 470 tr/min</td></tr>
+          <tr><td>Ralenti</td><td class="n" colspan="2">N1 1 574 / 1 991 tr/min · N2 13 264 tr/min</td></tr>
+          <tr><td>ITT max</td><td class="n" colspan="2">1 054 °C décollage et démarrage · 1 017 °C continu</td></tr>
+          <tr><td>Poussée réglée sur</td><td class="n" colspan="2">N1 (vitesse du corps basse pression)</td></tr>
+          <tr><td>Accessoires (sur N2)</td><td class="n" colspan="2">Pompe hydraulique 0,1835:1 · IDG 0,8595:1, sens horaire</td></tr>
+        </table>
+      </div>
+      <p class="gtf-note">
+        Sources : fiche de certification EASA <a href="https://www.caa.co.uk/Documents/Download/3939/984aa08e-5352-4da9-824b-309ec7cec37d/3281" target="_blank" rel="noopener">IM.E.090, issue 07</a>,
+        <a href="https://global.kawasaki.com/en/corp/rd/magazine/179/pdf/n179en14.pdf" target="_blank" rel="noopener">Kawasaki Technical Review n° 179</a> (2018),
+        <a href="https://www.aircraft.airbus.com/en/newsroom/stories/2025-08-a-geared-propulsion-system-to-deliver-industry-leading-efficiency" target="_blank" rel="noopener">Airbus</a> (2025). La géométrie interne n'est pas publiée : les rayons et longueurs sont
+        reconstitués à partir des dimensions officielles et de coupes publiques, les nombres d'aubes internes et de dents sont figurés
+        (les dents 32 / 33 / 98 donnent exactement le rapport 3,0625). Le sens absolu de rotation est figuré ; la soufflante tourne en sens
+        inverse du corps BP (réducteur en étoile) et les corps BP et HP sont contrarotatifs (d'après les brevets P&amp;W). Les aubes sont
+        orientées en conséquence. Débit carburant et température turbine : modèle simplifié. Rotation affichée ralentie.
+      </p>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="pw1500g.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script src="page-controls.js"></script>
+</body>
+</html>

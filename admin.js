@@ -24,6 +24,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
     { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
     { key: 'pt6a21',        icon: '🛩️', label: 'PT6A-21'  },
+    { key: 'pw1500g',       icon: '⚙️', label: 'PW1500G'  },
   ]},
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
@@ -320,6 +321,7 @@ const PERMS_STRUCTURE = [
   { key: 'moteurs', label: 'Moteurs', children: [
     { key: 'turboreacteur', label: 'CFM56-7B' },
     { key: 'pt6a21',        label: 'PT6A-21' },
+    { key: 'pw1500g',       label: 'PW1500G' },
   ]},
   { key: 'jeuxdesociete', label: 'Jeux de société', children: [
     { key: '7wonders',    label: '7 Wonders'       },
