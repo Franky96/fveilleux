@@ -201,6 +201,14 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 .flowkey2 i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
 #cycle{width:100%;height:150px;display:block;margin-top:4px}
 .amb{grid-template-columns:1fr 1fr}
+.ctags{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ctag{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font-family:var(--f-mono);font-size:11px;line-height:1.2;background:rgba(8,12,15,.86);border:1px solid var(--line2);border-left:4px solid var(--c,#4aa3ff);padding:3px 7px;border-radius:2px;white-space:nowrap;color:var(--text)}
+.ctag b{font-family:var(--f-display);font-size:14px;color:var(--c,#4aa3ff);margin-right:5px}
+.ctag.fire{box-shadow:0 0 12px #ff7a2a88}
+.cyclekey{position:absolute;right:10px;top:52px;display:grid;gap:3px;background:rgba(10,14,17,.84);border:1px solid var(--line2);border-radius:3px;padding:6px 10px;font-family:var(--f-mono);font-size:11px;color:var(--muted);pointer-events:none}
+.cyclekey i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.cyclekey .fo{margin-top:3px;padding-top:4px;border-top:1px solid var(--line2);color:var(--text)}
+.cyclekey .fo b{color:#ff9a4d;font-weight:500}
 /* ---------- plein écran de secours (Safari iPhone) ---------- */
 html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
 .viewport.pseudo-fs{position:fixed;inset:0;z-index:1000;height:100vh!important;height:100dvh!important;max-height:none!important;min-height:0!important;margin:0!important;border:0;border-radius:0}
@@ -237,6 +245,9 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
   .lamp{font-size:10.5px}
   .mags button{font-size:11px}
   .amb{grid-template-columns:1fr}
+  .cyclekey{top:48px;right:8px;font-size:10px;padding:4px 8px}
+  .ctag{font-size:10px;padding:2px 5px}
+  .ctag b{font-size:12px}
 }
 /* ---------- téléphones en paysage : la vue 3D occupe la hauteur de l'écran ---------- */
 @media (max-height:500px) and (orientation:landscape) and (pointer:coarse){
@@ -299,10 +310,10 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
           </div>
         </section>
         <section>
-          <h4>Cycle à quatre temps <em class="hint">(couleurs visibles quand le cycle est affiché)</em></h4>
+          <h4>Cycle à quatre temps</h4>
           <div class="seg" role="group" aria-label="Cycle">
-            <button id="t-cycle" aria-pressed="false" title="Visualise les temps admission, compression, combustion et échappement dans les cylindres">Afficher le cycle</button>
-            <button id="t-cyl" aria-pressed="false" title="Affiche ou masque les couleurs des temps et le nuage de gaz dans les cylindres">Couleurs cylindres</button>
+            <button id="t-cycle" aria-pressed="false" title="Étiquette sur chaque cylindre : son numéro et le temps en cours, selon l'ordre d'allumage 1-3-2-4">Afficher le cycle</button>
+            <button id="t-cyl" aria-pressed="false" title="Colore l'intérieur des cylindres selon le temps en cours (visible en coupe ou en rayons X), avec les étincelles des bougies">Couleurs cylindres</button>
           </div>
         </section>
         <section>
@@ -333,6 +344,8 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
       </div>
     </div>
     <div class="vfoot"><span id="rot-note">Rotation affichée ×1/20 — vilebrequin horaire vu de l'arrière</span><span class="hint-mouse">Glisser : orbite · Molette : zoom · Clic : identifier une pièce</span><span class="hint-touch">Glisser : orbite · Pincer : zoom · Toucher : identifier</span></div>
+    <div class="ctags" id="ctags" hidden></div>
+    <div class="cyclekey" id="cyclekey" hidden><span><i style="background:#4aa3ff"></i>Admission</span><span><i style="background:#9d7bff"></i>Compression</span><span><i style="background:#ff7a2a"></i>Combustion / détente</span><span><i style="background:#8a929a"></i>Échappement</span><span class="fo">Allumage <b id="fo-seq">1-3-2-4</b></span></div>
     <div class="tip" id="tip" hidden></div>
     <div class="hud" id="hud" hidden></div>
     <div class="frozen" id="frozen" hidden>Simulation figée</div>
@@ -1473,9 +1486,10 @@ for (const k of ['ext', 'cut', 'xray']) $('m-' + k).onclick = () => setMode(k);
 let showCylCol = false, showProp = true, showInst = true, showCycle = false, showGas = false, showOil = false, flowCut = false, flowK = 1, paused = false, simClock = 0;
 $('t-prop').onclick = e => { showProp = !showProp; e.currentTarget.setAttribute('aria-pressed', showProp); prop.visible = showProp; };
 $('t-inst').onclick = e => { showInst = !showInst; e.currentTarget.setAttribute('aria-pressed', showInst); modInst.visible = showInst; };
-function setCycle(v) { showCycle = v; $('t-cycle').setAttribute('aria-pressed', v); updKey(); }
+function setCycle(v) { showCycle = v; $('t-cycle').setAttribute('aria-pressed', v); $('ctags').hidden = !v; updCycleKey(); }
+function updCycleKey() { $('cyclekey').hidden = !(showCycle || showCylCol); }
 $('t-cycle').onclick = () => setCycle(!showCycle);
-$('t-cyl').onclick = e => { showCylCol = !showCylCol; e.currentTarget.setAttribute('aria-pressed', showCylCol); };
+$('t-cyl').onclick = e => { showCylCol = !showCylCol; e.currentTarget.setAttribute('aria-pressed', showCylCol); updCycleKey(); };
 function updKey() { $('flowkey').hidden = !((showGas || showOil) && (showPts || showArr)); }
 $('t-gas').onclick = e => { showGas = !showGas; e.currentTarget.setAttribute('aria-pressed', showGas); updKey(); };
 $('t-oil').onclick = e => { showOil = !showOil; e.currentTarget.setAttribute('aria-pressed', showOil); updKey(); };
@@ -1574,7 +1588,7 @@ function showPart(k) {
 }
 $('parts').innerHTML = PART_ORDER.map(k => `<button data-k="${k}" aria-pressed="false">${PARTS[k][0].split(' (')[0]}</button>`).join('');
 $('parts').onclick = e => { const b = e.target.closest('button'); if (b) showPart(b.dataset.k); };
-$('info-body').innerHTML = `<h3>Un quatre cylindres à plat</h3><div class="ref">Manuel d'utilisation O-320 · section 1</div><p>L'avant est le côté de l'hélice ; le haut est le côté des tubes de tiges de culbuteurs. Les cylindres sont numérotés de l'avant vers l'arrière, impairs à droite et pairs à gauche (vu de l'arrière). Le vilebrequin tourne dans le sens horaire vu de l'arrière et entraîne l'hélice en direct. Activez « Cycle 4 temps » et la coupe horizontale pour voir les pistons et les soupapes suivre l'ordre d'allumage 1-3-2-4.</p><dl class="kv"><dt>Explosions</dt><dd>2 par tour de vilebrequin</dd><dt>Cylindre 1</dt><dd>avant droit</dd><dt>Admission</dt><dd>centrale, sous le moteur</dd></dl>`;
+$('info-body').innerHTML = `<h3>Un quatre cylindres à plat</h3><div class="ref">Manuel d'utilisation O-320 · section 1</div><p>L'avant est le côté de l'hélice ; le haut est le côté des tubes de tiges de culbuteurs. Les cylindres sont numérotés de l'avant vers l'arrière, impairs à droite et pairs à gauche (vu de l'arrière). Le vilebrequin tourne dans le sens horaire vu de l'arrière et entraîne l'hélice en direct. Activez « Afficher le cycle » pour étiqueter chaque cylindre avec son temps en cours, et « Couleurs cylindres » avec la coupe pour voir les chambres changer de couleur en suivant l'ordre d'allumage 1-3-2-4.</p><dl class="kv"><dt>Explosions</dt><dd>2 par tour de vilebrequin</dd><dt>Cylindre 1</dt><dd>avant droit</dd><dt>Admission</dt><dd>centrale, sous le moteur</dd></dl>`;
 
 /* ---------- sélection 3D ---------- */
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tipEl = $('tip');
@@ -1905,11 +1919,12 @@ function frame(now) {
     const crown = d + 1.58, roof = 10.88;
     o.chamber.position.y = (crown + roof) / 2 * S; o.chamber.scale.set(1, Math.max(0.02, (roof - crown)) * S, 1);
     const k = Math.floor(psi / 180), fired = st.running && inp.mag !== 'off';
-    let col = STROKE_COL[k], op = showCycle && showCylCol ? 0.42 : 0;
-    if (k === 0 && fired) { const f = Math.max(0, 1 - psi / 70); o.chamberMat.color.setRGB(1, 0.45 + 0.5 * f, 0.1 + 0.6 * f); op = showCycle && showCylCol ? 0.5 + 0.4 * f : 0; }
+    let col = STROKE_COL[k], op = showCylCol ? 0.42 : 0;
+    if (k === 0 && fired) { const f = Math.max(0, 1 - psi / 70); o.chamberMat.color.setRGB(1, 0.45 + 0.5 * f, 0.1 + 0.6 * f); op = showCylCol ? 0.5 + 0.4 * f : 0; }
     else if (k === 0 && !fired) o.chamberMat.color.set('#9d7bff');
     else o.chamberMat.color.set(col);
     o.chamberMat.opacity = op;
+    o.psi = psi; o.k = k; o.fired = fired;
     // avec le nuage de gaz : teinte de la chambre dans la même couleur (bleu -> orange)
     if (showGas && showPts && showCylCol && st.rpm > 20) { const av = o.cloud.avg; o.chamberMat.color.setRGB(av[0], av[1], av[2]); o.chamberMat.opacity = 0.14; }
     // étincelles : haut et bas selon les magnétos (G : hauts gauches + bas droits)
@@ -1953,12 +1968,37 @@ function frame(now) {
   // légère vibration si le moteur tourne mal
   eng.position.y = st.running ? Math.sin(simClock * 90) * st.rough * 0.004 : 0;
   controls.update(); renderer.render(scene, camera);
+  if (showCycle) updTags();
   for (const g of GAUGES) drawGauge(g, rdt);
   drawCycle(thetaV);
   histT += dt; if (histT > 0.25) { histT = 0; hist.push({ rpm: st.rpm, map: st.map, cht: st.cht, op: st.oilP }); if (hist.length > 240) hist.shift(); drawTrend(); }
   uiAcc += rdt; if (uiAcc > 0.1) { uiAcc = 0; uiTick(); }
   updAudio();
   requestAnimationFrame(frame);
+}
+/* étiquettes du cycle : numéro du cylindre et temps en cours, au-dessus de chaque culasse */
+const tagV = new THREE.Vector3();
+const tags = cylObjs.map(o => { const d = document.createElement('div'); d.className = 'ctag'; $('ctags').appendChild(d); return d; });
+function updTags() {
+  const w = view.clientWidth, h = view.clientHeight, placed = [];
+  cylObjs.forEach((o, i) => {
+    const d = tags[i];
+    o.grp.localToWorld(tagV.set(0, 15.5 * S, 0)); tagV.project(camera);
+    if (tagV.z > 1 || o.k === undefined) { d.style.display = 'none'; return; }
+    d.style.display = '';
+    const burn = o.k === 0 && o.fired && o.psi < 40 && st.rpm > 20;
+    const name = burn ? 'Combustion' : STROKE_NAME[o.k];
+    const col = o.k === 0 && !o.fired ? '#9d7bff' : STROKE_COL[o.k];
+    if (d._n !== name) { d._n = name; d.innerHTML = `<b>${o.c.n}</b>${name}`; d.style.setProperty('--c', col); d.classList.toggle('fire', burn); }
+    placed.push({ d, x: (tagV.x + 1) / 2 * w, y: (1 - tagV.y) / 2 * h, w: d.offsetWidth || 110, h: d.offsetHeight || 20 });
+  });
+  // les étiquettes qui se chevauchent sont décalées vers le haut, l'une au-dessus de l'autre
+  placed.sort((a, b) => b.y - a.y);
+  for (let i = 0; i < placed.length; i++) {
+    const t = placed[i];
+    for (let j = 0; j < i; j++) { const u = placed[j]; if (Math.abs(t.x - u.x) < (t.w + u.w) / 2 + 4 && t.y > u.y - u.h - 3) t.y = u.y - u.h - 3; }
+    t.d.style.transform = `translate(${t.x.toFixed(1)}px,${t.y.toFixed(1)}px) translate(-50%,-100%)`;
+  }
 }
 resize();
 requestAnimationFrame(frame);
