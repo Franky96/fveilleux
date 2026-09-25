@@ -10,6 +10,7 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 
 ## Git
 
-- Développer sur `website-updating`, merger vers `master`, puis push les deux.
-- Ne jamais pusher directement sur `master` sans passer par `website-updating`.
-- **Toujours faire le merge et push après chaque modification.**
+- Travailler et pousser directement sur `master` : Hostinger déploie automatiquement `master` à chaque push.
+- **Toujours commit et push sur `master` après chaque modification.**
+- Ne jamais faire de push forcé sur `master` (ça casse le déploiement Hostinger) sans prévenir l'utilisateur au préalable.
+- Ne jamais committer de manuels (PDF P&WC, etc.) ni d'identifiants : le dépôt est public.
