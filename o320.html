@@ -49,8 +49,25 @@ button,input,select{font:inherit;color:inherit}
 .viewport{position:relative;background:radial-gradient(120% 90% at 50% 40%,#1a252d 0%,#0c1115 70%);border:1px solid var(--line);border-radius:6px;overflow:hidden;height:min(68vh,720px);min-height:420px}
 #view{position:absolute;inset:0}
 #view canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
-.vbar{position:absolute;left:10px;right:10px;top:10px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none;align-items:flex-start}
-.vbar>*{pointer-events:auto}
+.vbar{position:absolute;left:10px;right:10px;top:10px;bottom:34px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;pointer-events:none}
+.vbar-main{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vbar-main>*,.vmenu{pointer-events:auto}
+.menu-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;padding:5px 11px;cursor:pointer;color:var(--text);font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12px;backdrop-filter:blur(4px)}
+.menu-btn b{font-size:15px;line-height:1;font-weight:400}
+.menu-btn[aria-expanded="true"]{background:var(--accent-d);border-color:#3f7f9c;color:#e9f6fc}
+.menu-btn:hover{border-color:var(--accent)}
+.vmenu{display:grid;gap:10px;width:min(430px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;background:rgba(10,14,17,.88);border:1px solid var(--line2);border-radius:6px;padding:10px 12px 12px;backdrop-filter:blur(6px)}
+.vmenu[hidden]{display:none}
+.vmenu section{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.vmenu .mnote{font-size:11px;color:var(--dim);width:100%}
+.vmenu h4{width:100%;margin:0;font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.vmenu h4 .hint{font-style:normal;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:400;color:var(--dim)}
+.vmenu .seg{background:rgba(19,26,31,.9)}
+.vmenu .chipr{background:none;border:0;padding:0 2px;flex:1 1 180px}
+.vmenu .chipr input[type=range]{flex:1;width:auto;min-width:80px}
+.vmenu select{background:var(--panel2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--f-mono);font-size:11px;padding:2px 4px}
+.hint-touch{display:none}
+@media (pointer:coarse){.hint-mouse{display:none}.hint-touch{display:inline}}
 .seg{display:inline-flex;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;overflow:hidden;backdrop-filter:blur(4px)}
 .seg button{background:none;border:0;padding:6px 10px;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .seg button+button{border-left:1px solid var(--line2)}
@@ -69,7 +86,7 @@ button,input,select{font:inherit;color:inherit}
 .hud span{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;color:var(--muted)}
 .hud b{font-weight:500;font-variant-numeric:tabular-nums}
 .hud b.x{color:var(--red)}
-.frozen{position:absolute;left:50%;top:58px;transform:translateX(-50%);background:rgba(10,14,17,.86);border:1px solid var(--amber);color:#ffd17a;font-family:var(--f-display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:13px;padding:4px 14px;border-radius:3px;pointer-events:none}
+.frozen{position:absolute;left:50%;top:auto;bottom:64px;transform:translateX(-50%);background:rgba(10,14,17,.86);border:1px solid var(--amber);color:#ffd17a;font-family:var(--f-display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:13px;padding:4px 14px;border-radius:3px;pointer-events:none}
 .chipr output{font-family:var(--f-mono);font-size:11px;color:var(--text);min-width:42px;text-align:right;letter-spacing:0;text-transform:none}
 .calpanel{position:absolute;right:10px;top:110px;width:250px;max-width:calc(100% - 20px);background:rgba(10,14,17,.9);border:1px solid var(--line2);border-top:2px solid #6fe3ff;border-radius:4px;padding:8px 10px;display:grid;gap:6px;font-size:12px;color:var(--muted)}
 .calpanel label{display:grid;grid-template-columns:62px 1fr 58px;align-items:center;gap:6px}
@@ -184,6 +201,55 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 .flowkey2 i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
 #cycle{width:100%;height:150px;display:block;margin-top:4px}
 .amb{grid-template-columns:1fr 1fr}
+/* ---------- plein écran de secours (Safari iPhone) ---------- */
+html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
+.viewport.pseudo-fs{position:fixed;inset:0;z-index:1000;height:100vh!important;height:100dvh!important;max-height:none!important;min-height:0!important;margin:0!important;border:0;border-radius:0}
+.viewport.pseudo-fs .vbar{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(34px,calc(env(safe-area-inset-bottom) + 28px))}
+.viewport.pseudo-fs .vfoot{left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom))}
+.viewport.pseudo-fs .hud{right:max(10px,env(safe-area-inset-right));bottom:max(34px,calc(env(safe-area-inset-bottom) + 28px))}
+/* ---------- téléphones (iPhone portrait) ---------- */
+@media (max-width:700px){
+  body{padding-inline:max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right));padding-bottom:max(28px,env(safe-area-inset-bottom))}
+  .top{padding-block:12px 10px;gap:8px 16px}
+  .brand h1{font-size:30px}
+  .brand p{font-size:12px}
+  .plate{font-size:10px;padding:5px 8px}
+  .back{margin-top:max(10px,env(safe-area-inset-top))}
+  .viewport{height:min(64vh,560px);min-height:340px}
+  .vbar{left:8px;right:8px;top:8px;bottom:34px}
+  .vbar-main{gap:6px}
+  .vbar-main .seg button{padding:6px 8px;font-size:11px;letter-spacing:.04em}
+  .menu-btn{padding:6px 10px}
+  .menu-btn span{display:none}
+  #t-pause span,#t-fs span{display:none}
+  #t-pause,#t-fs{min-width:34px;font-size:14px!important}
+  .vmenu{width:100%;padding:8px 10px 10px}
+  .vmenu .seg button{padding:6px 8px;font-size:11.5px}
+  .vfoot{left:8px;right:8px;bottom:6px;font-size:10px}
+  .vfoot #rot-note{display:none}
+  .hud{grid-template-columns:repeat(2,auto);right:8px;bottom:30px}
+  .hud div{min-width:64px;padding:4px 8px}
+  .flowkey2{bottom:30px;left:8px;font-size:10px;max-width:calc(100% - 16px)}
+  .card{padding:12px}
+  .panel{padding:10px;gap:10px}
+  .info h3{font-size:22px}
+  .docs>h2{font-size:24px}
+  .lamp{font-size:10.5px}
+  .mags button{font-size:11px}
+  .amb{grid-template-columns:1fr}
+}
+/* ---------- téléphones en paysage : la vue 3D occupe la hauteur de l'écran ---------- */
+@media (max-height:500px) and (orientation:landscape) and (pointer:coarse){
+  body{padding-inline:max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right))}
+  .viewport{height:calc(100svh - 16px);min-height:260px}
+  .top{padding-block:8px 6px}
+  .brand h1{font-size:26px}
+  .brand p,.plate{display:none}
+  .back{margin-top:8px;padding:3px 10px;font-size:12px}
+  .vbar{bottom:30px}
+  .vmenu{width:min(430px,100%)}
+  .hud{grid-template-columns:repeat(4,auto)}
+}
 </style>
 </head>
 <body>
@@ -202,49 +268,71 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 <section class="app">
   <div class="viewport" id="vp">
     <div id="view"><div class="loading" id="loading">Chargement du modèle 3D…</div></div>
-    <div class="vbar">
-      <div class="seg" role="group" aria-label="Rendu">
-        <button id="m-ext" aria-pressed="true">Extérieur</button>
-        <button id="m-cut" aria-pressed="false">Coupe horizontale</button>
-        <button id="m-xray" aria-pressed="false">Rayons X</button>
+    <div class="vbar" id="vbar">
+      <div class="vbar-main">
+        <button class="menu-btn" id="menu-toggle" aria-expanded="true" aria-controls="vmenu" title="Afficher / masquer les menus (touche M)"><b aria-hidden="true">☰</b><span>Menus</span></button>
+        <div class="seg" role="group" aria-label="Rendu">
+          <button id="m-ext" aria-pressed="true">Extérieur</button>
+          <button id="m-cut" aria-pressed="false" title="Coupe horizontale dans le plan des cylindres">Coupe</button>
+          <button id="m-xray" aria-pressed="false">Rayons X</button>
+        </div>
+        <div class="seg"><button id="t-pause" aria-pressed="false" title="Figer / reprendre (touche Espace)">⏸<span> Figer</span></button></div>
+        <div class="seg"><button id="t-fs" aria-pressed="false" title="Plein écran (touche F)">⛶<span> Plein écran</span></button></div>
       </div>
-      <div class="seg" role="group" aria-label="Vues">
-        <button id="v-34">3/4</button>
-        <button id="v-top">Dessus</button>
-        <button id="v-left">Gauche</button>
-        <button id="v-front">Avant</button>
-        <button id="v-rear">Arrière</button>
+      <div class="vmenu" id="vmenu">
+        <section>
+          <h4>Vue caméra</h4>
+          <div class="seg" role="group" aria-label="Vues">
+            <button id="v-34">3/4</button>
+            <button id="v-top">Dessus</button>
+            <button id="v-left">Gauche</button>
+            <button id="v-front">Avant</button>
+            <button id="v-rear">Arrière</button>
+          </div>
+        </section>
+        <section>
+          <h4>Afficher</h4>
+          <div class="seg" role="group" aria-label="Affichage">
+            <button id="t-prop" aria-pressed="true">Hélice</button>
+            <button id="t-inst" aria-pressed="true" title="Échappement, admission, radiateur d'huile et accessoires d'installation">Installation</button>
+            <button id="t-snd" aria-pressed="false">Son</button>
+          </div>
+        </section>
+        <section>
+          <h4>Cycle à quatre temps <em class="hint">(couleurs visibles quand le cycle est affiché)</em></h4>
+          <div class="seg" role="group" aria-label="Cycle">
+            <button id="t-cycle" aria-pressed="false" title="Visualise les temps admission, compression, combustion et échappement dans les cylindres">Afficher le cycle</button>
+            <button id="t-cyl" aria-pressed="false" title="Affiche ou masque les couleurs des temps et le nuage de gaz dans les cylindres">Couleurs cylindres</button>
+          </div>
+        </section>
+        <section>
+          <h4>Flux</h4>
+          <div class="seg" role="group" aria-label="Flux affichés">
+            <button id="t-gas" aria-pressed="false">Mélange / échappement</button>
+            <button id="t-oil" aria-pressed="false">Huile</button>
+          </div>
+          <div class="seg" role="group" aria-label="Style du flux">
+            <button id="fs-pts" aria-pressed="false">Particules</button>
+            <button id="fs-arr" aria-pressed="false">Flèches</button>
+            <button id="t-fcut" aria-pressed="false" title="N'affiche le flux que dans la partie conservée de la coupe">Couper le flux</button>
+          </div>
+          <label class="chipr" for="flowspd">Vitesse <input id="flowspd" type="range" min="0" max="1" step="0.005" value="0.87"><output id="o-flowspd">×1,00</output></label>
+        </section>
+        <section>
+          <h4>Animation</h4>
+          <label class="chipr" for="explode">Vue éclatée <input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
+          <label class="chipr" for="slow">Ralenti visuel
+            <select id="slow">
+              <option value="0.2">×1/5</option>
+              <option value="0.05" selected>×1/20</option>
+              <option value="0.0167">×1/60</option>
+              <option value="0.005">×1/200</option>
+              <option value="1">temps réel</option>
+            </select></label>
+        </section>
       </div>
-      <div class="seg" role="group" aria-label="Affichage">
-        <button id="t-prop" aria-pressed="true">Hélice</button>
-        <button id="t-inst" aria-pressed="true">Installation</button>
-        <button id="t-cycle" aria-pressed="false">Cycle 4 temps</button>
-        <button id="t-cyl" aria-pressed="false" title="Affiche ou masque les couleurs des temps et le nuage de gaz dans les cylindres">Couleurs cylindres</button>
-        <button id="t-snd" aria-pressed="false">Son</button>
-      </div>
-      <div class="seg" role="group" aria-label="Flux">
-        <button id="t-gas" aria-pressed="false">Flux mélange / échappement</button>
-        <button id="t-oil" aria-pressed="false">Flux huile</button>
-      </div>
-      <div class="seg" role="group" aria-label="Style du flux">
-        <button id="fs-pts" aria-pressed="false">Particules</button>
-        <button id="fs-arr" aria-pressed="false">Flèches</button>
-        <button id="t-fcut" aria-pressed="false">Couper le flux</button>
-      </div>
-      <label class="chipr" for="flowspd">Vitesse flux <input id="flowspd" type="range" min="0" max="1" step="0.005" value="0.87"><output id="o-flowspd">×1,00</output></label>
-      <label class="chipr" for="slow">Ralenti visuel
-        <select id="slow" style="background:transparent;border:0;color:var(--text)">
-          <option value="0.2">×1/5</option>
-          <option value="0.05" selected>×1/20</option>
-          <option value="0.0167">×1/60</option>
-          <option value="0.005">×1/200</option>
-          <option value="1">temps réel</option>
-        </select></label>
-      <label class="chipr" for="explode">Éclaté <input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
-      <div class="seg"><button id="t-pause" aria-pressed="false" title="Figer / reprendre (Espace)">⏸ Figer</button></div>
-      <div class="seg"><button id="t-fs" aria-pressed="false" title="Plein écran (F)">⛶ Plein écran</button></div>
     </div>
-    <div class="vfoot"><span id="rot-note">Rotation affichée ×1/20 — vilebrequin horaire vu de l'arrière</span><span>Glisser : orbite · Molette : zoom · Clic : identifier une pièce</span></div>
+    <div class="vfoot"><span id="rot-note">Rotation affichée ×1/20 — vilebrequin horaire vu de l'arrière</span><span class="hint-mouse">Glisser : orbite · Molette : zoom · Clic : identifier une pièce</span><span class="hint-touch">Glisser : orbite · Pincer : zoom · Toucher : identifier</span></div>
     <div class="tip" id="tip" hidden></div>
     <div class="hud" id="hud" hidden></div>
     <div class="frozen" id="frozen" hidden>Simulation figée</div>
@@ -1396,15 +1484,46 @@ $('flowspd').oninput = e => { flowK = Math.pow(10, lerp(-2, 0.301, +e.target.val
 let slow = 0.05;
 $('slow').onchange = e => { slow = +e.target.value; $('rot-note').textContent = slow === 1 ? 'Rotation en temps réel (effet stroboscopique)' : `Rotation affichée ×1/${Math.round(1 / slow)} — vilebrequin horaire vu de l'arrière`; };
 let explode = 0; $('explode').oninput = e => explode = +e.target.value;
-function setPaused(v) { paused = v; $('t-pause').setAttribute('aria-pressed', v); $('t-pause').textContent = v ? '▶ Reprendre' : '⏸ Figer'; $('frozen').hidden = !v; if (au && au.on) v ? au.ctx.suspend() : au.ctx.resume(); }
+function setPaused(v) { paused = v; $('t-pause').setAttribute('aria-pressed', v); $('t-pause').innerHTML = v ? '▶<span> Reprendre</span>' : '⏸<span> Figer</span>'; $('frozen').hidden = !v; if (au && au.on) v ? au.ctx.suspend() : au.ctx.resume(); }
 $('t-pause').onclick = () => setPaused(!paused);
-addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return; if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); setPaused(!paused); } if (e.key === 'f' || e.key === 'F') toggleFS(); });
-/* plein écran */
-const vpEl = $('vp'), fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
-function toggleFS() { try { if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); else { const r = (vpEl.requestFullscreen || vpEl.webkitRequestFullscreen).call(vpEl); if (r && r.catch) r.catch(() => logE('Plein écran refusé par le navigateur', 'a')); } } catch (e) { logE('Plein écran non disponible', 'a'); } }
+addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return; if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); setPaused(!paused); } });
+/* ---------- plein écran ---------- */
+const vpEl = $('vp');
+// Plein écran natif si le navigateur le permet, sinon (Safari iPhone) la vue est agrandie à tout l'écran en CSS
+const nativeFS = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+let pseudoFS = false;
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || (pseudoFS ? vpEl : null);
+function setPseudoFS(v) {
+  pseudoFS = v;
+  vpEl.classList.toggle('pseudo-fs', v);
+  document.documentElement.classList.toggle('pseudo-fs-on', v);
+  onFS();
+}
+function toggleFS() {
+  if (!nativeFS) { setPseudoFS(!pseudoFS); return; }
+  try {
+    if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else { const req = vpEl.requestFullscreen || vpEl.webkitRequestFullscreen; const r = req && req.call(vpEl); if (r && r.catch) r.catch(() => logE('Plein écran refusé par le navigateur', 'a')); }
+  } catch (err) { logE('Plein écran non disponible dans ce navigateur', 'a'); }
+}
 $('t-fs').onclick = toggleFS;
-function onFS() { const on = !!fsEl(); $('t-fs').setAttribute('aria-pressed', on); $('t-fs').textContent = on ? '✕ Quitter' : '⛶ Plein écran'; $('hud').hidden = !on; }
+function onFS() { const on = !!fsEl(); $('t-fs').setAttribute('aria-pressed', on); $('t-fs').innerHTML = on ? '✕<span> Quitter</span>' : '⛶<span> Plein écran</span>'; $('hud').hidden = !on; }
 document.addEventListener('fullscreenchange', onFS); document.addEventListener('webkitfullscreenchange', onFS);
+addEventListener('keydown', e => { if (e.key === 'Escape' && pseudoFS) setPseudoFS(false); });
+addEventListener('keydown', e => { if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) toggleFS(); });
+/* ---------- menus rétractables (ouverts par défaut sur grand écran, choix mémorisé) ---------- */
+function setMenus(open, remember) {
+  $('vmenu').hidden = !open;
+  $('menu-toggle').setAttribute('aria-expanded', open);
+  if (remember) { try { localStorage.setItem('o320.menus', open ? '1' : '0'); } catch (e) {} }
+}
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem('o320.menus'); } catch (e) {}
+  setMenus(saved === null ? innerWidth > 700 && !matchMedia('(pointer:coarse)').matches : saved === '1', false);
+})();
+$('menu-toggle').onclick = () => setMenus($('vmenu').hidden, true);
+addEventListener('keydown', e => { if ((e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) setMenus($('vmenu').hidden, true); });
 /* vues */
 let camTween = null;
 const views = { '34': [new THREE.Vector3(-3.3, 2.1, 4.1), new THREE.Vector3(0, -0.05, 0)], top: [new THREE.Vector3(-0.05, 3.9, 0.02), new THREE.Vector3(0, 0, 0)], left: [new THREE.Vector3(0, 0.1, 3.8), new THREE.Vector3(0, -0.1, 0)], front: [new THREE.Vector3(-3.8, 0.6, 0.4), new THREE.Vector3(0, -0.1, 0)], rear: [new THREE.Vector3(3.8, 0.7, -0.6), new THREE.Vector3(0, -0.1, 0)] };
@@ -1749,7 +1868,7 @@ function uiTick() {
   $('phase').textContent = ph; $('clock').textContent = fmtT(st.t);
   if (fsEl()) { const cell = (l, v, x) => `<div><span>${l}</span><b class="${x ? 'x' : ''}">${v}</b></div>`; $('hud').innerHTML = cell('Régime', Math.round(st.rpm) + ' tr/min', st.rpm > 2727) + cell('Admission', st.map.toFixed(1) + ' po', false) + cell('CHT', Math.round(st.cht) + ' °F', st.cht > 500) + cell('Huile', Math.round(st.oilP) + ' psi', lamp.op); }
 }
-function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); sizeGauges(); sizeTrend(); sizeCycle(); }
+function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.zoom = Math.min(1, camera.aspect / 1.0); /* écran étroit : on recule pour garder tout le moteur */ camera.updateProjectionMatrix(); sizeGauges(); sizeTrend(); sizeCycle(); }
 new ResizeObserver(resize).observe(view);
 new ResizeObserver(() => { sizeGauges(); sizeTrend(); sizeCycle(); }).observe(document.querySelector('.panel'));
 
