@@ -39,6 +39,10 @@ function manuelsRoot(): ?string {
 $s = getSession();
 if (!$s) refuse(401, "Connexion requise pour consulter les manuels.");
 $perms = is_array($s['permissions'] ?? null) ? $s['permissions'] : [];
+// Le compte invité peut voir les simulateurs, mais jamais les manuels
+if (($s['role'] ?? '') === 'guest' || ($s['uid'] ?? '') === 'guest') {
+  refuse(403, "Les manuels ne sont pas accessibles au compte invité.");
+}
 if (($s['role'] ?? '') !== 'admin' && !array_intersect(PERMISSIONS, $perms)) {
   refuse(403, "Accès refusé : permission « Moteurs » requise.");
 }

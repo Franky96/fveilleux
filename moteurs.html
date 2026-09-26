@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Outils de Frank — Moteurs</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_permsMot.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
 </head>
 <body>
   <div class="dashboard-container">

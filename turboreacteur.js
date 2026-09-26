@@ -1,6 +1,11 @@
 (function () {
   'use strict';
 
+  if (!sessionStorage.getItem('loggedIn')) {
+    window.location.href = 'index.html';
+    return;
+  }
+
   const loadingEl = document.getElementById('viewport-loading');
   if (typeof THREE === 'undefined' || !THREE.OrbitControls) {
     if (loadingEl) loadingEl.textContent = 'Impossible de charger le moteur 3D (bibliothèque non disponible).';

@@ -1,10 +1,11 @@
 import { db, doc, getDoc } from "./firebase-config.js";
 
-// Section publique : les simulateurs sont visibles sans connexion.
-// Seuls les manuels (api/manuel.php) restent réservés aux comptes autorisés.
-const loggedIn = !!sessionStorage.getItem('loggedIn');
+if (!sessionStorage.getItem('loggedIn')) {
+  window.location.href = 'index.html';
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   const role = sessionStorage.getItem('userRole');
 
   // Charger les sections archivées depuis Firestore
@@ -14,19 +15,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (configSnap.exists()) archivedSections = configSnap.data().archivedSections || [];
   } catch (e) { /* offline fallback: show all permitted cards */ }
 
-  // Masquer seulement les cartes archivées (section publique)
+  // Accès complet si admin ou permission parente 'moteurs'
+  const hasFullInfo = role === 'admin' || permissions.includes('moteurs');
+
+  // Masquer les cartes archivées ou sans permission
   const cards = document.querySelectorAll('.menu-card');
   cards.forEach(card => {
-    if (archivedSections.includes(card.getAttribute('data-section'))) card.style.display = 'none';
+    const section = card.getAttribute('data-section');
+    const isArchived = archivedSections.includes(section);
+    if (isArchived || (!hasFullInfo && !permissions.includes(section))) {
+      card.style.display = 'none';
+    }
   });
-
-  // Visiteur non connecté : retour vers la page de connexion, pas de menu du compte
-  if (!loggedIn) {
-    const back = document.querySelector('.back-btn-dash');
-    if (back) { back.href = 'index.html'; back.innerHTML = '&#8592; Connexion'; }
-    const hbg = document.getElementById('hamburger-btn');
-    if (hbg) hbg.style.display = 'none';
-  }
 
   // Révéler le menu maintenant que les permissions sont appliquées
   const grid = document.getElementById('menu-grid');
