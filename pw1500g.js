@@ -1,8 +1,6 @@
 (function () {
   'use strict';
 
-  if (!sessionStorage.getItem('loggedIn')) { window.location.href = 'index.html'; return; }
-
   const $ = (id) => document.getElementById(id);
   const loadingEl = $('viewport-loading');
   if (typeof THREE === 'undefined' || !THREE.OrbitControls) {

@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Outils de Frank — Moteurs</title>
   <link rel="stylesheet" href="style.css">
-  <script>
-    const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-    if (!sessionStorage.getItem('loggedIn') ||
-        (!_permsMot.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
-      window.location.href = 'dashboard.html';
-    }
-  </script>
 </head>
 <body>
   <div class="dashboard-container">
@@ -20,7 +13,7 @@
       <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
       <div style="text-align:center;">
         <h1>Moteurs</h1>
-        <p class="subtitle">Simulations de turbomachines</p>
+        <p class="subtitle">Simulations de moteurs d’avion</p>
       </div>
       <div class="header-controls">
         <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">

@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   cards.forEach(card => {
     const section = card.getAttribute('data-section');
     const isArchived = archivedSections.includes(section);
-    if (isArchived || (role !== 'admin' && !permissions.includes(section))) {
+    if (isArchived || (role !== 'admin' && section !== 'moteurs' && !permissions.includes(section))) {
       card.style.display = 'none';
     }
   });

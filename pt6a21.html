@@ -4,13 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Simulateur PT6A-21 — Outils de Frank</title>
-<script>
-  const _pP = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-  if (!sessionStorage.getItem('loggedIn') ||
-      (!_pP.includes('pt6a21') && !_pP.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
-    window.location.href = 'dashboard.html';
-  }
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -1951,7 +1944,10 @@ const MANUAL_TITLES = {
 };
 const manualFiles = { AMM: null, IPC: null, OM: null }; // null = en chargement, false = indisponible
 const manualErr = {};
-for (const doc of Object.keys(manualFiles)) {
+// Section publique : les visiteurs non connectés ne voient pas les liens vers les manuels
+const manualsAllowed = !!sessionStorage.getItem('loggedIn') && (sessionStorage.getItem('userRole') === 'admin' ||
+  JSON.parse(sessionStorage.getItem('userPermissions') || '[]').some(p => p === 'moteurs' || p === 'pt6a21'));
+if (manualsAllowed) for (const doc of Object.keys(manualFiles)) {
   fetch(`api/manuel.php?m=${MANUEL}&doc=${doc}&list=1`, { credentials: 'same-origin' })
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(j => { manualFiles[doc] = new Set(j.files); })
@@ -1996,6 +1992,7 @@ function manualButton(doc, file, refs) {
 }
 function renderManualLinks(ref) {
   const box = $('info-body').querySelector('.mlinks'); if (!box) return;
+  if (!manualsAllowed) { box.hidden = true; return; }
   const refs = manualRefs(ref);
   if (!refs.length) { box.hidden = true; return; }
   box.hidden = false;
