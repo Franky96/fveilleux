@@ -300,7 +300,26 @@
     #cg-root .tn-card h2 { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #3a6a78; margin: 0 0 0.7rem; display: flex; justify-content: space-between; gap: 0.5rem; }
     #cg-root .tn-champion { text-align: center; padding: 1rem; border-radius: 12px; border: 2px solid #c9a84c; background: rgba(201,168,76,0.1); color: #e8d9a8; font-size: 1.15rem; }
     #cg-root .tn-champion small { display: block; margin-top: 0.3rem; font-size: 0.8rem; color: #9a8350; }
-    #cg-root .tn-match-row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem auto; gap: 0.5rem; align-items: center; padding: 0.5rem 0.5rem 0.5rem 0.7rem; border-left: 4px solid var(--c); border-radius: 8px; background: #0a1519; margin-bottom: 0.45rem; }
+    #cg-root .tn-match-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "eq sc" "bar bar" "ctrl ctrl"; gap: 0.35rem 0.6rem; align-items: center; padding: 0.6rem 0.6rem 0.6rem 0.8rem; border-left: 4px solid var(--c); border-radius: 8px; background: #0a1519; margin-bottom: 0.55rem; }
+    #cg-root .tn-match-eq { grid-area: eq; min-width: 0; }
+    #cg-root .tn-role { display: inline-block; font-size: 0.7rem; color: #c9a84c; margin: 0.1rem 0 0.1rem; }
+    #cg-root .tn-match-eq small { display: block; }
+    #cg-root .tn-sc { grid-area: sc; font-size: 2.6rem; font-weight: bold; line-height: 1; color: #e0f0f4; font-variant-numeric: tabular-nums; text-align: right; }
+    #cg-root .tn-sc.lead { color: #c9a84c; }
+    #cg-root .tn-sc.win { color: var(--c); }
+    #cg-root .tn-scbar { grid-area: bar; height: 4px; border-radius: 2px; background: #0f1c22; overflow: hidden; }
+    #cg-root .tn-scbar i { display: block; height: 100%; width: 0; background: var(--c); transition: width 0.3s; }
+    #cg-root .tn-ctrl { grid-area: ctrl; display: flex; gap: 0.4rem; align-items: center; }
+    #cg-root .tn-ctrl .tn-pts { flex: 1 1 4rem; min-width: 3.5rem; font-size: 1.05rem; }
+    #cg-root .tn-pb { flex: 0 0 2.8rem; height: 2.8rem; border-radius: 10px; font-size: 1.4rem; font-weight: bold; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+    #cg-root .tn-pb.undo { border: 1px solid #1a3a4a; background: transparent; color: #3a6a78; font-size: 1.15rem; }
+    #cg-root .tn-pb.undo:disabled { opacity: 0.25; cursor: default; }
+    #cg-root .tn-pb.minus { border: 1px solid #c0392b; background: rgba(192,57,43,0.08); color: #e05050; }
+    #cg-root .tn-pb.plus { border: 1px solid #20b8c8; background: rgba(32,184,200,0.08); color: #20b8c8; }
+    #cg-root .tn-fin { margin: 0.2rem 0 0.5rem; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1.5px solid #c9a84c; background: rgba(201,168,76,0.08); color: #e8d9a8; display: flex; flex-wrap: wrap; gap: 0.5rem 0.8rem; align-items: center; justify-content: space-between; }
+    #cg-root .tn-queue { margin: 0.6rem 0 0; font-size: 0.8rem; color: #5a8a98; }
+    #cg-root #tn-format { flex-wrap: wrap; }
+    #cg-root #tn-format .mode-btn { flex: 1 1 8rem; }
     #cg-root .tn-match-eq b { color: var(--c); display: block; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #cg-root .tn-match-eq small { color: #5a8a98; font-size: 0.75rem; }
     #cg-root .tn-pts { width: 100%; box-sizing: border-box; margin: 0; padding: 0.55rem 0.3rem; text-align: center; border-radius: 8px; border: 1px solid #1a3a4a; background: #080f12; color: #e0f0f4; font-weight: bold; }
@@ -355,7 +374,8 @@
     @media (max-width: 480px) {
       .modejeu-btn { font-size: 0.8rem; padding: 0.55rem 0.3rem; }
       .modejeu-btn small { font-size: 0.62rem; }
-      #cg-root .tn-match-row { grid-template-columns: minmax(0, 1fr) 3.6rem auto; }
+      #cg-root .tn-pb { flex-basis: 2.5rem; height: 2.6rem; }
+      #cg-root .tn-sc { font-size: 2.2rem; }
       #cg-root .tn-win { padding: 0.6rem 0.55rem; }
       #cg-root .tn-table { font-size: 0.82rem; }
     }
@@ -366,6 +386,9 @@
     html.light #cg-root .tn-pl { background: #f0f8fa; border-color: #c4dde8; color: #0a2030; }
     html.light #cg-root .tn-eq-nom:focus, html.light #cg-root .tn-pts { background: #fff; border-color: #c4dde8; color: #0a2030; }
     html.light #cg-root .tn-match-row { background: #f0f8fa; }
+    html.light #cg-root .tn-sc { color: #0a2030; }
+    html.light #cg-root .tn-scbar { background: #d8eef5; }
+    html.light #cg-root .tn-fin { color: #6a5210; }
     html.light #cg-root .tn-table td, html.light #cg-root .tn-list li { color: #0a2030; border-bottom-color: #d8eef5; }
     html.light #cg-root .tn-table th { border-bottom-color: #c4dde8; }
     html.light #cg-root .tn-bar, html.light #cg-root .tn-serie { background: #d8eef5; }
@@ -443,6 +466,17 @@
           Un contre un
           <small>Calendrier : chaque équipe affronte toutes les autres</small>
         </button>
+        <button type="button" class="mode-btn" data-f="ks">
+          Le gagnant reste
+          <small>Le gagnant affronte l'équipe suivante, le perdant retourne dans la file</small>
+        </button>
+      </div>
+
+      <div class="setup-lbl">Points pour gagner une partie <small>(0 = vous choisissez le gagnant)</small></div>
+      <input type="text" inputmode="numeric" class="cg-target-input" id="tn-ptscible" value="0">
+      <div class="mode-btns" id="tn-ptsmode">
+        <button type="button" class="mode-btn active" data-pm="max">↑ Maximum<small>Premier à atteindre la cible gagne</small></button>
+        <button type="button" class="mode-btn" data-pm="min">↓ Minimum<small>Fin quand la cible est atteinte, le moins gagne</small></button>
       </div>
 
       <div class="setup-lbl">Victoires pour gagner le tournoi <small>(0 = sans limite)</small></div>
@@ -488,7 +522,7 @@
     <div class="tn-champion" id="tn-champion" hidden></div>
 
     <section class="tn-card">
-      <h2><span id="tn-partie-titre">Nouvelle partie</span><span style="text-transform:none;letter-spacing:0;">points facultatifs</span></h2>
+      <h2><span id="tn-partie-titre">Nouvelle partie</span><span id="tn-partie-cible" style="text-transform:none;letter-spacing:0;">points facultatifs</span></h2>
       <div id="tn-partie"></div>
       <div class="tn-choix" id="tn-choix" hidden></div>
     </section>

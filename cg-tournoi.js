@@ -1,8 +1,9 @@
 /* =====================================================================
    Compteur général — mode Tournoi
    Liste de joueurs → équipes (tirage ou composition manuelle) →
-   parties (toutes les équipes ou matchs 1 contre 1) → victoires / défaites
-   par équipe et par joueur. Tout est sauvegardé dans le navigateur.
+   parties (toutes les équipes, matchs 1 contre 1 ou « le gagnant reste »)
+   avec compteur de points → victoires / défaites par équipe et par joueur.
+   Tout est sauvegardé dans le navigateur.
    ===================================================================== */
 (function () {
   'use strict';
@@ -19,7 +20,8 @@
   let players = [];          // noms des joueurs inscrits
   let taille = 2;            // joueurs par équipe
   let draft = [];            // équipes proposées [{nom, joueurs:[]}]
-  let format = 'all';        // 'all' = toutes les équipes à chaque partie, 'rr' = matchs 1 contre 1
+  let format = 'all';        // 'all' = toutes ensemble, 'rr' = chacun contre chacun, 'ks' = le gagnant reste
+  let ptsMode = 'max';       // 'max' = le plus de points gagne, 'min' = le moins de points gagne
   let pick = null;           // joueur sélectionné pour un échange {t, p}
   let recompo = false;       // nouvelles équipes dans le tournoi en cours
 
@@ -96,6 +98,7 @@
       }).join('');
     }
     document.querySelectorAll('#tn-format .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.f === format));
+    document.querySelectorAll('#tn-ptsmode .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.pm === ptsMode));
     $('tn-start').disabled = !draft.length || draft.filter(e => e.joueurs.length).length < 2;
     $('tn-start').textContent = !draft.length ? 'Formez d\'abord les équipes' : recompo ? 'Continuer le tournoi avec ces équipes ▶' : 'Commencer le tournoi ▶';
   }
@@ -104,20 +107,24 @@
     const eqs = draft.filter(e => e.joueurs.length);
     if (eqs.length < 2) return;
     save(KEY_ROSTER, [...new Set([...players, ...load(KEY_ROSTER, [])])].slice(0, 40));
-    const cible = parseInt($('tn-cible').value) || 0;
+    const cible = parseInt($('tn-cible').value) || 0, ptsCible = parseInt($('tn-ptscible').value) || 0;
     if (recompo && T) {
       // nouvelles équipes : on garde les parties déjà jouées pour le classement des joueurs
-      T.phase++; T.format = format; T.cible = cible;
+      T.phase++; T.format = format; T.cible = cible; T.ptsCible = ptsCible; T.ptsMode = ptsMode;
     } else {
-      T = { started: Date.now(), format, cible, phase: 1, nextId: 1, nextTeam: 1, matches: [], teams: [] };
+      T = { started: Date.now(), format, cible, ptsCible, ptsMode, phase: 1, nextId: 1, nextTeam: 1, matches: [], teams: [] };
     }
+    T.live = null;
     recompo = false;
     eqs.forEach((e, i) => T.teams.push({ id: T.nextTeam++, nom: e.nom.trim() || `Équipe ${i + 1}`, couleur: TN_COULEURS[i % TN_COULEURS.length], joueurs: e.joueurs.slice(), phase: T.phase }));
     T.schedule = format === 'rr' ? calendrier(equipesActives().map(t => t.id)) : [];
+    T.queue = format === 'ks' ? melange(equipesActives().map(t => t.id)) : [];
     choix = null;
     save(KEY, T);
     ouvrirJeu();
   }
+
+  function melange(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
   /* Calendrier « chacun contre chacun » (méthode du cercle) */
   function calendrier(ids) {
@@ -145,20 +152,79 @@
   function equipesPartie() {
     if (choix) return choix;
     if (T.format === 'rr') { const m = prochainMatch(); if (m) return [m.a, m.b]; }
+    if (T.format === 'ks' && T.queue && T.queue.length > 1) return T.queue.slice(0, 2);   // tenant contre challenger
     return equipesActives().map(t => t.id);
   }
 
+  /* ---------- points de la partie en cours (comme le compteur) ---------- */
+  function live() {
+    const ids = equipesPartie(), key = ids.join(',');
+    if (!T.live || T.live.key !== key) T.live = { key, pts: {}, hist: {} };
+    ids.forEach(id => { if (T.live.pts[id] == null) { T.live.pts[id] = 0; T.live.hist[id] = []; } });
+    return T.live;
+  }
+  function ajouterPts(id, signe) {
+    const inp = $('tn-pts-' + id), v = parseInt(inp && inp.value) || 0;
+    if (v <= 0) { if (inp) inp.focus(); return; }
+    const L = live(); L.pts[id] += signe * v; L.hist[id].push(signe * v);
+    inp.value = ''; save(KEY, T); majPoints();
+  }
+  function annulerPts(id) {
+    const L = live(); if (!L.hist[id].length) return;
+    L.pts[id] -= L.hist[id].pop(); save(KEY, T); majPoints();
+  }
+  // fin de partie d'après la cible de points : {gagnant} ou {nul:true}, sinon null
+  function finPartie() {
+    if (!T.ptsCible) return null;
+    const ids = equipesPartie(), L = live(), sc = ids.map(id => L.pts[id]);
+    if (!sc.some(x => x >= T.ptsCible)) return null;
+    const best = T.ptsMode === 'min' ? Math.min(...sc) : Math.max(...sc);
+    const w = ids.filter((id, i) => sc[i] === best);
+    return w.length === 1 ? { gagnant: w[0] } : { nul: true };
+  }
+  function majPoints() {
+    const ids = equipesPartie(), L = live(), sc = ids.map(id => L.pts[id]);
+    const fin = finPartie(), anyPts = sc.some(x => x !== 0);
+    const lead = anyPts ? (T.ptsMode === 'min' ? Math.min(...sc) : Math.max(...sc)) : null;
+    ids.forEach((id, i) => {
+      const el = $('tn-sc-' + id); if (!el) return;
+      el.textContent = L.pts[id];
+      el.classList.toggle('lead', !fin && lead != null && sc[i] === lead && sc.filter(x => x === lead).length === 1);
+      el.classList.toggle('win', !!(fin && fin.gagnant === id));
+      const u = $('tn-undo-' + id); if (u) u.disabled = !L.hist[id].length;
+      const bar = $('tn-scbar-' + id);
+      if (bar) bar.style.width = T.ptsCible ? Math.min(100, Math.max(0, L.pts[id] / T.ptsCible * 100)) + '%' : '0';
+    });
+    const box = $('tn-fin'); if (!box) return;
+    box.hidden = !fin;
+    if (fin) {
+      const g = fin.gagnant != null ? equipe(fin.gagnant) : null;
+      box.innerHTML = g ? `<span>Partie terminée : <b style="color:${g.couleur}">${esc(g.nom)}</b> gagne</span> <button type="button" class="tn-btn" data-win="${g.id}">Valider la victoire ✔</button>`
+        : `<span>Partie terminée à égalité</span> <button type="button" class="tn-btn" data-act="nul">Valider l'égalité ✔</button>`;
+    }
+  }
+
   function enregistrer(gagnant) {           // gagnant = id d'équipe, ou null pour une égalité
-    const ids = equipesPartie();
-    const pts = ids.map(id => { const v = $('tn-pts-' + id); const n = v && v.value.trim() !== '' ? parseInt(v.value) : null; return Number.isFinite(n) ? n : null; });
+    const ids = equipesPartie(), L = live();
+    const joue = ids.some(id => L.hist[id].length);
     const m = { id: T.nextId++, phase: T.phase, t: Date.now(), equipes: ids.slice(), gagnant,
-      scores: pts.some(p => p != null) ? pts : null,
+      scores: joue ? ids.map(id => L.pts[id]) : null,
       compo: ids.map(id => equipe(id).joueurs.slice()) };
     if (T.format === 'rr' && !choix) { const pm = prochainMatch(); if (pm) m.rr = pm.k; }
+    const avant = { queue: (T.queue || []).slice(), live: JSON.parse(JSON.stringify(L)), choix };
+    if (T.format === 'ks') {
+      // le gagnant reste (en tête de file), les autres équipes de la partie vont au bout de la file
+      const q = T.queue.filter(id => !ids.includes(id));
+      const reste = gagnant != null ? gagnant : (T.queue[0] != null && ids.includes(T.queue[0]) ? T.queue[0] : null);
+      T.queue = [...(reste != null ? [reste] : []), ...q, ...ids.filter(id => id !== reste)];
+    }
     T.matches.push(m);
-    choix = null; save(KEY, T);
+    choix = null; T.live = null; save(KEY, T);
     const g = gagnant != null ? equipe(gagnant) : null;
-    toast(g ? `Victoire de ${g.nom} enregistrée` : 'Égalité enregistrée', () => { T.matches = T.matches.filter(x => x.id !== m.id); save(KEY, T); renderJeu(); });
+    toast(g ? `Victoire de ${g.nom} enregistrée` : 'Égalité enregistrée', () => {
+      T.matches = T.matches.filter(x => x.id !== m.id); T.queue = avant.queue; T.live = avant.live; choix = avant.choix;
+      save(KEY, T); renderJeu();
+    });
     renderJeu();
   }
 
@@ -179,6 +245,7 @@
         }
       });
     }
+    for (const s of S.values()) { let k = 0; s.best = 0; for (const r of s.forme) { k = r === 'V' ? k + 1 : 0; s.best = Math.max(s.best, k); } }
     return [...S.values()].sort((a, b) => b.v - a.v || pct(b) - pct(a) || (b.pp - b.pc) - (a.pp - a.pc) || a.d - b.d || a.t.nom.localeCompare(b.t.nom));
   }
   function statsJoueurs() {
@@ -210,29 +277,44 @@
     const pm = T.format === 'rr' && !choix ? prochainMatch() : null;
     let titre = 'Nouvelle partie';
     if (T.format === 'rr') titre = pm ? `Match ${pm.k + 1} / ${T.schedule.length} · ronde ${pm.ronde}` : (choix ? 'Match libre' : 'Calendrier terminé');
+    const tenant = T.format === 'ks' && !choix ? st.find(s => s.t.id === T.queue[0]) : null;
+    if (T.format === 'ks') titre = choix ? 'Match libre' : 'Le gagnant reste';
     $('tn-partie-titre').textContent = titre;
+    $('tn-partie-cible').textContent = T.ptsCible ? `${T.ptsMode === 'min' ? 'fin à' : 'premier à'} ${T.ptsCible} pts${T.ptsMode === 'min' ? ', le moins gagne' : ''}` : 'points facultatifs';
     const finCal = T.format === 'rr' && !pm && !choix;
     $('tn-partie').innerHTML = finCal
       ? `<p class="tn-mini">Toutes les équipes se sont affrontées. Lancez une nouvelle ronde ou choisissez un match libre.</p>
          <button type="button" class="tn-btn" data-act="ronde">↻ Nouvelle ronde</button>`
-      : ids.map(id => { const e = equipe(id); return `<div class="tn-match-row" style="--c:${e.couleur}">
-          <div class="tn-match-eq"><b>${esc(e.nom)}</b><small>${esc(e.joueurs.join(', '))}</small></div>
-          <input class="tn-pts" id="tn-pts-${id}" type="text" inputmode="numeric" placeholder="pts" aria-label="Points de ${esc(e.nom)} (facultatif)">
-          <button type="button" class="tn-win" data-win="${id}">🏆 Gagne</button>
-        </div>`; }).join('') + `<div class="tn-match-actions"><button type="button" class="tn-btn ghost" data-act="nul">🤝 Égalité</button>
-          <button type="button" class="tn-btn ghost" data-act="choisir">⇄ Choisir les équipes</button></div>`;
+      : ids.map((id, i) => { const e = equipe(id);
+          const role = T.format === 'ks' && !choix ? (i === 0 ? `<span class="tn-role">👑 tenant${tenant && serie(tenant.forme)[0] === 'V' ? ' · ' + serie(tenant.forme).slice(1) + ' V de suite' : ''}</span>` : '<span class="tn-role">⚔️ challenger</span>') : '';
+          return `<div class="tn-match-row" style="--c:${e.couleur}">
+          <div class="tn-match-eq"><b>${esc(e.nom)}</b>${role}<small>${esc(e.joueurs.join(', '))}</small></div>
+          <div class="tn-sc" id="tn-sc-${id}">0</div>
+          <div class="tn-scbar"><i id="tn-scbar-${id}"></i></div>
+          <div class="tn-ctrl">
+            <input class="tn-pts" id="tn-pts-${id}" data-pts="${id}" type="text" inputmode="numeric" placeholder="pts" aria-label="Points à ajouter pour ${esc(e.nom)}">
+            <button type="button" class="tn-pb undo" id="tn-undo-${id}" data-undo="${id}" aria-label="Annuler le dernier ajout" disabled>↩</button>
+            <button type="button" class="tn-pb minus" data-minus="${id}" aria-label="Retirer les points">−</button>
+            <button type="button" class="tn-pb plus" data-plus="${id}" aria-label="Ajouter les points">+</button>
+            <button type="button" class="tn-win" data-win="${id}">🏆 Gagne</button>
+          </div>
+        </div>`; }).join('') + `<div class="tn-fin" id="tn-fin" hidden></div>
+        <div class="tn-match-actions"><button type="button" class="tn-btn ghost" data-act="nul">🤝 Égalité</button>
+          <button type="button" class="tn-btn ghost" data-act="choisir">⇄ Choisir les équipes</button>${choix && T.format !== 'all' ? '<button type="button" class="tn-btn ghost" data-act="choixcal">↩ Reprendre le format</button>' : ''}</div>` +
+        (T.format === 'ks' && !choix && T.queue.length > 2 ? `<p class="tn-queue">En attente : ${T.queue.slice(2).map(id => { const e = equipe(id); return `<b style="color:${e.couleur}">${esc(e.nom)}</b>`; }).join(' → ')}</p>` : '');
 
     // sélection libre des équipes
     $('tn-choix').hidden = true;
+    if (!finCal) majPoints();
 
     // classement équipes
     const hasPts = st.some(s => s.hasPts);
-    $('tn-classement').innerHTML = `<thead><tr><th>#</th><th class="l">Équipe</th><th>J</th><th>V</th><th>D</th><th>N</th><th>%</th>${hasPts ? '<th>Pts</th>' : ''}<th>Série</th></tr></thead><tbody>` +
+    $('tn-classement').innerHTML = `<thead><tr><th>#</th><th class="l">Équipe</th><th>J</th><th>V</th><th>D</th><th>N</th><th>%</th>${hasPts ? '<th>Pts</th>' : ''}<th>Série</th>${T.format === 'ks' ? '<th title="Plus longue série de victoires">Record</th>' : ''}</tr></thead><tbody>` +
       st.map((s, i) => `<tr class="${i === 0 && s.v > 0 ? 'lead' : ''}">
         <td>${i + 1}</td>
         <td class="l"><button type="button" class="tn-rename" data-ren="${s.t.id}" title="Renommer" style="color:${s.t.couleur}">${esc(s.t.nom)}</button><small>${esc(s.t.joueurs.join(', '))}</small></td>
         <td>${s.j}</td><td class="v">${s.v}</td><td class="d">${s.d}</td><td>${s.n}</td><td>${pctTxt(s)}</td>${hasPts ? `<td>${s.hasPts ? s.pp : '—'}</td>` : ''}
-        <td><span class="tn-serie ${(serie(s.forme)[0] || '')}">${serie(s.forme) || '—'}</span></td></tr>`).join('') + '</tbody>';
+        <td><span class="tn-serie ${(serie(s.forme)[0] || '')}">${serie(s.forme) || '—'}</span></td>${T.format === 'ks' ? `<td>${s.best || '—'}</td>` : ''}</tr>`).join('') + '</tbody>';
 
     // barres victoires / défaites
     const maxJ = Math.max(1, ...st.map(s => s.j));
@@ -277,14 +359,14 @@
     c.innerHTML = '<span class="tn-mini">Équipes qui jouent cette partie :</span><div class="tn-choix-list">' +
       equipesActives().map(e => `<label style="--c:${e.couleur}"><input type="checkbox" value="${e.id}"${sel.has(e.id) ? ' checked' : ''}> ${esc(e.nom)}</label>`).join('') +
       '</div><div class="tn-match-actions"><button type="button" class="tn-btn" data-act="choixok">Valider</button>' +
-      (T.format === 'rr' ? '<button type="button" class="tn-btn ghost" data-act="choixcal">Revenir au calendrier</button>' : '<button type="button" class="tn-btn ghost" data-act="choixtous">Toutes les équipes</button>') + '</div>';
+      (T.format !== 'all' ? `<button type="button" class="tn-btn ghost" data-act="choixcal">${T.format === 'rr' ? 'Revenir au calendrier' : 'Revenir à la file'}</button>` : '<button type="button" class="tn-btn ghost" data-act="choixtous">Toutes les équipes</button>') + '</div>';
   }
 
   function nouvelleCompo() {
     if (!confirm('Former de nouvelles équipes ? Le classement des équipes repart à zéro, le classement des joueurs est conservé.')) return;
     players = [...new Set(equipesActives().flatMap(t => t.joueurs))];
     draft = []; format = T.format; taille = Math.max(1, Math.round(players.length / equipesActives().length));
-    $('tn-cible').value = T.cible;
+    $('tn-cible').value = T.cible; $('tn-ptscible').value = T.ptsCible || 0; ptsMode = T.ptsMode || 'max';
     recompo = true;
     fermerJeu(true);
     tirage();
@@ -353,6 +435,7 @@
       else if (b.dataset.add != null) addPlayer(b.dataset.add);
       else if (b.dataset.n) { taille = +b.dataset.n; if (draft.length) tirage(); else renderSetup(); }
       else if (b.dataset.f) { format = b.dataset.f; renderSetup(); }
+      else if (b.dataset.pm) { ptsMode = b.dataset.pm; renderSetup(); }
       else if (b.dataset.p != null) { e.stopPropagation(); clicJoueur(+b.dataset.t, +b.dataset.p); }
       else if (b.classList.contains('tn-eq-card')) versEquipe(+b.dataset.eq);
     });
@@ -363,9 +446,13 @@
     // un tournoi est en cours : on arrive directement sur le mode Tournoi
     if (T && T.teams && window.setModeJeu) window.setModeJeu('tournoi');
 
+    $('tn-game').addEventListener('keydown', e => { const id = e.target.dataset && e.target.dataset.pts; if (id && e.key === 'Enter') { e.preventDefault(); ajouterPts(+id, 1); } });
     $('tn-game').addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.win) enregistrer(+b.dataset.win);
+      else if (b.dataset.plus) ajouterPts(+b.dataset.plus, 1);
+      else if (b.dataset.minus) ajouterPts(+b.dataset.minus, -1);
+      else if (b.dataset.undo) annulerPts(+b.dataset.undo);
       else if (b.dataset.del) { if (confirm('Supprimer cette partie ?')) { T.matches = T.matches.filter(m => m.id !== +b.dataset.del); save(KEY, T); renderJeu(); } }
       else if (b.dataset.ren) { const t = equipe(+b.dataset.ren), n = prompt('Nom de l\'équipe :', t.nom); if (n && n.trim()) { t.nom = n.trim().slice(0, 24); save(KEY, T); renderJeu(); } }
       else switch (b.dataset.act) {
