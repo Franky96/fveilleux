@@ -728,7 +728,10 @@
   $('menu-toggle').addEventListener('click', () => setMenus($('vmenu').hidden, true));
 
   // Plein écran natif, sinon (Safari iPhone) agrandissement CSS
-  const nativeFS = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  // iPad / iPhone : le plein écran natif de Safari ajoute un X par-dessus le menu et se ferme au moindre glissement vers le bas,
+  // on utilise donc toujours le plein écran CSS sur ces appareils
+  const appleTouch = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const nativeFS = !appleTouch && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
   let pseudoFS = false;
   const fsOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement) || pseudoFS;
   function onFS() { $('t-fs').textContent = fsOn() ? '✕ Quitter' : '⛶ Plein écran'; }

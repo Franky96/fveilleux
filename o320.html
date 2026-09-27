@@ -210,7 +210,7 @@ caption small{font-family:var(--f-mono);font-size:10.5px;color:var(--accent);fon
 .cyclekey .fo{margin-top:3px;padding-top:4px;border-top:1px solid var(--line2);color:var(--text)}
 .cyclekey .fo b{color:#ff9a4d;font-weight:500}
 /* ---------- plein écran de secours (Safari iPhone) ---------- */
-html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden}
+html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:none}
 .viewport.pseudo-fs{position:fixed;inset:0;z-index:1000;height:100vh!important;height:100dvh!important;max-height:none!important;min-height:0!important;margin:0!important;border:0;border-radius:0}
 .viewport.pseudo-fs .vbar{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(34px,calc(env(safe-area-inset-bottom) + 28px))}
 .viewport.pseudo-fs .vfoot{left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom))}
@@ -1504,7 +1504,10 @@ addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(document.act
 /* ---------- plein écran ---------- */
 const vpEl = $('vp');
 // Plein écran natif si le navigateur le permet, sinon (Safari iPhone) la vue est agrandie à tout l'écran en CSS
-const nativeFS = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+// iPad / iPhone : le plein écran natif de Safari ajoute un X par-dessus le menu et se ferme au moindre glissement vers le bas,
+// on utilise donc toujours le plein écran CSS sur ces appareils
+const appleTouch = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const nativeFS = !appleTouch && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
 let pseudoFS = false;
 const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || (pseudoFS ? vpEl : null);
 function setPseudoFS(v) {

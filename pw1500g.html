@@ -102,7 +102,7 @@
     #engine-viewport.pseudo-fs { position:fixed; inset:0; z-index:1000; height:100vh!important; height:100dvh!important; max-height:none; min-height:0; border:0; border-radius:0; }
     #engine-viewport.pseudo-fs .vbar { top:max(0.6rem, env(safe-area-inset-top)); left:max(0.6rem, env(safe-area-inset-left)); right:max(0.6rem, env(safe-area-inset-right)); }
     #engine-viewport.pseudo-fs .vfoot { bottom:max(0.5rem, env(safe-area-inset-bottom)); }
-    html.pseudo-fs-on, html.pseudo-fs-on body { overflow:hidden; }
+    html.pseudo-fs-on, html.pseudo-fs-on body { overflow:hidden; overscroll-behavior:none; }
 
     /* ── Instruments ── */
     .instr-row { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:0.55rem; margin-top:0.9rem; }
