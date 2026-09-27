@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jeux-v13';
+const CACHE_NAME = 'jeux-v14';
 const FILES_TO_CACHE = [
   '/jeuxdesociete.html',
   '/jeuxdesociete.js',
@@ -9,6 +9,7 @@ const FILES_TO_CACHE = [
   '/flip7.html',
   '/ladamepique.html',
   '/compteurgeneral.html',
+  '/cg-tournoi.js',
   '/style.css',
   '/version.js',
   '/theme-toggle.js',

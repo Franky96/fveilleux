@@ -258,6 +258,120 @@
     html.light .cg-btn-plus { background: rgba(32,184,200,0.08); }
     html.light .btn-partie-suite { background: #d8f0f5; color: #0a8090; border-color: #20b8c8; }
     html.light .btn-new-game { border-color: #c4dde8; color: #5a9aaa; }
+
+    /* ─── Mode tournoi ─── */
+    #cg-root [hidden] { display: none !important; }
+    #tn-setup button, #tn-game button, .tn-toast button { width: auto; transition: filter 0.15s, background 0.15s; }
+    #tn-setup button:hover, #tn-game button:hover { filter: brightness(1.2); }
+    #tn-setup .nb-btn { width: 2.6rem; }
+    #tn-setup .btn-start { width: 100%; }
+    #cg-root .tn-eq-nom::placeholder { color: var(--c); opacity: 0.8; }
+    #cg-root .tn-list.tn-hist li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.1rem 0.6rem; flex-wrap: nowrap; }
+    #cg-root .tn-list.tn-hist li .tn-mini { grid-column: 1; min-width: 0; }
+    #cg-root .tn-list.tn-hist li > span:nth-child(2) { grid-column: 1; min-width: 0; }
+    #cg-root .tn-list.tn-hist li .tn-del { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+    #cg-root .modejeu-btn { min-width: 0; }
+    #cg-root .tn-row { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+    #cg-root .tn-row .player-name-input { min-width: 0; }
+    #cg-root .tn-add { padding: 0 1rem; border-radius: 8px; border: 1px solid #20b8c8; background: rgba(32,184,200,0.1); color: #20b8c8; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
+    #cg-root .tn-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+    #cg-root .tn-chip { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.35rem 0.3rem 0.7rem; border-radius: 999px; background: #0c1a20; border: 1px solid #1a3a4a; color: #cfe6ec; font-size: 0.85rem; }
+    #cg-root .tn-chip button { width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 0; background: #132832; color: #7aabb8; cursor: pointer; font-size: 0.95rem; line-height: 1; padding: 0; }
+    #cg-root .tn-chip-add { cursor: pointer; padding: 0.3rem 0.7rem; color: #3a8a9a; background: transparent; border-style: dashed; }
+    #cg-root .tn-mini { font-size: 0.72rem; color: #3a6a78; width: 100%; }
+    #cg-root .tn-empty { font-size: 0.8rem; color: #2a5060; font-style: italic; }
+    #cg-root .tn-note { font-size: 0.78rem; color: #3a8a9a; margin: -0.6rem 0 1rem; }
+    #cg-root .tn-btn { padding: 0.6rem 0.9rem; border-radius: 10px; border: 1.5px solid #20b8c8; background: rgba(32,184,200,0.1); color: #20b8c8; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+    #cg-root .tn-btn.ghost { border-color: #1a3a4a; background: transparent; color: #5a8a98; font-weight: normal; }
+    #cg-root .tn-btn:disabled { opacity: 0.4; cursor: default; }
+    #cg-root .tn-equipes { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; margin: 0.6rem 0 1rem; }
+    #cg-root .tn-eq-card { border: 1px solid #1a3a4a; border-top: 3px solid var(--c); border-radius: 10px; padding: 0.55rem; background: #070e11; cursor: default; }
+    #cg-root .tn-eq-card.tn-drop { cursor: pointer; border-style: dashed; border-top-style: solid; }
+    #cg-root .tn-eq-nom { width: 100%; box-sizing: border-box; margin: 0 0 0.45rem; padding: 0.35rem 0.5rem; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--c); font-weight: bold; font-size: 0.95rem; }
+    #cg-root .tn-eq-nom:focus { border-color: #1a3a4a; outline: none; background: #080f12; }
+    #cg-root .tn-eq-joueurs { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    #cg-root .tn-pl { padding: 0.35rem 0.6rem; border-radius: 7px; border: 1px solid #1a3a4a; background: #0c1a20; color: #cfe6ec; font-size: 0.85rem; cursor: pointer; }
+    #cg-root .tn-pl.sel { border-color: #f1c40f; color: #f1c40f; background: rgba(241,196,15,0.1); }
+    #cg-root .tn-reprendre { display: flex; flex-direction: column; gap: 0.2rem; width: 100%; margin-bottom: 1.25rem; padding: 0.8rem; border-radius: 10px; border: 2px solid #c9a84c; background: rgba(201,168,76,0.08); color: #c9a84c; font-weight: bold; font-size: 1rem; cursor: pointer; }
+    #cg-root .tn-reprendre small { font-weight: normal; font-size: 0.75rem; color: #9a8350; }
+
+    #cg-root .tn-game { max-width: 760px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; }
+    #cg-root .tn-card { border: 1px solid #1a3a4a; border-radius: 12px; background: #060d10; padding: 0.9rem; }
+    #cg-root .tn-card h2 { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #3a6a78; margin: 0 0 0.7rem; display: flex; justify-content: space-between; gap: 0.5rem; }
+    #cg-root .tn-champion { text-align: center; padding: 1rem; border-radius: 12px; border: 2px solid #c9a84c; background: rgba(201,168,76,0.1); color: #e8d9a8; font-size: 1.15rem; }
+    #cg-root .tn-champion small { display: block; margin-top: 0.3rem; font-size: 0.8rem; color: #9a8350; }
+    #cg-root .tn-match-row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem auto; gap: 0.5rem; align-items: center; padding: 0.5rem 0.5rem 0.5rem 0.7rem; border-left: 4px solid var(--c); border-radius: 8px; background: #0a1519; margin-bottom: 0.45rem; }
+    #cg-root .tn-match-eq b { color: var(--c); display: block; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #cg-root .tn-match-eq small { color: #5a8a98; font-size: 0.75rem; }
+    #cg-root .tn-pts { width: 100%; box-sizing: border-box; margin: 0; padding: 0.55rem 0.3rem; text-align: center; border-radius: 8px; border: 1px solid #1a3a4a; background: #080f12; color: #e0f0f4; font-weight: bold; }
+    #cg-root .tn-win { padding: 0.6rem 0.8rem; border-radius: 9px; border: 1.5px solid var(--c); background: transparent; color: var(--c); font-weight: bold; cursor: pointer; white-space: nowrap; }
+    #cg-root .tn-win:active { background: var(--c); color: #061014; }
+    #cg-root .tn-match-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; }
+    #cg-root .tn-choix { margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid #132832; }
+    #cg-root .tn-choix-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.4rem 0 0.5rem; }
+    #cg-root .tn-choix-list label { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; border: 1px solid #1a3a4a; border-left: 3px solid var(--c); border-radius: 7px; color: #cfe6ec; font-size: 0.85rem; cursor: pointer; }
+    #cg-root .tn-table-wrap { overflow-x: auto; }
+    #cg-root .tn-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    #cg-root .tn-table th { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: #3a6a78; font-weight: normal; padding: 0.3rem 0.35rem; border-bottom: 1px solid #1a3a4a; }
+    #cg-root .tn-table td { white-space: nowrap; text-align: center; padding: 0.45rem 0.35rem; border-bottom: 1px solid #0f1c22; color: #cfe6ec; }
+    #cg-root .tn-table .l { text-align: left; }
+    #cg-root .tn-table td.l { white-space: normal; }
+    #cg-root .tn-table td.l small { display: block; color: #5a8a98; font-size: 0.72rem; }
+    #cg-root .tn-table td.v { color: #50d0a0; font-weight: bold; }
+    #cg-root .tn-table td.d { color: #ff7070; }
+    #cg-root .tn-table tr.lead td { background: rgba(201,168,76,0.07); }
+    #cg-root .tn-rename { background: none; border: 0; padding: 0; font-weight: bold; font-size: 0.95rem; cursor: pointer; text-align: left; }
+    #cg-root .tn-serie { font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 5px; background: #0f1c22; color: #7aabb8; }
+    #cg-root .tn-serie.V { background: rgba(80,208,160,0.15); color: #50d0a0; }
+    #cg-root .tn-serie.D { background: rgba(255,112,112,0.12); color: #ff7070; }
+    #cg-root .tn-barres { display: grid; gap: 0.35rem; margin-top: 0.8rem; }
+    #cg-root .tn-bar-row { display: grid; grid-template-columns: minmax(0, 7rem) 1fr 3.5rem; gap: 0.5rem; align-items: center; font-size: 0.78rem; }
+    #cg-root .tn-bar-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; }
+    #cg-root .tn-bar-row em { font-style: normal; color: #7aabb8; text-align: right; font-variant-numeric: tabular-nums; }
+    #cg-root .tn-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #0f1c22; }
+    #cg-root .tn-bar i.v { background: #50d0a0; }
+    #cg-root .tn-bar i.n { background: #7a8a90; }
+    #cg-root .tn-bar i.d { background: #ff7070; }
+    #cg-root .tn-list { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; }
+    #cg-root .tn-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0; border-bottom: 1px solid #0f1c22; color: #cfe6ec; flex-wrap: wrap; }
+    #cg-root .tn-list li.old { opacity: 0.55; }
+    #cg-root .tn-list li .tn-mini { width: auto; min-width: 6.5rem; }
+    #cg-root .tn-list li > span:nth-child(2) { flex: 1; min-width: 12rem; }
+    #cg-root .tn-list small { color: #5a8a98; }
+    #cg-root .tn-del { margin-left: auto; width: 2rem; height: 2rem; border-radius: 7px; border: 1px solid #1a3a4a; background: transparent; color: #5a8a98; cursor: pointer; }
+    #cg-root .tn-cal li { flex-wrap: nowrap; }
+    #cg-root .tn-cal li b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #cg-root .tn-cal li b:last-child { text-align: right; }
+    #cg-root .tn-cal li em { font-style: normal; font-size: 0.75rem; color: #5a8a98; min-width: 4.5rem; text-align: center; }
+    #cg-root .tn-cal li .r { font-size: 0.7rem; color: #2a5060; min-width: 2rem; }
+    #cg-root .tn-cal li.done { opacity: 0.6; }
+    #cg-root .tn-cal li.now { background: rgba(32,184,200,0.07); border-radius: 6px; }
+    #cg-root .tn-cal li.now em { color: #20b8c8; }
+    #cg-root .tn-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    #cg-root .tn-toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: 200; background: #0f2a32; border: 1px solid #20b8c8; color: #e0f0f4; padding: 0.6rem 0.9rem; border-radius: 10px; font-size: 0.9rem; box-shadow: 0 6px 20px rgba(0,0,0,0.4); display: flex; gap: 0.8rem; align-items: center; max-width: calc(100% - 2rem); }
+    #cg-root .tn-toast button { background: none; border: 0; color: #20b8c8; font-weight: bold; cursor: pointer; padding: 0; }
+    #cg-root details.tn-card > summary { cursor: pointer; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #3a6a78; list-style-position: inside; }
+    #cg-root details.tn-card[open] > summary { margin-bottom: 0.6rem; }
+    @media (max-width: 480px) {
+      .modejeu-btn { font-size: 0.8rem; padding: 0.55rem 0.3rem; }
+      .modejeu-btn small { font-size: 0.62rem; }
+      #cg-root .tn-match-row { grid-template-columns: minmax(0, 1fr) 3.6rem auto; }
+      #cg-root .tn-win { padding: 0.6rem 0.55rem; }
+      #cg-root .tn-table { font-size: 0.82rem; }
+    }
+    html.light #cg-root .tn-chip { background: #fff; border-color: #c4dde8; color: #0a2030; }
+    html.light #cg-root .tn-chip button { background: #e6f4f8; color: #2a6070; }
+    html.light #cg-root .tn-chip-add { background: transparent; color: #2a7080; }
+    html.light #cg-root .tn-eq-card, html.light #cg-root .tn-card { background: #fff; border-color: #c4dde8; }
+    html.light #cg-root .tn-pl { background: #f0f8fa; border-color: #c4dde8; color: #0a2030; }
+    html.light #cg-root .tn-eq-nom:focus, html.light #cg-root .tn-pts { background: #fff; border-color: #c4dde8; color: #0a2030; }
+    html.light #cg-root .tn-match-row { background: #f0f8fa; }
+    html.light #cg-root .tn-table td, html.light #cg-root .tn-list li { color: #0a2030; border-bottom-color: #d8eef5; }
+    html.light #cg-root .tn-table th { border-bottom-color: #c4dde8; }
+    html.light #cg-root .tn-bar, html.light #cg-root .tn-serie { background: #d8eef5; }
+    html.light #cg-root .tn-choix-list label { color: #0a2030; border-color: #c4dde8; }
+    html.light #cg-root .tn-champion { color: #6a5210; background: rgba(201,168,76,0.15); }
+    html.light #cg-root .tn-toast { background: #e6f4f8; color: #0a2030; }
   </style>
 </head>
 <body>
@@ -285,10 +399,59 @@
       </button>
       <button class="modejeu-btn" data-mj="equipes" onclick="setModeJeu('equipes')">
         👥 Équipes
-        <small>Tournoi par équipes avec membres</small>
+        <small>Points par équipe avec membres</small>
+      </button>
+      <button class="modejeu-btn" data-mj="tournoi" onclick="setModeJeu('tournoi')">
+        🏅 Tournoi
+        <small>Équipes tirées, victoires et défaites</small>
       </button>
     </div>
 
+    <!-- ── Mode tournoi ── -->
+    <div id="tn-setup" hidden>
+      <button type="button" class="tn-reprendre" id="tn-reprendre" hidden></button>
+
+      <div class="setup-lbl">Joueurs <span id="tn-count"></span></div>
+      <div class="tn-row">
+        <input type="text" class="player-name-input" id="tn-nom" placeholder="Nom du joueur (ou plusieurs, séparés par des virgules)" autocomplete="off" enterkeyhint="done">
+        <button type="button" class="tn-add" id="tn-add" aria-label="Ajouter le joueur">+</button>
+      </div>
+      <div class="tn-chips" id="tn-players"></div>
+      <div class="tn-chips" id="tn-recents"></div>
+
+      <div class="setup-lbl" style="margin-top:1rem;">Joueurs par équipe</div>
+      <div class="nb-btns" id="tn-taille">
+        <button type="button" class="nb-btn" data-n="1">1</button>
+        <button type="button" class="nb-btn active" data-n="2">2</button>
+        <button type="button" class="nb-btn" data-n="3">3</button>
+        <button type="button" class="nb-btn" data-n="4">4</button>
+        <button type="button" class="nb-btn" data-n="5">5</button>
+      </div>
+      <div class="tn-note" id="tn-note"></div>
+
+      <button type="button" class="tn-btn" id="tn-tirage" style="width:100%;">🎲 Former les équipes au hasard</button>
+      <p class="tn-mini" id="tn-compo-hint" hidden style="margin:0.6rem 0 0;">Touchez deux joueurs pour les échanger, ou un joueur puis une autre équipe pour l'y déplacer. Touchez le nom d'une équipe pour le changer. Relancez le tirage au besoin.</p>
+      <div class="tn-equipes" id="tn-equipes"></div>
+
+      <div class="setup-lbl">Format des parties</div>
+      <div class="mode-btns" id="tn-format">
+        <button type="button" class="mode-btn active" data-f="all">
+          Toutes ensemble
+          <small>Chaque partie réunit toutes les équipes, une seule gagne</small>
+        </button>
+        <button type="button" class="mode-btn" data-f="rr">
+          Un contre un
+          <small>Calendrier : chaque équipe affronte toutes les autres</small>
+        </button>
+      </div>
+
+      <div class="setup-lbl">Victoires pour gagner le tournoi <small>(0 = sans limite)</small></div>
+      <input type="text" inputmode="numeric" class="cg-target-input" id="tn-cible" value="0">
+
+      <button type="button" class="btn-start" id="tn-start" disabled>Formez d'abord les équipes</button>
+    </div>
+
+    <div class="cg-classic">
     <div class="setup-lbl" id="lbl-nb">Nombre de joueurs</div>
     <div class="nb-btns" id="cg-nb-btns"></div>
 
@@ -317,7 +480,48 @@
     <input type="text" inputmode="numeric" class="cg-target-input" id="cg-target" value="100">
 
     <button class="btn-start" onclick="demarrer()">Commencer ▶</button>
+    </div>
   </div>
+
+  <!-- ── Tournoi en cours ── -->
+  <div id="tn-game" class="tn-game" hidden>
+    <div class="tn-champion" id="tn-champion" hidden></div>
+
+    <section class="tn-card">
+      <h2><span id="tn-partie-titre">Nouvelle partie</span><span style="text-transform:none;letter-spacing:0;">points facultatifs</span></h2>
+      <div id="tn-partie"></div>
+      <div class="tn-choix" id="tn-choix" hidden></div>
+    </section>
+
+    <section class="tn-card">
+      <h2>Classement des équipes</h2>
+      <div class="tn-table-wrap"><table class="tn-table" id="tn-classement"></table></div>
+      <div class="tn-barres" id="tn-barres"></div>
+    </section>
+
+    <details class="tn-card" id="tn-joueurs-wrap" open>
+      <summary>Classement des joueurs</summary>
+      <div class="tn-table-wrap"><table class="tn-table" id="tn-joueurs"></table></div>
+    </details>
+
+    <details class="tn-card" id="tn-cal-wrap" hidden>
+      <summary>Calendrier</summary>
+      <ul class="tn-list tn-cal" id="tn-cal"></ul>
+    </details>
+
+    <details class="tn-card">
+      <summary>Historique des parties</summary>
+      <ul class="tn-list tn-hist" id="tn-hist"></ul>
+    </details>
+
+    <div class="tn-actions">
+      <button type="button" class="tn-btn" data-act="compo">🔀 Nouvelles équipes</button>
+      <button type="button" class="tn-btn ghost" data-act="resume">📋 Partager le résumé</button>
+      <button type="button" class="tn-btn ghost" data-act="setup">⚙︎ Retour à la configuration</button>
+      <button type="button" class="tn-btn ghost" data-act="fin">🗑 Terminer le tournoi</button>
+    </div>
+  </div>
+  <div class="tn-toast" id="tn-toast" hidden role="status"></div>
 
   <div id="cg-game" style="display:none;">
     <div class="score-outer">
@@ -357,7 +561,8 @@ function setModeJeu(mj) {
   document.getElementById('lbl-nb').textContent   = estEquipes ? "Nombre d'équipes" : 'Nombre de joueurs';
   document.getElementById('lbl-noms').textContent = estEquipes ? 'Noms des équipes' : 'Noms des joueurs';
   document.getElementById('cg-tournoi-section').style.display = estEquipes ? '' : 'none';
-  renderNoms();
+  if (window.tnShow) window.tnShow(mj === 'tournoi');
+  if (mj !== 'tournoi') renderNoms();
 }
 
 function setMode(m) {
@@ -651,6 +856,7 @@ initSetup();
 </script>
 
 <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="cg-tournoi.js"></script>
 <script src="sw-register.js"></script>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>
