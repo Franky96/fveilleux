@@ -317,6 +317,18 @@
     #cg-root .tn-pb.minus { border: 1px solid #c0392b; background: rgba(192,57,43,0.08); color: #e05050; }
     #cg-root .tn-pb.plus { border: 1px solid #20b8c8; background: rgba(32,184,200,0.08); color: #20b8c8; }
     #cg-root .tn-fin { margin: 0.2rem 0 0.5rem; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1.5px solid #c9a84c; background: rgba(201,168,76,0.08); color: #e8d9a8; display: flex; flex-wrap: wrap; gap: 0.5rem 0.8rem; align-items: center; justify-content: space-between; }
+    #cg-root .tn-jc { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.35rem; padding: 0.25rem 0.55rem; border-radius: 999px; border: 1px solid #1a3a4a; background: #0c1a20; color: #cfe6ec; font-size: 0.78rem; cursor: pointer; }
+    #cg-root .tn-jc.vide { color: #5a8a98; border-style: dashed; background: transparent; }
+    #cg-root .tn-dot { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,0.35); vertical-align: -0.1rem; margin-right: 0.3rem; flex: none; }
+    #cg-root .tn-match-row.pal { grid-template-areas: "eq sc" "pal pal" "bar bar" "ctrl ctrl"; }
+    #cg-root .tn-palette { grid-area: pal; display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0.4rem 0 0.2rem; }
+    #cg-root .tn-sw { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; border-radius: 8px; border: 1px solid #1a3a4a; background: transparent; color: #cfe6ec; font-size: 0.8rem; cursor: pointer; }
+    #cg-root .tn-sw i { width: 1rem; height: 1rem; border-radius: 50%; background: var(--s); box-shadow: 0 0 0 1px rgba(255,255,255,0.35); }
+    #cg-root .tn-sw i.none { background: repeating-linear-gradient(45deg, transparent 0 3px, #5a8a98 3px 4px); }
+    #cg-root .tn-sw.on { border-color: var(--s); background: rgba(255,255,255,0.06); font-weight: bold; }
+    html.light #cg-root .tn-jc { background: #fff; border-color: #c4dde8; color: #0a2030; }
+    html.light #cg-root .tn-sw { border-color: #c4dde8; color: #0a2030; }
+    html.light #cg-root .tn-dot, html.light #cg-root .tn-sw i { box-shadow: 0 0 0 1px rgba(0,0,0,0.3); }
     #cg-root .tn-queue { margin: 0.6rem 0 0; font-size: 0.8rem; color: #5a8a98; }
     #cg-root #tn-format { flex-wrap: wrap; }
     #cg-root #tn-format .mode-btn { flex: 1 1 8rem; }
@@ -541,6 +553,11 @@
     <details class="tn-card" id="tn-cal-wrap" hidden>
       <summary>Calendrier</summary>
       <ul class="tn-list tn-cal" id="tn-cal"></ul>
+    </details>
+
+    <details class="tn-card" id="tn-couleurs-wrap" hidden>
+      <summary>Victoires par couleur de jeu</summary>
+      <div class="tn-table-wrap"><table class="tn-table" id="tn-couleurs"></table></div>
     </details>
 
     <details class="tn-card">

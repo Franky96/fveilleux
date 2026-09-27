@@ -10,6 +10,14 @@
 
   const TN_COULEURS = ['#a088ff', '#ff7070', '#50d0a0', '#f1c40f', '#5fb3ff', '#ff9f43', '#e56fd0', '#8fd14f', '#4fd1d9', '#d9a066'];
   const KEY = 'cg.tournoi', KEY_ROSTER = 'cg.joueurs';
+  // couleurs de jeu (pions, cartes, camps) qu'on peut attribuer aux équipes pour chaque match
+  const JEU = [
+    ['rouge', 'Rouge', '#e74c3c'], ['bleu', 'Bleu', '#3498db'], ['vert', 'Vert', '#2ecc71'], ['jaune', 'Jaune', '#f1c40f'],
+    ['orange', 'Orange', '#e67e22'], ['violet', 'Violet', '#9b59b6'], ['rose', 'Rose', '#ff6fb5'], ['cyan', 'Cyan', '#1fc8d8'],
+    ['brun', 'Brun', '#8e5a2b'], ['gris', 'Gris', '#95a5a6'], ['noir', 'Noir', '#1b1b1b'], ['blanc', 'Blanc', '#f4f4f4'],
+  ];
+  const jeuDe = k => JEU.find(j => j[0] === k);
+  const pastille = k => { const j = jeuDe(k); return j ? `<i class="tn-dot" style="background:${j[2]}" title="${j[1]}"></i>` : ''; };
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -159,7 +167,13 @@
   /* ---------- points de la partie en cours (comme le compteur) ---------- */
   function live() {
     const ids = equipesPartie(), key = ids.join(',');
-    if (!T.live || T.live.key !== key) T.live = { key, pts: {}, hist: {} };
+    if (!T.live || T.live.key !== key) {
+      // nouvelle partie : chaque équipe reprend sa dernière couleur de jeu, sans doublon
+      T.live = { key, pts: {}, hist: {}, jeu: {} };
+      const pris = new Set();
+      ids.forEach(id => { const c = (T.jeuDefaut || {})[id]; if (c && !pris.has(c)) { T.live.jeu[id] = c; pris.add(c); } });
+    }
+    if (!T.live.jeu) T.live.jeu = {};
     ids.forEach(id => { if (T.live.pts[id] == null) { T.live.pts[id] = 0; T.live.hist[id] = []; } });
     return T.live;
   }
@@ -168,6 +182,15 @@
     if (v <= 0) { if (inp) inp.focus(); return; }
     const L = live(); L.pts[id] += signe * v; L.hist[id].push(signe * v);
     inp.value = ''; save(KEY, T); majPoints();
+  }
+  let palette = null;   // équipe dont la palette de couleurs est ouverte
+  function choisirJeu(id, c) {
+    const L = live();
+    // la couleur appartenait déjà à une autre équipe du match : on échange
+    const autre = Object.keys(L.jeu).find(k => +k !== id && L.jeu[k] === c);
+    if (autre) { if (L.jeu[id]) L.jeu[autre] = L.jeu[id]; else delete L.jeu[autre]; }
+    if (c) L.jeu[id] = c; else delete L.jeu[id];
+    palette = null; save(KEY, T); renderJeu();
   }
   function annulerPts(id) {
     const L = live(); if (!L.hist[id].length) return;
@@ -209,6 +232,7 @@
     const joue = ids.some(id => L.hist[id].length);
     const m = { id: T.nextId++, phase: T.phase, t: Date.now(), equipes: ids.slice(), gagnant,
       scores: joue ? ids.map(id => L.pts[id]) : null,
+      jeu: ids.some(id => L.jeu[id]) ? ids.map(id => L.jeu[id] || null) : null,
       compo: ids.map(id => equipe(id).joueurs.slice()) };
     if (T.format === 'rr' && !choix) { const pm = prochainMatch(); if (pm) m.rr = pm.k; }
     const avant = { queue: (T.queue || []).slice(), live: JSON.parse(JSON.stringify(L)), choix };
@@ -219,7 +243,8 @@
       T.queue = [...(reste != null ? [reste] : []), ...q, ...ids.filter(id => id !== reste)];
     }
     T.matches.push(m);
-    choix = null; T.live = null; save(KEY, T);
+    T.jeuDefaut = T.jeuDefaut || {}; ids.forEach(id => { if (L.jeu[id]) T.jeuDefaut[id] = L.jeu[id]; });
+    choix = null; T.live = null; palette = null; save(KEY, T);
     const g = gagnant != null ? equipe(gagnant) : null;
     toast(g ? `Victoire de ${g.nom} enregistrée` : 'Égalité enregistrée', () => {
       T.matches = T.matches.filter(x => x.id !== m.id); T.queue = avant.queue; T.live = avant.live; choix = avant.choix;
@@ -287,8 +312,13 @@
          <button type="button" class="tn-btn" data-act="ronde">↻ Nouvelle ronde</button>`
       : ids.map((id, i) => { const e = equipe(id);
           const role = T.format === 'ks' && !choix ? (i === 0 ? `<span class="tn-role">👑 tenant${tenant && serie(tenant.forme)[0] === 'V' ? ' · ' + serie(tenant.forme).slice(1) + ' V de suite' : ''}</span>` : '<span class="tn-role">⚔️ challenger</span>') : '';
-          return `<div class="tn-match-row" style="--c:${e.couleur}">
-          <div class="tn-match-eq"><b>${esc(e.nom)}</b>${role}<small>${esc(e.joueurs.join(', '))}</small></div>
+          return `<div class="tn-match-row${palette === id ? ' pal' : ''}" style="--c:${e.couleur}">
+          <div class="tn-match-eq"><b>${esc(e.nom)}</b>${role}<small>${esc(e.joueurs.join(', '))}</small>
+            ${(() => { const j = jeuDe(live().jeu[id]); return `<button type="button" class="tn-jc${j ? '' : ' vide'}" data-jc="${id}" aria-expanded="${palette === id}">${j ? `<i class="tn-dot" style="background:${j[2]}"></i>joue en ${j[1].toLowerCase()}` : '🎨 couleur de jeu'}</button>`; })()}</div>
+          ${palette === id ? `<div class="tn-palette">${JEU.map(j => {
+              const chez = Object.keys(live().jeu).find(k => +k !== id && live().jeu[k] === j[0]);
+              return `<button type="button" class="tn-sw${live().jeu[id] === j[0] ? ' on' : ''}" data-sw="${j[0]}" data-for="${id}" title="${j[1]}${chez ? ' (échange avec ' + esc(equipe(+chez).nom) + ')' : ''}" style="--s:${j[2]}"><i></i>${j[1]}${chez ? ' ⇄' : ''}</button>`; }).join('')}
+              <button type="button" class="tn-sw" data-sw="" data-for="${id}"><i class="none"></i>Aucune</button></div>` : ''}
           <div class="tn-sc" id="tn-sc-${id}">0</div>
           <div class="tn-scbar"><i id="tn-scbar-${id}"></i></div>
           <div class="tn-ctrl">
@@ -339,10 +369,22 @@
       }).join('');
     }
 
+    // victoires par couleur de jeu
+    const SC = new Map();
+    for (const m of T.matches) if (m.jeu) m.jeu.forEach((c, i) => {
+      if (!c) return; if (!SC.has(c)) SC.set(c, { c, j: 0, v: 0, d: 0, n: 0 });
+      const x = SC.get(c); x.j++;
+      if (m.gagnant == null) x.n++; else if (m.gagnant === m.equipes[i]) x.v++; else x.d++;
+    });
+    const sc = [...SC.values()].sort((a, b) => pct(b) - pct(a) || b.v - a.v);
+    $('tn-couleurs-wrap').hidden = !sc.length;
+    $('tn-couleurs').innerHTML = '<thead><tr><th class="l">Couleur</th><th>J</th><th>V</th><th>D</th><th>N</th><th>%</th></tr></thead><tbody>' +
+      sc.map(x => `<tr><td class="l">${pastille(x.c)} ${jeuDe(x.c)[1]}</td><td>${x.j}</td><td class="v">${x.v}</td><td class="d">${x.d}</td><td>${x.n}</td><td>${pctTxt(x)}</td></tr>`).join('') + '</tbody>';
+
     // historique
     const hist = T.matches.slice().reverse();
     $('tn-hist').innerHTML = hist.length ? hist.map(m => {
-      const nom = (id, i) => { const e = equipe(id); return `<b style="color:${e.couleur}">${esc(e.nom)}</b>${m.scores && m.scores[i] != null ? ' <small>(' + m.scores[i] + ')</small>' : ''}`; };
+      const nom = (id, i) => { const e = equipe(id); return `${m.jeu ? pastille(m.jeu[i]) : ''}<b style="color:${e.couleur}">${esc(e.nom)}</b>${m.scores && m.scores[i] != null ? ' <small>(' + m.scores[i] + ')</small>' : ''}`; };
       const g = m.gagnant != null ? equipe(m.gagnant) : null;
       const autres = m.equipes.map((id, i) => id === m.gagnant ? null : nom(id, i)).filter(Boolean);
       const quand = new Date(m.t).toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' });
@@ -453,6 +495,8 @@
       else if (b.dataset.plus) ajouterPts(+b.dataset.plus, 1);
       else if (b.dataset.minus) ajouterPts(+b.dataset.minus, -1);
       else if (b.dataset.undo) annulerPts(+b.dataset.undo);
+      else if (b.dataset.jc) { palette = palette === +b.dataset.jc ? null : +b.dataset.jc; renderJeu(); }
+      else if (b.dataset.sw != null && b.dataset.for) choisirJeu(+b.dataset.for, b.dataset.sw);
       else if (b.dataset.del) { if (confirm('Supprimer cette partie ?')) { T.matches = T.matches.filter(m => m.id !== +b.dataset.del); save(KEY, T); renderJeu(); } }
       else if (b.dataset.ren) { const t = equipe(+b.dataset.ren), n = prompt('Nom de l\'équipe :', t.nom); if (n && n.trim()) { t.nom = n.trim().slice(0, 24); save(KEY, T); renderJeu(); } }
       else switch (b.dataset.act) {
