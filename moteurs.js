@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Révéler le menu maintenant que les permissions sont appliquées
+  // Masquer un groupe dont toutes les cartes sont cachées
+  document.querySelectorAll('.mot-group').forEach(g => {
+    g.classList.toggle('vide', ![...g.querySelectorAll('.menu-card')].some(c => c.style.display !== 'none'));
+  });
+
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
 

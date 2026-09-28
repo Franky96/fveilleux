@@ -12,6 +12,15 @@
       window.location.href = 'dashboard.html';
     }
   </script>
+  <style>
+    .mot-group { max-width: 1000px; margin: 0 auto 2.5rem; }
+    .mot-group-title { font-size: 1.05rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 0.3rem; text-align: left; }
+    .mot-group-desc { margin: 0 0 1rem; font-size: 0.85rem; opacity: 0.7; text-align: left; }
+    .mot-grid-detail { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .mot-card-detail { border-width: 2px; }
+    .mot-card-detail h2 { font-size: 1.5rem; }
+    .mot-group:empty, .mot-group.vide { display: none; }
+  </style>
 </head>
 <body>
   <div class="dashboard-container">
@@ -39,33 +48,49 @@
     <main>
       <p class="welcome-text">Les simulateurs</p>
 
-      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+      <div id="menu-grid" style="visibility:hidden;">
 
-        <a href="turboreacteur.html" class="menu-card" data-section="turboreacteur">
-          <span class="icon">🌀</span>
-          <h2>CFM56-7B</h2>
-          <p>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d'air</p>
-        </a>
+        <section class="mot-group">
+          <h2 class="mot-group-title">Simulateurs détaillés</h2>
+          <p class="mot-group-desc">Modèles 3D complets avec coupes, circuits, procédures et instruments.</p>
+          <nav class="menu-grid mot-grid-detail">
 
-        <a href="pt6a21.html" class="menu-card" data-section="pt6a21">
-          <span class="icon">🛩️</span>
-          <h2>PT6A-21</h2>
-          <p>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</p>
-        </a>
+            <a href="pt6a21.html" class="menu-card mot-card-detail" data-section="pt6a21">
+              <span class="icon">🛩️</span>
+              <h2>PT6A-21</h2>
+              <p>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</p>
+            </a>
 
-        <a href="pw1500g.html" class="menu-card" data-section="pw1500g">
-          <span class="icon">⚙️</span>
-          <h2>PW1500G</h2>
-          <p>Turbofan à réducteur de l'Airbus A220 — réducteur de soufflante, coupe 3D, données certifiées</p>
-        </a>
+            <a href="o320.html" class="menu-card mot-card-detail" data-section="o320">
+              <span class="icon">✈️</span>
+              <h2>O-320</h2>
+              <p>Lycoming quatre cylindres à plat de 150 HP — modèle 3D, cycle à quatre temps, instruments</p>
+            </a>
 
-        <a href="o320.html" class="menu-card" data-section="o320">
-          <span class="icon">✈️</span>
-          <h2>O-320</h2>
-          <p>Lycoming quatre cylindres à plat de 150 HP — modèle 3D, cycle à quatre temps, instruments</p>
-        </a>
+          </nav>
+        </section>
 
-      </nav>
+        <section class="mot-group">
+          <h2 class="mot-group-title">Aperçus</h2>
+          <p class="mot-group-desc">Simulations plus simples, pour découvrir le fonctionnement général.</p>
+          <nav class="menu-grid">
+
+            <a href="turboreacteur.html" class="menu-card" data-section="turboreacteur">
+              <span class="icon">🌀</span>
+              <h2>CFM56-7B</h2>
+              <p>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d'air</p>
+            </a>
+
+            <a href="pw1500g.html" class="menu-card" data-section="pw1500g">
+              <span class="icon">⚙️</span>
+              <h2>PW1500G</h2>
+              <p>Turbofan à réducteur de l'Airbus A220 — réducteur de soufflante, coupe 3D, données certifiées</p>
+            </a>
+
+          </nav>
+        </section>
+
+      </div>
     </main>
 
   </div>
