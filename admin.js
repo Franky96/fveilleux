@@ -262,15 +262,17 @@ async function chargerUtilisateurs() {
     const accueil = u.pageAccueil || 'dashboard.html';
     const accueilHtml = `<span style="font-size:0.8rem; color:#888;">${esc(PAGE_LABELS[accueil] || accueil)}</span>`;
 
+    tr.className = 'user-row';
     tr.innerHTML = `
-      <td style="font-family:monospace; font-weight:bold;">${esc(id)}</td>
-      <td>${esc(u.nom)}</td>
-      <td>${accueilHtml}</td>
-      <td>${roleHtml}</td>
-      <td>${permsHtml}</td>
-      <td style="text-align:right; white-space:nowrap;">
-        <button onclick="editerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#d4892a; border:1px solid #d4892a; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem; transition:0.2s;" onmouseover="this.style.background='#d4892a'; this.style.color='#111';" onmouseout="this.style.background='#162216'; this.style.color='#d4892a';">Modifier</button>
-        ${id === 'frank' ? '' : `<button onclick="supprimerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#c0392b; border:1px solid #c0392b; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#c0392b'; this.style.color='#fff';" onmouseout="this.style.background='#162216'; this.style.color='#c0392b';">Supprimer</button>`}
+      <td class="u-id" data-label="Identifiant" style="font-family:monospace; font-weight:bold;">${esc(id)}</td>
+      <td class="u-nom" data-label="Nom affiché">${esc(u.nom)}</td>
+      <td data-label="Accueil">${accueilHtml}</td>
+      <td data-label="Rôle">${roleHtml}</td>
+      <td class="u-perms" data-label="Permissions">${permsHtml || '<span style="color:#888; font-size:0.8rem;">—</span>'}</td>
+      <td class="u-actions" style="text-align:right; white-space:nowrap;">
+        <button class="u-btn" onclick="changerMotDePasse('${id}')" title="Définir un nouveau mot de passe" style="width:auto; display:inline-block; background:#162216; color:#80cc80; border:1px solid #80cc80; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem;">🔑 Mot de passe</button>
+        <button class="u-btn" onclick="editerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#d4892a; border:1px solid #d4892a; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem; transition:0.2s;" onmouseover="this.style.background='#d4892a'; this.style.color='#111';" onmouseout="this.style.background='#162216'; this.style.color='#d4892a';">Modifier</button>
+        ${id === 'frank' ? '' : `<button class="u-btn" onclick="supprimerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#c0392b; border:1px solid #c0392b; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#c0392b'; this.style.color='#fff';" onmouseout="this.style.background='#162216'; this.style.color='#c0392b';">Supprimer</button>`}
       </td>
     `;
     tbody.appendChild(tr);
@@ -457,6 +459,8 @@ window.ouvrirModalUser = function() {
   document.getElementById('user-id').value = '';
   document.getElementById('user-id').disabled = false;
   document.getElementById('user-pass').value = '';
+  document.getElementById('user-pass').placeholder = '8 caractères minimum';
+  document.getElementById('pass-aide').textContent = "Communique ce mot de passe à la personne : il ne pourra plus être affiché après l'enregistrement.";
   document.getElementById('user-name').value = '';
   document.getElementById('user-role').value = 'user';
   document.getElementById('user-accueil').value = 'dashboard.html';
@@ -471,7 +475,9 @@ window.editerUser = function(id) {
   document.getElementById('modal-user-titre').textContent = `Modifier ${id}`;
   document.getElementById('user-id').value = id;
   document.getElementById('user-id').disabled = true;
-  document.getElementById('user-pass').value = u.motDePasse;
+  document.getElementById('user-pass').value = '';
+  document.getElementById('user-pass').placeholder = 'Laisser vide pour garder le mot de passe actuel';
+  document.getElementById('pass-aide').textContent = "Le mot de passe actuel est chiffré et ne peut pas être affiché. Tape ou génère un nouveau mot de passe pour le remplacer.";
   document.getElementById('user-name').value = u.nom;
   document.getElementById('user-role').value = u.role;
   document.getElementById('user-accueil').value = u.pageAccueil || 'dashboard.html';
@@ -488,6 +494,7 @@ window.sauvegarderUser = async function() {
   
   if (!id || !nom) { alert("Veuillez remplir les champs."); return; }
   if (!editModeId && !pass) { alert("Mot de passe requis pour un nouvel utilisateur."); return; }
+  if (pass && pass.length < 8) { alert("Le mot de passe doit contenir au moins 8 caractères."); return; }
 
   const perms = [];
   document.querySelectorAll('.chk-perm:checked').forEach(chk => perms.push(chk.value));
@@ -519,6 +526,42 @@ window.sauvegarderUser = async function() {
 
   await chargerUtilisateurs();
   window.fermerModalUser();
+  if (pass) afficherMotDePasse(targetId, pass);
+};
+
+/* ── Mots de passe : générer, afficher une seule fois, copier ── */
+function genererMotDePasse() {
+  // sans caractères ambigus (0/O, 1/l/I)
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  const r = new Uint32Array(12); crypto.getRandomValues(r);
+  let m = ''; r.forEach((x, i) => { m += A[x % A.length]; if (i === 3 || i === 7) m += '-'; });
+  return m;
+}
+window.genererDansChamp = function() {
+  const i = document.getElementById('user-pass');
+  i.value = genererMotDePasse(); i.type = 'text';
+  const oeil = document.getElementById('pass-oeil'); if (oeil) oeil.textContent = '🙈';
+};
+window.changerMotDePasse = function(id) {
+  window.editerUser(id);
+  window.genererDansChamp();
+  document.getElementById('user-pass').focus();
+  document.getElementById('user-pass').select();
+};
+function afficherMotDePasse(id, pass) {
+  document.getElementById('mdp-id').textContent = id;
+  document.getElementById('mdp-valeur').textContent = pass;
+  document.getElementById('mdp-copie').textContent = '📋 Copier';
+  document.getElementById('modal-mdp').classList.remove('hidden');
+}
+window.copierMotDePasse = async function() {
+  const t = document.getElementById('mdp-valeur').textContent;
+  try { await navigator.clipboard.writeText(t); document.getElementById('mdp-copie').textContent = '✓ Copié'; }
+  catch (e) { prompt('Copie le mot de passe :', t); }
+};
+window.fermerModalMdp = function() {
+  document.getElementById('mdp-valeur').textContent = '';
+  document.getElementById('modal-mdp').classList.add('hidden');
 };
 
 window.supprimerUser = async function(id) {

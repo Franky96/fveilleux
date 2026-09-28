@@ -58,9 +58,65 @@
       margin-left: 1.5rem;
       margin-top: 0.4rem;
     }
+    /* ─── Mots de passe ─── */
+    .pass-row { display: flex; gap: 0.5rem; align-items: stretch; }
+    .btn-generer { width: auto; flex: none; padding: 0.5rem 0.8rem; font-size: 0.85rem; border-radius: 8px; background: #162216; color: #80cc80; border: 1px solid #80cc80; }
+    .btn-generer:hover { background: #80cc80; color: #111; }
+    .pass-aide { margin: -0.2rem 0 0; font-size: 0.78rem; color: #888078; line-height: 1.4; }
+    .mdp-valeur { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.4rem; letter-spacing: 0.06em; text-align: center; padding: 0.8rem; border-radius: 8px; background: #f5f2eb; border: 1px dashed #c0392b; color: #1a1a1a; user-select: all; word-break: break-all; }
+
+    /* ─── Mise en page adaptée à la taille de l'écran ─── */
+    .admin-page .page-content { min-width: 0; }
+    .admin-page .admin-header { flex-wrap: wrap; gap: 1rem; }
+    .admin-page .admin-header .btn-ajouter { width: auto; }
+    .admin-page .content-block { overflow-x: auto; }
+    .admin-page .users-table .u-perms span { display: inline-block; margin-bottom: 3px; }
+    .admin-page .modal-overlay { padding: 1rem; }
+    .admin-page .modal-box { width: min(560px, 100%); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; }
+    .admin-page .modal-box select { width: 100%; }
+
+    /* Tablettes et petits portables : barre latérale réduite */
+    @media (max-width: 1100px) {
+      .admin-page .sidebar { width: 170px; padding: 1.5rem 1rem; }
+      .admin-page .page-content { padding: 1.75rem; }
+      .admin-page .users-table th:nth-child(3), .admin-page .users-table td:nth-child(3) { display: none; }
+    }
+
+    /* Téléphones et tablettes en portrait : barre en haut, utilisateurs en cartes */
+    @media (max-width: 800px) {
+      .admin-page .page-container { flex-direction: column; }
+      .admin-page .sidebar { width: 100%; min-height: 0; position: static; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1rem; padding: 0.8rem 1rem; border-right: 0; border-bottom: 2px solid #c0392b; }
+      .admin-page .sidebar .back-btn { margin: 0; }
+      .admin-page .sidebar h2 { margin: 0; }
+      .admin-page .sidebar-subtitle { margin: 0; }
+      .admin-page .page-content { padding: 1rem; min-height: 0; }
+      .admin-page .page-content h1 { font-size: 1.35rem; }
+      .admin-page .admin-header { margin-bottom: 1rem; }
+      .admin-page .admin-header .btn-ajouter { width: 100%; }
+      .admin-page .users-table thead { display: none; }
+      .admin-page .users-table, .admin-page .users-table tbody { display: block; width: 100%; }
+      .admin-page .users-table tr { display: block; }
+      .admin-page .users-table tr.user-row { border: 1px solid #d5d0c8; border-radius: 10px; padding: 0.6rem 0.8rem; margin-bottom: 0.7rem; background: #fff; }
+      .admin-page .users-table tr:not(.user-row) td { display: block; padding-top: 1.2rem !important; }
+      .admin-page .users-table tr.user-row td { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.5rem; border: 0; padding: 0.25rem 0; text-align: left !important; white-space: normal !important; }
+      .admin-page .users-table tr.user-row td::before { content: attr(data-label); color: #888078; font-size: 0.78rem; }
+      .admin-page .users-table th:nth-child(3), .admin-page .users-table td:nth-child(3) { display: grid; }
+      .admin-page .users-table td.u-actions { display: flex !important; flex-wrap: wrap; gap: 0.4rem; padding-top: 0.6rem !important; }
+      .admin-page .users-table td.u-actions::before { content: none; }
+      .admin-page .users-table .u-btn { flex: 1 1 auto; margin: 0 !important; padding: 0.55rem 0.6rem !important; font-size: 0.85rem !important; }
+      .admin-page #guest-perms-grid, .admin-page #archive-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important; }
+      .admin-page .perms-grid { grid-template-columns: 1fr; }
+      .admin-page .perm-children { margin-left: 0.8rem; }
+    }
+    @media (max-width: 420px) {
+      .admin-page .users-table tr.user-row td { grid-template-columns: 1fr; gap: 0.1rem; }
+      .admin-page .pass-row { flex-wrap: wrap; }
+      .admin-page .btn-generer { width: 100%; }
+    }
+    html.light .admin-page .users-table tr.user-row { background: #fff; }
   </style>
 </head>
-<body>
+<body class="admin-page">
   <div class="page-container">
 
     <aside class="sidebar" style="border-right-color: #c0392b;">
@@ -79,7 +135,7 @@
       </div>
 
       <div class="content-block">
-        <table class="calendar-table">
+        <table class="calendar-table users-table">
           <thead>
             <tr>
               <th>Identifiant</th>
@@ -131,10 +187,14 @@
       <input type="text" id="user-id" placeholder="Ex: jean123" />
       
       <label>Mot de passe</label>
-      <div style="position:relative; display:flex; align-items:center;">
-        <input type="password" id="user-pass" placeholder="Ex: secret456" style="flex:1; padding-right:2.2rem;" />
-        <button type="button" onclick="(function(){var i=document.getElementById('user-pass'),b=this;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';}).call(this)" title="Afficher / masquer" style="position:absolute;right:0.5rem;background:none;border:none;cursor:pointer;font-size:1rem;padding:0;line-height:1;color:#888;">👁</button>
+      <div class="pass-row">
+        <div style="position:relative; display:flex; align-items:center; flex:1; min-width:0;">
+          <input type="password" id="user-pass" placeholder="8 caractères minimum" autocomplete="new-password" style="flex:1; padding-right:2.2rem;" />
+          <button type="button" id="pass-oeil" onclick="(function(){var i=document.getElementById('user-pass'),b=this;i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';}).call(this)" title="Afficher / masquer" style="position:absolute;right:0.5rem;width:auto;background:none;border:none;cursor:pointer;font-size:1rem;padding:0;line-height:1;color:#888;">👁</button>
+        </div>
+        <button type="button" class="btn-generer" onclick="genererDansChamp()" title="Générer un mot de passe aléatoire">🎲 Générer</button>
       </div>
+      <p class="pass-aide" id="pass-aide"></p>
 
       <label>Nom affiché (Prénom)</label>
       <input type="text" id="user-name" placeholder="Ex: Jean" />
@@ -187,6 +247,20 @@
       <div class="modal-actions" style="margin-top:1.5rem;">
         <button class="btn-cancel" onclick="fermerModalUser()">Annuler</button>
         <button class="btn-save" style="background:#c0392b;" onclick="sauvegarderUser()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nouveau mot de passe : affiché une seule fois, pour le transmettre -->
+  <div class="modal-overlay hidden" id="modal-mdp">
+    <div class="modal-box">
+      <h3 style="color:#c0392b;">🔑 Mot de passe enregistré</h3>
+      <p style="margin:0; color:#555; font-size:0.9rem;">Nouveau mot de passe de <b id="mdp-id"></b> :</p>
+      <div class="mdp-valeur" id="mdp-valeur"></div>
+      <p class="pass-aide">Transmets-le maintenant : pour des raisons de sécurité, il ne pourra plus être affiché une fois cette fenêtre fermée.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModalMdp()">Fermer</button>
+        <button class="btn-save" id="mdp-copie" style="background:#c0392b;" onclick="copierMotDePasse()">📋 Copier</button>
       </div>
     </div>
   </div>
