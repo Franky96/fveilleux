@@ -200,6 +200,9 @@ window.toggleArchive = async function(key, children = []) {
 
 let usersData = {};
 let editModeId = null;
+// coffre des mots de passe : lecture déverrouillée quelques minutes par un code 2FA
+const coffre = { active: false, jusqua: 0, mdp: {} };
+let coffreMinuterie = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   await chargerUtilisateurs();
@@ -211,10 +214,14 @@ async function chargerUtilisateurs() {
   tbody.innerHTML = '';
 
   try {
-    const res  = await fetch('/api/users.php', { credentials: 'include' });
+    const ouvert = coffre.jusqua > Date.now();
+    let res  = await fetch('/api/users.php' + (ouvert ? '?mdp=1' : ''), { credentials: 'include' });
+    if (ouvert && res.status === 403) { coffre.jusqua = 0; res = await fetch('/api/users.php', { credentials: 'include' }); }
     const json = await res.json();
     if (!res.ok) throw new Error(json.error ?? 'Erreur');
     usersData = json.users ?? {};
+    coffre.mdp = json.motsDePasse || {};
+    majCoffreBar();
   } catch (e) {
     console.error('[admin] Erreur chargement utilisateurs:', e);
   }
@@ -268,6 +275,7 @@ async function chargerUtilisateurs() {
       <td class="u-nom" data-label="Nom affiché">${esc(u.nom)}</td>
       <td data-label="Accueil">${accueilHtml}</td>
       <td data-label="Rôle">${roleHtml}</td>
+      <td class="u-mdp" data-label="Mot de passe">${celluleMdp(id)}</td>
       <td class="u-perms" data-label="Permissions">${permsHtml || '<span style="color:#888; font-size:0.8rem;">—</span>'}</td>
       <td class="u-actions" style="text-align:right; white-space:nowrap;">
         <button class="u-btn" onclick="changerMotDePasse('${id}')" title="Définir un nouveau mot de passe" style="width:auto; display:inline-block; background:#162216; color:#80cc80; border:1px solid #80cc80; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem;">🔑 Mot de passe</button>
@@ -282,7 +290,7 @@ async function chargerUtilisateurs() {
   if (admins.length > 0) {
     const trSeparateurAdmins = document.createElement('tr');
     trSeparateurAdmins.innerHTML = `
-      <td colspan="6" style="padding-top: 1rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #c0392b; border-bottom: 2px solid #c0392b; letter-spacing: 0.05em;">
+      <td colspan="7" style="padding-top: 1rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #c0392b; border-bottom: 2px solid #c0392b; letter-spacing: 0.05em;">
         <strong>Administrateurs</strong>
       </td>
     `;
@@ -294,7 +302,7 @@ async function chargerUtilisateurs() {
   if (normaux.length > 0) {
     const trSeparateurNormaux = document.createElement('tr');
     trSeparateurNormaux.innerHTML = `
-      <td colspan="6" style="padding-top: 2.5rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #3a7a3a; border-bottom: 2px solid #3a7a3a; letter-spacing: 0.05em;">
+      <td colspan="7" style="padding-top: 2.5rem; padding-bottom: 0.5rem; font-size: 1.1rem; color: #3a7a3a; border-bottom: 2px solid #3a7a3a; letter-spacing: 0.05em;">
         <strong>Utilisateurs</strong>
       </td>
     `;
@@ -511,6 +519,7 @@ window.sauvegarderUser = async function() {
     });
     const json = await res.json();
     if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur');
+    if (json.avertissement) alert(json.avertissement);
   } catch (e) {
     alert('Erreur : ' + e.message);
     return;
@@ -528,6 +537,117 @@ window.sauvegarderUser = async function() {
   window.fermerModalUser();
   if (pass) afficherMotDePasse(targetId, pass);
 };
+
+/* ══════════ Coffre des mots de passe (lecture protégée par 2FA) ══════════ */
+
+function celluleMdp(id) {
+  if (coffre.jusqua <= Date.now()) return '<span class="mdp-cache">••••••••</span>';
+  const m = coffre.mdp[id];
+  if (!m) return '<span class="mdp-absent" title="Le mot de passe actuel est chiffré à sens unique. Il deviendra lisible dès la prochaine connexion de la personne, ou si tu lui en définis un nouveau.">En attente de sa prochaine connexion</span>';
+  return `<span class="mdp-clair">${esc(m.mdp)}</span> <button class="mdp-copier" onclick="copierTexte(this, '${id}')" title="Copier">📋</button>`;
+}
+window.copierTexte = async function(btn, id) {
+  const t = (coffre.mdp[id] || {}).mdp || '';
+  try { await navigator.clipboard.writeText(t); btn.textContent = '✓'; setTimeout(() => btn.textContent = '📋', 1500); }
+  catch (e) { prompt('Copie le mot de passe :', t); }
+};
+
+async function coffreApi(action, extra = {}) {
+  const res = await fetch('/api/users.php', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...extra }) });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur');
+  return json;
+}
+
+function majCoffreBar() {
+  const bar = document.getElementById('coffre-bar'); if (!bar) return;
+  const reste = Math.max(0, Math.round((coffre.jusqua - Date.now()) / 1000));
+  if (!coffre.active) {
+    bar.className = 'coffre-bar';
+    bar.innerHTML = `<span>🔐 Pour afficher les mots de passe, active d'abord la double authentification.</span><button class="coffre-btn" onclick="ouvrir2FA()">Configurer la 2FA</button>`;
+  } else if (reste > 0) {
+    bar.className = 'coffre-bar ouvert';
+    bar.innerHTML = `<span>🔓 Mots de passe visibles — verrouillage dans <b id="coffre-reste">${Math.floor(reste / 60)}:${String(reste % 60).padStart(2, '0')}</b></span><button class="coffre-btn" onclick="verrouillerCoffre()">🔒 Verrouiller</button>`;
+  } else {
+    bar.className = 'coffre-bar';
+    bar.innerHTML = `<span>🔒 Mots de passe masqués.</span><button class="coffre-btn" onclick="ouvrirDeverrouillage()">🔓 Afficher les mots de passe</button>`;
+  }
+}
+
+function demarrerMinuterie() {
+  clearInterval(coffreMinuterie);
+  coffreMinuterie = setInterval(() => {
+    if (coffre.jusqua <= Date.now()) { clearInterval(coffreMinuterie); coffre.mdp = {}; chargerUtilisateurs(); return; }
+    const el = document.getElementById('coffre-reste');
+    const r = Math.round((coffre.jusqua - Date.now()) / 1000);
+    if (el) el.textContent = `${Math.floor(r / 60)}:${String(r % 60).padStart(2, '0')}`;
+  }, 1000);
+}
+
+async function chargerCoffre() {
+  try {
+    const j = await coffreApi('2fa_etat');
+    coffre.active = j.active; coffre.jusqua = j.jusqua > 0 ? Date.now() + j.jusqua * 1000 : 0;
+    if (coffre.jusqua) demarrerMinuterie();
+  } catch (e) { console.warn('[admin] 2FA :', e.message); }
+  majCoffreBar();
+  if (coffre.jusqua) chargerUtilisateurs();
+}
+document.addEventListener('DOMContentLoaded', chargerCoffre);
+
+/* Configuration de la 2FA : QR code à scanner, puis un code pour confirmer */
+window.ouvrir2FA = async function() {
+  try {
+    const j = await coffreApi('2fa_init');
+    const box = document.getElementById('qr-2fa');
+    box.innerHTML = '';
+    if (window.qrcode) { const q = qrcode(0, 'M'); q.addData(j.uri); q.make(); box.innerHTML = q.createSvgTag({ cellSize: 5, margin: 2 }); }
+    document.getElementById('secret-2fa').textContent = j.secret.replace(/(.{4})/g, '$1 ').trim();
+    document.getElementById('code-2fa-setup').value = '';
+    document.getElementById('err-2fa-setup').textContent = '';
+    document.getElementById('modal-2fa').classList.remove('hidden');
+    document.getElementById('code-2fa-setup').focus();
+  } catch (e) { alert('Erreur : ' + e.message); }
+};
+window.activer2FA = async function() {
+  const code = document.getElementById('code-2fa-setup').value;
+  try {
+    await coffreApi('2fa_activer', { code });
+    coffre.active = true;
+    document.getElementById('modal-2fa').classList.add('hidden');
+    majCoffreBar();
+    alert('Double authentification activée. Utilise un code de l\'application pour afficher les mots de passe.');
+  } catch (e) { document.getElementById('err-2fa-setup').textContent = e.message; }
+};
+
+/* Déverrouillage temporaire */
+window.ouvrirDeverrouillage = function() {
+  document.getElementById('code-2fa').value = '';
+  document.getElementById('err-2fa').textContent = '';
+  document.getElementById('modal-code').classList.remove('hidden');
+  document.getElementById('code-2fa').focus();
+};
+window.validerCode = async function() {
+  const code = document.getElementById('code-2fa').value;
+  try {
+    const j = await coffreApi('deverrouiller', { code });
+    coffre.jusqua = Date.now() + j.jusqua * 1000;
+    document.getElementById('modal-code').classList.add('hidden');
+    demarrerMinuterie();
+    await chargerUtilisateurs();
+  } catch (e) { document.getElementById('err-2fa').textContent = e.message; }
+};
+window.verrouillerCoffre = async function() {
+  try { await coffreApi('verrouiller'); } catch (e) {}
+  coffre.jusqua = 0; coffre.mdp = {}; clearInterval(coffreMinuterie);
+  await chargerUtilisateurs();
+};
+window.fermerModal2FA = id => document.getElementById(id).classList.add('hidden');
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target.id === 'code-2fa') validerCode();
+  if (e.target.id === 'code-2fa-setup') activer2FA();
+});
 
 /* ── Mots de passe : générer, afficher une seule fois, copier ── */
 function genererMotDePasse() {

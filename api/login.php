@@ -48,6 +48,14 @@ switch ($action) {
     }
     @unlink(essaisFichier());
 
+    // Coffre : les mots de passe définis avant l'ajout du coffre deviennent lisibles
+    // par l'admin (avec 2FA) dès la prochaine connexion de la personne.
+    try {
+      $c = $pdo->prepare('SELECT 1 FROM documents WHERE collection_name=? AND doc_id=?');
+      $c->execute(['_mdp', $user['id']]);
+      if (!$c->fetch()) { require_once __DIR__ . '/coffre.php'; coffreEnregistrer($pdo, $user['id'], $pass); }
+    } catch (Throwable $e) { error_log('fveilleux: coffre — ' . $e->getMessage()); }
+
     sessionInit();
     session_regenerate_id(true);
     $_SESSION['uid']          = $user['id'];

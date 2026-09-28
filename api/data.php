@@ -15,6 +15,14 @@ $perms   = is_array($session['permissions'] ?? null) ? $session['permissions'] :
 $isAdmin = $role === 'admin';
 $isGuest = $role === 'guest' || ($session['uid'] ?? '') === 'guest';
 
+// Collections internes (ex. « _mdp », le coffre des mots de passe) : jamais servies ici, même à l'admin
+$colDemandee = (string)($_GET['col'] ?? '');
+if ($colDemandee === '' && $method === 'POST') {
+  $peek = json_decode(file_get_contents('php://input'), true);
+  $colDemandee = (string)($peek['col'] ?? '');
+}
+if (str_starts_with($colDemandee, '_')) errOut('Accès refusé', 403);
+
 /*
  * Chaque document de données appartient à une section du site.
  * Le serveur vérifie la permission de la section : cacher la page dans le

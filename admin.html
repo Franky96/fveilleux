@@ -65,6 +65,21 @@
     .pass-aide { margin: -0.2rem 0 0; font-size: 0.78rem; color: #888078; line-height: 1.4; }
     .mdp-valeur { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.4rem; letter-spacing: 0.06em; text-align: center; padding: 0.8rem; border-radius: 8px; background: #f5f2eb; border: 1px dashed #c0392b; color: #1a1a1a; user-select: all; word-break: break-all; }
 
+    /* ─── Coffre des mots de passe ─── */
+    .coffre-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 10px; background: #fff; border: 1px solid #d5d0c8; color: #555; font-size: 0.9rem; }
+    .coffre-bar.ouvert { border-color: #c0392b; background: #fdf1ef; color: #7a2a20; }
+    .coffre-btn { width: auto; padding: 0.45rem 0.9rem; font-size: 0.85rem; border-radius: 8px; background: #162216; color: #80cc80; border: 1px solid #80cc80; }
+    .coffre-btn:hover { background: #80cc80; color: #111; }
+    .mdp-cache { color: #aaa; letter-spacing: 0.1em; }
+    .mdp-clair { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: bold; color: #c0392b; word-break: break-all; }
+    .mdp-absent { font-size: 0.78rem; color: #999; font-style: italic; }
+    .mdp-copier { width: auto; padding: 0 0.3rem; background: none; border: 0; cursor: pointer; font-size: 0.9rem; }
+    .qr-2fa { display: grid; place-items: center; min-height: 180px; background: #fff; border-radius: 8px; }
+    .qr-2fa svg { width: 190px; height: 190px; }
+    .secret-2fa { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.95rem; text-align: center; padding: 0.5rem; background: #f5f2eb; border-radius: 8px; color: #1a1a1a; user-select: all; word-break: break-all; }
+    .code-2fa { font-size: 1.5rem !important; letter-spacing: 0.25em; text-align: center; font-family: ui-monospace, Menlo, Consolas, monospace; }
+    .err-2fa { margin: 0; min-height: 1.1em; color: #c0392b; font-size: 0.85rem; }
+
     /* ─── Mise en page adaptée à la taille de l'écran ─── */
     .admin-page .admin-main { min-width: 0; min-height: 0; max-width: 1400px; margin: 0 auto; border-radius: 12px; }
     .admin-page .admin-header { flex-wrap: wrap; gap: 1rem; }
@@ -136,6 +151,8 @@
         <button class="btn-ajouter" onclick="ouvrirModalUser()" style="background:#e74c3c; color:white; border:none;">+ Nouvel utilisateur</button>
       </div>
 
+      <div class="coffre-bar" id="coffre-bar"></div>
+
       <div class="content-block">
         <table class="calendar-table users-table">
           <thead>
@@ -144,6 +161,7 @@
               <th>Nom affiché</th>
               <th>Accueil</th>
               <th>Rôle</th>
+              <th>Mot de passe</th>
               <th>Permissions</th>
               <th style="text-align:right;">Actions</th>
             </tr>
@@ -267,6 +285,40 @@
     </div>
   </div>
 
+  <!-- Configuration de la double authentification -->
+  <div class="modal-overlay hidden" id="modal-2fa">
+    <div class="modal-box">
+      <h3 style="color:#c0392b;">🔐 Activer la double authentification</h3>
+      <p class="pass-aide" style="margin:0;">1. Dans une application d'authentification (Google Authenticator, Microsoft Authenticator, 1Password…), ajoute un compte en scannant ce code :</p>
+      <div class="qr-2fa" id="qr-2fa"></div>
+      <p class="pass-aide" style="margin:0;">Ou saisis cette clé à la main :</p>
+      <div class="secret-2fa" id="secret-2fa"></div>
+      <label>2. Entre le code à 6 chiffres affiché par l'application</label>
+      <input type="text" id="code-2fa-setup" class="code-2fa" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456">
+      <p class="err-2fa" id="err-2fa-setup"></p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModal2FA('modal-2fa')">Annuler</button>
+        <button class="btn-save" style="background:#c0392b;" onclick="activer2FA()">Activer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Déverrouillage temporaire des mots de passe -->
+  <div class="modal-overlay hidden" id="modal-code">
+    <div class="modal-box">
+      <h3 style="color:#c0392b;">🔓 Afficher les mots de passe</h3>
+      <label>Code à 6 chiffres de ton application d'authentification</label>
+      <input type="text" id="code-2fa" class="code-2fa" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456">
+      <p class="err-2fa" id="err-2fa"></p>
+      <p class="pass-aide" style="margin:0;">Les mots de passe restent visibles 5 minutes, puis se masquent automatiquement.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerModal2FA('modal-code')">Annuler</button>
+        <button class="btn-save" style="background:#c0392b;" onclick="validerCode()">Déverrouiller</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script type="module" src="admin.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
   <script src="version.js"></script>
