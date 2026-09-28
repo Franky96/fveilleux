@@ -11,6 +11,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') errOut('Méthode non autorisée', 405
 $input  = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $input['action'] ?? '';
 
+/* ── Limite d'essais : 8 mots de passe erronés par adresse IP en 15 minutes ── */
+const MAX_ECHECS = 8, FENETRE = 900;
+function essaisFichier(): string {
+  return sys_get_temp_dir() . '/fv_login_' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? '?') . '.json';
+}
+function echecsRecents(): array {
+  $f = essaisFichier();
+  $t = is_file($f) ? (json_decode((string)@file_get_contents($f), true) ?: []) : [];
+  return array_values(array_filter($t, fn($x) => is_int($x) && $x > time() - FENETRE));
+}
+function noterEchec(): void {
+  $t = echecsRecents(); $t[] = time();
+  @file_put_contents(essaisFichier(), json_encode($t), LOCK_EX);
+}
+
 switch ($action) {
 
   /* ── Connexion normale ── */
@@ -18,6 +33,7 @@ switch ($action) {
     $uid  = strtolower(trim($input['userId'] ?? ''));
     $pass = $input['password'] ?? '';
     if (!$uid || !$pass) errOut('Champs manquants');
+    if (count(echecsRecents()) >= MAX_ECHECS) errOut('Trop de tentatives. Réessayez dans 15 minutes.', 429);
 
     $pdo  = getPDO();
     $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
@@ -25,8 +41,10 @@ switch ($action) {
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($pass, $user['password_hash'])) {
+      noterEchec();
       errOut('Identifiant ou mot de passe incorrect', 401);
     }
+    @unlink(essaisFichier());
 
     sessionInit();
     session_regenerate_id(true);
