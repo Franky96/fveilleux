@@ -1,5 +1,10 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 
+// Neutralise le texte enregistré avant de l'insérer dans la page (empêche l'injection de code)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Adresse web sûre : http(s) seulement, sinon « https:// » est ajouté devant
+const urlSure = u => { u = String(u ?? '').trim(); return esc(/^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^[a-z][a-z0-9+.-]*:/i, '')); };
+
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('aviation')) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
@@ -158,7 +163,7 @@ window.decoderMETAR = function() {
       else if (t.match(/^5(\d{1})(\d{3})$/)) { let val = parseInt(t.match(/^5(\d{1})(\d{3})$/)[2]) / 10; rmkDecoded.push(`• Tendance pression (3h) : variation <strong>${val.toFixed(1)} hPa</strong>`); }
       else if (t === 'PRESRR') rmkDecoded.push(`• Pression en hausse rapide`); else if (t === 'PRESFR') rmkDecoded.push(`• Pression en baisse rapide`);
       else if (t.match(/^T(\d{1})(\d{3})(\d{1})(\d{3})$/)) { let m = t.match(/^T(\d{1})(\d{3})(\d{1})(\d{3})$/); let temp = (m[1] === '1' ? -1 : 1) * (parseInt(m[2]) / 10); let td = (m[3] === '1' ? -1 : 1) * (parseInt(m[4]) / 10); rmkDecoded.push(`• Temp exacte : <strong>${temp.toFixed(1)}°C</strong> / Rosée : <strong>${td.toFixed(1)}°C</strong>`); }
-      else if (t === 'PK' && tNext === 'WND' && tNext2) { let m = tNext2.split('/'); if (m.length === 2 && m[0].length >= 3) { rmkDecoded.push(`• Vent de pointe : <strong>du ${m[0].substring(0,3)}° à ${m[0].substring(3)} nœuds</strong>`); i += 2; } else unparsed.push(t); }
+      else if (t === 'PK' && tNext === 'WND' && tNext2) { let m = tNext2.split('/'); if (m.length === 2 && m[0].length >= 3) { rmkDecoded.push(`• Vent de pointe : <strong>du ${esc(m[0].substring(0,3))}° à ${esc(m[0].substring(3))} nœuds</strong>`); i += 2; } else unparsed.push(t); }
       else if (t.match(/^([A-Z]{2}\d)+$/)) {
          const nC = {'CI':'Cirrus', 'CC':'Cirrocumulus', 'CS':'Cirrostratus', 'AC':'Altocumulus', 'AS':'Altostratus', 'NS':'Nimbostratus', 'SC':'Stratocumulus', 'ST':'Stratus', 'CU':'Cumulus', 'CB':'Cumulonimbus', 'TC':'Towering Cumulus', 'SF':'Stratus fractus', 'CF':'Cumulus fractus', 'SN':'Neige (obscurcissement)', 'RA':'Pluie (obscurcissement)', 'FG':'Brouillard (obscurcissement)', 'BR':'Brume (obscurcissement)', 'HZ':'Brume sèche (obscurcissement)'};
         let m = [...t.matchAll(/([A-Z]{2})(\d)/g)]; let valid = true; let cldStr = m.map(match => { if (nC[match[1]]) return `${nC[match[1]]} (${match[2]}/8)`; valid = false; return ""; });
@@ -167,14 +172,14 @@ window.decoderMETAR = function() {
       i++;
     }
     let finalHtml = rmkDecoded.join('<br>');
-    if (unparsed.length > 0) finalHtml += (finalHtml !== '' ? '<br>' : '') + `<span style="color:#888078; font-style:italic;">Brut : ${unparsed.join(' ')}</span>`;
+    if (unparsed.length > 0) finalHtml += (finalHtml !== '' ? '<br>' : '') + `<span style="color:#888078; font-style:italic;">Brut : ${esc(unparsed.join(' '))}</span>`;
     if (finalHtml) result.remarques = { label: '📝 Remarques (RMK)', valeur: finalHtml };
   }
   afficherResultat(raw, result, alerteDegivrage);
 };
 
 function afficherResultat(raw, result, alerteDegivrage) {
-  document.getElementById('metar-raw').innerHTML = `<div style="background:#1a1a1a; padding:1.2rem; border-radius:8px; border:1px solid #d5d0c8; margin-bottom:1.5rem; font-family:monospace; color:#80cc80;">${raw}</div>`;
+  document.getElementById('metar-raw').innerHTML = `<div style="background:#1a1a1a; padding:1.2rem; border-radius:8px; border:1px solid #d5d0c8; margin-bottom:1.5rem; font-family:monospace; color:#80cc80;">${esc(raw)}</div>`;
   document.getElementById('metar-resultat-block').style.display = 'block';
   let html = '';
   if (alerteDegivrage) html += `<div style="background: #fde8e8; border-left: 5px solid #e74c3c; padding: 1.2rem; margin-bottom: 1.5rem; border-radius: 4px;"><strong style="color: #c0392b;">⚠️ Alerte de givrage</strong><br><span style="color: #78281f; font-size: 0.95rem;">Précipitations hivernales rapportées.</span></div>`;
@@ -206,7 +211,7 @@ function creerCarteGroupe(groupe, gIndex) {
   const header = document.createElement('div');
   header.className = 'groupe-header';
   header.innerHTML = `
-    <span class="groupe-titre">${groupe.titre}</span>
+    <span class="groupe-titre">${esc(groupe.titre)}</span>
     <span class="groupe-count">${items.length} élément${items.length !== 1 ? 's' : ''}</span>
     <div class="groupe-header-actions">
       <button class="btn-ajouter-dans-groupe" onclick="ouvrirMenuItem(${gIndex}, this)" title="Ajouter dans ce groupe">+</button>
@@ -234,15 +239,15 @@ function creerBlocNote(gIndex, note, iIndex) {
   const icones = { texte: '📝', pdf: '📎', lien: '🔗', reference: '🌐' };
   let contenu = '';
   if (note.type_note === 'texte') {
-    contenu = `<p class="note-contenu">${note.contenu.replace(/\n/g, '<br>')}</p>`;
+    contenu = `<p class="note-contenu">${esc(note.contenu).replace(/\n/g, '<br>')}</p>`;
   } else {
-    const url = note.contenu.startsWith('http') ? note.contenu : 'https://' + note.contenu;
-    contenu = `<a href="${url}" target="_blank" class="note-lien">${note.type_note === 'pdf' ? '📄 ' : ''}${note.nom || note.contenu}</a>`;
+    const url = urlSure(note.contenu);
+    contenu = `<a href="${url}" target="_blank" class="note-lien">${note.type_note === 'pdf' ? '📄 ' : ''}${esc(note.nom || note.contenu)}</a>`;
   }
   div.innerHTML = `
     <div class="note-card-header">
       <span class="note-icone">${icones[note.type_note] || '📝'}</span>
-      <span class="note-titre">${note.titre}</span>
+      <span class="note-titre">${esc(note.titre)}</span>
       <div class="note-actions">
         <button class="btn-edit" onclick="editerItem(${gIndex}, ${iIndex})">✏️</button>
         <button class="btn-delete" onclick="supprimerItem(${gIndex}, ${iIndex})">🗑️</button>

@@ -1,5 +1,10 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 
+// Neutralise le texte enregistré avant de l'insérer dans la page (empêche l'injection de code)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Adresse web sûre : http(s) seulement, sinon « https:// » est ajouté devant
+const urlSure = u => { u = String(u ?? '').trim(); return esc(/^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^[a-z][a-z0-9+.-]*:/i, '')); };
+
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('ena')) {
   alert("Accès refusé à cette page.");
@@ -155,7 +160,7 @@ function creerCarteGroupe(coursId, groupe, gIndex) {
   const header = document.createElement('div');
   header.className = 'groupe-header';
   header.innerHTML = `
-    <span class="groupe-titre">${groupe.titre}</span>
+    <span class="groupe-titre">${esc(groupe.titre)}</span>
     ${nbEch > 0 ? `<span class="groupe-progress">${nbDone}/${nbEch}</span>` : ''}
     <span class="groupe-count">${items.length} élément${items.length !== 1 ? 's' : ''}</span>
     <div class="groupe-header-actions">
@@ -190,8 +195,8 @@ function creerBlocEcheance(coursId, gIndex, e, iIndex) {
     : '—';
   div.innerHTML = `
     <input type="checkbox" class="echeance-check" ${e.complete ? 'checked' : ''} onchange="toggleComplete('${coursId}', ${gIndex}, ${iIndex}, this)">
-    <span class="echeance-date">${dateFormatee}</span>
-    <span class="echeance-desc">${e.description}</span>
+    <span class="echeance-date">${esc(dateFormatee)}</span>
+    <span class="echeance-desc">${esc(e.description)}</span>
     <div class="bloc-actions">
       <button class="btn-edit" onclick="editerItem('${coursId}', ${gIndex}, ${iIndex})">✏️</button>
       <button class="btn-delete" onclick="supprimerItem('${coursId}', ${gIndex}, ${iIndex})">🗑️</button>
@@ -206,15 +211,15 @@ function creerBlocNote(coursId, gIndex, note, iIndex) {
   const icones = { texte: '📝', pdf: '📎', lien: '🔗', reference: '🌐' };
   let contenu = '';
   if (note.type_note === 'texte') {
-    contenu = `<p class="note-contenu">${note.contenu.replace(/\n/g, '<br>')}</p>`;
+    contenu = `<p class="note-contenu">${esc(note.contenu).replace(/\n/g, '<br>')}</p>`;
   } else {
-    const url = note.contenu.startsWith('http') ? note.contenu : 'https://' + note.contenu;
-    contenu = `<a href="${url}" target="_blank" class="note-lien">${note.type_note === 'pdf' ? '📄 ' : ''}${note.nom || note.contenu}</a>`;
+    const url = urlSure(note.contenu);
+    contenu = `<a href="${url}" target="_blank" class="note-lien">${note.type_note === 'pdf' ? '📄 ' : ''}${esc(note.nom || note.contenu)}</a>`;
   }
   div.innerHTML = `
     <div class="note-card-header">
       <span class="note-icone">${icones[note.type_note] || '📝'}</span>
-      <span class="note-titre">${note.titre}</span>
+      <span class="note-titre">${esc(note.titre)}</span>
       <div class="note-actions">
         <button class="btn-edit" onclick="editerItem('${coursId}', ${gIndex}, ${iIndex})">✏️</button>
         <button class="btn-delete" onclick="supprimerItem('${coursId}', ${gIndex}, ${iIndex})">🗑️</button>

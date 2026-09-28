@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Décodeur CSDB — Outils de Frank</title>
+  <script>
+    // Réservé aux personnes connectées
+    if (!sessionStorage.getItem('loggedIn')) window.location.href = '../index.html';
+  </script>
   <link rel="stylesheet" href="../style.css">
   <style>
     body { flex-direction:column; align-items:stretch; justify-content:flex-start; }

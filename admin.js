@@ -1,4 +1,7 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
+
+// Neutralise le texte enregistré avant de l'insérer dans la page (empêche l'injection de code)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // Note: gestion des utilisateurs via /api/users.php (PHP + MySQL)
 
 // Vérification admin avant toute opération Firebase
@@ -242,7 +245,7 @@ async function chargerUtilisateurs() {
     const tr = document.createElement('tr');
     
     const permsHtml = (u.permissions || []).map(p => 
-      `<span style="background:#e0ddd6; color:#555; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; margin-right:4px;">${p}</span>`
+      `<span style="background:#e0ddd6; color:#555; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; margin-right:4px;">${esc(p)}</span>`
     ).join('');
 
     const roleHtml = u.role === 'admin'
@@ -257,11 +260,11 @@ async function chargerUtilisateurs() {
       'films.html': 'Films & Séries','scifi.html': 'Sci-Fi',
     };
     const accueil = u.pageAccueil || 'dashboard.html';
-    const accueilHtml = `<span style="font-size:0.8rem; color:#888;">${PAGE_LABELS[accueil] || accueil}</span>`;
+    const accueilHtml = `<span style="font-size:0.8rem; color:#888;">${esc(PAGE_LABELS[accueil] || accueil)}</span>`;
 
     tr.innerHTML = `
-      <td style="font-family:monospace; font-weight:bold;">${id}</td>
-      <td>${u.nom}</td>
+      <td style="font-family:monospace; font-weight:bold;">${esc(id)}</td>
+      <td>${esc(u.nom)}</td>
       <td>${accueilHtml}</td>
       <td>${roleHtml}</td>
       <td>${permsHtml}</td>

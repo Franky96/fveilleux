@@ -43,6 +43,11 @@ if ($method === 'POST') {
     $newPass  = $input['motDePasse']  ?? '';
 
     if (!$uid || !$nom) errOut('Champs manquants');
+    // identifiant simple : lettres, chiffres, point, tiret, soulignement
+    if (!preg_match('/^[a-z0-9._-]{1,40}$/', $uid)) errOut('Identifiant invalide (lettres, chiffres, . _ - seulement)');
+    if (mb_strlen($nom) > 60) errOut('Nom trop long');
+    if (!preg_match('/^[a-z0-9_-]+\.html$/', $accueil)) $accueil = 'dashboard.html';
+    $perms = json_encode(array_values(array_filter((array)($input['permissions'] ?? []), fn($p) => is_string($p) && preg_match('/^[A-Za-z0-9_-]{1,40}$/', $p))));
 
     // Vérifier si l'utilisateur existe déjà
     $exists = $pdo->prepare('SELECT id FROM users WHERE id=?');

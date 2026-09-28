@@ -1,5 +1,10 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 
+// Neutralise le texte enregistré avant de l'insérer dans la page (empêche l'injection de code)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Adresse web sûre : http(s) seulement, sinon « https:// » est ajouté devant
+const urlSure = u => { u = String(u ?? '').trim(); return esc(/^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^[a-z][a-z0-9+.-]*:/i, '')); };
+
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('liens')) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
@@ -61,7 +66,7 @@ function afficherCategories() {
     a.href = '#';
     a.className = 'sidebar-sublink' + (categorieActive === cat ? ' active' : '');
     a.innerHTML = `<span style="display:flex; justify-content:space-between; align-items:center;">
-                     ${cat} 
+                     ${esc(cat)} 
                      <span style="color:#ff6b6b; cursor:pointer; font-size:0.8rem;" onclick="event.stopPropagation(); supprimerCat(${index})" title="Supprimer la catégorie">✕</span>
                    </span>`;
     a.onclick = (e) => { e.preventDefault(); filtrerParCat(cat); };
@@ -125,21 +130,21 @@ function afficherLiens() {
     div.className = 'note-card note-type-lien';
     
     // Ajout d'https:// automatique si l'utilisateur l'a oublié
-    const urlClean = lien.url.startsWith('http') ? lien.url : 'https://' + lien.url;
+    const urlClean = urlSure(lien.url);
 
     div.innerHTML = `
       <div class="note-card-header">
         <span class="note-icone">🔗</span>
         <div style="flex:1;">
-          <a href="${urlClean}" target="_blank" class="note-titre note-lien" style="font-size:1.05rem;">${lien.nom}</a>
-          <span style="display:block; font-size:0.75rem; color:#888078; margin-top:0.2rem;">Catégorie: ${lien.cat}</span>
+          <a href="${urlClean}" target="_blank" class="note-titre note-lien" style="font-size:1.05rem;">${esc(lien.nom)}</a>
+          <span style="display:block; font-size:0.75rem; color:#888078; margin-top:0.2rem;">Catégorie: ${esc(lien.cat)}</span>
         </div>
         <div class="note-actions">
           <button class="btn-edit" onclick="editerLien(${vraiIndex})">✏️</button>
           <button class="btn-delete" onclick="supprimerLien(${vraiIndex})">🗑️</button>
         </div>
       </div>
-      ${lien.desc ? `<p class="note-contenu" style="margin-top:0.5rem; border-top:1px solid #d5d0c8; padding-top:0.5rem;">${lien.desc}</p>` : ''}
+      ${lien.desc ? `<p class="note-contenu" style="margin-top:0.5rem; border-top:1px solid #d5d0c8; padding-top:0.5rem;">${esc(lien.desc)}</p>` : ''}
     `;
     container.appendChild(div);
   });

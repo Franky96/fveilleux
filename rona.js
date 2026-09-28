@@ -1,5 +1,8 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 
+// Neutralise le texte enregistré avant de l'insérer dans la page (empêche l'injection de code)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('rona')) {
   alert("Accès refusé.");
@@ -686,7 +689,7 @@ function afficherCompletes() {
     .sort((a, b) => a.nom.localeCompare(b.nom));
 
   bar.innerHTML = compteur + triees.map(loc => {
-    return `<span style="background:#808080; color:#000; padding:0.25rem 0.6rem; border-radius:8px; font-size:0.8rem; font-weight:bold;">${loc.nom} ✅</span>`;
+    return `<span style="background:#808080; color:#000; padding:0.25rem 0.6rem; border-radius:8px; font-size:0.8rem; font-weight:bold;">${esc(loc.nom)} ✅</span>`;
   }).join('');
 }
 

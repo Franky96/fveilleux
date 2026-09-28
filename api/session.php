@@ -1,6 +1,20 @@
 <?php
 defined('_FVEILLEUX') or die('Accès direct interdit.');
 
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: same-origin');
+
+// Les écritures n'acceptent que du JSON envoyé par le site : un formulaire
+// d'un autre site ne peut pas produire cet en-tête sans autorisation (CORS).
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+    && stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== 0) {
+  http_response_code(415);
+  header('Content-Type: application/json; charset=utf-8');
+  echo json_encode(['error' => 'Format de requête non accepté']);
+  exit;
+}
+
 function sessionInit(): void {
   if (session_status() === PHP_SESSION_NONE) {
     session_set_cookie_params([

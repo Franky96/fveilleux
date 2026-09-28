@@ -1,5 +1,10 @@
 import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 
+// Neutralise le texte enregistré avant de l'insérer dans la page (empêche l'injection de code)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Adresse web sûre : http(s) seulement, sinon « https:// » est ajouté devant
+const urlSure = u => { u = String(u ?? '').trim(); return esc(/^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^[a-z][a-z0-9+.-]*:/i, '')); };
+
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('films')) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
@@ -201,7 +206,7 @@ function creerCarteFilm(item, vraiIndex) {
   }[item.statut] || '';
 
   const posterHtml = item.image
-    ? `<img class="film-poster" src="${item.image}" alt="${item.titre}" loading="lazy"
+    ? `<img class="film-poster" src="${urlSure(item.image)}" alt="${esc(item.titre)}" loading="lazy"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
   const placeholderVisible = item.image ? 'none' : 'flex';
@@ -219,13 +224,13 @@ function creerCarteFilm(item, vraiIndex) {
           <button class="btn-delete" onclick="event.stopPropagation(); supprimerFilm(${vraiIndex})" title="Supprimer">🗑️</button>
         </div>
       </div>
-      <h3 class="film-titre">${item.titre}</h3>
+      <h3 class="film-titre">${esc(item.titre)}</h3>
       <div class="film-infos">
-        ${item.genre ? `<span class="film-genre">${item.genre}</span>` : ''}
-        ${item.annee ? `<span class="film-annee">${item.annee}</span>` : ''}
+        ${item.genre ? `<span class="film-genre">${esc(item.genre)}</span>` : ''}
+        ${item.annee ? `<span class="film-annee">${esc(item.annee)}</span>` : ''}
       </div>
-      ${item.statut === 'vu' && item.note > 0 ? `<div class="film-etoiles" title="${item.note}/5">${etoiles}</div>` : ''}
-      ${item.commentaire ? `<p class="film-commentaire">${item.commentaire}</p>` : ''}
+      ${item.statut === 'vu' && item.note > 0 ? `<div class="film-etoiles" title="${esc(item.note)}/5">${etoiles}</div>` : ''}
+      ${item.commentaire ? `<p class="film-commentaire">${esc(item.commentaire)}</p>` : ''}
     </div>
   `;
   return card;
@@ -410,15 +415,15 @@ window.ouvrirDetail = (index) => {
 
   // Meta
   const metaParts = [];
-  if (item.annee) metaParts.push(`<span>${item.annee}</span>`);
-  if (item.genre) metaParts.push(`<span class="film-genre">${item.genre}</span>`);
+  if (item.annee) metaParts.push(`<span>${esc(item.annee)}</span>`);
+  if (item.genre) metaParts.push(`<span class="film-genre">${esc(item.genre)}</span>`);
   if (item.type === 'film' && item.duree) {
     const h = Math.floor(item.duree / 60);
     const m = String(item.duree % 60).padStart(2, '0');
-    metaParts.push(`<span>${h}h${m}</span>`);
+    metaParts.push(`<span>${esc(h)}h${esc(m)}</span>`);
   }
   if (item.type === 'serie' && item.nb_saisons) {
-    metaParts.push(`<span>${item.nb_saisons} saison${item.nb_saisons > 1 ? 's' : ''}</span>`);
+    metaParts.push(`<span>${esc(item.nb_saisons)} saison${item.nb_saisons > 1 ? 's' : ''}</span>`);
   }
   document.getElementById('detail-meta').innerHTML = metaParts.join('<span class="sep"> · </span>');
 
@@ -426,7 +431,7 @@ window.ouvrirDetail = (index) => {
   const etoilesEl = document.getElementById('detail-etoiles');
   if (item.note > 0) {
     const etoiles = '★'.repeat(item.note) + '☆'.repeat(5 - item.note);
-    etoilesEl.innerHTML = `<span class="film-etoiles" title="${item.note}/5">${etoiles}</span>`;
+    etoilesEl.innerHTML = `<span class="film-etoiles" title="${esc(item.note)}/5">${esc(etoiles)}</span>`;
     etoilesEl.style.display = 'block';
   } else {
     etoilesEl.style.display = 'none';
@@ -435,8 +440,8 @@ window.ouvrirDetail = (index) => {
   // Réalisateur / Acteurs
   const peopleEl = document.getElementById('detail-people');
   let peopleHtml = '';
-  if (item.realisateur) peopleHtml += `<div class="detail-people-row"><span class="detail-role">🎥 Réal.</span>${item.realisateur}</div>`;
-  if (item.acteurs) peopleHtml += `<div class="detail-people-row"><span class="detail-role">🎭 Acteurs</span>${item.acteurs}</div>`;
+  if (item.realisateur) peopleHtml += `<div class="detail-people-row"><span class="detail-role">🎥 Réal.</span>${esc(item.realisateur)}</div>`;
+  if (item.acteurs) peopleHtml += `<div class="detail-people-row"><span class="detail-role">🎭 Acteurs</span>${esc(item.acteurs)}</div>`;
   peopleEl.innerHTML = peopleHtml;
   peopleEl.style.display = peopleHtml ? 'flex' : 'none';
 
