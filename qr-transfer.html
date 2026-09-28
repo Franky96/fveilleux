@@ -1426,7 +1426,7 @@ function txBuildFileInfo() {
   const tag = txQrMode !== 'normal' ? ` · QR ${txQrMode}` : '';
   $('#tx-drop-content').innerHTML = `
     <div class="file-info">
-      <div><b>${tx.file.name}</b></div>
+      <div><b>${String(tx.file.name).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';')}</b></div>
       <div class="meta">${fmtBytes(tx.file.size)} · ${frames} trames${tag}</div>
     </div>`;
 }

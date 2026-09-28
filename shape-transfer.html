@@ -799,7 +799,7 @@ $('#tx-file').onchange = async e => {
   $('#tx-drop').classList.add('has-file');
   $('#tx-drop-content').innerHTML = `
     <div class="file-info">
-      <div><b>${f.name}</b></div>
+      <div><b>${String(f.name).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';')}</b></div>
       <div class="meta">${fmtBytes(f.size)} · ${chunks} trames · ~${fmtBytes(chunks * CHUNK_SIZE / (1000/frameMs))}/s</div>
     </div>`;
   $('#tx-start').disabled = false;
