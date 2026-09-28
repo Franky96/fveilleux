@@ -68,7 +68,7 @@ function tentativeHtml(tentatives) {
 }
 
 function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function renderDetails() {
@@ -283,8 +283,8 @@ map.on('click', function(e) {
       L.popup()
         .setLatLng([best[6], best[5]])
         .setContent(`
-          <div class="popup-title">✈ ${callsign}</div>
-          <div class="popup-row"><b>Pays :</b> ${best[2] || '—'}</div>
+          <div class="popup-title">✈ ${escHtml(callsign)}</div>
+          <div class="popup-row"><b>Pays :</b> ${escHtml(best[2] || '—')}</div>
           <div class="popup-row"><b>Altitude :</b> ${alt}</div>
           <div class="popup-row"><b>Vitesse :</b> ${spd}</div>
           <div class="popup-row"><b>Cap :</b> ${Math.round(best[10] || 0)}°</div>
@@ -307,8 +307,8 @@ map.on('click', function(e) {
       L.popup()
         .setLatLng([best.lat, best.lng])
         .setContent(`
-          <div class="popup-title">🛰 ${best.name}</div>
-          <div class="popup-row"><b>Altitude :</b> ${best.alt} km</div>
+          <div class="popup-title">🛰 ${escHtml(best.name)}</div>
+          <div class="popup-row"><b>Altitude :</b> ${escHtml(best.alt)} km</div>
           <div class="popup-row"><b>Lat :</b> ${best.lat.toFixed(2)}°</div>
           <div class="popup-row"><b>Lon :</b> ${best.lng.toFixed(2)}°</div>
         `)
@@ -621,8 +621,8 @@ async function chargerSeismes() {
 
       const circle = L.circleMarker([lat, lon], { radius, color, fillColor: color, fillOpacity: 0.42, weight: 1.5 });
       circle.bindPopup(`
-        <div class="popup-title">🌍 M${mag.toFixed(1)} — ${place}</div>
-        <div class="popup-row"><b>Date :</b> ${time}</div>
+        <div class="popup-title">🌍 M${mag.toFixed(1)} — ${escHtml(place)}</div>
+        <div class="popup-row"><b>Date :</b> ${escHtml(time)}</div>
         <div class="popup-row"><b>Profondeur :</b> ${depth.toFixed(1)} km</div>
         <div class="popup-row"><b>Lat / Lon :</b> ${lat.toFixed(2)}° / ${lon.toFixed(2)}°</div>
       `);

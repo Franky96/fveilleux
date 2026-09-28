@@ -1,4 +1,6 @@
 // === SÉCURITÉ ===
+// Les données viennent de relais publics (proxies CORS) : on les affiche toujours comme du texte
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') || !permissions.includes('hockey')) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
@@ -242,13 +244,13 @@ function afficherResultatsListe(joueurs) {
     btn.style.alignItems = 'center';
     btn.style.gap = '1rem';
     
-    const headshotUrl = `https://assets.nhle.com/mugs/nhl/latest/${joueur.playerId}.png`;
+    const headshotUrl = `https://assets.nhle.com/mugs/nhl/latest/${encodeURIComponent(joueur.playerId)}.png`;
     
     btn.innerHTML = `
       <img src="${headshotUrl}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'40\\' height=\\'40\\'><circle cx=\\'20\\' cy=\\'20\\' r=\\'20\\' fill=\\'%232a3a2a\\'/></svg>'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #0a0f0a; border: 1px solid #2a3a2a;">
       <div style="display:flex; flex-direction:column; line-height:1.2; text-align:left;">
-        <strong style="color:#f0ede6;">${joueur.name}</strong>
-        <span style="color:#a89f94; font-size:0.8rem;">${joueur.teamAbbrev || '—'} · ${joueur.positionCode || '—'}</span>
+        <strong style="color:#f0ede6;">${esc(joueur.name)}</strong>
+        <span style="color:#a89f94; font-size:0.8rem;">${esc(joueur.teamAbbrev || '—')} · ${esc(joueur.positionCode || '—')}</span>
       </div>
     `;
     
@@ -391,8 +393,8 @@ async function afficherFiche(playerId, nomComplet) {
       
       return statsFormat.map(stat => `
         <div style="display:flex; flex-direction:column; align-items:center; background:#0a0f0a; border:1px solid #2a3a2a; border-radius:8px; padding:0.8rem;">
-          <span style="color:#a89f94; font-size:0.75rem; text-transform:uppercase; font-weight:bold; margin-bottom:0.2rem;">${stat.l}</span>
-          <span style="color:#f0ede6; font-size:1.2rem; font-weight:bold;">${stat.v ?? '0'}</span>
+          <span style="color:#a89f94; font-size:0.75rem; text-transform:uppercase; font-weight:bold; margin-bottom:0.2rem;">${esc(stat.l)}</span>
+          <span style="color:#f0ede6; font-size:1.2rem; font-weight:bold;">${esc(stat.v ?? '0')}</span>
         </div>`).join('');
     };
 
@@ -457,13 +459,13 @@ async function chargerGameLog(playerId, estGardien) {
         const res = g.wins > 0 ? '<span class="gamelog-win">V</span>' : '<span class="gamelog-loss">D</span>';
         const pct = g.savePctg != null ? (g.savePctg < 1 ? g.savePctg * 100 : g.savePctg).toFixed(1) + '%' : '—';
         return `<div class="gamelog-row gamelog-row-goalie">
-          <span>${fmtDate(g.gameDate)}</span>
-          <span style="color:#a89f94">${loc} ${g.opponentAbbrev || '—'}</span>
-          <span>${res}</span>
-          <span>${g.shotsAgainst ?? '—'}</span>
-          <span>${g.saves ?? '—'}</span>
-          <span>${pct}</span>
-          <span>${g.shutouts ?? '—'}</span>
+          <span>${esc(fmtDate(g.gameDate))}</span>
+          <span style="color:#a89f94">${esc(loc)} ${esc(g.opponentAbbrev || '—')}</span>
+          <span>${esc(res)}</span>
+          <span>${esc(g.shotsAgainst ?? '—')}</span>
+          <span>${esc(g.saves ?? '—')}</span>
+          <span>${esc(pct)}</span>
+          <span>${esc(g.shutouts ?? '—')}</span>
         </div>`;
       }).join('')}
     </div>`;
@@ -478,13 +480,13 @@ async function chargerGameLog(playerId, estGardien) {
         const pm  = g.plusMinus != null ? (g.plusMinus > 0 ? '+' + g.plusMinus : g.plusMinus) : '—';
         const pmCls = g.plusMinus > 0 ? 'gamelog-win' : g.plusMinus < 0 ? 'gamelog-loss' : '';
         return `<div class="gamelog-row gamelog-row-skater">
-          <span>${fmtDate(g.gameDate)}</span>
-          <span style="color:#a89f94">${loc} ${g.opponentAbbrev || '—'}</span>
-          <span>${g.goals ?? '—'}</span>
-          <span>${g.assists ?? '—'}</span>
-          <span class="gamelog-pts">${pts}</span>
-          <span class="${pmCls}">${pm}</span>
-          <span>${g.toi || '—'}</span>
+          <span>${esc(fmtDate(g.gameDate))}</span>
+          <span style="color:#a89f94">${esc(loc)} ${esc(g.opponentAbbrev || '—')}</span>
+          <span>${esc(g.goals ?? '—')}</span>
+          <span>${esc(g.assists ?? '—')}</span>
+          <span class="gamelog-pts">${esc(pts)}</span>
+          <span class="${esc(pmCls)}">${esc(pm)}</span>
+          <span>${esc(g.toi || '—')}</span>
         </div>`;
       }).join('')}
     </div>`;
@@ -540,8 +542,8 @@ async function chargerEdge(playerId, estGardien, saison) {
   container.style.gap = '10px';
   container.innerHTML = valides.map(f => `
     <div style="display:flex;flex-direction:column;align-items:center;background:#0a0f0a;border:1px solid #2a3a2a;border-radius:8px;padding:0.8rem;">
-      <span style="color:#a89f94;font-size:0.75rem;text-transform:uppercase;font-weight:bold;margin-bottom:0.2rem;">${f.l}</span>
-      <span style="color:#f0ede6;font-size:1.05rem;font-weight:bold;">${f.v}</span>
+      <span style="color:#a89f94;font-size:0.75rem;text-transform:uppercase;font-weight:bold;margin-bottom:0.2rem;">${esc(f.l)}</span>
+      <span style="color:#f0ede6;font-size:1.05rem;font-weight:bold;">${esc(f.v)}</span>
     </div>`).join('');
 }
 
@@ -654,8 +656,8 @@ async function chercherContrats(ppUrl, cwUrl) {
     container.style.gap = '10px';
     container.innerHTML = fields.map(f => `
       <div style="display:flex; flex-direction:column; align-items:center; background:#0a0f0a; border:1px solid #2a3a2a; border-radius:8px; padding:0.8rem;">
-        <span style="color:#a89f94; font-size:0.75rem; text-transform:uppercase; font-weight:bold; margin-bottom:0.2rem;">${f.l}</span>
-        <span style="color:#f0ede6; font-size:1.2rem; font-weight:bold;">${f.v || '—'}</span>
+        <span style="color:#a89f94; font-size:0.75rem; text-transform:uppercase; font-weight:bold; margin-bottom:0.2rem;">${esc(f.l)}</span>
+        <span style="color:#f0ede6; font-size:1.2rem; font-weight:bold;">${esc(f.v || '—')}</span>
       </div>`).join('');
   } else {
     if (status) status.textContent = "Données indisponibles — liens directs :";
@@ -761,12 +763,12 @@ function afficherCartesContrats(contrats, container) {
     const div = document.createElement('div');
     div.style.cssText = 'background: #162216; border: 1px solid #3a4a3a; padding: 1.2rem; border-radius: 6px;';
     div.innerHTML = `
-      <h4 style="color:#d4892a; margin-bottom:10px; border-bottom:1px solid #3a4a3a; padding-bottom:5px;">${titre}</h4>
+      <h4 style="color:#d4892a; margin-bottom:10px; border-bottom:1px solid #3a4a3a; padding-bottom:5px;">${esc(titre)}</h4>
       <div style="font-size:0.9rem; line-height:1.6; color:#f0ede6;">
-        <div><strong style="color:#80cc80;">Cap Hit:</strong> ${contrat.capHit || '—'}</div>
-        <div><strong style="color:#80cc80;">AAV:</strong> ${contrat.aav || '—'}</div>
-        <div><strong style="color:#80cc80;">Durée:</strong> ${contrat.length || '—'}</div>
-        <div><strong style="color:#80cc80;">Expiration:</strong> ${contrat.expiry || '—'}</div>
+        <div><strong style="color:#80cc80;">Cap Hit:</strong> ${esc(contrat.capHit || '—')}</div>
+        <div><strong style="color:#80cc80;">AAV:</strong> ${esc(contrat.aav || '—')}</div>
+        <div><strong style="color:#80cc80;">Durée:</strong> ${esc(contrat.length || '—')}</div>
+        <div><strong style="color:#80cc80;">Expiration:</strong> ${esc(contrat.expiry || '—')}</div>
       </div>
     `;
     container.appendChild(div);

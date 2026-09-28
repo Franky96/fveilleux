@@ -41,6 +41,7 @@ if ($method === 'POST') {
     $perms    = json_encode($input['permissions'] ?? []);
     $accueil  = $input['pageAccueil'] ?? 'dashboard.html';
     $newPass  = $input['motDePasse']  ?? '';
+    if ($newPass !== '' && mb_strlen($newPass) < 8) errOut('Mot de passe trop court (8 caractères minimum)');
 
     if (!$uid || !$nom) errOut('Champs manquants');
     // identifiant simple : lettres, chiffres, point, tiret, soulignement

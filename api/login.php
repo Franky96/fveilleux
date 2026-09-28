@@ -40,7 +40,9 @@ switch ($action) {
     $stmt->execute([$uid]);
     $user = $stmt->fetch();
 
-    if (!$user || !password_verify($pass, $user['password_hash'])) {
+    // un hachage fictif garde le même temps de réponse si l'identifiant n'existe pas
+    $hash = $user['password_hash'] ?? '$2y$12$s4a3SyVQ72HqiSzh6KXqu.SbSygekfgTVa18Jt5dUyihnb9or2daa';
+    if (!password_verify($pass, $hash) || !$user) {
       noterEchec();
       errOut('Identifiant ou mot de passe incorrect', 401);
     }
@@ -84,7 +86,10 @@ switch ($action) {
   /* ── Déconnexion ── */
   case 'logout':
     sessionInit();
+    $_SESSION = [];
     session_destroy();
+    $p = session_get_cookie_params();
+    setcookie(session_name(), '', ['expires' => time() - 3600, 'path' => $p['path'], 'secure' => $p['secure'], 'httponly' => true, 'samesite' => $p['samesite'] ?: 'Lax']);
     jsonOut(['ok' => true]);
 
   /* ── Session courante ── */
