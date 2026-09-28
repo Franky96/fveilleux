@@ -60,7 +60,7 @@
     const isAdmin = role === 'admin';
 
     const archivesBtn = document.getElementById('btn-archives');
-    if (archivesBtn) archivesBtn.style.display = 'flex';
+    if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
 
     const webmailBtn = document.getElementById('btn-webmail');
     if (webmailBtn) webmailBtn.style.display = isAdmin ? 'flex' : 'none';

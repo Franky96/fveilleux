@@ -2,6 +2,8 @@ import { db, doc, getDoc } from "./firebase-config.js";
 
 if (!sessionStorage.getItem('loggedIn')) {
   window.location.href = 'index.html';
+} else if (sessionStorage.getItem('userRole') === 'guest') {
+  window.location.href = 'dashboard.html';   // pas d'archives pour le compte invité
 }
 
 // Modules run after the DOM is parsed (deferred), so we can query elements directly.

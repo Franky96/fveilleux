@@ -44,9 +44,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 4a. Archives et Concept — visibles pour tous
   const archivesBtn = document.getElementById('btn-archives');
-  if (archivesBtn) archivesBtn.style.display = 'flex';
+  // Archives et Concept : pas pour le compte invité
+  if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
   const conceptBtn = document.getElementById('btn-concept');
-  if (conceptBtn) conceptBtn.style.display = 'flex';
+  if (conceptBtn) conceptBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
 
   // 4. Gérer l'affichage du bouton Webmail (admin seulement)
   const btnWebmail = document.getElementById('btn-webmail');

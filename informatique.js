@@ -34,7 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Archives — visible pour tous
   const archivesBtn = document.getElementById('btn-archives');
-  if (archivesBtn) archivesBtn.style.display = 'flex';
+  // Archives et Concept : pas pour le compte invité
+  if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
 
   // Items admin seulement
   const isAdmin = role === 'admin';

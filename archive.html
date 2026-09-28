@@ -9,6 +9,7 @@
     if (!sessionStorage.getItem('loggedIn')) {
       window.location.href = 'index.html';
     }
+    else if (sessionStorage.getItem('userRole') === 'guest') window.location.href = 'dashboard.html';
   </script>
 </head>
 <body>
