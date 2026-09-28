@@ -66,7 +66,7 @@
     .mdp-valeur { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.4rem; letter-spacing: 0.06em; text-align: center; padding: 0.8rem; border-radius: 8px; background: #f5f2eb; border: 1px dashed #c0392b; color: #1a1a1a; user-select: all; word-break: break-all; }
 
     /* ─── Mise en page adaptée à la taille de l'écran ─── */
-    .admin-page .page-content { min-width: 0; }
+    .admin-page .admin-main { min-width: 0; min-height: 0; max-width: 1400px; margin: 0 auto; border-radius: 12px; }
     .admin-page .admin-header { flex-wrap: wrap; gap: 1rem; }
     .admin-page .admin-header .btn-ajouter { width: auto; }
     .admin-page .content-block { overflow-x: auto; }
@@ -75,29 +75,28 @@
     .admin-page .modal-box { width: min(560px, 100%); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; }
     .admin-page .modal-box select { width: 100%; }
 
-    /* Tablettes et petits portables : barre latérale réduite */
+    /* Tablettes et petits portables */
     @media (max-width: 1100px) {
-      .admin-page .sidebar { width: 170px; padding: 1.5rem 1rem; }
-      .admin-page .page-content { padding: 1.75rem; }
+      .admin-page .admin-main { padding: 1.75rem; }
       .admin-page .users-table th:nth-child(3), .admin-page .users-table td:nth-child(3) { display: none; }
     }
 
-    /* Téléphones et tablettes en portrait : barre en haut, utilisateurs en cartes */
+    /* Téléphones et tablettes en portrait : utilisateurs en cartes */
     @media (max-width: 800px) {
-      .admin-page .page-container { flex-direction: column; }
-      .admin-page .sidebar { width: 100%; min-height: 0; position: static; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1rem; padding: 0.8rem 1rem; border-right: 0; border-bottom: 2px solid #c0392b; }
-      .admin-page .sidebar .back-btn { margin: 0; }
-      .admin-page .sidebar h2 { margin: 0; }
-      .admin-page .sidebar-subtitle { margin: 0; }
-      .admin-page .page-content { padding: 1rem; min-height: 0; }
-      .admin-page .page-content h1 { font-size: 1.35rem; }
+      .admin-page .admin-container { padding: 1rem; }
+      .admin-page .admin-container > header { margin-bottom: 1rem; padding-bottom: 1rem; }
+      .admin-page .admin-main { padding: 1rem; }
+      .admin-page .admin-main h1 { font-size: 1.35rem; }
+      .admin-page .content-block { padding: 0.75rem; }
+      .admin-page .users-table tr:not(.user-row) td { padding: 0.6rem 0.2rem 0.4rem !important; }
+      .admin-page .users-table tr:not(.user-row):first-child td { padding-top: 0 !important; }
       .admin-page .admin-header { margin-bottom: 1rem; }
       .admin-page .admin-header .btn-ajouter { width: 100%; }
       .admin-page .users-table thead { display: none; }
       .admin-page .users-table, .admin-page .users-table tbody { display: block; width: 100%; }
       .admin-page .users-table tr { display: block; }
       .admin-page .users-table tr.user-row { border: 1px solid #d5d0c8; border-radius: 10px; padding: 0.6rem 0.8rem; margin-bottom: 0.7rem; background: #fff; }
-      .admin-page .users-table tr:not(.user-row) td { display: block; padding-top: 1.2rem !important; }
+      .admin-page .users-table tr:not(.user-row) td { display: block; }
       .admin-page .users-table tr.user-row td { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.5rem; border: 0; padding: 0.25rem 0; text-align: left !important; white-space: normal !important; }
       .admin-page .users-table tr.user-row td::before { content: attr(data-label); color: #888078; font-size: 0.78rem; }
       .admin-page .users-table th:nth-child(3), .admin-page .users-table td:nth-child(3) { display: grid; }
@@ -117,15 +116,18 @@
   </style>
 </head>
 <body class="admin-page">
-  <div class="page-container">
+  <div class="dashboard-container admin-container">
 
-    <aside class="sidebar" style="border-right-color: #c0392b;">
-      <a href="dashboard.html" class="back-btn" style="color:#e74c3c;">&#8592; Accueil</a>
-      <h2 style="color:#e74c3c;">Admin</h2>
-      <p class="sidebar-subtitle">Centre de contrôle</p>
-    </aside>
+    <header>
+      <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <div style="text-align:center;">
+        <h1 style="color:#e74c3c;">Administration</h1>
+        <p class="subtitle">Centre de contrôle</p>
+      </div>
+      <div class="header-controls"></div>
+    </header>
 
-    <main class="page-content">
+    <main class="page-content admin-main">
       <div class="admin-header">
         <div>
           <h1 style="color: #c0392b; margin-bottom:0.5rem;">Gestion des utilisateurs</h1>
@@ -272,11 +274,10 @@
   <script>
     (function () {
       const toggle = document.getElementById('theme-toggle');
-      const backBtn = document.querySelector('.sidebar .back-btn-dash') || document.querySelector('.sidebar .back-btn');
-      if (toggle && backBtn) {
+      const controls = document.querySelector('.header-controls');
+      if (toggle && controls) {
         toggle.classList.remove('theme-toggle--fixed');
-        backBtn.style.display = 'block';
-        backBtn.after(toggle);
+        controls.prepend(toggle);
       }
     })();
   </script>
