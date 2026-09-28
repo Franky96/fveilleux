@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const grid = document.getElementById('menu-grid');
   if (grid) grid.style.visibility = 'visible';
 
-  // Archives — visible pour tous
   const archivesBtn = document.getElementById('btn-archives');
   // Archives et Concept : pas pour le compte invité
   if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';

@@ -144,7 +144,7 @@ html.light {
         <span></span><span></span><span></span>
       </button>
       <div id="hamburger-menu">
-        <a href="archive.html" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
+        <a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
         <a href="https://mail.hostinger.com/" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
         <button class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
         <div class="hbg-sep"></div>
@@ -441,6 +441,9 @@ function closeHamburger() {
 document.addEventListener('click', e => {
   if (!e.target.closest('#hamburger-btn') && !e.target.closest('#hamburger-menu')) closeHamburger();
 });
+// Archives : pas pour le compte invité
+const archivesBtn = document.getElementById('btn-archives');
+if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) logoutBtn.addEventListener('click', () => {
   sessionStorage.clear(); window.location.href = 'index.html';
