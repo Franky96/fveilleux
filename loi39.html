@@ -1,22 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Québec sous la loi 39</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=Public+Sans:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="loi39.css">
-<style>
-body{margin:0;background:#F1F3F7}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background:#0C1019}}
-:root[data-theme="dark"] body{background:#0C1019}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Outils de Frank — Loi 39</title>
+  <script>
+    const _pL = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pL.includes('loi39') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+    }
+    // Thème du site (clair / sombre) appliqué aussi à la simulation
+    document.documentElement.dataset.theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="loi-39/loi39.css">
+  <style>
+    /* Pas de style.css ici : ses règles générales (button, header, input…) déformeraient la simulation.
+       La barre du haut et l'interrupteur de thème reprennent donc le style du site. */
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0C1019; }
+    html[data-theme="light"] body { background: #F1F3F7; }
+    .site-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem;
+      padding: 1rem 1.5rem; background: #0a0f0a; border-bottom: 1px solid #2a3a2a; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .site-top a.retour { justify-self: start; background: #000; color: #a89f94; border: 1px solid #2a3a2a; padding: 0.4rem 1rem;
+      border-radius: 8px; text-decoration: none; font-size: 0.9rem; }
+    .site-top a.retour:hover { background: #1a2e1a; border-color: #80cc80; color: #80cc80; }
+    .site-top .titre { text-align: center; }
+    .site-top h1 { margin: 0; font-size: 1.4rem; color: #80cc80; }
+    .site-top p { margin: 0.15rem 0 0; color: #a89f94; font-size: 0.9rem; }
+    .site-top .controles { justify-self: end; display: flex; align-items: center; }
+    html[data-theme="light"] .site-top { background: #f5f2eb; border-bottom-color: #d5d0c8; }
+    html[data-theme="light"] .site-top h1 { color: #2a6a2a; }
+    html[data-theme="light"] .site-top a.retour { background: #fff; color: #555; border-color: #d5d0c8; }
+    #theme-toggle { width: 68px; height: 26px; border-radius: 13px; background: #2a3a2a; border: 1.5px solid #3a5a3a; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
+      transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
+    .tg-icon { font-size: 0.62rem; line-height: 1; pointer-events: none; position: relative; z-index: 2; }
+    #theme-toggle-knob { position: absolute; width: 20px; height: 20px; border-radius: 50%; top: 50%; transform: translateY(-50%); left: 3px;
+      background: #7ab880; box-shadow: 0 1px 4px rgba(0,0,0,0.55); transition: left 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s; pointer-events: none; z-index: 3; }
+    html.light #theme-toggle { background: #34c759; border-color: #28a045; }
+    html.light #theme-toggle-knob { left: 45px; background: #fff; }
+    @media (max-width: 600px) {
+      .site-top { padding: 0.75rem 1rem; grid-template-columns: auto 1fr auto; }
+      .site-top h1 { font-size: 1.1rem; }
+      .site-top p { display: none; }
+    }
+  </style>
 </head>
 <body>
-<!-- Votre en-tête de site ici -->
-<div class="loi39" data-src="data.json">
+  <div class="site-top">
+    <a href="dashboard.html" class="retour">&#8592; Accueil</a>
+    <div class="titre">
+      <h1>Loi 39</h1>
+      <p>Le Québec avec le mode de scrutin du projet de loi n° 39</p>
+    </div>
+    <div class="controles" id="controles"></div>
+  </div>
+
+<div class="loi39" data-src="loi-39/data.json">
 <div class="wrap">
   <header class="top">
     <div class="big num" id="l39-bigNum">52<small>sièges sur 125</small></div>
@@ -163,8 +207,18 @@ body{margin:0;background:#F1F3F7}
 </div>
 </div>
 
-<!-- Votre pied de page ici -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script type="module" src="loi39.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script type="module" src="loi-39/loi39.js"></script>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script>
+    (function () {
+      const t = document.getElementById('theme-toggle');
+      if (t) { t.classList.remove('theme-toggle--fixed'); document.getElementById('controles').appendChild(t); }
+      // l'interrupteur du site change la classe « light » : on suit avec data-theme pour la simulation
+      const sync = () => { document.documentElement.dataset.theme = document.documentElement.classList.contains('light') ? 'light' : 'dark'; };
+      sync(); new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    })();
+  </script>
 </body>
 </html>

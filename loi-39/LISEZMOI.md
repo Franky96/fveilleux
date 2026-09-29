@@ -15,13 +15,19 @@ projet** : architecture, données, méthode, reconstruction, pièges connus.
 
 ## 0. Sur fveilleux.com
 
-- En ligne : **https://fveilleux.com/loi-39/** (page publique, sans connexion).
-- Dans le dépôt `Franky96/fveilleux` (public, déployé sur Hostinger à chaque push sur `master`) : dossier `loi-39/`.
-  - `index.html` = `exemple.html` + fond de page clair/sombre ; charge `loi39.css`, `loi39.js`, `data.json`.
-  - `loi39-simulation.html` = version autonome (données intégrées), à télécharger ou ouvrir hors ligne.
-- Reconstruire depuis le dépôt : `cd loi-39/outils && LOI39_AUTONOME="$PWD/../loi39-simulation.html" ./reconstruire.sh`
-  (le kit est écrit dans `loi-39/` par défaut). Si `exemple.html` est régénéré, recopier dans `index.html` le bloc
-  `<style>` du fond de page, puis pousser sur `master`.
+- Page du site : **https://fveilleux.com/loi39.html**, une section comme les autres : connexion requise,
+  permission « loi39 » (Admin), ouvrable au compte invité via « Permissions Invité ».
+- `loi39.html` (racine du dépôt) = barre du haut du site + contenu de `fragment.html` ; il charge
+  `loi-39/loi39.css`, `loi-39/loi39.js` et `loi-39/data.json`. Il **n'utilise pas** `style.css` (ses règles
+  générales `button`, `header`, `input`… déformeraient la simulation). Le thème du site (classe `light` sur
+  `<html>`) est recopié dans `data-theme`, que la simulation suit.
+- Dépôt `Franky96/fveilleux` (public, déployé sur Hostinger à chaque push sur `master`) ; le dossier `loi-39/`
+  garde le kit, ce LISEZMOI et `outils/`. Pas de page publique dans `loi-39/` : ne pas y laisser `index.html`,
+  `exemple.html` ni la version autonome.
+- Reconstruire depuis le dépôt :
+  `cd loi-39/outils && LOI39_AUTONOME=/tmp/loi39-simulation.html ./reconstruire.sh && rm -f ../exemple.html`
+  Si `fragment.html` a changé, recopier son contenu dans `loi39.html` (avec `data-src="loi-39/data.json"`),
+  puis pousser sur `master`.
 
 ## 1. Contenu du dossier
 
