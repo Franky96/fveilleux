@@ -23,6 +23,9 @@
   --pq:#5A6BFF; --plq:#FF4D4D; --caq:#3CC6FF; --pcq:#8FA0DA; --qs:#FF7A3A; --focus:#8FA0FF; --warn:#F0B35A; --water:#0F1624;
 }
 *{box-sizing:border-box}
+/* Un seul rythme d'espacement : --gap entre les cartes, --sec entre les sections */
+:root{--gap:20px;--sec:48px}
+@media (max-width:600px){:root{--gap:16px;--sec:36px}}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1680px;margin:0 auto;padding-inline:clamp(16px,3vw,56px);padding-block:28px 64px}
 h1,h2,h3{font-family:var(--serif);text-wrap:balance;margin:0;line-height:1.15}
@@ -36,7 +39,7 @@ a{color:inherit;text-underline-offset:3px}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* En-tête */
-header.top{display:grid;grid-template-columns:auto 1fr;gap:10px 36px;align-items:end;padding-bottom:26px;border-bottom:1px solid var(--rule)}
+header.top{display:grid;grid-template-columns:auto 1fr;gap:var(--gap) 36px;align-items:end;padding-bottom:var(--gap);border-bottom:1px solid var(--rule)}
 .big{font-family:var(--serif);font-weight:800;font-size:clamp(5rem,14vw,9.5rem);line-height:.82;letter-spacing:-.04em;color:var(--lead,var(--ink))}
 .big small{display:block;font-family:var(--sans);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted);margin-top:14px}
 .headline{display:grid;gap:12px;max-width:62ch}
@@ -45,11 +48,12 @@ header.top{display:grid;grid-template-columns:auto 1fr;gap:10px 36px;align-items
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--soft);color:var(--ink);white-space:nowrap}
 .pill.mod{background:var(--warn);color:var(--bg)}
 
-section{padding-top:40px;display:grid;gap:18px}
+section{padding-top:var(--sec);display:grid;gap:var(--gap)}
 .sec-head{display:grid;gap:6px;max-width:70ch}
 
 /* Hémicycles */
-.hemis{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.res-grid{display:grid;gap:var(--gap)}
+.hemis{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
 .hemi{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 10px;display:grid;gap:6px}
 .hemi svg{width:100%;height:auto;display:block}
 .hemi .cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -77,7 +81,7 @@ td.total{font-weight:700;font-size:1rem}
 .coal .pill b{font-weight:700}
 
 /* Carte */
-.mapgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+.mapgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:var(--gap);align-items:start}
 .mapcard{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:14px;display:grid;gap:12px;position:relative}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
 .seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
@@ -108,17 +112,49 @@ line.lead{stroke:var(--ink);stroke-opacity:.55;stroke-width:1px;vector-effect:no
 .zoombar button:hover{border-color:var(--ink)}
 .zoombar .sq{width:30px;padding:5px 0;font-size:.95rem;line-height:1}
 .hint{font-size:.75rem;color:var(--muted)}
-/* Plein écran : API native, ou superposition fixe si le navigateur la refuse */
-.mapgrid.fs{position:fixed;inset:0;z-index:50;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 14px)}
-.mapgrid:fullscreen{padding:14px}
-.mapgrid.fs,.mapgrid:fullscreen{background:var(--bg);height:100%;width:100%;grid-template-columns:minmax(0,1fr) minmax(300px,390px);grid-template-rows:minmax(0,1fr);align-items:stretch;overflow:hidden}
-.mapgrid.fs .mapcard,.mapgrid:fullscreen .mapcard{display:flex;flex-direction:column;min-height:0}
-.mapgrid.fs .mapstage,.mapgrid:fullscreen .mapstage{flex:1;min-height:0}
-.mapgrid.fs #map,.mapgrid:fullscreen #map{height:100%}
-.mapgrid.fs .panel,.mapgrid:fullscreen .panel{overflow-y:auto;min-height:0}
+/* Plein écran : seule la carte remplit l'écran ; barres, légende, détail et scénario flottent par-dessus */
+.mapgrid.fs{position:fixed;inset:0;z-index:50}
+.mapgrid.fs,.mapgrid:fullscreen{display:block;background:var(--water);padding:0;margin:0;width:100%;height:100%;overflow:hidden}
+.mapgrid.fs .mapcard,.mapgrid:fullscreen .mapcard{position:absolute;inset:0;display:block;padding:0;border:0;border-radius:0;background:var(--water)}
+.mapgrid.fs .mapstage,.mapgrid:fullscreen .mapstage{position:absolute;inset:0;border-radius:0}
+.mapgrid.fs #map,.mapgrid:fullscreen #map{width:100%;height:100%}
 .mapgrid.fs .hint,.mapgrid:fullscreen .hint{display:none}
-@media (max-width:900px){
-  .mapgrid.fs,.mapgrid:fullscreen{grid-template-columns:1fr;grid-template-rows:minmax(0,1.4fr) minmax(0,1fr)}
+.mapgrid.fs .zoombar,.mapgrid:fullscreen .zoombar{top:calc(env(safe-area-inset-top,0px) + 12px);left:calc(env(safe-area-inset-left,0px) + 12px);z-index:6}
+.fsonly{display:none}
+.mapgrid.fs .fsonly,.mapgrid:fullscreen .fsonly{display:inline-block}
+.zoombar button.fsonly[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* éléments flottants : même carte translucide */
+.mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar,.mapgrid.fs .scale,.mapgrid:fullscreen .scale,
+.mapgrid.fs .panel,.mapgrid:fullscreen .panel,.mapgrid.fs .scen,.mapgrid:fullscreen .scen{
+  position:absolute;z-index:5;background:color-mix(in srgb,var(--surface) 92%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 28px rgb(0 0 0 / .28)}
+.mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);padding:8px;max-width:calc(100% - 24px)}
+.mapgrid.fs .scale,.mapgrid:fullscreen .scale{left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);padding:6px 10px;max-width:calc(100% - 24px);flex-wrap:wrap}
+.mapgrid.fs .panel,.mapgrid:fullscreen .panel{display:none;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:min(390px,calc(100% - 24px));max-height:none;overflow-y:auto;align-content:start}
+.mapgrid.fs .scen,.mapgrid:fullscreen .scen{display:none;top:calc(env(safe-area-inset-top,0px) + 60px);left:calc(env(safe-area-inset-left,0px) + 12px);width:min(300px,calc(100% - 24px));max-height:calc(100% - 200px);overflow-y:auto}
+.mapgrid.fs.show-panel .panel,.mapgrid:fullscreen.show-panel .panel{display:grid}
+.mapgrid.fs.show-scen .scen,.mapgrid:fullscreen.show-scen .scen{display:grid}
+.mapgrid.fs .scen .sliders,.mapgrid:fullscreen .scen .sliders{grid-template-columns:1fr}
+.mapgrid.fs .scen .row,.mapgrid:fullscreen .scen .row{flex-direction:column;align-items:stretch}
+@media (min-width:701px){
+  /* grand écran : barres en haut à gauche (zone vide de la carte), le sud reste dégagé */
+  /* --zbh / --tbh : hauteurs réelles de la barre de zoom et de la barre des modes (calculées en JS) */
+  .mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 20px + var(--zbh,36px));width:max-content;max-width:min(760px,calc(100% - 24px))}
+  .mapgrid.fs .scen,.mapgrid:fullscreen .scen{top:calc(env(safe-area-inset-top,0px) + 28px + var(--zbh,36px) + var(--tbh,50px));max-height:calc(100% - 52px - var(--zbh,36px) - var(--tbh,50px) - var(--sch,40px))}
+  .mapgrid.fs.show-panel .zoombar,.mapgrid:fullscreen.show-panel .zoombar{max-width:calc(100% - 436px)}
+  .mapgrid.fs.show-panel .toolbar,.mapgrid:fullscreen.show-panel .toolbar{max-width:min(760px,calc(100% - 436px))}
+  .mapgrid.fs .scale,.mapgrid:fullscreen .scale{max-width:min(520px,calc(100% - 430px))}
+}
+@media (max-width:700px){
+  /* téléphone : le détail devient un tiroir en bas, le scénario occupe le haut */
+  .mapgrid.fs .zoombar button,.mapgrid:fullscreen .zoombar button{padding:4px 7px;font-size:.72rem}
+  .mapgrid.fs .zoombar .sq,.mapgrid:fullscreen .zoombar .sq{width:26px;padding:4px 0}
+  .mapgrid.fs .scale,.mapgrid:fullscreen .scale{display:none}
+  .mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);padding:6px;gap:6px}
+  .mapgrid.fs .toolbar .seg button,.mapgrid:fullscreen .toolbar .seg button{padding:5px 8px;font-size:.74rem}
+  .mapgrid.fs .panel,.mapgrid:fullscreen .panel{top:auto;left:calc(env(safe-area-inset-left,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:auto;max-height:55%}
+  .mapgrid.fs .scen,.mapgrid:fullscreen .scen{top:calc(env(safe-area-inset-top,0px) + 20px + var(--zbh,90px));left:8px;right:8px;width:auto;max-height:calc(100% - 36px - var(--zbh,90px) - var(--tbh,90px))}
+  .mapgrid.fs.show-panel .toolbar,.mapgrid.fs.show-panel .scale,.mapgrid:fullscreen.show-panel .toolbar,.mapgrid:fullscreen.show-panel .scale{display:none}
 }
 #fsBtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .linkbtn{font:inherit;font-size:.82rem;font-weight:600;background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
@@ -164,7 +200,7 @@ details[open] summary{margin-bottom:8px}
 .btn:hover{border-color:var(--ink)}
 
 /* Méthode */
-.method{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.method{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
 .method .box{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px;display:grid;gap:10px;align-content:start}
 .method ol,.method ul{margin:0;padding-left:1.2em;display:grid;gap:7px;font-size:.9rem}
 .method q{font-style:italic}
@@ -204,28 +240,25 @@ details[open] summary{margin-bottom:8px}
 .gbar .track i:last-child{border-radius:0 5px 5px 0}
 .gbar .track b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);transform:translateX(-1px)}
 .mapgrid .scen{grid-column:1/-1}
-.mapgrid.fs .scen,.mapgrid:fullscreen .scen{display:none}
 @media (min-width:1100px){
   header.top{grid-template-columns:auto minmax(0,58ch) minmax(300px,1fr)}
   .glance{grid-column:auto;padding-left:20px;border-left:1px solid var(--rule)}
 }
 @media (min-width:1400px){
-  .res-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(600px,1.45fr);gap:18px;align-items:stretch}
+  .res-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(600px,1.45fr);align-items:stretch}
   .res-grid .hemis{display:contents}
   .res-grid .hemi{align-content:center}
   .res-grid .pname + .muted{display:none}
   .res-grid .bar-cell{display:none}
   .res-grid table th,.res-grid table td{padding-inline:9px}
   .res-grid table th{letter-spacing:.03em}
-  .res-grid .tablebox{align-self:stretch;display:flex;align-items:center}
+  .res-grid .tablebox{align-self:stretch}
   .wrap .mapgrid{grid-template-columns:290px minmax(0,1fr) minmax(360px,410px)}
   .mapgrid .scen{grid-column:auto;order:-1;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
   .mapgrid .scen .sliders{grid-template-columns:1fr}
   .mapgrid .scen .row{flex-direction:column;align-items:stretch}
   .mapgrid .scen .sl{max-width:none!important;min-width:0!important}
-  .mapgrid.fs,.mapgrid:fullscreen{grid-template-columns:270px minmax(0,1fr) minmax(320px,390px)}
-  .mapgrid.fs .scen,.mapgrid:fullscreen .scen{display:grid;overflow-y:auto;max-height:100%;position:static}
-  .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 28px;align-items:start}
+  .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 var(--gap);align-items:start}
   .lower .method{grid-template-columns:1fr}
 }
 /* Écrans larges (suite) */
@@ -331,6 +364,8 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
             <button type="button" class="sq" data-z="in" aria-label="Zoomer">+</button>
             <button type="button" class="sq" data-z="out" aria-label="Dézoomer">−</button>
             <button type="button" data-z="fs" id="fsBtn" aria-pressed="false">⛶ Plein écran</button>
+            <button type="button" data-z="panel" id="panelBtn" class="fsonly" aria-pressed="false">Détail</button>
+            <button type="button" data-z="scen" id="scenBtn" class="fsonly" aria-pressed="false">Scénario</button>
           </div>
           <div class="tip" id="tip" hidden></div>
         </div>
@@ -605,6 +640,8 @@ function drawBase(){
   document.querySelector(".zoombar").addEventListener("click", e => {
     const z = e.target.closest("button[data-z]")?.dataset.z; if (!z) return;
     if (z==="fs") toggleFullscreen();
+    else if (z==="panel") showFloat("show-panel", !mapGrid.classList.contains("show-panel"));
+    else if (z==="scen") showFloat("show-scen", !mapGrid.classList.contains("show-scen"));
     else if (z==="all") selectAll();
     else if (z==="in") mapSvg.transition().duration(reduceMotion?0:250).call(zoom.scaleBy, 1.8);
     else if (z==="out") mapSvg.transition().duration(reduceMotion?0:250).call(zoom.scaleBy, 1/1.8);
@@ -613,8 +650,32 @@ function drawBase(){
 }
 const mapGrid = document.querySelector(".mapgrid"), fsBtn = document.getElementById("fsBtn");
 const isFs = () => document.fullscreenElement === mapGrid || mapGrid.classList.contains("fs");
+const panelBtn = document.getElementById("panelBtn"), scenBtn = document.getElementById("scenBtn");
+// En plein écran, le détail et le scénario flottent sur la carte ; on les affiche ou les masque
+// hauteurs réelles des barres du haut, pour empiler les éléments flottants sans chevauchement
+function placeFloats(){
+  if (!isFs()) return;
+  const zb = mapGrid.querySelector(".zoombar"), tb = mapGrid.querySelector(".toolbar");
+  mapGrid.style.setProperty("--zbh", zb.offsetHeight + "px");
+  mapGrid.style.setProperty("--tbh", tb.offsetHeight + "px");
+  const sc = mapGrid.querySelector(".scale");
+  mapGrid.style.setProperty("--sch", (sc.offsetHeight || 0) + "px");
+}
+window.addEventListener("resize", placeFloats);
+function showFloat(cls, on){
+  mapGrid.classList.toggle(cls, on);
+  requestAnimationFrame(placeFloats);
+  if (cls === "show-panel") panelBtn.setAttribute("aria-pressed", on);
+  if (cls === "show-scen") scenBtn.setAttribute("aria-pressed", on);
+  // sur téléphone, un seul élément flottant à la fois
+  if (on && window.innerWidth <= 700) showFloat(cls === "show-panel" ? "show-scen" : "show-panel", false);
+}
+let wasFs = false;
 function syncFsButton(){
   const on = isFs();
+  if (on && !wasFs) { showFloat("show-panel", window.innerWidth > 900); showFloat("show-scen", false); }
+  wasFs = on;
+  requestAnimationFrame(placeFloats);
   fsBtn.setAttribute("aria-pressed", on);
   fsBtn.textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
   document.body.style.overflow = mapGrid.classList.contains("fs") ? "hidden" : "";
@@ -746,6 +807,7 @@ function select(sel, {zoomTo = false} = {}){
   state.sel = sel;
   if (sel.type !== "all" && sel.type !== state.view) setView(sel.type, {silent:true});
   paintMap(); renderPanel();
+  if (isFs() && sel.type !== "all") showFloat("show-panel", true);   // en plein écran, le détail s'ouvre sur la sélection
   if (zoomTo && sel.type !== "all") zoomToFeature(sel.type==="reg" ? REGFEAT[sel.code] : RIDFEAT[sel.id], sel.type==="reg" ? 0.85 : 0.5);
 }
 function renderPanel(){

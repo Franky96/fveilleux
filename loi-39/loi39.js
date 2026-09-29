@@ -196,6 +196,8 @@ function drawBase(){
   ROOT.querySelector(".zoombar").addEventListener("click", e => {
     const z = e.target.closest("button[data-z]")?.dataset.z; if (!z) return;
     if (z==="fs") toggleFullscreen();
+    else if (z==="panel") showFloat("show-panel", !mapGrid.classList.contains("show-panel"));
+    else if (z==="scen") showFloat("show-scen", !mapGrid.classList.contains("show-scen"));
     else if (z==="all") selectAll();
     else if (z==="in") mapSvg.transition().duration(reduceMotion?0:250).call(zoom.scaleBy, 1.8);
     else if (z==="out") mapSvg.transition().duration(reduceMotion?0:250).call(zoom.scaleBy, 1/1.8);
@@ -204,8 +206,32 @@ function drawBase(){
 }
 const mapGrid = ROOT.querySelector(".mapgrid"), fsBtn = document.getElementById("l39-fsBtn");
 const isFs = () => document.fullscreenElement === mapGrid || mapGrid.classList.contains("fs");
+const panelBtn = document.getElementById("l39-panelBtn"), scenBtn = document.getElementById("l39-scenBtn");
+// En plein écran, le détail et le scénario flottent sur la carte ; on les affiche ou les masque
+// hauteurs réelles des barres du haut, pour empiler les éléments flottants sans chevauchement
+function placeFloats(){
+  if (!isFs()) return;
+  const zb = mapGrid.querySelector(".zoombar"), tb = mapGrid.querySelector(".toolbar");
+  mapGrid.style.setProperty("--zbh", zb.offsetHeight + "px");
+  mapGrid.style.setProperty("--tbh", tb.offsetHeight + "px");
+  const sc = mapGrid.querySelector(".scale");
+  mapGrid.style.setProperty("--sch", (sc.offsetHeight || 0) + "px");
+}
+window.addEventListener("resize", placeFloats);
+function showFloat(cls, on){
+  mapGrid.classList.toggle(cls, on);
+  requestAnimationFrame(placeFloats);
+  if (cls === "show-panel") panelBtn.setAttribute("aria-pressed", on);
+  if (cls === "show-scen") scenBtn.setAttribute("aria-pressed", on);
+  // sur téléphone, un seul élément flottant à la fois
+  if (on && window.innerWidth <= 700) showFloat(cls === "show-panel" ? "show-scen" : "show-panel", false);
+}
+let wasFs = false;
 function syncFsButton(){
   const on = isFs();
+  if (on && !wasFs) { showFloat("show-panel", window.innerWidth > 900); showFloat("show-scen", false); }
+  wasFs = on;
+  requestAnimationFrame(placeFloats);
   fsBtn.setAttribute("aria-pressed", on);
   fsBtn.textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
   document.body.style.overflow = mapGrid.classList.contains("fs") ? "hidden" : "";
@@ -337,6 +363,7 @@ function select(sel, {zoomTo = false} = {}){
   state.sel = sel;
   if (sel.type !== "all" && sel.type !== state.view) setView(sel.type, {silent:true});
   paintMap(); renderPanel();
+  if (isFs() && sel.type !== "all") showFloat("show-panel", true);   // en plein écran, le détail s'ouvre sur la sélection
   if (zoomTo && sel.type !== "all") zoomToFeature(sel.type==="reg" ? REGFEAT[sel.code] : RIDFEAT[sel.id], sel.type==="reg" ? 0.85 : 0.5);
 }
 function renderPanel(){
