@@ -359,6 +359,10 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
 .mapcard>*,.panel>*,.scen>*{min-width:0}
 .seg{max-width:100%;flex-wrap:wrap}
 @media (max-width:400px){.seg button{padding:6px 8px;font-size:.76rem}}
+/* téléphone : les 4 modes en grille 2 × 2 plutôt qu'un bouton seul sur sa ligne */
+@media (max-width:600px){.seg.modeseg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
+  .seg.modeseg button{border:0;text-wrap:balance}
+  .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}}
 /* Écrans ultra-larges (21:9, 32:9) : on utilise la largeur au lieu d'une colonne centrée */
 @media (min-width:2000px){.wrap{max-width:2600px}}
 @media (min-width:3000px){.wrap{max-width:3200px}}
@@ -457,11 +461,11 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
             <button type="button" id="v-reg" aria-pressed="true">Régions (17)</button>
             <button type="button" id="v-circ" aria-pressed="false">Circonscriptions (80)</button>
           </div>
-          <div class="seg" role="group" aria-label="Mode de la carte">
+          <div class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="m-lead" aria-pressed="true">Parti en tête</button>
             <button type="button" id="m-vote" aria-pressed="false">Vote</button>
-            <button type="button" id="m-seat" aria-pressed="false">Sièges</button>
-            <button type="button" id="m-comp" aria-pressed="false">Compensation</button>
+            <button type="button" id="m-seat" aria-pressed="false">Sièges totaux</button>
+            <button type="button" id="m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
           </div>
           <div class="chips" id="partyChips" aria-label="Parti affiché"></div>
         </div>
@@ -1027,8 +1031,8 @@ function paintMap(){
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
-    : state.mode==="seat" ? `<span>0</span>${ramp}<span>tous les sièges</span><span>· chiffre = sièges ${p} (circ. + rég.)</span>`
-    : `Chiffre : sièges de région (compensatoires) obtenus par le ${p}.`;
+    : state.mode==="seat" ? `<span>0</span>${ramp}<span>tous les sièges</span><span>· chiffre = sièges totaux ${p} (circ. + rég.)</span>`
+    : `Chiffre : sièges compensatoires seulement (sièges de région) obtenus par le ${p}, sans ses circonscriptions.`;
 }
 
 /* --- Panneau --- */

@@ -354,6 +354,11 @@ body{margin:0;background:#F1F3F7}
 @media (max-width:400px){
 .loi39 .seg button{padding:6px 8px;font-size:.76rem}
 }
+@media (max-width:600px){
+.loi39 .seg.modeseg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
+.loi39 .seg.modeseg button{border:0;text-wrap:balance}
+.loi39 .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}
+}
 @media (min-width:2000px){
 .loi39 .wrap{max-width:2600px}
 }
@@ -459,11 +464,11 @@ body{margin:0;background:#F1F3F7}
             <button type="button" id="l39-v-reg" aria-pressed="true">Régions (17)</button>
             <button type="button" id="l39-v-circ" aria-pressed="false">Circonscriptions (80)</button>
           </div>
-          <div class="seg" role="group" aria-label="Mode de la carte">
+          <div class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="l39-m-lead" aria-pressed="true">Parti en tête</button>
             <button type="button" id="l39-m-vote" aria-pressed="false">Vote</button>
-            <button type="button" id="l39-m-seat" aria-pressed="false">Sièges</button>
-            <button type="button" id="l39-m-comp" aria-pressed="false">Compensation</button>
+            <button type="button" id="l39-m-seat" aria-pressed="false">Sièges totaux</button>
+            <button type="button" id="l39-m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
           </div>
           <div class="chips" id="l39-partyChips" aria-label="Parti affiché"></div>
         </div>
@@ -1031,8 +1036,8 @@ function paintMap(){
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
-    : state.mode==="seat" ? `<span>0</span>${ramp}<span>tous les sièges</span><span>· chiffre = sièges ${p} (circ. + rég.)</span>`
-    : `Chiffre : sièges de région (compensatoires) obtenus par le ${p}.`;
+    : state.mode==="seat" ? `<span>0</span>${ramp}<span>tous les sièges</span><span>· chiffre = sièges totaux ${p} (circ. + rég.)</span>`
+    : `Chiffre : sièges compensatoires seulement (sièges de région) obtenus par le ${p}, sans ses circonscriptions.`;
 }
 
 /* --- Panneau --- */
