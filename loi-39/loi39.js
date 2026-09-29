@@ -168,6 +168,9 @@ function chamber(svg, seatsBy, n, ringBy){
 }
 
 /* --- Carte --- */
+// date de la projection Qc125 (écrite par scrape_qc125.py, mise à jour chaque jour par le pipeline)
+const MAJ = (DATA.maj && DATA.maj.texte) || "28 septembre 2026";
+document.querySelectorAll("[data-maj]").forEach(e => e.textContent = MAJ);
 const RGEO = DATA.districtGeo, GGEO = DATA.regionGeo;   // 80 circonscriptions hypothétiques et 17 régions
 // d3 attend des anneaux extérieurs en sens horaire ; on corrige au besoin
 for (const g of [RGEO, GGEO]) for (const f of g.features){
@@ -821,7 +824,7 @@ function render(){
     `La CAQ passe de ${RES.fptp.CAQ} à ${tot.CAQ} siège${tot.CAQ>1?"s":""}.`;
   const modified = state.target.some((t,i)=>Math.abs(t-BASE[i])>0.05) || state.thr !== 10;
   document.getElementById("l39-statusPills").innerHTML =
-    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125 du 28 sept. 2026</span>`) +
+    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125 du ${esc(MAJ)}</span>`) +
     `<span class="pill">Seuil ${fmt(state.thr,state.thr%1?1:0)} % : ${RES.eligible.length} parti${RES.eligible.length>1?"s":""} admissible${RES.eligible.length>1?"s":""}</span>`;
 
   const gbar = (label, seatsBy, n) => { const m = Math.floor(n/2)+1;

@@ -377,7 +377,7 @@ body{margin:0;background:#F1F3F7}
   <header class="top">
     <div class="big num" id="l39-bigNum">52<small>sièges sur 125</small></div>
     <div class="headline">
-      <span class="eyebrow">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du 28 septembre 2026</span>
+      <span class="eyebrow">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>28 septembre 2026</span></span>
       <h1 id="l39-headline">Le PQ serait minoritaire avec la loi 39</h1>
       <p class="lede" id="l39-lede"></p>
       <div class="coal" id="l39-statusPills"></div>
@@ -538,7 +538,7 @@ body{margin:0;background:#F1F3F7}
     </div>
     <div class="sources">
       <span class="eyebrow">Sources</span>
-      <span>Projections par circonscription : <a href="https://qc125.com/districts.htm" target="_blank" rel="noopener">Qc125, Philippe J. Fournier</a>, mise à jour du 28 septembre 2026.</span>
+      <span>Projections par circonscription : <a href="https://qc125.com/districts.htm" target="_blank" rel="noopener">Qc125, Philippe J. Fournier</a>, mise à jour du <span data-maj>28 septembre 2026</span>.</span>
       <span>Règles : Projet de loi n<sup>o</sup> 39, <i>Loi établissant un nouveau mode de scrutin</i>, Assemblée nationale du Québec, 2019.</span>
       <span>Électeurs et sections de vote 2026 : <a href="https://www.dgeq.org/donnees.html" target="_blank" rel="noopener">données ouvertes d'Élections Québec</a> (électeurs inscrits par circonscription et sections de vote avec électeurs).</span>
       <span>Méthode de référence : <a href="https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/conseil-executif/publications-adm/autres_documents/reforme-scrutin_simulation_.pdf" target="_blank" rel="noopener">Gouvernement du Québec, « Simulation — Mode de scrutin mixte avec compensation régionale », janvier 2020</a>.</span>
@@ -720,6 +720,9 @@ function chamber(svg, seatsBy, n, ringBy){
 }
 
 /* --- Carte --- */
+// date de la projection Qc125 (écrite par scrape_qc125.py, mise à jour chaque jour par le pipeline)
+const MAJ = (DATA.maj && DATA.maj.texte) || "28 septembre 2026";
+document.querySelectorAll("[data-maj]").forEach(e => e.textContent = MAJ);
 const RGEO = DATA.districtGeo, GGEO = DATA.regionGeo;   // 80 circonscriptions hypothétiques et 17 régions
 // d3 attend des anneaux extérieurs en sens horaire ; on corrige au besoin
 for (const g of [RGEO, GGEO]) for (const f of g.features){
@@ -1373,7 +1376,7 @@ function render(){
     `La CAQ passe de ${RES.fptp.CAQ} à ${tot.CAQ} siège${tot.CAQ>1?"s":""}.`;
   const modified = state.target.some((t,i)=>Math.abs(t-BASE[i])>0.05) || state.thr !== 10;
   document.getElementById("l39-statusPills").innerHTML =
-    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125 du 28 sept. 2026</span>`) +
+    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125 du ${esc(MAJ)}</span>`) +
     `<span class="pill">Seuil ${fmt(state.thr,state.thr%1?1:0)} % : ${RES.eligible.length} parti${RES.eligible.length>1?"s":""} admissible${RES.eligible.length>1?"s":""}</span>`;
 
   const gbar = (label, seatsBy, n) => { const m = Math.floor(n/2)+1;

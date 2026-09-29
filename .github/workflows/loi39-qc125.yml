@@ -1,0 +1,62 @@
+# Mise à jour quotidienne de la page Loi 39 avec les projections Qc125.
+# Télécharge les 127 fiches de circonscription de qc125.com, reconstruit data.json et pousse sur master
+# seulement si les données ont changé (Hostinger déploie alors le site automatiquement).
+# Si une fiche Qc125 est illisible, rien n'est publié : le pipeline échoue et GitHub envoie un courriel.
+name: Loi 39 · données Qc125
+
+on:
+  schedule:
+    - cron: "17 10 * * *"   # chaque jour vers 6 h 17 (heure de Montréal, été) / 5 h 17 (hiver)
+  workflow_dispatch:        # bouton « Run workflow » dans l'onglet Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loi39-qc125
+  cancel-in-progress: false
+
+jobs:
+  maj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Projections Qc125
+        working-directory: loi-39/outils
+        run: |
+          for essai in 1 2 3; do
+            python3 scrape_qc125.py && exit 0
+            echo "Essai $essai échoué, nouvel essai dans 60 s"; sleep 60
+          done
+          exit 1
+
+      - name: data.json, simulation de référence et page
+        working-directory: loi-39/outils
+        env:
+          LOI39_AUTONOME: ${{ runner.temp }}/loi39-simulation.html
+        run: |
+          python3 build_data80.py
+          python3 sim80.py
+          python3 build_site.py
+
+      - name: Publier si les données ont changé
+        run: |
+          DONNEES="loi-39/data.json loi-39/outils/data.json loi-39/outils/proj.json loi-39/outils/ridings.tsv loi-39/outils/maj.json loi-39/outils/result.json"
+          # la page elle-même ne doit pas changer : seules les données sont publiées
+          AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
+          if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi
+          git add $DONNEES
+          if git diff --cached --quiet; then echo "Aucune nouvelle donnée Qc125."; exit 0; fi
+          MAJ=$(python3 -c "import json;print(json.load(open('loi-39/outils/maj.json')).get('texte','?'))")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Loi 39 : projections Qc125 du $MAJ (mise à jour automatique)"
+          for essai in 1 2 3 4; do
+            git push origin HEAD:master && exit 0
+            sleep $((2 ** essai)); git pull --rebase origin master
+          done
+          exit 1

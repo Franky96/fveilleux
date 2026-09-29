@@ -21,20 +21,28 @@ def text(s):
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", s)))
 
 
+MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
 districts = get("https://qc125.com/districts.htm")
 links = re.findall(r"href='https://qc125.com/(\d+)f\.htm'[^>]*>([^<]+)</a>", districts)
 assert len(links) >= 125, f"seulement {len(links)} circonscriptions trouvées"
-open("ridings.tsv", "w", encoding="utf-8").write("\n".join(f"{i}\t{n}" for i, n in links))
-
-proj = {}
+proj, dates, erreurs = {}, [], []
 for rid, name in links:
     t = text(get(f"https://qc125.com/{rid}f.htm"))
     seg = t[t.find("Historique récent"): t.find("Mise à jour", t.find("Historique récent"))]
     # Ordre conservé tel que publié (sert à départager les égalités, comme Qc125)
     shares = {p: int(v) for p, v in re.findall(r"\b(PQ|PLQ|CAQ|PCQ|QS)\b (\d+)% ±", seg)}
-    if sum(shares.values()) < 90:
-        print("À VÉRIFIER :", rid, name, shares)
+    if sum(shares.values()) < 90 or set(shares) != set(PARTIES):
+        erreurs.append(f"{rid} {name} {shares}")
+    m = re.search(r"Mise à jour : (\d{1,2}) (" + "|".join(MOIS) + r") (\d{4})", t)
+    if m: dates.append((int(m[3]), MOIS.index(m[2]) + 1, int(m[1])))
     proj[name] = shares
     time.sleep(0.3)
+# Rien n'est écrit si une fiche est illisible : on garde les données précédentes (le pipeline échoue et avertit)
+if erreurs:
+    raise SystemExit("Fiches Qc125 illisibles, données non mises à jour :\n" + "\n".join(erreurs))
+open("ridings.tsv", "w", encoding="utf-8").write("\n".join(f"{i}\t{n}" for i, n in links))
 json.dump(proj, open("proj.json", "w", encoding="utf-8"), ensure_ascii=False, indent=0)
-print(f"{len(proj)} circonscriptions enregistrées dans proj.json")
+a, m, j = max(dates) if dates else (0, 0, 0)
+maj = {"date": f"{a:04d}-{m:02d}-{j:02d}", "texte": f"{j} {MOIS[m - 1]} {a}"} if dates else {}
+json.dump(maj, open("maj.json", "w", encoding="utf-8"), ensure_ascii=False)
+print(f"{len(proj)} circonscriptions enregistrées dans proj.json · mise à jour Qc125 : {maj.get('texte', '?')}")
