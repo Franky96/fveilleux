@@ -102,6 +102,11 @@ td.total{font-weight:700;font-size:1rem}
 #map path.rid:hover{stroke:var(--ink);stroke-opacity:1;stroke-width:1.2px}
 #map path.regline{fill:none;stroke:var(--surface);stroke-width:1.6px;vector-effect:non-scaling-stroke;pointer-events:none}
 #map.v-circ path.regline{stroke-width:1.1px}
+/* Pas de cadre de focus rectangulaire du navigateur sur les régions cliquées (Chrome, Safari iPad) ;
+   au clavier, le contour suit la forme de la région */
+#map path:focus{outline:none}
+#map path:focus-visible{outline:none;stroke:var(--focus);stroke-width:2.5px;vector-effect:non-scaling-stroke}
+#map:focus{outline:none}
 #map path.selline{fill:none;stroke:var(--ink);stroke-width:2.4px;vector-effect:non-scaling-stroke;pointer-events:none}
 .lbl{font-family:var(--sans);font-size:11px;font-weight:700;pointer-events:none;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px}
 .lbl .sub{font-weight:500}
