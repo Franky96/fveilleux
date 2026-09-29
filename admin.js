@@ -32,6 +32,7 @@ const SECTIONS_ARCHIVABLES = [
   ]},
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
+  { key: 'distant',      icon: '🖥️', label: 'Connexion à distance' },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
     { key: '7wonders',    icon: '🏛️', label: '7 Wonders'       },
@@ -325,6 +326,7 @@ const PERMS_STRUCTURE = [
   { key: 'rona',      label: 'RONA S&S' },
   { key: 'pageTest',  label: 'Page de tests' },
   { key: 'osint',     label: 'OSINT Map' },
+  { key: 'distant',   label: 'Connexion à distance' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'csdb',      label: 'CSDB' },

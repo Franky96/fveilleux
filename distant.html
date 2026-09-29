@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils de Frank — Connexion à distance</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    const _pD = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') === 'guest' ||
+        (!_pD.includes('distant') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+    }
+  </script>
+  <style>
+    .rd-wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 1.25rem; }
+    .rd-card { background: #0f1a0f; border: 1px solid #2a3a2a; border-radius: 14px; padding: 1.5rem; }
+    .rd-card h2 { color: #80cc80; font-size: 1.25rem; margin: 0 0 0.3rem; }
+    .rd-card p { color: #a89f94; margin: 0; line-height: 1.55; }
+    .rd-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin-top: 0.8rem; font-size: 0.8rem; color: #7a8a7a; font-family: ui-monospace, Menlo, Consolas, monospace; }
+    .rd-actions { display: grid; gap: 0.75rem; margin-top: 1.25rem; }
+    .rd-btn { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 1.1rem; border-radius: 12px; text-decoration: none; border: 1px solid #2a3a2a; background: #0a0f0a; color: #d8e8d8; transition: border-color 0.15s, background 0.15s; }
+    .rd-btn:hover { border-color: #80cc80; background: #132113; }
+    .rd-btn.pri { border: 2px solid #80cc80; background: #142414; }
+    .rd-btn .ico { font-size: 1.8rem; flex: none; }
+    .rd-btn b { display: block; font-size: 1.05rem; color: #80cc80; }
+    .rd-btn small { display: block; color: #a89f94; font-size: 0.82rem; margin-top: 0.15rem; line-height: 1.4; }
+    .rd-aide h3 { color: #c0d8c0; font-size: 0.95rem; margin: 0 0 0.6rem; }
+    .rd-aide ul { margin: 0; padding-left: 1.2rem; color: #a89f94; line-height: 1.6; font-size: 0.9rem; }
+    .rd-aide li + li { margin-top: 0.35rem; }
+    .rd-aide a { color: #80cc80; }
+    html.light .rd-card { background: #fff; border-color: #d5d0c8; }
+    html.light .rd-card h2, html.light .rd-btn b { color: #2a6a2a; }
+    html.light .rd-btn { background: #f5f2eb; border-color: #d5d0c8; color: #1a1a1a; }
+    html.light .rd-btn.pri { background: #eef6ea; border-color: #3a7a3a; }
+    html.light .rd-aide h3 { color: #1a1a1a; }
+    @media (max-width: 600px) { .rd-card { padding: 1.1rem; } .dashboard-container { padding: 1rem; } }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <header>
+      <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
+      <div style="text-align:center;">
+        <h1>Connexion à distance</h1>
+        <p class="subtitle">Bureau à distance du cégep</p>
+      </div>
+      <div class="header-controls"></div>
+    </header>
+
+    <main class="rd-wrap">
+      <section class="rd-card">
+        <h2>📚 Manuels de maintenance</h2>
+        <p>Accès au poste « MANUELS » du laboratoire du Cégep Édouard-Montpetit, par la passerelle de Bureau à distance du cégep. Connecte-toi avec ton compte du cégep.</p>
+        <div class="rd-meta"><span>Passerelle : rds.cegepmontpetit.ca</span><span>Collection : MANUELS</span></div>
+
+        <div class="rd-actions">
+          <a class="rd-btn pri" href="https://rds.cegepmontpetit.ca/RDWeb/webclient/" target="_blank" rel="noopener">
+            <span class="ico">🖥️</span>
+            <span><b>Ouvrir dans le navigateur</b><small>Client web du cégep : connecte-toi, puis clique sur « MANUELS ». S'ouvre dans un nouvel onglet.</small></span>
+          </a>
+          <a class="rd-btn" href="api/distant.php">
+            <span class="ico">⬇️</span>
+            <span><b>Ouvrir avec l'application Bureau à distance</b><small>Télécharge le fichier de connexion (.rdp), puis ouvre-le : il lance l'application.</small></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="rd-card rd-aide">
+        <h3>Si le navigateur ne fonctionne pas</h3>
+        <ul>
+          <li><b>Windows</b> : ouvre le fichier .rdp téléchargé, la Connexion Bureau à distance est déjà installée.</li>
+          <li><b>Mac, iPad, iPhone</b> : installe <a href="https://apps.apple.com/app/windows-app/id1295203466" target="_blank" rel="noopener">Windows App</a> (gratuite), puis ouvre le fichier .rdp avec elle.</li>
+          <li><b>Android</b> : installe <a href="https://play.google.com/store/apps/details?id=com.microsoft.rdc.androidx" target="_blank" rel="noopener">Windows App</a> depuis le Play Store, puis ouvre le fichier .rdp.</li>
+          <li>Hors du réseau du cégep, la passerelle peut exiger une double authentification du cégep ou refuser certaines connexions : c'est le cégep qui gère cet accès.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script>
+    (function () {
+      const toggle = document.getElementById('theme-toggle');
+      const controls = document.querySelector('.header-controls');
+      if (toggle && controls) { toggle.classList.remove('theme-toggle--fixed'); controls.prepend(toggle); }
+    })();
+  </script>
+</body>
+</html>
