@@ -18,7 +18,7 @@ const BASE = (() => {
   return t.map(v => 100*v/T);
 })();
 
-const state = { target: BASE.slice(), thr: 10, mode: "lead", party: "CAQ", view: "reg", sel: {type:"all"} };
+const state = { target: BASE.slice(), thr: 10, mode: "lead", party: "ALL", lastParty: "CAQ", view: "reg", sel: {type:"all"} };
 let RES;
 
 /* --- Loi 39, art. 14.2 et 14.3 : diviseurs 1, 2, 3… sur les électeurs inscrits --- */
@@ -348,10 +348,17 @@ function regionLead(R){
   }
   return best;
 }
+const ALLC = "var(--ink)";
+const MAXSEATS = () => Math.max(...Object.keys(RES.regions).map(c => DIST[c]+LIST[c]));
+const MAXLIST = () => Math.max(...Object.keys(RES.regions).map(c => LIST[c]));
 function fillRegion(code){
   const R = RES.regions[code], seats = DIST[code]+LIST[code];
   if (state.mode==="lead"){ const p = regionLead(R); return [PV[p], 0.35 + 0.65*(R.d[p]+R.l[p])/seats]; }
   const p = state.party;
+  if (p==="ALL"){   // tous les partis : le nombre de sièges de la région, en teinte neutre
+    if (state.mode==="seat") return [ALLC, 0.1 + 0.5*seats/MAXSEATS()];
+    return [ALLC, 0.1 + 0.5*LIST[code]/MAXLIST()];
+  }
   if (state.mode==="vote") return [PV[p], Math.max(0.06, Math.min(1, R.share[p]/50))];
   if (state.mode==="seat") return [PV[p], Math.max(0.06, (R.d[p]+R.l[p])/seats)];
   return [PV[p], R.l[p] ? Math.min(1, 0.25 + 0.25*R.l[p]) : 0.06];
@@ -436,6 +443,7 @@ function labelFor(code){
   const R = RES.regions[code];
   if (state.mode==="lead") return String(DIST[code]+LIST[code]);
   const p = state.party;
+  if (p==="ALL") return String(state.mode==="seat" ? DIST[code]+LIST[code] : LIST[code]);
   if (state.mode==="vote") return fmt(R.share[p],0)+" %";
   if (state.mode==="seat") return String(R.d[p]+R.l[p]);
   return String(R.l[p]);
@@ -474,7 +482,7 @@ function paintMap(){
   placeLabels();
 
   const sc = document.getElementById("l39-scale");
-  const p = state.party, col = PV[p];
+  const p = state.party, col = p==="ALL" ? ALLC : PV[p];
   const ramp = `<span class="ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${col} 6%, var(--surface)), ${col})"></span>`;
   document.getElementById("l39-hint").textContent = isCur
     ? "Carte actuelle : les 127 circonscriptions de la carte électorale 2026 (Élections Québec), avec la projection Qc125 de chacune. C'est le mode de scrutin en vigueur, sans simulation."
@@ -485,6 +493,9 @@ function paintMap(){
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
+    : p==="ALL" ? (state.mode==="seat"
+        ? `Tous les partis · chiffre = nombre total de sièges de la région (circonscriptions + région). Plus la région ressort, plus elle a de sièges.`
+        : `Tous les partis · chiffre = nombre de sièges compensatoires (sièges de région) de la région.`)
     : state.mode==="seat" ? `<span>0</span>${ramp}<span>tous les sièges</span><span>· chiffre = sièges totaux ${p} (circ. + rég.)</span>`
     : `Chiffre : sièges compensatoires seulement (sièges de région) obtenus par le ${p}, sans ses circonscriptions.`;
 }
@@ -888,16 +899,27 @@ function setMode(m, {silent = false} = {}){
   state.mode = m;
   for (const id of ["lead","vote","seat","comp"]) document.getElementById("l39-m-"+id).setAttribute("aria-pressed", id===m);
   document.getElementById("l39-partyChips").setAttribute("aria-disabled", m==="lead");
+  // « Tous les partis » n'a pas de sens pour le vote : on reprend le dernier parti choisi
+  if (m==="vote" && state.party==="ALL") state.party = state.lastParty;
+  syncChips();
   if (!silent) paintMap();
 }
 for (const id of ["lead","vote","seat","comp"]) document.getElementById("l39-m-"+id).addEventListener("click", () => setMode(id));
-document.getElementById("l39-partyChips").innerHTML = P.map(p =>
-  `<button type="button" class="chip" style="--c:${PV[p]}" data-p="${p}" aria-pressed="${p===state.party}">${p}</button>`).join("");
+document.getElementById("l39-partyChips").innerHTML =
+  `<button type="button" class="chip" style="--c:${ALLC}" data-p="ALL" aria-pressed="${state.party==="ALL"}" title="Nombre total de sièges de chaque région">Tous les partis</button>` +
+  P.map(p => `<button type="button" class="chip" style="--c:${PV[p]}" data-p="${p}" aria-pressed="${p===state.party}">${p}</button>`).join("");
+function syncChips(){
+  document.querySelectorAll("#l39-partyChips .chip").forEach(c => {
+    c.setAttribute("aria-pressed", c.dataset.p===state.party);
+    if (c.dataset.p==="ALL") c.disabled = state.mode==="vote";
+  });
+}
 document.getElementById("l39-partyChips").setAttribute("aria-disabled","true");
 document.getElementById("l39-partyChips").addEventListener("click", e => {
   const b = e.target.closest("button[data-p]"); if (!b) return;
   state.party = b.dataset.p;
-  document.querySelectorAll("#l39-partyChips .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.p===state.party));
+  if (state.party!=="ALL") state.lastParty = state.party;
+  syncChips();
   paintMap();
 });
 

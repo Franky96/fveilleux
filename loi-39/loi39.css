@@ -140,6 +140,7 @@
 .loi39 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .loi39 .chip{font:inherit;font-size:.8rem;font-weight:700;padding:4px 10px;border-radius:99px;border:1.5px solid var(--c);color:var(--c);background:transparent;cursor:pointer}
 .loi39 .chip[aria-pressed="true"]{background:var(--c);color:var(--surface)}
+.loi39 .chip:disabled{opacity:.35;cursor:not-allowed}
 .loi39 .chips[aria-disabled="true"]{opacity:.35;pointer-events:none}
 .loi39 .seg button:disabled{opacity:.35;cursor:not-allowed}
 .loi39 .mapstage{position:relative;border-radius:8px;overflow:hidden;background:var(--water)}
