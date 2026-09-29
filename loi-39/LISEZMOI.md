@@ -198,7 +198,10 @@ Un seul fichier : `<title>`, polices, `<style>`, balisage, `<script type="module
     proportionnel uniforme.
   - `regions[code]` contient `share`, `d`, `l`, `steps` (chaque tour avec **tous** les quotients),
     `ridings` et `districts`.
-- **`hemicycle()` :** les deux hémicycles. Les sièges de région sont dessinés en anneaux.
+- **`chamber()` :** les deux plans de l'Assemblée, disposition de l'Assemblée nationale : gouvernement (plus grand
+  parti) en bas, opposition en face (opposition officielle d'abord), présidence au bout gauche, banquettes
+  perpendiculaires au bout droit dimensionnées pour que chaque côté tienne tous ses sièges. « PM » et « C » marquent
+  le premier ministre et le chef de l'opposition. Les sièges de région sont dessinés en contour.
 - **Carte (d3-geo, projection conique conforme, `viewBox 600×704`) :**
   - Calques : `gRid` (80 circonscriptions), `gRegFill` (17 régions pleines, en vue Régions), `gReg` (contours
     des régions), `gSel` (sélection), `gLbl` (étiquettes).
@@ -290,6 +293,7 @@ Sans `files`, l'artifact garde l'ancien `data.json`. C'est déjà arrivé une fo
   modèle 80 + 45 est marqué « simulé » (bandeau + étiquettes `.tag.sim`).
 - Plein écran : la carte seule ; barres, légende, détail et scénario flottent par-dessus (boutons « Détail » /
   « Scénario »). Pas de cadre de focus rectangulaire sur les régions cliquées.
+- Plans de l'Assemblée en face-à-face (format de l'Assemblée nationale) au lieu d'hémicycles.
 - `build_site.py` préfixe tous les liens internes `href="#h-…"` (pas seulement `#h-map`).
 
 ## Sources

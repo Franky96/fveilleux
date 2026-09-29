@@ -49,6 +49,7 @@
 .loi39 .legend span{display:inline-flex;align-items:center;gap:6px}
 .loi39 .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
 .loi39 .dot.ring{background:transparent!important;border:2.5px solid currentColor}
+.loi39 .dot.sq{border-radius:2px}
 .loi39 .tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--rule);border-radius:10px}
 .loi39 table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
 .loi39 th,.loi39 td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rule)}
