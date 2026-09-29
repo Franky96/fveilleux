@@ -7,3 +7,4 @@ liste_trousse-1_1.jpg
 loi-39/outils/brut/*.json
 loi-39/outils/brut/*.zip
 loi-39/outils/brut/sv/
+__pycache__/
