@@ -1,7 +1,8 @@
 """Assemble data.json (tout ce que la page charge) à partir des fichiers de outils/.
 
 Entrées : proj.json + ridings.tsv (Qc125), elec_circ.csv (Élections Québec), m80/sections_pts.csv (codes CEP),
-          m80/districts.json + m80/d80.json + m80/r80.json (sortie de m80/district2.py + mapshaper).
+          m80/districts.json + m80/d80.json + m80/r80.json (sortie de m80/district2.py + mapshaper),
+          m80/c127.json (127 circonscriptions actuelles, simplifiées par mapshaper).
 Sortie  : data.json
 """
 import json, csv, re, importlib.util, io, contextlib, os
@@ -53,7 +54,13 @@ rg = rewind(json.load(open("m80/r80.json", encoding="utf-8")))
 for f in rg["features"]: f["properties"] = {"REG": code[f["properties"]["REG"]]}
 for f in dg["features"]: f["properties"] = {"DID": f["properties"]["DID"]}
 
+# 127 circonscriptions actuelles (carte « mode actuel ») : RID = rang dans ridings, appariement par nom normalisé
+cg = rewind(json.load(open("m80/c127.json", encoding="utf-8")))
+ridx = {norm(x["n"]): i for i, x in enumerate(rid)}
+for f in cg["features"]: f["properties"] = {"RID": ridx[norm(f["properties"]["NM_CEP"])]}
+assert sorted(f["properties"]["RID"] for f in cg["features"]) == list(range(len(rid)))
+
 data = {"regions": [{"code": code[n], "name": n, "electors": D["elec_reg"][n]} for n in CODES],
-        "ridings": rid, "districts": districts, "districtGeo": dg, "regionGeo": rg}
+        "ridings": rid, "districts": districts, "districtGeo": dg, "regionGeo": rg, "ridingGeo": cg}
 open("data.json", "w", encoding="utf-8").write(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
 print("data.json", os.path.getsize("data.json"), "octets ·", len(rid), "circ. actuelles ·", len(districts), "hypothétiques")

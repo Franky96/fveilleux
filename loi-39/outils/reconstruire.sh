@@ -70,6 +70,9 @@ for f in g['features']: f['properties']['REG'] = D['districts'][str(f['propertie
 json.dump(g, open('m80/d80.json', 'w'), ensure_ascii=False)
 EOF
   $MS -i m80/d80.json -dissolve REG -o m80/r80.json format=geojson precision=0.0008
+  # carte du mode actuel : les 127 circonscriptions (15 % des points : assez fin pour Montréal zoomé)
+  $MS -i brut/circ2026.json -proj wgs84 -filter-fields NM_CEP,CO_CEP -clip m80/land.json \
+      -simplify 15% weighted keep-shapes -filter-islands min-area=4km2 -clean -o m80/c127.json format=geojson precision=0.0008
 fi
 
 echo "== data.json, simulation de référence, page et kit"

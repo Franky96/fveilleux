@@ -181,6 +181,17 @@ const projection = d3.geoConicConformal().rotate([71.6,0]).parallels([46,60]).fi
 const path = d3.geoPath(projection);
 const REGFEAT = Object.fromEntries(GGEO.features.map(f => [f.properties.REG, f]));
 const RIDFEAT = Object.fromEntries(RGEO.features.map(f => [f.properties.DID, f]));
+// carte actuelle : 127 circonscriptions réelles (RID = rang dans DATA.ridings)
+const CGEO = DATA.ridingGeo;
+for (const f of CGEO.features){
+  if (d3.geoArea(f) > 2*Math.PI){
+    const rev = poly => poly.map(r => r.slice().reverse());
+    f.geometry.coordinates = f.geometry.type==="Polygon" ? rev(f.geometry.coordinates) : f.geometry.coordinates.map(rev);
+  }
+}
+const CURFEAT = Object.fromEntries(CGEO.features.map(f => [f.properties.RID, f]));
+const featOf = sel => sel.type==="reg" ? REGFEAT[sel.code] : sel.type==="circ" ? RIDFEAT[sel.id] : sel.type==="cur" ? CURFEAT[sel.idx] : null;
+const padOf = sel => sel.type==="reg" ? 0.85 : 0.5;
 const DNAME = Object.fromEntries(DATA.districts.map(d => [d.id, d.name]));
 const box = (a,b) => ({type:"Feature",geometry:{type:"MultiPoint",coordinates:[a,b]}});
 const PRESETS = {
@@ -198,7 +209,7 @@ const LBL_MIN = 19, LBL_NAME = 70, NAME_ZOOM = 5;   // noms à partir d'un zoom 
 
 const mapSvg = d3.select("#l39-map");
 const gZoom = mapSvg.append("g");
-const gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gSel = gZoom.append("g"), gLbl = gZoom.append("g");
+const gCur = gZoom.append("g"), gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gSel = gZoom.append("g"), gLbl = gZoom.append("g");
 let curK = 1, curT = d3.zoomIdentity;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40,-40],[MW+40,MH+40]])
@@ -218,6 +229,13 @@ function drawBase(){
   mapSvg.call(zoom).on("dblclick.zoom", null);
   // un clic sur l'eau / hors du territoire revient à tout le Québec
   mapSvg.on("click", e => { if (e.target === mapSvg.node()) select({type:"all"}); });
+  gCur.selectAll("path").data(CGEO.features).join("path")
+    .attr("class","rid").attr("d",path).attr("tabindex",0).attr("role","button")
+    .attr("aria-label", f => DATA.ridings[f.properties.RID].n)
+    .on("click", (e,f) => pick(f))
+    .on("keydown", (e,f) => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(f); } })
+    .on("mousemove", (e,f) => showTip(e,f))
+    .on("mouseleave", () => { tip.hidden = true; });
   gRid.selectAll("path").data(RGEO.features).join("path")
     .attr("class","rid").attr("d",path).attr("tabindex",0).attr("role","button")
     .attr("aria-label", f => DNAME[f.properties.DID])
@@ -269,8 +287,11 @@ function showFloat(cls, on){
   if (on && window.innerWidth <= 700) showFloat(cls === "show-panel" ? "show-scen" : "show-panel", false);
 }
 let wasFs = false;
+const scenEl = document.getElementById("l39-scen"), scenHome = scenEl.parentNode, scenNext = scenEl.nextSibling;
 function syncFsButton(){
   const on = isFs();
+  if (on && scenEl.parentNode !== mapGrid) mapGrid.appendChild(scenEl);
+  if (!on && scenEl.parentNode === mapGrid) scenHome.insertBefore(scenEl, scenNext);
   if (on && !wasFs) { showFloat("show-panel", window.innerWidth > 900); showFloat("show-scen", false); }
   wasFs = on;
   requestAnimationFrame(placeFloats);
@@ -290,13 +311,18 @@ document.addEventListener("keydown", e => {
 });
 
 function pick(f){
-  if (state.view==="reg") select({type:"reg", code:f.properties.REG});
+  if (state.view==="cur") select({type:"cur", idx:f.properties.RID});
+  else if (state.view==="reg") select({type:"reg", code:f.properties.REG});
   else select({type:"circ", id:f.properties.DID});
 }
 
 const tip = document.getElementById("l39-tip"), stage = document.getElementById("l39-stage");
 function showTip(e, f){
-  if (state.view==="reg"){
+  if (state.view==="cur"){
+    const x = RES.ridings[f.properties.RID];
+    const top = P.map((p,i)=>[p,x.sh[i]]).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([p,v])=>`${p} ${fmt(v,0)} %`).join(" · ");
+    tip.innerHTML = `<b>${esc(x.n)}</b>${esc(REG[x.r].name)} · ${x.e.toLocaleString("fr-CA")} électeurs<br>${top}`;
+  } else if (state.view==="reg"){
     const code = f.properties.REG, R = RES.regions[code];
     const parts = P.filter(p => R.d[p]+R.l[p] > 0).sort((a,b)=>(R.d[b]+R.l[b])-(R.d[a]+R.l[a]))
       .map(p => `${p} ${R.d[p]+R.l[p]}`).join(" · ");
@@ -329,6 +355,12 @@ function fillRegion(code){
   if (state.mode==="vote") return [PV[p], Math.max(0.06, Math.min(1, R.share[p]/50))];
   if (state.mode==="seat") return [PV[p], Math.max(0.06, (R.d[p]+R.l[p])/seats)];
   return [PV[p], R.l[p] ? Math.min(1, 0.25 + 0.25*R.l[p]) : 0.06];
+}
+function fillCur(idx){
+  const x = RES.ridings[idx];
+  if (state.mode==="vote"){ const i = P.indexOf(state.party); return [PV[state.party], Math.max(0.06, Math.min(1, x.sh[i]/50))]; }
+  const i = P.indexOf(x.w);
+  return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
 }
 function fillRiding(id){
   const x = RES.byId[id];
@@ -409,17 +441,21 @@ function labelFor(code){
   return String(R.l[p]);
 }
 function paintMap(){
-  const byReg = state.view==="reg";
+  const byReg = state.view==="reg", isCur = state.view==="cur";
   mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
-  gRid.style("display", byReg ? "none" : null);
+  gCur.style("display", isCur ? null : "none");
+  gRid.style("display", state.view==="circ" ? null : "none");
   gRegFill.style("display", byReg ? null : "none");
+  if (isCur) gCur.selectAll("path").each(function(f){
+    const [c,o] = fillCur(f.properties.RID); this.style.fill = c; this.style.fillOpacity = o;
+  });
   if (byReg) gRegFill.selectAll("path").each(function(f){
     const [c,o] = fillRegion(f.properties.REG); this.style.fill = c; this.style.fillOpacity = o;
   });
-  else gRid.selectAll("path").each(function(f){
+  else if (!isCur) gRid.selectAll("path").each(function(f){
     const [c,o] = fillRiding(f.properties.DID); this.style.fill = c; this.style.fillOpacity = o;
   });
-  const sf = state.sel.type==="reg" ? REGFEAT[state.sel.code] : state.sel.type==="circ" ? RIDFEAT[state.sel.id] : null;
+  const sf = featOf(state.sel);
   document.getElementById("l39-selAll").setAttribute("aria-pressed", state.sel.type==="all");
   gSel.selectAll("path").data(sf ? [sf] : []).join("path").attr("class","selline").attr("d",path);
 
@@ -439,8 +475,12 @@ function paintMap(){
   const sc = document.getElementById("l39-scale");
   const p = state.party, col = PV[p];
   const ramp = `<span class="ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${col} 6%, var(--surface)), ${col})"></span>`;
+  document.getElementById("l39-hint").textContent = isCur
+    ? "Carte actuelle : les 127 circonscriptions de la carte électorale 2026 (Élections Québec), avec la projection Qc125 de chacune. C'est le mode de scrutin en vigueur, sans simulation."
+    : "Loi 39 : découpage hypothétique à 80 circonscriptions construit pour cette simulation à partir des 16 951 sections de vote 2026 d'Élections Québec (voir « Méthode »). Ce n'est pas une carte officielle : la Commission de la représentation électorale n'en a jamais tracé.";
   sc.innerHTML = !byReg
     ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription</span>`
+       : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de circonscription et sièges de région de chaque région.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
@@ -454,10 +494,11 @@ function select(sel, {zoomTo = false} = {}){
   if (sel.type !== "all" && sel.type !== state.view) setView(sel.type, {silent:true});
   paintMap(); renderPanel();
   if (isFs() && sel.type !== "all") showFloat("show-panel", true);   // en plein écran, le détail s'ouvre sur la sélection
-  if (zoomTo && sel.type !== "all") zoomToFeature(sel.type==="reg" ? REGFEAT[sel.code] : RIDFEAT[sel.id], sel.type==="reg" ? 0.85 : 0.5);
+  if (zoomTo && sel.type !== "all") zoomToFeature(featOf(sel), padOf(sel));
 }
 function renderPanel(){
   const t = state.sel.type;
+  if (state.view==="cur") return t==="cur" ? renderCurPanel() : renderAllCurPanel();
   t==="all" ? renderAllPanel() : t==="reg" ? renderRegionPanel() : renderRidingPanel();
 }
 function selectAll(){
@@ -636,7 +677,63 @@ function renderRidingPanel(){
     </div>`;
 }
 
+/* Carte actuelle : tout le Québec, puis une circonscription réelle */
+function renderAllCurPanel(){
+  const f = RES.fptp, order = P.slice().sort((a,b) => f[b]-f[a] || RES.natShare[b]-RES.natShare[a]), lead = order[0];
+  const rows = order.map(p => `<div class="vrow wide"><b style="color:${PV[p]}">${p}</b>
+      <div class="track"><i style="width:${Math.min(100,RES.natShare[p]*2)}%;background:${PV[p]}"></i></div>
+      <span class="num">${fmt(RES.natShare[p])} %</span><span class="num sx"><b>${f[p]}</b> <small>sièges</small></span></div>`).join("");
+  const byReg = DATA.regions.map(r => { const c = Object.fromEntries(P.map(p=>[p,0])); RES.ridings.filter(x=>x.r===r.code).forEach(x => c[x.w]++);
+    return `<tr><td><button type="button" class="linkbtn" data-goreg="${r.code}">${esc(r.name)}</button></td>${P.map(p => `<td class="${c[p]?"has":""}" style="--c:${PV[p]}">${c[p]||"·"}</td>`).join("")}</tr>`; }).join("");
+  document.getElementById("l39-panel").innerHTML = `
+    <div style="display:grid;gap:6px">
+      <span class="eyebrow">Carte actuelle · 127 circonscriptions</span>
+      <h3 style="font-size:1.4rem">Tout le Québec</h3>
+      <div class="meta"><span class="pill"><i class="dot" style="background:${PV[lead]}"></i>${lead} ${f[lead] >= 64 ? "majoritaire" : "minoritaire"} : ${f[lead]} / 127</span><span class="pill">Majorité : 64</span></div>
+      <p class="muted" style="font-size:.86rem">Projection Qc125 dans chaque circonscription réelle : le parti en tête l'emporte, sans compensation. Cliquez sur une circonscription pour son détail.</p>
+    </div>
+    <div style="display:grid;gap:8px"><span class="eyebrow">Vote et sièges</span>${rows}</div>
+    <div style="display:grid;gap:8px"><span class="eyebrow">Sièges par région (limites de 2019)</span>
+      <div class="tablebox"><table class="ctable regsum"><thead><tr><th>Région</th>${P.map(p=>`<th style="color:${PV[p]}">${p}</th>`).join("")}</tr></thead><tbody>${byReg}</tbody></table></div></div>`;
+}
+function renderCurPanel(){
+  const idx = state.sel.idx, x = RES.ridings[idx], code = x.r;
+  const order = P.map((p,i)=>[p,x.sh[i]]).sort((a,b)=>b[1]-a[1]), margin = order[0][1] - order[1][1];
+  const rows = order.map(([p,v]) => `<div class="vrow${p===x.w?" win":""}"><b style="color:${PV[p]}">${p}</b>
+      <div class="track"><i style="width:${Math.min(100,v*2)}%;background:${PV[p]}"></i></div><span class="num">${fmt(v)} %</span><span></span></div>`).join("");
+  // avec la loi 39 : dans quelles circonscriptions simulées vont ses électeurs
+  const dests = DATA.districts.map(d => { const c = d.comp.find(([ri]) => ri === idx); return c ? {d, e: c[1]} : null; })
+    .filter(Boolean).sort((a,b) => b.e - a.e);
+  const destRows = dests.map(({d, e}) => { const w = RES.byId[d.id].w;
+    return `<tr><td><button type="button" class="linkbtn" data-rid="${d.id}">${esc(d.name)}</button></td><td>${100*e/x.e < 1 ? "< 1" : fmt(100*e/x.e,0)} %</td><td><b style="color:${PV[w]}">${w}</b></td></tr>`; }).join("");
+  document.getElementById("l39-panel").innerHTML = `
+    <div style="display:grid;gap:6px">
+      <span class="eyebrow">Circonscription actuelle · ${esc(REG[code].name)}</span>
+      <h3 style="font-size:1.4rem">${esc(x.n)}</h3>
+      <div class="meta">
+        <span class="pill"><i class="dot" style="background:${PV[x.w]}"></i>En tête : ${x.w}</span>
+        <span class="pill num">Avance : ${fmt(margin)} pts</span>
+        <span class="pill num">${x.e.toLocaleString("fr-CA")} électeurs</span>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <button type="button" class="linkbtn" data-all>← Tout le Québec</button>
+        <button type="button" class="linkbtn" data-zoomsel>Zoomer ici</button>
+        <a class="linkbtn" href="https://qc125.com/${x.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>
+      </div>
+    </div>
+    <div style="display:grid;gap:8px"><span class="eyebrow">Projection Qc125</span>${rows}</div>
+    <div class="explain">
+      <span class="eyebrow">Avec la loi 39 <span class="tag sim" title="${SIM_TIP}">simulé</span></span>
+      <p>Ses électeurs se retrouveraient dans ${dests.length} circonscription${dests.length>1?"s":""} de la carte simulée à 80 :</p>
+      <div class="tablebox"><table class="ctable"><thead><tr><th>Circonscription simulée</th><th>Part de ses électeurs</th><th>Gagnant</th></tr></thead>
+        <tbody>${destRows}</tbody></table></div>
+      <div><button type="button" class="linkbtn" data-goreg="${code}">Voir la région ${esc(REG[code].name)} avec la loi 39 →</button></div>
+    </div>`;
+}
+
 document.getElementById("l39-panel").addEventListener("click", e => {
+  const cr = e.target.closest("[data-cur]");
+  if (cr) return select({type:"cur", idx: +cr.dataset.cur}, {zoomTo:true});
   const rid = e.target.closest("[data-rid]");
   if (rid) return select({type:"circ", id: +rid.dataset.rid}, {zoomTo:true});
   if (e.target.closest("[data-all]")) return selectAll();
@@ -644,19 +741,31 @@ document.getElementById("l39-panel").addEventListener("click", e => {
   if (g) return select({type:"reg", code: g.dataset.goreg}, {zoomTo:true});
   if (e.target.closest("[data-zoomsel]") && state.sel.type !== "all") {
     const s = state.sel;
-    zoomToFeature(s.type==="reg" ? REGFEAT[s.code] : RIDFEAT[s.id], s.type==="reg" ? 0.85 : 0.5);
+    zoomToFeature(featOf(s), padOf(s));
   }
 });
 
+let loiView = "reg";   // dernier découpage choisi pour la loi 39
 function setView(v, {silent = false} = {}){
+  const prev = state.view;
   state.view = v;
+  if (v !== "cur") loiView = v;
+  document.getElementById("l39-c-act").setAttribute("aria-pressed", v==="cur");
+  document.getElementById("l39-c-loi").setAttribute("aria-pressed", v!=="cur");
+  document.getElementById("l39-loiSeg").hidden = v==="cur";
   document.getElementById("l39-v-reg").setAttribute("aria-pressed", v==="reg");
   document.getElementById("l39-v-circ").setAttribute("aria-pressed", v==="circ");
-  for (const id of ["seat","comp"]) document.getElementById("l39-m-"+id).disabled = v==="circ";
-  if (v==="circ" && (state.mode==="seat" || state.mode==="comp")) setMode("lead", {silent:true});
+  for (const id of ["seat","comp"]) document.getElementById("l39-m-"+id).disabled = v!=="reg";
+  if (v!=="reg" && (state.mode==="seat" || state.mode==="comp")) setMode("lead", {silent:true});
   if (!silent){
     // garder une sélection cohérente avec l'affichage
-    if (v==="circ" && state.sel.type==="reg"){
+    if (v==="cur" && state.sel.type!=="cur") state.sel = {type:"all"};
+    else if (prev==="cur" && state.sel.type==="cur"){
+      // circonscription réelle → la circonscription simulée qui reçoit le plus de ses électeurs, ou sa région
+      const idx = state.sel.idx, best = DATA.districts.map(d => [d, (d.comp.find(([ri]) => ri===idx)||[0,0])[1]]).sort((a,b) => b[1]-a[1])[0][0];
+      state.sel = v==="circ" ? {type:"circ", id: best.id} : {type:"reg", code: DATA.ridings[idx].r};
+    }
+    else if (v==="circ" && state.sel.type==="reg"){
       state.sel = {type:"circ", id: RES.regions[state.sel.code].districts[0].id};
     } else if (v==="reg" && state.sel.type==="circ"){
       state.sel = {type:"reg", code: RES.byId[state.sel.id].r};
@@ -664,6 +773,8 @@ function setView(v, {silent = false} = {}){
     paintMap(); renderPanel();
   }
 }
+document.getElementById("l39-c-act").addEventListener("click", () => setView("cur"));
+document.getElementById("l39-c-loi").addEventListener("click", () => setView(loiView));
 document.getElementById("l39-v-reg").addEventListener("click", () => setView("reg"));
 document.getElementById("l39-v-circ").addEventListener("click", () => setView("circ"));
 

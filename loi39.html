@@ -111,11 +111,27 @@
         <div class="legend"><span><i class="dot sq" style="background:var(--muted)"></i>Siège de circonscription</span><span style="color:var(--muted)"><i class="dot ring sq"></i>Siège de région (compensatoire)</span></div>
       </figure>
     </div>
+    <div class="res-side">
     <div class="tablebox">
       <table>
         <thead><tr><th>Parti</th><th>Vote</th><th>Actuel (127)</th><th>Circ. (80)</th><th>Région (45)</th><th>Total (125)</th><th>% des sièges</th><th class="bar-cell" style="text-align:left">Sièges vs vote</th></tr></thead>
         <tbody id="l39-resBody"></tbody>
       </table>
+    </div>
+        <div class="scen" id="l39-scen" aria-labelledby="l39-h-scen">
+          <div class="sec-head">
+            <h3 id="l39-h-scen">Tester un autre scénario</h3>
+            <p class="muted" style="font-size:.86rem">Changez le vote d'un parti : les autres s'ajustent pour garder 100 %. Le changement est appliqué proportionnellement dans les 127 circonscriptions, et tout est recalculé en direct.</p>
+          </div>
+          <div class="sliders" id="l39-sliders"></div>
+          <div class="row">
+            <div class="sl" style="min-width:200px;flex:1;max-width:420px;--c:var(--ink)">
+              <label for="l39-thr"><span>Seuil national (art. 379.2)</span><span class="num" id="l39-thrV">10 %</span></label>
+              <input type="range" id="l39-thr" min="0" max="20" step="0.5" value="10">
+            </div>
+            <button type="button" class="btn" id="l39-reset">Revenir à la projection Qc125</button>
+          </div>
+        </div>
     </div>
     </div>
     <div class="coal" id="l39-coalitions"></div>
@@ -123,13 +139,17 @@
 
   <section aria-labelledby="l39-h-map">
     <div class="sec-head">
-      <h2 id="l39-h-map">Carte et scénarios <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">carte à 80 simulée</span></h2>
-      <p class="muted">Choisissez l'affichage par région (les 17 régions électorales de la loi) ou par circonscription (les 80 d'une carte hypothétique conforme à la loi). Cliquez sur la carte pour voir le détail. Pour zoomer, utilisez la molette, le pincement ou les raccourcis.</p>
+      <h2 id="l39-h-map">La carte</h2>
+      <p class="muted">Basculez entre la carte actuelle (les 127 circonscriptions réelles, projection Qc125) et la carte simulée de la loi 39 : ses 17 régions ou ses 80 circonscriptions hypothétiques. Cliquez sur la carte pour voir le détail. Pour zoomer, utilisez la molette, le pincement ou les raccourcis.</p>
     </div>
     <div class="mapgrid">
       <div class="mapcard">
         <div class="toolbar">
-          <div class="seg" role="group" aria-label="Découpage affiché">
+          <div class="seg" role="group" aria-label="Carte affichée">
+            <button type="button" id="l39-c-act" aria-pressed="false">Carte actuelle (127)</button>
+            <button type="button" id="l39-c-loi" aria-pressed="true">Loi 39 · simulée</button>
+          </div>
+          <div class="seg" role="group" aria-label="Découpage de la loi 39" id="l39-loiSeg">
             <button type="button" id="l39-v-reg" aria-pressed="true">Régions (17)</button>
             <button type="button" id="l39-v-circ" aria-pressed="false">Circonscriptions (80)</button>
           </div>
@@ -157,23 +177,9 @@
           <div class="tip" id="l39-tip" hidden></div>
         </div>
         <div class="scale" id="l39-scale"></div>
-        <p class="hint">Circonscriptions : découpage hypothétique à 80 construit pour cette simulation à partir des 16 951 sections de vote 2026 d'Élections Québec (voir « Méthode »). Ce n'est pas une carte officielle : la Commission de la représentation électorale n'en a jamais tracé.</p>
+        <p class="hint" id="l39-hint">Circonscriptions : découpage hypothétique à 80 construit pour cette simulation à partir des 16 951 sections de vote 2026 d'Élections Québec (voir « Méthode »). Ce n'est pas une carte officielle : la Commission de la représentation électorale n'en a jamais tracé.</p>
       </div>
       <aside class="panel" id="l39-panel" aria-live="polite"></aside>
-      <div class="scen" aria-labelledby="l39-h-scen">
-        <div class="sec-head">
-          <h3 id="l39-h-scen">Tester un autre scénario</h3>
-          <p class="muted" style="font-size:.86rem">Changez le vote d'un parti : les autres s'ajustent pour garder 100 %. Le changement est appliqué proportionnellement dans les 127 circonscriptions, et tout est recalculé en direct.</p>
-        </div>
-        <div class="sliders" id="l39-sliders"></div>
-        <div class="row">
-          <div class="sl" style="min-width:200px;flex:1;max-width:420px;--c:var(--ink)">
-            <label for="l39-thr"><span>Seuil national (art. 379.2)</span><span class="num" id="l39-thrV">10 %</span></label>
-            <input type="range" id="l39-thr" min="0" max="20" step="0.5" value="10">
-          </div>
-          <button type="button" class="btn" id="l39-reset">Revenir à la projection Qc125</button>
-        </div>
-      </div>
     </div>
   </section>
 

@@ -280,7 +280,11 @@
 .loi39 .gbar .track i:first-child{border-radius:5px 0 0 5px}
 .loi39 .gbar .track i:last-child{border-radius:0 5px 5px 0}
 .loi39 .gbar .track b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);transform:translateX(-1px)}
-.loi39 .mapgrid .scen{grid-column:1/-1}
+.loi39 .res-side{display:grid;gap:var(--gap);align-content:start;min-width:0}
+.loi39 .seg[hidden]{display:none}
+.loi39 .panel .ctable th{white-space:normal;vertical-align:bottom}
+.loi39 .panel .ctable td:first-child{white-space:normal}
+.loi39 .panel .ctable .linkbtn{text-align:left}
 @media (min-width:1100px){
 .loi39 header.top{grid-template-columns:auto minmax(0,58ch) minmax(300px,1fr)}
 .loi39 .glance{grid-column:auto;padding-left:20px;border-left:1px solid var(--rule)}
@@ -294,12 +298,7 @@
 .loi39 .res-grid .bar-cell{display:none}
 .loi39 .res-grid table th,.loi39 .res-grid table td{padding-inline:9px}
 .loi39 .res-grid table th{letter-spacing:.03em}
-.loi39 .res-grid .tablebox{align-self:stretch}
-.loi39 .wrap .mapgrid{grid-template-columns:290px minmax(0,1fr) minmax(360px,410px)}
-.loi39 .mapgrid .scen{grid-column:auto;order:-1;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
-.loi39 .mapgrid .scen .sliders{grid-template-columns:1fr}
-.loi39 .mapgrid .scen .row{flex-direction:column;align-items:stretch}
-.loi39 .mapgrid .scen .sl{max-width:none!important;min-width:0!important}
+.loi39 .wrap .mapgrid{grid-template-columns:minmax(0,1fr) minmax(360px,420px)}
 .loi39 .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 var(--gap);align-items:start}
 .loi39 .lower .method{grid-template-columns:1fr}
 

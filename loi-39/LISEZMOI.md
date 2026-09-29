@@ -183,7 +183,8 @@ Un seul fichier : `<title>`, polices, `<style>`, balisage, `<script type="module
   regions:   [{code:"06", name:"Montréal", electors:1311258}, …],           // 17, codes 01–17
   ridings:   [{n:"Acadie", id:"1003", r:"06", s:[PQ,PLQ,CAQ,PCQ,QS] (%), o:[ordre Qc125], e:électeurs}, …], // 127
   districts: [{id:1, name:"…", r:"01", e:électeurs, comp:[[indexRiding, électeurs], …]}, …], // 80
-  districtGeo: GeoJSON (properties.DID), regionGeo: GeoJSON (properties.REG)
+  districtGeo: GeoJSON (properties.DID), regionGeo: GeoJSON (properties.REG),
+  ridingGeo: GeoJSON des 127 circonscriptions actuelles (properties.RID = rang dans ridings ; m80/c127.json)
 }
 ```
 
@@ -281,8 +282,9 @@ Sans `files`, l'artifact garde l'ancien `data.json`. C'est déjà arrivé une fo
 
 ## 7. Préférences de Frank (historique des demandes)
 
-- Pas de circonscriptions actuelles sur la carte : elle ne montre que des régions et des circonscriptions conformes
-  à la loi.
+- La carte bascule entre la **carte actuelle** (127 circonscriptions réelles, `ridingGeo`, vue `cur`) et la **loi 39
+  simulée** (17 régions ou 80 circonscriptions). Pas de mélange des deux découpages sur un même affichage. Une
+  circonscription actuelle montre où vont ses électeurs dans la carte à 80, avec un lien pour y passer.
 - Circonscriptions réalistes, d'un seul tenant, qui respectent les municipalités.
 - Vue par défaut : « Tout le Québec ». On revient à cette vue avec le bouton, en cliquant sur l'eau, ou avec le
   lien dans les panneaux.
@@ -296,6 +298,7 @@ Sans `files`, l'artifact garde l'ancien `data.json`. C'est déjà arrivé une fo
   modèle 80 + 45 est marqué « simulé » (bandeau + étiquettes `.tag.sim`).
 - Plein écran : la carte seule ; barres, légende, détail et scénario flottent par-dessus (boutons « Détail » /
   « Scénario »). Pas de cadre de focus rectangulaire sur les régions cliquées.
+- Scénario (curseurs) sous le tableau des résultats, pas dans la carte ; en plein écran, il flotte sur la carte.
 - Plans de l'Assemblée en face-à-face (format de l'Assemblée nationale) au lieu d'hémicycles, pivotés de 90° :
   présidence en haut. Le dessin se fait dans le plan couché puis `RX`/`RY` le font pivoter ; les textes restent
   horizontaux.
