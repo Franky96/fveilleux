@@ -55,21 +55,18 @@
         <div class="rd-meta"><span>Passerelle : rds.cegepmontpetit.ca</span><span>Collection : MANUELS</span></div>
 
         <div class="rd-actions">
-          <a class="rd-btn pri" href="https://rds.cegepmontpetit.ca/RDWeb/webclient/" target="_blank" rel="noopener">
+          <a class="rd-btn pri" href="api/distant.php">
             <span class="ico">🖥️</span>
-            <span><b>Ouvrir dans le navigateur</b><small>Client web du cégep : connecte-toi, puis clique sur « MANUELS ». S'ouvre dans un nouvel onglet.</small></span>
-          </a>
-          <a class="rd-btn" href="api/distant.php">
-            <span class="ico">⬇️</span>
-            <span><b>Ouvrir avec l'application Bureau à distance</b><small>Télécharge le fichier de connexion (.rdp), puis ouvre-le : il lance l'application.</small></span>
+            <span><b>Connexion à distance</b><small>Télécharge le fichier de connexion (.rdp) ; ouvre-le pour lancer le Bureau à distance, puis connecte-toi avec ton compte du cégep.</small></span>
           </a>
         </div>
       </section>
 
       <section class="rd-card rd-aide">
-        <h3>Si le navigateur ne fonctionne pas</h3>
+        <h3>Selon ton ordinateur</h3>
         <ul>
           <li><b>Windows</b> : ouvre le fichier .rdp téléchargé, la Connexion Bureau à distance est déjà installée.</li>
+          <li><b>Linux</b> : installe Remmina (<code>sudo apt install remmina remmina-plugin-rdp</code>), puis ouvre le fichier .rdp avec Remmina.</li>
           <li><b>Mac, iPad, iPhone</b> : installe <a href="https://apps.apple.com/app/windows-app/id1295203466" target="_blank" rel="noopener">Windows App</a> (gratuite), puis ouvre le fichier .rdp avec elle.</li>
           <li><b>Android</b> : installe <a href="https://play.google.com/store/apps/details?id=com.microsoft.rdc.androidx" target="_blank" rel="noopener">Windows App</a> depuis le Play Store, puis ouvre le fichier .rdp.</li>
           <li>Hors du réseau du cégep, la passerelle peut exiger une double authentification du cégep ou refuser certaines connexions : c'est le cégep qui gère cet accès.</li>
