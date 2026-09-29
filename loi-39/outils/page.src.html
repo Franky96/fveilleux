@@ -633,9 +633,9 @@ function simulate(){
    ringBy : sièges de région (loi 39), dessinés en contour. */
 function chamber(svg, seatsBy, n, ringBy){
   const S = 10, G = 2.6, STEP = S + G, AISLE = 7, C = 15, ROWS = 3, MID = 24;   // taille, pas, allée, colonnes par côté
-  // le bout droit est assez profond pour que chaque côté contienne tous ses sièges
-  const K = 4, govN = d3.max(P, p => seatsBy[p]), oppN = n - govN;
-  const RH = Math.max(ROWS, Math.ceil((govN - ROWS*C)/K), Math.ceil((oppN - ROWS*C)/K));
+  // côté gouvernement : exactement la majorité (64 ou 63), présidence comprise ; côté opposition : le reste
+  const maj = Math.floor(n/2) + 1, govCap = maj - 1, oppCap = n - maj, K = 4;
+  const RH = Math.max(ROWS, Math.ceil((govCap - ROWS*C)/K), Math.ceil((oppCap - ROWS*C)/K));
   const x0 = 50, colX = j => x0 + j*STEP + Math.floor(j/3)*AISLE;
   const xR = colX(C-1) + S + 16, rightX = k => xR + k*STEP;
   const H = 2*(MID + RH*STEP) + 8, cy = H/2, W = rightX(K-1) + S + 8;
@@ -646,27 +646,24 @@ function chamber(svg, seatsBy, n, ringBy){
 
   // places : côté gouvernement (bancs puis bout droit bas), côté opposition (bancs puis bout droit haut)
   const bench = y => { const out = []; for (let j = 0; j < C; j++) for (let r = 0; r < ROWS; r++) out.push({x:colX(j), y:y(r), j, r}); return out; };
-  // bout droit : par rangées pour le gouvernement (un seul parti), par colonnes pour l'opposition (un bloc par parti)
-  const end = (y, byCol) => { const out = [];
-    if (byCol) for (let k = 0; k < K; k++) for (let r = 0; r < RH; r++) out.push({x:rightX(k), y:y(r), j:C+k, r});
-    else for (let r = 0; r < RH; r++) for (let k = 0; k < K; k++) out.push({x:rightX(k), y:y(r), j:C+k, r});
-    return out; };
-  const govSlots = [...bench(yBot), ...end(yBot, false)], oppSlots = [...bench(yTop), ...end(yTop, true)];
+  // bout : rempli par colonnes, pour que chaque parti forme un bloc
+  const end = y => { const out = []; for (let k = 0; k < K; k++) for (let r = 0; r < RH; r++) out.push({x:rightX(k), y:y(r), j:C+k, r}); return out; };
+  const govSlots = [...bench(yBot), ...end(yBot)].slice(0, govCap), oppSlots = [...bench(yTop), ...end(yTop)].slice(0, oppCap);
 
   const order = P.filter(p => seatsBy[p] > 0).sort((a,b) => seatsBy[b]-seatsBy[a] || SEAT_ORDER.indexOf(a)-SEAT_ORDER.indexOf(b));
   const gov = order[0], opp = order.slice(1);
   const seatsOf = p => { const ring = ringBy ? ringBy[p] : 0; return d3.range(seatsBy[p]).map(i => ({p, ring: i >= seatsBy[p]-ring})); };
   const placed = [];
-  // gouvernement : ses bancs ; s'il déborde, les dernières places du côté opposé
   // la présidence est un député du parti au pouvoir (siège de circonscription) : il quitte les bancs
   let gs = seatsOf(gov);
   const presIdx = gs.findIndex(x => !x.ring), pres = presIdx >= 0 ? gs.splice(presIdx, 1)[0] : null;
+  // gouvernement : son côté ; s'il a plus que la majorité, son surplus passe au bout du côté opposé
   gs.slice(0, govSlots.length).forEach((s,i) => placed.push({...s, ...govSlots[i]}));
   const govExtra = gs.slice(govSlots.length);
-  const oppFree = oppSlots.slice(0, oppSlots.length - govExtra.length);
   govExtra.forEach((s,i) => placed.push({...s, ...oppSlots[oppSlots.length-1-i]}));
-  // opposition : l'opposition officielle d'abord, près de la présidence ; surplus éventuel au bout des bancs du gouvernement
-  const spare = govSlots.slice(Math.min(gs.length, govSlots.length)).reverse();
+  // opposition : l'opposition officielle d'abord, près de la présidence. Gouvernement minoritaire : les places
+  // libres du côté gouvernement reçoivent le débordement (dernier parti d'opposition), à la suite du gouvernement
+  const oppFree = oppSlots.slice(0, oppSlots.length - govExtra.length), spare = govSlots.slice(Math.min(gs.length, govSlots.length));
   let oi = 0, si = 0;
   for (const p of opp) for (const s of seatsOf(p)) { const slot = oi < oppFree.length ? oppFree[oi++] : spare[si++]; if (slot) placed.push({...s, ...slot}); }
 
@@ -726,8 +723,10 @@ const PRESETS = {
 // Position des étiquettes (coordonnées de la carte), à l'intérieur de la région. Les autres régions
 // utilisent le centre de leur plus grand morceau. Une étiquette n'est affichée que si sa région est assez
 // grande à l'écran pour la contenir : Montréal, Laval, etc. apparaissent en zoomant.
-const LABEL_AT = {"07":[100,582],"15":[143,602],"14":[193,582],"12":[274,588],"09":[366,429],"10":[204,301]};
-const LBL_MIN = {w:54, h:30}, LBL_NAME = {w:110, h:62};   // taille minimale de la région à l'écran (px)
+// Une étiquette est au « pôle d'inaccessibilité » de la région (point le plus loin des bords, algorithme polylabel)
+// et n'est affichée que si le cercle libre autour de ce point est assez grand à l'écran : LBL_MIN px de rayon pour
+// le nombre, LBL_NAME px pour ajouter le nom (seulement quand on est vraiment zoomé).
+const LBL_MIN = 19, LBL_NAME = 70, NAME_ZOOM = 5;   // noms à partir d'un zoom × 5
 
 const mapSvg = d3.select("#l39-map");
 const gZoom = mapSvg.append("g");
@@ -873,33 +872,61 @@ function labelLines(code){
   if (state.mode==="lead") return [`${DIST[code]} circ.`, `${LIST[code]} rég.`];
   return [labelFor(code)];
 }
-// point d'ancrage : position choisie, sinon centre du plus grand morceau de la région
+// Pôle d'inaccessibilité (d'après polylabel, Mapbox) d'un polygone en coordonnées de la carte : [x, y, rayon]
+function polylabel(rings, precision = 0.5){
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of rings[0]){ minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+  const segDist2 = (px, py, a, b) => { let x = a[0], y = a[1], dx = b[0]-x, dy = b[1]-y;
+    if (dx || dy){ const t = ((px-x)*dx + (py-y)*dy) / (dx*dx + dy*dy); if (t > 1){ x = b[0]; y = b[1]; } else if (t > 0){ x += dx*t; y += dy*t; } }
+    dx = px-x; dy = py-y; return dx*dx + dy*dy; };
+  const dist = (x, y) => { let inside = false, m = Infinity;       // distance signée au contour (positive dedans)
+    for (const ring of rings) for (let i = 0, j = ring.length-1; i < ring.length; j = i++){
+      const a = ring[i], b = ring[j];
+      if ((a[1] > y) !== (b[1] > y) && x < (b[0]-a[0])*(y-a[1])/(b[1]-a[1]) + a[0]) inside = !inside;
+      m = Math.min(m, segDist2(x, y, a, b)); }
+    return (inside ? 1 : -1) * Math.sqrt(m); };
+  const cell = (x, y, h) => { const d = dist(x, y); return {x, y, h, d, max: d + h*Math.SQRT2}; };
+  const size = Math.min(maxX-minX, maxY-minY); if (!size) return [minX, minY, 0];
+  let h = size/2, q = [];
+  for (let x = minX; x < maxX; x += size) for (let y = minY; y < maxY; y += size) q.push(cell(x+h, y+h, h));
+  let best = cell((minX+maxX)/2, (minY+maxY)/2, 0);
+  while (q.length){
+    q.sort((a, b) => b.max - a.max); const c = q.shift();
+    if (c.d > best.d) best = c;
+    if (c.max - best.d <= precision) continue;
+    h = c.h/2; q.push(cell(c.x-h, c.y-h, h), cell(c.x+h, c.y-h, h), cell(c.x-h, c.y+h, h), cell(c.x+h, c.y+h, h));
+  }
+  return [best.x, best.y, best.d];
+}
+// point d'ancrage de chaque région : pôle de son plus grand morceau (calculé une fois, en coordonnées de la carte)
 const ANCHOR = {};
 function anchorOf(f){
   const code = f.properties.REG;
   if (ANCHOR[code]) return ANCHOR[code];
-  if (LABEL_AT[code]) return ANCHOR[code] = LABEL_AT[code];
-  let best = f, area = -1;
-  if (f.geometry.type === "MultiPolygon") for (const poly of f.geometry.coordinates){
-    const g = {type:"Feature", geometry:{type:"Polygon", coordinates:poly}}, a = path.area(g);
-    if (a > area){ area = a; best = g; }
+  const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
+  let best = [0, 0, -1];
+  for (const poly of polys){
+    const rings = poly.map(r => r.map(c => projection(c)));
+    const cand = polylabel(rings);
+    if (cand[2] > best[2]) best = cand;
   }
-  return ANCHOR[code] = path.centroid(best);
+  return ANCHOR[code] = best;
 }
 function placeLabels(){
   const k = curK, t = curT, svgEl = mapSvg.node();
   // pixels écran par unité de carte (viewBox 600 × 704, conservé)
   const px = Math.min(svgEl.clientWidth / MW, svgEl.clientHeight / MH) * k;
   gLbl.selectAll("g.lab").each(function(f){
-    const [x, y] = anchorOf(f), [[x0,y0],[x1,y1]] = path.bounds(f);
-    const w = (x1-x0) * px, h = (y1-y0) * px;
+    const [x, y, rad] = anchorOf(f), room = rad * px;   // rayon libre autour de l'étiquette, en px écran
     const sx = t.applyX(x), sy = t.applyY(y);           // position dans la vue (unités de viewBox)
     const mx = 44 / Math.max(px / k, 0.01);            // marge ≈ 44 px écran : pas d'étiquette coupée au bord
-    const inView = sx > mx && sx < MW - mx && sy > 16 && sy < MH - 16;
-    const show = inView && w >= LBL_MIN.w && h >= LBL_MIN.h;
+    const zb = mapSvg.node().parentNode.querySelector(".zoombar");   // pas d'étiquette sous la barre de boutons
+    const top = ((zb ? zb.offsetTop + zb.offsetHeight : 0) + 14) / Math.max(px / k, 0.01);
+    const inView = sx > mx && sx < MW - mx && sy > top && sy < MH - 16;
+    const show = inView && room >= LBL_MIN;
     const g = d3.select(this).style("display", show ? null : "none");
     if (!show) return;
-    g.select("text.nmtxt").style("display", w >= LBL_NAME.w && h >= LBL_NAME.h ? null : "none");
+    g.select("text.nmtxt").style("display", k >= NAME_ZOOM && room >= LBL_NAME ? null : "none");   // noms : seulement très zoomé
     g.selectAll("text").attr("transform", `translate(${x},${y})`)
       .style("font-size", (10.5/k)+"px").style("stroke-width", (3/k)+"px");
   });

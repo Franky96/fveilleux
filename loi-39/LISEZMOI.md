@@ -200,7 +200,9 @@ Un seul fichier : `<title>`, polices, `<style>`, balisage, `<script type="module
     `ridings` et `districts`.
 - **`chamber()` :** les deux plans de l'Assemblée, disposition de l'Assemblée nationale pivotée de 90° (horaire) :
   présidence en haut, gouvernement (plus grand parti) à gauche, opposition à droite (opposition officielle d'abord),
-  banquettes perpendiculaires en bas dimensionnées pour que chaque côté tienne tous ses sièges. « PM » et « C » marquent
+  banquettes perpendiculaires en bas. Côté gouvernement : exactement la majorité (64 ou 63), présidence comprise ;
+  gouvernement minoritaire → le dernier parti d'opposition déborde de ce côté ; plus que la majorité → son surplus
+  passe au bout du côté opposé. « PM » et « C » marquent
   le premier ministre et le chef de l'opposition. La présidence est un siège de circonscription du parti au
   pouvoir, retiré des bancs et coloré à sa couleur (compté dans ses sièges). Les sièges de région sont dessinés en contour.
 - **Carte (d3-geo, projection conique conforme, `viewBox 600×704`) :**
@@ -286,9 +288,9 @@ Sans `files`, l'artifact garde l'ancien `data.json`. C'est déjà arrivé une fo
   lien dans les panneaux.
 - Un vrai usage des écrans larges : plus de colonnes, pas seulement un zoom.
 - Explication pédagogique de la compensation, avec tous les quotients à chaque tour.
-- Étiquettes de la carte : ancrées dans leur région (plus de renvois vers une bande du bas), affichées seulement si la
-  région est assez grande à l'écran (`LBL_MIN`, nom si `LBL_NAME`) et loin du bord : Montréal et Laval apparaissent
-  en zoomant.
+- Étiquettes de la carte : au pôle d'inaccessibilité de la région (`polylabel`, point le plus loin des bords),
+  affichées seulement si le cercle libre autour fait au moins `LBL_MIN` px à l'écran, loin des bords et sous la barre de
+  zoom ; les noms seulement à partir d'un zoom × `NAME_ZOOM`. Montréal et Laval apparaissent en zoomant.
 - Barre « coup d'œil » : chaque segment montre son nombre (« PQ 54 », sinon « 54 », sinon sous la barre, `fitGlance`).
 - Comparaison avec le mode actuel bien visible (« Ce qui changerait » + barres avant/après), et tout ce qui vient du
   modèle 80 + 45 est marqué « simulé » (bandeau + étiquettes `.tag.sim`).
