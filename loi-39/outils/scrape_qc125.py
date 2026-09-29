@@ -3,7 +3,7 @@
 Qc125 (Apache mod_security) répond 406 sans en-têtes de navigateur : on envoie un User-Agent et un Accept complets.
 Usage : /usr/bin/python3 scrape_qc125.py   (dans le dossier outils/)
 """
-import re, html, json, time, urllib.request
+import re, html, json, time, datetime, zoneinfo, urllib.request
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 HDR = {"User-Agent": UA, "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -45,4 +45,8 @@ json.dump(proj, open("proj.json", "w", encoding="utf-8"), ensure_ascii=False, in
 a, m, j = max(dates) if dates else (0, 0, 0)
 maj = {"date": f"{a:04d}-{m:02d}-{j:02d}", "texte": f"{j} {MOIS[m - 1]} {a}"} if dates else {}
 json.dump(maj, open("maj.json", "w", encoding="utf-8"), ensure_ascii=False)
+# date de la vérification (heure de Montréal) : affichée sur la page même si Qc125 n'a rien changé
+auj = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+json.dump({"date": auj.isoformat(), "texte": f"{auj.day} {MOIS[auj.month - 1]} {auj.year}"},
+          open("../verif.json", "w", encoding="utf-8"), ensure_ascii=False)
 print(f"{len(proj)} circonscriptions enregistrées dans proj.json · mise à jour Qc125 : {maj.get('texte', '?')}")

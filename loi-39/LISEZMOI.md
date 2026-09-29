@@ -254,9 +254,9 @@ cd ~/Downloads/loi39-site/outils
 
 **Mise à jour automatique (fveilleux.com)** : le workflow GitHub `.github/workflows/loi39-qc125.yml` roule chaque
 jour vers 6 h (heure de Montréal). Il relance `scrape_qc125.py`, `build_data80.py`, `sim80.py` et `build_site.py`, puis
-pousse sur `master` **seulement** si les données ont changé (`data.json`, `proj.json`, `maj.json`…). Hostinger
-redéploie alors le site. La date affichée sur la page (« projection Qc125 du … ») vient de `maj.json`, lue dans la
-fiche Qc125 (« Mise à jour : … »). Si une fiche est illisible, rien n'est écrit et le workflow échoue (courriel de
+pousse sur `master` (Hostinger redéploie alors le site). La date « projection Qc125 du … » vient de `maj.json`, lue
+dans la fiche Qc125 (« Mise à jour : … »). La date « vérifiée le … » vient de `loi-39/verif.json`, écrit à chaque
+vérification réussie : elle change tous les jours, même quand Qc125 n'a rien changé. Si une fiche est illisible, rien n'est écrit et le workflow échoue (courriel de
 GitHub). Lancement manuel : onglet **Actions** → « Loi 39 · données Qc125 » → **Run workflow**.
 
 **Republier l'artifact** (depuis Claude Code) : outil Artifact, `file_path = outils/page.src.html`,

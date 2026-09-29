@@ -171,6 +171,13 @@ function chamber(svg, seatsBy, n, ringBy){
 // date de la projection Qc125 (écrite par scrape_qc125.py, mise à jour chaque jour par le pipeline)
 const MAJ = (DATA.maj && DATA.maj.texte) || "28 septembre 2026";
 document.querySelectorAll("[data-maj]").forEach(e => e.textContent = MAJ);
+// dernière vérification quotidienne (verif.json, à côté de data.json) : même si Qc125 n'a rien changé
+{
+  const src = (document.getElementsByClassName("loi39")[0] || {dataset: {}}).dataset.src || "data.json";
+  fetch(new URL("verif.json", new URL(src, location.href)), {cache: "no-cache"})
+    .then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(v => { if (v && v.texte) document.querySelectorAll("[data-verif]").forEach(e => { e.lastElementChild.textContent = v.texte; e.hidden = false; }); });
+}
 const RGEO = DATA.districtGeo, GGEO = DATA.regionGeo;   // 80 circonscriptions hypothétiques et 17 régions
 // d3 attend des anneaux extérieurs en sens horaire ; on corrige au besoin
 for (const g of [RGEO, GGEO]) for (const f of g.features){

@@ -1,6 +1,7 @@
 # Mise à jour quotidienne de la page Loi 39 avec les projections Qc125.
 # Télécharge les 127 fiches de circonscription de qc125.com, reconstruit data.json et pousse sur master
-# seulement si les données ont changé (Hostinger déploie alors le site automatiquement).
+# (Hostinger déploie alors le site automatiquement). La date de vérification (loi-39/verif.json) est publiée
+# chaque jour, même quand Qc125 n'a rien changé.
 # Si une fiche Qc125 est illisible, rien n'est publié : le pipeline échoue et GitHub envoie un courriel.
 name: Loi 39 · données Qc125
 
@@ -43,18 +44,24 @@ jobs:
           python3 sim80.py
           python3 build_site.py
 
-      - name: Publier si les données ont changé
+      - name: Publier la vérification (et les données si elles ont changé)
         run: |
-          DONNEES="loi-39/data.json loi-39/outils/data.json loi-39/outils/proj.json loi-39/outils/ridings.tsv loi-39/outils/maj.json loi-39/outils/result.json"
+          DONNEES="loi-39/verif.json loi-39/data.json loi-39/outils/data.json loi-39/outils/proj.json loi-39/outils/ridings.tsv loi-39/outils/maj.json loi-39/outils/result.json"
           # la page elle-même ne doit pas changer : seules les données sont publiées
           AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
           if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi
           git add $DONNEES
-          if git diff --cached --quiet; then echo "Aucune nouvelle donnée Qc125."; exit 0; fi
+          if git diff --cached --quiet; then echo "Déjà vérifié aujourd'hui, rien à publier."; exit 0; fi
           MAJ=$(python3 -c "import json;print(json.load(open('loi-39/outils/maj.json')).get('texte','?'))")
+          VERIF=$(python3 -c "import json;print(json.load(open('loi-39/verif.json'))['texte'])")
+          if git diff --cached --quiet -- loi-39/outils/proj.json; then
+            MSG="Loi 39 : vérification Qc125 du $VERIF, aucun changement (projection du $MAJ)"
+          else
+            MSG="Loi 39 : projections Qc125 du $MAJ (mise à jour automatique)"
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Loi 39 : projections Qc125 du $MAJ (mise à jour automatique)"
+          git commit -m "$MSG"
           for essai in 1 2 3 4; do
             git push origin HEAD:master && exit 0
             sleep $((2 ** essai)); git pull --rebase origin master
