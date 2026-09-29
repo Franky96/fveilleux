@@ -971,76 +971,17 @@ function anchorOf(f){
   }
   return ANCHOR[code] = best;
 }
-// morceaux de la région projetés en coordonnées de la carte (calculés une fois)
-const PROJ = {};
-function projOf(f){
-  const code = f.properties.REG;
-  if (PROJ[code]) return PROJ[code];
-  const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
-  return PROJ[code] = polys.map(poly => poly.map(r => r.map(c => projection(c))));
-}
-// découpe un anneau par un rectangle (Sutherland-Hodgman) ; le bord de l'écran devient un bord du polygone
-function clipRing(ring, x0, y0, x1, y1){
-  const sides = [[p => p[0] >= x0, (a, b) => [x0, a[1] + (b[1]-a[1])*(x0-a[0])/(b[0]-a[0])]],
-                 [p => p[0] <= x1, (a, b) => [x1, a[1] + (b[1]-a[1])*(x1-a[0])/(b[0]-a[0])]],
-                 [p => p[1] >= y0, (a, b) => [a[0] + (b[0]-a[0])*(y0-a[1])/(b[1]-a[1]), y0]],
-                 [p => p[1] <= y1, (a, b) => [a[0] + (b[0]-a[0])*(y1-a[1])/(b[1]-a[1]), y1]]];
-  let out = ring;
-  for (const [inside, cut] of sides){
-    const src = out; out = [];
-    for (let i = 0; i < src.length; i++){
-      const a = src[(i + src.length - 1) % src.length], b = src[i];
-      if (inside(b)){ if (!inside(a)) out.push(cut(a, b)); out.push(b); }
-      else if (inside(a)) out.push(cut(a, b));
-    }
-    if (!out.length) break;
-  }
-  return out;
-}
-// région dont le point d'ancrage est hors de la vue : meilleur point de sa partie visible
-const VIS = {};
-function visibleAnchor(f, x0, y0, x1, y1, k){
-  const key = f.properties.REG + ":" + [x0, y0, x1, y1].map(v => v.toFixed(2)).join();
-  if (key in VIS) return VIS[key];
-  if (Object.keys(VIS).length > 400) for (const c in VIS) delete VIS[c];
-  let best = null;
-  for (const poly of projOf(f)){
-    const outer = clipRing(poly[0], x0, y0, x1, y1);
-    if (outer.length < 3) continue;                     // morceau entièrement hors de la vue
-    const rings = [outer, ...poly.slice(1).map(r => clipRing(r, x0, y0, x1, y1)).filter(r => r.length >= 3)];
-    const cand = polylabel(rings, 0.5 / k);
-    if (!best || cand[2] > best[2]) best = cand;
-  }
-  return VIS[key] = best;
-}
 function placeLabels(){
   const k = curK, t = curT, svgEl = mapSvg.node();
   // pixels écran par unité de carte (viewBox 600 × 704, conservé)
   const px = Math.min(svgEl.clientWidth / MW, svgEl.clientHeight / MH) * k;
-  const u = 1 / Math.max(px / k, 0.01);                 // 1 px écran, en unités de viewBox
-  const mx = 44 * u;                                    // marge ≈ 44 px écran : pas d'étiquette coupée au bord
-  // obstacles posés sur la carte (barre de boutons, badge) : rectangles en unités de viewBox, avec la demi-taille d'une étiquette
-  const sr = svgEl.getBoundingClientRect(), hw = 34 * u, hh = 16 * u;
-  const obst = [...svgEl.parentNode.querySelectorAll(".zoombar, .mapbadge")]
-    .filter(e => !e.hidden && e.offsetParent).map(e => e.getBoundingClientRect()).filter(r => r.width)
-    .map(r => [(r.left - sr.left) * u - hw, (r.top - sr.top) * u - hh, (r.right - sr.left) * u + hw, (r.bottom - sr.top) * u + hh]);
-  const libre = (sx, sy) => sx > mx && sx < MW - mx && sy > 16 * u && sy < MH - 16 &&
-    !obst.some(([a, b, c, d]) => sx > a && sx < c && sy > b && sy < d);
-  const zb = svgEl.parentNode.querySelector(".zoombar");
-  const top = ((zb ? zb.offsetTop + zb.offsetHeight : 0) + 14) * u;
-  // zone visible en coordonnées de la carte, pour les régions coupées par le bord (avec ou sans la bande des boutons)
-  const cx0 = t.invertX(12 * u), cx1 = t.invertX(MW - 12 * u), cy1 = t.invertY(MH - 6 * u);
-  const cyTout = t.invertY(6 * u), cySous = t.invertY(top - 8 * u);
+  // demi-largeur et demi-hauteur de la fenêtre en unités de viewBox (centrée, « meet » : peut dépasser 600 × 704)
+  const hx = svgEl.clientWidth / 2 / (px / k), hy = svgEl.clientHeight / 2 / (px / k);
   gLbl.selectAll("g.lab").each(function(f){
-    let [x, y, rad] = anchorOf(f);
-    if (!libre(t.applyX(x), t.applyY(y))){
-      // ancrage hors de la vue ou sous un bouton : on garde le chiffre sur la partie encore visible de la région
-      let v = visibleAnchor(f, cx0, cyTout, cx1, cy1, k);
-      if (v && !libre(t.applyX(v[0]), t.applyY(v[1]))) v = visibleAnchor(f, cx0, cySous, cx1, cy1, k);
-      if (v && libre(t.applyX(v[0]), t.applyY(v[1]))) [x, y, rad] = v; else rad = 0;
-    }
-    const room = rad * px;                              // rayon libre autour de l'étiquette, en px écran
-    const show = room >= LBL_MIN;
+    // le chiffre reste au milieu de la région ; il disparaît simplement quand ce milieu sort de la fenêtre
+    const [x, y, rad] = anchorOf(f), room = rad * px;   // rayon libre autour de l'étiquette, en px écran
+    const sx = t.applyX(x), sy = t.applyY(y);           // position dans la vue (unités de viewBox)
+    const show = Math.abs(sx - MW/2) <= hx && Math.abs(sy - MH/2) <= hy && room >= LBL_MIN;
     const g = d3.select(this).style("display", show ? null : "none");
     if (!show) return;
     g.select("text.nmtxt").style("display", k >= NAME_ZOOM && room >= LBL_NAME ? null : "none");   // noms : seulement très zoomé
