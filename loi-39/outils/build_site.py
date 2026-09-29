@@ -20,7 +20,7 @@ def prefix_ids(s):
     s = re.sub(r'(\s)id="', r'\1id="l39-', s)
     s = re.sub(r'(\s)for="', r'\1for="l39-', s)
     s = re.sub(r'aria-labelledby="', 'aria-labelledby="l39-', s)
-    s = s.replace('href="#h-map"', 'href="#l39-h-map"')
+    s = re.sub(r'href="#(h-[a-z]+)"', r'href="#l39-\1"', s)   # liens internes vers les titres
     s = s.replace('getElementById("', 'getElementById("l39-')
     s = re.sub(r'#(map|fsBtn|partyChips)\b', r'#l39-\1', s)
     return s

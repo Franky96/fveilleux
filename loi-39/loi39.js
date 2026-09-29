@@ -148,20 +148,20 @@ const PRESETS = {
   qc:  box([-71.55,46.68],[-71.0,46.98]),
   sud: box([-75.6,45.0],[-70.0,47.3]),
 };
-// Position des étiquettes (coordonnées de la carte à zoom 1). Les régions trop petites du sud
-// ont leur étiquette dans la bande du bas, reliée par un trait.
-const LABEL_AT = {"06":[152,684],"13":[92,684],"16":[214,686],"05":[286,676],
-                  "07":[100,582],"15":[143,602],"14":[193,582],"12":[274,588],"09":[366,429],"10":[204,301]};
-const CALLOUT = new Set(["06","13","16","05"]);
+// Position des étiquettes (coordonnées de la carte), à l'intérieur de la région. Les autres régions
+// utilisent le centre de leur plus grand morceau. Une étiquette n'est affichée que si sa région est assez
+// grande à l'écran pour la contenir : Montréal, Laval, etc. apparaissent en zoomant.
+const LABEL_AT = {"07":[100,582],"15":[143,602],"14":[193,582],"12":[274,588],"09":[366,429],"10":[204,301]};
+const LBL_MIN = {w:54, h:30}, LBL_NAME = {w:110, h:62};   // taille minimale de la région à l'écran (px)
 
 const mapSvg = d3.select("#l39-map");
 const gZoom = mapSvg.append("g");
 const gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gSel = gZoom.append("g"), gLbl = gZoom.append("g");
-let curK = 1;
+let curK = 1, curT = d3.zoomIdentity;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40,-40],[MW+40,MH+40]])
   .on("zoom", e => {
-    gZoom.attr("transform", e.transform); curK = e.transform.k;
+    gZoom.attr("transform", e.transform); curK = e.transform.k; curT = e.transform;
     placeLabels();
   });
 
@@ -298,17 +298,38 @@ function labelLines(code){
   if (state.mode==="lead") return [`${DIST[code]} circ.`, `${LIST[code]} rég.`];
   return [labelFor(code)];
 }
+// point d'ancrage : position choisie, sinon centre du plus grand morceau de la région
+const ANCHOR = {};
+function anchorOf(f){
+  const code = f.properties.REG;
+  if (ANCHOR[code]) return ANCHOR[code];
+  if (LABEL_AT[code]) return ANCHOR[code] = LABEL_AT[code];
+  let best = f, area = -1;
+  if (f.geometry.type === "MultiPolygon") for (const poly of f.geometry.coordinates){
+    const g = {type:"Feature", geometry:{type:"Polygon", coordinates:poly}}, a = path.area(g);
+    if (a > area){ area = a; best = g; }
+  }
+  return ANCHOR[code] = path.centroid(best);
+}
 function placeLabels(){
-  const k = curK;
+  const k = curK, t = curT, svgEl = mapSvg.node();
+  // pixels écran par unité de carte (viewBox 600 × 704, conservé)
+  const px = Math.min(svgEl.clientWidth / MW, svgEl.clientHeight / MH) * k;
   gLbl.selectAll("g.lab").each(function(f){
-    const code = f.properties.REG, c = path.centroid(f), a = LABEL_AT[code] || c;
-    const x = c[0] + (a[0]-c[0])/k, y = c[1] + (a[1]-c[1])/k;
-    const g = d3.select(this);
-    g.select("text").attr("transform", `translate(${x},${y})`)
+    const [x, y] = anchorOf(f), [[x0,y0],[x1,y1]] = path.bounds(f);
+    const w = (x1-x0) * px, h = (y1-y0) * px;
+    const sx = t.applyX(x), sy = t.applyY(y);           // position dans la vue (unités de viewBox)
+    const mx = 44 / Math.max(px / k, 0.01);            // marge ≈ 44 px écran : pas d'étiquette coupée au bord
+    const inView = sx > mx && sx < MW - mx && sy > 16 && sy < MH - 16;
+    const show = inView && w >= LBL_MIN.w && h >= LBL_MIN.h;
+    const g = d3.select(this).style("display", show ? null : "none");
+    if (!show) return;
+    g.select("text.nmtxt").style("display", w >= LBL_NAME.w && h >= LBL_NAME.h ? null : "none");
+    g.selectAll("text").attr("transform", `translate(${x},${y})`)
       .style("font-size", (10.5/k)+"px").style("stroke-width", (3/k)+"px");
-    if (CALLOUT.has(code)) g.select("line").attr("x1",c[0]).attr("y1",c[1]).attr("x2",x).attr("y2",y - 22/k);
   });
 }
+new ResizeObserver(() => placeLabels()).observe(document.getElementById("l39-map"));
 function labelFor(code){
   const R = RES.regions[code];
   if (state.mode==="lead") return String(DIST[code]+LIST[code]);
@@ -334,15 +355,14 @@ function paintMap(){
 
   const labs = gLbl.selectAll("g.lab").data(byReg ? GGEO.features : [], f=>f.properties.REG)
     .join(enter => { const g = enter.append("g").attr("class","lab");
-      g.append("line").attr("class","lead"); g.append("text").attr("class","lbl").attr("text-anchor","middle"); return g; });
+      g.append("text").attr("class","lbl nmtxt").attr("text-anchor","middle");
+      g.append("text").attr("class","lbl valtxt").attr("text-anchor","middle"); return g; });
   labs.each(function(f){
-    const code = f.properties.REG, callout = CALLOUT.has(code);
-    const lines = callout ? [REG[code].name, ...labelLines(code)] : labelLines(code);
-    const t = d3.select(this).select("text"); t.selectAll("tspan").remove();
-    lines.forEach((ln,i) => t.append("tspan").attr("x",0)
-      .attr("dy", i===0 ? `${0.35 - (lines.length-1)*0.575}em` : "1.15em")
-      .attr("class", callout && i===0 ? "nm" : i ? "sub" : null).text(ln));
-    d3.select(this).select("line").style("display", CALLOUT.has(code) ? null : "none");
+    const code = f.properties.REG, vals = labelLines(code), top = 0.35 - (vals.length-1)*0.575;
+    // valeurs centrées sur le point d'ancrage ; le nom, une ligne au-dessus (affiché si la région est assez grande)
+    const t = d3.select(this).select("text.valtxt"); t.selectAll("tspan").remove();
+    vals.forEach((ln,i) => t.append("tspan").attr("x",0).attr("dy", i===0 ? `${top}em` : "1.15em").attr("class", i ? "sub" : null).text(ln));
+    d3.select(this).select("text.nmtxt").attr("dy", `${top - 1.2}em`).text(REG[code].name);
   });
   placeLabels();
 
@@ -577,6 +597,21 @@ function setView(v, {silent = false} = {}){
 document.getElementById("l39-v-reg").addEventListener("click", () => setView("reg"));
 document.getElementById("l39-v-circ").addEventListener("click", () => setView("circ"));
 
+const SIM_TIP = "Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).";
+// chaque segment de la barre affiche son nombre : « PQ 54 », sinon « 54 », sinon juste sous la barre
+function fitGlance(){
+  document.getElementById("l39-glance").querySelectorAll(".gbar").forEach(gb => {
+    let tiny = false;
+    gb.querySelectorAll(".track i").forEach(i => {
+      i.classList.remove("tiny"); i.textContent = `${i.dataset.p} ${i.dataset.n}`;
+      if (i.scrollWidth > i.clientWidth) i.textContent = i.dataset.n;
+      if (i.scrollWidth > i.clientWidth) { i.classList.add("tiny"); tiny = true; }
+    });
+    gb.classList.toggle("has-tiny", tiny);
+  });
+}
+window.addEventListener("resize", () => fitGlance());
+
 /* --- Résultats --- */
 function render(){
   RES = simulate();
@@ -590,7 +625,7 @@ function render(){
   const fl = P.slice().sort((a,b)=>RES.fptp[b]-RES.fptp[a])[0];
   document.getElementById("l39-lede").innerHTML =
     `Avec le mode actuel, le ${fl} obtient <b>${RES.fptp[fl]} sièges sur 127</b> avec ${fmt(RES.natShare[fl])} % des votes. `+
-    `Avec la loi 39, le ${lead} en obtient <b>${tot[lead]} sur 125</b> et la majorité est à ${maj}. `+
+    `Avec la loi 39 (simulation), le ${lead} en obtient <b>${tot[lead]} sur 125</b> et la majorité est à ${maj}. `+
     `La CAQ passe de ${RES.fptp.CAQ} à ${tot.CAQ} siège${tot.CAQ>1?"s":""}.`;
   const modified = state.target.some((t,i)=>Math.abs(t-BASE[i])>0.05) || state.thr !== 10;
   document.getElementById("l39-statusPills").innerHTML =
@@ -600,9 +635,35 @@ function render(){
   const gbar = (label, seatsBy, n) => { const m = Math.floor(n/2)+1;
     return `<div class="gbar"><div class="gl"><span><b>${label}</b> · ${n} sièges</span><span>majorité ${m}</span></div>
       <div class="track">${SEAT_ORDER.filter(p=>seatsBy[p]).map(p =>
-        `<i style="flex:${seatsBy[p]};background:${PV[p]}" title="${p} : ${seatsBy[p]}">${seatsBy[p] >= 7 ? `${p} ${seatsBy[p]}` : ""}</i>`).join("")}
+        `<i style="flex:${seatsBy[p]};background:${PV[p]};--c:${PV[p]}" title="${p} : ${seatsBy[p]}" data-p="${p}" data-n="${seatsBy[p]}">${p} ${seatsBy[p]}</i>`).join("")}
         <b style="left:${100*m/n}%" aria-hidden="true"></b></div></div>`; };
   document.getElementById("l39-glance").innerHTML = gbar("Mode actuel", RES.fptp, 127) + gbar("Loi 39", tot, 125);
+  document.getElementById("l39-glance").querySelector(".gbar:last-child .gl b").insertAdjacentHTML("afterend", ` <span class="tag sim" title="${SIM_TIP}">simulé</span>`);
+  fitGlance();
+
+  // Ce qui changerait : majorité, puis sièges par parti (actuel → loi 39)
+  const fl1 = P.slice().sort((a,b)=>RES.fptp[b]-RES.fptp[a])[0];
+  const stat = (p, n, tot_, m) => `${p} ${n >= m ? "majoritaire" : "minoritaire"} · ${n} / ${tot_}`;
+  document.getElementById("l39-chgMaj").innerHTML =
+    `<div><span class="eyebrow">Mode actuel · projection Qc125</span><span class="st" style="color:${PV[fl1]}">${stat(fl1, RES.fptp[fl1], 127, 64)}</span><span class="muted" style="font-size:.85rem">majorité à 64 sièges</span></div>`+
+    `<div><span class="eyebrow">Loi 39 · <span class="tag sim" title="${SIM_TIP}">simulé</span></span><span class="st" style="color:${PV[lead]}">${stat(lead, tot[lead], 125, maj)}</span><span class="muted" style="font-size:.85rem">majorité à ${maj} sièges</span></div>`;
+  document.getElementById("l39-chg").innerHTML = P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map(p => {
+    const d = tot[p] - RES.fptp[p], cls = d > 0 ? "up" : d < 0 ? "down" : "eq";
+    return `<div class="pc" style="--c:${PV[p]}"><span class="pn">${p}</span>
+      <span class="d ${cls}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${Math.abs(d)}</span>
+      <span class="ft"><b>${RES.fptp[p]}</b> → <b>${tot[p]}</b> sièges</span>
+      <span class="ds">${fmt(RES.natShare[p])} % des votes</span></div>`;
+  }).join("");
+
+  // Barres jumelées : part des sièges (actuel / loi 39) comparée à la part des votes, échelle 0–75 %
+  document.getElementById("l39-twin").innerHTML = P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map(p => {
+    const a = 100*RES.fptp[p]/127, b = 100*tot[p]/125, v = RES.natShare[p], sc = x => Math.min(100, x/0.75);
+    return `<div class="tw-row" style="--c:${PV[p]}"><span class="pn">${p}</span>
+      <div class="tw-bars" title="${p} : ${fmt(a)} % des sièges actuellement, ${fmt(b)} % avec la loi 39, ${fmt(v)} % des votes">
+        <i class="a" style="width:${sc(a)}%"></i><i style="width:${sc(b)}%"></i>
+        <span class="v" style="left:${sc(v)}%"></span><span class="m" style="left:${sc(50)}%"></span></div>
+      <span class="nums">${fmt(a,0)} % → <b>${fmt(b,0)} %</b> <span style="font-size:.78rem">(vote ${fmt(v,0)} %)</span></span></div>`;
+  }).join("");
   document.getElementById("l39-capA").textContent = `127 sièges · majorité 64`;
   document.getElementById("l39-capB").textContent = `125 sièges · majorité ${maj}`;
   hemicycle(document.getElementById("l39-hemiA"), RES.fptp, 127);

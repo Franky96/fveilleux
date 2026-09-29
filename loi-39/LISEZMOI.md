@@ -282,6 +282,15 @@ Sans `files`, l'artifact garde l'ancien `data.json`. C'est déjà arrivé une fo
   lien dans les panneaux.
 - Un vrai usage des écrans larges : plus de colonnes, pas seulement un zoom.
 - Explication pédagogique de la compensation, avec tous les quotients à chaque tour.
+- Étiquettes de la carte : ancrées dans leur région (plus de renvois vers une bande du bas), affichées seulement si la
+  région est assez grande à l'écran (`LBL_MIN`, nom si `LBL_NAME`) et loin du bord : Montréal et Laval apparaissent
+  en zoomant.
+- Barre « coup d'œil » : chaque segment montre son nombre (« PQ 54 », sinon « 54 », sinon sous la barre, `fitGlance`).
+- Comparaison avec le mode actuel bien visible (« Ce qui changerait » + barres avant/après), et tout ce qui vient du
+  modèle 80 + 45 est marqué « simulé » (bandeau + étiquettes `.tag.sim`).
+- Plein écran : la carte seule ; barres, légende, détail et scénario flottent par-dessus (boutons « Détail » /
+  « Scénario »). Pas de cadre de focus rectangulaire sur les régions cliquées.
+- `build_site.py` préfixe tous les liens internes `href="#h-…"` (pas seulement `#h-map`).
 
 ## Sources
 - Qc125 (Philippe J. Fournier) : https://qc125.com/districts.htm
