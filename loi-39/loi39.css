@@ -42,7 +42,7 @@
 .loi39 .res-grid{display:grid;gap:var(--gap)}
 .loi39 .hemis{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
 .loi39 .hemi{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 10px;display:grid;gap:6px}
-.loi39 .hemi svg{width:100%;height:auto;display:block}
+.loi39 .hemi svg{width:100%;height:auto;display:block;max-height:560px}
 .loi39 .hemi .cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .loi39 .hemi .cap b{font-family:var(--serif);font-size:1.05rem}
 .loi39 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}

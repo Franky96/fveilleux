@@ -51,7 +51,7 @@ body{margin:0;background:#F1F3F7}
 .loi39 .res-grid{display:grid;gap:var(--gap)}
 .loi39 .hemis{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
 .loi39 .hemi{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px 16px 10px;display:grid;gap:6px}
-.loi39 .hemi svg{width:100%;height:auto;display:block}
+.loi39 .hemi svg{width:100%;height:auto;display:block;max-height:560px}
 .loi39 .hemi .cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .loi39 .hemi .cap b{font-family:var(--serif);font-size:1.05rem}
 .loi39 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
@@ -640,7 +640,9 @@ function chamber(svg, seatsBy, n, ringBy){
   const xR = colX(C-1) + S + 16, rightX = k => xR + k*STEP;
   const H = 2*(MID + RH*STEP) + 8, cy = H/2, W = rightX(K-1) + S + 8;
   const yTop = r => cy - MID - S - r*STEP, yBot = r => cy + MID + r*STEP;   // r = 0 : première rangée
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  // plan pivoté de 90° (sens horaire) : présidence en haut, gouvernement à gauche, opposition à droite
+  svg.setAttribute("viewBox", `0 0 ${H} ${W}`);
+  const RX = (x, y) => H - y, RY = (x, y) => x;   // (x, y) du plan couché → position affichée
 
   // places : côté gouvernement (bancs puis bout droit bas), côté opposition (bancs puis bout droit haut)
   const bench = y => { const out = []; for (let j = 0; j < C; j++) for (let r = 0; r < ROWS; r++) out.push({x:colX(j), y:y(r), j, r}); return out; };
@@ -667,29 +669,30 @@ function chamber(svg, seatsBy, n, ringBy){
   for (const p of opp) for (const s of seatsOf(p)) { const slot = oi < oppFree.length ? oppFree[oi++] : spare[si++]; if (slot) placed.push({...s, ...slot}); }
 
   const g = d3.select(svg); g.selectAll("*").remove();
+  // rectangle du plan couché → rectangle affiché (largeur et hauteur échangées)
+  const rect = (x, y, w, h) => g.append("rect").attr("x", RX(x, y) - h).attr("y", RY(x, y)).attr("width", h).attr("height", w);
   const txt = (x, y, t, o = {}) => g.append("text").attr("x",x).attr("y",y).attr("text-anchor",o.anchor||"middle")
     .attr("transform", o.rot ? `rotate(-90 ${x} ${y})` : null).style("fill", o.fill||"var(--muted)")
     .style("font", `${o.w||600} ${o.size||7.5}px var(--sans)`).style("letter-spacing", o.ls||".04em").text(t);
-  // allée centrale et présidence
-  g.append("rect").attr("x", x0-4).attr("y", cy-MID+6).attr("width", colX(C-1)+S-x0+8).attr("height", 2*MID-12).attr("rx",4)
-    .style("fill","var(--soft)");
-  g.append("rect").attr("x", 22).attr("y", cy-9).attr("width", 18).attr("height", 18).attr("rx", 3)
-    .style("fill","none").style("stroke","var(--muted)").attr("stroke-width", 1.4);
-  txt(31, cy+19, "Présidence", {size:6});
-  txt(10, cy - MID - 2, "Opposition", {rot:true, anchor:"start", size:7});
-  txt(10, cy + MID + 2, "Gouvernement", {rot:true, anchor:"end", size:7});
-  txt((x0 + colX(C-1)+S)/2, cy+3, `majorité : ${Math.floor(n/2)+1} sièges`, {size:7.5});
+  // allée centrale (verticale) et présidence (en haut)
+  rect(x0-4, cy-MID+6, colX(C-1)+S-x0+8, 2*MID-12).attr("rx",4).style("fill","var(--soft)");
+  rect(22, cy-9, 18, 18).attr("rx",3).style("fill","none").style("stroke","var(--muted)").attr("stroke-width",1.4);
+  txt(RX(0, cy), RY(22, cy) - 4, "Présidence", {size:6.5});
+  txt(RX(0, cy + MID + ROWS*STEP/2), RY(x0, 0) - 6, "Gouvernement", {size:7});
+  txt(RX(0, cy - MID - ROWS*STEP/2), RY(x0, 0) - 6, "Opposition", {size:7});
+  txt(RX(0, cy) + 2.6, RY((x0 + colX(C-1)+S)/2, 0), `majorité : ${Math.floor(n/2)+1} sièges`, {size:7.5, rot:true});
   // sièges
   for (const s of placed){
-    const r = g.append("rect").attr("x", s.x).attr("y", s.y).attr("width", S).attr("height", S).attr("rx", 2.2);
-    if (s.ring) r.attr("x", s.x+1).attr("y", s.y+1).attr("width", S-2).attr("height", S-2).style("fill","var(--surface)").style("stroke", PV[s.p]).attr("stroke-width", 1.8);
+    const r = s.ring ? rect(s.x+1, s.y+1, S-2, S-2) : rect(s.x, s.y, S, S);
+    r.attr("rx", 2.2);
+    if (s.ring) r.style("fill","var(--surface)").style("stroke", PV[s.p]).attr("stroke-width", 1.8);
     else r.style("fill", PV[s.p]);
     r.append("title").text(`${s.p}${s.ring ? " · siège de région" : ""}`);
   }
   // premier ministre et chef de l'opposition : première rangée, au milieu des bancs
   const front = (p, side) => placed.filter(s => s.p === p && s.r === 0 && s.j < C && (side === "gov" ? s.y > cy : s.y < cy))
     .sort((a,b) => Math.abs(a.j-7) - Math.abs(b.j-7))[0];
-  const mark = (s, t) => { if (s) txt(s.x + S/2, s.y + S/2 + 2.6, t, {size: t.length > 1 ? 5.2 : 6.5, w:800, fill:"var(--surface)", ls:"0"}); };
+  const mark = (s, t) => { if (s) txt(RX(s.x, s.y + S/2), RY(s.x + S/2, 0) + 2.6, t, {size: t.length > 1 ? 5.2 : 6.5, w:800, fill:"var(--surface)", ls:"0"}); };
   mark(front(gov, "gov"), "PM");
   if (opp[0]) mark(front(opp[0], "opp"), "C");
 }
