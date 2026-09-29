@@ -1,0 +1,891 @@
+{
+"Abitibi-Est": {
+"PQ": 33,
+"PLQ": 22,
+"CAQ": 20,
+"PCQ": 16,
+"QS": 9
+},
+"Abitibi-Ouest": {
+"PQ": 37,
+"CAQ": 24,
+"PCQ": 16,
+"PLQ": 12,
+"QS": 11
+},
+"Acadie": {
+"PLQ": 59,
+"PCQ": 14,
+"PQ": 12,
+"QS": 11,
+"CAQ": 5
+},
+"Anjou–Louis-Riel": {
+"PLQ": 40,
+"PQ": 24,
+"CAQ": 14,
+"QS": 11,
+"PCQ": 11
+},
+"Argenteuil": {
+"PQ": 38,
+"PLQ": 22,
+"PCQ": 17,
+"CAQ": 16,
+"QS": 6
+},
+"Arthabaska-L’Érable": {
+"PQ": 37,
+"PCQ": 36,
+"CAQ": 13,
+"PLQ": 7,
+"QS": 6
+},
+"Beauce-Nord": {
+"PCQ": 51,
+"PQ": 20,
+"CAQ": 15,
+"PLQ": 7,
+"QS": 6
+},
+"Beauce-Sud": {
+"PCQ": 50,
+"CAQ": 20,
+"PQ": 16,
+"PLQ": 7,
+"QS": 5
+},
+"Beauharnois": {
+"PQ": 38,
+"CAQ": 28,
+"PLQ": 12,
+"PCQ": 11,
+"QS": 9
+},
+"Bellechasse": {
+"PCQ": 50,
+"PQ": 20,
+"CAQ": 18,
+"PLQ": 7,
+"QS": 5
+},
+"Berthier": {
+"PQ": 43,
+"CAQ": 22,
+"PCQ": 18,
+"QS": 9,
+"PLQ": 7
+},
+"Bertrand": {
+"PQ": 43,
+"CAQ": 22,
+"PCQ": 13,
+"PLQ": 12,
+"QS": 9
+},
+"Blainville": {
+"PQ": 32,
+"PLQ": 25,
+"CAQ": 23,
+"PCQ": 11,
+"QS": 8
+},
+"Bonaventure": {
+"PQ": 50,
+"PLQ": 18,
+"CAQ": 15,
+"PCQ": 9,
+"QS": 7
+},
+"Borduas": {
+"PQ": 37,
+"CAQ": 33,
+"QS": 11,
+"PLQ": 10,
+"PCQ": 8
+},
+"Bourassa-Sauvé": {
+"PLQ": 59,
+"PQ": 16,
+"PCQ": 10,
+"QS": 10,
+"CAQ": 4
+},
+"Camille-Laurin": {
+"PQ": 50,
+"PLQ": 19,
+"QS": 13,
+"CAQ": 10,
+"PCQ": 8
+},
+"Brome-Missisquoi": {
+"PLQ": 27,
+"PQ": 24,
+"CAQ": 21,
+"PCQ": 16,
+"QS": 11
+},
+"Chambly": {
+"PQ": 37,
+"CAQ": 29,
+"PLQ": 13,
+"QS": 11,
+"PCQ": 9
+},
+"Champlain": {
+"PQ": 29,
+"PCQ": 28,
+"CAQ": 21,
+"PLQ": 13,
+"QS": 7
+},
+"Chapleau": {
+"PLQ": 28,
+"PQ": 23,
+"CAQ": 21,
+"PCQ": 17,
+"QS": 10
+},
+"Charlesbourg": {
+"PCQ": 32,
+"PQ": 27,
+"CAQ": 20,
+"PLQ": 11,
+"QS": 9
+},
+"Charlevoix–Côte-de-Beaupré": {
+"PQ": 36,
+"PCQ": 27,
+"CAQ": 20,
+"QS": 8,
+"PLQ": 8
+},
+"Châteauguay": {
+"PLQ": 36,
+"PQ": 23,
+"CAQ": 18,
+"PCQ": 14,
+"QS": 8
+},
+"Chauveau": {
+"PCQ": 40,
+"PQ": 23,
+"CAQ": 20,
+"PLQ": 9,
+"QS": 7
+},
+"Chicoutimi": {
+"PQ": 41,
+"PCQ": 25,
+"CAQ": 17,
+"PLQ": 9,
+"QS": 7
+},
+"Chomedey": {
+"PLQ": 51,
+"PCQ": 21,
+"PQ": 13,
+"CAQ": 10,
+"QS": 5
+},
+"Chutes-de-la-Chaudière": {
+"PCQ": 38,
+"CAQ": 24,
+"PQ": 20,
+"PLQ": 9,
+"QS": 7
+},
+"Côte-du-Sud": {
+"PCQ": 33,
+"PQ": 30,
+"CAQ": 20,
+"PLQ": 10,
+"QS": 7
+},
+"D’Arcy-McGee": {
+"PLQ": 66,
+"PCQ": 18,
+"PQ": 7,
+"QS": 6,
+"CAQ": 2
+},
+"Deux-Montagnes": {
+"PQ": 37,
+"CAQ": 23,
+"PLQ": 21,
+"PCQ": 11,
+"QS": 8
+},
+"Drummond–Bois-Francs": {
+"PQ": 31,
+"PCQ": 31,
+"CAQ": 20,
+"PLQ": 9,
+"QS": 9
+},
+"Dubuc": {
+"PQ": 45,
+"CAQ": 23,
+"PCQ": 18,
+"QS": 7,
+"PLQ": 7
+},
+"Duplessis": {
+"PQ": 37,
+"CAQ": 24,
+"PCQ": 19,
+"PLQ": 13,
+"QS": 6
+},
+"Fabre": {
+"PLQ": 37,
+"PQ": 21,
+"CAQ": 19,
+"PCQ": 16,
+"QS": 7
+},
+"Gaspé": {
+"PQ": 51,
+"PLQ": 16,
+"CAQ": 16,
+"PCQ": 9,
+"QS": 6
+},
+"Gatineau": {
+"PLQ": 33,
+"PQ": 23,
+"PCQ": 18,
+"CAQ": 17,
+"QS": 9
+},
+"Gouin": {
+"QS": 48,
+"PQ": 23,
+"PLQ": 17,
+"CAQ": 7,
+"PCQ": 4
+},
+"Granby": {
+"PQ": 33,
+"CAQ": 29,
+"PCQ": 16,
+"QS": 11,
+"PLQ": 11
+},
+"Groulx": {
+"PQ": 32,
+"CAQ": 25,
+"PLQ": 24,
+"PCQ": 10,
+"QS": 9
+},
+"Hochelaga-Maisonneuve": {
+"QS": 36,
+"PQ": 33,
+"PLQ": 16,
+"CAQ": 8,
+"PCQ": 6
+},
+"Hull": {
+"PLQ": 40,
+"PQ": 19,
+"QS": 14,
+"CAQ": 14,
+"PCQ": 13
+},
+"Huntingdon": {
+"PLQ": 27,
+"PQ": 26,
+"CAQ": 20,
+"PCQ": 17,
+"QS": 9
+},
+"Iberville": {
+"PQ": 33,
+"CAQ": 26,
+"PCQ": 18,
+"PLQ": 12,
+"QS": 10
+},
+"Îles-de-la-Madeleine": {
+"PQ": 60,
+"PLQ": 18,
+"CAQ": 12,
+"PCQ": 5,
+"QS": 5
+},
+"Jacques-Cartier": {
+"PLQ": 74,
+"PCQ": 14,
+"PQ": 6,
+"QS": 4,
+"CAQ": 2
+},
+"Jean-Lesage": {
+"QS": 31,
+"PQ": 27,
+"PCQ": 22,
+"PLQ": 10,
+"CAQ": 10
+},
+"Jean-Talon": {
+"PQ": 34,
+"PLQ": 26,
+"PCQ": 18,
+"QS": 12,
+"CAQ": 10
+},
+"Jeanne-Mance–Viger": {
+"PLQ": 58,
+"PQ": 15,
+"PCQ": 12,
+"QS": 7,
+"CAQ": 7
+},
+"Daniel-Johnson": {
+"PQ": 31,
+"CAQ": 26,
+"PCQ": 23,
+"QS": 10,
+"PLQ": 9
+},
+"Joliette": {
+"PQ": 53,
+"CAQ": 22,
+"PCQ": 12,
+"QS": 7,
+"PLQ": 5
+},
+"Jonquière": {
+"PQ": 44,
+"CAQ": 22,
+"PCQ": 18,
+"QS": 8,
+"PLQ": 6
+},
+"L’Assomption": {
+"PQ": 38,
+"CAQ": 28,
+"PLQ": 13,
+"QS": 10,
+"PCQ": 10
+},
+"La Peltrie": {
+"PCQ": 38,
+"PQ": 20,
+"CAQ": 18,
+"PLQ": 17,
+"QS": 6
+},
+"La Pinière": {
+"PLQ": 48,
+"PQ": 21,
+"CAQ": 12,
+"PCQ": 11,
+"QS": 8
+},
+"La Prairie": {
+"PQ": 33,
+"CAQ": 26,
+"PLQ": 21,
+"PCQ": 10,
+"QS": 10
+},
+"Labelle": {
+"PQ": 46,
+"CAQ": 22,
+"PCQ": 13,
+"PLQ": 9,
+"QS": 8
+},
+"Lac-Saint-Jean": {
+"PQ": 40,
+"PLQ": 21,
+"PCQ": 18,
+"CAQ": 15,
+"QS": 5
+},
+"LaFontaine": {
+"PLQ": 60,
+"PCQ": 15,
+"PQ": 13,
+"QS": 7,
+"CAQ": 5
+},
+"Pierre-Laporte": {
+"PLQ": 42,
+"PQ": 23,
+"CAQ": 17,
+"QS": 11,
+"PCQ": 7
+},
+"Laurier-Dorion": {
+"QS": 37,
+"PLQ": 36,
+"PQ": 16,
+"PCQ": 7,
+"CAQ": 4
+},
+"Laval-des-Rapides": {
+"PLQ": 33,
+"PQ": 26,
+"CAQ": 20,
+"PCQ": 11,
+"QS": 8
+},
+"Laviolette–Saint-Maurice": {
+"PQ": 30,
+"PCQ": 26,
+"CAQ": 22,
+"PLQ": 13,
+"QS": 8
+},
+"Les Plaines": {
+"PQ": 39,
+"CAQ": 26,
+"PCQ": 14,
+"PLQ": 13,
+"QS": 8
+},
+"Lévis": {
+"PCQ": 33,
+"CAQ": 25,
+"PQ": 24,
+"PLQ": 10,
+"QS": 8
+},
+"Lotbinière-Frontenac": {
+"PCQ": 39,
+"PQ": 24,
+"CAQ": 19,
+"PLQ": 11,
+"QS": 6
+},
+"Louis-Hébert": {
+"PQ": 27,
+"PCQ": 24,
+"CAQ": 23,
+"PLQ": 17,
+"QS": 8
+},
+"Marguerite-Bourgeoys": {
+"PLQ": 61,
+"PCQ": 15,
+"PQ": 13,
+"QS": 7,
+"CAQ": 4
+},
+"Marie-Victorin": {
+"PQ": 43,
+"CAQ": 19,
+"QS": 15,
+"PLQ": 15,
+"PCQ": 8
+},
+"Marquette": {
+"PLQ": 61,
+"PQ": 13,
+"PCQ": 12,
+"QS": 8,
+"CAQ": 5
+},
+"Maskinongé": {
+"PQ": 35,
+"CAQ": 24,
+"PCQ": 22,
+"PLQ": 11,
+"QS": 8
+},
+"Masson": {
+"PQ": 40,
+"CAQ": 27,
+"PLQ": 15,
+"PCQ": 10,
+"QS": 8
+},
+"Matane-Matapédia-Mitis": {
+"PQ": 69,
+"PCQ": 11,
+"CAQ": 10,
+"QS": 6,
+"PLQ": 4
+},
+"Maurice-Richard": {
+"PQ": 32,
+"PLQ": 29,
+"QS": 24,
+"CAQ": 10,
+"PCQ": 5
+},
+"Mégantic": {
+"PCQ": 28,
+"PQ": 27,
+"CAQ": 19,
+"PLQ": 17,
+"QS": 9
+},
+"Mercier": {
+"QS": 46,
+"PLQ": 24,
+"PQ": 22,
+"PCQ": 4,
+"CAQ": 4
+},
+"Mille-Îles": {
+"PLQ": 40,
+"PQ": 23,
+"CAQ": 18,
+"PCQ": 11,
+"QS": 8
+},
+"Mirabel": {
+"PQ": 37,
+"CAQ": 28,
+"PCQ": 13,
+"PLQ": 13,
+"QS": 8
+},
+"Mont-Royal–Outremont": {
+"PLQ": 48,
+"PQ": 17,
+"QS": 14,
+"PCQ": 11,
+"CAQ": 9
+},
+"Montarville": {
+"PQ": 33,
+"CAQ": 27,
+"PLQ": 21,
+"QS": 12,
+"PCQ": 6
+},
+"Montmorency": {
+"PCQ": 33,
+"PQ": 23,
+"CAQ": 21,
+"PLQ": 13,
+"QS": 9
+},
+"Nelligan": {
+"PLQ": 67,
+"PCQ": 18,
+"PQ": 9,
+"QS": 4,
+"CAQ": 2
+},
+"Nicolet-Bécancour": {
+"PCQ": 31,
+"PQ": 31,
+"CAQ": 23,
+"PLQ": 8,
+"QS": 6
+},
+"Notre-Dame-de-Grâce": {
+"PLQ": 67,
+"PCQ": 12,
+"QS": 10,
+"PQ": 10,
+"CAQ": 1
+},
+"Orford": {
+"PLQ": 31,
+"PQ": 23,
+"CAQ": 20,
+"PCQ": 14,
+"QS": 11
+},
+"Papineau": {
+"PLQ": 25,
+"PQ": 23,
+"CAQ": 21,
+"PCQ": 20,
+"QS": 10
+},
+"Pointe-aux-Trembles": {
+"PQ": 43,
+"CAQ": 18,
+"PLQ": 18,
+"QS": 12,
+"PCQ": 9
+},
+"Pontiac": {
+"PLQ": 55,
+"PCQ": 16,
+"PQ": 12,
+"CAQ": 9,
+"QS": 7
+},
+"Portneuf": {
+"PCQ": 41,
+"PQ": 24,
+"CAQ": 20,
+"PLQ": 7,
+"QS": 7
+},
+"Prévost": {
+"PQ": 42,
+"CAQ": 19,
+"PCQ": 15,
+"PLQ": 14,
+"QS": 9
+},
+"René-Lévesque": {
+"PQ": 42,
+"CAQ": 29,
+"PCQ": 14,
+"PLQ": 7,
+"QS": 7
+},
+"Repentigny": {
+"PQ": 39,
+"CAQ": 29,
+"PLQ": 15,
+"QS": 8,
+"PCQ": 8
+},
+"Richelieu": {
+"PQ": 46,
+"CAQ": 26,
+"PCQ": 10,
+"PLQ": 9,
+"QS": 7
+},
+"Richmond": {
+"PQ": 23,
+"PLQ": 22,
+"CAQ": 21,
+"PCQ": 19,
+"QS": 14
+},
+"Rimouski": {
+"PQ": 49,
+"CAQ": 19,
+"QS": 15,
+"PCQ": 9,
+"PLQ": 7
+},
+"Rivière-du-Loup–Témiscouata–Les Basques": {
+"PQ": 40,
+"CAQ": 24,
+"PCQ": 16,
+"QS": 10,
+"PLQ": 9
+},
+"Robert-Baldwin": {
+"PLQ": 70,
+"PCQ": 17,
+"PQ": 6,
+"QS": 4,
+"CAQ": 2
+},
+"Roberval": {
+"PQ": 43,
+"CAQ": 21,
+"PCQ": 18,
+"PLQ": 10,
+"QS": 6
+},
+"Rosemont": {
+"QS": 32,
+"PQ": 30,
+"PLQ": 23,
+"CAQ": 9,
+"PCQ": 5
+},
+"Rousseau": {
+"PQ": 40,
+"CAQ": 28,
+"PCQ": 17,
+"QS": 8,
+"PLQ": 5
+},
+"Rouyn-Noranda–Témiscamingue": {
+"PQ": 33,
+"QS": 21,
+"CAQ": 21,
+"PCQ": 13,
+"PLQ": 11
+},
+"Saint-François": {
+"PQ": 30,
+"PLQ": 19,
+"QS": 19,
+"PCQ": 16,
+"CAQ": 15
+},
+"Saint-Henri–Sainte-Anne": {
+"PLQ": 37,
+"QS": 34,
+"PQ": 15,
+"PCQ": 7,
+"CAQ": 7
+},
+"Saint-Hyacinthe": {
+"PQ": 40,
+"CAQ": 24,
+"PCQ": 14,
+"PLQ": 12,
+"QS": 10
+},
+"Saint-Jean": {
+"PQ": 43,
+"CAQ": 21,
+"PLQ": 18,
+"QS": 9,
+"PCQ": 9
+},
+"Saint-Jérôme": {
+"PQ": 42,
+"CAQ": 22,
+"PCQ": 14,
+"PLQ": 10,
+"QS": 10
+},
+"Saint-Laurent": {
+"PLQ": 56,
+"PCQ": 15,
+"PQ": 14,
+"CAQ": 8,
+"QS": 7
+},
+"Sainte-Marie–Saint-Jacques": {
+"QS": 41,
+"PQ": 25,
+"PLQ": 20,
+"CAQ": 8,
+"PCQ": 5
+},
+"Sainte-Rose": {
+"PLQ": 33,
+"CAQ": 24,
+"PQ": 22,
+"PCQ": 12,
+"QS": 7
+},
+"Sanguinet": {
+"PQ": 38,
+"CAQ": 22,
+"PLQ": 16,
+"PCQ": 14,
+"QS": 9
+},
+"Sherbrooke": {
+"PQ": 28,
+"QS": 27,
+"PLQ": 21,
+"CAQ": 13,
+"PCQ": 10
+},
+"Soulanges": {
+"PLQ": 34,
+"CAQ": 21,
+"PQ": 21,
+"PCQ": 16,
+"QS": 7
+},
+"Taillon": {
+"PQ": 41,
+"PLQ": 22,
+"CAQ": 20,
+"QS": 10,
+"PCQ": 6
+},
+"Taschereau": {
+"QS": 32,
+"PQ": 29,
+"PCQ": 16,
+"PLQ": 14,
+"CAQ": 9
+},
+"Terrebonne": {
+"PQ": 45,
+"CAQ": 30,
+"PLQ": 14,
+"QS": 8,
+"PCQ": 3
+},
+"Trois-Rivières": {
+"PQ": 31,
+"CAQ": 25,
+"PCQ": 19,
+"PLQ": 13,
+"QS": 11
+},
+"Ungava": {
+"PQ": 30,
+"PLQ": 23,
+"CAQ": 19,
+"QS": 15,
+"PCQ": 12
+},
+"Vachon": {
+"PQ": 37,
+"PLQ": 21,
+"CAQ": 20,
+"PCQ": 10,
+"QS": 10
+},
+"Vanier-Les Rivières": {
+"PCQ": 32,
+"PQ": 25,
+"CAQ": 22,
+"PLQ": 12,
+"QS": 8
+},
+"Vaudreuil": {
+"PLQ": 44,
+"PQ": 20,
+"PCQ": 16,
+"CAQ": 13,
+"QS": 6
+},
+"Verchères": {
+"PQ": 44,
+"CAQ": 27,
+"PLQ": 10,
+"QS": 10,
+"PCQ": 7
+},
+"Verdun": {
+"PLQ": 37,
+"QS": 31,
+"PQ": 16,
+"CAQ": 8,
+"PCQ": 7
+},
+"Viau": {
+"PLQ": 44,
+"QS": 27,
+"PQ": 17,
+"PCQ": 8,
+"CAQ": 4
+},
+"Vimont-Auteuil": {
+"PLQ": 36,
+"PQ": 22,
+"CAQ": 21,
+"PCQ": 13,
+"QS": 7
+},
+"Westmount–Saint-Louis": {
+"PLQ": 67,
+"PCQ": 11,
+"PQ": 10,
+"QS": 8,
+"CAQ": 4
+},
+"Bellefeuille": {
+"PQ": 37,
+"CAQ": 22,
+"PCQ": 17,
+"PLQ": 13,
+"QS": 10
+},
+"Marie-Lacoste-Gérin-Lajoie": {
+"PQ": 30,
+"PCQ": 29,
+"CAQ": 22,
+"PLQ": 10,
+"QS": 9
+}
+}

@@ -1,0 +1,452 @@
+{
+ "nat_share": {
+  "PQ": 30.1,
+  "PLQ": 23.8,
+  "CAQ": 17.8,
+  "PCQ": 16.8,
+  "QS": 11.4
+ },
+ "eligible": [
+  "PQ",
+  "PLQ",
+  "CAQ",
+  "PCQ",
+  "QS"
+ ],
+ "fptp_127": {
+  "PQ": 67,
+  "PLQ": 37,
+  "PCQ": 15,
+  "QS": 8
+ },
+ "loi39_dist": {
+  "PQ": 42,
+  "PCQ": 10,
+  "QS": 5,
+  "PLQ": 23
+ },
+ "loi39_list": {
+  "PQ": 10,
+  "CAQ": 16,
+  "PCQ": 10,
+  "PLQ": 7,
+  "QS": 2
+ },
+ "loi39_total": {
+  "PQ": 52,
+  "PLQ": 30,
+  "CAQ": 16,
+  "PCQ": 20,
+  "QS": 7
+ },
+ "regions": {
+  "Bas-Saint-Laurent": {
+   "pop": 197736,
+   "ridings_now": 3,
+   "dist_seats": 2,
+   "list_seats": 1,
+   "share": {
+    "PQ": 53.0,
+    "PLQ": 6.7,
+    "CAQ": 17.8,
+    "PCQ": 12.1,
+    "QS": 10.4
+   },
+   "fptp_now": {
+    "PQ": 3
+   },
+   "dist": {
+    "PQ": 2
+   },
+   "list": {
+    "PQ": 1
+   }
+  },
+  "Saguenay–Lac-Saint-Jean": {
+   "pop": 277897,
+   "ridings_now": 5,
+   "dist_seats": 3,
+   "list_seats": 2,
+   "share": {
+    "PQ": 43.1,
+    "PLQ": 10.7,
+    "CAQ": 19.8,
+    "PCQ": 19.6,
+    "QS": 6.7
+   },
+   "fptp_now": {
+    "PQ": 5
+   },
+   "dist": {
+    "PQ": 3
+   },
+   "list": {
+    "CAQ": 1,
+    "PCQ": 1
+   }
+  },
+  "Capitale-Nationale": {
+   "pop": 751366,
+   "ridings_now": 11,
+   "dist_seats": 7,
+   "list_seats": 4,
+   "share": {
+    "PQ": 27.0,
+    "PLQ": 13.2,
+    "CAQ": 17.7,
+    "PCQ": 29.6,
+    "QS": 12.5
+   },
+   "fptp_now": {
+    "PCQ": 6,
+    "PQ": 3,
+    "QS": 2
+   },
+   "dist": {
+    "PCQ": 4,
+    "PQ": 2,
+    "QS": 1
+   },
+   "list": {
+    "CAQ": 1,
+    "PQ": 1,
+    "PLQ": 1,
+    "PCQ": 1
+   }
+  },
+  "Mauricie": {
+   "pop": 270016,
+   "ridings_now": 4,
+   "dist_seats": 3,
+   "list_seats": 2,
+   "share": {
+    "PQ": 31.6,
+    "PLQ": 12.6,
+    "CAQ": 23.2,
+    "PCQ": 24.0,
+    "QS": 8.6
+   },
+   "fptp_now": {
+    "PQ": 4
+   },
+   "dist": {
+    "PQ": 3
+   },
+   "list": {
+    "PCQ": 1,
+    "CAQ": 1
+   }
+  },
+  "Estrie": {
+   "pop": 329747,
+   "ridings_now": 5,
+   "dist_seats": 3,
+   "list_seats": 2,
+   "share": {
+    "PQ": 26.4,
+    "PLQ": 22.2,
+    "CAQ": 17.7,
+    "PCQ": 17.5,
+    "QS": 16.1
+   },
+   "fptp_now": {
+    "PCQ": 1,
+    "PLQ": 1,
+    "PQ": 3
+   },
+   "dist": {
+    "PCQ": 1,
+    "PLQ": 0,
+    "PQ": 2
+   },
+   "list": {
+    "PLQ": 1,
+    "CAQ": 1
+   }
+  },
+  "Montréal": {
+   "pop": 2050053,
+   "ridings_now": 27,
+   "dist_seats": 17,
+   "list_seats": 10,
+   "share": {
+    "PQ": 18.8,
+    "PLQ": 45.8,
+    "CAQ": 6.4,
+    "PCQ": 10.4,
+    "QS": 18.6
+   },
+   "fptp_now": {
+    "PLQ": 18,
+    "PQ": 3,
+    "QS": 6
+   },
+   "dist": {
+    "PLQ": 11,
+    "PQ": 2,
+    "QS": 4
+   },
+   "list": {
+    "PCQ": 2,
+    "PQ": 3,
+    "PLQ": 3,
+    "CAQ": 1,
+    "QS": 1
+   }
+  },
+  "Outaouais": {
+   "pop": 396000,
+   "ridings_now": 5,
+   "dist_seats": 4,
+   "list_seats": 2,
+   "share": {
+    "PQ": 20.1,
+    "PLQ": 36.4,
+    "CAQ": 16.5,
+    "PCQ": 16.9,
+    "QS": 10.1
+   },
+   "fptp_now": {
+    "PLQ": 5
+   },
+   "dist": {
+    "PLQ": 4
+   },
+   "list": {
+    "PQ": 1,
+    "PCQ": 1
+   }
+  },
+  "Abitibi-Témiscamingue": {
+   "pop": 148216,
+   "ridings_now": 3,
+   "dist_seats": 2,
+   "list_seats": 1,
+   "share": {
+    "PQ": 34.4,
+    "PLQ": 15.1,
+    "CAQ": 21.7,
+    "PCQ": 15.1,
+    "QS": 13.7
+   },
+   "fptp_now": {
+    "PQ": 3
+   },
+   "dist": {
+    "PQ": 2
+   },
+   "list": {
+    "CAQ": 1
+   }
+  },
+  "Côte-Nord": {
+   "pop": 91121,
+   "ridings_now": 2,
+   "dist_seats": 1,
+   "list_seats": 1,
+   "share": {
+    "PQ": 39.9,
+    "PLQ": 10.1,
+    "CAQ": 26.8,
+    "PCQ": 16.7,
+    "QS": 6.6
+   },
+   "fptp_now": {
+    "PQ": 2
+   },
+   "dist": {
+    "PQ": 1
+   },
+   "list": {
+    "CAQ": 1
+   }
+  },
+  "Nord-du-Québec": {
+   "pop": 46202,
+   "ridings_now": 1,
+   "dist_seats": 1,
+   "list_seats": 0,
+   "share": {
+    "PQ": 30.3,
+    "PLQ": 23.2,
+    "CAQ": 19.2,
+    "PCQ": 12.1,
+    "QS": 15.2
+   },
+   "fptp_now": {
+    "PQ": 1
+   },
+   "dist": {
+    "PQ": 1
+   },
+   "list": {}
+  },
+  "Gaspésie–Îles-de-la-Madeleine": {
+   "pop": 90634,
+   "ridings_now": 3,
+   "dist_seats": 2,
+   "list_seats": 1,
+   "share": {
+    "PQ": 54.2,
+    "PLQ": 17.5,
+    "CAQ": 14.5,
+    "PCQ": 7.7,
+    "QS": 6.1
+   },
+   "fptp_now": {
+    "PQ": 3
+   },
+   "dist": {
+    "PQ": 2
+   },
+   "list": {
+    "PQ": 1
+   }
+  },
+  "Chaudière-Appalaches": {
+   "pop": 428924,
+   "ridings_now": 7,
+   "dist_seats": 4,
+   "list_seats": 2,
+   "share": {
+    "PQ": 22.2,
+    "PLQ": 8.8,
+    "CAQ": 20.3,
+    "PCQ": 42.4,
+    "QS": 6.3
+   },
+   "fptp_now": {
+    "PCQ": 7
+   },
+   "dist": {
+    "PCQ": 4
+   },
+   "list": {
+    "PQ": 1,
+    "CAQ": 1
+   }
+  },
+  "Laval": {
+   "pop": 439754,
+   "ridings_now": 6,
+   "dist_seats": 4,
+   "list_seats": 2,
+   "share": {
+    "PQ": 21.3,
+    "PLQ": 38.7,
+    "CAQ": 18.8,
+    "PCQ": 14.1,
+    "QS": 7.1
+   },
+   "fptp_now": {
+    "PLQ": 6
+   },
+   "dist": {
+    "PLQ": 4
+   },
+   "list": {
+    "PQ": 1,
+    "CAQ": 1
+   }
+  },
+  "Lanaudière": {
+   "pop": 515682,
+   "ridings_now": 8,
+   "dist_seats": 5,
+   "list_seats": 3,
+   "share": {
+    "PQ": 42.4,
+    "PLQ": 11.0,
+    "CAQ": 26.7,
+    "PCQ": 11.6,
+    "QS": 8.3
+   },
+   "fptp_now": {
+    "PQ": 8
+   },
+   "dist": {
+    "PQ": 5
+   },
+   "list": {
+    "CAQ": 2,
+    "PCQ": 1
+   }
+  },
+  "Laurentides": {
+   "pop": 621736,
+   "ridings_now": 10,
+   "dist_seats": 6,
+   "list_seats": 3,
+   "share": {
+    "PQ": 39.0,
+    "PLQ": 16.5,
+    "CAQ": 22.4,
+    "PCQ": 13.5,
+    "QS": 8.6
+   },
+   "fptp_now": {
+    "PQ": 10
+   },
+   "dist": {
+    "PQ": 6
+   },
+   "list": {
+    "CAQ": 1,
+    "PLQ": 1,
+    "PCQ": 1
+   }
+  },
+  "Montérégie": {
+   "pop": 1581697,
+   "ridings_now": 23,
+   "dist_seats": 13,
+   "list_seats": 7,
+   "share": {
+    "PQ": 33.6,
+    "PLQ": 21.5,
+    "CAQ": 23.0,
+    "PCQ": 12.1,
+    "QS": 9.8
+   },
+   "fptp_now": {
+    "PQ": 16,
+    "PLQ": 7
+   },
+   "dist": {
+    "PQ": 9,
+    "PLQ": 4
+   },
+   "list": {
+    "CAQ": 3,
+    "PCQ": 2,
+    "QS": 1,
+    "PLQ": 1
+   }
+  },
+  "Centre-du-Québec": {
+   "pop": 249216,
+   "ridings_now": 4,
+   "dist_seats": 3,
+   "list_seats": 2,
+   "share": {
+    "PQ": 32.4,
+    "PLQ": 8.5,
+    "CAQ": 19.6,
+    "PCQ": 31.9,
+    "QS": 7.5
+   },
+   "fptp_now": {
+    "PQ": 3,
+    "PCQ": 1
+   },
+   "dist": {
+    "PQ": 2,
+    "PCQ": 1
+   },
+   "list": {
+    "CAQ": 1,
+    "PQ": 1
+   }
+  }
+ }
+}

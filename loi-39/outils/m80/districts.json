@@ -1,0 +1,1287 @@
+{
+ "districts": {
+  "1": {
+   "reg": "Bas-Saint-Laurent",
+   "electors": 72346,
+   "comp": {
+    "Rivière-du-Loup–Témiscouata–Les Basques": 51933,
+    "Rimouski": 20413
+   },
+   "mun": {
+    "Rimouski": 16439,
+    "Rivière-du-Loup": 15962,
+    "Témiscouata-sur-le-Lac": 4203,
+    "Saint-Antonin": 3488
+   },
+   "name": "Rivière-du-Loup–Témiscouata–Les Basques"
+  },
+  "2": {
+   "reg": "Bas-Saint-Laurent",
+   "electors": 72352,
+   "comp": {
+    "Matane-Matapédia-Mitis": 46422,
+    "Rimouski": 25930
+   },
+   "mun": {
+    "Rimouski": 23193,
+    "Matane": 11429,
+    "Mont-Joli": 5214,
+    "Amqui": 4982
+   },
+   "name": "Matane-Matapédia-Mitis"
+  },
+  "3": {
+   "reg": "Saguenay–Lac-Saint-Jean",
+   "electors": 76205,
+   "comp": {
+    "Roberval": 44510,
+    "Dubuc": 31100,
+    "Lac-Saint-Jean": 595
+   },
+   "mun": {
+    "Saguenay": 17471,
+    "Dolbeau-Mistassini": 11053,
+    "Saint-Félicien": 7958,
+    "Roberval": 7791
+   },
+   "name": "Roberval / Dubuc"
+  },
+  "4": {
+   "reg": "Saguenay–Lac-Saint-Jean",
+   "electors": 76092,
+   "comp": {
+    "Lac-Saint-Jean": 43973,
+    "Jonquière": 20196,
+    "Dubuc": 11923
+   },
+   "mun": {
+    "Saguenay": 27237,
+    "Alma": 24634,
+    "Hébertville": 5390,
+    "Métabetchouan--Lac-à-la-Croix": 3229
+   },
+   "name": "Lac-Saint-Jean / Jonquière"
+  },
+  "5": {
+   "reg": "Saguenay–Lac-Saint-Jean",
+   "electors": 70656,
+   "comp": {
+    "Chicoutimi": 45641,
+    "Jonquière": 25015
+   },
+   "mun": {
+    "Saguenay": 70656
+   },
+   "name": "Chicoutimi"
+  },
+  "6": {
+   "reg": "Capitale-Nationale",
+   "electors": 82818,
+   "comp": {
+    "Portneuf": 55872,
+    "Louis-Hébert": 17964,
+    "La Peltrie": 4850,
+    "Jean-Talon": 4132
+   },
+   "mun": {
+    "Saint-Augustin-de-Desmaures": 16735,
+    "Saint-Raymond": 9460,
+    "Pont-Rouge": 8859,
+    "Sainte-Catherine-de-la-Jacques-Cartier": 7008
+   },
+   "name": "Portneuf"
+  },
+  "7": {
+   "reg": "Capitale-Nationale",
+   "electors": 91218,
+   "comp": {
+    "La Peltrie": 39403,
+    "Louis-Hébert": 30032,
+    "Vanier-Les Rivières": 16355,
+    "Chauveau": 5428
+   },
+   "mun": {
+    "Québec": 83530,
+    "L'Ancienne-Lorette": 7688
+   },
+   "name": "La Peltrie / Louis-Hébert"
+  },
+  "8": {
+   "reg": "Capitale-Nationale",
+   "electors": 91126,
+   "comp": {
+    "Jean-Talon": 43057,
+    "Taschereau": 42110,
+    "La Peltrie": 5959
+   },
+   "mun": {
+    "Québec": 84925,
+    "L'Ancienne-Lorette": 5959,
+    "Notre-Dame-des-Anges": 242
+   },
+   "name": "Jean-Talon / Taschereau"
+  },
+  "9": {
+   "reg": "Capitale-Nationale",
+   "electors": 87893,
+   "comp": {
+    "Chauveau": 46101,
+    "Charlesbourg": 23038,
+    "Vanier-Les Rivières": 18754
+   },
+   "mun": {
+    "Québec": 79384,
+    "Lac-Beauport": 6646,
+    "Wendake": 1863
+   },
+   "name": "Chauveau / Charlesbourg"
+  },
+  "10": {
+   "reg": "Capitale-Nationale",
+   "electors": 80795,
+   "comp": {
+    "Jean-Lesage": 27602,
+    "Vanier-Les Rivières": 23981,
+    "Charlesbourg": 23329,
+    "Taschereau": 5883
+   },
+   "mun": {
+    "Québec": 80795
+   },
+   "name": "Jean-Lesage / Vanier-Les Rivières"
+  },
+  "11": {
+   "reg": "Capitale-Nationale",
+   "electors": 78116,
+   "comp": {
+    "Charlevoix–Côte-de-Beaupré": 31427,
+    "Montmorency": 30100,
+    "Jean-Lesage": 16589
+   },
+   "mun": {
+    "Québec": 46689,
+    "Boischatel": 7111,
+    "Château-Richer": 3755,
+    "Beaupré": 3459
+   },
+   "name": "Charlevoix–Côte-de-Beaupré / Montmorency"
+  },
+  "12": {
+   "reg": "Capitale-Nationale",
+   "electors": 80429,
+   "comp": {
+    "Montmorency": 27918,
+    "Charlevoix–Côte-de-Beaupré": 24383,
+    "Charlesbourg": 11017,
+    "La Peltrie": 9002,
+    "Chauveau": 8107,
+    "Portneuf": 2
+   },
+   "mun": {
+    "Québec": 39338,
+    "Stoneham-et-Tewkesbury": 7522,
+    "La Malbaie": 6890,
+    "Sainte-Brigitte-de-Laval": 6239
+   },
+   "name": "Montmorency / Charlevoix–Côte-de-Beaupré"
+  },
+  "13": {
+   "reg": "Mauricie",
+   "electors": 77161,
+   "comp": {
+    "Maskinongé": 48050,
+    "Laviolette–Saint-Maurice": 29111
+   },
+   "mun": {
+    "Shawinigan": 26708,
+    "Trois-Rivières": 16748,
+    "Louiseville": 5965,
+    "Saint-Boniface": 4175
+   },
+   "name": "Maskinongé"
+  },
+  "14": {
+   "reg": "Mauricie",
+   "electors": 69566,
+   "comp": {
+    "Trois-Rivières": 53826,
+    "Champlain": 15740
+   },
+   "mun": {
+    "Trois-Rivières": 69566
+   },
+   "name": "Trois-Rivières"
+  },
+  "15": {
+   "reg": "Mauricie",
+   "electors": 76326,
+   "comp": {
+    "Champlain": 44771,
+    "Laviolette–Saint-Maurice": 31555
+   },
+   "mun": {
+    "Trois-Rivières": 23649,
+    "Shawinigan": 15886,
+    "La Tuque": 8844,
+    "Saint-Tite": 3111
+   },
+   "name": "Champlain / Laviolette–Saint-Maurice"
+  },
+  "16": {
+   "reg": "Estrie",
+   "electors": 88751,
+   "comp": {
+    "Orford": 47621,
+    "Richmond": 31002,
+    "Sherbrooke": 7512,
+    "Saint-François": 2616
+   },
+   "mun": {
+    "Sherbrooke": 31024,
+    "Magog": 23761,
+    "Orford": 4440,
+    "Saint-Denis-de-Brompton": 3938
+   },
+   "name": "Orford / Richmond"
+  },
+  "17": {
+   "reg": "Estrie",
+   "electors": 88700,
+   "comp": {
+    "Saint-François": 50018,
+    "Sherbrooke": 38682
+   },
+   "mun": {
+    "Sherbrooke": 78227,
+    "Coaticook": 4691,
+    "Compton": 2554,
+    "Waterville": 1862
+   },
+   "name": "Saint-François / Sherbrooke"
+  },
+  "18": {
+   "reg": "Estrie",
+   "electors": 88760,
+   "comp": {
+    "Mégantic": 51718,
+    "Richmond": 27964,
+    "Sherbrooke": 6992,
+    "Saint-François": 2086
+   },
+   "mun": {
+    "Sherbrooke": 21954,
+    "Val-des-Sources": 5687,
+    "Lac-Mégantic": 4838,
+    "Cookshire-Eaton": 4379
+   },
+   "name": "Mégantic / Richmond"
+  },
+  "19": {
+   "reg": "Montréal",
+   "electors": 83812,
+   "comp": {
+    "Robert-Baldwin": 53225,
+    "Saint-Laurent": 14537,
+    "Jacques-Cartier": 12534,
+    "Nelligan": 3516
+   },
+   "mun": {
+    "Dollard-des-Ormeaux": 36016,
+    "Montréal": 35262,
+    "Pointe-Claire": 12534
+   },
+   "name": "Robert-Baldwin"
+  },
+  "20": {
+   "reg": "Montréal",
+   "electors": 91566,
+   "comp": {
+    "Nelligan": 54433,
+    "Jacques-Cartier": 35487,
+    "Robert-Baldwin": 1646
+   },
+   "mun": {
+    "Montréal": 41789,
+    "Kirkland": 14290,
+    "Beaconsfield": 14097,
+    "Pointe-Claire": 14059
+   },
+   "name": "Nelligan / Jacques-Cartier"
+  },
+  "21": {
+   "reg": "Montréal",
+   "electors": 92710,
+   "comp": {
+    "Acadie": 42468,
+    "Saint-Laurent": 40503,
+    "Maurice-Richard": 9739
+   },
+   "mun": {
+    "Montréal": 92710
+   },
+   "name": "Acadie / Saint-Laurent"
+  },
+  "22": {
+   "reg": "Montréal",
+   "electors": 80260,
+   "comp": {
+    "Marquette": 26224,
+    "Mont-Royal–Outremont": 25807,
+    "Notre-Dame-de-Grâce": 23271,
+    "Saint-Laurent": 4126,
+    "Marguerite-Bourgeoys": 832
+   },
+   "mun": {
+    "Montréal": 47603,
+    "Dorval": 14494,
+    "Mont-Royal": 14414,
+    "Montréal-Ouest": 3749
+   },
+   "name": "Marquette / Mont-Royal–Outremont"
+  },
+  "23": {
+   "reg": "Montréal",
+   "electors": 94177,
+   "comp": {
+    "LaFontaine": 38985,
+    "Bourassa-Sauvé": 36962,
+    "Maurice-Richard": 14054,
+    "Anjou–Louis-Riel": 4176,
+    "Acadie": 0
+   },
+   "mun": {
+    "Montréal": 94177,
+    "TNO aquatique de la MRC géographique de Montréal": 0
+   },
+   "name": "LaFontaine / Bourassa-Sauvé"
+  },
+  "24": {
+   "reg": "Montréal",
+   "electors": 92714,
+   "comp": {
+    "Laurier-Dorion": 43940,
+    "Gouin": 25482,
+    "Maurice-Richard": 8394,
+    "Acadie": 7325,
+    "Mont-Royal–Outremont": 4684,
+    "Mercier": 2889
+   },
+   "mun": {
+    "Montréal": 92714
+   },
+   "name": "Laurier-Dorion / Gouin"
+  },
+  "25": {
+   "reg": "Montréal",
+   "electors": 89289,
+   "comp": {
+    "D’Arcy-McGee": 56447,
+    "Notre-Dame-de-Grâce": 23401,
+    "Mont-Royal–Outremont": 9441
+   },
+   "mun": {
+    "Montréal": 61138,
+    "Côte-Saint-Luc": 23275,
+    "Hampstead": 4876
+   },
+   "name": "D’Arcy-McGee"
+  },
+  "26": {
+   "reg": "Montréal",
+   "electors": 79804,
+   "comp": {
+    "Marguerite-Bourgeoys": 51969,
+    "Marquette": 19086,
+    "Saint-Henri–Sainte-Anne": 8749
+   },
+   "mun": {
+    "Montréal": 79804
+   },
+   "name": "Marguerite-Bourgeoys"
+  },
+  "27": {
+   "reg": "Montréal",
+   "electors": 93938,
+   "comp": {
+    "Viau": 39247,
+    "Jeanne-Mance–Viger": 34088,
+    "Maurice-Richard": 13475,
+    "Bourassa-Sauvé": 7128
+   },
+   "mun": {
+    "Montréal": 93938
+   },
+   "name": "Viau / Jeanne-Mance–Viger"
+  },
+  "28": {
+   "reg": "Montréal",
+   "electors": 92832,
+   "comp": {
+    "Rosemont": 51659,
+    "Gouin": 16995,
+    "Hochelaga-Maisonneuve": 13408,
+    "Mercier": 10770
+   },
+   "mun": {
+    "Montréal": 92832
+   },
+   "name": "Rosemont / Gouin"
+  },
+  "29": {
+   "reg": "Montréal",
+   "electors": 86741,
+   "comp": {
+    "Camille-Laurin": 48997,
+    "Anjou–Louis-Riel": 22169,
+    "Jeanne-Mance–Viger": 15575
+   },
+   "mun": {
+    "Montréal": 86741
+   },
+   "name": "Camille-Laurin / Anjou–Louis-Riel"
+  },
+  "30": {
+   "reg": "Montréal",
+   "electors": 82075,
+   "comp": {
+    "Saint-Henri–Sainte-Anne": 30915,
+    "Westmount–Saint-Louis": 29116,
+    "Mont-Royal–Outremont": 18420,
+    "Mercier": 3340,
+    "Notre-Dame-de-Grâce": 284
+   },
+   "mun": {
+    "Montréal": 67843,
+    "Westmount": 14232
+   },
+   "name": "Saint-Henri–Sainte-Anne / Westmount–Saint-Louis"
+  },
+  "31": {
+   "reg": "Montréal",
+   "electors": 82040,
+   "comp": {
+    "Sainte-Marie–Saint-Jacques": 39990,
+    "Mercier": 27749,
+    "Westmount–Saint-Louis": 14301
+   },
+   "mun": {
+    "Montréal": 82040
+   },
+   "name": "Sainte-Marie–Saint-Jacques / Mercier"
+  },
+  "32": {
+   "reg": "Montréal",
+   "electors": 80267,
+   "comp": {
+    "Verdun": 49379,
+    "Saint-Henri–Sainte-Anne": 19715,
+    "Westmount–Saint-Louis": 8966,
+    "Sainte-Marie–Saint-Jacques": 2207
+   },
+   "mun": {
+    "Montréal": 80267
+   },
+   "name": "Verdun"
+  },
+  "33": {
+   "reg": "Montréal",
+   "electors": 86148,
+   "comp": {
+    "Pointe-aux-Trembles": 40931,
+    "Hochelaga-Maisonneuve": 26913,
+    "Anjou–Louis-Riel": 14995,
+    "LaFontaine": 3309,
+    "Camille-Laurin": 0
+   },
+   "mun": {
+    "Montréal": 82673,
+    "Montréal-Est": 3475,
+    "TNO terrestre de la MRC géographique de Montréal": 0,
+    "TNO aquatique de la MRC géographique de Montréal": 0
+   },
+   "name": "Pointe-aux-Trembles / Hochelaga-Maisonneuve"
+  },
+  "34": {
+   "reg": "Outaouais",
+   "electors": 78781,
+   "comp": {
+    "Hull": 60470,
+    "Pontiac": 18311
+   },
+   "mun": {
+    "Gatineau": 78781
+   },
+   "name": "Hull"
+  },
+  "35": {
+   "reg": "Outaouais",
+   "electors": 80197,
+   "comp": {
+    "Gatineau": 42426,
+    "Pontiac": 37771
+   },
+   "mun": {
+    "Gatineau": 21535,
+    "Cantley": 8976,
+    "Val-des-Monts": 8651,
+    "La Pêche": 6947
+   },
+   "name": "Gatineau / Pontiac"
+  },
+  "36": {
+   "reg": "Outaouais",
+   "electors": 69263,
+   "comp": {
+    "Chapleau": 51945,
+    "Gatineau": 17318
+   },
+   "mun": {
+    "Gatineau": 63262,
+    "Chelsea": 6001
+   },
+   "name": "Chapleau"
+  },
+  "37": {
+   "reg": "Outaouais",
+   "electors": 69225,
+   "comp": {
+    "Papineau": 60571,
+    "Chapleau": 6837,
+    "Gatineau": 1817
+   },
+   "mun": {
+    "Gatineau": 39924,
+    "L'Ange-Gardien": 5622,
+    "Saint-André-Avellin": 3155,
+    "Thurso": 2648
+   },
+   "name": "Papineau"
+  },
+  "38": {
+   "reg": "Abitibi-Témiscamingue",
+   "electors": 55316,
+   "comp": {
+    "Rouyn-Noranda–Témiscamingue": 40848,
+    "Abitibi-Est": 14468
+   },
+   "mun": {
+    "Rouyn-Noranda": 32227,
+    "Val-d'Or": 10073,
+    "Malartic": 2563,
+    "Ville-Marie": 1964
+   },
+   "name": "Rouyn-Noranda–Témiscamingue"
+  },
+  "39": {
+   "reg": "Abitibi-Témiscamingue",
+   "electors": 57813,
+   "comp": {
+    "Abitibi-Ouest": 35331,
+    "Abitibi-Est": 18903,
+    "Rouyn-Noranda–Témiscamingue": 3579
+   },
+   "mun": {
+    "Val-d'Or": 14505,
+    "Amos": 10422,
+    "La Sarre": 5703,
+    "Senneterre": 3144
+   },
+   "name": "Abitibi-Ouest"
+  },
+  "40": {
+   "reg": "Côte-Nord",
+   "electors": 69035,
+   "comp": {
+    "Duplessis": 37069,
+    "René-Lévesque": 31966
+   },
+   "mun": {
+    "Sept-Îles": 18279,
+    "Baie-Comeau": 15753,
+    "Port-Cartier": 4905,
+    "Havre-Saint-Pierre": 2754
+   },
+   "name": "Duplessis / René-Lévesque"
+  },
+  "41": {
+   "reg": "Nord-du-Québec",
+   "electors": 31748,
+   "comp": {
+    "Ungava": 31748
+   },
+   "mun": {
+    "Chibougamau": 5018,
+    "Chisasibi": 3279,
+    "Mistissini": 2763,
+    "Waskaganish": 1680
+   },
+   "name": "Ungava"
+  },
+  "42": {
+   "reg": "Gaspésie–Îles-de-la-Madeleine",
+   "electors": 11146,
+   "comp": {
+    "Îles-de-la-Madeleine": 11146
+   },
+   "mun": {
+    "Les Îles-de-la-Madeleine": 10771,
+    "Grosse-Île": 375
+   },
+   "name": "Îles-de-la-Madeleine"
+  },
+  "43": {
+   "reg": "Gaspésie–Îles-de-la-Madeleine",
+   "electors": 65801,
+   "comp": {
+    "Bonaventure": 35779,
+    "Gaspé": 30022
+   },
+   "mun": {
+    "Gaspé": 12210,
+    "Chandler": 6184,
+    "Sainte-Anne-des-Monts": 5168,
+    "Carleton-sur-Mer": 3539
+   },
+   "name": "Bonaventure / Gaspé"
+  },
+  "44": {
+   "reg": "Chaudière-Appalaches",
+   "electors": 75521,
+   "comp": {
+    "Lotbinière-Frontenac": 59431,
+    "Beauce-Nord": 16090
+   },
+   "mun": {
+    "Thetford Mines": 20857,
+    "Saint-Apollinaire": 6676,
+    "Saint-Lambert-de-Lauzon": 5772,
+    "Sainte-Marie": 3948
+   },
+   "name": "Lotbinière-Frontenac"
+  },
+  "45": {
+   "reg": "Chaudière-Appalaches",
+   "electors": 69432,
+   "comp": {
+    "Chutes-de-la-Chaudière": 45615,
+    "Lévis": 23817
+   },
+   "mun": {
+    "Lévis": 69432
+   },
+   "name": "Chutes-de-la-Chaudière"
+  },
+  "46": {
+   "reg": "Chaudière-Appalaches",
+   "electors": 74916,
+   "comp": {
+    "Lévis": 29594,
+    "Bellechasse": 23425,
+    "Chutes-de-la-Chaudière": 16161,
+    "Beauce-Nord": 5736
+   },
+   "mun": {
+    "Lévis": 53278,
+    "Saint-Henri": 4331,
+    "Saint-Anselme": 3320,
+    "Sainte-Claire": 2899
+   },
+   "name": "Lévis / Bellechasse"
+  },
+  "47": {
+   "reg": "Chaudière-Appalaches",
+   "electors": 73032,
+   "comp": {
+    "Côte-du-Sud": 50443,
+    "Bellechasse": 22589
+   },
+   "mun": {
+    "Montmagny": 9249,
+    "La Pocatière": 5077,
+    "Lac-Etchemin": 3452,
+    "L'Islet": 3142
+   },
+   "name": "Côte-du-Sud"
+  },
+  "48": {
+   "reg": "Chaudière-Appalaches",
+   "electors": 75151,
+   "comp": {
+    "Beauce-Sud": 50607,
+    "Beauce-Nord": 24544
+   },
+   "mun": {
+    "Saint-Georges": 26166,
+    "Sainte-Marie": 5704,
+    "Beauceville": 4882,
+    "Saint-Joseph-de-Beauce": 3891
+   },
+   "name": "Beauce-Sud"
+  },
+  "49": {
+   "reg": "Laval",
+   "electors": 87846,
+   "comp": {
+    "Fabre": 58186,
+    "Sainte-Rose": 17511,
+    "Chomedey": 12149
+   },
+   "mun": {
+    "Laval": 87846
+   },
+   "name": "Fabre"
+  },
+  "50": {
+   "reg": "Laval",
+   "electors": 81372,
+   "comp": {
+    "Chomedey": 44507,
+    "Laval-des-Rapides": 36865
+   },
+   "mun": {
+    "Laval": 81372
+   },
+   "name": "Chomedey / Laval-des-Rapides"
+  },
+  "51": {
+   "reg": "Laval",
+   "electors": 81038,
+   "comp": {
+    "Vimont-Auteuil": 40699,
+    "Sainte-Rose": 40339
+   },
+   "mun": {
+    "Laval": 81038
+   },
+   "name": "Vimont-Auteuil / Sainte-Rose"
+  },
+  "52": {
+   "reg": "Laval",
+   "electors": 75273,
+   "comp": {
+    "Mille-Îles": 49728,
+    "Laval-des-Rapides": 19450,
+    "Vimont-Auteuil": 6095
+   },
+   "mun": {
+    "Laval": 75273
+   },
+   "name": "Mille-Îles"
+  },
+  "53": {
+   "reg": "Lanaudière",
+   "electors": 92233,
+   "comp": {
+    "Rousseau": 46126,
+    "Les Plaines": 36623,
+    "Masson": 9484
+   },
+   "mun": {
+    "Saint-Lin--Laurentides": 18910,
+    "Mirabel": 13192,
+    "Terrebonne": 12068,
+    "Sainte-Anne-des-Plaines": 11363
+   },
+   "name": "Rousseau / Les Plaines"
+  },
+  "54": {
+   "reg": "Lanaudière",
+   "electors": 93856,
+   "comp": {
+    "Terrebonne": 55051,
+    "Masson": 25888,
+    "Les Plaines": 12917
+   },
+   "mun": {
+    "Terrebonne": 77324,
+    "Mascouche": 16532
+   },
+   "name": "Terrebonne / Masson"
+  },
+  "55": {
+   "reg": "Lanaudière",
+   "electors": 88279,
+   "comp": {
+    "Repentigny": 56379,
+    "Masson": 19645,
+    "L’Assomption": 12255
+   },
+   "mun": {
+    "Repentigny": 62614,
+    "Mascouche": 16420,
+    "Charlemagne": 5183,
+    "Terrebonne": 3225
+   },
+   "name": "Repentigny"
+  },
+  "56": {
+   "reg": "Lanaudière",
+   "electors": 80439,
+   "comp": {
+    "Berthier": 53752,
+    "L’Assomption": 21552,
+    "Joliette": 5135
+   },
+   "mun": {
+    "L'Assomption": 9211,
+    "Saint-Félix-de-Valois": 6194,
+    "Repentigny": 5092,
+    "Saint-Jean-de-Matha": 4401
+   },
+   "name": "Berthier"
+  },
+  "57": {
+   "reg": "Lanaudière",
+   "electors": 80167,
+   "comp": {
+    "Joliette": 53997,
+    "L’Assomption": 23031,
+    "Rousseau": 3139
+   },
+   "mun": {
+    "Joliette": 17105,
+    "Saint-Charles-Borromée": 13677,
+    "L'Assomption": 8957,
+    "Lavaltrie": 7954
+   },
+   "name": "Joliette"
+  },
+  "58": {
+   "reg": "Laurentides",
+   "electors": 79796,
+   "comp": {
+    "Labelle": 47503,
+    "Bertrand": 32293
+   },
+   "mun": {
+    "Mont-Laurier": 11793,
+    "Sainte-Agathe-des-Monts": 10060,
+    "Mont-Tremblant": 6982,
+    "Val-David": 4685
+   },
+   "name": "Labelle / Bertrand"
+  },
+  "59": {
+   "reg": "Laurentides",
+   "electors": 86806,
+   "comp": {
+    "Argenteuil": 42752,
+    "Mirabel": 22611,
+    "Bellefeuille": 7446,
+    "Prévost": 7324,
+    "Labelle": 6673
+   },
+   "mun": {
+    "Mirabel": 20105,
+    "Lachute": 12161,
+    "Brownsburg-Chatham": 6861,
+    "Saint-Sauveur": 5580
+   },
+   "name": "Argenteuil / Mirabel"
+  },
+  "60": {
+   "reg": "Laurentides",
+   "electors": 87555,
+   "comp": {
+    "Saint-Jérôme": 45854,
+    "Bellefeuille": 30563,
+    "Mirabel": 7747,
+    "Blainville": 3391
+   },
+   "mun": {
+    "Saint-Jérôme": 58033,
+    "Mirabel": 13136,
+    "Saint-Colomban": 12995,
+    "Blainville": 3391
+   },
+   "name": "Saint-Jérôme / Bellefeuille"
+  },
+  "61": {
+   "reg": "Laurentides",
+   "electors": 80260,
+   "comp": {
+    "Prévost": 45821,
+    "Bertrand": 27396,
+    "Bellefeuille": 7043
+   },
+   "mun": {
+    "Sainte-Sophie": 14567,
+    "Sainte-Adèle": 13252,
+    "Prévost": 11367,
+    "Rawdon": 11058
+   },
+   "name": "Prévost / Bertrand"
+  },
+  "62": {
+   "reg": "Laurentides",
+   "electors": 93794,
+   "comp": {
+    "Deux-Montagnes": 50210,
+    "Mirabel": 24620,
+    "Groulx": 18964
+   },
+   "mun": {
+    "Saint-Eustache": 36237,
+    "Boisbriand": 18964,
+    "Sainte-Marthe-sur-le-Lac": 15712,
+    "Deux-Montagnes": 13973
+   },
+   "name": "Deux-Montagnes / Mirabel"
+  },
+  "63": {
+   "reg": "Laurentides",
+   "electors": 93741,
+   "comp": {
+    "Blainville": 58681,
+    "Groulx": 35060
+   },
+   "mun": {
+    "Blainville": 43562,
+    "Sainte-Thérèse": 21104,
+    "Rosemère": 11191,
+    "Bois-des-Filion": 7869
+   },
+   "name": "Blainville"
+  },
+  "64": {
+   "reg": "Montérégie",
+   "electors": 88093,
+   "comp": {
+    "Beauharnois": 58315,
+    "Soulanges": 29778
+   },
+   "mun": {
+    "Salaberry-de-Valleyfield": 36920,
+    "Beauharnois": 10708,
+    "Saint-Zotique": 7967,
+    "Coteau-du-Lac": 6124
+   },
+   "name": "Beauharnois"
+  },
+  "65": {
+   "reg": "Montérégie",
+   "electors": 88000,
+   "comp": {
+    "Vaudreuil": 59083,
+    "Soulanges": 28917
+   },
+   "mun": {
+    "Vaudreuil-Dorion": 32335,
+    "Saint-Lazare": 16869,
+    "Pincourt": 11312,
+    "L'Île-Perrot": 8842
+   },
+   "name": "Vaudreuil"
+  },
+  "66": {
+   "reg": "Montérégie",
+   "electors": 82583,
+   "comp": {
+    "Châteauguay": 56577,
+    "Sanguinet": 19721,
+    "Vaudreuil": 2992,
+    "La Prairie": 2128,
+    "Beauharnois": 1165
+   },
+   "mun": {
+    "Châteauguay": 38314,
+    "Mercier": 11213,
+    "Saint-Constant": 10224,
+    "Sainte-Catherine": 9497
+   },
+   "name": "Châteauguay"
+  },
+  "67": {
+   "reg": "Montérégie",
+   "electors": 97371,
+   "comp": {
+    "La Pinière": 53005,
+    "La Prairie": 29283,
+    "Pierre-Laporte": 11571,
+    "Sanguinet": 3512
+   },
+   "mun": {
+    "Brossard": 59676,
+    "La Prairie": 20112,
+    "Candiac": 5909,
+    "Saint-Lambert": 4900
+   },
+   "name": "La Pinière / La Prairie"
+  },
+  "68": {
+   "reg": "Montérégie",
+   "electors": 96576,
+   "comp": {
+    "Taillon": 32060,
+    "Verchères": 28872,
+    "Montarville": 25293,
+    "Vachon": 10351
+   },
+   "mun": {
+    "Longueuil": 42411,
+    "Sainte-Julie": 24613,
+    "Boucherville": 19150,
+    "Saint-Bruno-de-Montarville": 6143
+   },
+   "name": "Taillon / Verchères"
+  },
+  "69": {
+   "reg": "Montérégie",
+   "electors": 96994,
+   "comp": {
+    "Marie-Victorin": 44322,
+    "Pierre-Laporte": 31947,
+    "Taillon": 19941,
+    "Vachon": 784
+   },
+   "mun": {
+    "Longueuil": 84488,
+    "Saint-Lambert": 12506
+   },
+   "name": "Marie-Victorin / Pierre-Laporte"
+  },
+  "70": {
+   "reg": "Montérégie",
+   "electors": 88710,
+   "comp": {
+    "Borduas": 44389,
+    "Chambly": 29198,
+    "Montarville": 14399,
+    "Vachon": 724
+   },
+   "mun": {
+    "Beloeil": 18962,
+    "Saint-Bruno-de-Montarville": 14399,
+    "Saint-Basile-le-Grand": 13117,
+    "Mont-Saint-Hilaire": 10807
+   },
+   "name": "Borduas / Chambly"
+  },
+  "71": {
+   "reg": "Montérégie",
+   "electors": 87308,
+   "comp": {
+    "Richelieu": 52956,
+    "Verchères": 19049,
+    "Montarville": 13881,
+    "Borduas": 1422
+   },
+   "mun": {
+    "Sorel-Tracy": 29499,
+    "Varennes": 15093,
+    "Boucherville": 13881,
+    "Contrecoeur": 7697
+   },
+   "name": "Richelieu"
+  },
+  "72": {
+   "reg": "Montérégie",
+   "electors": 96680,
+   "comp": {
+    "Vachon": 41965,
+    "Saint-Jean": 36006,
+    "Pierre-Laporte": 9333,
+    "La Pinière": 5304,
+    "Chambly": 2197,
+    "Iberville": 1875
+   },
+   "mun": {
+    "Longueuil": 51298,
+    "Saint-Jean-sur-Richelieu": 37881,
+    "Brossard": 5304,
+    "Carignan": 2197
+   },
+   "name": "Vachon / Saint-Jean"
+  },
+  "73": {
+   "reg": "Montérégie",
+   "electors": 93511,
+   "comp": {
+    "Huntingdon": 50082,
+    "Sanguinet": 21938,
+    "La Prairie": 19468,
+    "Iberville": 2023
+   },
+   "mun": {
+    "Saint-Constant": 13068,
+    "Candiac": 11880,
+    "Saint-Rémi": 6927,
+    "Saint-Philippe": 6305
+   },
+   "name": "Huntingdon / Sanguinet"
+  },
+  "74": {
+   "reg": "Montérégie",
+   "electors": 82739,
+   "comp": {
+    "Saint-Hyacinthe": 55483,
+    "Borduas": 12519,
+    "Verchères": 8316,
+    "Daniel-Johnson": 3302,
+    "Iberville": 2054,
+    "Richelieu": 1065
+   },
+   "mun": {
+    "Saint-Hyacinthe": 44590,
+    "Saint-Amable": 8316,
+    "Mont-Saint-Hilaire": 4866,
+    "Saint-Jean-Baptiste": 2460
+   },
+   "name": "Saint-Hyacinthe"
+  },
+  "75": {
+   "reg": "Montérégie",
+   "electors": 88554,
+   "comp": {
+    "Iberville": 25007,
+    "Chambly": 22828,
+    "Brome-Missisquoi": 21870,
+    "Saint-Jean": 16184,
+    "Granby": 2665
+   },
+   "mun": {
+    "Saint-Jean-sur-Richelieu": 16184,
+    "Chambly": 16027,
+    "Bromont": 8947,
+    "Marieville": 8833
+   },
+   "name": "Iberville / Chambly"
+  },
+  "76": {
+   "reg": "Montérégie",
+   "electors": 84254,
+   "comp": {
+    "Brome-Missisquoi": 34093,
+    "Daniel-Johnson": 20795,
+    "Iberville": 20268,
+    "Saint-Jean": 9098
+   },
+   "mun": {
+    "Saint-Jean-sur-Richelieu": 23548,
+    "Cowansville": 13335,
+    "Shefford": 6521,
+    "Lac-Brome": 5441
+   },
+   "name": "Brome-Missisquoi / Daniel-Johnson"
+  },
+  "77": {
+   "reg": "Montérégie",
+   "electors": 82458,
+   "comp": {
+    "Granby": 55995,
+    "Daniel-Johnson": 25164,
+    "Brome-Missisquoi": 1299
+   },
+   "mun": {
+    "Granby": 55995,
+    "Acton Vale": 5480,
+    "Saint-Pie": 4630,
+    "Roxton Pond": 3974
+   },
+   "name": "Granby"
+  },
+  "78": {
+   "reg": "Centre-du-Québec",
+   "electors": 69160,
+   "comp": {
+    "Nicolet-Bécancour": 41028,
+    "Drummond–Bois-Francs": 20314,
+    "Marie-Lacoste-Gérin-Lajoie": 7818
+   },
+   "mun": {
+    "Bécancour": 11784,
+    "Nicolet": 6907,
+    "Saint-Cyrille-de-Wendover": 4117,
+    "Warwick": 3892
+   },
+   "name": "Nicolet-Bécancour / Drummond–Bois-Francs"
+  },
+  "79": {
+   "reg": "Centre-du-Québec",
+   "electors": 69007,
+   "comp": {
+    "Marie-Lacoste-Gérin-Lajoie": 38372,
+    "Drummond–Bois-Francs": 30635
+   },
+   "mun": {
+    "Drummondville": 62368,
+    "Saint-Germain-de-Grantham": 3897,
+    "Wickham": 1989,
+    "Lefebvre": 753
+   },
+   "name": "Marie-Lacoste-Gérin-Lajoie / Drummond–Bois-Francs"
+  },
+  "80": {
+   "reg": "Centre-du-Québec",
+   "electors": 64208,
+   "comp": {
+    "Arthabaska-L’Érable": 61771,
+    "Drummond–Bois-Francs": 2437
+   },
+   "mun": {
+    "Victoriaville": 37940,
+    "Plessisville": 7280,
+    "Princeville": 4921,
+    "Saint-Christophe-d'Arthabaska": 2556
+   },
+   "name": "Arthabaska-L’Érable"
+  }
+ },
+ "DIST": {
+  "Bas-Saint-Laurent": 2,
+  "Saguenay–Lac-Saint-Jean": 3,
+  "Capitale-Nationale": 7,
+  "Mauricie": 3,
+  "Estrie": 3,
+  "Montréal": 15,
+  "Outaouais": 4,
+  "Abitibi-Témiscamingue": 2,
+  "Côte-Nord": 1,
+  "Nord-du-Québec": 1,
+  "Gaspésie–Îles-de-la-Madeleine": 2,
+  "Chaudière-Appalaches": 5,
+  "Laval": 4,
+  "Lanaudière": 5,
+  "Laurentides": 6,
+  "Montérégie": 14,
+  "Centre-du-Québec": 3
+ },
+ "LIST": {
+  "Bas-Saint-Laurent": 1,
+  "Saguenay–Lac-Saint-Jean": 2,
+  "Capitale-Nationale": 4,
+  "Mauricie": 2,
+  "Estrie": 2,
+  "Montréal": 8,
+  "Outaouais": 2,
+  "Abitibi-Témiscamingue": 1,
+  "Côte-Nord": 1,
+  "Nord-du-Québec": 0,
+  "Gaspésie–Îles-de-la-Madeleine": 1,
+  "Chaudière-Appalaches": 3,
+  "Laval": 2,
+  "Lanaudière": 3,
+  "Laurentides": 3,
+  "Montérégie": 8,
+  "Centre-du-Québec": 2
+ },
+ "elec_reg": {
+  "Montérégie": 1253831,
+  "Outaouais": 297466,
+  "Montréal": 1308373,
+  "Laurentides": 521952,
+  "Laval": 325529,
+  "Centre-du-Québec": 202375,
+  "Bas-Saint-Laurent": 144698,
+  "Chaudière-Appalaches": 368052,
+  "Estrie": 266211,
+  "Abitibi-Témiscamingue": 113129,
+  "Mauricie": 223053,
+  "Lanaudière": 434974,
+  "Saguenay–Lac-Saint-Jean": 222953,
+  "Capitale-Nationale": 592395,
+  "Côte-Nord": 69035,
+  "Nord-du-Québec": 31748,
+  "Gaspésie–Îles-de-la-Madeleine": 76947
+ }
+}
