@@ -305,6 +305,13 @@ details[open] summary{margin-bottom:8px}
 .gbar .track b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);transform:translateX(-1px)}
 .res-side{display:grid;gap:var(--gap);align-content:start;min-width:0}
 .seg[hidden]{display:none}
+/* badge « simulé » en haut de la carte (carte de la loi 39) ; la barre de zoom lui laisse la place */
+.mapbadge{position:absolute;top:12px;right:12px;z-index:4;background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:4px 9px;font-size:.66rem}
+.mapbadge[hidden]{display:none}
+.mapstage:has(.mapbadge:not([hidden])) .zoombar{max-width:calc(100% - 150px)}
+.mapgrid.fs .mapbadge,.mapgrid:fullscreen .mapbadge{top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:6}
+.mapgrid.fs.show-panel .mapbadge,.mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 424px)}
+@media (max-width:700px){.mapgrid.fs.show-panel .mapbadge,.mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 12px)}}
 .panel .ctable th{white-space:normal;vertical-align:bottom}
 .panel .ctable td:first-child{white-space:normal}
 .panel .ctable .linkbtn{text-align:left}
@@ -471,6 +478,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
             <button type="button" data-z="panel" id="panelBtn" class="fsonly" aria-pressed="false">Détail</button>
             <button type="button" data-z="scen" id="scenBtn" class="fsonly" aria-pressed="false">Scénario</button>
           </div>
+          <span class="tag sim mapbadge" id="mapBadge" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">Loi 39 · simulé</span>
           <div class="tip" id="tip" hidden></div>
         </div>
         <div class="scale" id="scale"></div>
@@ -978,6 +986,7 @@ function paintMap(){
   const byReg = state.view==="reg", isCur = state.view==="cur";
   mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
   gCur.style("display", isCur ? null : "none");
+  document.getElementById("mapBadge").hidden = isCur;
   gRid.style("display", state.view==="circ" ? null : "none");
   gRegFill.style("display", byReg ? null : "none");
   if (isCur) gCur.selectAll("path").each(function(f){

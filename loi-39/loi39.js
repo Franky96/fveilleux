@@ -444,6 +444,7 @@ function paintMap(){
   const byReg = state.view==="reg", isCur = state.view==="cur";
   mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
   gCur.style("display", isCur ? null : "none");
+  document.getElementById("l39-mapBadge").hidden = isCur;
   gRid.style("display", state.view==="circ" ? null : "none");
   gRegFill.style("display", byReg ? null : "none");
   if (isCur) gCur.selectAll("path").each(function(f){

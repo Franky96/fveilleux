@@ -282,6 +282,14 @@
 .loi39 .gbar .track b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);transform:translateX(-1px)}
 .loi39 .res-side{display:grid;gap:var(--gap);align-content:start;min-width:0}
 .loi39 .seg[hidden]{display:none}
+.loi39 .mapbadge{position:absolute;top:12px;right:12px;z-index:4;background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:4px 9px;font-size:.66rem}
+.loi39 .mapbadge[hidden]{display:none}
+.loi39 .mapstage:has(.mapbadge:not([hidden])) .zoombar{max-width:calc(100% - 150px)}
+.loi39 .mapgrid.fs .mapbadge,.loi39 .mapgrid:fullscreen .mapbadge{top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:6}
+.loi39 .mapgrid.fs.show-panel .mapbadge,.loi39 .mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 424px)}
+@media (max-width:700px){
+.loi39 .mapgrid.fs.show-panel .mapbadge,.loi39 .mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 12px)}
+}
 .loi39 .panel .ctable th{white-space:normal;vertical-align:bottom}
 .loi39 .panel .ctable td:first-child{white-space:normal}
 .loi39 .panel .ctable .linkbtn{text-align:left}
