@@ -86,7 +86,6 @@ body{margin:0;background:#F1F3F7}
 .loi39 .chg-t tr.st td{font-weight:700;background:var(--soft)}
 .loi39 .chg-t tr.sep td{border-top:2px solid var(--rule)}
 .loi39 .chg-t .vs{font-size:.78rem;color:var(--muted);font-weight:400;margin-left:6px}
-.loi39 .tablebox:has(.chg-t){max-width:1000px}
 .loi39 .chg-t .sh{display:none}
 @media (max-width:600px){
 .loi39 .chg-t{table-layout:fixed}
@@ -103,6 +102,13 @@ body{margin:0;background:#F1F3F7}
 .loi39 .chg-t .num-big,.loi39 .chg-t .d{font-size:1.1rem}
 
 }
+.loi39 .chg-grid{display:grid;gap:var(--gap);grid-template-columns:minmax(0,1fr);align-items:stretch}
+@media (min-width:1100px){
+.loi39 .chg-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+}
+.loi39 .chg-grid .twin{grid-template-rows:auto 1fr}
+.loi39 .chg-grid .tw-list{display:grid;gap:10px;align-content:space-evenly}
+.loi39 .chg-grid .tw-bars i{height:13px}
 .loi39 .twin{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;gap:12px}
 .loi39 .twin-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline}
 .loi39 .twin-head b{font-family:var(--serif);font-size:1.05rem}
@@ -364,11 +370,19 @@ body{margin:0;background:#F1F3F7}
       <h2 id="l39-h-chg">Ce qui changerait</h2>
       <p class="muted">Les mêmes votes projetés par Qc125, comptés de deux façons. Le <b>mode actuel</b> les prend tels quels dans les 127 circonscriptions réelles. La <b>loi 39</b> est <b>simulée</b> : aucune carte officielle à 80 circonscriptions n'existe, celle-ci a été construite pour respecter la loi, puis 45 sièges de région compensent l'écart entre votes et sièges. <a href="#l39-h-meth">Méthode et limites</a></p>
     </div>
-    <div class="tablebox">
-      <table class="chg-t">
-        <thead><tr><th></th><th><span class="lg">Mode actuel</span><span class="sh">Actuel</span> <span class="tag real">Qc125</span></th><th>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></th><th>Écart</th></tr></thead>
-        <tbody id="l39-chgBody"></tbody>
-      </table>
+    <div class="chg-grid">
+      <div class="tablebox">
+        <table class="chg-t">
+          <thead><tr><th></th><th><span class="lg">Mode actuel</span><span class="sh">Actuel</span> <span class="tag real">Qc125</span></th><th>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></th><th>Écart</th></tr></thead>
+          <tbody id="l39-chgBody"></tbody>
+        </table>
+      </div>
+      <figure class="twin" style="margin:0">
+        <figcaption class="twin-head"><b>Part des sièges, avant et après</b>
+          <span class="legend"><span><i class="bar-k a"></i>Mode actuel</span><span><i class="bar-k b"></i>Loi 39 (simulé)</span><span><i class="bar-k v"></i>Part des votes</span><span><i class="bar-k m"></i>Majorité (50 %)</span></span>
+        </figcaption>
+        <div id="l39-twin" class="tw-list"></div>
+      </figure>
     </div>
   </section>
 
@@ -396,12 +410,6 @@ body{margin:0;background:#F1F3F7}
       </table>
     </div>
     </div>
-    <figure class="twin" style="margin:0">
-      <figcaption class="twin-head"><b>Part des sièges, avant et après</b>
-        <span class="legend"><span><i class="bar-k a"></i>Mode actuel</span><span><i class="bar-k b"></i>Loi 39 (simulé)</span><span><i class="bar-k v"></i>Part des votes</span><span><i class="bar-k m"></i>Majorité (50 %)</span></span>
-      </figcaption>
-      <div id="l39-twin"></div>
-    </figure>
     <div class="coal" id="l39-coalitions"></div>
   </section>
 

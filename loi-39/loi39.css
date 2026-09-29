@@ -77,7 +77,6 @@
 .loi39 .chg-t tr.st td{font-weight:700;background:var(--soft)}
 .loi39 .chg-t tr.sep td{border-top:2px solid var(--rule)}
 .loi39 .chg-t .vs{font-size:.78rem;color:var(--muted);font-weight:400;margin-left:6px}
-.loi39 .tablebox:has(.chg-t){max-width:1000px}
 .loi39 .chg-t .sh{display:none}
 @media (max-width:600px){
 .loi39 .chg-t{table-layout:fixed}
@@ -94,6 +93,13 @@
 .loi39 .chg-t .num-big,.loi39 .chg-t .d{font-size:1.1rem}
 
 }
+.loi39 .chg-grid{display:grid;gap:var(--gap);grid-template-columns:minmax(0,1fr);align-items:stretch}
+@media (min-width:1100px){
+.loi39 .chg-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+}
+.loi39 .chg-grid .twin{grid-template-rows:auto 1fr}
+.loi39 .chg-grid .tw-list{display:grid;gap:10px;align-content:space-evenly}
+.loi39 .chg-grid .tw-bars i{height:13px}
 .loi39 .twin{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;gap:12px}
 .loi39 .twin-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline}
 .loi39 .twin-head b{font-family:var(--serif);font-size:1.05rem}
