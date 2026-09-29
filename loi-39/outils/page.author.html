@@ -655,7 +655,9 @@ function chamber(svg, seatsBy, n, ringBy){
   const seatsOf = p => { const ring = ringBy ? ringBy[p] : 0; return d3.range(seatsBy[p]).map(i => ({p, ring: i >= seatsBy[p]-ring})); };
   const placed = [];
   // gouvernement : ses bancs ; s'il déborde, les dernières places du côté opposé
+  // la présidence est un député du parti au pouvoir (siège de circonscription) : il quitte les bancs
   let gs = seatsOf(gov);
+  const presIdx = gs.findIndex(x => !x.ring), pres = presIdx >= 0 ? gs.splice(presIdx, 1)[0] : null;
   gs.slice(0, govSlots.length).forEach((s,i) => placed.push({...s, ...govSlots[i]}));
   const govExtra = gs.slice(govSlots.length);
   const oppFree = oppSlots.slice(0, oppSlots.length - govExtra.length);
@@ -673,7 +675,10 @@ function chamber(svg, seatsBy, n, ringBy){
     .style("font", `${o.w||600} ${o.size||7.5}px var(--sans)`).style("letter-spacing", o.ls||".04em").text(t);
   // allée centrale (verticale) et présidence (en haut)
   rect(x0-4, cy-MID+6, colX(C-1)+S-x0+8, 2*MID-12).attr("rx",4).style("fill","var(--soft)");
-  rect(22, cy-9, 18, 18).attr("rx",3).style("fill","none").style("stroke","var(--muted)").attr("stroke-width",1.4);
+  const chair = rect(22, cy-9, 18, 18).attr("rx",3);
+  if (pres) chair.style("fill", PV[pres.p]);
+  else chair.style("fill","none").style("stroke","var(--muted)").attr("stroke-width",1.4);
+  chair.append("title").text(pres ? `Présidence : député du ${pres.p}, compté dans ses ${seatsBy[pres.p]} sièges. Il ne vote qu'en cas d'égalité.` : "Présidence");
   txt(RX(0, cy), RY(22, cy) - 4, "Présidence", {size:6.5});
   txt(RX(0, cy + MID + ROWS*STEP/2), RY(x0, 0) - 6, "Gouvernement", {size:7});
   txt(RX(0, cy - MID - ROWS*STEP/2), RY(x0, 0) - 6, "Opposition", {size:7});

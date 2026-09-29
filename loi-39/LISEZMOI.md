@@ -201,7 +201,8 @@ Un seul fichier : `<title>`, polices, `<style>`, balisage, `<script type="module
 - **`chamber()` :** les deux plans de l'Assemblée, disposition de l'Assemblée nationale pivotée de 90° (horaire) :
   présidence en haut, gouvernement (plus grand parti) à gauche, opposition à droite (opposition officielle d'abord),
   banquettes perpendiculaires en bas dimensionnées pour que chaque côté tienne tous ses sièges. « PM » et « C » marquent
-  le premier ministre et le chef de l'opposition. Les sièges de région sont dessinés en contour.
+  le premier ministre et le chef de l'opposition. La présidence est un siège de circonscription du parti au
+  pouvoir, retiré des bancs et coloré à sa couleur (compté dans ses sièges). Les sièges de région sont dessinés en contour.
 - **Carte (d3-geo, projection conique conforme, `viewBox 600×704`) :**
   - Calques : `gRid` (80 circonscriptions), `gRegFill` (17 régions pleines, en vue Régions), `gReg` (contours
     des régions), `gSel` (sélection), `gLbl` (étiquettes).
