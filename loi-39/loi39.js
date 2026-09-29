@@ -369,7 +369,7 @@ function fillRiding(id){
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
 }
 function labelLines(code){
-  if (state.mode==="lead") return [`${DIST[code]} circ.`, `${LIST[code]} rég.`];
+  if (state.mode==="lead") return [`${LIST[code]} rég.`, `(${DIST[code]} circ.)`];
   return [labelFor(code)];
 }
 // Pôle d'inaccessibilité (d'après polylabel, Mapbox) d'un polygone en coordonnées de la carte : [x, y, rayon]
@@ -483,7 +483,7 @@ function paintMap(){
     ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription</span>`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
-    : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de circonscription et sièges de région de chaque région.`
+    : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
     : state.mode==="seat" ? `<span>0</span>${ramp}<span>tous les sièges</span><span>· chiffre = sièges ${p} (circ. + rég.)</span>`
     : `Chiffre : sièges de région (compensatoires) obtenus par le ${p}.`;
