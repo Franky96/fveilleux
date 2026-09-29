@@ -247,6 +247,18 @@ details[open] summary{margin-bottom:8px}
   .vrow{grid-template-columns:40px 1fr 44px}
   .vrow .seats{grid-column:2/4;justify-content:flex-start}
 }
+/* Petits écrans : une grille ne doit jamais s'élargir à la taille d'un tableau ou d'un SVG */
+section{grid-template-columns:minmax(0,1fr)}
+section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
+.hemis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){.hemis{grid-template-columns:minmax(0,1fr)}}
+.mapcard{grid-template-columns:minmax(0,1fr)}
+.mapcard>*,.panel>*,.scen>*{min-width:0}
+.seg{max-width:100%;flex-wrap:wrap}
+@media (max-width:400px){.seg button{padding:6px 8px;font-size:.76rem}}
+/* Écrans ultra-larges (21:9, 32:9) : on utilise la largeur au lieu d'une colonne centrée */
+@media (min-width:2000px){.wrap{max-width:2600px}}
+@media (min-width:3000px){.wrap{max-width:3200px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 

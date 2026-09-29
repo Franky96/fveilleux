@@ -227,6 +227,30 @@
 .loi39 .vrow .seats{grid-column:2/4;justify-content:flex-start}
 
 }
+/* Petits écrans : une grille ne doit jamais s'élargir à la taille d'un tableau ou d'un SVG */
+.loi39 section{grid-template-columns:minmax(0,1fr)}
+.loi39 section>*,.loi39 .res-grid>*,.loi39 .hemis>*,.loi39 .hemi,.loi39 .mapgrid>*,.loi39 .method>*,.loi39 .lower>*{min-width:0}
+.loi39 .hemis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:900px){
+.loi39 .hemis{grid-template-columns:minmax(0,1fr)}
+
+}
+.loi39 .mapcard{grid-template-columns:minmax(0,1fr)}
+.loi39 .mapcard>*,.loi39 .panel>*,.loi39 .scen>*{min-width:0}
+.loi39 .seg{max-width:100%;flex-wrap:wrap}
+@media (max-width:400px){
+.loi39 .seg button{padding:6px 8px;font-size:.76rem}
+
+}
+/* Écrans ultra-larges (21:9, 32:9) : on utilise la largeur au lieu d'une colonne centrée */
+@media (min-width:2000px){
+.loi39 .wrap{max-width:2600px}
+
+}
+@media (min-width:3000px){
+.loi39 .wrap{max-width:3200px}
+
+}
 @media (prefers-reduced-motion:reduce){
 .loi39, .loi39 *{transition:none!important}
 }
