@@ -8,3 +8,7 @@ loi-39/outils/brut/*.json
 loi-39/outils/brut/*.zip
 loi-39/outils/brut/sv/
 __pycache__/
+# Sous-produits de loi-39/outils/build_site.py (non publiés)
+/loi39-simulation.html
+loi-39/exemple.html
+loi-39/outils/check.mjs
