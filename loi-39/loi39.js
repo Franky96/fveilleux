@@ -641,19 +641,16 @@ function render(){
   document.getElementById("l39-glance").querySelector(".gbar:last-child .gl b").insertAdjacentHTML("afterend", ` <span class="tag sim" title="${SIM_TIP}">simulé</span>`);
   fitGlance();
 
-  // Ce qui changerait : majorité, puis sièges par parti (actuel → loi 39)
+  // Ce qui changerait : un tableau (résultat, majorité, sièges par parti et écart)
   const fl1 = P.slice().sort((a,b)=>RES.fptp[b]-RES.fptp[a])[0];
-  const stat = (p, n, tot_, m) => `${p} ${n >= m ? "majoritaire" : "minoritaire"} · ${n} / ${tot_}`;
-  document.getElementById("l39-chgMaj").innerHTML =
-    `<div><span class="eyebrow">Mode actuel · projection Qc125</span><span class="st" style="color:${PV[fl1]}">${stat(fl1, RES.fptp[fl1], 127, 64)}</span><span class="muted" style="font-size:.85rem">majorité à 64 sièges</span></div>`+
-    `<div><span class="eyebrow">Loi 39 · <span class="tag sim" title="${SIM_TIP}">simulé</span></span><span class="st" style="color:${PV[lead]}">${stat(lead, tot[lead], 125, maj)}</span><span class="muted" style="font-size:.85rem">majorité à ${maj} sièges</span></div>`;
-  document.getElementById("l39-chg").innerHTML = P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map(p => {
-    const d = tot[p] - RES.fptp[p], cls = d > 0 ? "up" : d < 0 ? "down" : "eq";
-    return `<div class="pc" style="--c:${PV[p]}"><span class="pn">${p}</span>
-      <span class="d ${cls}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${Math.abs(d)}</span>
-      <span class="ft"><b>${RES.fptp[p]}</b> → <b>${tot[p]}</b> sièges</span>
-      <span class="ds">${fmt(RES.natShare[p])} % des votes</span></div>`;
-  }).join("");
+  const res_ = (p, n, m) => `<span style="color:${PV[p]}">${p} ${n >= m ? '<span class="lg">majoritaire</span><span class="sh">maj.</span>' : '<span class="lg">minoritaire</span><span class="sh">min.</span>'}</span>`;
+  const dcell = d => `<td class="d ${d>0?"up":d<0?"down":"eq"}">${d>0?"+":d<0?"−":"±"}${Math.abs(d)}</td>`;
+  document.getElementById("l39-chgBody").innerHTML =
+    `<tr class="st"><td>Résultat</td><td>${res_(fl1, RES.fptp[fl1], 64)}</td><td>${res_(lead, tot[lead], maj)}</td><td></td></tr>`+
+    `<tr><td>Sièges<span class="lg"> · majorité</span><span class="sh"> (maj.)</span></td><td>127 <span class="muted">(${64})</span></td><td>125 <span class="muted">(${maj})</span></td><td></td></tr>`+
+    P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map((p,i) =>
+      `<tr${i===0?' class="sep"':""}><td><span class="pname"><i class="dot" style="background:${PV[p]}"></i>${p}</span><span class="vs">${fmt(RES.natShare[p])} %<span class="lg"> des votes</span></span></td>`+
+      `<td class="num-big">${RES.fptp[p]}</td><td class="num-big">${tot[p]}</td>${dcell(tot[p]-RES.fptp[p])}</tr>`).join("");
 
   // Barres jumelées : part des sièges (actuel / loi 39) comparée à la part des votes, échelle 0–75 %
   document.getElementById("l39-twin").innerHTML = P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map(p => {

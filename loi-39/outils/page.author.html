@@ -82,20 +82,31 @@ td.total{font-weight:700;font-size:1rem}
 .tag.real{background:var(--soft);color:var(--ink)}
 .tag.sim{background:transparent;color:var(--warn);border:1.5px dashed var(--warn);cursor:help}
 h2 .tag,h3 .tag,.cap .tag{margin-left:6px;font-size:.62rem}
-.simnote{margin-top:var(--gap);display:grid;gap:8px;padding:12px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--warn);font-size:.9rem}
-.simnote .tag{margin-right:6px}
-/* Ce qui changerait */
-.chg-maj{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:var(--gap)}
-.chg-maj > div{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;display:grid;gap:4px}
-.chg-maj .st{font-family:var(--serif);font-size:1.3rem;font-weight:600}
-.chg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:var(--gap)}
-.chg .pc{background:var(--surface);border:1px solid var(--rule);border-top:4px solid var(--c);border-radius:10px;padding:12px 14px;display:grid;gap:2px}
-.chg .pc .pn{font-weight:700;color:var(--c)}
-.chg .pc .ft{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.chg .pc .ft b{color:var(--ink)}
-.chg .pc .d{font-family:var(--serif);font-size:2.1rem;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
-.chg .pc .d.up{color:var(--ink)} .chg .pc .d.down{color:var(--muted)} .chg .pc .d.eq{color:var(--muted)}
-.chg .pc .ds{font-size:.78rem;color:var(--muted)}
+/* Ce qui changerait : un seul tableau */
+.chg-t th:not(:first-child),.chg-t td:not(:first-child){text-align:center}
+.chg-t th .tag{margin-left:6px;font-size:.6rem}
+.chg-t td{font-size:.95rem}
+.chg-t .num-big{font-family:var(--serif);font-size:1.25rem;font-weight:700}
+.chg-t .d{font-family:var(--serif);font-size:1.25rem;font-weight:800}
+.chg-t .d.up{color:var(--ink)} .chg-t .d.down,.chg-t .d.eq{color:var(--muted)}
+.chg-t tr.st td{font-weight:700;background:var(--soft)}
+.chg-t tr.sep td{border-top:2px solid var(--rule)}
+.chg-t .vs{font-size:.78rem;color:var(--muted);font-weight:400;margin-left:6px}
+.tablebox:has(.chg-t){max-width:1000px}
+.chg-t .sh{display:none}
+@media (max-width:600px){
+  .chg-t{table-layout:fixed}
+  .chg-t th:first-child{width:36%}
+  .chg-t th,.chg-t td{padding:8px 4px}
+  .chg-t td:first-child{white-space:normal}
+  .chg-t th{letter-spacing:.02em;font-size:.64rem}
+  .chg-t th .tag{font-size:.55rem;padding:1px 4px;letter-spacing:.03em}
+  .chg-t th .tag{display:block;width:max-content;margin:4px auto 0}
+  .chg-t .lg{display:none} .chg-t .sh{display:inline}
+  .chg-t .vs{display:block;margin:2px 0 0}
+  .chg-t td{font-size:.85rem}
+  .chg-t .num-big,.chg-t .d{font-size:1.1rem}
+}
 /* Barres jumelées avant / après */
 .twin{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;gap:12px}
 .twin-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline}
@@ -351,18 +362,17 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
     <div class="glance" id="glance" aria-label="Répartition des sièges"></div>
   </header>
 
-  <aside class="simnote" aria-label="Comment lire cette page">
-    <div><span class="tag real">Mode actuel</span> Les projections Qc125 par circonscription, telles quelles : 127 circonscriptions réelles, un seul tour.</div>
-    <div><span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">Loi 39 · simulé</span> Aucune élection n'a eu lieu avec ce mode et aucune carte officielle à 80 circonscriptions n'existe. Cette page en construit une qui respecte la loi, y transpose les mêmes votes et applique la compensation régionale (80 + 45 sièges). <a href="#h-meth">Méthode et limites</a></div>
-  </aside>
-
   <section aria-labelledby="h-chg">
     <div class="sec-head">
       <h2 id="h-chg">Ce qui changerait</h2>
-      <p class="muted">Mêmes votes, deux modes de scrutin : le nombre de sièges de chaque parti avec le mode actuel, puis avec la loi 39.</p>
+      <p class="muted">Les mêmes votes projetés par Qc125, comptés de deux façons. Le <b>mode actuel</b> les prend tels quels dans les 127 circonscriptions réelles. La <b>loi 39</b> est <b>simulée</b> : aucune carte officielle à 80 circonscriptions n'existe, celle-ci a été construite pour respecter la loi, puis 45 sièges de région compensent l'écart entre votes et sièges. <a href="#h-meth">Méthode et limites</a></p>
     </div>
-    <div class="chg-maj" id="chgMaj"></div>
-    <div class="chg" id="chg"></div>
+    <div class="tablebox">
+      <table class="chg-t">
+        <thead><tr><th></th><th><span class="lg">Mode actuel</span><span class="sh">Actuel</span> <span class="tag real">Qc125</span></th><th>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></th><th>Écart</th></tr></thead>
+        <tbody id="chgBody"></tbody>
+      </table>
+    </div>
   </section>
 
   <section aria-labelledby="h-res">
@@ -1149,19 +1159,16 @@ function render(){
   document.getElementById("glance").querySelector(".gbar:last-child .gl b").insertAdjacentHTML("afterend", ` <span class="tag sim" title="${SIM_TIP}">simulé</span>`);
   fitGlance();
 
-  // Ce qui changerait : majorité, puis sièges par parti (actuel → loi 39)
+  // Ce qui changerait : un tableau (résultat, majorité, sièges par parti et écart)
   const fl1 = P.slice().sort((a,b)=>RES.fptp[b]-RES.fptp[a])[0];
-  const stat = (p, n, tot_, m) => `${p} ${n >= m ? "majoritaire" : "minoritaire"} · ${n} / ${tot_}`;
-  document.getElementById("chgMaj").innerHTML =
-    `<div><span class="eyebrow">Mode actuel · projection Qc125</span><span class="st" style="color:${PV[fl1]}">${stat(fl1, RES.fptp[fl1], 127, 64)}</span><span class="muted" style="font-size:.85rem">majorité à 64 sièges</span></div>`+
-    `<div><span class="eyebrow">Loi 39 · <span class="tag sim" title="${SIM_TIP}">simulé</span></span><span class="st" style="color:${PV[lead]}">${stat(lead, tot[lead], 125, maj)}</span><span class="muted" style="font-size:.85rem">majorité à ${maj} sièges</span></div>`;
-  document.getElementById("chg").innerHTML = P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map(p => {
-    const d = tot[p] - RES.fptp[p], cls = d > 0 ? "up" : d < 0 ? "down" : "eq";
-    return `<div class="pc" style="--c:${PV[p]}"><span class="pn">${p}</span>
-      <span class="d ${cls}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${Math.abs(d)}</span>
-      <span class="ft"><b>${RES.fptp[p]}</b> → <b>${tot[p]}</b> sièges</span>
-      <span class="ds">${fmt(RES.natShare[p])} % des votes</span></div>`;
-  }).join("");
+  const res_ = (p, n, m) => `<span style="color:${PV[p]}">${p} ${n >= m ? '<span class="lg">majoritaire</span><span class="sh">maj.</span>' : '<span class="lg">minoritaire</span><span class="sh">min.</span>'}</span>`;
+  const dcell = d => `<td class="d ${d>0?"up":d<0?"down":"eq"}">${d>0?"+":d<0?"−":"±"}${Math.abs(d)}</td>`;
+  document.getElementById("chgBody").innerHTML =
+    `<tr class="st"><td>Résultat</td><td>${res_(fl1, RES.fptp[fl1], 64)}</td><td>${res_(lead, tot[lead], maj)}</td><td></td></tr>`+
+    `<tr><td>Sièges<span class="lg"> · majorité</span><span class="sh"> (maj.)</span></td><td>127 <span class="muted">(${64})</span></td><td>125 <span class="muted">(${maj})</span></td><td></td></tr>`+
+    P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map((p,i) =>
+      `<tr${i===0?' class="sep"':""}><td><span class="pname"><i class="dot" style="background:${PV[p]}"></i>${p}</span><span class="vs">${fmt(RES.natShare[p])} %<span class="lg"> des votes</span></span></td>`+
+      `<td class="num-big">${RES.fptp[p]}</td><td class="num-big">${tot[p]}</td>${dcell(tot[p]-RES.fptp[p])}</tr>`).join("");
 
   // Barres jumelées : part des sièges (actuel / loi 39) comparée à la part des votes, échelle 0–75 %
   document.getElementById("twin").innerHTML = P.slice().sort((a,b)=>tot[b]-tot[a]||RES.fptp[b]-RES.fptp[a]).map(p => {
