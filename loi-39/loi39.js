@@ -659,8 +659,10 @@ function render(){
       <div class="tw-bars" title="${p} : ${fmt(a)} % des sièges actuellement, ${fmt(b)} % avec la loi 39, ${fmt(v)} % des votes">
         <i class="a" style="width:${sc(a)}%"></i><i style="width:${sc(b)}%"></i>
         <span class="v" style="left:${sc(v)}%"></span><span class="m" style="left:${sc(50)}%"></span></div>
-      <span class="nums">${fmt(a,0)} % → <b>${fmt(b,0)} %</b> <span style="font-size:.78rem">(vote ${fmt(v,0)} %)</span></span></div>`;
+      <span class="c a">${fmt(a,0)} %</span><span class="c b">${fmt(b,0)} %</span><span class="c v">${fmt(v,0)} %</span></div>`;
   }).join("");
+  document.getElementById("l39-twin").insertAdjacentHTML("afterbegin",
+    `<div class="tw-row hd" aria-hidden="true"><span></span><span class="ax">Part des sièges (échelle 0–75 %)</span><span>Actuel</span><span>Loi 39</span><span>Votes</span></div>`);
   document.getElementById("l39-capA").textContent = `127 sièges · majorité 64`;
   document.getElementById("l39-capB").textContent = `125 sièges · majorité ${maj}`;
   hemicycle(document.getElementById("l39-hemiA"), RES.fptp, 127);

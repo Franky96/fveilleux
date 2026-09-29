@@ -119,16 +119,19 @@ h2 .tag,h3 .tag,.cap .tag{margin-left:6px;font-size:.62rem}
 .bar-k{display:inline-block;width:14px;height:8px;border-radius:2px;vertical-align:middle}
 .bar-k.a{background:var(--muted);opacity:.45}.bar-k.b{background:var(--ink)}
 .bar-k.v{width:3px;height:12px;background:var(--ink)}.bar-k.m{width:0;height:12px;border-left:2px dashed var(--muted);border-radius:0}
-.tw-row{display:grid;grid-template-columns:48px minmax(0,1fr) 170px;gap:10px;align-items:center;font-size:.85rem}
+.tw-row{display:grid;grid-template-columns:48px minmax(0,1fr) repeat(3,62px);gap:10px;align-items:center;font-size:.85rem}
+.tw-row.hd{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tw-row.hd span{text-align:right;white-space:nowrap}
+.tw-row .c{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tw-row .c.a{color:var(--muted)} .tw-row .c.b{font-weight:700;color:var(--ink)} .tw-row .c.v{color:var(--muted)}
+.tw-row.hd .ax{text-align:left}
 .tw-row .pn{font-weight:700;color:var(--c)}
 .tw-bars{position:relative;display:grid;gap:3px;padding-block:2px}
 .tw-bars i{display:block;height:11px;border-radius:3px;background:var(--c)}
 .tw-bars i.a{opacity:.38}
 .tw-bars .v{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--ink);border-radius:2px;transform:translateX(-1px)}
 .tw-bars .m{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--muted)}
-.tw-row .nums{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
-.tw-row .nums b{color:var(--ink)}
-@media (max-width:520px){.tw-row{grid-template-columns:40px minmax(0,1fr) 92px;font-size:.78rem}.tw-row .nums span{display:block}}
+@media (max-width:520px){.tw-row{grid-template-columns:36px minmax(0,1fr) repeat(3,40px);gap:6px;font-size:.76rem}.tw-row.hd{font-size:.58rem;letter-spacing:.02em}.tw-row.hd .ax{visibility:hidden}}
 .coal .pill{font-weight:500}
 .coal .pill b{font-weight:700}
 
@@ -1184,8 +1187,10 @@ function render(){
       <div class="tw-bars" title="${p} : ${fmt(a)} % des sièges actuellement, ${fmt(b)} % avec la loi 39, ${fmt(v)} % des votes">
         <i class="a" style="width:${sc(a)}%"></i><i style="width:${sc(b)}%"></i>
         <span class="v" style="left:${sc(v)}%"></span><span class="m" style="left:${sc(50)}%"></span></div>
-      <span class="nums">${fmt(a,0)} % → <b>${fmt(b,0)} %</b> <span style="font-size:.78rem">(vote ${fmt(v,0)} %)</span></span></div>`;
+      <span class="c a">${fmt(a,0)} %</span><span class="c b">${fmt(b,0)} %</span><span class="c v">${fmt(v,0)} %</span></div>`;
   }).join("");
+  document.getElementById("twin").insertAdjacentHTML("afterbegin",
+    `<div class="tw-row hd" aria-hidden="true"><span></span><span class="ax">Part des sièges (échelle 0–75 %)</span><span>Actuel</span><span>Loi 39</span><span>Votes</span></div>`);
   document.getElementById("capA").textContent = `127 sièges · majorité 64`;
   document.getElementById("capB").textContent = `125 sièges · majorité ${maj}`;
   hemicycle(document.getElementById("hemiA"), RES.fptp, 127);
