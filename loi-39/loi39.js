@@ -1,6 +1,6 @@
 // Simulation loi 39 : à charger avec type="module", après d3 (global).
 const ROOT = document.querySelector(".loi39");
-const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json")).json();
+const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json", {cache: "no-cache"})).json();
 
 const P = ["PQ","PLQ","CAQ","PCQ","QS"];
 const PNAME = {PQ:"Parti québécois",PLQ:"Parti libéral du Québec",CAQ:"Coalition avenir Québec",PCQ:"Parti conservateur du Québec",QS:"Québec solidaire"};

@@ -27,11 +27,11 @@ def prefix_ids(s):
 markup, js, css = prefix_ids(markup), prefix_ids(js), prefix_ids(css)
 
 # --- JS : racine configurable ---
-old_fetch = 'const DATA = await (await fetch("data.json")).json();'
+old_fetch = 'const DATA = await (await fetch("data.json", {cache: "no-cache"})).json();'
 assert old_fetch in js
 js = js.replace(old_fetch,
     'const ROOT = document.querySelector(".loi39");\n'
-    'const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json")).json();')
+    'const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json", {cache: "no-cache"})).json();')
 js = js.replace('document.querySelector(".zoombar")', 'ROOT.querySelector(".zoombar")')
 js = js.replace('document.querySelector(".mapgrid")', 'ROOT.querySelector(".mapgrid")')
 assert js.count('document.querySelector(') == 1  # seulement ROOT

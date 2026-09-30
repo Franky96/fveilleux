@@ -603,7 +603,7 @@ body{margin:0;background:#F1F3F7}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script type="module">
 const ROOT = document.querySelector(".loi39");
-const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json")).json();
+const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json", {cache: "no-cache"})).json();
 
 const P = ["PQ","PLQ","CAQ","PCQ","QS"];
 const PNAME = {PQ:"Parti québécois",PLQ:"Parti libéral du Québec",CAQ:"Coalition avenir Québec",PCQ:"Parti conservateur du Québec",QS:"Québec solidaire"};

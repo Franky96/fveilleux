@@ -1,0 +1,14 @@
+# Page Loi 39 : le navigateur revérifie chaque fichier auprès du serveur à chaque visite (réponse 304 rapide
+# s'il n'a pas changé). Sans ça, data.json restait en cache 7 jours et le JS/CSS jusqu'à un Ctrl+F5 :
+# la date de projection Qc125 et la date de vérification quotidienne ne se mettaient pas à jour.
+<IfModule mod_expires.c>
+  <FilesMatch "\.(js|css|json|html)$">
+    ExpiresActive Off
+  </FilesMatch>
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|json|html)$">
+    Header set Cache-Control "no-cache"
+    Header unset Expires
+  </FilesMatch>
+</IfModule>
