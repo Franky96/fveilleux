@@ -299,7 +299,7 @@ async function chargerUtilisateurs() {
       <td class="u-perms" data-label="Permissions">${u.role === 'admin'
         ? '<span class="perm-tout">Accès complet</span>'
         : permsHtml
-        ? `<div><button type="button" class="perm-btn" aria-expanded="false" onclick="basculerPerms(this)">Voir (${permsUser.length}) <span aria-hidden="true">▾</span></button><div class="perm-list" hidden>${permsHtml}</div></div>`
+        ? `<button type="button" class="perm-btn" onclick="voirPerms('${id}')">Voir (${permsUser.length})</button>`
         : '<span style="color:#888; font-size:0.8rem;">—</span>'}</td>
       <td class="u-actions" style="text-align:right; white-space:nowrap;">
         <button class="u-btn" onclick="changerMotDePasse('${id}')" title="Définir un nouveau mot de passe" style="width:auto; display:inline-block; background:#162216; color:#80cc80; border:1px solid #80cc80; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem;">🔑 Mot de passe</button>
@@ -335,19 +335,43 @@ async function chargerUtilisateurs() {
   }
 }
 
-// Permissions d'un utilisateur : cachées derrière un bouton pour garder le tableau compact
-window.basculerPerms = function (btn) {
-  const liste = btn.nextElementSibling, ouvert = liste.hidden;
-  liste.hidden = !ouvert;
-  btn.setAttribute('aria-expanded', ouvert);
-  btn.querySelector('span').textContent = ouvert ? '▴' : '▾';
+// Permissions d'un utilisateur : fenêtre avec la structure des sections (accordées en vert, les autres en gris)
+window.voirPerms = function (id) {
+  const u = usersData[id]; if (!u) return;
+  const perms = normaliserPerms(u.permissions);
+  const connues = new Set();
+  const ligne = (key, label, ok, note = '') => { connues.add(key);
+    return `<li class="${ok ? 'pv-ok' : 'pv-non'}"><span class="pv-ico" aria-hidden="true">${ok ? '✓' : '·'}</span>${esc(label)}`
+      + `${archivedSections.includes(key) ? ' <small class="pv-arch">archivée</small>' : ''}${note ? ` <small>${note}</small>` : ''}<span class="sr">${ok ? ' : accordée' : ' : non accordée'}</span></li>`; };
+  const blocs = PERMS_STRUCTURE.map(s => {
+    if (!s.children) return { html: `<ul class="pv-list">${ligne(s.key, s.label, perms.includes(s.key))}</ul>`, groupe: false };
+    const tout = !s.independent && perms.includes(s.key);
+    const enfants = s.children.map(c => ligne(c.key, c.label, tout || perms.includes(c.key), s.independent ? 'permission séparée' : '')).join('');
+    const nb = s.children.filter(c => tout || perms.includes(c.key)).length;
+    const tete = s.independent
+      ? ligne(s.key, s.label, perms.includes(s.key))
+      : ligne(s.key, s.label, tout || nb > 0, tout ? 'tout le groupe' : `${nb} / ${s.children.length}`);
+    return { html: `<div class="pv-groupe"><ul class="pv-list">${tete}</ul><ul class="pv-list pv-enfants">${enfants}</ul></div>`, groupe: true };
+  });
+  const autres = perms.filter(k => !connues.has(k));
+  document.getElementById('pv-titre').textContent = `Permissions de ${u.nom || id}`;
+  document.getElementById('pv-resume').textContent = `${perms.length} permission${perms.length > 1 ? 's' : ''} accordée${perms.length > 1 ? 's' : ''} · ${id}`;
+  document.getElementById('pv-corps').innerHTML =
+    `<div class="pv-simples">${blocs.filter(b => !b.groupe).map(b => b.html).join('')}</div>` +
+    `<div class="pv-groupes">${blocs.filter(b => b.groupe).map(b => b.html).join('')}</div>` +
+    (autres.length ? `<p class="pv-autres">Autres clés enregistrées (sans section) : ${autres.map(esc).join(', ')}</p>` : '');
+  document.getElementById('modal-perms-vue').classList.remove('hidden');
 };
+window.fermerPermsVue = () => document.getElementById('modal-perms-vue').classList.add('hidden');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerPermsVue(); });
 
 // ── Structure des permissions ────────────────────────
 const PERMS_STRUCTURE = [
   { key: 'ena',       label: 'ÉNA' },
-  { key: 'aeronefs',  label: 'Aéronefs' },
-  { key: 'aviation',  label: 'Aviation' },
+  // Aviation : Aéronefs est une permission séparée (la section Aviation ne l'ouvre pas à elle seule)
+  { key: 'aviation',  label: 'Aviation', independent: true, children: [
+    { key: 'aeronefs', label: 'Aéronefs' },
+  ]},
   { key: 'bieres',    label: 'Bières' },
   { key: 'scifi',     label: 'Sci-Fi' },
   { key: 'hockey',    label: 'Hockey' },
@@ -415,7 +439,9 @@ function renderPermsModal(currentPerms = []) {
       // Groupe parent + enfants
       const group = document.createElement('div');
       group.className = 'perm-group';
-      group.appendChild(makePermLabel(s.key, s.label, true, null));
+      const parentLbl = makePermLabel(s.key, s.label, !s.independent, null);
+      if (s.independent) parentLbl.classList.add('perm-parent');
+      group.appendChild(parentLbl);
 
       const childrenDiv = document.createElement('div');
       childrenDiv.className = 'perm-children';
@@ -427,7 +453,7 @@ function renderPermsModal(currentPerms = []) {
           archivedGrid.appendChild(makePermLabel(child.key, child.label + ' (' + s.label + ')'));
           hasArchived = true;
         } else {
-          childrenDiv.appendChild(makePermLabel(child.key, child.label, false, s.key));
+          childrenDiv.appendChild(makePermLabel(child.key, child.label, false, s.independent ? null : s.key));
         }
       });
 

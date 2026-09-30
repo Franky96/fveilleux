@@ -85,9 +85,25 @@
     .admin-page .admin-header { flex-wrap: wrap; gap: 1rem; }
     .admin-page .admin-header .btn-ajouter { width: auto; }
     .admin-page .content-block { overflow-x: auto; }
-    .admin-page .users-table .perm-list { margin-top: 0.4rem; }
-    .admin-page .users-table .perm-list span { display: inline-block; margin-bottom: 3px; }
-    .admin-page .users-table .perm-list[hidden] { display: none; }
+    /* Fenêtre « Voir les permissions » : structure des sections */
+    .admin-page .modal-box.pv-box { width: min(720px, 100%); }
+    .pv-resume { margin: -0.4rem 0 0; color: #888078; font-size: 0.85rem; }
+    .pv-legende { margin: 0; font-size: 0.8rem; display: flex; gap: 1rem; }
+    .pv-corps { display: grid; gap: 0.9rem; color: #1a1a1a; }
+    .pv-simples { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.1rem 1rem; }
+    .pv-groupes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.7rem; }
+    .pv-groupe { border: 1px solid #e0ddd6; border-radius: 10px; padding: 0.55rem 0.7rem; background: #faf8f4; }
+    .pv-groupe > .pv-list:first-child li { font-weight: bold; }
+    .pv-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; font-size: 0.88rem; }
+    .pv-enfants { margin: 0.3rem 0 0 0.35rem; padding-left: 0.7rem; border-left: 2px solid #e0ddd6; }
+    .pv-list li { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; }
+    .pv-list small { font-size: 0.72rem; color: #888078; font-weight: normal; }
+    .pv-list small.pv-arch { color: #b07a2a; }
+    .pv-ico { width: 1em; flex: none; text-align: center; font-weight: bold; }
+    .pv-ok { color: #2e7d32; }
+    .pv-non { color: #a8a298; }
+    .pv-autres { margin: 0; font-size: 0.8rem; color: #888078; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .perm-btn { width: auto; padding: 0.2rem 0.6rem; font-size: 0.78rem; border-radius: 6px; background: transparent; color: #888078; border: 1px solid #c8c2b8; cursor: pointer; white-space: nowrap; }
     .perm-tout { font-size: 0.78rem; font-weight: bold; color: #c0392b; white-space: nowrap; }
     .perm-btn:hover, .perm-btn[aria-expanded="true"] { color: #d4892a; border-color: #d4892a; }
@@ -279,6 +295,19 @@
   </div>
 
   <!-- Nouveau mot de passe : affiché une seule fois, pour le transmettre -->
+  <!-- Permissions d'un utilisateur (lecture) -->
+  <div class="modal-overlay hidden" id="modal-perms-vue" onclick="if (event.target === this) fermerPermsVue()">
+    <div class="modal-box pv-box" role="dialog" aria-modal="true" aria-labelledby="pv-titre">
+      <h3 id="pv-titre" style="margin:0;">Permissions</h3>
+      <p id="pv-resume" class="pv-resume"></p>
+      <p class="pv-legende"><span class="pv-ok">✓ accordée</span> <span class="pv-non">· non accordée</span></p>
+      <div id="pv-corps" class="pv-corps"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fermerPermsVue()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay hidden" id="modal-mdp">
     <div class="modal-box">
       <h3 style="color:#c0392b;">🔑 Mot de passe enregistré</h3>
