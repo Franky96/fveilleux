@@ -15,9 +15,9 @@ projet** : architecture, données, méthode, reconstruction, pièges connus.
 
 ## 0. Sur fveilleux.com
 
-- Page du site : **https://fveilleux.com/loi39.html**, une section comme les autres : connexion requise,
+- Page du site : **https://fveilleux.com/votes-quebec.html**, une section comme les autres : connexion requise,
   permission « loi39 » (Admin), ouvrable au compte invité via « Permissions Invité ».
-- `loi39.html` (racine du dépôt) = barre du haut du site + contenu de `fragment.html` ; il charge
+- `votes-quebec.html` (racine du dépôt ; `loi39.html` redirige vers elle) = barre du haut du site + contenu de `fragment.html` ; il charge
   `loi-39/loi39.css`, `loi-39/loi39.js` et `loi-39/data.json`. Il **n'utilise pas** `style.css` (ses règles
   générales `button`, `header`, `input`… déformeraient la simulation). Le thème du site (classe `light` sur
   `<html>`) est recopié dans `data-theme`, que la simulation suit.
@@ -26,7 +26,7 @@ projet** : architecture, données, méthode, reconstruction, pièges connus.
   `exemple.html` ni la version autonome.
 - Reconstruire depuis le dépôt :
   `cd loi-39/outils && LOI39_AUTONOME=/tmp/loi39-simulation.html ./reconstruire.sh && rm -f ../exemple.html`
-  Si `fragment.html` a changé, recopier son contenu dans `loi39.html` (avec `data-src="loi-39/data.json"`),
+  Si `fragment.html` a changé, recopier son contenu dans `votes-quebec.html` (avec `data-src="loi-39/data.json"`),
   puis pousser sur `master`.
 
 ## 1. Contenu du dossier

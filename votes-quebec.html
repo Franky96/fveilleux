@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Outils de Frank — Votes Québec</title>
+  <script>
+    const _pL = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pL.includes('loi39') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+    }
+    // Thème du site (clair / sombre) appliqué aussi à la simulation
+    document.documentElement.dataset.theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="loi-39/loi39.css">
+  <style>
+    /* Pas de style.css ici : ses règles générales (button, header, input…) déformeraient la simulation.
+       La barre du haut et l'interrupteur de thème reprennent donc le style du site. */
+    * { box-sizing: border-box; }
+    /* Barre du haut : mêmes couleurs que la simulation (tokens de loi-39/loi39.css) */
+    .site-top, body { --st-bg:#0C1019; --st-surface:#141A27; --st-rule:#273045; --st-ink:#E6E9F1; --st-muted:#98A1B4; }
+    html[data-theme="light"] .site-top, html[data-theme="light"] body { --st-bg:#F1F3F7; --st-surface:#FFFFFF; --st-rule:#D6DCE6; --st-ink:#121929; --st-muted:#586176; }
+    body { margin: 0; background: var(--st-bg); }
+    .site-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem;
+      padding: 0.5rem 1.5rem; background: var(--st-surface); border-bottom: 1px solid var(--st-rule);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .site-top a.retour { justify-self: start; background: transparent; color: var(--st-muted); border: 1px solid var(--st-rule); padding: 0.3rem 0.85rem;
+      border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+    .site-top a.retour:hover { border-color: var(--st-ink); color: var(--st-ink); }
+    .site-top a.retour:focus-visible, #theme-toggle:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    .site-top .titre { text-align: center; margin: 0; color: var(--st-ink); font-size: 0.9rem; font-weight: 600; }
+    .site-top { position: relative; z-index: 50; }
+    /* interrupteur + menu hamburger du site (page-controls.js), aux couleurs de la page */
+    .page-topbar-controls { grid-column: -2; justify-self: end; position: relative; display: flex; align-items: center; gap: 0.5rem; }
+    #hamburger-btn { width: auto; background: transparent; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px;
+      padding: 7px; border-radius: 8px; transition: background 0.2s; -webkit-tap-highlight-color: transparent; }
+    #hamburger-btn:hover { background: var(--st-bg); }
+    #hamburger-btn:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    #hamburger-btn span { display: block; width: 20px; height: 2px; background: var(--st-ink); border-radius: 2px;
+      transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: center; }
+    #hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    #hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    #hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    #hamburger-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 60; background: var(--st-surface);
+      border: 1px solid var(--st-rule); border-radius: 12px; padding: 0.4rem; min-width: 195px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #hamburger-menu.open { display: block; }
+    .hbg-item { display: none; align-items: center; gap: 0.65rem; width: 100%; padding: 0.65rem 0.85rem; background: transparent; border: none;
+      -webkit-appearance: none; appearance: none; border-radius: 8px; color: var(--st-ink); font: inherit; font-size: 0.88rem; cursor: pointer;
+      text-decoration: none; text-align: left; white-space: nowrap; margin: 0; box-sizing: border-box; }
+    .hbg-item:hover, .hbg-item:focus-visible { background: var(--st-bg); outline: none; }
+    #logoutBtn.hbg-item { display: flex; color: #E5484D; margin-top: 0.4rem; }
+    .hbg-sep { display: none; height: 1px; background: var(--st-rule); margin: 0.3rem 0.5rem; }
+    @media (prefers-reduced-motion: reduce) { #hamburger-btn span { transition: none; } }
+    #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
+      transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
+    .tg-icon { font-size: 0.6rem; line-height: 1; pointer-events: none; position: relative; z-index: 2; }
+    #theme-toggle-knob { position: absolute; width: 18px; height: 18px; border-radius: 50%; top: 50%; transform: translateY(-50%); left: 2px;
+      background: var(--st-ink); box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: left 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s; pointer-events: none; z-index: 3; }
+    html.light #theme-toggle-knob { left: 38px; }
+    @media (prefers-reduced-motion: reduce) { #theme-toggle, #theme-toggle-knob { transition: none; } }
+    .site-top .titre { font-size: 0.82rem; text-wrap: balance; }
+    .site-top .titre sup { font-size: 0.7em; }
+    /* la ligne « Simulation · … » est dans la barre : on ne la répète pas en tête de la page */
+    @media (min-width: 601px) { .loi39 .kicker { display: none; } }
+    @media (max-width: 600px) {
+      .site-top { padding: 0.45rem 1rem; grid-template-columns: auto 1fr; }   /* titre masqué : interrupteur à droite */
+      .site-top .titre { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-top" data-topbar>
+    <a href="dashboard.html" class="retour">&#8592; Accueil</a>
+    <p class="titre">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></p>
+  </div>
+
+<div class="loi39" data-src="loi-39/data.json">
+<div class="wrap">
+  <header class="top">
+    <div class="big num" id="l39-bigNum"><small>sièges sur 125</small></div>
+    <div class="headline">
+      <span class="eyebrow kicker">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>28 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span>
+      <h1 id="l39-headline">Le PQ serait minoritaire avec la loi 39</h1>
+      <p class="lede" id="l39-lede"></p>
+      <div class="coal" id="l39-statusPills"></div>
+    </div>
+    <div class="glance" id="l39-glance" aria-label="Répartition des sièges"></div>
+  </header>
+
+  <section aria-labelledby="l39-h-chg">
+    <div class="sec-head">
+      <h2 id="l39-h-chg">Ce qui changerait</h2>
+      <p class="muted">Les mêmes votes projetés par Qc125, comptés de deux façons. Le <b>mode actuel</b> les prend tels quels dans les 127 circonscriptions réelles. La <b>loi 39</b> est <b>simulée</b> : aucune carte officielle à 80 circonscriptions n'existe, celle-ci a été construite pour respecter la loi, puis 45 sièges de région compensent l'écart entre votes et sièges. <a href="#l39-h-meth">Méthode et limites</a></p>
+    </div>
+    <div class="chg-grid">
+      <div class="tablebox">
+        <table class="chg-t">
+          <thead><tr><th></th><th><span class="lg">Mode actuel</span><span class="sh">Actuel</span> <span class="tag real">Qc125</span></th><th>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></th><th>Écart</th></tr></thead>
+          <tbody id="l39-chgBody"></tbody>
+        </table>
+      </div>
+      <figure class="twin" style="margin:0">
+        <figcaption class="twin-head"><b>Part des sièges, avant et après</b>
+          <span class="legend"><span><i class="bar-k a"></i>Mode actuel</span><span><i class="bar-k b"></i>Loi 39 (simulé)</span><span><i class="bar-k v"></i>Part des votes</span><span><i class="bar-k m"></i>Majorité (50 %)</span></span>
+        </figcaption>
+        <div id="l39-twin" class="tw-list"></div>
+      </figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="l39-h-res">
+    <div class="sec-head">
+      <h2 id="l39-h-res">Deux Assemblées, les mêmes votes</h2>
+      <p class="muted">Un point par siège, pour le mode actuel et pour la loi 39, où l'anneau marque les 45 sièges de région.</p>
+    </div>
+    <div class="res-grid">
+    <div class="hemis">
+      <figure class="hemi" style="margin:0">
+        <div class="cap"><b>Mode actuel</b><span class="muted num" id="l39-capA"></span></div>
+        <svg id="l39-hemiA" viewBox="0 0 400 215" role="img" aria-label="Plan de l'Assemblée, mode actuel"></svg>
+      </figure>
+      <figure class="hemi" style="margin:0">
+        <div class="cap"><b>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></b><span class="muted num" id="l39-capB"></span></div>
+        <svg id="l39-hemiB" viewBox="0 0 400 215" role="img" aria-label="Plan de l'Assemblée selon la loi 39"></svg>
+        <div class="legend"><span><i class="dot sq" style="background:var(--muted)"></i>Siège de circonscription</span><span style="color:var(--muted)"><i class="dot ring sq"></i>Siège de région (compensatoire)</span></div>
+      </figure>
+    </div>
+    <div class="res-side">
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Parti</th><th>Vote</th><th>Circ. (80)</th><th>Région (45)</th><th>Total (125)</th><th>% des sièges</th><th class="bar-cell" style="text-align:left">Sièges vs vote</th></tr></thead>
+        <tbody id="l39-resBody"></tbody>
+      </table>
+    </div>
+        <div class="scen" id="l39-scen" aria-labelledby="l39-h-scen">
+          <div class="sec-head">
+            <h3 id="l39-h-scen">Tester un autre scénario</h3>
+            <p class="muted" style="font-size:.86rem">Changez le vote d'un parti : les autres s'ajustent pour garder 100 %. Le changement est appliqué proportionnellement dans les 127 circonscriptions, et tout est recalculé en direct.</p>
+          </div>
+          <div class="sliders" id="l39-sliders"></div>
+          <div class="row">
+            <div class="sl" style="min-width:200px;flex:1;max-width:420px;--c:var(--ink)">
+              <label for="l39-thr"><span>Seuil national (art. 379.2)</span><span class="num" id="l39-thrV">10 %</span></label>
+              <input type="range" id="l39-thr" min="0" max="20" step="0.5" value="10">
+            </div>
+            <button type="button" class="btn" id="l39-reset">Revenir à la projection Qc125</button>
+          </div>
+        </div>
+    </div>
+    </div>
+    <div class="coal" id="l39-coalitions"></div>
+  </section>
+
+  <section aria-labelledby="l39-h-map">
+    <div class="sec-head">
+      <h2 id="l39-h-map">La carte</h2>
+      <p class="muted">Basculez entre la carte actuelle (les 127 circonscriptions réelles, projection Qc125) et la carte simulée de la loi 39 : ses 17 régions ou ses 80 circonscriptions hypothétiques. Cliquez sur la carte pour voir le détail. Pour zoomer, utilisez la molette, le pincement ou les raccourcis.</p>
+    </div>
+    <div class="mapgrid">
+      <div class="mapcard">
+        <div class="toolbar">
+          <div class="seg" role="group" aria-label="Carte affichée">
+            <button type="button" id="l39-c-act" aria-pressed="false">Carte actuelle (127)</button>
+            <button type="button" id="l39-c-loi" aria-pressed="true">Loi 39 · simulée</button>
+          </div>
+          <div class="seg" role="group" aria-label="Découpage de la loi 39" id="l39-loiSeg">
+            <button type="button" id="l39-v-reg" aria-pressed="true">Régions (17)</button>
+            <button type="button" id="l39-v-circ" aria-pressed="false">Circonscriptions (80)</button>
+          </div>
+          <div class="seg modeseg" role="group" aria-label="Mode de la carte">
+            <button type="button" id="l39-m-lead" aria-pressed="true">Parti en tête</button>
+            <button type="button" id="l39-m-vote" aria-pressed="false">Vote</button>
+            <button type="button" id="l39-m-seat" aria-pressed="false">Sièges totaux</button>
+            <button type="button" id="l39-m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
+          </div>
+          <div class="chips" id="l39-partyChips" aria-label="Parti affiché"></div>
+        </div>
+        <div class="mapstage" id="l39-stage">
+          <svg id="l39-map" class="v-reg" viewBox="0 0 600 704" role="img" aria-label="Carte du Québec"></svg>
+          <div class="zoombar">
+            <button type="button" data-z="all" id="l39-selAll" aria-pressed="true">Tout le Québec</button>
+            <button type="button" data-z="mtl">Grand Montréal</button>
+            <button type="button" data-z="qc">Québec</button>
+            <button type="button" data-z="sud">Sud</button>
+            <button type="button" class="sq" data-z="in" aria-label="Zoomer">+</button>
+            <button type="button" class="sq" data-z="out" aria-label="Dézoomer">−</button>
+            <button type="button" data-z="fs" id="l39-fsBtn" aria-pressed="false">⛶ Plein écran</button>
+            <button type="button" data-z="panel" id="l39-panelBtn" class="fsonly" aria-pressed="false">Détail</button>
+            <button type="button" data-z="scen" id="l39-scenBtn" class="fsonly" aria-pressed="false">Scénario</button>
+          </div>
+          <span class="tag sim mapbadge" id="l39-mapBadge" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">Loi 39 · simulé</span>
+          <div class="tip" id="l39-tip" hidden></div>
+        </div>
+        <div class="scale" id="l39-scale"></div>
+        <p class="hint" id="l39-hint">Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).</p>
+      </div>
+      <aside class="panel" id="l39-panel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+
+  <div class="lower">
+  <section aria-labelledby="l39-h-reg" class="sec-reg">
+    <div class="sec-head">
+      <h2 id="l39-h-reg">Région par région</h2>
+      <p class="muted">Pour chaque région : sièges de circonscription et de région, résultat par parti. Le format est « circ. + rég. ».</p>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Région</th><th>Électeurs</th><th>Circ. actuelles</th><th>Circ.</th><th>Rég.</th><th>PQ</th><th>PLQ</th><th>CAQ</th><th>PCQ</th><th>QS</th></tr></thead>
+        <tbody id="l39-regBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="l39-h-meth" class="sec-meth">
+    <div class="sec-head"><h2 id="l39-h-meth">Méthode et limites</h2></div>
+    <div class="method">
+      <div class="box">
+        <h3>Ce que la loi prévoit</h3>
+        <ol>
+          <li><b>125 députés</b> : 80 de circonscription élus au scrutin majoritaire et 45 de région (art. 14).</li>
+          <li><b>Sièges de circonscription par région</b> : 1 par région, 1 de plus pour la Gaspésie–Îles-de-la-Madeleine, et les 62 autres répartis selon le nombre d'électeurs avec les diviseurs 1, 2, 3… (art. 14.2).</li>
+          <li><b>Sièges de région</b> : 1 pour chacune des 16 régions autres que le Nord-du-Québec, et les 29 autres répartis de la même façon (art. 14.3). <a href="#l39-h-rep">Voir le calcul</a></li>
+          <li><b>Compensation</b> : dans chaque région, chaque parti reçoit un score égal à son vote divisé par 1 + la moitié (arrondie vers le haut) de ses députés de circonscription. Le meilleur score gagne un siège, puis le diviseur de ce parti augmente de 1, et on recommence jusqu'à ce que tous les sièges de région soient attribués (art. 379.1). Un parti qui a raflé les circonscriptions part donc avec un handicap ; un parti qui n'en a gagné aucune part avec son vote complet. Le détail tour par tour de chaque région est dans le panneau de la carte.</li>
+          <li><b>Seuil</b> : 10 % des votes valides à l'échelle du Québec pour participer à la compensation (art. 379.2).</li>
+        </ol>
+      </div>
+      <div class="box">
+        <h3>Approximations de cette simulation</h3>
+        <ul>
+          <li><b>Une carte à 80 circonscriptions a dû être inventée.</b> La loi n'a jamais été appliquée, donc aucune carte officielle n'existe. La simulation du gouvernement (2020) avait utilisé les 78 circonscriptions fédérales, plus les Îles-de-la-Madeleine et l'Ungava. Mais la carte fédérale de 2025 ne respecte pas la répartition de la loi (18 circonscriptions à Montréal au lieu de 15, par exemple). On a donc construit un découpage qui respecte la loi : dans chaque région, le nombre exact de circonscriptions de l'article 14.2. Chaque circonscription part d'un point de départ et grandit uniquement vers des sections de vote voisines, ce qui la garde d'un seul tenant. Franchir une limite de municipalité ou de circonscription actuelle est pénalisé, pour garder les villes et quartiers ensemble. Chaque circonscription est à moins de 9 % de la moyenne d'électeurs de sa région (la Loi électorale permet 25 %). Les Îles-de-la-Madeleine et l'Ungava restent telles quelles. Un autre découpage tout aussi valable donnerait des résultats un peu différents.</li>
+          <li><b>Vote de liste = vote de circonscription.</b> La loi prévoit un second bulletin. Ici, on suppose que chaque électeur vote pour le même parti aux deux niveaux.</li>
+          <li><b>Transposition des votes.</b> Qc125 projette les 127 circonscriptions actuelles. Le vote d'une nouvelle circonscription est la moyenne des projections des circonscriptions actuelles d'où viennent ses électeurs, pondérée par leur nombre. On suppose donc que le vote est uniforme à l'intérieur d'une circonscription actuelle.</li>
+          <li><b>Électeurs inscrits 2026</b> (Élections Québec) pour répartir les sièges entre les régions, comme le prévoit la loi. Les régions suivent les limites de 2019 prévues par la loi, reconstituées à partir des circonscriptions actuelles.</li>
+          <li><b>Rattachements incertains</b> : Daniel-Johnson est placée en Montérégie et Côte-du-Sud en Chaudière-Appalaches.</li>
+          <li><b>Aucune marge d'erreur</b> : on utilise la valeur centrale de chaque projection, sans intervalle.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sources">
+      <span class="eyebrow">Sources</span>
+      <span>Projections par circonscription : <a href="https://qc125.com/districts.htm" target="_blank" rel="noopener">Qc125, Philippe J. Fournier</a>, mise à jour du <span data-maj>28 septembre 2026</span><span data-verif hidden> ; données revérifiées chaque jour, dernière vérification le <span></span></span>.</span>
+      <span>Règles : Projet de loi n<sup>o</sup> 39, <i>Loi établissant un nouveau mode de scrutin</i>, Assemblée nationale du Québec, 2019.</span>
+      <span>Électeurs et sections de vote 2026 : <a href="https://www.dgeq.org/donnees.html" target="_blank" rel="noopener">données ouvertes d'Élections Québec</a> (électeurs inscrits par circonscription et sections de vote avec électeurs).</span>
+      <span>Méthode de référence : <a href="https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/conseil-executif/publications-adm/autres_documents/reforme-scrutin_simulation_.pdf" target="_blank" rel="noopener">Gouvernement du Québec, « Simulation — Mode de scrutin mixte avec compensation régionale », janvier 2020</a>.</span>
+      <span>Contours : sections de vote et circonscriptions 2026 d'Élections Québec, regroupées et limitées à la terre ferme pour l'affichage. Contours simplifiés.</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="l39-h-rep" class="sec-rep">
+    <div class="sec-head"><h2 id="l39-h-rep">Répartition des sièges de région</h2>
+      <p class="muted">Combien des 45 sièges de région revient à chaque région.</p></div>
+    <div class="repart" id="l39-repart"></div>
+  </section>
+  </div>
+</div>
+</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <script type="module" src="loi-39/loi39.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;font-family:system-ui,sans-serif;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script src="page-controls.js"></script>
+  <script>
+    (function () {
+      // l'interrupteur du site change la classe « light » : on suit avec data-theme pour la simulation
+      const sync = () => { document.documentElement.dataset.theme = document.documentElement.classList.contains('light') ? 'light' : 'dark'; };
+      sync(); new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+      // filet de sécurité : si la simulation ne se charge pas (réseau, erreur), on montre quand même la page
+      setTimeout(() => { const w = document.querySelector('.loi39 .wrap'); if (w) w.classList.add('ready'); }, 6000);
+    })();
+  </script>
+</body>
+</html>
