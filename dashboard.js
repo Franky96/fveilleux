@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (e) { /* offline fallback: show all permitted cards */ }
 
   // 3. Gérer l'affichage des cartes selon les permissions et les archives
-  const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  const ANC = { loi39: 'votes-quebec', qrlink: 'qr-transfer', shapelink: 'shape-transfer' };   // anciens noms
+  const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]').map(k => ANC[k] || k);
   const cards = document.querySelectorAll('.menu-card');
 
   cards.forEach(card => {

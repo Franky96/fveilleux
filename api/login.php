@@ -61,8 +61,16 @@ switch ($action) {
     $_SESSION['uid']          = $user['id'];
     $_SESSION['nom']          = $user['nom'];
     $_SESSION['role']         = $user['role'];
-    $_SESSION['permissions']  = json_decode($user['permissions'] ?? '[]', true);
-    $_SESSION['page_accueil'] = $user['page_accueil'] ?? 'dashboard.html';
+    $brut = json_decode($user['permissions'] ?? '[]', true) ?: [];
+    $_SESSION['permissions']  = normaliserPermissions($brut);
+    $_SESSION['page_accueil'] = ($user['page_accueil'] ?? '') === 'loi39.html' ? 'votes-quebec.html' : ($user['page_accueil'] ?? 'dashboard.html');
+    // migration unique des anciens noms (permissions, page d'accueil) dans la base
+    if ($_SESSION['permissions'] !== $brut || $_SESSION['page_accueil'] !== ($user['page_accueil'] ?? 'dashboard.html')) {
+      try {
+        $pdo->prepare('UPDATE users SET permissions=?, page_accueil=? WHERE id=?')
+            ->execute([json_encode($_SESSION['permissions']), $_SESSION['page_accueil'], $user['id']]);
+      } catch (Throwable $e) { error_log('fveilleux: migration permissions — ' . $e->getMessage()); }
+    }
 
     jsonOut([
       'ok'          => true,
@@ -79,7 +87,7 @@ switch ($action) {
     $stmt->execute();
     $row    = $stmt->fetch();
     $config = $row ? json_decode($row['data'], true) : [];
-    $perms  = $config['guestPermissions'] ?? [];
+    $perms  = normaliserPermissions($config['guestPermissions'] ?? []);
 
     sessionInit();
     session_regenerate_id(true);

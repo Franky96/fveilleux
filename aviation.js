@@ -6,7 +6,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const urlSure = u => { u = String(u ?? '').trim(); return esc(/^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^[a-z][a-z0-9+.-]*:/i, '')); };
 
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('aviation')) {
+if (!sessionStorage.getItem('loggedIn') || (sessionStorage.getItem('userRole') !== 'admin' && !permissions.includes('aviation'))) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
   window.location.href = 'dashboard.html';
 }
@@ -17,7 +17,7 @@ let menuGroupeIndex = null;
 
 document.addEventListener('DOMContentLoaded', function() {
   // NOUVEAU : Afficher le bouton UNIQUEMENT si l'utilisateur a la permission
-  if (permissions.includes('aeronefs')) {
+  if (permissions.includes('aeronefs') || sessionStorage.getItem('userRole') === 'admin') {
     const btnAero = document.getElementById('btn-aeronefs');
     if (btnAero) btnAero.style.display = 'flex';
   }

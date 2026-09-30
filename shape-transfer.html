@@ -187,7 +187,7 @@
 <script>
   const _perms = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_perms.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_perms.includes('informatique') && !_perms.includes('shape-transfer') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>

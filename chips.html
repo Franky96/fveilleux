@@ -8,7 +8,7 @@
 <script>
   const _pChip = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_pChip.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin'))
+      (!_pChip.includes('informatique') && !_pChip.includes('chips') && sessionStorage.getItem('userRole') !== 'admin'))
     window.location.href = 'dashboard.html';
 </script>
 <style>

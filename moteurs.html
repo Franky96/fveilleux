@@ -8,7 +8,7 @@
   <script>
     const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_permsMot.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!['moteurs', 'turboreacteur', 'pt6a21', 'pw1500g', 'o320'].some(k => _permsMot.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>

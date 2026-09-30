@@ -8,7 +8,7 @@
   <script>
     const _permsJeux = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_permsJeux.includes('jeuxdesociete') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!['jeuxdesociete', '7wonders', 'qwirkle', 'tickettoride', 'flip7', 'ladamepique', 'compteurgeneral'].some(k => _permsJeux.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>

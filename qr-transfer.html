@@ -756,7 +756,7 @@
 <script>
   const _permsQr = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_permsQr.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_permsQr.includes('informatique') && !_permsQr.includes('qr-transfer') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>

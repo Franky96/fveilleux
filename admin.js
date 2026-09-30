@@ -23,6 +23,11 @@ const SECTIONS_ARCHIVABLES = [
     { key: 'csdb',      icon: '📶', label: 'CSDB'           },
     { key: 'converter', icon: '🔢', label: 'Convertisseur'  },
     { key: 'crypteur',  icon: '⚙️', label: 'Encodeur BNR'  },
+    { key: 'tcpip',          icon: '🌐', label: 'TCP/IP'         },
+    { key: 'qr-transfer',    icon: '📲', label: 'QR Transfert'   },
+    { key: 'shape-transfer', icon: '🔷', label: 'Shape Transfert' },
+    { key: 'chips',          icon: '🔌', label: 'Simulateurs'          },
+    { key: 'circuit',        icon: '⚡', label: 'Circuit logique'      },
   ]},
   { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
     { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
@@ -33,11 +38,12 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'distant',      icon: '🖥️', label: 'Connexion à distance' },
-  { key: 'loi39',        icon: '🗳️', label: 'Votes Québec'    },
+  { key: 'votes-quebec', icon: '🗳️', label: 'Votes Québec'    },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
     { key: '7wonders',    icon: '🏛️', label: '7 Wonders'       },
     { key: 'qwirkle',     icon: '🎯', label: 'Qwirkle'          },
+    { key: 'tickettoride', icon: '🚂', label: 'Ticket to Ride'  },
     { key: 'flip7',          icon: '🃏', label: 'Flip 7'           },
     { key: 'ladamepique',    icon: '♠️', label: 'La Dame de Pique' },
     { key: 'compteurgeneral', icon: '🎯', label: 'Compteur Général'  },
@@ -57,8 +63,12 @@ const SECTIONS_INVITABLES = [
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société' },
   { key: 'rona',          icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',         icon: '🌐', label: 'OSINT Map'       },
-  { key: 'loi39',         icon: '🗳️', label: 'Votes Québec'    },
+  { key: 'votes-quebec',  icon: '🗳️', label: 'Votes Québec'    },
 ];
+
+// Anciens noms de permissions → nom de la page qu'elles ouvrent (mêmes règles dans api/permissions.php)
+const ANCIENNES_CLES = { loi39: 'votes-quebec', qrlink: 'qr-transfer', shapelink: 'shape-transfer' };
+const normaliserPerms = arr => [...new Set((arr || []).map(k => ANCIENNES_CLES[k] || k))];
 
 const configRef = doc(db, "systeme", "config");
 let archivedSections = [];
@@ -66,8 +76,14 @@ let guestPermissions = [];
 
 // Live sync: re-render the archive grid whenever config changes
 onSnapshot(configRef, (snap) => {
-  archivedSections   = snap.exists() ? (snap.data().archivedSections  || []) : [];
-  guestPermissions   = snap.exists() ? (snap.data().guestPermissions   || []) : [];
+  const brutArch  = snap.exists() ? (snap.data().archivedSections || []) : [];
+  const brutGuest = snap.exists() ? (snap.data().guestPermissions || []) : [];
+  archivedSections = normaliserPerms(brutArch);
+  guestPermissions = normaliserPerms(brutGuest);
+  // migration unique : réécrit la config si elle contenait d'anciens noms
+  if (JSON.stringify(brutArch) !== JSON.stringify(archivedSections) || JSON.stringify(brutGuest) !== JSON.stringify(guestPermissions)) {
+    setDoc(configRef, { archivedSections, guestPermissions }, { merge: true }).catch(() => {});
+  }
   renderArchiveGrid();
   renderGuestPerms();
   // Re-rendre les permissions si le modal est ouvert
@@ -254,7 +270,8 @@ async function chargerUtilisateurs() {
     const id = u.id;
     const tr = document.createElement('tr');
     
-    const permsHtml = (u.permissions || []).map(p => 
+    const permsUser = normaliserPerms(u.permissions);
+    const permsHtml = permsUser.map(p => 
       `<span style="background:#e0ddd6; color:#555; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; margin-right:4px;">${esc(p)}</span>`
     ).join('');
 
@@ -279,8 +296,10 @@ async function chargerUtilisateurs() {
       <td data-label="Accueil">${accueilHtml}</td>
       <td data-label="Rôle">${roleHtml}</td>
       <td class="u-mdp" data-label="Mot de passe">${celluleMdp(id)}</td>
-      <td class="u-perms" data-label="Permissions">${permsHtml
-        ? `<div><button type="button" class="perm-btn" aria-expanded="false" onclick="basculerPerms(this)">Voir (${(u.permissions || []).length}) <span aria-hidden="true">▾</span></button><div class="perm-list" hidden>${permsHtml}</div></div>`
+      <td class="u-perms" data-label="Permissions">${u.role === 'admin'
+        ? '<span class="perm-tout">Accès complet</span>'
+        : permsHtml
+        ? `<div><button type="button" class="perm-btn" aria-expanded="false" onclick="basculerPerms(this)">Voir (${permsUser.length}) <span aria-hidden="true">▾</span></button><div class="perm-list" hidden>${permsHtml}</div></div>`
         : '<span style="color:#888; font-size:0.8rem;">—</span>'}</td>
       <td class="u-actions" style="text-align:right; white-space:nowrap;">
         <button class="u-btn" onclick="changerMotDePasse('${id}')" title="Définir un nouveau mot de passe" style="width:auto; display:inline-block; background:#162216; color:#80cc80; border:1px solid #80cc80; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem;">🔑 Mot de passe</button>
@@ -334,18 +353,21 @@ const PERMS_STRUCTURE = [
   { key: 'hockey',    label: 'Hockey' },
   { key: 'liens',     label: 'Liens utiles' },
   { key: 'films',     label: 'Films & Séries' },
-  { key: 'webmail',   label: 'Webmail' },
   { key: 'rona',      label: 'RONA S&S' },
   { key: 'pageTest',  label: 'Page de tests' },
   { key: 'osint',     label: 'OSINT Map' },
   { key: 'distant',   label: 'Connexion à distance' },
-  { key: 'loi39',     label: 'Votes Québec' },
+  { key: 'votes-quebec', label: 'Votes Québec' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'csdb',      label: 'CSDB' },
     { key: 'converter', label: 'Convertisseur' },
     { key: 'crypteur',  label: 'Encodeur BNR' },
     { key: 'tcpip',     label: 'TCP/IP' },
+    { key: 'qr-transfer',    label: 'QR Transfert' },
+    { key: 'shape-transfer', label: 'Shape Transfert' },
+    { key: 'chips',          label: 'Simulateurs' },
+    { key: 'circuit',        label: 'Circuit logique' },
   ]},
   { key: 'moteurs', label: 'Moteurs', children: [
     { key: 'turboreacteur', label: 'CFM56-7B' },
@@ -356,6 +378,7 @@ const PERMS_STRUCTURE = [
   { key: 'jeuxdesociete', label: 'Jeux de société', children: [
     { key: '7wonders',    label: '7 Wonders'       },
     { key: 'qwirkle',     label: 'Qwirkle'         },
+    { key: 'tickettoride', label: 'Ticket to Ride' },
     { key: 'flip7',           label: 'Flip 7'           },
     { key: 'ladamepique',     label: 'La Dame de Pique'  },
     { key: 'compteurgeneral', label: 'Compteur Général'  },
@@ -401,7 +424,7 @@ function renderPermsModal(currentPerms = []) {
         const childArchived = archivedSections.includes(child.key);
         if (childArchived && !isArchived) {
           // Enfant archivé mais parent actif → enfant dans section archivée
-          archivedGrid.appendChild(makePermLabel(child.key, child.label + ' (Informatique)'));
+          archivedGrid.appendChild(makePermLabel(child.key, child.label + ' (' + s.label + ')'));
           hasArchived = true;
         } else {
           childrenDiv.appendChild(makePermLabel(child.key, child.label, false, s.key));
@@ -504,7 +527,7 @@ window.editerUser = function(id) {
   document.getElementById('user-name').value = u.nom;
   document.getElementById('user-role').value = u.role;
   document.getElementById('user-accueil').value = u.pageAccueil || 'dashboard.html';
-  renderPermsModal(u.permissions || []);
+  renderPermsModal(normaliserPerms(u.permissions));
   updatePermsOverlay();
   document.getElementById('modal-user').classList.remove('hidden');
 };
@@ -519,8 +542,9 @@ window.sauvegarderUser = async function() {
   if (!editModeId && !pass) { alert("Mot de passe requis pour un nouvel utilisateur."); return; }
   if (pass && pass.length < 8) { alert("Le mot de passe doit contenir au moins 8 caractères."); return; }
 
+  // un admin a accès à tout par son rôle : on n'enregistre pas de liste (elle ne servirait qu'à semer la confusion)
   const perms = [];
-  document.querySelectorAll('.chk-perm:checked').forEach(chk => perms.push(chk.value));
+  if (role !== 'admin') document.querySelectorAll('.chk-perm:checked').forEach(chk => perms.push(chk.value));
   const pageAccueil = document.getElementById('user-accueil').value;
 
   if (!editModeId && usersData[id]) { alert("Identifiant déjà pris !"); return; }

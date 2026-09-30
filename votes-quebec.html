@@ -7,7 +7,7 @@
   <script>
     const _pL = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_pL.includes('loi39') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!_pL.includes('votes-quebec') && !_pL.includes('loi39') && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
     }
     // Thème du site (clair / sombre) appliqué aussi à la simulation

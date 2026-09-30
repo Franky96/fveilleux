@@ -58,3 +58,11 @@ function getSession(): ?array {
   sessionInit();
   return empty($_SESSION['uid']) ? null : $_SESSION;
 }
+
+/* Anciens noms de permissions → nom de la page qu'elles ouvrent (mêmes règles dans admin.js) */
+const ANCIENNES_PERMISSIONS = ['loi39' => 'votes-quebec', 'qrlink' => 'qr-transfer', 'shapelink' => 'shape-transfer'];
+function normaliserPermissions($perms): array {
+  $out = [];
+  foreach ((array)$perms as $p) if (is_string($p)) $out[] = ANCIENNES_PERMISSIONS[$p] ?? $p;
+  return array_values(array_unique($out));
+}

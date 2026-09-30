@@ -16,7 +16,7 @@ projet** : architecture, données, méthode, reconstruction, pièges connus.
 ## 0. Sur fveilleux.com
 
 - Page du site : **https://fveilleux.com/votes-quebec.html**, une section comme les autres : connexion requise,
-  permission « loi39 » (Admin), ouvrable au compte invité via « Permissions Invité ».
+  permission « votes-quebec » (Admin ; l'ancien nom « loi39 » est converti automatiquement), ouvrable au compte invité via « Permissions Invité ».
 - `votes-quebec.html` (racine du dépôt ; `loi39.html` redirige vers elle) = barre du haut du site + contenu de `fragment.html` ; il charge
   `votes-quebec/loi39.css`, `votes-quebec/loi39.js` et `votes-quebec/data.json`. Il **n'utilise pas** `style.css` (ses règles
   générales `button`, `header`, `input`… déformeraient la simulation). Le thème du site (classe `light` sur

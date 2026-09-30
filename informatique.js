@@ -5,7 +5,8 @@ if (!sessionStorage.getItem('loggedIn')) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  const ANC = { qrlink: 'qr-transfer', shapelink: 'shape-transfer' };   // anciens noms
+  const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]').map(k => ANC[k] || k);
   const role = sessionStorage.getItem('userRole');
 
   // Charger les sections archivées depuis Firestore

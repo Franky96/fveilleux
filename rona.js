@@ -4,7 +4,7 @@ import { db, doc, setDoc, onSnapshot } from "./firebase-config.js";
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('rona')) {
+if (!sessionStorage.getItem('loggedIn') || (sessionStorage.getItem('userRole') !== 'admin' && !permissions.includes('rona'))) {
   alert("Accès refusé.");
   window.location.href = 'dashboard.html';
 }

@@ -8,7 +8,7 @@
   <script>
     const _permsInfo = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_permsInfo.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!['informatique', 'arinc429', 'csdb', 'converter', 'crypteur', 'tcpip', 'qr-transfer', 'shape-transfer', 'chips', 'circuit'].some(k => _permsInfo.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>
@@ -71,13 +71,13 @@
           <p>Calculateur de sous-réseau · CIDR</p>
         </a>
 
-        <a href="qr-transfer.html" class="menu-card" data-section="qrlink">
+        <a href="qr-transfer.html" class="menu-card" data-section="qr-transfer">
           <span class="icon">📷</span>
           <h2>QR Transfert</h2>
           <p>Transfert de fichiers par codes QR — sans réseau</p>
         </a>
 
-        <a href="shape-transfer.html" class="menu-card" data-section="shapelink">
+        <a href="shape-transfer.html" class="menu-card" data-section="shape-transfer">
           <span class="icon">▲■●</span>
           <h2>Shape Transfert</h2>
           <p>Transfert de fichiers par symboles géométriques colorés — sans réseau</p>

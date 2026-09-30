@@ -1,5 +1,5 @@
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('aeronefs')) {
+if (!sessionStorage.getItem('loggedIn') || (sessionStorage.getItem('userRole') !== 'admin' && !permissions.includes('aeronefs'))) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
   window.location.href = 'dashboard.html';
 }

@@ -8,7 +8,7 @@
   <script>
     const _perms = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_perms.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!_perms.includes('informatique') && !_perms.includes('circuit') && sessionStorage.getItem('userRole') !== 'admin')) {
       document.location.href = 'index.html';
     }
   </script>

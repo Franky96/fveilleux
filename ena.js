@@ -6,7 +6,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const urlSure = u => { u = String(u ?? '').trim(); return esc(/^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^[a-z][a-z0-9+.-]*:/i, '')); };
 
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('ena')) {
+if (!sessionStorage.getItem('loggedIn') || (sessionStorage.getItem('userRole') !== 'admin' && !permissions.includes('ena'))) {
   alert("Accès refusé à cette page.");
   window.location.href = 'dashboard.html';
 }

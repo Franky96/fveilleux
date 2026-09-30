@@ -2,7 +2,7 @@
 // Les données viennent de relais publics (proxies CORS) : on les affiche toujours comme du texte
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const permissions = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-if (!sessionStorage.getItem('loggedIn') || !permissions.includes('hockey')) {
+if (!sessionStorage.getItem('loggedIn') || (sessionStorage.getItem('userRole') !== 'admin' && !permissions.includes('hockey'))) {
   alert("Accès refusé : vous n'avez pas l'autorisation de voir cette page.");
   window.location.href = 'dashboard.html';
 }
