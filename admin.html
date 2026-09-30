@@ -85,7 +85,11 @@
     .admin-page .admin-header { flex-wrap: wrap; gap: 1rem; }
     .admin-page .admin-header .btn-ajouter { width: auto; }
     .admin-page .content-block { overflow-x: auto; }
-    .admin-page .users-table .u-perms span { display: inline-block; margin-bottom: 3px; }
+    .admin-page .users-table .perm-list { margin-top: 0.4rem; }
+    .admin-page .users-table .perm-list span { display: inline-block; margin-bottom: 3px; }
+    .admin-page .users-table .perm-list[hidden] { display: none; }
+    .perm-btn { width: auto; padding: 0.2rem 0.6rem; font-size: 0.78rem; border-radius: 6px; background: transparent; color: #888078; border: 1px solid #c8c2b8; cursor: pointer; white-space: nowrap; }
+    .perm-btn:hover, .perm-btn[aria-expanded="true"] { color: #d4892a; border-color: #d4892a; }
     .admin-page .modal-overlay { padding: 1rem; }
     .admin-page .modal-box { width: min(560px, 100%); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; }
     .admin-page .modal-box select { width: 100%; }

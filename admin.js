@@ -279,7 +279,9 @@ async function chargerUtilisateurs() {
       <td data-label="Accueil">${accueilHtml}</td>
       <td data-label="Rôle">${roleHtml}</td>
       <td class="u-mdp" data-label="Mot de passe">${celluleMdp(id)}</td>
-      <td class="u-perms" data-label="Permissions">${permsHtml || '<span style="color:#888; font-size:0.8rem;">—</span>'}</td>
+      <td class="u-perms" data-label="Permissions">${permsHtml
+        ? `<div><button type="button" class="perm-btn" aria-expanded="false" onclick="basculerPerms(this)">Voir (${(u.permissions || []).length}) <span aria-hidden="true">▾</span></button><div class="perm-list" hidden>${permsHtml}</div></div>`
+        : '<span style="color:#888; font-size:0.8rem;">—</span>'}</td>
       <td class="u-actions" style="text-align:right; white-space:nowrap;">
         <button class="u-btn" onclick="changerMotDePasse('${id}')" title="Définir un nouveau mot de passe" style="width:auto; display:inline-block; background:#162216; color:#80cc80; border:1px solid #80cc80; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem;">🔑 Mot de passe</button>
         <button class="u-btn" onclick="editerUser('${id}')" style="width:auto; display:inline-block; background:#162216; color:#d4892a; border:1px solid #d4892a; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:0.3rem; transition:0.2s;" onmouseover="this.style.background='#d4892a'; this.style.color='#111';" onmouseout="this.style.background='#162216'; this.style.color='#d4892a';">Modifier</button>
@@ -313,6 +315,14 @@ async function chargerUtilisateurs() {
     normaux.forEach(ajouterLigne);
   }
 }
+
+// Permissions d'un utilisateur : cachées derrière un bouton pour garder le tableau compact
+window.basculerPerms = function (btn) {
+  const liste = btn.nextElementSibling, ouvert = liste.hidden;
+  liste.hidden = !ouvert;
+  btn.setAttribute('aria-expanded', ouvert);
+  btn.querySelector('span').textContent = ouvert ? '▴' : '▾';
+};
 
 // ── Structure des permissions ────────────────────────
 const PERMS_STRUCTURE = [
