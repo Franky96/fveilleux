@@ -340,25 +340,31 @@ window.voirPerms = function (id) {
   const u = usersData[id]; if (!u) return;
   const perms = normaliserPerms(u.permissions);
   const connues = new Set();
+  let enArchive = false;
   const ligne = (key, label, ok, note = '') => { connues.add(key);
     return `<li class="${ok ? 'pv-ok' : 'pv-non'}"><span class="pv-ico" aria-hidden="true">${ok ? '✓' : '·'}</span>${esc(label)}`
-      + `${archivedSections.includes(key) ? ' <small class="pv-arch">archivée</small>' : ''}${note ? ` <small>${note}</small>` : ''}<span class="sr">${ok ? ' : accordée' : ' : non accordée'}</span></li>`; };
+      + `${archivedSections.includes(key) && !enArchive ? ' <small class="pv-arch">archivée</small>' : ''}${note ? ` <small>${note}</small>` : ''}<span class="sr">${ok ? ' : accordée' : ' : non accordée'}</span></li>`; };
   const blocs = PERMS_STRUCTURE.map(s => {
-    if (!s.children) return { html: `<ul class="pv-list">${ligne(s.key, s.label, perms.includes(s.key))}</ul>`, groupe: false };
-    const tout = !s.independent && perms.includes(s.key);
-    const enfants = s.children.map(c => ligne(c.key, c.label, tout || perms.includes(c.key), s.independent ? 'permission séparée' : '')).join('');
+    enArchive = archivedSections.includes(s.key);
+    const arch = archivedSections.includes(s.key);
+    if (!s.children) return { html: `<ul class="pv-list">${ligne(s.key, s.label, perms.includes(s.key))}</ul>`, groupe: false, arch };
+    const tout = !s.liee && perms.includes(s.key);
+    const enfants = s.children.map(c => ligne(c.key, c.label, tout || perms.includes(c.key))).join('');
     const nb = s.children.filter(c => tout || perms.includes(c.key)).length;
-    const tete = s.independent
+    const tete = s.liee
       ? ligne(s.key, s.label, perms.includes(s.key))
       : ligne(s.key, s.label, tout || nb > 0, tout ? 'tout le groupe' : `${nb} / ${s.children.length}`);
-    return { html: `<div class="pv-groupe"><ul class="pv-list">${tete}</ul><ul class="pv-list pv-enfants">${enfants}</ul></div>`, groupe: true };
+    return { html: `<div class="pv-groupe"><ul class="pv-list">${tete}</ul><ul class="pv-list pv-enfants">${enfants}</ul></div>`, groupe: true, arch };
   });
   const autres = perms.filter(k => !connues.has(k));
   document.getElementById('pv-titre').textContent = `Permissions de ${u.nom || id}`;
   document.getElementById('pv-resume').textContent = `${perms.length} permission${perms.length > 1 ? 's' : ''} accordée${perms.length > 1 ? 's' : ''} · ${id}`;
-  document.getElementById('pv-corps').innerHTML =
-    `<div class="pv-simples">${blocs.filter(b => !b.groupe).map(b => b.html).join('')}</div>` +
-    `<div class="pv-groupes">${blocs.filter(b => b.groupe).map(b => b.html).join('')}</div>` +
+  // sections actives d'abord, puis une division « Archives » pour les sections archivées
+  const zone = liste => (liste.some(b => !b.groupe) ? `<div class="pv-simples">${liste.filter(b => !b.groupe).map(b => b.html).join('')}</div>` : '') +
+    (liste.some(b => b.groupe) ? `<div class="pv-groupes">${liste.filter(b => b.groupe).map(b => b.html).join('')}</div>` : '');
+  const archives = blocs.filter(b => b.arch);
+  document.getElementById('pv-corps').innerHTML = zone(blocs.filter(b => !b.arch)) +
+    (archives.length ? `<div class="pv-division"><h4>Archives</h4><p>Retirées de l’accueil pour tout le monde, même si la permission est accordée.</p>${zone(archives)}</div>` : '') +
     (autres.length ? `<p class="pv-autres">Autres clés enregistrées (sans section) : ${autres.map(esc).join(', ')}</p>` : '');
   document.getElementById('modal-perms-vue').classList.remove('hidden');
 };
@@ -368,8 +374,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerPermsV
 // ── Structure des permissions ────────────────────────
 const PERMS_STRUCTURE = [
   { key: 'ena',       label: 'ÉNA' },
-  // Aviation : Aéronefs est une permission séparée (la section Aviation ne l'ouvre pas à elle seule)
-  { key: 'aviation',  label: 'Aviation', independent: true, children: [
+  // Aviation : Aéronefs s'ouvre depuis la page Aviation, donc il la demande (cocher Aéronefs coche Aviation ;
+  // décocher Aviation décoche Aéronefs). Aviation seule reste possible.
+  { key: 'aviation',  label: 'Aviation', liee: true, children: [
     { key: 'aeronefs', label: 'Aéronefs' },
   ]},
   { key: 'bieres',    label: 'Bières' },
@@ -439,8 +446,8 @@ function renderPermsModal(currentPerms = []) {
       // Groupe parent + enfants
       const group = document.createElement('div');
       group.className = 'perm-group';
-      const parentLbl = makePermLabel(s.key, s.label, !s.independent, null);
-      if (s.independent) parentLbl.classList.add('perm-parent');
+      const parentLbl = makePermLabel(s.key, s.label, !s.liee, null);
+      if (s.liee) { parentLbl.classList.add('perm-parent'); parentLbl.querySelector('input').classList.add('chk-dep-parent'); }
       group.appendChild(parentLbl);
 
       const childrenDiv = document.createElement('div');
@@ -453,7 +460,9 @@ function renderPermsModal(currentPerms = []) {
           archivedGrid.appendChild(makePermLabel(child.key, child.label + ' (' + s.label + ')'));
           hasArchived = true;
         } else {
-          childrenDiv.appendChild(makePermLabel(child.key, child.label, false, s.independent ? null : s.key));
+          const childLbl = makePermLabel(child.key, child.label, false, s.liee ? null : s.key);
+          if (s.liee) { const i = childLbl.querySelector('input'); i.classList.add('chk-dep'); i.dataset.dep = s.key; }
+          childrenDiv.appendChild(childLbl);
         }
       });
 
@@ -489,6 +498,15 @@ function renderPermsModal(currentPerms = []) {
       parent.indeterminate = n > 0 && n < siblings.length;
     }
   });
+
+  // Sous-pages qui demandent leur section (ex. Aéronefs → Aviation)
+  document.querySelectorAll('.chk-dep').forEach(child => child.addEventListener('change', () => {
+    const parent = document.querySelector(`.chk-dep-parent[value="${child.dataset.dep}"]`);
+    if (child.checked && parent) parent.checked = true;
+  }));
+  document.querySelectorAll('.chk-dep-parent').forEach(parent => parent.addEventListener('change', () => {
+    if (!parent.checked) document.querySelectorAll(`.chk-dep[data-dep="${parent.value}"]`).forEach(c => c.checked = false);
+  }));
 
   // Attacher les listeners parent ↔ enfant
   document.querySelectorAll('.chk-parent').forEach(parent => {
