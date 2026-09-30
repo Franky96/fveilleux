@@ -33,7 +33,29 @@
     .site-top a.retour:hover { border-color: var(--st-ink); color: var(--st-ink); }
     .site-top a.retour:focus-visible, #theme-toggle:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
     .site-top .titre { text-align: center; margin: 0; color: var(--st-ink); font-size: 0.9rem; font-weight: 600; }
-    .site-top .controles { justify-self: end; display: flex; align-items: center; }
+    .site-top { position: relative; z-index: 50; }
+    /* interrupteur + menu hamburger du site (page-controls.js), aux couleurs de la page */
+    .page-topbar-controls { grid-column: -2; justify-self: end; position: relative; display: flex; align-items: center; gap: 0.5rem; }
+    #hamburger-btn { width: auto; background: transparent; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px;
+      padding: 7px; border-radius: 8px; transition: background 0.2s; -webkit-tap-highlight-color: transparent; }
+    #hamburger-btn:hover { background: var(--st-bg); }
+    #hamburger-btn:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    #hamburger-btn span { display: block; width: 20px; height: 2px; background: var(--st-ink); border-radius: 2px;
+      transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: center; }
+    #hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    #hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    #hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    #hamburger-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 60; background: var(--st-surface);
+      border: 1px solid var(--st-rule); border-radius: 12px; padding: 0.4rem; min-width: 195px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #hamburger-menu.open { display: block; }
+    .hbg-item { display: none; align-items: center; gap: 0.65rem; width: 100%; padding: 0.65rem 0.85rem; background: transparent; border: none;
+      -webkit-appearance: none; appearance: none; border-radius: 8px; color: var(--st-ink); font: inherit; font-size: 0.88rem; cursor: pointer;
+      text-decoration: none; text-align: left; white-space: nowrap; margin: 0; box-sizing: border-box; }
+    .hbg-item:hover, .hbg-item:focus-visible { background: var(--st-bg); outline: none; }
+    #logoutBtn.hbg-item { display: flex; color: #E5484D; margin-top: 0.4rem; }
+    .hbg-sep { display: none; height: 1px; background: var(--st-rule); margin: 0.3rem 0.5rem; }
+    @media (prefers-reduced-motion: reduce) { #hamburger-btn span { transition: none; } }
     #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
       transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
@@ -53,10 +75,9 @@
   </style>
 </head>
 <body>
-  <div class="site-top">
+  <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
     <p class="titre">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></p>
-    <div class="controles" id="controles"></div>
   </div>
 
 <div class="loi39" data-src="loi-39/data.json">
@@ -246,10 +267,9 @@
   <script type="module" src="loi-39/loi39.js"></script>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>
+  <script src="page-controls.js"></script>
   <script>
     (function () {
-      const t = document.getElementById('theme-toggle');
-      if (t) { t.classList.remove('theme-toggle--fixed'); document.getElementById('controles').appendChild(t); }
       // l'interrupteur du site change la classe « light » : on suit avec data-theme pour la simulation
       const sync = () => { document.documentElement.dataset.theme = document.documentElement.classList.contains('light') ? 'light' : 'dark'; };
       sync(); new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
