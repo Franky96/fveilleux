@@ -19,6 +19,11 @@
 .loi39{--gap:16px;--sec:36px}
 }
 .loi39{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.loi39 .wrap:not(.ready){visibility:hidden;opacity:0}
+.loi39 .wrap.ready{opacity:1;transition:opacity .2s}
+@media (prefers-reduced-motion:reduce){
+.loi39 .wrap.ready{transition:none}
+}
 .loi39 .wrap{max-width:1680px;margin:0 auto;padding-inline:clamp(16px,3vw,56px);padding-block:28px 64px}
 .loi39 h1,.loi39 h2,.loi39 h3{font-family:var(--serif);text-wrap:balance;margin:0;line-height:1.15}
 .loi39 h2{font-size:1.65rem;font-weight:600}

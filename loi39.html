@@ -83,7 +83,7 @@
 <div class="loi39" data-src="loi-39/data.json">
 <div class="wrap">
   <header class="top">
-    <div class="big num" id="l39-bigNum">52<small>sièges sur 125</small></div>
+    <div class="big num" id="l39-bigNum"><small>sièges sur 125</small></div>
     <div class="headline">
       <span class="eyebrow kicker">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>28 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span>
       <h1 id="l39-headline">Le PQ serait minoritaire avec la loi 39</h1>
@@ -274,6 +274,8 @@
       // l'interrupteur du site change la classe « light » : on suit avec data-theme pour la simulation
       const sync = () => { document.documentElement.dataset.theme = document.documentElement.classList.contains('light') ? 'light' : 'dark'; };
       sync(); new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+      // filet de sécurité : si la simulation ne se charge pas (réseau, erreur), on montre quand même la page
+      setTimeout(() => { const w = document.querySelector('.loi39 .wrap'); if (w) w.classList.add('ready'); }, 6000);
     })();
   </script>
 </body>

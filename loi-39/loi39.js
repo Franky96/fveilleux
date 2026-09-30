@@ -1025,3 +1025,5 @@ document.getElementById("l39-reset").addEventListener("click", () => {
 });
 
 drawBase(); syncSliders(); render();
+// premier rendu terminé : on montre la page (évite l'éclair du squelette vide pendant le chargement)
+document.getElementsByClassName("wrap")[0].classList.add("ready");
