@@ -903,6 +903,13 @@ function render(){
   q.sort((a,b) => b[0]-a[0] || (b[1] > a[1] ? 1 : -1));
   const won = q.slice(0, 29), [last, next] = [q[28], q[29]];
   const totE = DATA.regions.reduce((a,r) => a + r.electors, 0);
+  // exemple : la région du premier quotient non retenu (elle montre des quotients gagnants et le raté)
+  const ex = DATA.regions.find(r => r.code===next[1]), rank = (c, d) => q.findIndex(x => x[1]===c && x[2]===d) + 1;
+  const exRows = Array.from({length: (EXTRA_L[ex.code]||0) + 1}, (_, i) => {
+    const d = i + 1, k = rank(ex.code, d), ok = k <= 29;
+    return `<tr class="${ok ? "" : "miss"}"><td>÷ ${d} = <b>${nf(ex.electors/d)}</b></td>
+      <td>${k}<sup>e</sup> quotient</td><td>${ok ? "✓ siège" : "✗ sous la barre"}</td></tr>`;
+  }).join("");
   const rows = DATA.regions.slice().sort((a,b) => b.electors-a.electors).map(r => {
     const base = r.code===NORD ? 0 : 1, extra = EXTRA_L[r.code]||0;
     return `<tr><td>${esc(r.name)}</td><td>${nf(r.electors)}</td><td class="bse">${base}</td><td>${extra ? "+"+extra : "—"}</td><td><b>${LIST[r.code]}</b></td>
@@ -912,19 +919,34 @@ function render(){
     <ol>
       <li><b>Un siège de base par région</b> : chacune des 16 régions en reçoit un, sauf le Nord-du-Québec, qui n'en a aucun (16 sièges, art. 14.3).</li>
       <li><b>Les 29 autres selon le nombre d'électeurs inscrits</b> : on divise les électeurs de chaque région par 1, 2, 3, 4… Les 29 plus grands résultats (« quotients ») gagnent chacun un siège pour leur région. C'est la méthode des plus grandes moyennes, la même que pour les 62 sièges de circonscription (art. 14.2).</li>
-      <li><b>La barre à franchir</b> : le 29<sup>e</sup> quotient retenu est ${esc(nm(last[1]))} ÷ ${last[2]} = ${nf(last[0])} électeurs. Le suivant, ${esc(nm(next[1]))} ÷ ${next[2]} = ${nf(next[0])}, rate le siège de peu. En gros, une région gagne un siège de plus par tranche d'environ ${nf(Math.round(last[0]/10000)*10000)} électeurs.</li>
       <li><b>Les votes ne changent pas ce nombre</b> : ils décident seulement <em>quels partis</em> obtiennent ces sièges, par la compensation dans chaque région (voir <a href="#l39-h-meth">Méthode</a>).</li>
     </ol>
-    <div>
-      <span class="eyebrow">Les 29 quotients gagnants, du plus grand au plus petit</span>
-      <div class="qlist">${won.map(([v,c,d]) => `<span class="q">${esc(nm(c))} ÷${d} · ${nf(v)}</span>`).join("")}
-        <span class="q miss" title="Premier quotient non retenu">${esc(nm(next[1]))} ÷${next[2]} · ${nf(next[0])}</span></div>
-    </div>
+    <button type="button" class="qopen" id="l39-qOpen" aria-haspopup="dialog">
+      <span><b>Les 29 quotients gagnants</b><small>La liste, la barre à franchir et un exemple de calcul</small></span><span aria-hidden="true">›</span>
+    </button>
+    <dialog class="qdlg" id="l39-qDlg" aria-labelledby="l39-qTitle">
+      <div class="qhead"><h3 id="l39-qTitle">Les 29 quotients gagnants</h3><button type="button" class="qclose" id="l39-qClose" aria-label="Fermer">×</button></div>
+      <p>On divise les électeurs inscrits de chaque région par 1, 2, 3, 4… Chaque résultat est un <b>quotient</b>. On classe ensuite tous les quotients de toutes les régions, du plus grand au plus petit : les 29 premiers donnent chacun un siège de région à leur région, en plus de son siège de base.</p>
+      <div class="qex">
+        <span class="eyebrow">Exemple de calcul · ${esc(nm(ex.code))}</span>
+        <p>${nf(ex.electors)} électeurs inscrits.</p>
+        <table><tbody>${exRows}</tbody></table>
+        <p>Résultat : 1 siège de base + ${EXTRA_L[ex.code]||0} = <b>${LIST[ex.code]} sièges de région</b>.</p>
+      </div>
+      <p><b>La barre à franchir</b> : le 29<sup>e</sup> quotient est ${esc(nm(last[1]))} ÷ ${last[2]} = ${nf(last[0])} électeurs. Le 30<sup>e</sup>, ${esc(nm(next[1]))} ÷ ${next[2]} = ${nf(next[0])}, rate le siège de peu. En gros, une région gagne un siège de plus par tranche d'environ ${nf(Math.round(last[0]/10000)*10000)} électeurs.</p>
+      <span class="eyebrow">Les 29 quotients, du plus grand au plus petit</span>
+      <ol class="qlist">${won.map(([v,c,d], i) => `<li class="q${c===ex.code ? " ex" : ""}"><span>${i+1}.</span><span>${esc(nm(c))} ÷ ${d}</span><b>${nf(v)}</b></li>`).join("")}
+        <li class="q miss"><span>30.</span><span>${esc(nm(next[1]))} ÷ ${next[2]}</span><b>${nf(next[0])}</b></li></ol>
+    </dialog>
     <div class="tablebox"><table>
       <thead><tr><th>Région</th><th>Électeurs</th><th class="bse">Base</th><th>Ajout</th><th>Sièges</th><th class="eps">Élect./siège</th></tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr><td><b>Total</b></td><td>${nf(totE)}</td><td class="bse">16</td><td>+29</td><td><b>45</b></td><td class="eps">${nf(totE/45)}</td></tr></tfoot>
     </table></div>`;
+  const dlg = document.getElementById("l39-qDlg");
+  document.getElementById("l39-qOpen").addEventListener("click", () => dlg.showModal());
+  document.getElementById("l39-qClose").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });   // clic sur le fond : fermer
 })();
 document.getElementById("l39-regBody").addEventListener("click", e => {
   const a = e.target.closest("a[data-reg]"); if (!a) return;
