@@ -18,15 +18,15 @@ projet** : architecture, données, méthode, reconstruction, pièges connus.
 - Page du site : **https://fveilleux.com/votes-quebec.html**, une section comme les autres : connexion requise,
   permission « loi39 » (Admin), ouvrable au compte invité via « Permissions Invité ».
 - `votes-quebec.html` (racine du dépôt ; `loi39.html` redirige vers elle) = barre du haut du site + contenu de `fragment.html` ; il charge
-  `loi-39/loi39.css`, `loi-39/loi39.js` et `loi-39/data.json`. Il **n'utilise pas** `style.css` (ses règles
+  `votes-quebec/loi39.css`, `votes-quebec/loi39.js` et `votes-quebec/data.json`. Il **n'utilise pas** `style.css` (ses règles
   générales `button`, `header`, `input`… déformeraient la simulation). Le thème du site (classe `light` sur
   `<html>`) est recopié dans `data-theme`, que la simulation suit.
-- Dépôt `Franky96/fveilleux` (public, déployé sur Hostinger à chaque push sur `master`) ; le dossier `loi-39/`
-  garde le kit, ce LISEZMOI et `outils/`. Pas de page publique dans `loi-39/` : ne pas y laisser `index.html`,
+- Dépôt `Franky96/fveilleux` (public, déployé sur Hostinger à chaque push sur `master`) ; le dossier `votes-quebec/`
+  garde le kit, ce LISEZMOI et `outils/`. Pas de page publique dans `votes-quebec/` : ne pas y laisser `index.html`,
   `exemple.html` ni la version autonome.
 - Reconstruire depuis le dépôt :
-  `cd loi-39/outils && LOI39_AUTONOME=/tmp/loi39-simulation.html ./reconstruire.sh && rm -f ../exemple.html`
-  Si `fragment.html` a changé, recopier son contenu dans `votes-quebec.html` (avec `data-src="loi-39/data.json"`),
+  `cd votes-quebec/outils && LOI39_AUTONOME=/tmp/loi39-simulation.html ./reconstruire.sh && rm -f ../exemple.html`
+  Si `fragment.html` a changé, recopier son contenu dans `votes-quebec.html` (avec `data-src="votes-quebec/data.json"`),
   puis pousser sur `master`.
 
 ## 1. Contenu du dossier
@@ -255,7 +255,7 @@ cd ~/Downloads/loi39-site/outils
 **Mise à jour automatique (fveilleux.com)** : le workflow GitHub `.github/workflows/loi39-qc125.yml` roule chaque
 jour vers 6 h (heure de Montréal). Il relance `scrape_qc125.py`, `build_data80.py`, `sim80.py` et `build_site.py`, puis
 pousse sur `master` (Hostinger redéploie alors le site). La date « projection Qc125 du … » vient de `maj.json`, lue
-dans la fiche Qc125 (« Mise à jour : … »). La date « vérifiée le … » vient de `loi-39/verif.json`, écrit à chaque
+dans la fiche Qc125 (« Mise à jour : … »). La date « vérifiée le … » vient de `votes-quebec/verif.json`, écrit à chaque
 vérification réussie : elle change tous les jours, même quand Qc125 n'a rien changé. Si une fiche est illisible, rien n'est écrit et le workflow échoue (courriel de
 GitHub). Lancement manuel : onglet **Actions** → « Loi 39 · données Qc125 » → **Run workflow**.
 

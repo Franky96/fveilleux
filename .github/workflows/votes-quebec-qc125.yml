@@ -1,9 +1,9 @@
-# Mise à jour quotidienne de la page Loi 39 avec les projections Qc125.
+# Mise à jour quotidienne de la page Votes Québec (simulation loi 39) avec les projections Qc125.
 # Télécharge les 127 fiches de circonscription de qc125.com, reconstruit data.json et pousse sur master
-# (Hostinger déploie alors le site automatiquement). La date de vérification (loi-39/verif.json) est publiée
+# (Hostinger déploie alors le site automatiquement). La date de vérification (votes-quebec/verif.json) est publiée
 # chaque jour, même quand Qc125 n'a rien changé.
 # Si une fiche Qc125 est illisible, rien n'est publié : le pipeline échoue et GitHub envoie un courriel.
-name: Loi 39 · données Qc125
+name: Votes Québec · données Qc125
 
 on:
   schedule:
@@ -31,7 +31,7 @@ jobs:
           ref: master
 
       - name: Projections Qc125
-        working-directory: loi-39/outils
+        working-directory: votes-quebec/outils
         run: |
           for essai in 1 2 3; do
             python3 scrape_qc125.py && exit 0
@@ -40,7 +40,7 @@ jobs:
           exit 1
 
       - name: data.json, simulation de référence et page
-        working-directory: loi-39/outils
+        working-directory: votes-quebec/outils
         env:
           LOI39_AUTONOME: ${{ runner.temp }}/loi39-simulation.html
         run: |
@@ -50,15 +50,15 @@ jobs:
 
       - name: Publier la vérification (et les données si elles ont changé)
         run: |
-          DONNEES="loi-39/verif.json loi-39/data.json loi-39/outils/data.json loi-39/outils/proj.json loi-39/outils/ridings.tsv loi-39/outils/maj.json loi-39/outils/result.json"
+          DONNEES="votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
           # la page elle-même ne doit pas changer : seules les données sont publiées
           AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
           if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi
           git add $DONNEES
           if git diff --cached --quiet; then echo "Déjà vérifié aujourd'hui, rien à publier."; exit 0; fi
-          MAJ=$(python3 -c "import json;print(json.load(open('loi-39/outils/maj.json')).get('texte','?'))")
-          VERIF=$(python3 -c "import json;print(json.load(open('loi-39/verif.json'))['texte'])")
-          if git diff --cached --quiet -- loi-39/outils/proj.json; then
+          MAJ=$(python3 -c "import json;print(json.load(open('votes-quebec/outils/maj.json')).get('texte','?'))")
+          VERIF=$(python3 -c "import json;print(json.load(open('votes-quebec/verif.json'))['texte'])")
+          if git diff --cached --quiet -- votes-quebec/outils/proj.json; then
             MSG="Loi 39 : vérification Qc125 du $VERIF, aucun changement (projection du $MAJ)"
           else
             MSG="Loi 39 : projections Qc125 du $MAJ (mise à jour automatique)"

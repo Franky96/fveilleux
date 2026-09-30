@@ -4,11 +4,11 @@ package-lock.json
 liste_trousse-1_1.jpg
 
 # Loi 39 : téléchargements bruts (retéléchargés par outils/reconstruire.sh)
-loi-39/outils/brut/*.json
-loi-39/outils/brut/*.zip
-loi-39/outils/brut/sv/
+votes-quebec/outils/brut/*.json
+votes-quebec/outils/brut/*.zip
+votes-quebec/outils/brut/sv/
 __pycache__/
-# Sous-produits de loi-39/outils/build_site.py (non publiés)
+# Sous-produits de votes-quebec/outils/build_site.py (non publiés)
 /loi39-simulation.html
-loi-39/exemple.html
-loi-39/outils/check.mjs
+votes-quebec/exemple.html
+votes-quebec/outils/check.mjs

@@ -16,12 +16,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=Public+Sans:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="loi-39/loi39.css">
+  <link rel="stylesheet" href="votes-quebec/loi39.css">
   <style>
     /* Pas de style.css ici : ses règles générales (button, header, input…) déformeraient la simulation.
        La barre du haut et l'interrupteur de thème reprennent donc le style du site. */
     * { box-sizing: border-box; }
-    /* Barre du haut : mêmes couleurs que la simulation (tokens de loi-39/loi39.css) */
+    /* Barre du haut : mêmes couleurs que la simulation (tokens de votes-quebec/loi39.css) */
     .site-top, body { --st-bg:#0C1019; --st-surface:#141A27; --st-rule:#273045; --st-ink:#E6E9F1; --st-muted:#98A1B4; }
     html[data-theme="light"] .site-top, html[data-theme="light"] body { --st-bg:#F1F3F7; --st-surface:#FFFFFF; --st-rule:#D6DCE6; --st-ink:#121929; --st-muted:#586176; }
     body { margin: 0; background: var(--st-bg); }
@@ -80,7 +80,7 @@
     <p class="titre">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></p>
   </div>
 
-<div class="loi39" data-src="loi-39/data.json">
+<div class="loi39" data-src="votes-quebec/data.json">
 <div class="wrap">
   <header class="top">
     <div class="big num" id="l39-bigNum"><small>sièges sur 125</small></div>
@@ -264,7 +264,7 @@
 </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-  <script type="module" src="loi-39/loi39.js"></script>
+  <script type="module" src="votes-quebec/loi39.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;font-family:system-ui,sans-serif;"></div>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>
