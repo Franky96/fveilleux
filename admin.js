@@ -109,42 +109,56 @@ function ligneBascule({ icon, label, on, etatOn, etatOff, ton, onClick, enfant =
   b.onclick = onClick;
   return b;
 }
-function zoneBascule(conteneur, resume, simples, groupes) {
+// Zone regroupée par statut : une division par statut (titre + nombre), sections simples puis cartes de groupe
+function zoneBascule(conteneur, resume, divisions) {
   conteneur.removeAttribute('style');
   conteneur.className = 'bx';
   conteneur.innerHTML = `<p class="bx-resume">${resume}</p>`;
-  if (simples.length) { const d = document.createElement('div'); d.className = 'bx-simples'; simples.forEach(x => d.appendChild(x)); conteneur.appendChild(d); }
-  if (groupes.length) { const d = document.createElement('div'); d.className = 'bx-groupes'; groupes.forEach(x => d.appendChild(x)); conteneur.appendChild(d); }
+  divisions.filter(d => d.simples.length || d.groupes.length).forEach(d => {
+    const div = document.createElement('section');
+    div.className = 'bx-division ' + (d.classe || '');
+    div.innerHTML = `<h4>${d.titre} <span>${d.simples.length + d.groupes.length}</span></h4>${d.note ? `<p>${d.note}</p>` : ''}`;
+    if (d.simples.length) { const x = document.createElement('div'); x.className = 'bx-simples'; d.simples.forEach(e => x.appendChild(e)); div.appendChild(x); }
+    if (d.groupes.length) { const x = document.createElement('div'); x.className = 'bx-groupes'; d.groupes.forEach(e => x.appendChild(e)); div.appendChild(x); }
+    conteneur.appendChild(div);
+  });
 }
 
 function renderArchiveGrid() {
   const grid = document.getElementById('archive-grid');
   if (!grid) return;
-  const sw = (s, enfant, onClick, note) => ligneBascule({ icon: s.icon, label: s.label, on: !archivedSections.includes(s.key),
-    etatOn: 'Sur l’accueil', etatOff: 'Archivée', ton: 'bx-on', onClick, enfant, note });
-  const simples = [], groupes = [];
+  // interrupteur activé = archivée
+  const sw = (s, enfant, onClick, note) => ligneBascule({ icon: s.icon, label: s.label, on: archivedSections.includes(s.key),
+    etatOn: 'Archivée', etatOff: 'Sur l’accueil', ton: 'bx-arch', onClick, enfant, note });
+  const arch = { titre: 'Archivées', classe: 'bx-div-arch', simples: [], groupes: [] };
+  const actives = { titre: 'Sur l’accueil', simples: [], groupes: [] };
   SECTIONS_ARCHIVABLES.forEach(s => {
-    if (!s.children) { simples.push(sw(s, false, () => toggleArchive(s.key))); return; }
-    const parentArch = archivedSections.includes(s.key);
+    const archivee = archivedSections.includes(s.key);
+    if (!s.children) { (archivee ? arch : actives).simples.push(sw(s, false, () => toggleArchive(s.key))); return; }
     const carte = document.createElement('div');
-    carte.className = 'bx-groupe' + (parentArch ? ' bx-groupe-off' : '');
+    carte.className = 'bx-groupe';
     carte.appendChild(sw(s, false, () => toggleArchive(s.key, s.children), 'tout le groupe'));
-    s.children.forEach(c => carte.appendChild(sw(c, true, () => toggleArchive(c.key), parentArch ? 'groupe archivé' : '')));
-    groupes.push(carte);
+    s.children.forEach(c => carte.appendChild(sw(c, true, () => toggleArchive(c.key), archivee ? 'avec son groupe' : '')));
+    (archivee ? arch : actives).groupes.push(carte);
   });
   const n = SECTIONS_ARCHIVABLES.flatMap(s => [s, ...(s.children || [])]).filter(s => archivedSections.includes(s.key)).length;
-  zoneBascule(grid, n ? `<b>${n}</b> section${n > 1 ? 's' : ''} ou page${n > 1 ? 's' : ''} archivée${n > 1 ? 's' : ''}. Une section archivée disparaît de l’accueil pour tout le monde et reste consultable dans Archives.`
-                      : 'Aucune section archivée : tout est sur l’accueil.', simples, groupes);
+  zoneBascule(grid, n ? `<b>${n}</b> section${n > 1 ? 's' : ''} ou page${n > 1 ? 's' : ''} archivée${n > 1 ? 's' : ''}. Active l’interrupteur pour archiver : la section disparaît de l’accueil pour tout le monde et reste consultable dans Archives.`
+                      : 'Aucune section archivée. Active l’interrupteur d’une section pour l’archiver.', [arch, actives]);
 }
 
 function renderGuestPerms() {
   const grid = document.getElementById('guest-perms-grid');
   if (!grid) return;
-  const lignes = SECTIONS_INVITABLES.map(s => ligneBascule({ icon: s.icon, label: s.label, on: guestPermissions.includes(s.key),
-    etatOn: 'Ouverte', etatOff: 'Bloquée', ton: 'bx-on', onClick: () => toggleGuestPerm(s.key),
-    note: archivedSections.includes(s.key) ? 'archivée : invisible sur l’accueil' : '' }));
+  const ouvertes = { titre: 'Ouvertes aux invités', classe: 'bx-div-on', simples: [], groupes: [] };
+  const bloquees = { titre: 'Bloquées', simples: [], groupes: [] };
+  const archivees = { titre: 'Archivées', classe: 'bx-div-arch', note: 'Invisibles sur l’accueil pour tout le monde, même ouvertes.', simples: [], groupes: [] };
+  SECTIONS_INVITABLES.forEach(s => {
+    const on = guestPermissions.includes(s.key);
+    const ligne = ligneBascule({ icon: s.icon, label: s.label, on, etatOn: 'Ouverte', etatOff: 'Bloquée', ton: 'bx-on', onClick: () => toggleGuestPerm(s.key) });
+    (archivedSections.includes(s.key) ? archivees : on ? ouvertes : bloquees).simples.push(ligne);
+  });
   const n = SECTIONS_INVITABLES.filter(s => guestPermissions.includes(s.key)).length;
-  zoneBascule(grid, `<b>${n}</b> section${n > 1 ? 's' : ''} sur ${SECTIONS_INVITABLES.length} ouverte${n > 1 ? 's' : ''} aux invités. Les manuels, l’admin et la connexion à distance leur restent toujours fermés.`, lignes, []);
+  zoneBascule(grid, `<b>${n}</b> section${n > 1 ? 's' : ''} sur ${SECTIONS_INVITABLES.length} ouverte${n > 1 ? 's' : ''} aux invités. Les manuels, l’admin et la connexion à distance leur restent toujours fermés.`, [ouvertes, bloquees, archivees]);
 }
 
 window.toggleGuestPerm = async function(key) {
