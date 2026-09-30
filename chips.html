@@ -145,8 +145,8 @@ html.light {
       </button>
       <div id="hamburger-menu">
         <a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
-        <a href="https://mail.hostinger.com/" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
-        <button class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
+        <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
+        <button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
         <div class="hbg-sep"></div>
         <div id="logoutBtn" class="hbg-item" role="button" tabindex="0">↩ Déconnexion</div>
       </div>
@@ -444,6 +444,12 @@ document.addEventListener('click', e => {
 // Archives : pas pour le compte invité
 const archivesBtn = document.getElementById('btn-archives');
 if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
+// Webmail : admins et permission « webmail » ; badge de version : admins
+const _admChip = sessionStorage.getItem('userRole') === 'admin';
+const webmailBtn = document.getElementById('btn-webmail');
+if (webmailBtn) webmailBtn.style.display = _admChip || _pChip.includes('webmail') ? 'flex' : 'none';
+const badgeBtn = document.getElementById('toggle-version-btn');
+if (badgeBtn) badgeBtn.style.display = _admChip ? 'flex' : 'none';
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) logoutBtn.addEventListener('click', () => {
   sessionStorage.clear(); window.location.href = 'index.html';
