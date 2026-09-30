@@ -706,7 +706,11 @@ function chamber(svg, seatsBy, n, ringBy){
   const bench = y => { const out = []; for (let j = 0; j < C; j++) for (let r = 0; r < ROWS; r++) out.push({x:colX(j), y:y(r), j, r}); return out; };
   // bout : rempli par colonnes, pour que chaque parti forme un bloc
   const end = y => { const out = []; for (let k = 0; k < K; k++) for (let r = 0; r < RH; r++) out.push({x:rightX(k), y:y(r), j:C+k, r}); return out; };
-  const govSlots = [...bench(yBot), ...end(yBot)].slice(0, govCap), oppSlots = [...bench(yTop), ...end(yTop)].slice(0, oppCap);
+  // places gardées près de l'allée ; au bout, on remplit ensuite chaque rangée de l'extérieur vers l'allée,
+  // pour que les derniers sièges (le parti coupé en deux) se rejoignent au bas du plan, de part et d'autre
+  const side = (y, cap) => { const all = [...bench(y), ...end(y)].slice(0, cap), nb = C*ROWS;
+    return [...all.slice(0, nb), ...all.slice(nb).sort((a, b) => a.j - b.j || b.r - a.r)]; };
+  const govSlots = side(yBot, govCap), oppSlots = side(yTop, oppCap);
 
   const order = P.filter(p => seatsBy[p] > 0).sort((a,b) => seatsBy[b]-seatsBy[a] || SEAT_ORDER.indexOf(a)-SEAT_ORDER.indexOf(b));
   const gov = order[0], opp = order.slice(1);
@@ -722,8 +726,19 @@ function chamber(svg, seatsBy, n, ringBy){
   // opposition : l'opposition officielle d'abord, près de la présidence. Gouvernement minoritaire : les places
   // libres du côté gouvernement reçoivent le débordement (dernier parti d'opposition), à la suite du gouvernement
   const oppFree = oppSlots.slice(0, oppSlots.length - govExtra.length), spare = govSlots.slice(Math.min(gs.length, govSlots.length));
-  let oi = 0, si = 0;
-  for (const p of opp) for (const s of seatsOf(p)) { const slot = oi < oppFree.length ? oppFree[oi++] : spare[si++]; if (slot) placed.push({...s, ...slot}); }
+  // le parti qui ne tient pas en entier du côté opposition est coupé : sa part de chaque côté va en dernier,
+  // donc au bas du plan des deux côtés ; les partis entièrement côté gouvernement s'assoient avant lui
+  const toOpp = [], toGov = [], cut = [];
+  let room = oppFree.length;
+  for (const p of opp){
+    const ss = seatsOf(p);
+    if (ss.length <= room){ toOpp.push(...ss); room -= ss.length; }
+    else if (room > 0){ cut.push(ss.slice(0, room), ss.slice(room)); room = 0; }
+    else toGov.push(...ss);
+  }
+  const oppList = [...toOpp, ...(cut[0] || [])], govList = [...toGov, ...(cut[1] || [])];
+  oppList.forEach((s, i) => { if (oppFree[i]) placed.push({...s, ...oppFree[i]}); });
+  govList.forEach((s, i) => { if (spare[i]) placed.push({...s, ...spare[i]}); });
 
   const g = d3.select(svg); g.selectAll("*").remove();
   // rectangle du plan couché → rectangle affiché (largeur et hauteur échangées)
