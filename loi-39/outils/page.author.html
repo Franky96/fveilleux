@@ -608,7 +608,7 @@ const BASE = (() => {
   return t.map(v => 100*v/T);
 })();
 
-const state = { target: BASE.slice(), thr: 10, mode: "lead", party: "ALL", lastParty: "CAQ", view: "reg", sel: {type:"all"} };
+const state = { target: BASE.slice(), thr: 10, mode: "lead", party: "ALL", lastParty: null, view: "reg", sel: {type:"all"} };
 let RES;
 
 /* --- Loi 39, art. 14.2 et 14.3 : diviseurs 1, 2, 3… sur les électeurs inscrits --- */
@@ -1564,7 +1564,9 @@ function setMode(m, {silent = false} = {}){
   for (const id of ["lead","vote","seat","comp"]) document.getElementById("m-"+id).setAttribute("aria-pressed", id===m);
   document.getElementById("partyChips").setAttribute("aria-disabled", m==="lead");
   // « Tous les partis » n'a pas de sens pour le vote : on reprend le dernier parti choisi
-  if (m==="vote" && state.party==="ALL") state.party = state.lastParty;
+  // parti par défaut : le dernier choisi, sinon celui qui gagnerait (le plus de sièges, puis le plus de votes)
+  if (m==="vote" && state.party==="ALL") state.party = state.lastParty ||
+    P.slice().sort((a,b) => RES.total[b]-RES.total[a] || RES.natShare[b]-RES.natShare[a])[0];
   syncChips();
   if (!silent) paintMap();
 }
