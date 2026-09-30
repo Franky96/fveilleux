@@ -262,7 +262,18 @@ body{margin:0;background:#F1F3F7}
 .loi39 .repart .q{font-size:.72rem;font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:5px;background:var(--soft);white-space:nowrap}
 .loi39 .repart .q.miss{background:transparent;border:1px dashed var(--rule);color:var(--muted)}
 .loi39 .repart table{font-size:.82rem}
-.loi39 .repart td,.loi39 .repart th{font-variant-numeric:tabular-nums}
+.loi39 .repart td,.loi39 .repart th{font-variant-numeric:tabular-nums;padding-inline:7px}
+.loi39 .repart th{letter-spacing:.02em}
+.loi39 .repart{container-type:inline-size}
+@container (max-width:600px){
+.loi39 .repart .eps{display:none}
+}
+@container (max-width:460px){
+.loi39 .repart .bse{display:none}
+.loi39 .repart td:first-child{white-space:normal}
+.loi39 .repart th{white-space:normal;letter-spacing:0}
+.loi39 .repart td,.loi39 .repart th{padding:6px 5px;font-size:.74rem}
+}
 .loi39 .explain{display:grid;gap:10px}
 .loi39 .explain h4{margin:6px 0 0;font:700 .9rem var(--sans)}
 .loi39 .explain p{font-size:.86rem}
@@ -325,7 +336,11 @@ body{margin:0;background:#F1F3F7}
 .loi39 .res-grid table th,.loi39 .res-grid table td{padding-inline:9px}
 .loi39 .res-grid table th{letter-spacing:.03em}
 .loi39 .wrap .mapgrid{grid-template-columns:minmax(0,1fr) minmax(360px,420px)}
-.loi39 .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 var(--gap);align-items:start}
+.loi39 .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 var(--gap);align-items:start;
+    grid-template-areas:"reg rep" "meth rep"}
+.loi39 .lower .sec-reg{grid-area:reg}
+.loi39 .lower .sec-meth{grid-area:meth}
+.loi39 .lower .sec-rep{grid-area:rep}
 .loi39 .lower .method{grid-template-columns:1fr}
 
 }
@@ -506,7 +521,7 @@ body{margin:0;background:#F1F3F7}
 
 
   <div class="lower">
-  <section aria-labelledby="l39-h-reg">
+  <section aria-labelledby="l39-h-reg" class="sec-reg">
     <div class="sec-head">
       <h2 id="l39-h-reg">Région par région</h2>
       <p class="muted">Pour chaque région : sièges de circonscription et de région, résultat par parti. Le format est « circ. + rég. ».</p>
@@ -517,10 +532,9 @@ body{margin:0;background:#F1F3F7}
         <tbody id="l39-regBody"></tbody>
       </table>
     </div>
-    <div class="repart" id="l39-repart"></div>
   </section>
 
-  <section aria-labelledby="l39-h-meth">
+  <section aria-labelledby="l39-h-meth" class="sec-meth">
     <div class="sec-head"><h2 id="l39-h-meth">Méthode et limites</h2></div>
     <div class="method">
       <div class="box">
@@ -528,7 +542,7 @@ body{margin:0;background:#F1F3F7}
         <ol>
           <li><b>125 députés</b> : 80 de circonscription élus au scrutin majoritaire et 45 de région (art. 14).</li>
           <li><b>Sièges de circonscription par région</b> : 1 par région, 1 de plus pour la Gaspésie–Îles-de-la-Madeleine, et les 62 autres répartis selon le nombre d'électeurs avec les diviseurs 1, 2, 3… (art. 14.2).</li>
-          <li><b>Sièges de région</b> : 1 pour chacune des 16 régions autres que le Nord-du-Québec, et les 29 autres répartis de la même façon (art. 14.3).</li>
+          <li><b>Sièges de région</b> : 1 pour chacune des 16 régions autres que le Nord-du-Québec, et les 29 autres répartis de la même façon (art. 14.3). <a href="#l39-h-rep">Voir le calcul</a></li>
           <li><b>Compensation</b> : dans chaque région, chaque parti reçoit un score égal à son vote divisé par 1 + la moitié (arrondie vers le haut) de ses députés de circonscription. Le meilleur score gagne un siège, puis le diviseur de ce parti augmente de 1, et on recommence jusqu'à ce que tous les sièges de région soient attribués (art. 379.1). Un parti qui a raflé les circonscriptions part donc avec un handicap ; un parti qui n'en a gagné aucune part avec son vote complet. Le détail tour par tour de chaque région est dans le panneau de la carte.</li>
           <li><b>Seuil</b> : 10 % des votes valides à l'échelle du Québec pour participer à la compensation (art. 379.2).</li>
         </ol>
@@ -553,6 +567,12 @@ body{margin:0;background:#F1F3F7}
       <span>Méthode de référence : <a href="https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/conseil-executif/publications-adm/autres_documents/reforme-scrutin_simulation_.pdf" target="_blank" rel="noopener">Gouvernement du Québec, « Simulation — Mode de scrutin mixte avec compensation régionale », janvier 2020</a>.</span>
       <span>Contours : sections de vote et circonscriptions 2026 d'Élections Québec, regroupées et limitées à la terre ferme pour l'affichage. Contours simplifiés.</span>
     </div>
+  </section>
+
+  <section aria-labelledby="l39-h-rep" class="sec-rep">
+    <div class="sec-head"><h2 id="l39-h-rep">Répartition des sièges de région</h2>
+      <p class="muted">Comment les 45 sièges de région sont répartis entre les 17 régions, avant même le vote.</p></div>
+    <div class="repart" id="l39-repart"></div>
   </section>
   </div>
 </div>
@@ -1470,11 +1490,10 @@ function render(){
   const totE = DATA.regions.reduce((a,r) => a + r.electors, 0);
   const rows = DATA.regions.slice().sort((a,b) => b.electors-a.electors).map(r => {
     const base = r.code===NORD ? 0 : 1, extra = EXTRA_L[r.code]||0;
-    return `<tr><td>${esc(r.name)}</td><td>${nf(r.electors)}</td><td>${base}</td><td>${extra ? "+"+extra : "—"}</td><td><b>${LIST[r.code]}</b></td>
-      <td>${LIST[r.code] ? nf(r.electors/LIST[r.code]) : "—"}</td></tr>`;
+    return `<tr><td>${esc(r.name)}</td><td>${nf(r.electors)}</td><td class="bse">${base}</td><td>${extra ? "+"+extra : "—"}</td><td><b>${LIST[r.code]}</b></td>
+      <td class="eps">${LIST[r.code] ? nf(r.electors/LIST[r.code]) : "—"}</td></tr>`;
   }).join("");
   document.getElementById("l39-repart").innerHTML = `
-    <h3>Comment les 45 sièges de région sont répartis entre les régions</h3>
     <ol>
       <li><b>Un siège de base par région</b> : chacune des 16 régions en reçoit un, sauf le Nord-du-Québec, qui n'en a aucun (16 sièges, art. 14.3).</li>
       <li><b>Les 29 autres selon le nombre d'électeurs inscrits</b> : on divise les électeurs de chaque région par 1, 2, 3, 4… Les 29 plus grands résultats (« quotients ») gagnent chacun un siège pour leur région. C'est la méthode des plus grandes moyennes, la même que pour les 62 sièges de circonscription (art. 14.2).</li>
@@ -1487,9 +1506,9 @@ function render(){
         <span class="q miss" title="Premier quotient non retenu">${esc(nm(next[1]))} ÷${next[2]} · ${nf(next[0])}</span></div>
     </div>
     <div class="tablebox"><table>
-      <thead><tr><th>Région</th><th>Électeurs</th><th>Base</th><th>+ Quotients</th><th>Sièges</th><th>Élect. / siège</th></tr></thead>
+      <thead><tr><th>Région</th><th>Électeurs</th><th class="bse">Base</th><th>Ajout</th><th>Sièges</th><th class="eps">Élect./siège</th></tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr><td><b>Total</b></td><td>${nf(totE)}</td><td>16</td><td>+29</td><td><b>45</b></td><td>${nf(totE/45)}</td></tr></tfoot>
+      <tfoot><tr><td><b>Total</b></td><td>${nf(totE)}</td><td class="bse">16</td><td>+29</td><td><b>45</b></td><td class="eps">${nf(totE/45)}</td></tr></tfoot>
     </table></div>`;
 })();
 document.getElementById("l39-regBody").addEventListener("click", e => {

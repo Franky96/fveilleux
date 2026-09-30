@@ -253,7 +253,18 @@
 .loi39 .repart .q{font-size:.72rem;font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:5px;background:var(--soft);white-space:nowrap}
 .loi39 .repart .q.miss{background:transparent;border:1px dashed var(--rule);color:var(--muted)}
 .loi39 .repart table{font-size:.82rem}
-.loi39 .repart td,.loi39 .repart th{font-variant-numeric:tabular-nums}
+.loi39 .repart td,.loi39 .repart th{font-variant-numeric:tabular-nums;padding-inline:7px}
+.loi39 .repart th{letter-spacing:.02em}
+.loi39 .repart{container-type:inline-size}
+@container (max-width:600px){
+.loi39 .repart .eps{display:none}
+}
+@container (max-width:460px){
+.loi39 .repart .bse{display:none}
+.loi39 .repart td:first-child{white-space:normal}
+.loi39 .repart th{white-space:normal;letter-spacing:0}
+.loi39 .repart td,.loi39 .repart th{padding:6px 5px;font-size:.74rem}
+}
 .loi39 .explain{display:grid;gap:10px}
 .loi39 .explain h4{margin:6px 0 0;font:700 .9rem var(--sans)}
 .loi39 .explain p{font-size:.86rem}
@@ -316,7 +327,11 @@
 .loi39 .res-grid table th,.loi39 .res-grid table td{padding-inline:9px}
 .loi39 .res-grid table th{letter-spacing:.03em}
 .loi39 .wrap .mapgrid{grid-template-columns:minmax(0,1fr) minmax(360px,420px)}
-.loi39 .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 var(--gap);align-items:start}
+.loi39 .lower{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:0 var(--gap);align-items:start;
+    grid-template-areas:"reg rep" "meth rep"}
+.loi39 .lower .sec-reg{grid-area:reg}
+.loi39 .lower .sec-meth{grid-area:meth}
+.loi39 .lower .sec-rep{grid-area:rep}
 .loi39 .lower .method{grid-template-columns:1fr}
 
 }

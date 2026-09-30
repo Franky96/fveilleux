@@ -909,11 +909,10 @@ function render(){
   const totE = DATA.regions.reduce((a,r) => a + r.electors, 0);
   const rows = DATA.regions.slice().sort((a,b) => b.electors-a.electors).map(r => {
     const base = r.code===NORD ? 0 : 1, extra = EXTRA_L[r.code]||0;
-    return `<tr><td>${esc(r.name)}</td><td>${nf(r.electors)}</td><td>${base}</td><td>${extra ? "+"+extra : "—"}</td><td><b>${LIST[r.code]}</b></td>
-      <td>${LIST[r.code] ? nf(r.electors/LIST[r.code]) : "—"}</td></tr>`;
+    return `<tr><td>${esc(r.name)}</td><td>${nf(r.electors)}</td><td class="bse">${base}</td><td>${extra ? "+"+extra : "—"}</td><td><b>${LIST[r.code]}</b></td>
+      <td class="eps">${LIST[r.code] ? nf(r.electors/LIST[r.code]) : "—"}</td></tr>`;
   }).join("");
   document.getElementById("l39-repart").innerHTML = `
-    <h3>Comment les 45 sièges de région sont répartis entre les régions</h3>
     <ol>
       <li><b>Un siège de base par région</b> : chacune des 16 régions en reçoit un, sauf le Nord-du-Québec, qui n'en a aucun (16 sièges, art. 14.3).</li>
       <li><b>Les 29 autres selon le nombre d'électeurs inscrits</b> : on divise les électeurs de chaque région par 1, 2, 3, 4… Les 29 plus grands résultats (« quotients ») gagnent chacun un siège pour leur région. C'est la méthode des plus grandes moyennes, la même que pour les 62 sièges de circonscription (art. 14.2).</li>
@@ -926,9 +925,9 @@ function render(){
         <span class="q miss" title="Premier quotient non retenu">${esc(nm(next[1]))} ÷${next[2]} · ${nf(next[0])}</span></div>
     </div>
     <div class="tablebox"><table>
-      <thead><tr><th>Région</th><th>Électeurs</th><th>Base</th><th>+ Quotients</th><th>Sièges</th><th>Élect. / siège</th></tr></thead>
+      <thead><tr><th>Région</th><th>Électeurs</th><th class="bse">Base</th><th>Ajout</th><th>Sièges</th><th class="eps">Élect./siège</th></tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr><td><b>Total</b></td><td>${nf(totE)}</td><td>16</td><td>+29</td><td><b>45</b></td><td>${nf(totE/45)}</td></tr></tfoot>
+      <tfoot><tr><td><b>Total</b></td><td>${nf(totE)}</td><td class="bse">16</td><td>+29</td><td><b>45</b></td><td class="eps">${nf(totE/45)}</td></tr></tfoot>
     </table></div>`;
 })();
 document.getElementById("l39-regBody").addEventListener("click", e => {

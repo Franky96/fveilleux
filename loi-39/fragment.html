@@ -124,7 +124,7 @@
 
 
   <div class="lower">
-  <section aria-labelledby="l39-h-reg">
+  <section aria-labelledby="l39-h-reg" class="sec-reg">
     <div class="sec-head">
       <h2 id="l39-h-reg">Région par région</h2>
       <p class="muted">Pour chaque région : sièges de circonscription et de région, résultat par parti. Le format est « circ. + rég. ».</p>
@@ -135,10 +135,9 @@
         <tbody id="l39-regBody"></tbody>
       </table>
     </div>
-    <div class="repart" id="l39-repart"></div>
   </section>
 
-  <section aria-labelledby="l39-h-meth">
+  <section aria-labelledby="l39-h-meth" class="sec-meth">
     <div class="sec-head"><h2 id="l39-h-meth">Méthode et limites</h2></div>
     <div class="method">
       <div class="box">
@@ -146,7 +145,7 @@
         <ol>
           <li><b>125 députés</b> : 80 de circonscription élus au scrutin majoritaire et 45 de région (art. 14).</li>
           <li><b>Sièges de circonscription par région</b> : 1 par région, 1 de plus pour la Gaspésie–Îles-de-la-Madeleine, et les 62 autres répartis selon le nombre d'électeurs avec les diviseurs 1, 2, 3… (art. 14.2).</li>
-          <li><b>Sièges de région</b> : 1 pour chacune des 16 régions autres que le Nord-du-Québec, et les 29 autres répartis de la même façon (art. 14.3).</li>
+          <li><b>Sièges de région</b> : 1 pour chacune des 16 régions autres que le Nord-du-Québec, et les 29 autres répartis de la même façon (art. 14.3). <a href="#l39-h-rep">Voir le calcul</a></li>
           <li><b>Compensation</b> : dans chaque région, chaque parti reçoit un score égal à son vote divisé par 1 + la moitié (arrondie vers le haut) de ses députés de circonscription. Le meilleur score gagne un siège, puis le diviseur de ce parti augmente de 1, et on recommence jusqu'à ce que tous les sièges de région soient attribués (art. 379.1). Un parti qui a raflé les circonscriptions part donc avec un handicap ; un parti qui n'en a gagné aucune part avec son vote complet. Le détail tour par tour de chaque région est dans le panneau de la carte.</li>
           <li><b>Seuil</b> : 10 % des votes valides à l'échelle du Québec pour participer à la compensation (art. 379.2).</li>
         </ol>
@@ -171,6 +170,12 @@
       <span>Méthode de référence : <a href="https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/conseil-executif/publications-adm/autres_documents/reforme-scrutin_simulation_.pdf" target="_blank" rel="noopener">Gouvernement du Québec, « Simulation — Mode de scrutin mixte avec compensation régionale », janvier 2020</a>.</span>
       <span>Contours : sections de vote et circonscriptions 2026 d'Élections Québec, regroupées et limitées à la terre ferme pour l'affichage. Contours simplifiés.</span>
     </div>
+  </section>
+
+  <section aria-labelledby="l39-h-rep" class="sec-rep">
+    <div class="sec-head"><h2 id="l39-h-rep">Répartition des sièges de région</h2>
+      <p class="muted">Comment les 45 sièges de région sont répartis entre les 17 régions, avant même le vote.</p></div>
+    <div class="repart" id="l39-repart"></div>
   </section>
   </div>
 </div>

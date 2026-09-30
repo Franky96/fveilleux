@@ -55,7 +55,7 @@ def scope(block):
         while depth:
             depth += {"{": 1, "}": -1}.get(block[k], 0); k += 1
         inner = block[j + 1 : k - 1]
-        if prelude.startswith("@media"):
+        if prelude.startswith(("@media", "@container")):
             out.append(f"{prelude}{{\n{scope(inner)}}}\n")
         else:
             sels = ",".join(scope_sel(s) for s in prelude.split(","))
