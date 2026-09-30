@@ -748,7 +748,6 @@ const mTQ = M('torquemeter', { color: 0x9da7ad, metalness: 0.9, roughness: 0.3 }
 const mPropS = M('propshaft', { color: 0xa8afb4, metalness: 0.9, roughness: 0.28 });
 const mBlade = M('propeller', { color: 0x23272a, metalness: 0.2, roughness: 0.55 });
 const mSpin = M('propeller', { color: 0xd6d9db, metalness: 0.6, roughness: 0.3 });
-const mTip = M('propeller', { color: 0xe8e8e2, metalness: 0.1, roughness: 0.5 });
 const mFuel = M('fuelmanifold', { color: 0xbfae7f, metalness: 0.85, roughness: 0.35 });
 const mIgn = M('igniters', { color: 0xc9cdd0, metalness: 0.8, roughness: 0.3 });
 const mT5 = M('t5', { color: 0xc8a35c, metalness: 0.85, roughness: 0.35 });
@@ -907,7 +906,6 @@ const propBlades = [];
     const hold = new THREE.Group(); hold.rotation.y = k * TAU / 3 + 0.3; hold.position.y = AY(-4.2);
     const pivot = new THREE.Group(); hold.add(pivot);
     const bm = new THREE.Mesh(g, mBlade); pivot.add(bm); reg('propeller', bm);
-    const tip = new THREE.Mesh(new THREE.BoxGeometry(3.2 * S, 4.6 * S, 0.5 * S), mTip); tip.position.x = 43.2 * S; pivot.add(tip); reg('propeller', tip);
     const cuff = new THREE.Mesh(new THREE.CylinderGeometry(1.5 * S, 1.7 * S, 2.2 * S, 20), mSpin); cuff.rotation.z = Math.PI / 2; cuff.position.x = 7.2 * S; pivot.add(cuff); reg('propeller', cuff);
     propGroup.add(hold); propBlades.push(pivot);
   }
