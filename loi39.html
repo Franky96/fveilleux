@@ -21,42 +21,37 @@
     /* Pas de style.css ici : ses règles générales (button, header, input…) déformeraient la simulation.
        La barre du haut et l'interrupteur de thème reprennent donc le style du site. */
     * { box-sizing: border-box; }
-    body { margin: 0; background: #0C1019; }
-    html[data-theme="light"] body { background: #F1F3F7; }
+    /* Barre du haut : mêmes couleurs que la simulation (tokens de loi-39/loi39.css) */
+    .site-top, body { --st-bg:#0C1019; --st-surface:#141A27; --st-rule:#273045; --st-ink:#E6E9F1; --st-muted:#98A1B4; }
+    html[data-theme="light"] .site-top, html[data-theme="light"] body { --st-bg:#F1F3F7; --st-surface:#FFFFFF; --st-rule:#D6DCE6; --st-ink:#121929; --st-muted:#586176; }
+    body { margin: 0; background: var(--st-bg); }
     .site-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem;
-      padding: 1rem 1.5rem; background: #0a0f0a; border-bottom: 1px solid #2a3a2a; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-    .site-top a.retour { justify-self: start; background: #000; color: #a89f94; border: 1px solid #2a3a2a; padding: 0.4rem 1rem;
-      border-radius: 8px; text-decoration: none; font-size: 0.9rem; }
-    .site-top a.retour:hover { background: #1a2e1a; border-color: #80cc80; color: #80cc80; }
-    .site-top .titre { text-align: center; }
-    .site-top h1 { margin: 0; font-size: 1.4rem; color: #80cc80; }
-    .site-top p { margin: 0.15rem 0 0; color: #a89f94; font-size: 0.9rem; }
+      padding: 0.5rem 1.5rem; background: var(--st-surface); border-bottom: 1px solid var(--st-rule);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .site-top a.retour { justify-self: start; background: transparent; color: var(--st-muted); border: 1px solid var(--st-rule); padding: 0.3rem 0.85rem;
+      border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+    .site-top a.retour:hover { border-color: var(--st-ink); color: var(--st-ink); }
+    .site-top a.retour:focus-visible, #theme-toggle:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    .site-top .titre { text-align: center; margin: 0; color: var(--st-ink); font-size: 0.9rem; font-weight: 600; }
     .site-top .controles { justify-self: end; display: flex; align-items: center; }
-    html[data-theme="light"] .site-top { background: #f5f2eb; border-bottom-color: #d5d0c8; }
-    html[data-theme="light"] .site-top h1 { color: #2a6a2a; }
-    html[data-theme="light"] .site-top a.retour { background: #fff; color: #555; border-color: #d5d0c8; }
-    #theme-toggle { width: 68px; height: 26px; border-radius: 13px; background: #2a3a2a; border: 1.5px solid #3a5a3a; cursor: pointer;
+    #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
       transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
-    .tg-icon { font-size: 0.62rem; line-height: 1; pointer-events: none; position: relative; z-index: 2; }
-    #theme-toggle-knob { position: absolute; width: 20px; height: 20px; border-radius: 50%; top: 50%; transform: translateY(-50%); left: 3px;
-      background: #7ab880; box-shadow: 0 1px 4px rgba(0,0,0,0.55); transition: left 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s; pointer-events: none; z-index: 3; }
-    html.light #theme-toggle { background: #34c759; border-color: #28a045; }
-    html.light #theme-toggle-knob { left: 45px; background: #fff; }
+    .tg-icon { font-size: 0.6rem; line-height: 1; pointer-events: none; position: relative; z-index: 2; }
+    #theme-toggle-knob { position: absolute; width: 18px; height: 18px; border-radius: 50%; top: 50%; transform: translateY(-50%); left: 2px;
+      background: var(--st-ink); box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: left 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s; pointer-events: none; z-index: 3; }
+    html.light #theme-toggle-knob { left: 38px; }
+    @media (prefers-reduced-motion: reduce) { #theme-toggle, #theme-toggle-knob { transition: none; } }
     @media (max-width: 600px) {
-      .site-top { padding: 0.75rem 1rem; grid-template-columns: auto 1fr auto; }
-      .site-top h1 { font-size: 1.1rem; }
-      .site-top p { display: none; }
+      .site-top { padding: 0.45rem 1rem; }
+      .site-top .titre { display: none; }
     }
   </style>
 </head>
 <body>
   <div class="site-top">
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <div class="titre">
-      <h1>Loi 39</h1>
-      <p>Le Québec avec le mode de scrutin du projet de loi n° 39</p>
-    </div>
+    <p class="titre">Le Québec avec le mode de scrutin du projet de loi n° 39</p>
     <div class="controles" id="controles"></div>
   </div>
 
