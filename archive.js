@@ -15,6 +15,8 @@ if (!sessionStorage.getItem('loggedIn')) {
 
   // Hide all cards immediately so nothing flashes before Firestore responds
   cards.forEach(card => { card.style.display = 'none'; });
+  // en ouvrant une section archivée, son bouton « ← Accueil » ramènera ici (voir version.js)
+  cards.forEach(card => card.addEventListener('click', () => sessionStorage.setItem('retourArchives', '1')));
 
   // Load archived sections from Firestore
   let archivedSections = [];
@@ -27,7 +29,10 @@ if (!sessionStorage.getItem('loggedIn')) {
   cards.forEach(card => {
     const section = card.getAttribute('data-section');
     const isArchived = archivedSections.includes(section);
-    const hasPermission = role === 'admin' || permissions.includes(section);
+    const parent = card.getAttribute('data-parent');
+    const hasPermission = role === 'admin' || permissions.includes(section) || (parent && permissions.includes(parent));
+    // une page dont tout le groupe est archivé est déjà atteignable par la carte du groupe
+    if (parent && archivedSections.includes(parent)) { card.style.display = 'none'; return; }
     if (isArchived && hasPermission) {
       card.style.display = '';
     }

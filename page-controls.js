@@ -63,7 +63,8 @@
     if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
 
     const webmailBtn = document.getElementById('btn-webmail');
-    if (webmailBtn) webmailBtn.style.display = isAdmin ? 'flex' : 'none';
+    const perms = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (webmailBtn) webmailBtn.style.display = isAdmin || perms.includes('webmail') ? 'flex' : 'none';
 
     const badgeBtn = document.getElementById('toggle-version-btn');
     if (badgeBtn) {

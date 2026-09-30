@@ -50,10 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const conceptBtn = document.getElementById('btn-concept');
   if (conceptBtn) conceptBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
 
-  // 4. Gérer l'affichage du bouton Webmail (admin seulement)
+  // 4. Bouton Webmail : admins et utilisateurs avec la permission « webmail »
   const btnWebmail = document.getElementById('btn-webmail');
   if (btnWebmail) {
-    btnWebmail.style.display = role === 'admin' ? 'flex' : 'none';
+    btnWebmail.style.display = role === 'admin' || permissions.includes('webmail') ? 'flex' : 'none';
   }
 
   // Rendre le menu visible maintenant que tout est appliqué

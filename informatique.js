@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cards = document.querySelectorAll('.menu-card');
   cards.forEach(card => {
     const section = card.getAttribute('data-section');
-    const isArchived = archivedSections.includes(section);
+    // groupe entier archivé (ouvert depuis Archives) : on montre ses pages, archivées avec lui
+    const isArchived = archivedSections.includes(section) && !archivedSections.includes('informatique');
     if (isArchived || (!hasFullInfo && !permissions.includes(section))) {
       card.style.display = 'none';
     }
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Items admin seulement
   const isAdmin = role === 'admin';
   const btnWebmail = document.getElementById('btn-webmail');
-  if (btnWebmail) btnWebmail.style.display = isAdmin ? 'flex' : 'none';
+  if (btnWebmail) btnWebmail.style.display = isAdmin || permissions.includes('webmail') ? 'flex' : 'none';
   const badgeBtn = document.getElementById('toggle-version-btn');
   if (badgeBtn) {
     badgeBtn.style.display = isAdmin ? 'flex' : 'none';

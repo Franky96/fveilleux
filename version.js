@@ -19,6 +19,20 @@ const SITE_VERSION = '1.4.2';
 
 })();
 
+// Section ouverte depuis la page Archives : son bouton « ← Accueil » ramène aux Archives.
+// Le retour à l'accueil (dashboard) efface ce souvenir.
+(function () {
+  const page = location.pathname.split('/').pop() || 'index.html';
+  if (page === 'dashboard.html' || page === 'index.html') { sessionStorage.removeItem('retourArchives'); return; }
+  if (page === 'archive.html' || sessionStorage.getItem('retourArchives') !== '1') return;
+  const go = () => document.querySelectorAll('a[href="dashboard.html"]').forEach(a => {
+    if (!/accueil|^\s*←\s*$/i.test(a.textContent)) return;   // seulement les boutons de retour
+    a.href = 'archive.html';
+    if (/accueil/i.test(a.textContent)) a.textContent = a.textContent.replace(/accueil/i, 'Archives');
+  });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+
 window.toggleVersionBadge = function () {
   const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
   const newHidden = !hidden;

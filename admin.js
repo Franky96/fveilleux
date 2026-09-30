@@ -354,6 +354,7 @@ const PERMS_STRUCTURE = [
   { key: 'hockey',    label: 'Hockey' },
   { key: 'liens',     label: 'Liens utiles' },
   { key: 'films',     label: 'Films & Séries' },
+  { key: 'webmail',   label: 'Webmail' },
   { key: 'rona',      label: 'RONA S&S' },
   { key: 'pageTest',  label: 'Page de tests' },
   { key: 'osint',     label: 'OSINT Map' },

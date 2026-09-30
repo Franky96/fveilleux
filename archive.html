@@ -17,8 +17,10 @@
 
     <header data-topbar>
       <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
-      <h1>Archives</h1>
-      <p class="subtitle">Sections archivées</p>
+      <div style="text-align:center;">
+        <h1>Archives</h1>
+        <p class="subtitle">Sections archivées</p>
+      </div>
     </header>
 
     <main>
@@ -26,36 +28,43 @@
 
       <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
 
+        <!-- Cartes de l'accueil et des groupes (Informatique, Moteurs, Jeux) : archive.js n'affiche que les sections archivées -->
+        
         <a href="ena.html" class="menu-card" data-section="ena">
           <span class="icon">🛠️</span>
           <h2>ÉNA</h2>
           <p>École nationale d'aérotechnique</p>
         </a>
 
+        
         <a href="aviation.html" class="menu-card" data-section="aviation">
           <span class="icon">✈️</span>
           <h2>Aviation</h2>
           <p>Outils, météo et aéronefs</p>
         </a>
 
+        
         <a href="bieres.html" class="menu-card" data-section="bieres">
           <span class="icon">🍺</span>
           <h2>Bières</h2>
           <p>Vive la zythologie</p>
         </a>
 
+        
         <a href="scifi.html" class="menu-card" data-section="scifi">
           <span class="icon">🚀</span>
           <h2>Science-Fiction</h2>
           <p>Archives galactiques</p>
         </a>
 
+        
         <a href="hockey.html" class="menu-card" data-section="hockey">
           <span class="icon">🏒</span>
           <h2>Hockey</h2>
           <p>Statistiques LNH</p>
         </a>
 
+        
         <a href="liens.html" class="menu-card" data-section="liens">
           <span class="icon">🌍</span>
           <h2>Liens utiles</h2>
@@ -64,7 +73,7 @@
 
         <a href="films.html" class="menu-card" data-section="films">
           <span class="icon">🎬</span>
-          <h2>Films &amp; Séries</h2>
+          <h2>Films & Séries</h2>
           <p>Ma liste de visionnement</p>
         </a>
 
@@ -74,10 +83,160 @@
           <p>Outils techniques et avioniques</p>
         </a>
 
+        <a href="moteurs.html" class="menu-card" data-section="moteurs">
+          <span class="icon">🌀</span>
+          <h2>Moteurs</h2>
+          <p>Simulations CFM56-7B et PT6A-21</p>
+        </a>
+
+        <a href="jeuxdesociete.html" class="menu-card" data-section="jeuxdesociete">
+          <span class="icon">🎲</span>
+          <h2>Jeux de société</h2>
+          <p>Outils et compagnons de jeux</p>
+        </a>
+
         <a href="rona.html" class="menu-card" data-section="rona">
           <span class="icon">👷‍♂️</span>
           <h2>RONA S&amp;S</h2>
           <p>Suivi des trousses de premiers soins</p>
+        </a>
+
+        <a href="pageTest.html" class="menu-card" data-section="pageTest">
+          <span class="icon">🧪</span>
+          <h2>Page de tests</h2>
+          <p>Page pour faire des tests html et js</p>
+        </a>
+
+        <a href="votes-quebec.html" class="menu-card" data-section="votes-quebec">
+          <span class="icon">🗳️</span>
+          <h2>Votes Québec</h2>
+          <p>Simulation du mode de scrutin mixte sur les projections Qc125</p>
+        </a>
+
+        <a href="distant.html" class="menu-card" data-section="distant">
+          <span class="icon">🖥️</span>
+          <h2>Connexion à distance</h2>
+          <p>Manuels de maintenance du cégep, dans le navigateur</p>
+        </a>
+
+        <a href="osint.html" class="menu-card" data-section="osint">
+          <span class="icon">🌐</span>
+          <h2>OSINT Map</h2>
+          <p>Avions, satellites, séismes en direct</p>
+        </a>
+
+        <a href="arinc429.html" class="menu-card" data-section="arinc429" data-parent="informatique">
+          <span class="icon">📡</span>
+          <h2>ARINC 429</h2>
+          <p>Décodeur de mots avioniques</p>
+        </a>
+
+        <a href="csdb.html" class="menu-card" data-section="csdb" data-parent="informatique">
+          <span class="icon">📶</span>
+          <h2>CSDB</h2>
+          <p>Commercial Standard Digital Bus — décodeur de blocs</p>
+        </a>
+
+        <a href="converter.html" class="menu-card" data-section="converter" data-parent="informatique">
+          <span class="icon">🔢</span>
+          <h2>Convertisseur</h2>
+          <p>Décimal · Binaire · Hex · Octal</p>
+        </a>
+
+        <a href="crypteur.html" class="menu-card" data-section="crypteur" data-parent="informatique">
+          <span class="icon">⚙️</span>
+          <h2>Encodeur BNR</h2>
+          <p>Signe-magnitude · Bit de signe · Valeur par bit</p>
+        </a>
+
+        <a href="tcpip.html" class="menu-card" data-section="tcpip" data-parent="informatique">
+          <span class="icon">🌐</span>
+          <h2>TCP/IP</h2>
+          <p>Calculateur de sous-réseau · CIDR</p>
+        </a>
+
+        <a href="qr-transfer.html" class="menu-card" data-section="qr-transfer" data-parent="informatique">
+          <span class="icon">📷</span>
+          <h2>QR Transfert</h2>
+          <p>Transfert de fichiers par codes QR — sans réseau</p>
+        </a>
+
+        <a href="shape-transfer.html" class="menu-card" data-section="shape-transfer" data-parent="informatique">
+          <span class="icon">▲■●</span>
+          <h2>Shape Transfert</h2>
+          <p>Transfert de fichiers par symboles géométriques colorés — sans réseau</p>
+        </a>
+
+        <a href="chips.html" class="menu-card" data-section="chips" data-parent="informatique">
+          <span class="icon">🔧</span>
+          <h2>Simulateurs</h2>
+          <p>NE555 · Portes logiques · AO 741 · MOS 6502</p>
+        </a>
+
+        <a href="circuit.html" class="menu-card" data-section="circuit" data-parent="informatique">
+          <span class="icon">⚡</span>
+          <h2>Circuit logique</h2>
+          <p>Simulateur interactif — placer, connecter, simuler</p>
+        </a>
+
+            <a href="pt6a21.html" class="menu-card" data-section="pt6a21" data-parent="moteurs">
+              <span class="icon">🛩️</span>
+              <h2>PT6A-21</h2>
+              <p>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</p>
+            </a>
+
+        <a href="o320.html" class="menu-card" data-section="o320" data-parent="moteurs">
+              <span class="icon">✈️</span>
+              <h2>O-320</h2>
+              <p>Lycoming quatre cylindres à plat de 150 HP — modèle 3D, cycle à quatre temps, instruments</p>
+            </a>
+
+        <a href="turboreacteur.html" class="menu-card" data-section="turboreacteur" data-parent="moteurs">
+              <span class="icon">🌀</span>
+              <h2>CFM56-7B</h2>
+              <p>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d'air</p>
+            </a>
+
+            <a href="pw1500g.html" class="menu-card" data-section="pw1500g" data-parent="moteurs">
+              <span class="icon">⚙️</span>
+              <h2>PW1500G</h2>
+              <p>Turbofan à réducteur de l'Airbus A220 — réducteur de soufflante, coupe 3D, données certifiées</p>
+            </a>
+
+        <a href="7wonders.html" class="menu-card" data-section="7wonders" data-parent="jeuxdesociete">
+          <span class="icon">🏛️</span>
+          <h2>7 Wonders</h2>
+          <p>Comptage des points &amp; aide aux règles</p>
+        </a>
+
+        <a href="qwirkle.html" class="menu-card" data-section="qwirkle" data-parent="jeuxdesociete">
+          <span class="icon">🎯</span>
+          <h2>Qwirkle</h2>
+          <p>Compteur de points par tour</p>
+        </a>
+
+        <a href="tickettoride.html" class="menu-card" data-section="tickettoride" data-parent="jeuxdesociete">
+          <span class="icon">🚂</span>
+          <h2>Ticket to Ride</h2>
+          <p>Compteur de points &amp; Longest Train</p>
+        </a>
+
+        <a href="flip7.html" class="menu-card" data-section="flip7" data-parent="jeuxdesociete">
+          <span class="icon">🃏</span>
+          <h2>Flip 7</h2>
+          <p>Compteur de points par manche</p>
+        </a>
+
+        <a href="ladamepique.html" class="menu-card" data-section="ladamepique" data-parent="jeuxdesociete">
+          <span class="icon">♠️</span>
+          <h2>La Dame de Pique</h2>
+          <p>Compteur de points — 2000 pour gagner</p>
+        </a>
+
+        <a href="compteurgeneral.html" class="menu-card" data-section="compteurgeneral" data-parent="jeuxdesociete">
+          <span class="icon">🎯</span>
+          <h2>Compteur Général</h2>
+          <p>Score configurable — maximum ou minimum pour gagner</p>
         </a>
 
       </nav>
