@@ -29,7 +29,7 @@
       padding: 0.5rem 1.5rem; background: var(--st-surface); border-bottom: 1px solid var(--st-rule);
       font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
     .site-top a.retour { justify-self: start; background: transparent; color: var(--st-muted); border: 1px solid var(--st-rule); padding: 0.3rem 0.85rem;
-      border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+      border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
     .site-top a.retour:hover { border-color: var(--st-ink); color: var(--st-ink); }
     .site-top a.retour:focus-visible, #theme-toggle:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
     .site-top .titre { text-align: center; margin: 0; color: var(--st-ink); font-size: 0.9rem; font-weight: 600; }
@@ -42,6 +42,10 @@
       background: var(--st-ink); box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: left 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s; pointer-events: none; z-index: 3; }
     html.light #theme-toggle-knob { left: 38px; }
     @media (prefers-reduced-motion: reduce) { #theme-toggle, #theme-toggle-knob { transition: none; } }
+    .site-top .titre { font-size: 0.82rem; text-wrap: balance; }
+    .site-top .titre sup { font-size: 0.7em; }
+    /* la ligne « Simulation · … » est dans la barre : on ne la répète pas en tête de la page */
+    @media (min-width: 601px) { .loi39 .kicker { display: none; } }
     @media (max-width: 600px) {
       .site-top { padding: 0.45rem 1rem; }
       .site-top .titre { display: none; }
@@ -51,7 +55,7 @@
 <body>
   <div class="site-top">
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre">Le Québec avec le mode de scrutin du projet de loi n° 39</p>
+    <p class="titre">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></p>
     <div class="controles" id="controles"></div>
   </div>
 
@@ -60,7 +64,7 @@
   <header class="top">
     <div class="big num" id="l39-bigNum">52<small>sièges sur 125</small></div>
     <div class="headline">
-      <span class="eyebrow">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>28 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span>
+      <span class="eyebrow kicker">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>28 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span>
       <h1 id="l39-headline">Le PQ serait minoritaire avec la loi 39</h1>
       <p class="lede" id="l39-lede"></p>
       <div class="coal" id="l39-statusPills"></div>
