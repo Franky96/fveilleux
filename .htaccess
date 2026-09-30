@@ -1,0 +1,16 @@
+# Cache du navigateur : HTML, JS, CSS et JSON sont revérifiés auprès du serveur à chaque visite.
+# S'ils n'ont pas changé, le serveur répond « 304 inchangé » (quelques octets) : la page reste rapide,
+# et une mise à jour poussée sur master est visible tout de suite, sans Ctrl+F5 ni effacer l'historique.
+# (Sans ce fichier, Hostinger laissait le navigateur garder les .js jusqu'à 7 jours.)
+# Les images, polices, PDF, etc. gardent la mise en cache normale d'Hostinger.
+<IfModule mod_expires.c>
+  <FilesMatch "\.(html?|js|mjs|css|json|webmanifest)$">
+    ExpiresActive Off
+  </FilesMatch>
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html?|js|mjs|css|json|webmanifest)$">
+    Header set Cache-Control "no-cache"
+    Header unset Expires
+  </FilesMatch>
+</IfModule>
