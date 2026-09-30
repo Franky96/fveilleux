@@ -12,7 +12,9 @@ if (!sessionStorage.getItem('loggedIn') || sessionStorage.getItem('userRole') !=
 // ── Archive management ───────────────────────────────
 const SECTIONS_ARCHIVABLES = [
   { key: 'ena',          icon: '🛠️', label: 'ÉNA'            },
-  { key: 'aviation',     icon: '✈️', label: 'Aviation'        },
+  { key: 'aviation',     icon: '✈️', label: 'Aviation', children: [
+    { key: 'aeronefs', icon: '🛩️', label: 'Aéronefs' },
+  ]},
   { key: 'bieres',       icon: '🍺', label: 'Bières'          },
   { key: 'scifi',        icon: '🚀', label: 'Science-Fiction' },
   { key: 'hockey',       icon: '🏒', label: 'Hockey'          },
@@ -94,101 +96,55 @@ onSnapshot(configRef, (snap) => {
   }
 });
 
-function makeArchiveCard(s, isChild = false) {
-  const archived = archivedSections.includes(s.key);
-  const card = document.createElement('div');
-  card.style.cssText = [
-    'background:' + (archived ? '#1c0f0f' : '#0f1a0f'),
-    'border:1px solid ' + (archived ? '#6a2a2a' : '#2a4a2a'),
-    'border-radius:' + (isChild ? '8px' : '10px'),
-    'padding:' + (isChild ? '0.6rem 0.5rem' : '1rem 0.8rem'),
-    'cursor:pointer',
-    'transition:all 0.15s',
-    'text-align:center',
-    'user-select:none',
-  ].join(';');
-  card.innerHTML = `
-    <div style="font-size:${isChild ? '1.1rem' : '1.6rem'}; margin-bottom:0.3rem;">${s.icon}</div>
-    <div style="font-weight:bold; color:${archived ? '#c07070' : '#80cc80'}; font-size:${isChild ? '0.75rem' : '0.88rem'}; margin-bottom:0.25rem;">${s.label}</div>
-    <div style="font-size:0.65rem; color:${archived ? '#7a3a3a' : '#3a6a3a'}; letter-spacing:0.03rem;">
-      ${archived ? '📁 Archivé' : (isChild ? '✅ Visible' : '🏠 Dashboard')}
-    </div>`;
-  card.onmouseenter = () => { card.style.opacity = '0.75'; };
-  card.onmouseleave = () => { card.style.opacity = '1'; };
-  card.onclick = () => toggleArchive(s.key);
-  return card;
+// Ligne à interrupteur (permissions invité, archives) : icône, nom, état en mots, interrupteur
+function ligneBascule({ icon, label, on, etatOn, etatOff, ton, onClick, enfant = false, note = '' }) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'bx-row' + (enfant ? ' bx-enfant' : '') + ' ' + (on ? ton : 'bx-off');
+  b.setAttribute('role', 'switch');
+  b.setAttribute('aria-checked', on);
+  b.innerHTML = `<span class="bx-ico" aria-hidden="true">${icon || ''}</span>`
+    + `<span class="bx-nom">${esc(label)}${note ? `<small>${note}</small>` : ''}</span>`
+    + `<span class="bx-etat">${on ? etatOn : etatOff}</span><span class="bx-sw" aria-hidden="true"></span>`;
+  b.onclick = onClick;
+  return b;
+}
+function zoneBascule(conteneur, resume, simples, groupes) {
+  conteneur.removeAttribute('style');
+  conteneur.className = 'bx';
+  conteneur.innerHTML = `<p class="bx-resume">${resume}</p>`;
+  if (simples.length) { const d = document.createElement('div'); d.className = 'bx-simples'; simples.forEach(x => d.appendChild(x)); conteneur.appendChild(d); }
+  if (groupes.length) { const d = document.createElement('div'); d.className = 'bx-groupes'; groupes.forEach(x => d.appendChild(x)); conteneur.appendChild(d); }
 }
 
 function renderArchiveGrid() {
   const grid = document.getElementById('archive-grid');
   if (!grid) return;
-  grid.innerHTML = '';
+  const sw = (s, enfant, onClick, note) => ligneBascule({ icon: s.icon, label: s.label, on: !archivedSections.includes(s.key),
+    etatOn: 'Sur l’accueil', etatOff: 'Archivée', ton: 'bx-on', onClick, enfant, note });
+  const simples = [], groupes = [];
   SECTIONS_ARCHIVABLES.forEach(s => {
-    if (s.children) {
-      // Groupe parent + enfants
-      const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 0.75rem;';
-
-      const parentArchived = archivedSections.includes(s.key);
-      const parentCard = document.createElement('div');
-      parentCard.style.cssText = [
-        'background:' + (parentArchived ? '#1c0f0f' : '#0f1a0f'),
-        'border:2px solid ' + (parentArchived ? '#6a2a2a' : '#2a5a2a'),
-        'border-radius:10px',
-        'padding:1rem 0.8rem',
-        'cursor:pointer',
-        'transition:all 0.15s',
-        'text-align:center',
-        'user-select:none',
-      ].join(';');
-      parentCard.innerHTML = `
-        <div style="font-size:1.6rem; margin-bottom:0.4rem;">${s.icon}</div>
-        <div style="font-weight:bold; color:${parentArchived ? '#c07070' : '#80cc80'}; font-size:0.88rem; margin-bottom:0.35rem;">${s.label}</div>
-        <div style="font-size:0.7rem; color:${parentArchived ? '#7a3a3a' : '#3a6a3a'}; letter-spacing:0.03rem;">
-          ${parentArchived ? '📁 Archivé' : '🏠 Dashboard'}
-        </div>`;
-      parentCard.onmouseenter = () => { parentCard.style.opacity = '0.75'; };
-      parentCard.onmouseleave = () => { parentCard.style.opacity = '1'; };
-      parentCard.onclick = () => toggleArchive(s.key, s.children);
-      wrapper.appendChild(parentCard);
-
-      s.children.forEach(child => {
-        wrapper.appendChild(makeArchiveCard(child, true));
-      });
-
-      grid.appendChild(wrapper);
-    } else {
-      grid.appendChild(makeArchiveCard(s));
-    }
+    if (!s.children) { simples.push(sw(s, false, () => toggleArchive(s.key))); return; }
+    const parentArch = archivedSections.includes(s.key);
+    const carte = document.createElement('div');
+    carte.className = 'bx-groupe' + (parentArch ? ' bx-groupe-off' : '');
+    carte.appendChild(sw(s, false, () => toggleArchive(s.key, s.children), 'tout le groupe'));
+    s.children.forEach(c => carte.appendChild(sw(c, true, () => toggleArchive(c.key), parentArch ? 'groupe archivé' : '')));
+    groupes.push(carte);
   });
+  const n = SECTIONS_ARCHIVABLES.flatMap(s => [s, ...(s.children || [])]).filter(s => archivedSections.includes(s.key)).length;
+  zoneBascule(grid, n ? `<b>${n}</b> section${n > 1 ? 's' : ''} ou page${n > 1 ? 's' : ''} archivée${n > 1 ? 's' : ''}. Une section archivée disparaît de l’accueil pour tout le monde et reste consultable dans Archives.`
+                      : 'Aucune section archivée : tout est sur l’accueil.', simples, groupes);
 }
 
 function renderGuestPerms() {
   const grid = document.getElementById('guest-perms-grid');
   if (!grid) return;
-  grid.innerHTML = '';
-  SECTIONS_INVITABLES.forEach(s => {
-    const on = guestPermissions.includes(s.key);
-    const card = document.createElement('div');
-    card.style.cssText = [
-      'background:' + (on ? '#0f2a0f' : '#0f1a0f'),
-      'border:1px solid ' + (on ? '#27ae60' : '#2a3a2a'),
-      'border-radius:10px',
-      'padding:1rem 0.8rem',
-      'cursor:pointer',
-      'transition:all 0.15s',
-      'text-align:center',
-      'user-select:none',
-    ].join(';');
-    card.innerHTML = `
-      <div style="font-size:1.6rem; margin-bottom:0.3rem;">${s.icon}</div>
-      <div style="font-weight:bold; color:${on ? '#27ae60' : '#556655'}; font-size:0.88rem; margin-bottom:0.25rem;">${s.label}</div>
-      <div style="font-size:0.65rem; color:${on ? '#1a6a1a' : '#2a3a2a'}; letter-spacing:0.03rem;">${on ? '✅ Accessible' : '🔒 Bloqué'}</div>`;
-    card.onmouseenter = () => { card.style.opacity = '0.75'; };
-    card.onmouseleave = () => { card.style.opacity = '1'; };
-    card.onclick = () => toggleGuestPerm(s.key);
-    grid.appendChild(card);
-  });
+  const lignes = SECTIONS_INVITABLES.map(s => ligneBascule({ icon: s.icon, label: s.label, on: guestPermissions.includes(s.key),
+    etatOn: 'Ouverte', etatOff: 'Bloquée', ton: 'bx-on', onClick: () => toggleGuestPerm(s.key),
+    note: archivedSections.includes(s.key) ? 'archivée : invisible sur l’accueil' : '' }));
+  const n = SECTIONS_INVITABLES.filter(s => guestPermissions.includes(s.key)).length;
+  zoneBascule(grid, `<b>${n}</b> section${n > 1 ? 's' : ''} sur ${SECTIONS_INVITABLES.length} ouverte${n > 1 ? 's' : ''} aux invités. Les manuels, l’admin et la connexion à distance leur restent toujours fermés.`, lignes, []);
 }
 
 window.toggleGuestPerm = async function(key) {
