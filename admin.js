@@ -33,7 +33,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'distant',      icon: '🖥️', label: 'Connexion à distance' },
-  { key: 'loi39',        icon: '🗳️', label: 'Loi 39'          },
+  { key: 'loi39',        icon: '🗳️', label: 'Votes Québec'    },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
     { key: '7wonders',    icon: '🏛️', label: '7 Wonders'       },
@@ -57,7 +57,7 @@ const SECTIONS_INVITABLES = [
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société' },
   { key: 'rona',          icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',         icon: '🌐', label: 'OSINT Map'       },
-  { key: 'loi39',         icon: '🗳️', label: 'Loi 39'          },
+  { key: 'loi39',         icon: '🗳️', label: 'Votes Québec'    },
 ];
 
 const configRef = doc(db, "systeme", "config");
@@ -339,7 +339,7 @@ const PERMS_STRUCTURE = [
   { key: 'pageTest',  label: 'Page de tests' },
   { key: 'osint',     label: 'OSINT Map' },
   { key: 'distant',   label: 'Connexion à distance' },
-  { key: 'loi39',     label: 'Loi 39' },
+  { key: 'loi39',     label: 'Votes Québec' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'csdb',      label: 'CSDB' },
