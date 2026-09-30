@@ -421,7 +421,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
   <section aria-labelledby="h-res">
     <div class="sec-head">
       <h2 id="h-res">Deux Assemblées, les mêmes votes</h2>
-      <p class="muted">À gauche, le mode actuel (127 circonscriptions, un seul tour). À droite, le mode mixte avec compensation régionale du projet de loi 39 : 80 sièges de circonscription et 45 sièges de région.</p>
+      <p class="muted">Un point par siège. À gauche, le mode actuel ; à droite, la loi 39, avec ses 45 sièges de région.</p>
     </div>
     <div class="res-grid">
     <div class="hemis">
@@ -438,7 +438,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
     <div class="res-side">
     <div class="tablebox">
       <table>
-        <thead><tr><th>Parti</th><th>Vote</th><th>Actuel (127)</th><th>Circ. (80)</th><th>Région (45)</th><th>Total (125)</th><th>% des sièges</th><th class="bar-cell" style="text-align:left">Sièges vs vote</th></tr></thead>
+        <thead><tr><th>Parti</th><th>Vote</th><th>Circ. (80)</th><th>Région (45)</th><th>Total (125)</th><th>% des sièges</th><th class="bar-cell" style="text-align:left">Sièges vs vote</th></tr></thead>
         <tbody id="resBody"></tbody>
       </table>
     </div>
@@ -502,7 +502,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
           <div class="tip" id="tip" hidden></div>
         </div>
         <div class="scale" id="scale"></div>
-        <p class="hint" id="hint">Circonscriptions : découpage hypothétique à 80 construit pour cette simulation à partir des 16 951 sections de vote 2026 d'Élections Québec (voir « Méthode »). Ce n'est pas une carte officielle : la Commission de la représentation électorale n'en a jamais tracé.</p>
+        <p class="hint" id="hint">Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).</p>
       </div>
       <aside class="panel" id="panel" aria-live="polite"></aside>
     </div>
@@ -560,7 +560,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
 
   <section aria-labelledby="h-rep" class="sec-rep">
     <div class="sec-head"><h2 id="h-rep">Répartition des sièges de région</h2>
-      <p class="muted">Comment les 45 sièges de région sont répartis entre les 17 régions, avant même le vote.</p></div>
+      <p class="muted">Combien des 45 sièges de région revient à chaque région.</p></div>
     <div class="repart" id="repart"></div>
   </section>
   </div>
@@ -1063,7 +1063,7 @@ function paintMap(){
   const ramp = `<span class="ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${col} 6%, var(--surface)), ${col})"></span>`;
   document.getElementById("hint").textContent = isCur
     ? "Carte actuelle : les 127 circonscriptions de la carte électorale 2026 (Élections Québec), avec la projection Qc125 de chacune. C'est le mode de scrutin en vigueur, sans simulation."
-    : "Loi 39 : découpage hypothétique à 80 circonscriptions construit pour cette simulation à partir des 16 951 sections de vote 2026 d'Élections Québec (voir « Méthode »). Ce n'est pas une carte officielle : la Commission de la représentation électorale n'en a jamais tracé.";
+    : "Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).";
   sc.innerHTML = !byReg
     ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription</span>`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
@@ -1116,8 +1116,6 @@ function renderAllPanel(){
       <td><b>${LIST[r.code]}</b></td></tr>`;
   }).join("");
   const sumRow = `<tr class="sum"><td>Total</td>${el.map(p=>`<td style="color:${PV[p]}"><b>${RES.totL[p]}</b></td>`).join("")}<td><b>45</b></td></tr>`;
-  const pairs = [];
-  for (let i=0;i<P.length;i++) for (let j=i+1;j<P.length;j++){ const n = tot[P[i]]+tot[P[j]]; if (n>=maj) pairs.push(`${P[i]} + ${P[j]} (${n})`); }
   document.getElementById("panel").innerHTML = `
     <div style="display:grid;gap:6px">
       <span class="eyebrow">Ensemble du Québec · 17 régions</span>
@@ -1128,12 +1126,10 @@ function renderAllPanel(){
       </div>
       <p class="muted" style="font-size:.84rem">Cliquez sur une région ou une circonscription de la carte pour voir son détail. Cliquez sur l'eau ou sur « Tout le Québec » pour revenir ici.</p>
     </div>
-    <div class="kv num"><div><b>80</b><span>Circ.</span></div><div><b>45</b><span>Région</span></div><div><b>125</b><span>Total</span></div></div>
     <div style="display:grid;gap:8px"><span class="eyebrow">Vote et sièges · total (circ. + rég.)</span>${rows}</div>
-    ${tot[lead] < maj && pairs.length ? `<div class="note"><span class="eyebrow">Majorités possibles à deux partis</span><p>${pairs.join(" · ")}</p></div>` : ""}
     <div class="explain">
-      <span class="eyebrow">D'où viennent les 45 sièges de région</span>
-      <p>Chaque région fait sa propre compensation, avec ses propres votes. Le tableau montre combien de sièges de région chaque parti obtient dans chaque région. Cliquez sur une région pour voir le calcul tour par tour.</p>
+      <span class="eyebrow">Sièges de région obtenus par chaque parti</span>
+      <p>Chaque région fait sa propre compensation avec ses propres votes. Cliquez sur une région pour voir le calcul tour par tour.</p>
       <div class="tablebox"><table class="ctable regsum"><thead><tr><th>Région</th>${el.map(p=>`<th style="color:${PV[p]}">${p}</th>`).join("")}<th>Sièges</th></tr></thead>
         <tbody>${regRows}${sumRow}</tbody></table></div>
     </div>`;
@@ -1399,7 +1395,7 @@ function render(){
     `La CAQ passe de ${RES.fptp.CAQ} à ${tot.CAQ} siège${tot.CAQ>1?"s":""}.`;
   const modified = state.target.some((t,i)=>Math.abs(t-BASE[i])>0.05) || state.thr !== 10;
   document.getElementById("statusPills").innerHTML =
-    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125 du ${esc(MAJ)}</span>`) +
+    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125</span>`) +
     `<span class="pill">Seuil ${fmt(state.thr,state.thr%1?1:0)} % : ${RES.eligible.length} parti${RES.eligible.length>1?"s":""} admissible${RES.eligible.length>1?"s":""}</span>`;
 
   const gbar = (label, seatsBy, n) => { const m = Math.floor(n/2)+1;
@@ -1442,7 +1438,7 @@ function render(){
     const vs = RES.natShare[p], ss = 100*tot[p]/125, gap = ss - vs;
     const el = RES.eligible.includes(p);
     return `<tr><td><span class="pname"><i class="dot" style="background:${PV[p]}"></i>${p}</span> <span class="muted" style="font-size:.8rem">${PNAME[p]}</span>${el?"":' <span class="pill">sous le seuil</span>'}</td>
-      <td>${fmt(vs)} %</td><td>${RES.fptp[p]}</td><td>${RES.totD[p]}</td><td>${RES.totL[p]}</td><td class="total">${tot[p]}</td>
+      <td>${fmt(vs)} %</td><td>${RES.totD[p]}</td><td>${RES.totL[p]}</td><td class="total">${tot[p]}</td>
       <td>${fmt(ss)} % <span class="${gap>=0?"delta-pos":"delta-neg"}" style="font-size:.8rem">(${gap>=0?"+":"−"}${fmt(Math.abs(gap))})</span></td>
       <td class="bar-cell" style="text-align:left"><div class="mini" title="vote"><i style="width:${vs*2}%;background:${PV[p]};opacity:.35"></i></div>
         <div class="mini" style="margin-top:3px" title="sièges"><i style="width:${ss*2}%;background:${PV[p]}"></i></div></td></tr>`;
@@ -1484,8 +1480,8 @@ function render(){
     <ol>
       <li><b>Un siège de base par région</b> : chacune des 16 régions en reçoit un, sauf le Nord-du-Québec, qui n'en a aucun (16 sièges, art. 14.3).</li>
       <li><b>Les 29 autres selon le nombre d'électeurs inscrits</b> : on divise les électeurs de chaque région par 1, 2, 3, 4… Les 29 plus grands résultats (« quotients ») gagnent chacun un siège pour leur région. C'est la méthode des plus grandes moyennes, la même que pour les 62 sièges de circonscription (art. 14.2).</li>
-      <li><b>La barre à franchir</b> : le 29<sup>e</sup> quotient retenu est ${esc(nm(last[1]))} ÷ ${last[2]} = ${nf(last[0])} électeurs. Le suivant, ${esc(nm(next[1]))} ÷ ${next[2]} = ${nf(next[0])}, rate le siège de peu. En gros, une région gagne un siège de région supplémentaire par tranche d'environ ${nf(last[0])} électeurs.</li>
-      <li><b>Ça ne dépend pas des votes</b> : le nombre de sièges de chaque région est fixé d'avance par ses électeurs inscrits. Les votes décident ensuite <em>quels partis</em> les obtiennent, par la compensation dans chaque région (voir <a href="#h-meth">Méthode</a>).</li>
+      <li><b>La barre à franchir</b> : le 29<sup>e</sup> quotient retenu est ${esc(nm(last[1]))} ÷ ${last[2]} = ${nf(last[0])} électeurs. Le suivant, ${esc(nm(next[1]))} ÷ ${next[2]} = ${nf(next[0])}, rate le siège de peu. En gros, une région gagne un siège de plus par tranche d'environ ${nf(Math.round(last[0]/10000)*10000)} électeurs.</li>
+      <li><b>Les votes ne changent pas ce nombre</b> : ils décident seulement <em>quels partis</em> obtiennent ces sièges, par la compensation dans chaque région (voir <a href="#h-meth">Méthode</a>).</li>
     </ol>
     <div>
       <span class="eyebrow">Les 29 quotients gagnants, du plus grand au plus petit</span>
