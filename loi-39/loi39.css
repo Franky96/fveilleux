@@ -246,6 +246,14 @@
 .loi39 .method ol,.loi39 .method ul{margin:0;padding-left:1.2em;display:grid;gap:7px;font-size:.9rem}
 .loi39 .method q{font-style:italic}
 .loi39 .sources{font-size:.85rem;color:var(--muted);display:grid;gap:4px}
+.loi39 .repart{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px;display:grid;gap:12px}
+.loi39 .repart h3{margin:0;font-size:1.05rem;text-wrap:balance}
+.loi39 .repart ol{margin:0;padding-left:1.2em;display:grid;gap:7px;font-size:.9rem}
+.loi39 .repart .qlist{display:flex;flex-wrap:wrap;gap:4px}
+.loi39 .repart .q{font-size:.72rem;font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:5px;background:var(--soft);white-space:nowrap}
+.loi39 .repart .q.miss{background:transparent;border:1px dashed var(--rule);color:var(--muted)}
+.loi39 .repart table{font-size:.82rem}
+.loi39 .repart td,.loi39 .repart th{font-variant-numeric:tabular-nums}
 .loi39 .explain{display:grid;gap:10px}
 .loi39 .explain h4{margin:6px 0 0;font:700 .9rem var(--sans)}
 .loi39 .explain p{font-size:.86rem}

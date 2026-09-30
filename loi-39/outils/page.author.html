@@ -267,6 +267,15 @@ details[open] summary{margin-bottom:8px}
 .method q{font-style:italic}
 .sources{font-size:.85rem;color:var(--muted);display:grid;gap:4px}
 
+/* Répartition des 45 sièges de région entre les régions */
+.repart{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px;display:grid;gap:12px}
+.repart h3{margin:0;font-size:1.05rem;text-wrap:balance}
+.repart ol{margin:0;padding-left:1.2em;display:grid;gap:7px;font-size:.9rem}
+.repart .qlist{display:flex;flex-wrap:wrap;gap:4px}
+.repart .q{font-size:.72rem;font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:5px;background:var(--soft);white-space:nowrap}
+.repart .q.miss{background:transparent;border:1px dashed var(--rule);color:var(--muted)}
+.repart table{font-size:.82rem}
+.repart td,.repart th{font-variant-numeric:tabular-nums}
 .explain{display:grid;gap:10px}
 .explain h4{margin:6px 0 0;font:700 .9rem var(--sans)}
 .explain p{font-size:.86rem}
@@ -506,6 +515,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
         <tbody id="regBody"></tbody>
       </table>
     </div>
+    <div class="repart" id="repart"></div>
   </section>
 
   <section aria-labelledby="h-meth">
@@ -1445,6 +1455,39 @@ function render(){
 
   paintMap(); renderPanel();
 }
+(function renderRepart(){
+  const nf = x => Math.round(x).toLocaleString("fr-CA");
+  const nm = c => DATA.regions.find(r => r.code===c).name;
+  // tous les quotients électeurs ÷ 1, 2, 3… ; les 29 plus grands gagnent un siège (même tri que highestQuotients)
+  const q = [];
+  for (const r of DATA.regions) for (let d = 1; d <= 29; d++) q.push([r.electors/d, r.code, d]);
+  q.sort((a,b) => b[0]-a[0] || (b[1] > a[1] ? 1 : -1));
+  const won = q.slice(0, 29), [last, next] = [q[28], q[29]];
+  const totE = DATA.regions.reduce((a,r) => a + r.electors, 0);
+  const rows = DATA.regions.slice().sort((a,b) => b.electors-a.electors).map(r => {
+    const base = r.code===NORD ? 0 : 1, extra = EXTRA_L[r.code]||0;
+    return `<tr><td>${esc(r.name)}</td><td>${nf(r.electors)}</td><td>${base}</td><td>${extra ? "+"+extra : "—"}</td><td><b>${LIST[r.code]}</b></td>
+      <td>${LIST[r.code] ? nf(r.electors/LIST[r.code]) : "—"}</td></tr>`;
+  }).join("");
+  document.getElementById("repart").innerHTML = `
+    <h3>Comment les 45 sièges de région sont répartis entre les régions</h3>
+    <ol>
+      <li><b>Un siège de base par région</b> : chacune des 16 régions en reçoit un, sauf le Nord-du-Québec, qui n'en a aucun (16 sièges, art. 14.3).</li>
+      <li><b>Les 29 autres selon le nombre d'électeurs inscrits</b> : on divise les électeurs de chaque région par 1, 2, 3, 4… Les 29 plus grands résultats (« quotients ») gagnent chacun un siège pour leur région. C'est la méthode des plus grandes moyennes, la même que pour les 62 sièges de circonscription (art. 14.2).</li>
+      <li><b>La barre à franchir</b> : le 29<sup>e</sup> quotient retenu est ${esc(nm(last[1]))} ÷ ${last[2]} = ${nf(last[0])} électeurs. Le suivant, ${esc(nm(next[1]))} ÷ ${next[2]} = ${nf(next[0])}, rate le siège de peu. En gros, une région gagne un siège de région supplémentaire par tranche d'environ ${nf(last[0])} électeurs.</li>
+      <li><b>Ça ne dépend pas des votes</b> : le nombre de sièges de chaque région est fixé d'avance par ses électeurs inscrits. Les votes décident ensuite <em>quels partis</em> les obtiennent, par la compensation dans chaque région (voir <a href="#h-meth">Méthode</a>).</li>
+    </ol>
+    <div>
+      <span class="eyebrow">Les 29 quotients gagnants, du plus grand au plus petit</span>
+      <div class="qlist">${won.map(([v,c,d]) => `<span class="q">${esc(nm(c))} ÷${d} · ${nf(v)}</span>`).join("")}
+        <span class="q miss" title="Premier quotient non retenu">${esc(nm(next[1]))} ÷${next[2]} · ${nf(next[0])}</span></div>
+    </div>
+    <div class="tablebox"><table>
+      <thead><tr><th>Région</th><th>Électeurs</th><th>Base</th><th>+ Quotients</th><th>Sièges</th><th>Élect. / siège</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td><b>Total</b></td><td>${nf(totE)}</td><td>16</td><td>+29</td><td><b>45</b></td><td>${nf(totE/45)}</td></tr></tfoot>
+    </table></div>`;
+})();
 document.getElementById("regBody").addEventListener("click", e => {
   const a = e.target.closest("a[data-reg]"); if (!a) return;
   select({type:"reg", code:a.dataset.reg}, {zoomTo:true});
