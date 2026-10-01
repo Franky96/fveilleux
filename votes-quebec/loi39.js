@@ -230,7 +230,7 @@ const PRESETS = {
 // Une étiquette est au « pôle d'inaccessibilité » de la région (point le plus loin des bords, algorithme polylabel)
 // et n'est affichée que si le cercle libre autour de ce point est assez grand à l'écran : LBL_MIN px de rayon pour
 // le nombre, LBL_NAME px pour ajouter le nom (seulement quand on est vraiment zoomé).
-const LBL_MIN = 19, LBL_NAME = 70, NAME_ZOOM = 5;   // noms à partir d'un zoom × 5
+const LBL_MIN = 19, LBL_MIN_CIRC = 14, LBL_NAME = 70, NAME_ZOOM = 5;   // circonscriptions : étiquette courte (« 34 % »), seuil plus bas   // noms à partir d'un zoom × 5
 
 const mapSvg = d3.select("#l39-map");
 const gZoom = mapSvg.append("g");
@@ -432,8 +432,10 @@ function polylabel(rings, precision = 0.5){
 }
 // point d'ancrage de chaque région : pôle de son plus grand morceau (calculé une fois, en coordonnées de la carte)
 const ANCHOR = {};
+// clé d'une entité étiquetée : région (REG), circonscription actuelle (RID) ou hypothétique (DID)
+const labKey = f => f.properties.REG != null ? "g" + f.properties.REG : f.properties.RID != null ? "c" + f.properties.RID : "d" + f.properties.DID;
 function anchorOf(f){
-  const code = f.properties.REG;
+  const code = labKey(f);
   if (ANCHOR[code]) return ANCHOR[code];
   const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
   let best = [0, 0, -1];
@@ -454,7 +456,7 @@ function placeLabels(){
     // le chiffre reste au milieu de la région ; il disparaît simplement quand ce milieu sort de la fenêtre
     const [x, y, rad] = anchorOf(f), room = rad * px;   // rayon libre autour de l'étiquette, en px écran
     const sx = t.applyX(x), sy = t.applyY(y);           // position dans la vue (unités de viewBox)
-    const show = Math.abs(sx - MW/2) <= hx && Math.abs(sy - MH/2) <= hy && room >= LBL_MIN;
+    const show = Math.abs(sx - MW/2) <= hx && Math.abs(sy - MH/2) <= hy && room >= (f.properties.REG != null ? LBL_MIN : LBL_MIN_CIRC);
     const g = d3.select(this).style("display", show ? null : "none");
     if (!show) return;
     g.select("text.nmtxt").style("display", k >= NAME_ZOOM && room >= LBL_NAME ? null : "none");   // noms : seulement très zoomé
@@ -492,11 +494,21 @@ function paintMap(){
   document.getElementById("l39-selAll").setAttribute("aria-pressed", state.sel.type==="all");
   gSel.selectAll("path").data(sf ? [sf] : []).join("path").attr("class","selline").attr("d",path);
 
-  const labs = gLbl.selectAll("g.lab").data(byReg ? GGEO.features : [], f=>f.properties.REG)
+  // étiquettes : les régions ; en mode Vote, aussi chaque circonscription (actuelle ou hypothétique) avec le % du parti
+  const labFeats = byReg ? GGEO.features : state.mode === "vote" ? (isCur ? CGEO.features : RGEO.features) : [];
+  const labs = gLbl.selectAll("g.lab").data(labFeats, labKey)
     .join(enter => { const g = enter.append("g").attr("class","lab");
       g.append("text").attr("class","lbl nmtxt").attr("text-anchor","middle");
       g.append("text").attr("class","lbl valtxt").attr("text-anchor","middle"); return g; });
+  const pi = P.indexOf(state.party);
   labs.each(function(f){
+    if (f.properties.REG == null){   // circonscription : % du parti choisi ; nom seulement très zoomé
+      const cur = f.properties.RID != null, x = cur ? RES.ridings[f.properties.RID] : RES.byId[f.properties.DID];
+      const t = d3.select(this).select("text.valtxt"); t.selectAll("tspan").remove();
+      t.append("tspan").attr("x", 0).attr("dy", "0.35em").text(x && pi >= 0 ? fmt(x.sh[pi], 0) + " %" : "");
+      d3.select(this).select("text.nmtxt").attr("dy", "-0.85em").text(cur ? DATA.ridings[f.properties.RID].n : DNAME[f.properties.DID]);
+      return;
+    }
     const code = f.properties.REG, vals = labelLines(code), top = 0.35 - (vals.length-1)*0.575;
     // valeurs centrées sur le point d'ancrage ; le nom, une ligne au-dessus (affiché si la région est assez grande)
     const t = d3.select(this).select("text.valtxt"); t.selectAll("tspan").remove();
@@ -512,7 +524,7 @@ function paintMap(){
     ? "Carte actuelle : les 127 circonscriptions de la carte électorale 2026 (Élections Québec), avec la projection Qc125 de chacune. C'est le mode de scrutin en vigueur, sans simulation."
     : "Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).";
   sc.innerHTML = !byReg
-    ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription</span>`
+    ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription (chiffre = % du ${p}, plus de circonscriptions en zoomant)</span>`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
