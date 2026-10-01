@@ -56,6 +56,34 @@
     #logoutBtn.hbg-item { display: flex; color: #E5484D; margin-top: 0.4rem; }
     .hbg-sep { display: none; height: 1px; background: var(--st-rule); margin: 0.3rem 0.5rem; }
     @media (prefers-reduced-motion: reduce) { #hamburger-btn span { transition: none; } }
+    /* Choix du mode de scrutin */
+    .scrutins { background: var(--st-bg); border-bottom: 1px solid var(--st-rule); padding: 0.6rem clamp(16px, 3vw, 56px);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .sc-tabs { max-width: 1680px; margin: 0 auto; display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+    .sc-tab { flex: none; display: grid; gap: 1px; text-align: left; padding: 0.45rem 0.9rem; border-radius: 9px; cursor: pointer;
+      background: transparent; border: 1px solid var(--st-rule); color: var(--st-muted); font: inherit; }
+    .sc-tab b { font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem; }
+    .sc-tab small { font-size: 0.72rem; }
+    .sc-tab:hover { border-color: var(--st-ink); color: var(--st-ink); }
+    .sc-tab:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    .sc-tab[aria-selected="true"] { background: var(--st-ink); border-color: var(--st-ink); color: var(--st-bg); }
+    .sc-dot { width: 8px; height: 8px; border-radius: 50%; background: #E5484D; flex: none; animation: sc-pouls 1.6s ease-in-out infinite; }
+    .sc-live b { color: #E5484D; }
+    .sc-live[aria-selected="true"] b { color: #E5484D; }
+    @keyframes sc-pouls { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @media (prefers-reduced-motion: reduce) { .sc-dot { animation: none; } }
+    /* Vue « En direct » (temporaire) */
+    .vue-live { background: var(--st-bg); min-height: 60vh; padding: 3rem clamp(16px, 3vw, 56px); font-family: "Public Sans", system-ui, sans-serif; }
+    .vue-live[hidden] { display: none; }
+    .live-carte { max-width: 640px; margin: 0 auto; display: grid; gap: 0.8rem; padding: 1.75rem; border-radius: 14px;
+      background: var(--st-surface); border: 1px solid var(--st-rule); color: var(--st-ink); }
+    .live-carte h2 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.6rem; text-wrap: balance; }
+    .live-carte p { margin: 0; color: var(--st-muted); line-height: 1.55; }
+    .live-badge { justify-self: start; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #E5484D; border: 1px solid #E5484D; border-radius: 99px; padding: 0.2rem 0.6rem; }
+    .live-note { font-size: 0.82rem; }
+    .loi39[hidden], .site-top .titre > [hidden] { display: none; }
+    @media (max-width: 600px) { .sc-tab { flex: 1 1 0; min-width: 0; padding: 0.4rem 0.6rem; } .sc-tab small { font-size: 0.68rem; } }
     #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
       transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
@@ -77,10 +105,31 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></p>
+    <p class="titre"><span class="t-loi39">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span><span class="t-live" hidden>Élections générales du 5 octobre 2026 · résultats en direct</span></p>
   </div>
 
-<div class="loi39" data-src="votes-quebec/data.json">
+  <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
+  <nav class="scrutins" aria-label="Mode de scrutin">
+    <div class="sc-tabs" role="tablist">
+      <button type="button" role="tab" class="sc-tab" id="tab-loi39" aria-selected="true" aria-controls="vue-loi39" data-vue="loi39">
+        <b>Loi 39</b><small>Mixte compensatoire régional</small>
+      </button>
+      <button type="button" role="tab" class="sc-tab sc-live" id="tab-live" aria-selected="false" aria-controls="vue-live" data-vue="live">
+        <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Élection du 5 octobre 2026</small>
+      </button>
+    </div>
+  </nav>
+
+  <section class="vue-live" id="vue-live" role="tabpanel" aria-labelledby="tab-live" hidden>
+    <div class="live-carte">
+      <span class="live-badge"><i class="sc-dot" aria-hidden="true"></i>En direct</span>
+      <h2>Élections générales du 5 octobre 2026</h2>
+      <p>Les résultats en direct s'afficheront ici le soir de l'élection, dès la fermeture des bureaux de vote.</p>
+      <p class="live-note">Cette vue est temporaire : elle disparaîtra après l'élection.</p>
+    </div>
+  </section>
+
+<div class="loi39" id="vue-loi39" role="tabpanel" aria-labelledby="tab-loi39" data-src="votes-quebec/data.json">
 <div class="wrap">
   <header class="top">
     <div class="big num" id="l39-bigNum"><small>sièges sur 125</small></div>
@@ -275,6 +324,21 @@
       // l'interrupteur du site change la classe « light » : on suit avec data-theme pour la simulation
       const sync = () => { document.documentElement.dataset.theme = document.documentElement.classList.contains('light') ? 'light' : 'dark'; };
       sync(); new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+      // choix du mode de scrutin : bascule des vues, titre de la barre, adresse (#live) pour garder le choix
+      const montrer = vue => {
+        document.querySelectorAll('.sc-tab').forEach(t => t.setAttribute('aria-selected', t.dataset.vue === vue));
+        document.getElementById('vue-loi39').hidden = vue !== 'loi39';
+        document.getElementById('vue-live').hidden = vue !== 'live';
+        document.querySelectorAll('.site-top .titre > span[class^="t-"]').forEach(x => x.hidden = x.className !== 't-' + vue);
+        if (vue === 'loi39') window.dispatchEvent(new Event('resize'));   // la carte se recale à son retour
+      };
+      document.querySelector('.sc-tabs').addEventListener('click', e => {
+        const t = e.target.closest('.sc-tab'); if (!t) return;
+        history.replaceState(null, '', t.dataset.vue === 'loi39' ? location.pathname : '#' + t.dataset.vue);
+        montrer(t.dataset.vue);
+      });
+      if (location.hash === '#live') montrer('live');
+
       // filet de sécurité : si la simulation ne se charge pas (réseau, erreur), on montre quand même la page
       setTimeout(() => { const w = document.querySelector('.loi39 .wrap'); if (w) w.classList.add('ready'); }, 6000);
     })();
