@@ -73,6 +73,10 @@ EOF
   # carte du mode actuel : les 127 circonscriptions (15 % des points : assez fin pour Montréal zoomé)
   $MS -i brut/circ2026.json -proj wgs84 -filter-fields NM_CEP,CO_CEP -clip m80/land.json \
       -simplify 15% weighted keep-shapes -filter-islands min-area=4km2 -clean -o m80/c127.json format=geojson precision=0.0008
+  # limites de région de la carte actuelle : les 127 circonscriptions fusionnées par région
+  $PY m80/r127.py
+  $MS -i m80/c127_reg.json -dissolve REG -o m80/r127.json format=geojson precision=0.0008
+  rm -f m80/c127_reg.json
 fi
 
 echo "== data.json, simulation de référence, page et kit"

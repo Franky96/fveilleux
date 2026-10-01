@@ -60,8 +60,13 @@ ridx = {norm(x["n"]): i for i, x in enumerate(rid)}
 for f in cg["features"]: f["properties"] = {"RID": ridx[norm(f["properties"]["NM_CEP"])]}
 assert sorted(f["properties"]["RID"] for f in cg["features"]) == list(range(len(rid)))
 
+# régions de la carte actuelle : les 127 circonscriptions fusionnées par région (m80/r127.py + mapshaper)
+cr = rewind(json.load(open("m80/r127.json", encoding="utf-8"))) if os.path.exists("m80/r127.json") else None
+if cr:
+    for f in cr["features"]: f["properties"] = {"REG": code[f["properties"]["REG"]]}
+
 data = {"regions": [{"code": code[n], "name": n, "electors": D["elec_reg"][n]} for n in CODES],
-        "ridings": rid, "districts": districts, "districtGeo": dg, "regionGeo": rg, "ridingGeo": cg,
+        "ridings": rid, "districts": districts, "districtGeo": dg, "regionGeo": rg, "ridingGeo": cg, "curRegionGeo": cr,
         "maj": json.load(open("maj.json", encoding="utf-8")) if os.path.exists("maj.json") else {}}
 open("data.json", "w", encoding="utf-8").write(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
 print("data.json", os.path.getsize("data.json"), "octets ·", len(rid), "circ. actuelles ·", len(districts), "hypothétiques")

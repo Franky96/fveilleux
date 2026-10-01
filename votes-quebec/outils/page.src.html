@@ -824,6 +824,15 @@ for (const f of CGEO.features){
     f.geometry.coordinates = f.geometry.type==="Polygon" ? rev(f.geometry.coordinates) : f.geometry.coordinates.map(rev);
   }
 }
+// limites de région de la carte actuelle (fusion des 127 circonscriptions réelles) : sans ça, les limites du
+// découpage à 80 coupaient certaines circonscriptions réelles
+const CREG = DATA.curRegionGeo || null;
+if (CREG) for (const f of CREG.features){
+  if (d3.geoArea(f) > 2*Math.PI){
+    const rev = poly => poly.map(r => r.slice().reverse());
+    f.geometry.coordinates = f.geometry.type==="Polygon" ? rev(f.geometry.coordinates) : f.geometry.coordinates.map(rev);
+  }
+}
 const CURFEAT = Object.fromEntries(CGEO.features.map(f => [f.properties.RID, f]));
 const featOf = sel => sel.type==="reg" ? REGFEAT[sel.code] : sel.type==="circ" ? RIDFEAT[sel.id] : sel.type==="cur" ? CURFEAT[sel.idx] : null;
 const padOf = sel => sel.type==="reg" ? 0.85 : 0.5;
@@ -844,7 +853,7 @@ const LBL_MIN = 19, LBL_MIN_CIRC = 14, LBL_NAME = 70, NAME_ZOOM = 5;   // circon
 
 const mapSvg = d3.select("#l39-map");
 const gZoom = mapSvg.append("g");
-const gCur = gZoom.append("g"), gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gSel = gZoom.append("g"), gLbl = gZoom.append("g");
+const gCur = gZoom.append("g"), gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gRegCur = gZoom.append("g"), gSel = gZoom.append("g"), gLbl = gZoom.append("g");
 let curK = 1, curT = d3.zoomIdentity;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40,-40],[MW+40,MH+40]])
@@ -887,6 +896,7 @@ function drawBase(){
     .on("mousemove", (e,f) => showTip(e,f))
     .on("mouseleave", () => { tip.hidden = true; });
   gReg.selectAll("path").data(GGEO.features).join("path").attr("class","regline").attr("d",path);
+  gRegCur.selectAll("path").data(CREG ? CREG.features : []).join("path").attr("class","regline").attr("d",path);
 
   ROOT.querySelector(".zoombar").addEventListener("click", e => {
     const z = e.target.closest("button[data-z]")?.dataset.z; if (!z) return;
@@ -1092,6 +1102,8 @@ function paintMap(){
   const byReg = state.view==="reg", isCur = state.view==="cur";
   mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
   gCur.style("display", isCur ? null : "none");
+  gReg.style("display", isCur && CREG ? "none" : null);
+  gRegCur.style("display", isCur ? null : "none");
   document.getElementById("l39-mapBadge").hidden = isCur;
   gRid.style("display", state.view==="circ" ? null : "none");
   gRegFill.style("display", byReg ? null : "none");
