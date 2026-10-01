@@ -434,10 +434,13 @@
       };
       document.querySelector('.sc-tabs').addEventListener('click', e => {
         const t = e.target.closest('.sc-tab'); if (!t) return;
-        history.replaceState(null, '', t.dataset.vue === 'loi39' ? location.pathname : '#' + t.dataset.vue);
+        history.replaceState(null, '', location.pathname + location.search + '#' + t.dataset.vue);
         montrer(t.dataset.vue);
       });
-      if (location.hash === '#live') montrer('live');
+      // jusqu'au lendemain de l'élection (6 octobre inclus), la page s'ouvre sur « En direct » ; #loi39 ou #live forcent un onglet
+      const FIN_DIRECT = new Date('2026-10-07T00:00:00-04:00');
+      if (location.hash === '#live' || (location.hash !== '#loi39' && Date.now() < FIN_DIRECT)) montrer('live');
+      window.addEventListener('hashchange', () => { if (location.hash === '#live' || location.hash === '#loi39') montrer(location.hash.slice(1)); });
 
       // filet de sécurité : si la simulation ne se charge pas (réseau, erreur), on montre quand même la page
       setTimeout(() => { const w = document.querySelector('.loi39 .wrap'); if (w) w.classList.add('ready'); }, 6000);
