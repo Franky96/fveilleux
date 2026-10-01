@@ -388,14 +388,18 @@ function fillRegion(code){
   if (state.mode==="seat") return [PV[p], Math.max(0.06, (R.d[p]+R.l[p])/seats)];
   return [PV[p], R.l[p] ? Math.min(1, 0.25 + 0.25*R.l[p]) : 0.06];
 }
+// parti en 2e place d'une circonscription (selon ses parts de vote)
+const secondOf = sh => P.map((p, i) => [i, sh[i]]).sort((a, b) => b[1] - a[1])[1][0];
 function fillCur(idx){
   const x = RES.ridings[idx];
+  if (state.mode==="second"){ const i = secondOf(x.sh); return [PV[P[i]], Math.max(0.3, Math.min(1, (x.sh[i]-10)/30))]; }
   if (state.mode==="vote"){ const i = P.indexOf(state.party); return [PV[state.party], Math.max(0.06, Math.min(1, x.sh[i]/50))]; }
   const i = P.indexOf(x.w);
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
 }
 function fillRiding(id){
   const x = RES.byId[id];
+  if (state.mode==="second"){ const i = secondOf(x.sh); return [PV[P[i]], Math.max(0.3, Math.min(1, (x.sh[i]-10)/30))]; }
   if (state.mode==="vote"){ const i = P.indexOf(state.party); return [PV[state.party], Math.max(0.06, Math.min(1, x.sh[i]/50))]; }
   const i = P.indexOf(x.w);
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
@@ -525,6 +529,7 @@ function paintMap(){
     : "Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).";
   sc.innerHTML = !byReg
     ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription (chiffre = % du ${p}, plus de circonscriptions en zoomant)</span>`
+       : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? "actuelle (projection Qc125)" : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
@@ -800,7 +805,8 @@ function setView(v, {silent = false} = {}){
   document.getElementById("l39-v-reg").setAttribute("aria-pressed", v==="reg");
   document.getElementById("l39-v-circ").setAttribute("aria-pressed", v==="circ");
   for (const id of ["seat","comp"]) document.getElementById("l39-m-"+id).disabled = v!=="reg";
-  if (v!=="reg" && (state.mode==="seat" || state.mode==="comp")) setMode("lead", {silent:true});
+  document.getElementById("l39-m-second").disabled = v==="reg";   // 2e place : seulement par circonscription
+  if ((v!=="reg" && (state.mode==="seat" || state.mode==="comp")) || (v==="reg" && state.mode==="second")) setMode("lead", {silent:true});
   if (!silent){
     // garder une sélection cohérente avec l'affichage
     if (v==="cur" && state.sel.type!=="cur") state.sel = {type:"all"};
@@ -983,8 +989,8 @@ document.getElementById("l39-regBody").addEventListener("click", e => {
 /* --- Contrôles --- */
 function setMode(m, {silent = false} = {}){
   state.mode = m;
-  for (const id of ["lead","vote","seat","comp"]) document.getElementById("l39-m-"+id).setAttribute("aria-pressed", id===m);
-  document.getElementById("l39-partyChips").setAttribute("aria-disabled", m==="lead");
+  for (const id of ["lead","second","vote","seat","comp"]) document.getElementById("l39-m-"+id).setAttribute("aria-pressed", id===m);
+  document.getElementById("l39-partyChips").setAttribute("aria-disabled", m==="lead" || m==="second");
   // « Tous les partis » n'a pas de sens pour le vote : on reprend le dernier parti choisi
   // parti par défaut : le dernier choisi, sinon celui qui gagnerait (le plus de sièges, puis le plus de votes)
   if (m==="vote" && state.party==="ALL") state.party = state.lastParty ||
@@ -992,7 +998,7 @@ function setMode(m, {silent = false} = {}){
   syncChips();
   if (!silent) paintMap();
 }
-for (const id of ["lead","vote","seat","comp"]) document.getElementById("l39-m-"+id).addEventListener("click", () => setMode(id));
+for (const id of ["lead","second","vote","seat","comp"]) document.getElementById("l39-m-"+id).addEventListener("click", () => setMode(id));
 document.getElementById("l39-partyChips").innerHTML =
   `<button type="button" class="chip" style="--c:${ALLC}" data-p="ALL" aria-pressed="${state.party==="ALL"}" title="Nombre total de sièges de chaque région">Tous les partis</button>` +
   P.map(p => `<button type="button" class="chip" style="--c:${PV[p]}" data-p="${p}" aria-pressed="${p===state.party}">${p}</button>`).join("");

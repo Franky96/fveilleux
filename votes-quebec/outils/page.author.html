@@ -403,6 +403,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
 /* téléphone : les 4 modes en grille 2 × 2 plutôt qu'un bouton seul sur sa ligne */
 @media (max-width:600px){.seg.modeseg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
   .seg.modeseg button{border:0;text-wrap:balance}
+  .seg.modeseg button:last-child{grid-column:1/-1}
   .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}}
 /* Écrans ultra-larges (21:9, 32:9) : on utilise la largeur au lieu d'une colonne centrée */
 @media (min-width:2000px){.wrap{max-width:2600px}}
@@ -504,6 +505,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
           </div>
           <div class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="m-lead" aria-pressed="true">Parti en tête</button>
+            <button type="button" id="m-second" aria-pressed="false" disabled title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
             <button type="button" id="m-vote" aria-pressed="false">Vote</button>
             <button type="button" id="m-seat" aria-pressed="false">Sièges totaux</button>
             <button type="button" id="m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
@@ -981,14 +983,18 @@ function fillRegion(code){
   if (state.mode==="seat") return [PV[p], Math.max(0.06, (R.d[p]+R.l[p])/seats)];
   return [PV[p], R.l[p] ? Math.min(1, 0.25 + 0.25*R.l[p]) : 0.06];
 }
+// parti en 2e place d'une circonscription (selon ses parts de vote)
+const secondOf = sh => P.map((p, i) => [i, sh[i]]).sort((a, b) => b[1] - a[1])[1][0];
 function fillCur(idx){
   const x = RES.ridings[idx];
+  if (state.mode==="second"){ const i = secondOf(x.sh); return [PV[P[i]], Math.max(0.3, Math.min(1, (x.sh[i]-10)/30))]; }
   if (state.mode==="vote"){ const i = P.indexOf(state.party); return [PV[state.party], Math.max(0.06, Math.min(1, x.sh[i]/50))]; }
   const i = P.indexOf(x.w);
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
 }
 function fillRiding(id){
   const x = RES.byId[id];
+  if (state.mode==="second"){ const i = secondOf(x.sh); return [PV[P[i]], Math.max(0.3, Math.min(1, (x.sh[i]-10)/30))]; }
   if (state.mode==="vote"){ const i = P.indexOf(state.party); return [PV[state.party], Math.max(0.06, Math.min(1, x.sh[i]/50))]; }
   const i = P.indexOf(x.w);
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
@@ -1118,6 +1124,7 @@ function paintMap(){
     : "Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).";
   sc.innerHTML = !byReg
     ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription (chiffre = % du ${p}, plus de circonscriptions en zoomant)</span>`
+       : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? "actuelle (projection Qc125)" : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
@@ -1393,7 +1400,8 @@ function setView(v, {silent = false} = {}){
   document.getElementById("v-reg").setAttribute("aria-pressed", v==="reg");
   document.getElementById("v-circ").setAttribute("aria-pressed", v==="circ");
   for (const id of ["seat","comp"]) document.getElementById("m-"+id).disabled = v!=="reg";
-  if (v!=="reg" && (state.mode==="seat" || state.mode==="comp")) setMode("lead", {silent:true});
+  document.getElementById("m-second").disabled = v==="reg";   // 2e place : seulement par circonscription
+  if ((v!=="reg" && (state.mode==="seat" || state.mode==="comp")) || (v==="reg" && state.mode==="second")) setMode("lead", {silent:true});
   if (!silent){
     // garder une sélection cohérente avec l'affichage
     if (v==="cur" && state.sel.type!=="cur") state.sel = {type:"all"};
@@ -1576,8 +1584,8 @@ document.getElementById("regBody").addEventListener("click", e => {
 /* --- Contrôles --- */
 function setMode(m, {silent = false} = {}){
   state.mode = m;
-  for (const id of ["lead","vote","seat","comp"]) document.getElementById("m-"+id).setAttribute("aria-pressed", id===m);
-  document.getElementById("partyChips").setAttribute("aria-disabled", m==="lead");
+  for (const id of ["lead","second","vote","seat","comp"]) document.getElementById("m-"+id).setAttribute("aria-pressed", id===m);
+  document.getElementById("partyChips").setAttribute("aria-disabled", m==="lead" || m==="second");
   // « Tous les partis » n'a pas de sens pour le vote : on reprend le dernier parti choisi
   // parti par défaut : le dernier choisi, sinon celui qui gagnerait (le plus de sièges, puis le plus de votes)
   if (m==="vote" && state.party==="ALL") state.party = state.lastParty ||
@@ -1585,7 +1593,7 @@ function setMode(m, {silent = false} = {}){
   syncChips();
   if (!silent) paintMap();
 }
-for (const id of ["lead","vote","seat","comp"]) document.getElementById("m-"+id).addEventListener("click", () => setMode(id));
+for (const id of ["lead","second","vote","seat","comp"]) document.getElementById("m-"+id).addEventListener("click", () => setMode(id));
 document.getElementById("partyChips").innerHTML =
   `<button type="button" class="chip" style="--c:${ALLC}" data-p="ALL" aria-pressed="${state.party==="ALL"}" title="Nombre total de sièges de chaque région">Tous les partis</button>` +
   P.map(p => `<button type="button" class="chip" style="--c:${PV[p]}" data-p="${p}" aria-pressed="${p===state.party}">${p}</button>`).join("");

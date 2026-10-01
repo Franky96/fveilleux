@@ -399,6 +399,7 @@
 @media (max-width:600px){
 .loi39 .seg.modeseg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule)}
 .loi39 .seg.modeseg button{border:0;text-wrap:balance}
+.loi39 .seg.modeseg button:last-child{grid-column:1/-1}
 .loi39 .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}
 }
 @media (min-width:2000px){
