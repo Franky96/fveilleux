@@ -77,6 +77,8 @@ EOF
   $PY m80/r127.py
   $MS -i m80/c127_reg.json -dissolve REG -o m80/r127.json format=geojson precision=0.0008
   rm -f m80/c127_reg.json
+  # digue de la Voie maritime et autres lanières très minces : traits parasites dans le fleuve à cette échelle
+  $PY m80/sans_digues.py m80/c127.json m80/d80.json m80/r127.json m80/r80.json
 fi
 
 echo "== data.json, simulation de référence, page et kit"
