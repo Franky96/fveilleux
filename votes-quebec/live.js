@@ -1,0 +1,229 @@
+/* Votes Québec — onglet « En direct » : résultats de l'élection générale du 5 octobre 2026.
+   Données : api/live.php (relais des données ouvertes d'Élections Québec, actualisées toutes les 2 à 5 min).
+   Carte : les 127 circonscriptions de votes-quebec/data.json (mêmes contours que la carte actuelle de la simulation).
+   Démo (admin) : votes-quebec.html?demo=40#live rejoue 2022 à 40 % des bureaux dépouillés. */
+
+const SIEGES = 127, MAJ = Math.floor(SIEGES / 2) + 1;      // 64
+const PARTIS = ["PQ", "PLQ", "CAQ", "PCQ", "QS", "AUT"];
+const NOMS = { PQ: "Parti québécois", PLQ: "Parti libéral", CAQ: "Coalition avenir Québec", PCQ: "Parti conservateur", QS: "Québec solidaire", AUT: "Autres et indépendants" };
+const COUL = { PQ: "var(--pq)", PLQ: "var(--plq)", CAQ: "var(--caq)", PCQ: "var(--pcq)", QS: "var(--qs)", AUT: "var(--aut)" };
+const RAFRAICHIR = 60;                                       // secondes entre deux lectures
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
+const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
+
+// sigle d'Élections Québec → parti de la carte (« PCQ/CPQ » est le Parti canadien : rangé dans Autres)
+function partiDe(abrev) {
+  const a = String(abrev || "").toUpperCase().replace(/[^A-Z]/g, "");
+  if (a === "PQ") return "PQ";
+  if (a.startsWith("PLQ")) return "PLQ";
+  if (a.includes("CAQ")) return "CAQ";
+  if (a === "QS") return "QS";
+  if (a.startsWith("PCOQ") || /^PCQE/.test(a)) return "PCQ";
+  return "AUT";
+}
+
+let DATA, PATH, ZOOM, svg, gZ, gRid, gSel, tip, resultats = null, candidatures = null, parRid = {}, sel = null, minuterie = null, demarre = false;
+const PARAMS = new URLSearchParams(location.search);
+const DEMO = sessionStorage.getItem("userRole") === "admin" && PARAMS.has("demo") ? Math.max(0, Math.min(100, +PARAMS.get("demo") || 40)) : null;
+
+/* ---------- chargement ---------- */
+async function lire(type) {
+  const q = type === "resultats" && DEMO !== null ? `type=demo&p=${DEMO}` : `type=${type}`;
+  const r = await fetch(`api/live.php?${q}`, { credentials: "include", cache: "no-store" });
+  if (!r.ok && r.status !== 503) throw new Error(r.status === 401 ? "Session expirée : reconnecte-toi." : `Erreur ${r.status}`);
+  return r.json();
+}
+
+async function actualiser() {
+  $("lvEtat").textContent = "Mise à jour…";
+  try {
+    const d = await lire("resultats");
+    resultats = d && d.circonscriptions ? d : null;
+    if (d && d.erreur) $("lvEtat").textContent = d.erreur;
+    indexer(); dessiner();
+  } catch (e) { $("lvEtat").textContent = e.message; }
+}
+
+// circonscriptions des résultats → rang dans DATA.ridings (appariement par nom, les numéros changent d'une carte à l'autre)
+function indexer() {
+  parRid = {};
+  if (!resultats) return;
+  const rang = Object.fromEntries(DATA.ridings.map((r, i) => [norm(r.n), i]));
+  for (const c of resultats.circonscriptions) {
+    const i = rang[norm(c.nomCirconscription)];
+    if (i == null) continue;
+    const cands = (c.candidats || []).map(k => ({ ...k, parti: partiDe(k.abreviationPartiPolitique) })).sort((a, b) => b.nbVoteTotal - a.nbVoteTotal);
+    const votes = cands.reduce((s, k) => s + (k.nbVoteTotal || 0), 0);
+    parRid[i] = { ...c, cands, votes, tete: votes > 0 ? cands[0] : null, frac: c.nbBureauTotal ? c.nbBureauComplete / c.nbBureauTotal : 0 };
+  }
+}
+
+/* ---------- interface ---------- */
+function sieges() {
+  const s = Object.fromEntries(PARTIS.map(p => [p, { elus: 0, avance: 0 }]));
+  for (const c of Object.values(parRid)) if (c.tete) s[c.tete.parti][c.isResultatsFinaux ? "elus" : "avance"]++;
+  return s;
+}
+
+function dessinerBarre() {
+  const s = sieges(), tot = p => s[p].elus + s[p].avance;
+  const ordre = PARTIS.filter(p => tot(p) > 0).sort((a, b) => tot(b) - tot(a) || PARTIS.indexOf(a) - PARTIS.indexOf(b));
+  const pct = n => (100 * n / SIEGES) + "%";
+  $("lvBarre").innerHTML = ordre.map(p => `<span class="lv-seg" style="width:${pct(tot(p))};--c:${COUL[p]}" title="${NOMS[p]} : ${tot(p)} siège${tot(p) > 1 ? "s" : ""}">`
+    + `<i class="lv-elus" style="width:${100 * s[p].elus / tot(p)}%"></i><b>${p === "AUT" ? "Aut." : p} ${tot(p)}</b></span>`).join("");
+  // étiquette selon la place : « PQ 54 », sinon « 54 », sinon rien
+  for (const seg of $("lvBarre").querySelectorAll(".lv-seg")) {
+    const b = seg.querySelector("b"); if (!b) continue;
+    if (b.offsetWidth > seg.clientWidth - 6) b.textContent = b.textContent.split(" ").pop();
+    if (b.offsetWidth > seg.clientWidth - 4) b.remove();
+  }
+  const lead = ordre[0];
+  const decides = Object.values(parRid).filter(c => c.tete).length;
+  $("lvSiegesTitre").textContent = !decides ? "Aucune circonscription dépouillée pour l'instant"
+    : tot(lead) >= MAJ ? `${NOMS[lead]} : ${tot(lead)} sièges, au-delà de la majorité` : `${NOMS[lead]} en tête avec ${tot(lead)} sièges`;
+  // légende par parti : sièges (élus + en avance) et vote national
+  const vote = {};
+  for (const p of resultats?.statistiques?.partisPolitiques || []) {
+    const k = partiDe(p.abreviationPartiPolitique); vote[k] = (vote[k] || 0) + (+p.tauxVoteTotal || 0);
+  }
+  $("lvPartis").innerHTML = PARTIS.filter(p => tot(p) > 0 || vote[p] > 0.05).sort((a, b) => tot(b) - tot(a) || (vote[b] || 0) - (vote[a] || 0)).map(p =>
+    `<div class="lv-parti" style="--c:${COUL[p]}"><i></i><span class="lv-pnom">${p === "AUT" ? "Autres" : p}</span>`
+    + `<b>${tot(p)}</b><small>${s[p].elus} élu${s[p].elus > 1 ? "s" : ""} · ${s[p].avance} en avance</small><span class="lv-pvote">${vote[p] != null ? nf(vote[p], 1) + " %" : "—"}</span></div>`).join("");
+}
+
+function dessinerEtat() {
+  const st = resultats?.statistiques;
+  const banniere = $("lvBanniere");
+  if (!resultats) {
+    banniere.hidden = false;
+    banniere.innerHTML = `Les résultats commenceront à s'afficher après la fermeture des bureaux de vote, le <b>5 octobre à 20 h</b>, et seront mis à jour toutes les 2 à 5 minutes. En attendant, clique sur une circonscription pour voir ses candidatures.`;
+    $("lvEtat").textContent = "En attente des premiers résultats · vérification chaque minute";
+    return;
+  }
+  banniere.hidden = !resultats.demo;
+  if (resultats.demo) banniere.innerHTML = `<b>Démo</b> : élections 2022 rejouées à ${DEMO} % des bureaux dépouillés, sur la carte 2026 (certaines circonscriptions n'existaient pas en 2022). Retire « ?demo » de l'adresse pour revenir au direct.`;
+  const maj = st?.iso8601DateMAJ ? new Date(String(st.iso8601DateMAJ).replace(",", ".")) : null;
+  $("lvEtat").innerHTML = [
+    st?.isResultatsFinaux ? "<b>Résultats finaux</b>" : "<b>Résultats préliminaires</b>",
+    `bureaux dépouillés ${nf(st?.nbBureauVoteRempli)} / ${nf(st?.nbBureauVote)} (${nf(st?.tauxBureauVoteRempli, 1)} %)`,
+    `participation ${nf(+st?.tauxParticipationTotal || 0, 1)} %`,
+    maj && !isNaN(maj) ? `données d'Élections Québec de ${maj.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" })}` : "",
+  ].filter(Boolean).join(" · ");
+}
+
+function remplir(i) {
+  const c = parRid[i];
+  if (!c || !c.tete) return ["var(--soft)", 1];
+  return [COUL[c.tete.parti], c.isResultatsFinaux ? 1 : 0.35 + 0.6 * c.frac];
+}
+
+function dessinerCarte() {
+  gRid.selectAll("path").each(function (f) { const [col, op] = remplir(f.properties.RID); this.style.fill = col; this.style.fillOpacity = op; });
+  const f = sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
+  gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
+}
+
+function dessinerPanneau() {
+  const p = $("lvPanneau");
+  if (sel == null) {
+    const n = Object.values(parRid).filter(c => c.tete).length;
+    p.innerHTML = `<span class="lv-eyebrow">Circonscriptions</span><h3>Clique sur une circonscription</h3>
+      <p class="lv-muted">Couleur : parti en tête. Plus la couleur est pâle, moins il y a de bureaux de vote dépouillés ; gris : aucun résultat.</p>
+      <div class="lv-kv"><div><b>${n}</b><span>avec résultats</span></div><div><b>${SIEGES - n}</b><span>sans résultat</span></div><div><b>${MAJ}</b><span>majorité</span></div></div>`;
+    return;
+  }
+  const r = DATA.ridings[sel], c = parRid[sel], reg = DATA.regions.find(x => x.code === r.r)?.name || "";
+  const cand = (candidatures || []).filter(k => norm(k.nom_circonscription) === norm(r.n));
+  const sortant = (prenom, nom) => cand.some(k => k.depute_sortant === "O" && norm(k.nom_bulletin_vote) === norm(nom) && norm(k.prenom_bulletin_vote) === norm(prenom));
+  let html = `<span class="lv-eyebrow">${esc(reg)}</span><h3>${esc(r.n)}</h3>`;
+  if (c && c.tete) {
+    const [a, b] = c.cands, ecart = b ? a.nbVoteTotal - b.nbVoteTotal : a.nbVoteTotal;
+    html += `<div class="lv-chips"><span class="lv-chip ${c.isResultatsFinaux ? "fin" : ""}">${c.isResultatsFinaux ? "Résultat final" : `${nf(c.nbBureauComplete)} / ${nf(c.nbBureauTotal)} bureaux (${nf(100 * c.frac, 0)} %)`}</span></div>
+      <p class="lv-tete" style="--c:${COUL[a.parti]}"><b>${esc(a.prenom)} ${esc(a.nom)}</b> (${esc(a.parti === "AUT" ? a.abreviationPartiPolitique : a.parti)}) ${c.isResultatsFinaux ? "élu·e" : "en avance"}
+        ${b ? `par ${nf(ecart)} voix (${nf(a.tauxVote - b.tauxVote, 1)} pt)` : ""}</p>
+      <table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${COUL[k.parti]}">
+        <td><i class="lv-pt"></i></td>
+        <td><b>${esc(k.prenom)} ${esc(k.nom)}</b>${sortant(k.prenom, k.nom) ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.abreviationPartiPolitique)} · ${nf(k.nbVoteAvance)} par anticipation</small>
+          <span class="lv-jauge"><i style="width:${Math.min(100, k.tauxVote)}%"></i></span></td>
+        <td class="lv-num"><b>${nf(k.tauxVote, 1)} %</b><small>${nf(k.nbVoteTotal)}</small></td></tr>`).join("")}</tbody></table>
+      <div class="lv-kv"><div><b>${nf(+c.tauxParticipation || 0, 1)} %</b><span>participation</span></div><div><b>${nf(c.nbElecteurInscrit)}</b><span>inscrits</span></div>
+        <div><b>${nf(c.nbVoteRejete)}</b><span>rejetés (${nf(c.tauxVoteRejete, 1)} %)</span></div></div>`;
+  } else {
+    html += `<div class="lv-chips"><span class="lv-chip">Aucun résultat pour l'instant</span></div>`;
+    if (cand.length) html += `<span class="lv-eyebrow">Candidatures (${cand.length})</span><ul class="lv-liste">${cand.map(k => {
+      const pa = partiDe(k.abreviation_parti);
+      return `<li style="--c:${COUL[pa]}"><i class="lv-pt"></i><span><b>${esc(k.prenom_bulletin_vote)} ${esc(k.nom_bulletin_vote)}</b>${k.depute_sortant === "O" ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.nom_parti || "Indépendant")}</small></span></li>`;
+    }).join("")}</ul>`;
+  }
+  // projection Qc125 d'avant le vote, pour comparer
+  const proj = ["PQ", "PLQ", "CAQ", "PCQ", "QS"].map((p, j) => [p, r.s[j]]).sort((x, y) => y[1] - x[1]).slice(0, 3);
+  html += `<p class="lv-muted lv-proj">Projection Qc125 avant le vote : ${proj.map(([pp, v]) => `<b style="color:${COUL[pp]}">${pp}</b> ${nf(v)} %`).join(" · ")}</p>`;
+  p.innerHTML = html;
+}
+
+function dessiner() { dessinerEtat(); dessinerBarre(); dessinerCarte(); dessinerPanneau(); }
+
+function choisir(i) { sel = i; dessinerCarte(); dessinerPanneau(); if (innerWidth <= 900) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+
+function infobulle(e, f) {
+  const i = f.properties.RID, r = DATA.ridings[i], c = parRid[i];
+  tip.hidden = false;
+  const box = svg.node().parentNode.getBoundingClientRect();
+  tip.style.left = (e.clientX - box.left + 12) + "px"; tip.style.top = (e.clientY - box.top + 12) + "px";
+  tip.innerHTML = `<b>${esc(r.n)}</b>` + (c && c.tete ? `${c.cands.slice(0, 3).map(k => `${esc(k.parti === "AUT" ? k.abreviationPartiPolitique : k.parti)} ${nf(k.tauxVote, 0)} %`).join(" · ")}<br><small>${nf(100 * c.frac, 0)} % des bureaux</small>` : "<small>Aucun résultat</small>");
+}
+
+/* ---------- carte ---------- */
+function construireCarte() {
+  const MW = 600, MH = 704;
+  for (const g of [DATA.ridingGeo, DATA.curRegionGeo].filter(Boolean)) for (const f of g.features)
+    if (d3.geoArea(f) > 2 * Math.PI) { const rev = q => q.map(x => x.slice().reverse()); f.geometry.coordinates = f.geometry.type === "Polygon" ? rev(f.geometry.coordinates) : f.geometry.coordinates.map(rev); }
+  const proj = d3.geoConicConformal().rotate([71.6, 0]).parallels([46, 60]).fitExtent([[12, 12], [MW - 12, 648]], DATA.curRegionGeo || DATA.ridingGeo);
+  PATH = d3.geoPath(proj);
+  svg = d3.select("#lvCarte").attr("viewBox", `0 0 ${MW} ${MH}`);
+  gZ = svg.append("g");
+  gRid = gZ.append("g");
+  gRid.selectAll("path").data(DATA.ridingGeo.features).join("path").attr("class", "lv-rid").attr("d", PATH)
+    .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => DATA.ridings[f.properties.RID].n)
+    .on("click", (e, f) => choisir(f.properties.RID))
+    .on("keydown", (e, f) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choisir(f.properties.RID); } })
+    .on("mousemove", infobulle).on("mouseleave", () => { tip.hidden = true; });
+  if (DATA.curRegionGeo) gZ.append("g").selectAll("path").data(DATA.curRegionGeo.features).join("path").attr("class", "lv-reg").attr("d", PATH);
+  gSel = gZ.append("g");
+  ZOOM = d3.zoom().scaleExtent([1, 40]).translateExtent([[-100, -100], [MW + 100, MH + 100]]).on("zoom", e => gZ.attr("transform", e.transform));
+  svg.call(ZOOM).on("dblclick.zoom", null);
+  svg.on("click", e => { if (e.target === svg.node()) { sel = null; dessinerCarte(); dessinerPanneau(); } });
+  const vers = (lon0, lat0, lon1, lat1) => {
+    const [x0, y0] = proj([lon0, lat1]), [x1, y1] = proj([lon1, lat0]);
+    const k = Math.min(40, 0.9 / Math.max((x1 - x0) / MW, (y1 - y0) / MH));
+    svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity.translate(MW / 2, MH / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
+  };
+  $("lvZoom").addEventListener("click", e => {
+    const z = e.target.closest("button")?.dataset.z; if (!z) return;
+    if (z === "tout") svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity);
+    else if (z === "mtl") vers(-74.1, 45.33, -73.3, 45.75);
+    else if (z === "qc") vers(-71.55, 46.68, -71.0, 47.0);
+    else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
+    else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
+  });
+  tip = $("lvTip");
+}
+
+/* ---------- démarrage (au premier affichage de l'onglet) ---------- */
+async function demarrer() {
+  if (demarre) return; demarre = true;
+  try {
+    DATA = await (await fetch("votes-quebec/data.json", { cache: "no-cache" })).json();
+    construireCarte();
+    lire("candidatures").then(d => { candidatures = d.liste || null; dessinerPanneau(); }).catch(() => {});
+    await actualiser();
+  } catch (e) { $("lvEtat").textContent = "Chargement impossible : " + e.message; }
+  // lecture régulière, seulement quand l'onglet est visible
+  minuterie = setInterval(() => { if (!document.hidden && !$("vue-live").hidden) actualiser(); }, RAFRAICHIR * 1000);
+  $("lvMaj").addEventListener("click", actualiser);
+}
+window.addEventListener("vue-live", demarrer);
+if (!$("vue-live").hidden) demarrer();

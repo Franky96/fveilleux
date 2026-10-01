@@ -72,16 +72,86 @@
     .sc-live[aria-selected="true"] b { color: #E5484D; }
     @keyframes sc-pouls { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
     @media (prefers-reduced-motion: reduce) { .sc-dot { animation: none; } }
-    /* Vue « En direct » (temporaire) */
-    .vue-live { background: var(--st-bg); min-height: 60vh; padding: 3rem clamp(16px, 3vw, 56px); font-family: "Public Sans", system-ui, sans-serif; }
+    /* Vue « En direct » (temporaire) : mêmes couleurs que la simulation */
+    .vue-live { --bg:#F1F3F7; --surface:#FFFFFF; --ink:#121929; --muted:#586176; --rule:#D6DCE6; --soft:#E7EBF2;
+      --pq:#0101CC; --plq:#D90000; --caq:#0FA3E0; --pcq:#172853; --qs:#FF5402; --aut:#8A8F99;
+      background: var(--bg); color: var(--ink); min-height: 60vh; font-family: "Public Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+    :root[data-theme="dark"] .vue-live { --bg:#0C1019; --surface:#141A27; --ink:#E6E9F1; --muted:#98A1B4; --rule:#273045; --soft:#1B2233;
+      --pq:#5A6BFF; --plq:#FF4D4D; --caq:#3CC6FF; --pcq:#8FA0DA; --qs:#FF7A3A; --aut:#7C8494; }
     .vue-live[hidden] { display: none; }
-    .live-carte { max-width: 640px; margin: 0 auto; display: grid; gap: 0.8rem; padding: 1.75rem; border-radius: 14px;
-      background: var(--st-surface); border: 1px solid var(--st-rule); color: var(--st-ink); }
-    .live-carte h2 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.6rem; text-wrap: balance; }
-    .live-carte p { margin: 0; color: var(--st-muted); line-height: 1.55; }
-    .live-badge { justify-self: start; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase; color: #E5484D; border: 1px solid #E5484D; border-radius: 99px; padding: 0.2rem 0.6rem; }
-    .live-note { font-size: 0.82rem; }
+    .lv-wrap { max-width: 1680px; margin: 0 auto; padding: 24px clamp(16px, 3vw, 56px) 56px; display: grid; gap: 20px; }
+    .lv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+    .lv-head h2 { margin: 6px 0 4px; font-family: "Literata", Georgia, serif; font-size: clamp(1.4rem, 3vw, 2rem); text-wrap: balance; }
+    .lv-etat { margin: 0; color: var(--muted); font-size: 0.88rem; }
+    .lv-etat b { color: var(--ink); }
+    .lv-btn, .lv-zoom button { font: inherit; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-btn:hover, .lv-zoom button:hover { border-color: var(--ink); }
+    .lv-btn:focus-visible, .lv-zoom button:focus-visible, .lv-rid:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .live-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #E5484D; border: 1px solid #E5484D; border-radius: 99px; padding: 0.2rem 0.6rem; }
+    .lv-banniere { margin: 0; padding: 12px 14px; border-radius: 10px; border: 1px dashed var(--rule); background: var(--surface); color: var(--muted); font-size: 0.9rem; }
+    .lv-banniere b { color: var(--ink); }
+    .lv-muted { color: var(--muted); margin: 0; font-size: 0.85rem; }
+    .lv-sieges { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+    .lv-sieges h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .lv-barre-zone { position: relative; padding-top: 22px; }
+    .lv-barre { display: flex; height: 38px; border-radius: 8px; overflow: hidden; background: var(--soft); }
+    .lv-seg { position: relative; height: 100%; background: color-mix(in srgb, var(--c) 45%, var(--soft)); display: flex; align-items: center; justify-content: center; min-width: 0; transition: width 0.6s ease; }
+    .lv-seg + .lv-seg { border-left: 2px solid var(--surface); }
+    .lv-elus { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); }
+    .lv-seg b { position: relative; font-size: 0.78rem; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.55); white-space: nowrap; }
+    .lv-maj { position: absolute; top: 18px; bottom: -4px; width: 0; border-left: 2px solid var(--ink); }
+    .lv-maj span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.72rem; font-weight: 700; white-space: nowrap; color: var(--ink); line-height: 1; }
+    .lv-legende { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.78rem; }
+    .lv-k { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background: var(--muted); }
+    .lv-k.pale { opacity: 0.4; margin-left: 8px; }
+    .lv-partis { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+    .lv-parti { display: grid; grid-template-columns: 10px auto 1fr auto; grid-template-rows: auto auto; column-gap: 8px; align-items: baseline; padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+    .lv-parti i { grid-row: 1 / 3; width: 10px; height: 100%; border-radius: 3px; background: var(--c); align-self: stretch; }
+    .lv-pnom { font-weight: 700; }
+    .lv-parti b { font-size: 1.3rem; font-variant-numeric: tabular-nums; justify-self: end; grid-column: 4; grid-row: 1; }
+    .lv-parti small { grid-column: 2 / 4; grid-row: 2; color: var(--muted); font-size: 0.72rem; }
+    .lv-pvote { grid-column: 4; grid-row: 2; justify-self: end; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+    .lv-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr); gap: 20px; align-items: start; }
+    .lv-cartecard { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+    .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+    .lv-zoom button { pointer-events: auto; }
+    #lvCarte { display: block; width: 100%; height: clamp(420px, 72vh, 900px); background: var(--bg); touch-action: none; }
+    .lv-rid { stroke: var(--surface); stroke-width: 0.4px; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill-opacity 0.4s; }
+    .lv-rid:hover { stroke: var(--ink); stroke-width: 1.2px; }
+    .lv-reg { fill: none; stroke: var(--surface); stroke-width: 1.4px; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .lv-selline { fill: none; stroke: var(--ink); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .lv-tip { position: absolute; z-index: 3; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px;
+      padding: 6px 9px; font-size: 0.8rem; box-shadow: 0 6px 20px rgba(0,0,0,0.25); max-width: 260px; }
+    .lv-tip b { display: block; }
+    .lv-tip small { color: var(--muted); }
+    .lv-panneau { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; display: grid; gap: 12px; align-content: start; }
+    .lv-panneau h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.35rem; text-wrap: balance; }
+    .lv-eyebrow { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .lv-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lv-chip { font-size: 0.75rem; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: var(--soft); }
+    .lv-chip.fin { background: var(--ink); color: var(--surface); }
+    .lv-tete { margin: 0; padding-left: 10px; border-left: 4px solid var(--c); font-size: 0.92rem; }
+    .lv-cands { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .lv-cands td { padding: 7px 4px; border-top: 1px solid var(--rule); vertical-align: top; }
+    .lv-cands small { display: block; color: var(--muted); font-size: 0.72rem; }
+    .lv-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .lv-pt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-top: 5px; }
+    .lv-jauge { display: block; height: 4px; border-radius: 2px; background: var(--soft); margin-top: 4px; overflow: hidden; }
+    .lv-jauge i { display: block; height: 100%; background: var(--c); }
+    .lv-sortant { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border: 1px solid var(--rule); border-radius: 4px; padding: 0 4px; }
+    .lv-kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .lv-kv div { background: var(--bg); border-radius: 8px; padding: 8px; display: grid; }
+    .lv-kv b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .lv-kv span { font-size: 0.72rem; color: var(--muted); }
+    .lv-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .lv-liste li { display: grid; grid-template-columns: 14px 1fr; gap: 6px; }
+    .lv-liste small { display: block; color: var(--muted); font-size: 0.75rem; }
+    .lv-proj { padding-top: 8px; border-top: 1px dashed var(--rule); }
+    .lv-source { font-size: 0.78rem; }
+    @media (max-width: 900px) { .lv-grid { grid-template-columns: minmax(0, 1fr); } #lvCarte { height: 62vh; } }
+    @media (max-width: 600px) { .lv-partis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lv-parti b { font-size: 1.1rem; } .lv-parti small { font-size: 0.66rem; } }
+    @media (prefers-reduced-motion: reduce) { .lv-seg, .lv-rid { transition: none; } }
     .loi39[hidden], .site-top .titre > [hidden] { display: none; }
     @media (max-width: 600px) { .sc-tab { flex: 1 1 0; min-width: 0; padding: 0.4rem 0.6rem; } .sc-tab small { font-size: 0.68rem; } }
     #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
@@ -121,11 +191,39 @@
   </nav>
 
   <section class="vue-live" id="vue-live" role="tabpanel" aria-labelledby="tab-live" hidden>
-    <div class="live-carte">
-      <span class="live-badge"><i class="sc-dot" aria-hidden="true"></i>En direct</span>
-      <h2>Élections générales du 5 octobre 2026</h2>
-      <p>Les résultats en direct s'afficheront ici le soir de l'élection, dès la fermeture des bureaux de vote.</p>
-      <p class="live-note">Cette vue est temporaire : elle disparaîtra après l'élection.</p>
+    <div class="lv-wrap">
+      <header class="lv-head">
+        <div>
+          <span class="live-badge"><i class="sc-dot" aria-hidden="true"></i>En direct</span>
+          <h2>Élections générales du 5 octobre 2026</h2>
+          <p class="lv-etat" id="lvEtat" aria-live="polite">Chargement…</p>
+        </div>
+        <button type="button" class="lv-btn" id="lvMaj">Mettre à jour</button>
+      </header>
+      <p class="lv-banniere" id="lvBanniere" hidden></p>
+
+      <section class="lv-sieges" aria-labelledby="lvSiegesTitre">
+        <h3 id="lvSiegesTitre">Sièges</h3>
+        <div class="lv-barre-zone">
+          <div class="lv-barre" id="lvBarre"></div>
+          <div class="lv-maj" style="left:calc(100% * 64 / 127)"><span>Majorité : 64</span></div>
+        </div>
+        <p class="lv-muted lv-legende"><i class="lv-k plein"></i>élu·e (résultat final) <i class="lv-k pale"></i>en avance · sur 127 sièges</p>
+        <div class="lv-partis" id="lvPartis"></div>
+      </section>
+
+      <div class="lv-grid">
+        <div class="lv-cartecard">
+          <div class="lv-zoom" id="lvZoom">
+            <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
+            <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
+          </div>
+          <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
+          <div class="lv-tip" id="lvTip" hidden></div>
+        </div>
+        <aside class="lv-panneau" id="lvPanneau" aria-live="polite"></aside>
+      </div>
+      <p class="lv-muted lv-source">Source : données ouvertes d'Élections Québec (résultats préliminaires, actualisés toutes les 2 à 5 minutes le soir du vote). Cette vue est temporaire.</p>
     </div>
   </section>
 
@@ -315,6 +413,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
   <script type="module" src="votes-quebec/loi39.js"></script>
+  <script type="module" src="votes-quebec/live.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;font-family:system-ui,sans-serif;"></div>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>
@@ -331,6 +430,7 @@
         document.getElementById('vue-live').hidden = vue !== 'live';
         document.querySelectorAll('.site-top .titre > span[class^="t-"]').forEach(x => x.hidden = x.className !== 't-' + vue);
         if (vue === 'loi39') window.dispatchEvent(new Event('resize'));   // la carte se recale à son retour
+        if (vue === 'live') window.dispatchEvent(new Event('vue-live'));   // live.js démarre au premier affichage
       };
       document.querySelector('.sc-tabs').addEventListener('click', e => {
         const t = e.target.closest('.sc-tab'); if (!t) return;
