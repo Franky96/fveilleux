@@ -26,7 +26,7 @@ projet** : architecture, données, méthode, reconstruction, pièges connus.
   `exemple.html` ni la version autonome.
 - Reconstruire depuis le dépôt :
   `cd votes-quebec/outils && LOI39_AUTONOME=/tmp/loi39-simulation.html ./reconstruire.sh && rm -f ../exemple.html`
-  Si `fragment.html` a changé, recopier son contenu dans `votes-quebec.html` (avec `data-src="votes-quebec/data.json"`),
+  Si `fragment.html` a changé, recopier son contenu dans `votes-quebec.html` (avec `id="vue-loi39" role="tabpanel" aria-labelledby="tab-loi39" data-src="votes-quebec/data.json"` sur la div `.loi39`, à cause des onglets de mode de scrutin),
   puis pousser sur `master`.
 
 ## 1. Contenu du dossier
