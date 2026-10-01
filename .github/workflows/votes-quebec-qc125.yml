@@ -7,11 +7,9 @@ name: Votes Québec · données Qc125
 
 on:
   schedule:
-    # GitHub peut retarder ou sauter un déclenchement programmé : trois essais par jour.
-    # Un seul commit par jour au plus (« déjà vérifié aujourd'hui » si la date est déjà publiée).
-    - cron: "17 10 * * *"   # vers 6 h 17 à Montréal (été) / 5 h 17 (hiver)
-    - cron: "47 15 * * *"   # vers 11 h 47
-    - cron: "37 21 * * *"   # vers 17 h 37
+    # GitHub retarde souvent les déclenchements programmés de plusieurs heures (ou en saute) : un essai
+    # toutes les 3 heures. Un seul commit par jour au plus si Qc125 ne change rien (« déjà vérifié aujourd'hui »).
+    - cron: "17 */3 * * *"
   workflow_dispatch:        # bouton « Run workflow » dans l'onglet Actions
 
 permissions:
