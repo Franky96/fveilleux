@@ -2,9 +2,9 @@
  "nat_share": {
   "PQ": 30.1,
   "PLQ": 23.9,
-  "CAQ": 17.7,
-  "PCQ": 16.8,
-  "QS": 11.4
+  "CAQ": 17.6,
+  "PCQ": 16.9,
+  "QS": 11.5
  },
  "eligible": [
   "PQ",
@@ -14,30 +14,30 @@
   "QS"
  ],
  "fptp_127": {
-  "PQ": 67,
+  "PQ": 66,
   "PLQ": 37,
   "PCQ": 15,
-  "QS": 8
+  "QS": 9
  },
  "loi39_dist": {
-  "PQ": 42,
+  "PQ": 41,
   "PCQ": 10,
   "QS": 5,
-  "PLQ": 23
+  "PLQ": 24
  },
  "loi39_list": {
   "PQ": 10,
   "CAQ": 16,
   "PCQ": 10,
-  "PLQ": 7,
-  "QS": 2
+  "PLQ": 6,
+  "QS": 3
  },
  "loi39_total": {
-  "PQ": 52,
+  "PQ": 51,
   "PLQ": 30,
   "CAQ": 16,
   "PCQ": 20,
-  "QS": 7
+  "QS": 8
  },
  "regions": {
   "Bas-Saint-Laurent": {
@@ -46,10 +46,10 @@
    "dist_seats": 2,
    "list_seats": 1,
    "share": {
-    "PQ": 53.2,
+    "PQ": 53.5,
     "PLQ": 6.7,
-    "CAQ": 17.5,
-    "PCQ": 12.1,
+    "CAQ": 17.1,
+    "PCQ": 12.4,
     "QS": 10.4
    },
    "fptp_now": {
@@ -68,11 +68,11 @@
    "dist_seats": 3,
    "list_seats": 2,
    "share": {
-    "PQ": 42.9,
-    "PLQ": 11.1,
-    "CAQ": 19.8,
+    "PQ": 43.1,
+    "PLQ": 11.0,
+    "CAQ": 19.6,
     "PCQ": 19.6,
-    "QS": 6.7
+    "QS": 6.6
    },
    "fptp_now": {
     "PQ": 5
@@ -92,10 +92,10 @@
    "list_seats": 4,
    "share": {
     "PQ": 27.0,
-    "PLQ": 13.3,
-    "CAQ": 17.3,
-    "PCQ": 29.8,
-    "QS": 12.6
+    "PLQ": 13.4,
+    "CAQ": 17.2,
+    "PCQ": 29.7,
+    "QS": 12.7
    },
    "fptp_now": {
     "PCQ": 6,
@@ -120,11 +120,11 @@
    "dist_seats": 3,
    "list_seats": 2,
    "share": {
-    "PQ": 31.6,
+    "PQ": 31.9,
     "PLQ": 12.6,
-    "CAQ": 23.2,
-    "PCQ": 24.0,
-    "QS": 8.6
+    "CAQ": 23.1,
+    "PCQ": 23.9,
+    "QS": 8.5
    },
    "fptp_now": {
     "PQ": 4
@@ -143,25 +143,27 @@
    "dist_seats": 3,
    "list_seats": 2,
    "share": {
-    "PQ": 26.4,
-    "PLQ": 22.4,
-    "CAQ": 17.5,
-    "PCQ": 17.5,
-    "QS": 16.1
+    "PQ": 26.3,
+    "PLQ": 22.5,
+    "CAQ": 17.3,
+    "PCQ": 17.7,
+    "QS": 16.3
    },
    "fptp_now": {
     "PCQ": 1,
     "PLQ": 1,
-    "PQ": 3
+    "PQ": 2,
+    "QS": 1
    },
    "dist": {
     "PCQ": 1,
-    "PLQ": 0,
-    "PQ": 2
+    "PLQ": 1,
+    "PQ": 1,
+    "QS": 0
    },
    "list": {
-    "PLQ": 1,
-    "CAQ": 1
+    "CAQ": 1,
+    "QS": 1
    }
   },
   "Montréal": {
@@ -171,10 +173,10 @@
    "list_seats": 10,
    "share": {
     "PQ": 18.8,
-    "PLQ": 46.0,
+    "PLQ": 45.8,
     "CAQ": 6.3,
     "PCQ": 10.4,
-    "QS": 18.5
+    "QS": 18.7
    },
    "fptp_now": {
     "PLQ": 18,
@@ -201,10 +203,10 @@
    "list_seats": 2,
    "share": {
     "PQ": 20.1,
-    "PLQ": 36.6,
-    "CAQ": 16.5,
+    "PLQ": 36.5,
+    "CAQ": 16.3,
     "PCQ": 16.9,
-    "QS": 9.9
+    "QS": 10.2
    },
    "fptp_now": {
     "PLQ": 5
@@ -223,11 +225,11 @@
    "dist_seats": 2,
    "list_seats": 1,
    "share": {
-    "PQ": 34.7,
-    "PLQ": 16.5,
-    "CAQ": 20.9,
-    "PCQ": 14.5,
-    "QS": 13.5
+    "PQ": 34.9,
+    "PLQ": 16.8,
+    "CAQ": 20.1,
+    "PCQ": 14.8,
+    "QS": 13.4
    },
    "fptp_now": {
     "PQ": 3
@@ -245,11 +247,11 @@
    "dist_seats": 1,
    "list_seats": 1,
    "share": {
-    "PQ": 39.9,
+    "PQ": 39.7,
     "PLQ": 10.1,
-    "CAQ": 26.8,
-    "PCQ": 16.7,
-    "QS": 6.6
+    "CAQ": 26.6,
+    "PCQ": 17.1,
+    "QS": 6.5
    },
    "fptp_now": {
     "PQ": 2
@@ -267,11 +269,11 @@
    "dist_seats": 1,
    "list_seats": 0,
    "share": {
-    "PQ": 30.3,
-    "PLQ": 23.2,
-    "CAQ": 19.2,
-    "PCQ": 12.1,
-    "QS": 15.2
+    "PQ": 30.0,
+    "PLQ": 24.0,
+    "CAQ": 19.0,
+    "PCQ": 12.0,
+    "QS": 15.0
    },
    "fptp_now": {
     "PQ": 1
@@ -287,11 +289,11 @@
    "dist_seats": 2,
    "list_seats": 1,
    "share": {
-    "PQ": 54.2,
-    "PLQ": 17.5,
-    "CAQ": 14.5,
+    "PQ": 54.4,
+    "PLQ": 17.4,
+    "CAQ": 14.4,
     "PCQ": 7.7,
-    "QS": 6.1
+    "QS": 6.0
    },
    "fptp_now": {
     "PQ": 3
@@ -309,10 +311,10 @@
    "dist_seats": 4,
    "list_seats": 2,
    "share": {
-    "PQ": 22.2,
-    "PLQ": 8.8,
-    "CAQ": 20.2,
-    "PCQ": 42.5,
+    "PQ": 22.1,
+    "PLQ": 8.9,
+    "CAQ": 20.3,
+    "PCQ": 42.4,
     "QS": 6.3
    },
    "fptp_now": {
@@ -332,10 +334,10 @@
    "dist_seats": 4,
    "list_seats": 2,
    "share": {
-    "PQ": 21.1,
-    "PLQ": 38.9,
-    "CAQ": 18.8,
-    "PCQ": 14.1,
+    "PQ": 20.6,
+    "PLQ": 39.2,
+    "CAQ": 18.9,
+    "PCQ": 14.2,
     "QS": 7.0
    },
    "fptp_now": {
@@ -355,11 +357,11 @@
    "dist_seats": 5,
    "list_seats": 3,
    "share": {
-    "PQ": 42.4,
-    "PLQ": 11.0,
-    "CAQ": 26.7,
+    "PQ": 42.5,
+    "PLQ": 11.1,
+    "CAQ": 26.4,
     "PCQ": 11.6,
-    "QS": 8.3
+    "QS": 8.4
    },
    "fptp_now": {
     "PQ": 8
@@ -378,9 +380,9 @@
    "dist_seats": 6,
    "list_seats": 3,
    "share": {
-    "PQ": 39.0,
-    "PLQ": 16.6,
-    "CAQ": 22.3,
+    "PQ": 39.1,
+    "PLQ": 16.8,
+    "CAQ": 22.0,
     "PCQ": 13.5,
     "QS": 8.6
    },
@@ -402,11 +404,11 @@
    "dist_seats": 13,
    "list_seats": 7,
    "share": {
-    "PQ": 33.5,
-    "PLQ": 21.6,
+    "PQ": 33.4,
+    "PLQ": 21.7,
     "CAQ": 23.0,
-    "PCQ": 12.1,
-    "QS": 9.7
+    "PCQ": 12.2,
+    "QS": 9.8
    },
    "fptp_now": {
     "PQ": 16,
@@ -429,11 +431,11 @@
    "dist_seats": 3,
    "list_seats": 2,
    "share": {
-    "PQ": 32.2,
-    "PLQ": 8.6,
+    "PQ": 32.4,
+    "PLQ": 8.5,
     "CAQ": 19.6,
-    "PCQ": 32.0,
-    "QS": 7.6
+    "PCQ": 31.9,
+    "QS": 7.5
    },
    "fptp_now": {
     "PQ": 3,
