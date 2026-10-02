@@ -1485,9 +1485,10 @@ function render(){
     (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125</span>`) +
     `<span class="pill">Seuil ${fmt(state.thr,state.thr%1?1:0)} % : ${RES.eligible.length} parti${RES.eligible.length>1?"s":""} admissible${RES.eligible.length>1?"s":""}</span>`;
 
+  // le parti qui a le plus de sièges part de la gauche : on voit tout de suite sa distance à la ligne de majorité
   const gbar = (label, seatsBy, n) => { const m = Math.floor(n/2)+1;
     return `<div class="gbar"><div class="gl"><span><b>${label}</b> · ${n} sièges</span><span>majorité ${m}</span></div>
-      <div class="track">${SEAT_ORDER.filter(p=>seatsBy[p]).map(p =>
+      <div class="track">${SEAT_ORDER.filter(p=>seatsBy[p]).sort((a,b)=>seatsBy[b]-seatsBy[a]).map(p =>
         `<i style="flex:${seatsBy[p]};background:${PV[p]};--c:${PV[p]}" title="${p} : ${seatsBy[p]}" data-p="${p}" data-n="${seatsBy[p]}">${p} ${seatsBy[p]}</i>`).join("")}
         <b style="left:${100*m/n}%" aria-hidden="true"></b></div></div>`; };
   document.getElementById("l39-glance").innerHTML = gbar("Mode actuel", RES.fptp, 127) + gbar("Loi 39", tot, 125);
