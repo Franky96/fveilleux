@@ -1,10 +1,10 @@
 {
 "Abitibi-Est": {
-"PQ": 30,
+"PQ": 29,
 "PLQ": 27,
 "PCQ": 17,
 "CAQ": 17,
-"QS": 9
+"QS": 10
 },
 "Abitibi-Ouest": {
 "PQ": 38,
@@ -78,7 +78,7 @@
 },
 "Bertrand": {
 "PQ": 44,
-"CAQ": 21,
+"CAQ": 22,
 "PCQ": 13,
 "PLQ": 13,
 "QS": 9
@@ -154,10 +154,10 @@
 "QS": 9
 },
 "Charlevoix–Côte-de-Beaupré": {
-"PQ": 36,
-"PCQ": 27,
+"PQ": 34,
+"PCQ": 28,
 "CAQ": 20,
-"QS": 8,
+"QS": 9,
 "PLQ": 8
 },
 "Châteauguay": {
@@ -347,7 +347,7 @@
 "CAQ": 26,
 "PCQ": 23,
 "QS": 10,
-"PLQ": 10
+"PLQ": 9
 },
 "Joliette": {
 "PQ": 53,
@@ -421,14 +421,14 @@
 },
 "Laurier-Dorion": {
 "QS": 37,
-"PLQ": 37,
+"PLQ": 36,
 "PQ": 16,
 "PCQ": 7,
 "CAQ": 4
 },
 "Laval-des-Rapides": {
 "PLQ": 34,
-"PQ": 24,
+"PQ": 25,
 "CAQ": 21,
 "PCQ": 12,
 "QS": 8
@@ -462,14 +462,14 @@
 "QS": 6
 },
 "Louis-Hébert": {
-"PQ": 28,
+"PQ": 27,
 "PCQ": 25,
 "CAQ": 22,
 "PLQ": 17,
 "QS": 9
 },
 "Marguerite-Bourgeoys": {
-"PLQ": 61,
+"PLQ": 62,
 "PCQ": 15,
 "PQ": 13,
 "QS": 7,
@@ -507,19 +507,19 @@
 "PQ": 71,
 "PCQ": 11,
 "CAQ": 9,
-"QS": 6,
+"QS": 5,
 "PLQ": 4
 },
 "Maurice-Richard": {
-"PQ": 31,
+"PQ": 30,
 "PLQ": 28,
-"QS": 27,
+"QS": 28,
 "CAQ": 9,
 "PCQ": 5
 },
 "Mégantic": {
 "PCQ": 28,
-"PQ": 27,
+"PQ": 28,
 "CAQ": 18,
 "PLQ": 17,
 "QS": 9
@@ -596,10 +596,10 @@
 },
 "Papineau": {
 "PLQ": 25,
-"PQ": 23,
+"PQ": 24,
 "CAQ": 21,
 "PCQ": 20,
-"QS": 10
+"QS": 9
 },
 "Pointe-aux-Trembles": {
 "PQ": 43,
@@ -654,7 +654,7 @@
 "PQ": 23,
 "PLQ": 22,
 "CAQ": 21,
-"PCQ": 20,
+"PCQ": 19,
 "QS": 14
 },
 "Rimouski": {
@@ -694,7 +694,7 @@
 },
 "Rousseau": {
 "PQ": 40,
-"CAQ": 28,
+"CAQ": 29,
 "PCQ": 17,
 "QS": 8,
 "PLQ": 5
@@ -764,14 +764,14 @@
 },
 "Sanguinet": {
 "PQ": 39,
-"CAQ": 22,
+"CAQ": 21,
 "PLQ": 16,
 "PCQ": 14,
 "QS": 9
 },
 "Sherbrooke": {
-"QS": 28,
 "PQ": 28,
+"QS": 28,
 "PLQ": 21,
 "CAQ": 13,
 "PCQ": 10
@@ -805,18 +805,18 @@
 "PCQ": 3
 },
 "Trois-Rivières": {
-"PQ": 32,
+"PQ": 30,
 "CAQ": 25,
-"PCQ": 19,
+"PCQ": 20,
 "PLQ": 13,
 "QS": 11
 },
 "Ungava": {
-"PQ": 30,
-"PLQ": 24,
+"PQ": 29,
+"PLQ": 25,
 "CAQ": 19,
-"QS": 15,
-"PCQ": 12
+"QS": 16,
+"PCQ": 11
 },
 "Vachon": {
 "PQ": 37,
@@ -848,7 +848,7 @@
 },
 "Verdun": {
 "PLQ": 38,
-"QS": 31,
+"QS": 30,
 "PQ": 16,
 "CAQ": 8,
 "PCQ": 7
