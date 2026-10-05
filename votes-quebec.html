@@ -140,6 +140,46 @@
     .lv-plist b { font-variant-numeric: tabular-nums; }
     @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; text-align: left; } .lv-head-droite .lv-btn { white-space: nowrap; } }
     .lv-particip small { white-space: nowrap; }
+    /* suivi : étoiles, liste suivie, tableau par parti, alertes */
+    .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; align-items: start; }
+    .lv-carteS { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
+    .lv-carteS h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .lv-pp-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .lv-pp-tete .lv-groupe button { font: inherit; font-size: 0.78rem; font-weight: 700; padding: 5px 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-pp-tete .lv-groupe button[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .lv-pp-resume { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lv-sg { border-top: 1px solid var(--rule); padding-top: 8px; }
+    .lv-sg > summary { cursor: pointer; font-size: 0.8rem; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+    .lv-sg > summary::-webkit-details-marker { display: none; }
+    .lv-sg > summary::before { content: "▸"; color: var(--muted); }
+    .lv-sg[open] > summary::before { content: "▾"; }
+    .lv-sg > summary span { flex: 1; }
+    .lv-sg > summary small { color: var(--muted); font-weight: 600; }
+    .lv-lignes { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; }
+    .lv-ligne { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 0.84rem; cursor: pointer; }
+    .lv-ligne:hover, .lv-ligne:focus-visible { background: var(--bg); outline: none; }
+    .lv-ligne .lv-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-ligne .lv-nom i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 6px; vertical-align: 1px; }
+    .lv-ecart { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+    .lv-ecart.neg { color: var(--muted); }
+    .lv-bur { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 4.5em; text-align: right; }
+    .lv-etoile { font: inherit; font-size: 1.05rem; line-height: 1; width: 26px; height: 26px; border-radius: 6px; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0; }
+    .lv-etoile[aria-pressed="true"] { color: #F5B83D; }
+    .lv-etoile:hover { color: #F5B83D; }
+    .lv-etoile:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+    .lv-suivre { font: inherit; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; justify-self: start; }
+    .lv-suivre[aria-pressed="true"] { border-color: #F5B83D; color: #B07A00; background: color-mix(in srgb, #F5B83D 14%, var(--surface)); }
+    #lvSuivies { display: grid; gap: 10px; }
+    .lv-journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
+    .lv-journal li { padding: 5px 8px; border-radius: 6px; background: var(--bg); }
+    .lv-journal time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+    .lv-alertes { position: fixed; right: 16px; bottom: 16px; z-index: 1100; display: grid; gap: 8px; max-width: min(360px, calc(100vw - 32px)); }
+    .lv-alerte { background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-left: 5px solid var(--c); border-radius: 10px; padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-size: 0.86rem; cursor: pointer; animation: lvEntre 0.25s ease-out; }
+    .lv-alerte small { display: block; color: var(--muted); font-size: 0.72rem; }
+    @keyframes lvEntre { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .lv-alerte { animation: none; } }
+    @media (max-width: 900px) { .lv-suivi { grid-template-columns: minmax(0, 1fr); } }
     .lv-pk { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--rule); }
     /* pastilles de prédiction : contour blanc + fin cerne noir, visibles même sur la couleur du même parti */
     .lv-preds { pointer-events: none; }
@@ -271,6 +311,24 @@
         </div>
         <aside class="lv-panneau" id="lvPanneau" aria-live="polite"></aside>
       </div>
+
+      <!-- suivi : circonscriptions suivies (étoiles, alertes) et tableau par parti -->
+      <div class="lv-suivi">
+        <section class="lv-carteS" aria-labelledby="lvSuiviesTitre">
+          <span class="lv-eyebrow">Mes circonscriptions</span>
+          <h3 id="lvSuiviesTitre">Suivies</h3>
+          <div id="lvSuivies"></div>
+        </section>
+        <section class="lv-carteS" aria-labelledby="lvParPartiTitre">
+          <span class="lv-eyebrow">Suivi par parti</span>
+          <div class="lv-pp-tete">
+            <h3 id="lvParPartiTitre">Circonscriptions du parti</h3>
+            <div class="lv-groupe" id="lvPPChoix" role="group" aria-label="Parti à suivre"></div>
+          </div>
+          <div id="lvParParti"></div>
+        </section>
+      </div>
+      <div class="lv-alertes" id="lvAlertes" aria-live="assertive"></div>
       <p class="lv-muted lv-source">Source : données ouvertes d'Élections Québec (résultats préliminaires, actualisés toutes les 2 à 5 minutes le soir du vote). Cette vue est temporaire.</p>
     </div>
   </section>
