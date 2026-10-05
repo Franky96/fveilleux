@@ -31,6 +31,7 @@ const DEMO = sessionStorage.getItem("userRole") === "admin" && PARAMS.has("demo"
 
 /* ---------- prédiction (projection Qc125 d'avant le vote) ---------- */
 const PROJ_P = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];          // ordre des parts dans data.json (ridings[].s)
+let cartePred = false;                                       // carte entière de la prédiction (au lieu des résultats)
 let prediction = sessionStorage.getItem("lvPrediction") === "1", gPred = null, ancrages = null, zoomK = 1;
 // gagnant prédit : plus grande part ; égalité départagée par l'ordre publié par Qc125 (ridings[].o)
 function predit(i) {
@@ -78,8 +79,8 @@ function ancrer() {
 function dessinerPrediction() {
   $("lvPred").setAttribute("aria-pressed", prediction);
   if (!gPred) return;
-  gPred.style("display", prediction ? null : "none");
-  if (!prediction) return;
+  gPred.style("display", prediction && !cartePred ? null : "none");   // inutile sur la carte de prédiction
+  if (!prediction || cartePred) return;
   const g = gPred.selectAll("g.lv-pred").data(ancrer(), d => d.RID).join(enter => {
     const e = enter.append("g").attr("class", "lv-pred");
     e.append("circle").attr("class", "lv-pred-halo"); e.append("circle").attr("class", "lv-pred-pt"); return e; });
@@ -175,6 +176,10 @@ function dessinerEtat() {
 }
 
 function remplir(i) {
+  if (cartePred) {                                           // carte de prédiction : gagnant Qc125, plus foncé si sa part est forte
+    const r = DATA.ridings[i], p = predit(i), v = r.s[PROJ_P.indexOf(p)];
+    return [COUL[p], Math.max(0.35, Math.min(1, (v - 15) / 35))];
+  }
   const c = parRid[i];
   if (!c || !c.tete) return ["var(--soft)", 1];
   return [COUL[c.tete.parti], c.isResultatsFinaux ? 1 : 0.35 + 0.6 * c.frac];
@@ -188,6 +193,15 @@ function dessinerCarte() {
 
 function dessinerPanneau() {
   const p = $("lvPanneau");
+  if (sel == null && cartePred) {
+    const n = {}; DATA.ridings.forEach((_, i) => { const p = predit(i); n[p] = (n[p] || 0) + 1; });
+    const ordre = Object.keys(n).sort((a, b) => n[b] - n[a]);
+    p.innerHTML = `<span class="lv-eyebrow">Carte de prédiction</span><h3>${NOMS[ordre[0]]} : ${n[ordre[0]]} sièges prédits</h3>
+      <p class="lv-muted">Chaque circonscription a la couleur du gagnant prédit par la projection Qc125 d'avant le vote ; plus la couleur est foncée, plus sa part prévue est forte. ${n[ordre[0]] >= MAJ ? "Majorité prédite." : `Il manquerait ${MAJ - n[ordre[0]]} siège${MAJ - n[ordre[0]] > 1 ? "s" : ""} pour la majorité (${MAJ}).`}</p>
+      <div class="lv-partis lv-partis-pred">${ordre.map(pp => `<div class="lv-parti" style="--c:${COUL[pp]}"><i></i><span class="lv-pnom">${pp}</span><b>${n[pp]}</b><small>sièges prédits</small></div>`).join("")}</div>
+      <p class="lv-muted">Clique sur « Carte prédiction » de nouveau pour revenir aux résultats.</p>`;
+    return;
+  }
   if (sel == null) {
     const n = Object.values(parRid).filter(c => c.tete).length;
     p.innerHTML = `<span class="lv-eyebrow">Circonscriptions</span><h3>Clique sur une circonscription</h3>
@@ -237,6 +251,11 @@ function infobulle(e, f) {
   tip.hidden = false;
   const box = svg.node().parentNode.getBoundingClientRect();
   tip.style.left = (e.clientX - box.left + 12) + "px"; tip.style.top = (e.clientY - box.top + 12) + "px";
+  if (cartePred) {
+    const top = PROJ_P.map((p, j) => [p, r.s[j]]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    tip.innerHTML = `<b>${esc(r.n)}</b>Prédiction : ${top.map(([p, v]) => `${p} ${nf(v)} %`).join(" · ")}<br><small>projection Qc125 d'avant le vote</small>`;
+    return;
+  }
   tip.innerHTML = `<b>${esc(r.n)}</b>` + (prediction ? `<small>Prédiction : ${predit(i)}</small><br>` : "") + (c && c.tete ? `${c.cands.slice(0, 3).map(k => `${esc(k.parti === "AUT" ? k.abreviationPartiPolitique : k.parti)} ${nf(k.tauxVote, 0)} %`).join(" · ")}<br><small>${nf(100 * c.frac, 0)} % des bureaux</small>` : "<small>Aucun résultat</small>");
 }
 
@@ -277,6 +296,7 @@ function construireCarte() {
     else if (z === "qc") vers(-71.55, 46.68, -71.0, 47.0);
     else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
     else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
+    else if (z === "cartepred") { cartePred = !cartePred; $("lvCartePred").setAttribute("aria-pressed", cartePred); dessinerCarte(); dessinerPrediction(); dessinerPanneau(); }
     else if (z === "pred") { prediction = !prediction; sessionStorage.setItem("lvPrediction", prediction ? "1" : "0"); dessinerPrediction(); dessinerPanneau(); }
   });
   tip = $("lvTip");
