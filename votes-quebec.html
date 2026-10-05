@@ -79,7 +79,7 @@
     :root[data-theme="dark"] .vue-live { --bg:#0C1019; --surface:#141A27; --ink:#E6E9F1; --muted:#98A1B4; --rule:#273045; --soft:#1B2233;
       --pq:#5A6BFF; --plq:#FF4D4D; --caq:#3CC6FF; --pcq:#8FA0DA; --qs:#FF7A3A; --aut:#7C8494; }
     .vue-live[hidden] { display: none; }
-    .lv-wrap { max-width: 1680px; margin: 0 auto; padding: 24px clamp(16px, 3vw, 56px) 56px; display: grid; gap: 20px; }
+    .lv-wrap { max-width: 1680px; margin: 0 auto; padding: 24px clamp(16px, 3vw, 56px) 56px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
     .lv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
     .lv-head h2 { margin: 6px 0 4px; font-family: "Literata", Georgia, serif; font-size: clamp(1.4rem, 3vw, 2rem); text-wrap: balance; }
     .lv-etat { margin: 0; color: var(--muted); font-size: 0.88rem; }
@@ -153,7 +153,7 @@
     .lv-plist { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.8rem; }
     .lv-plist li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
     .lv-plist b { font-variant-numeric: tabular-nums; }
-    @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; text-align: left; } .lv-head-droite .lv-btn { white-space: nowrap; } }
+    @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; min-width: 0; text-align: left; } .lv-particip small { white-space: normal; } .lv-head-droite .lv-btn { white-space: nowrap; } }
     .lv-particip small { white-space: nowrap; }
     /* suivi : étoiles, liste suivie, tableau par parti, alertes */
     .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-content: start; }
@@ -303,6 +303,13 @@
     .lv-zoom-bas:empty { display: none; }
     .lv-zoom-bas .lv-plein-btn { margin-left: 0; }
     .lv-zoom-bas .lv-menu { top: auto; bottom: calc(100% + 6px); }
+    /* « Info » : seulement en plein écran ; la fiche s'affiche alors par-dessus la carte, à droite */
+    .lv-zoom .lv-info-btn { display: none; }
+    .lv-cartecard:fullscreen .lv-info-btn, .lv-cartecard.lv-plein .lv-info-btn { display: inline-block; }
+    .lv-zoom .lv-info-btn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .lv-panneau.lv-panneau-plein { position: absolute; z-index: 4; top: 10px; right: 10px; bottom: 60px; width: min(400px, calc(100% - 20px));
+      overflow: auto; overscroll-behavior: contain; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+    @media (max-width: 600px) { .lv-panneau.lv-panneau-plein { top: auto; left: 10px; right: 10px; width: auto; max-height: 55%; } }
     /* téléphone : zoom au doigt (pincer), pas besoin des boutons de zoom */
     @media (max-width: 600px) { .lv-zoom [data-z="tout"], .lv-zoom [data-z="mtl"], .lv-zoom [data-z="qc"], .lv-zoom [data-z="plus"], .lv-zoom [data-z="moins"] { display: none; } }
     .lv-cartecard:fullscreen, .lv-cartecard.lv-plein { border: 0; border-radius: 0; width: 100%; height: 100%; }
@@ -433,6 +440,7 @@
               <button type="button" id="lvCarteSuivis" aria-haspopup="true" aria-expanded="false" aria-pressed="false" title="Entourer sur la carte les circonscriptions suivies pour un parti">★ Suivis</button>
               <span class="lv-menu" id="lvMenuSuivis" role="menu" hidden></span>
             </span>
+            <button type="button" id="lvInfo" class="lv-info-btn" aria-pressed="false" title="Afficher la fiche de la circonscription par-dessus la carte">ⓘ Info</button>
             <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
           </div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>

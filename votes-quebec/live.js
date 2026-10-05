@@ -670,7 +670,7 @@ function dessinerPanneau() {
 
 function dessiner() { dessinerEtat(); dessinerBarre(); dessinerCarte(); dessinerPrediction(); dessinerPanneau(); dessinerSuivi(); }
 
-function choisir(i, defiler = true) { sel = i; dessinerCarte(); dessinerPanneau(); if (defiler && innerWidth <= 900) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+function choisir(i, defiler = true) { sel = i; dessinerCarte(); dessinerPanneau(); if (defiler && innerWidth <= 900 && !document.querySelector(".lv-cartecard.lv-plein, .lv-cartecard:fullscreen")) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
 
 function infobulle(e, f) {
   const i = f.properties.RID, r = DATA.ridings[i], c = parRid[i];
@@ -717,7 +717,7 @@ function construireCarte() {
   });
   svg.call(ZOOM).on("dblclick.zoom", null);
   // souris dans la carte : la molette zoome seulement, la page ne défile jamais (même au zoom minimum/maximum)
-  svg.node().parentElement.addEventListener("wheel", e => e.preventDefault(), { passive: false });
+  svg.node().parentElement.addEventListener("wheel", e => { if (!e.target.closest(".lv-panneau, .lv-menu")) e.preventDefault(); }, { passive: false });
   svg.on("click", e => { if (e.target === svg.node()) { sel = null; dessinerCarte(); dessinerPanneau(); } });
   const vers = (lon0, lat0, lon1, lat1) => {
     const [x0, y0] = proj([lon0, lat1]), [x1, y1] = proj([lon1, lat0]);
@@ -747,10 +747,20 @@ function construireCarte() {
   tip = $("lvTip");
   const carte = $("lvCarte").parentElement;
   const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
+  // « Info » (plein écran seulement) : la fiche de circonscription passe par-dessus la carte, puis reprend sa place
+  const repere = document.createComment("place de la fiche");
+  const info = ouvrir => {
+    const pan = $("lvPanneau");
+    if (ouvrir && pan.parentElement !== carte) { pan.before(repere); carte.appendChild(pan); pan.classList.add("lv-panneau-plein"); }
+    if (!ouvrir && pan.parentElement === carte) { repere.replaceWith(pan); pan.classList.remove("lv-panneau-plein"); }
+    $("lvInfo").setAttribute("aria-pressed", ouvrir);
+  };
+  $("lvInfo").addEventListener("click", () => info($("lvInfo").getAttribute("aria-pressed") !== "true"));
   const etatPlein = () => {
     const on = !!ecran() || carte.classList.contains("lv-plein");
     $("lvPlein").setAttribute("aria-pressed", on);
     $("lvPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
+    if (!on) info(false);
   };
   function pleinEcran() {
     if (ecran()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
