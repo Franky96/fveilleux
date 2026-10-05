@@ -716,6 +716,8 @@ function construireCarte() {
     zoomK = e.transform.k;
   });
   svg.call(ZOOM).on("dblclick.zoom", null);
+  // souris dans la carte : la molette zoome seulement, la page ne défile jamais (même au zoom minimum/maximum)
+  svg.node().parentElement.addEventListener("wheel", e => e.preventDefault(), { passive: false });
   svg.on("click", e => { if (e.target === svg.node()) { sel = null; dessinerCarte(); dessinerPanneau(); } });
   const vers = (lon0, lat0, lon1, lat1) => {
     const [x0, y0] = proj([lon0, lat1]), [x1, y1] = proj([lon1, lat0]);
