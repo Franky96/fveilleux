@@ -88,15 +88,18 @@ function dessinerPrediction() {
   if (!gPred) return;
   gPred.style("display", prediction && !cartePred && !carteParticip ? null : "none");   // inutile sur la carte de prédiction
   if (!prediction || cartePred) return;
-  const g = gPred.selectAll("g.lv-pred").data(ancrer(), d => d.RID).join(enter => {
+  // pas de chevauchement : au zoom actuel, on garde d'abord les pastilles des grandes circonscriptions
+  // et on masque celles qui toucheraient une pastille déjà placée (elles réapparaissent en zoomant)
+  const MIN = 12 / zoomK, gardes = [];
+  for (const d of [...ancrer()].sort((a, b) => b.r - a.r))
+    if (gardes.every(o => (o.x - d.x) ** 2 + (o.y - d.y) ** 2 >= MIN * MIN)) gardes.push(d);
+  const g = gPred.selectAll("g.lv-pred").data(gardes, d => d.RID).join(enter => {
     const e = enter.append("g").attr("class", "lv-pred");
     e.append("circle").attr("class", "lv-pred-halo"); e.append("circle").attr("class", "lv-pred-pt"); return e; });
   g.attr("transform", d => `translate(${d.x},${d.y})`);
-  // taille à l'écran qui suit le zoom (grossit en zoomant, ∝ √zoom, jusqu'à 3×) sans déborder de la circonscription
-  // (au plus 60 % de son rayon libre) ; jamais sous 2,5 px pour rester visible
-  const ecran = d => Math.max(2.5, Math.min(4.2 * Math.min(3, Math.sqrt(zoomK)), 0.6 * d.r * zoomK));
-  g.select(".lv-pred-halo").attr("r", d => (ecran(d) + 1.2) / zoomK);
-  g.select(".lv-pred-pt").attr("r", d => ecran(d) / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", d => Math.min(1.4, ecran(d) / 3) / zoomK);
+  // taille constante à l'écran : rayon et contour divisés par le zoom
+  g.select(".lv-pred-halo").attr("r", 5.4 / zoomK);
+  g.select(".lv-pred-pt").attr("r", 4.2 / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", 1.4 / zoomK);
 }
 
 /* ---------- participation ---------- */
