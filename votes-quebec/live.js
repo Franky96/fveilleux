@@ -277,6 +277,7 @@ function dessinerSuivi() {
   const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => position(b, V, suivisProj).ecart - position(a, V, suivisProj).ecart);   // +3, +2, +1, 0, −1, −2…
   $("lvSuivisProj").setAttribute("aria-pressed", suivisProj);
   $("lvSuivisDetail").setAttribute("aria-pressed", suivisDetail);
+  document.querySelector("#vue-live .lv-grid").classList.toggle("suivi-det", suivisDetail);
   $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
   // regroupées par statut : serrées d'abord (celles à surveiller), puis en avance, en retard, terminées
   const gs = { serre: [], avance: [], retard: [], fini: [] };

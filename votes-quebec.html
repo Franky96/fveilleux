@@ -113,13 +113,15 @@
     .lv-parti small { grid-column: 2 / 4; grid-row: 2; color: var(--muted); font-size: 0.72rem; }
     .lv-pvote { grid-column: 4; grid-row: 2; justify-self: end; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
     /* carte, fiche de circonscription et suivis :
-       étroit : l'un sous l'autre · large : carte avec la fiche juste dessous, suivis à droite (ultra wide : jusqu'à 3360 px) */
+       étroit : l'un sous l'autre · large : carte à gauche, fiche puis suivies à droite (mode « Détaillé » : fiche sous la carte) */
     .lv-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "carte" "panneau" "suivi"; gap: 20px; align-items: start; }
     .lv-grid > .lv-cartecard { grid-area: carte; }
     .lv-grid > .lv-panneau { grid-area: panneau; }
     .lv-grid > .lv-suivi { grid-area: suivi; }
-    @media (min-width: 1100px) { .lv-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: "carte suivi" "panneau suivi";
-      grid-template-rows: auto 1fr; } }   /* la hauteur des suivis va à la 2e rangée : pas de vide entre la carte et la fiche */
+    @media (min-width: 1100px) { .lv-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: "carte panneau" "carte suivi";
+      grid-template-rows: auto 1fr; }
+      /* fiche au-dessus des suivies ; en mode « Détaillé » (suivies plus hautes), elle retourne sous la carte */
+      .lv-grid.suivi-det { grid-template-areas: "carte suivi" "panneau suivi"; } }   /* la hauteur des suivis va à la 2e rangée : pas de vide entre la carte et la fiche */
     @media (min-width: 1800px) { .lv-wrap { max-width: 3360px; } #lvCarte { height: clamp(520px, 72vh, 1000px); } }
     .lv-cartecard { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
     .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
