@@ -329,6 +329,13 @@
     .lv-ini { display: grid; place-items: center; background: var(--c); color: #fff; font-size: 0.78rem; font-weight: 700;
       text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
     .lv-cands td:first-child { width: 48px; }
+    img.lv-ava { cursor: zoom-in; }
+    /* photo agrandie au survol */
+    .lv-photo { position: fixed; z-index: 1200; pointer-events: none; display: grid; gap: 6px; justify-items: center; padding: 8px; border-radius: 12px;
+      background: #0A0B0E; color: #F4F5F7; border: 1px solid #2C313B; box-shadow: 0 12px 34px rgba(0,0,0,0.4); }
+    .lv-photo[hidden] { display: none; }
+    .lv-photo img { display: block; width: 220px; height: 220px; object-fit: cover; object-position: center 20%; border-radius: 8px; border-bottom: 4px solid var(--c); background: #1A1D24; }
+    .lv-photo span { font-size: 0.82rem; font-weight: 700; max-width: 220px; text-align: center; }
     .lv-liste li { align-items: center; }
     .lv-pt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-top: 5px; }
     .lv-jauge { display: block; height: 4px; border-radius: 2px; background: var(--soft); margin-top: 4px; overflow: hidden; }
@@ -455,6 +462,7 @@
       </div>
       <div class="lv-alertes" id="lvAlertes" aria-live="assertive"></div>
       <div class="lv-vtip" id="lvVTip" role="tooltip" hidden></div>
+      <div class="lv-photo" id="lvPhoto" aria-hidden="true" hidden></div>
       <p class="lv-muted lv-source">Source : données ouvertes d'Élections Québec (résultats préliminaires, actualisés toutes les 2 à 5 minutes le soir du vote). Cette vue est temporaire.</p>
     </div>
   </section>

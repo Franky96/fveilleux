@@ -431,9 +431,25 @@ function avatar(parti, circ, prenom, nom) {
   const url = (PHOTOS[parti] || {})[circ];
   const repli = `<span class="lv-ava lv-ini" style="--c:${COUL[parti]}" aria-hidden="true">${ini}</span>`;
   if (!url) return repli;
-  return `<img class="lv-ava" style="--c:${COUL[parti]}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer"
+  return `<img class="lv-ava" style="--c:${COUL[parti]}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-nom="${esc(`${prenom || ""} ${nom || ""}`.trim())}" data-parti="${parti}"
     onerror="this.outerHTML=this.dataset.repli" data-repli="${esc(repli)}">`;
 }
+
+// survol d'une photo : la même photo en grand, à côté
+function grandePhoto(img) {
+  const z = $("lvPhoto");
+  if (!img) { z.hidden = true; return; }
+  z.style.setProperty("--c", COUL[img.dataset.parti] || "var(--rule)");
+  z.innerHTML = `<img src="${esc(img.currentSrc || img.src)}" alt="" referrerpolicy="no-referrer"><span>${esc(img.dataset.nom || "")}</span>`;
+  z.hidden = false;
+  const r = img.getBoundingClientRect(), w = z.offsetWidth, h = z.offsetHeight;
+  let x = r.left - w - 12; if (x < 8) x = r.right + 12;
+  z.style.left = Math.min(innerWidth - w - 8, x) + "px";
+  z.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + "px";
+}
+document.addEventListener("mouseover", e => { const im = e.target.closest?.("img.lv-ava"); if (im) grandePhoto(im); });
+document.addEventListener("mouseout", e => { if (e.target.closest?.("img.lv-ava")) grandePhoto(null); });
+addEventListener("scroll", () => grandePhoto(null), { passive: true });
 
 /* ---------- chargement ---------- */
 async function lire(type) {
