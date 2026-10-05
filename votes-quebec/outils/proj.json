@@ -23,7 +23,7 @@
 "Anjou–Louis-Riel": {
 "PLQ": 41,
 "PQ": 23,
-"CAQ": 13,
+"CAQ": 12,
 "PCQ": 12,
 "QS": 11
 },
@@ -58,7 +58,7 @@
 "Beauharnois": {
 "PQ": 38,
 "CAQ": 25,
-"PLQ": 13,
+"PLQ": 14,
 "PCQ": 13,
 "QS": 9
 },
@@ -74,7 +74,7 @@
 "PCQ": 20,
 "CAQ": 20,
 "QS": 9,
-"PLQ": 8
+"PLQ": 9
 },
 "Bertrand": {
 "PQ": 43,
@@ -85,7 +85,7 @@
 },
 "Blainville": {
 "PQ": 34,
-"PLQ": 24,
+"PLQ": 25,
 "CAQ": 19,
 "PCQ": 13,
 "QS": 8
@@ -109,7 +109,7 @@
 "PQ": 15,
 "PCQ": 12,
 "QS": 9,
-"CAQ": 4
+"CAQ": 3
 },
 "Camille-Laurin": {
 "PQ": 49,
@@ -148,9 +148,9 @@
 },
 "Charlesbourg": {
 "PCQ": 35,
-"PQ": 26,
+"PQ": 27,
 "CAQ": 18,
-"PLQ": 12,
+"PLQ": 13,
 "QS": 8
 },
 "Charlevoix–Côte-de-Beaupré": {
@@ -207,7 +207,7 @@
 "PCQ": 20,
 "PQ": 7,
 "QS": 6,
-"CAQ": 2
+"CAQ": 1
 },
 "Deux-Montagnes": {
 "PQ": 37,
@@ -273,7 +273,7 @@
 "QS": 11
 },
 "Groulx": {
-"PQ": 34,
+"PQ": 33,
 "PLQ": 25,
 "CAQ": 21,
 "PCQ": 11,
@@ -310,7 +310,7 @@
 "Îles-de-la-Madeleine": {
 "PQ": 58,
 "PLQ": 19,
-"CAQ": 11,
+"CAQ": 10,
 "PCQ": 7,
 "QS": 5
 },
@@ -402,7 +402,7 @@
 "PQ": 39,
 "PLQ": 22,
 "PCQ": 20,
-"CAQ": 14,
+"CAQ": 13,
 "QS": 5
 },
 "LaFontaine": {
@@ -410,7 +410,7 @@
 "PCQ": 16,
 "PQ": 12,
 "QS": 6,
-"CAQ": 5
+"CAQ": 4
 },
 "Pierre-Laporte": {
 "PLQ": 43,
@@ -442,7 +442,7 @@
 },
 "Les Plaines": {
 "PQ": 39,
-"CAQ": 22,
+"CAQ": 21,
 "PCQ": 16,
 "PLQ": 15,
 "QS": 8
@@ -469,7 +469,7 @@
 "QS": 9
 },
 "Marguerite-Bourgeoys": {
-"PLQ": 61,
+"PLQ": 62,
 "PCQ": 16,
 "PQ": 12,
 "QS": 7,
@@ -571,7 +571,7 @@
 "PCQ": 19,
 "PQ": 8,
 "QS": 4,
-"CAQ": 2
+"CAQ": 1
 },
 "Nicolet-Bécancour": {
 "PCQ": 34,
@@ -581,7 +581,7 @@
 "QS": 6
 },
 "Notre-Dame-de-Grâce": {
-"PLQ": 66,
+"PLQ": 67,
 "PCQ": 13,
 "QS": 9,
 "PQ": 9,
@@ -609,7 +609,7 @@
 "PCQ": 11
 },
 "Pontiac": {
-"PLQ": 55,
+"PLQ": 56,
 "PCQ": 18,
 "PQ": 12,
 "CAQ": 8,
@@ -679,7 +679,7 @@
 "CAQ": 1
 },
 "Roberval": {
-"PQ": 42,
+"PQ": 43,
 "PCQ": 21,
 "CAQ": 19,
 "PLQ": 12,
@@ -728,7 +728,7 @@
 "QS": 9
 },
 "Saint-Jean": {
-"PQ": 43,
+"PQ": 42,
 "PLQ": 20,
 "CAQ": 18,
 "PCQ": 10,
@@ -882,10 +882,10 @@
 "QS": 10
 },
 "Marie-Lacoste-Gérin-Lajoie": {
-"PCQ": 31,
-"PQ": 30,
-"CAQ": 19,
+"PQ": 31,
+"PCQ": 30,
+"CAQ": 18,
 "PLQ": 12,
-"QS": 8
+"QS": 9
 }
 }
