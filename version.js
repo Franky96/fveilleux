@@ -33,6 +33,38 @@ const SITE_VERSION = '1.4.2';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
 
+// Mise à jour automatique : si le site a été redéployé depuis l'ouverture de la page (onglet resté ouvert,
+// page restaurée par le téléphone), elle se recharge d'elle-même. Vérifié au retour sur l'onglet et toutes les 2 min.
+// Jamais pendant une saisie (champ actif) : on attend que le champ soit quitté.
+(function () {
+  if (location.protocol === 'file:') return;
+  const url = new URL('api/version.php', document.currentScript ? document.currentScript.src : location.href).href;
+  let depart = null, attente = false;
+  const enSaisie = () => { const a = document.activeElement; return !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable); };
+  const verifier = async () => {
+    if (document.hidden) return;
+    try {
+      const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+      if (!r.ok) return;
+      const v = (await r.json()).v;
+      if (!v) return;
+      if (depart === null) { depart = v; return; }
+      if (v === depart) return;
+      if (enSaisie()) { if (!attente) { attente = true; document.addEventListener('focusout', () => { attente = false; setTimeout(verifier, 300); }, { once: true }); } return; }
+      // garde-fou : au plus un rechargement automatique par 30 s
+      const dernier = +sessionStorage.getItem('majAuto') || 0;
+      if (Date.now() - dernier < 30000) return;
+      sessionStorage.setItem('majAuto', String(Date.now()));
+      location.reload();
+    } catch (e) { /* hors ligne : on réessaiera */ }
+  };
+  verifier();
+  setInterval(verifier, 120000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) verifier(); });
+  // page restaurée depuis le cache arrière/avant du navigateur : elle peut dater de plusieurs jours
+  window.addEventListener('pageshow', e => { if (e.persisted) { depart === null ? location.reload() : verifier(); } });
+})();
+
 window.toggleVersionBadge = function () {
   const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
   const newHidden = !hidden;
