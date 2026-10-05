@@ -265,7 +265,7 @@ function dessinerSuivi() {
   $("lvPPChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pp="${p}" style="--c:${COUL[p]}" aria-pressed="${p === P}">${p}</button>`).join("");
   const grp = { elus: [], avSerre: [], retSerre: [], avance: [], perdu: [], loin: [] };
   DATA.ridings.forEach((_, i) => { const pos = position(i, P); grp[pos.g].push([i, pos]); });
-  for (const k in grp) grp[k].sort((x, y) => Math.abs(x[1].ecart) - Math.abs(y[1].ecart));
+  for (const k in grp) grp[k].sort((x, y) => y[1].ecart - x[1].ecart);   // +3, +2, +1, 0, −1, −2…
   const avantRes = !Object.values(parRid).some(c => c.tete), menes = grp.elus.length + grp.avSerre.length + grp.avance.length;
   // garde les groupes ouverts/fermés par l'utilisateur d'un rendu à l'autre
   const etatsOuv = Object.fromEntries([...$("lvParParti").querySelectorAll("details[data-g]")].map(d => [d.dataset.g, d.open]));
