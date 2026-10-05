@@ -142,6 +142,12 @@
     .lv-cands td { padding: 7px 4px; border-top: 1px solid var(--rule); vertical-align: top; }
     .lv-cands small { display: block; color: var(--muted); font-size: 0.72rem; }
     .lv-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .lv-ava { display: block; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center 20%;
+      border: 2px solid var(--c); background: var(--soft); flex: none; }
+    .lv-ini { display: grid; place-items: center; background: var(--c); color: #fff; font-size: 0.78rem; font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+    .lv-cands td:first-child { width: 48px; }
+    .lv-liste li { align-items: center; }
     .lv-pt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-top: 5px; }
     .lv-jauge { display: block; height: 4px; border-radius: 2px; background: var(--soft); margin-top: 4px; overflow: hidden; }
     .lv-jauge i { display: block; height: 100%; background: var(--c); }
@@ -151,7 +157,7 @@
     .lv-kv b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
     .lv-kv span { font-size: 0.72rem; color: var(--muted); }
     .lv-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-    .lv-liste li { display: grid; grid-template-columns: 14px 1fr; gap: 6px; }
+    .lv-liste li { display: grid; grid-template-columns: 40px 1fr; gap: 10px; }
     .lv-liste small { display: block; color: var(--muted); font-size: 0.75rem; }
     .lv-proj { padding-top: 8px; border-top: 1px dashed var(--rule); }
     .lv-source { font-size: 0.78rem; }

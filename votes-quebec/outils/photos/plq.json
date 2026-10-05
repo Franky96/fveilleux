@@ -1,0 +1,632 @@
+[
+ {
+  "circ": "Orford",
+  "nom": "Charles Milliard",
+  "photo": "https://plq.org/wp-content/uploads/2026/03/orford-charles-milliard-768x787jpg-293x300.jpg"
+ },
+ {
+  "circ": "Abitibi-Est",
+  "nom": "Pierre Dufour",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/abitibi-est-pierre-dufour-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Abitibi-Ouest",
+  "nom": "Marc-André Fortin",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/abitibi-ouest-marc-andre-fortin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Acadie",
+  "nom": "André A. Morin",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/acadie-andre-albert-morin-768x787-2-293x300.jpg"
+ },
+ {
+  "circ": "Anjou-Louis-Riel",
+  "nom": "Nicolas Plourde",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/anjoulouis-riel-nicolas-plourde-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Argenteuil",
+  "nom": "Émilie Jutras",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/argenteuil-emilie-jutras-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Arthabaska-L'Érable",
+  "nom": "Thomas Guérette",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/arthabaska-lerable-thomas-guerette-768x787-1.jpg"
+ },
+ {
+  "circ": "Beauce-Nord",
+  "nom": "Nancy Labbé",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/beauce-nord-nancy-labbe-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Beauce-Sud",
+  "nom": "Alvaro Peressutti",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/beauce-sud-alvaro-peressutti-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Beauharnois",
+  "nom": "Charles Royer Tremblay",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/beauharnois-charles-royer-tremblay-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Bellechasse",
+  "nom": "Richard Garon",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/bellechasse-richard-garon-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Bellefeuille",
+  "nom": "Maud Laporte-Roy",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/bellefeuille-maud-laporte-roy-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Berthier",
+  "nom": "Louis-Victor Sylvestre",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/berthier-louis-victor-sylvestre-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Bertrand",
+  "nom": "Felipe Morales",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/bertrand-felipe-morales-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Blainville",
+  "nom": "Sébastien Daoust",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/blainville-sebastien-daoust-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Bonaventure",
+  "nom": "Christian Cyr",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/bonaventure-christian-cyr-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Borduas",
+  "nom": "Xavier Mercier",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/borduas-xavier-mercier-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Bourassa-Sauvé",
+  "nom": "Madwa-Nika Cadet",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/bourassa-sauve-madwa-nika-cadet-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Brome-Missisquoi",
+  "nom": "Frédéric Beauchemin",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/brome-missisquoi-frederic-beauchemin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Camille-Laurin",
+  "nom": "Earl Corales",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/camille-laurin-earl-corales-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Chambly",
+  "nom": "Sarah Belbey",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/chambly-sarah-belbey-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Champlain",
+  "nom": "Annie Pronovost",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/champlain-annie-pronovost-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Chapleau",
+  "nom": "Michel Langevin",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/chapleau-michel-langevin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Charlesbourg",
+  "nom": "Seynabou Top",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/charlesbourg-seynabou-top-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Charlevoix-Côte-de-Beaupré",
+  "nom": "Michel Bureau",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/charlevoixcote-de-beaupre-michel-bureau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Châteauguay",
+  "nom": "Félix Rhéaume",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/chateauguay-felix-rheaume-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Chauveau",
+  "nom": "John McGrath",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/chauveau-john-mcgrath-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Chicoutimi",
+  "nom": "Jean-Marc Allard",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/chicoutimi-jean-marc-allard-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Chomedey",
+  "nom": "Madeleine Féquière",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/chomedey-madeleine-fequiere-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Chutes-de-la-Chaudière",
+  "nom": "Stéphane Clavet",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/chutes-de-la-chaudiere-stephane-clavet-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Côte-du-Sud",
+  "nom": "Nancy St-Pierre",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/cote-du-sud-nancy-st-pierre-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "D'Arcy-McGee",
+  "nom": "Elisabeth Prass",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/darcy-mcgee-elisabeth-prass-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Daniel-Johnson",
+  "nom": "Éric Sévigny",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/daniel-johnson-eric-sevigny-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Deux-Montagnes",
+  "nom": "Marc Allaire",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/deux-montagnes-marc-allaire-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Drummond-Bois-Francs",
+  "nom": "Colin Hendry",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/drummondbois-francs-colin-hendry-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Dubuc",
+  "nom": "Virginie Bouchard",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/dubuc-virginie-bouchard-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Fabre",
+  "nom": "Marie Claude Fournier",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/maurice-richard-marie-claude-fournier-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Gaspé",
+  "nom": "Michel Marin",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/gaspe-michel-marin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Gatineau",
+  "nom": "David Logue",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/gatineau-david-logue-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Gouin",
+  "nom": "Hoang Annie Nguyen",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/gouin-hoang-annie-nguyen-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Granby",
+  "nom": "Claudie Bérubé",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/granby-claudie-berube-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Groulx",
+  "nom": "Julie Tourangeau",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/groulx-julie-tourangeau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Hochelaga-Maisonneuve",
+  "nom": "Janny Gaspard",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/hochelaga-maisonneuve-janny-gaspard-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Hull",
+  "nom": "Sacha Cannon",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/hull-sacha-cannon-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Huntingdon",
+  "nom": "Connor Stacey",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/huntingdon-stacey-connor-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Iberville",
+  "nom": "Vanessa Riendeau",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/iberville-vanessa-riendeau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Îles-de-la-Madeleine",
+  "nom": "Gil Thériault",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/iles-de-la-madeleine-gil-theriault-768x787-2-293x300.jpg"
+ },
+ {
+  "circ": "Jacques-Cartier",
+  "nom": "Gregory Kelley",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/jacques-cartier-gregory-kelley-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Jean-Lesage",
+  "nom": "Gertrude Bourdon",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/jean-lesage-gertrude-bourdon-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Jean-Talon",
+  "nom": "Julie White",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/jean-talon-julie-white-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Jeanne-Mance-Viger",
+  "nom": "Filomena Rotiroti",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/jeanne-manceviger-filomena-rotiroti-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Joliette",
+  "nom": "Sana Arfaoui",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/joliette-sana-arfaoui-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Jonquière",
+  "nom": "Wilda Solon",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/jonquiere-wilda-solon-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "L'Assomption",
+  "nom": "Marie Claire Anglade",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/lassomption-marie-claire-anglade-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "La Peltrie",
+  "nom": "Alain Chandonnet",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/la-peltrie-alain-chandonnet-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "La Pinière",
+  "nom": "Linda Caron",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/la-piniere-linda-caron-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "La Prairie",
+  "nom": "Sonia Ziadé",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/la-prairie-sonia-ziade-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Labelle",
+  "nom": "Shawn Latulippe",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/labelle-shawn-latulippe-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Lac-Saint-Jean",
+  "nom": "Anne Pâquet",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/lac-saint-jean-anne-paquet-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "LaFontaine",
+  "nom": "Marc Tanguay",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/lafontaine-marc-tanguay-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Laurier-Dorion",
+  "nom": "Randy Legault-Rankin",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/laurier-dorion-randy-legault-rankin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Laval-des-Rapides",
+  "nom": "Caroline De Guire",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/laval-des-rapides-caroline-de-guire-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Laviolette-Saint-Maurice",
+  "nom": "Laurent Bélisle",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/laviolettesaint-maurice-laurent-belisle-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Les Plaines",
+  "nom": "Agathe Owona",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/les-plaines-agathe-owona-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Lévis",
+  "nom": "Brittany Blais",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/levis-brittany-blais-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Lotbinière-Frontenac",
+  "nom": "Ludovic Beauregard",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/lotbiniere-frontenac-ludovic-beauregard-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Louis-Hébert",
+  "nom": "Richard Bélanger",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/louis-hebert-richard-belanger-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Marguerite-Bourgeoys",
+  "nom": "Michel Leblanc",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/marguerite-bourgeoys-michel-leblanc-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Marie-Lacoste-Gérin-Lajoie",
+  "nom": "Alexandra Houle",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/marie-lacoste-gerin-lajoie-alexandra-houle-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Marie-Victorin",
+  "nom": "Lyes Chekal",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/marie-victorin-lyes-chekal-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Marquette",
+  "nom": "Enrico Ciccone",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/marquette-enrico-ciccone-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Maskinongé",
+  "nom": "Nancy Mignault",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/creation-sans-titre-10-293x300.png"
+ },
+ {
+  "circ": "Masson",
+  "nom": "Martin Gaulin",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/masson-martin-gaulin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Matane-Matapédia-Mitis",
+  "nom": "André Côté",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/matane-matapedia-mitis-andre-cote-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Maurice-Richard",
+  "nom": "Nada Boumeftah",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/maurice-richard-nada-boumeftah-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Mégantic",
+  "nom": "Sylvain Houle",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/megantic-sylvain-houle-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Mercier",
+  "nom": "Thierno Diallo",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/mercier-thierno-diallo-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Mille-Îles",
+  "nom": "Virginie Dufour",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/mille-iles-virginie-dufour-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Mirabel",
+  "nom": "Daniela Rodriguez",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/mirabel-daniela-rodriguez-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Mont-Royal-Outremont",
+  "nom": "Michelle Setlakwe",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/mont-royaloutremont-michelle-setlakwe-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Montarville",
+  "nom": "Mathieu Lavoie",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/montarville-mathieu-lavoie-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Montmorency",
+  "nom": "René-Paul Coly",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/montmorency-rene-paul-coly-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Nelligan",
+  "nom": "Monsef Derraji",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/nelligan-monsef-derraji-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Nicolet-Bécancour",
+  "nom": "Sophie Martinbeault",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/nicolet-becancour-sophie-martinbeault-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Notre-Dame-de-Grâce",
+  "nom": "Désirée McGraw",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/notre-dame-de-grace-desiree-mcgraw-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Papineau",
+  "nom": "Isabelle Sabourin",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/papineau-isabelle-sabourin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Pierre-Laporte",
+  "nom": "David Bowles",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/pierre-laporte-david-bowles-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Pointe-aux-Trembles",
+  "nom": "Naima Indira Som",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/camille-laurin-naima-marylene-indira-som-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Pontiac",
+  "nom": "André Fortin",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/pontiac-andre-fortin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Portneuf",
+  "nom": "Jeremy Ouellet-Rousseau",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/portneuf-jeremy-ouellet-rousseau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Prévost",
+  "nom": "Paul Landry",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/prevost-paul-landry-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "René-Lévesque",
+  "nom": "William Huynh-Jan",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/rene-levesque-william-huynh-jan-768x787-1.jpg"
+ },
+ {
+  "circ": "Repentigny",
+  "nom": "Yvena Luc",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/repentigny-yvena-luc-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Richelieu",
+  "nom": "Gilles Delorme",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/richelieu-gilles-delorme-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Richmond",
+  "nom": "Hugo Fontaine",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/richmond-hugo-fontaine-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Rimouski",
+  "nom": "Michel Bienvenu",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/rimouski-michel-bienvenu-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Rivière-du-Loup-Témiscouata-Les Basques",
+  "nom": "Karine Malenfant",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/riviere-du-louptemiscouata-karine-malenfant-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Robert-Baldwin",
+  "nom": "Brigitte Garceau",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/robert-baldwin-brigitte-garceau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Roberval",
+  "nom": "Serge Bergeron",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/roberval-serge-bergeron-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Rosemont",
+  "nom": "David Lavoie",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/rosemont-david-lavoie-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Rousseau",
+  "nom": "Sashmir Sidney",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/rousseau-sashmir-sidney-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Rouyn-Noranda-Témiscamingue",
+  "nom": "Leanne Loney",
+  "photo": "https://plq.org/wp-content/uploads/2026/09/rouyn-norandatemiscamingue-leanne-loney-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Saint-François",
+  "nom": "Jacqueline Belleau",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/saint-francois-jacqueline-belleau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Saint-Henri-Sainte-Anne",
+  "nom": "Benoit Clermont",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/saint-henrisainte-anne-benoit-clermont-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Saint-Hyacinthe",
+  "nom": "Mariliz Turla-Vadnais",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/saint-hyacinthe-mariliz-turla-vadnais-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Saint-Jean",
+  "nom": "Patrice Léger-Bourgoin",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/saint-jean-patrice-leger-bourgoin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Saint-Jérôme",
+  "nom": "Suzanne Pomerleau",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/saint-jerome-suzanne-pomerleau-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Saint-Laurent",
+  "nom": "Valérie Assouline",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/saint-laurent-valerie-assouline-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Sainte-Marie-Saint-Jacques",
+  "nom": "Justine McIntyre",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/sainte-mariesaint-jacques-justine-mcintyre-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Sainte-Rose",
+  "nom": "Cécile Tremblay",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/sainte-rose-cecile-tremblay-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Sanguinet",
+  "nom": "Pinou Thong",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/sanguinet-pinou-thong-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Sherbrooke",
+  "nom": "Pierre Cossette",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/sherbrooke-pierre-cossette-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Soulanges",
+  "nom": "Olivier Bertin-Mahieux",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/soulanges-olivier-bertin-mahieux-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Taillon",
+  "nom": "Boubacar Camara",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/taillon-boubacar-sidiki-camara-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Taschereau",
+  "nom": "Farnell Morisset",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/taschereau-farnell-morisset-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Terrebonne",
+  "nom": "Ange Claude Bigilimana",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/terrebonne-ange-claude-bigilimana-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Trois-Rivières",
+  "nom": "Valérie Renaud-Martin",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/trois-rivieres-valerie-renaud-martin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Ungava",
+  "nom": "Sandrine Rioux",
+  "photo": "https://plq.org/wp-content/uploads/2026/07/ungava-sandrine-rioux-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Vachon",
+  "nom": "Affine Lwalalika",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/vachon-affine-lwalalika-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Vanier-Les Rivières",
+  "nom": "Charles Hudon",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/vanier-les-rivieres-charles-hudon-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Vaudreuil",
+  "nom": "James Hughes",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/vaudreuil-james-hugues-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Verchères",
+  "nom": "Yacine Masrouki",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/vercheres-yacine-masrouki-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Verdun",
+  "nom": "Antoine Dionne Charest",
+  "photo": "https://plq.org/wp-content/uploads/2026/06/verdun-antoine-dionne-charest-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Viau",
+  "nom": "Frantz Benjamin",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/viau-frantz-benjamin-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Vimont-Auteuil",
+  "nom": "Louis Ialenti",
+  "photo": "https://plq.org/wp-content/uploads/2026/08/vimont-louis-ialenti-768x787-1-293x300.jpg"
+ },
+ {
+  "circ": "Westmount-Saint-Louis",
+  "nom": "Jennifer Maccarone",
+  "photo": "https://plq.org/wp-content/uploads/2025/11/westmountsaint-louis-jennifer-maccarone-768x787-3-293x300.jpg"
+ }
+]

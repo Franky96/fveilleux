@@ -90,6 +90,18 @@ function dessinerPrediction() {
   g.select(".lv-pred-pt").attr("r", 4.2 / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", 1.4 / zoomK);
 }
 
+/* ---------- photos des candidats (sites des partis, voir outils/photos.py) ---------- */
+let PHOTOS = {};
+// photo ronde cerclée de la couleur du parti ; initiales si pas de photo ou si l'image ne se charge pas
+function avatar(parti, circ, prenom, nom) {
+  const ini = esc(((prenom || "").trim()[0] || "") + ((nom || "").trim()[0] || "")).toUpperCase();
+  const url = (PHOTOS[parti] || {})[circ];
+  const repli = `<span class="lv-ava lv-ini" style="--c:${COUL[parti]}" aria-hidden="true">${ini}</span>`;
+  if (!url) return repli;
+  return `<img class="lv-ava" style="--c:${COUL[parti]}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer"
+    onerror="this.outerHTML=this.dataset.repli" data-repli="${esc(repli)}">`;
+}
+
 /* ---------- chargement ---------- */
 async function lire(type) {
   const q = type === "resultats" && DEMO !== null ? `type=demo&p=${DEMO}` : `type=${type}`;
@@ -223,7 +235,7 @@ function dessinerPanneau() {
       <p class="lv-tete" style="--c:${COUL[a.parti]}"><b>${esc(a.prenom)} ${esc(a.nom)}</b> (${esc(a.parti === "AUT" ? a.abreviationPartiPolitique : a.parti)}) ${c.isResultatsFinaux ? "élu·e" : "en avance"}
         ${b ? `par ${nf(ecart)} voix (${nf(a.tauxVote - b.tauxVote, 1)} pt)` : ""}</p>
       <table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${COUL[k.parti]}">
-        <td><i class="lv-pt"></i></td>
+        <td>${avatar(k.parti, r.n, k.prenom, k.nom)}</td>
         <td><b>${esc(k.prenom)} ${esc(k.nom)}</b>${sortant(k.prenom, k.nom) ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.abreviationPartiPolitique)} · ${nf(k.nbVoteAvance)} par anticipation</small>
           <span class="lv-jauge"><i style="width:${Math.min(100, k.tauxVote)}%"></i></span></td>
         <td class="lv-num"><b>${nf(k.tauxVote, 1)} %</b><small>${nf(k.nbVoteTotal)}</small></td></tr>`).join("")}</tbody></table>
@@ -233,7 +245,7 @@ function dessinerPanneau() {
     html += `<div class="lv-chips"><span class="lv-chip">Aucun résultat pour l'instant</span></div>`;
     if (cand.length) html += `<span class="lv-eyebrow">Candidatures (${cand.length})</span><ul class="lv-liste">${cand.map(k => {
       const pa = partiDe(k.abreviation_parti);
-      return `<li style="--c:${COUL[pa]}"><i class="lv-pt"></i><span><b>${esc(k.prenom_bulletin_vote)} ${esc(k.nom_bulletin_vote)}</b>${k.depute_sortant === "O" ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.nom_parti || "Indépendant")}</small></span></li>`;
+      return `<li style="--c:${COUL[pa]}">${avatar(pa, r.n, k.prenom_bulletin_vote, k.nom_bulletin_vote)}<span><b>${esc(k.prenom_bulletin_vote)} ${esc(k.nom_bulletin_vote)}</b>${k.depute_sortant === "O" ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.nom_parti || "Indépendant")}</small></span></li>`;
     }).join("")}</ul>`;
   }
   // projection Qc125 d'avant le vote, pour comparer
@@ -308,6 +320,7 @@ async function demarrer() {
   try {
     DATA = await (await fetch("votes-quebec/data.json", { cache: "no-cache" })).json();
     construireCarte();
+    fetch("votes-quebec/photos.json", { cache: "no-cache" }).then(x => x.ok ? x.json() : {}).then(d => { PHOTOS = d || {}; dessinerPanneau(); }).catch(() => {});
     lire("candidatures").then(d => { candidatures = d.liste || null; dessinerPanneau(); }).catch(() => {});
     await actualiser();
   } catch (e) { $("lvEtat").textContent = "Chargement impossible : " + e.message; }

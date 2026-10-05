@@ -1,0 +1,637 @@
+[
+ {
+  "circ": "Abitibi-Est",
+  "nom": "Sara Germain",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a7f268fa77e275b63faf6a7_ABES(Sara%20Germain)2x%20(3)-p-500.webp"
+ },
+ {
+  "circ": "Abitibi-Ouest",
+  "nom": "Joanie Bolduc",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a906fe94c8dfada1b802193_ABOU(Joanie%20Bolduc)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Acadie",
+  "nom": "Marie-Laurence Nault",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8591cf728d96793245e338_ACAD(Marie-Laurence%20Nault)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Anjou-Louis-Riel",
+  "nom": "Edissya Boukrif",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8598cb4a0530fb9454028b_ANJO(Edissya%20Boukrif)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Argenteuil",
+  "nom": "Pénéloppe Dagenais-Lavoie",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa9a0eb32f711fe3d0f4c55_ARGE(P%C3%A9n%C3%A9loppe%20Dagenais-Lavoie)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Arthabaska-L'Érable",
+  "nom": "Stéphanie Poirier",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8592087370ce60148372e9_ARTH(St%C3%A9phanie%20Poirier)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Beauce-Nord",
+  "nom": "Julie Dionne",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0b58381824f7fcdd07d34_BENO(Julie%20Dionne)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Beauce-Sud",
+  "nom": "Amélie Carrier",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8592304a61019face9e3c5_BESU(Am%C3%A9lie%20Carrier)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Beauharnois",
+  "nom": "Virginie Hockers",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8598f22a13804254c4829a_BEAU(Virginie%20Hockers)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Bellechasse",
+  "nom": "Raphaël Bédard",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a858f396349d716d0700d54_BELL(Rapha%C3%ABl%20B%C3%A9dard)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Bellefeuille",
+  "nom": "Normand Lalonde",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0b4b3615c14a63b383fc5_BELF(Normand%20Lalonde)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Berthier",
+  "nom": "Amélie Drainville",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a858f6bdc08e2606b495d4e_BERH(Am%C3%A9lie%20Drainville)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Bertrand",
+  "nom": "Nataël Bureau",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa9a1c7e4187d1b36adf88d_BERR(Nata%C3%ABl%20Bureau)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Blainville",
+  "nom": "Louis Piette",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0ae030612f512ff71e9ac_BLAI(Louis%20Piette)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Bonaventure",
+  "nom": "Yv Bonnier Viger",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a985bd2b669b0b386bf2ca9_BONA(Yv%20Bonnier%20Viger)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Borduas",
+  "nom": "Audrey Mc Nicoll",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e85b93c65fad88a046af_BORD(Audrey%20Mc%20Nicoll)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Bourassa-Sauvé",
+  "nom": "Mara Hermione Pierre",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8599851169697b96841da1_BOSA(Mara%20Hermionne%20Pierre)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Brome-Missisquoi",
+  "nom": "Michelle Corcos",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8599aeb905410236e68bee_BRMI(Michelle%20Corcos)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Camille-Laurin",
+  "nom": "René Gauvreau",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0ad6a0d64aaf00d1634f8_CALA(Ren%C3%A9%20Gauvreau)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Chambly",
+  "nom": "Jessyca Sorel",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0ab5bdc321837a893ca58_CHMB(Jessyca%20Sorel)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Champlain",
+  "nom": "Katherine Heckersbruch",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0aa3a45b28b99b4c7ab9d_CHMP(Katherine%20Heckersbruch)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Chapleau",
+  "nom": "Doryan Pansanel",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a858fa449d6729f9198bde8_CHAP(Doryan%20Pansanel)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Charlesbourg",
+  "nom": "Georges Goma",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8701499aa3933e4d19bc05_CHLB(Georges%20Goma)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Charlevoix-Côte-de-Beaupré",
+  "nom": "Dulce Vivar",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8599cf1169697b968462e0_CHCB(Dulce%20Vivar)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Châteauguay",
+  "nom": "Marianne Pharand-Roy",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa2f537b0e55aa9b077d6a4_CHAT(Mariane%20Pharand-Roy)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Chauveau",
+  "nom": "Émilie Couture",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0a8776e3f9feadb20ba78_CHAU(%C3%89milie%20Couture)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Chicoutimi",
+  "nom": "Jeanne Palardy",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85904e96fed95a0b3e3ec1_CHIC(Jeanne%20Palardy)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Chomedey",
+  "nom": "Geru Schneider",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8599f3e7658630e0f6ae98_CHOM(Geru%20Schneider)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Chutes-de-la-Chaudière",
+  "nom": "Jean-Benoît Ouellet",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa99d52a6c2c5c7a4d821f7_CDLC(Jean-Beno%C3%AEt%20Ouellette)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Côte-du-Sud",
+  "nom": "Jordan Veillette",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa99c4214ff0e47bf0dc7c6_CDS(Jordan%20Veillette)PETITE-p-500.webp"
+ },
+ {
+  "circ": "D'Arcy-McGee",
+  "nom": "Lucian Costin",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa99ae791873840b57265d4_DMG(Lucian%20Costin)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Daniel-Johnson",
+  "nom": "Tony Martel",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0a4e7e0a85714031aafdd_JOHN(Tony%20Martel)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Deux-Montagnes",
+  "nom": "Guillaume Ducharme",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85925896fed95a0b3f78d1_DEMO(Guillaume%20Ducharme)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Drummond-Bois-Francs",
+  "nom": "Lila Houde",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0a20583a22cedb913c270_DRUM(Lila%20Houde)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Dubuc",
+  "nom": "Ève Laguë",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa09f2f03332db8893f7fbc_DUBU(%C3%88ve%20Lagu%C3%AB)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Duplessis",
+  "nom": "Jani Bellefleur-Kaltush",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85927996fed95a0b3f914e_DUPL(Jani%20Bellefleur-Kaltush)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Fabre",
+  "nom": "Josée Chevalier",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa09da4882d7b7b25e3445e_FABR(Jos%C3%A9e%20Chevalier)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Gaspé",
+  "nom": "Emmanuelle Babin",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a870125d3867ff546073113_GASP(Emmanuelle%20Babin)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Gatineau",
+  "nom": "Emmanuelle Tremblay",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa099063908e9efe7de9aed_GATI(Emmanuelle%20Tremblay)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Gouin",
+  "nom": "Alexandre Boulerice",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8592d3d1e332f841e33b67_GOUI(Aelxandre%20Boulerice)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Granby",
+  "nom": "Méliane St-Amand",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa09844cb1474148cc715e6_GRAN(M%C3%A9liane%20St-Amand)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Groulx",
+  "nom": "Marie-Noëlle Aubertin",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85d603f68aae9b0e8de38c_GROU(Marie-No%C3%ABlle%20Aubertin)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Hochelaga-Maisonneuve",
+  "nom": "Alexandre Leduc",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8592f4e2a256e7510ce30c_HOCH(Alexandre%20Leduc)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Hull",
+  "nom": "Mariève Forest",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8701635410d51b952ba440_HULL(Mari%C3%A8ve%20Forest)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Huntingdon",
+  "nom": "Valérie Dubois",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa999e873d8ee68cac8fcd8_HUNT(Val%C3%A9rie%20Dubois)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Iberville",
+  "nom": "Nicolas Chatel-Launay",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8593c72423791579171947_IBER(Nicolas%20Chatel-Launay)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Îles-de-la-Madeleine",
+  "nom": "Zachary Jean",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa094cff1df658bdd8803ec_IDLM(Zachary%20Jean)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Jacques-Cartier",
+  "nom": "Gabriel Laurence-Brook",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8593e36cd95d8077e90b18_JACA(Gabriel%20Laurence-Brook)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Jean-Lesage",
+  "nom": "Sol Zanetti",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8590c1db28a88a22274f4a_JELE(Sol%20Zanetti)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Jeanne-Mance-Viger",
+  "nom": "Dalila Assefsaf",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa08c1c4bf405c091cfb5e2_JMV(Dalila%20Assefsaf)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Jean-Talon",
+  "nom": "Sonia Tchuembou",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0935aec515997053a821b_JETA(Sonia%20Tchuembou)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Joliette",
+  "nom": "Flavie Trudel",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8593fedb28a88a2229cd2c_JOLI(Flavie%20Trudel)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Jonquière",
+  "nom": "Serge Bergeron",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85941a859a6a42b88b015d_JONQ(Serge%20Bergeron)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "L'Assomption",
+  "nom": "Benoit Bourbonnais",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa06ad4cccd2831161ffdad_ASSO(Benoit%20Bourbonnais)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Labelle",
+  "nom": "Julie B. Savard",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8594ac88c891d8d87d08ab_LABE(Julie%20B.%20Savard)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Lac-Saint-Jean",
+  "nom": "Antoine Bessette",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa08936e9952c72bd5b30d5_LSJ(Antoine%20Bessette)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "LaFontaine",
+  "nom": "Kim Fontaine",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a870192dbdb6a1fb6daf4c2_LAFO(Kim%20Fontaine)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "La Peltrie",
+  "nom": "Frédéric Aubé",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85943dd2a2092d08ce73da_LAPE(Fr%C3%A9d%C3%A9ric%20Aub%C3%A9)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "La Pinière",
+  "nom": "Jacinthe Chapleau",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85945f47fec412e61de61e_LAPI(Jacinthe%20Chapleau)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "La Prairie",
+  "nom": "Francine Van Winden",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa05698e69faeda47cae17e_LAPR(Francine%20Van%20Winden)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Laurier-Dorion",
+  "nom": "Andrés Fontecilla",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859528d1e332f841e4db64_LADO(Andres%20Fontecilla)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Laval-des-Rapides",
+  "nom": "Sabrina Di Matteo",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859585c716c6f9043d775a_LDR(Sabrina%20Di%20Matteo)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Laviolette-Saint-Maurice",
+  "nom": "Rébéka Frédette",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa086b07a6e67eb61ca7292_LASM(R%C3%A9b%C3%A9ka%20Fr%C3%A9dette)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Les Plaines",
+  "nom": "Irène Dubé",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa084292fe189812ce6558a_LPLA(Ir%C3%A8ne%20Dub%C3%A9)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Lévis",
+  "nom": "Simon Beauchamp-Léveillé",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85959eb0d55215c9bb5dbb_LEVI(Simon%20Beauchamp-L%C3%A9veill%C3%A9)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Lotbinière-Frontenac",
+  "nom": "Élisabeth St-Aubin",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa9990594df15d043dc692d_LOFR(%C3%89lisabeth%20St-Aubin)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Louis-Hébert",
+  "nom": "Anne-Sophie Roy",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8595debe450c8423bbdb67_LOHE(Anne-Sophie%20Roy)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Marguerite-Bourgeoys",
+  "nom": "Bryan Gingras",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859604dc5cf4b298be37c8_MABO(Bryan%20Gingras)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Marie-Lacoste-Gérin-Lajoie",
+  "nom": "Sébastien Bage",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa997bdab2e9b9f5ce083bd_MLGL(S%C3%A9batien%20Baje)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Marie-Victorin",
+  "nom": "Lauréline Manassero",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85962ec78e396f742be5ab_MAVI(Laur%C3%A9line%20Manassero)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Marquette",
+  "nom": "Pascal Malo",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aaad97a92b2456a09a1c296_MARQ(Pascal%20Malo)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Maskinongé",
+  "nom": "Simon Piotte",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa082705532508bfb84b248_MASK(Simon%20Piotte)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Masson",
+  "nom": "Stéphane Durupt",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa07e1d81a3281b4514630a_MASS(St%C3%A9phane%20Durupt)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Matane-Matapédia-Mitis",
+  "nom": "Gabriel Plante",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0784d48ccf00d5ca69da4_MATN(Gabriel%20Plante)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Maurice-Richard",
+  "nom": "Anne Latendresse",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a98587a26c65a4eb57b0ce8_MAUR(Anne%20Latendresse)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Mégantic",
+  "nom": "Marilyn Ouellet",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8596cdbe450c8423bc7a8d_MEGA(Marilyn%20Ouellet)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Mercier",
+  "nom": "Ruba Ghazal",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859091be450c8423b8093f_MERC(Ruba%20Ghazal)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Mille-Îles",
+  "nom": "Zachary Robert",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f0d665a4f807d07c54abf_MIIL(Zachary%20Robert)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Mirabel",
+  "nom": "Marjolaine Goudreau",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a985e86fd42a8d200cc77bb_MIRA(Marjolaine%20Goudreau)_PETIT-p-500.webp"
+ },
+ {
+  "circ": "Montarville",
+  "nom": "Ginette Langlois",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859734aad1dfd3be62392e_MOTA(Ginette%20Langlois)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Montmorency",
+  "nom": "Annie-Pierre Bélanger",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a99b59165ac26ca1a651b0e_MONT(Annie-Pierre%20B%C3%A9langer)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Mont-Royal-Outremont",
+  "nom": "Marianne Locas-Ouimet",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8596f498d9d15ccfc23c9b_MROU(Marianne%20Locas-Ouimet)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Nelligan",
+  "nom": "Dominique Naud",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85980e675d23032fa059a8_NELL(Dominique%20Naud)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Nicolet-Bécancour",
+  "nom": "Milan Codebecq-Pérusse",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa995a5858d839735adfa50_NICO(Milan%20Codebecq-P%C3%A9russe)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Notre-Dame-de-Grâce",
+  "nom": "Élise Davignon",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f10ad98e7fad4fc12dfa9_NDG(%C3%89lise%20Davignon)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Orford",
+  "nom": "Eve-Lyne Clusiault",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859836bd994f5750b509d4_ORFO(Eve-Lyne%20Clusiault)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Papineau",
+  "nom": "Benoit Renaud",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a99aed0edaf2aa2b9d25831_PAPI(Beno%C3%AEt%20Renaud)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Pierre-Laporte",
+  "nom": "Claude Lefrançois",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a859887aad1dfd3be636e3c_LAPO(Claude%20Lefran%C3%A7ois)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Pointe-aux-Trembles",
+  "nom": "Mégane Charron",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dc3954d594b510b67dd6_PAT(M%C3%A9gane%20Charron)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Pontiac",
+  "nom": "Bianca Baldo",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dc68a0b9cb0f0e81dbed_PONT(Bianca%20Baldo)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Portneuf",
+  "nom": "Anne-Marie Melançon",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dc866b296c1ab6911f8b_PORT(Anne-Marie%20Melan%C3%A7on)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Prévost",
+  "nom": "Alix Gravel",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa993e517383a23cf6e16b1_PREV(Alix%20Gravel)PETITE-p-500.webp"
+ },
+ {
+  "circ": "René-Lévesque",
+  "nom": "Philippe C.-Boudreau",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa0735273abeee65c28433a_RELE(Philippe%20B.-Boudreau)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Repentigny",
+  "nom": "Martin Lefebvre",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa070dbf79fb5f9b34e6ab5_REPE(Martin%20Lefebvre)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Richelieu",
+  "nom": "Julien Bergeron",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa060849094a639bba4a17e_RICL(Julien%20Bergeron)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Richmond",
+  "nom": "David Poulin-Latulippe",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dcbf41723cc2e50db1ed_RICM(David%20Poulin-Latulippe)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Rimouski",
+  "nom": "Virginie Chevalier-Archambault",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa05d3a3483d5404f1af721_RIMO(Virginie%20Chevalier-Archambault)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Rivière-du-Loup-Témiscouata-Les Basques",
+  "nom": "Pierre-Erik Isabelle",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa991f8f0d02938f93966ea_RDLT(Pierre-Erik%20Isabelle)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Robert-Baldwin",
+  "nom": "Alexandra Lacoste",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f50f08f18990b19fba849_ROBA(Alexandra%20Lacoste)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Roberval",
+  "nom": "Guillaume David",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa05b410ab8d2c70d72ab9c_ROBE(Guillaume%20David)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Rosemont",
+  "nom": "Gisèle Pouhe Njall",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dd40712f2afc899fcbec_ROSE(Gis%C3%A8le%20Pouhe%20Njall)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Rousseau",
+  "nom": "Hind Rihani",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f4e2f770705c084ddf946_ROUS(Hind%20Rihani)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Rouyn-Noranda-Témiscamingue",
+  "nom": "France Marion",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85de652e2b669c93accaf3_RNT(France%20Marion)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Sainte-Marie-Saint-Jacques",
+  "nom": "Roxane Milot",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a907556a5b09f5a950aee01_SMSJ(Roxanne%20Milot)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Sainte-Rose",
+  "nom": "Karine Cliche",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dfe2c019c69adcae9568_SARO(Karine%20Cliche_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Saint-François",
+  "nom": "Mia Fréchette",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85de8f55432f5e78517ebb_SAFR(Mia%20Fr%C3%A9chette)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Saint-Henri-Sainte-Anne",
+  "nom": "Guillaume Cliche-Rivard",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85dec822740fdbccb128d1_SHSA(Guillaume%20Cliche-Rivard)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Saint-Hyacinthe",
+  "nom": "Philippe Daigneault",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85df0e0d3f793ba5811bc0_SAHY(Philippe%20Daigneault)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Saint-Jean",
+  "nom": "Pierre-Luc Lavertu",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a98615953f69774bb758a5f_SAJE(Pierre-Luc%20Lavertu)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Saint-Jérôme",
+  "nom": "Orphée Dubé-Gervais",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85df488541b5a210e076a5_STJE(Orph%C3%A9e%20Dub%C3%A9-Gervais)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Saint-Laurent",
+  "nom": "Étienne Loiselle-Schiettekatte",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85df76f907c8afea2e9c60_STLO(%C3%89tienne%20Loiselle-Schiettekatte)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Sanguinet",
+  "nom": "Virginie Bernier",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e022c5eeb68aba47805a_SAGU(Virginie%20Bernier)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Sherbrooke",
+  "nom": "Stéphanie Vachon",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e05ce5fbc6961aa0a524_SHER(St%C3%A9phanie%20Vachon)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Soulanges",
+  "nom": "Florian Martin",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aaadca0d8f5b2b8a1d97901_SOUL(Florian%20Martin)GRANDE-p-500.webp"
+ },
+ {
+  "circ": "Taillon",
+  "nom": "David Lalumière",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e092c3c558f2a1d4f36a_TAIL(David%20Lalumi%C3%A8re)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Taschereau",
+  "nom": "Etienne Grandmont",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a8700e99602e7c92aa9c5b0_TASC(Etienne%20Grandmont)_PETITE%20(1)-p-500.webp"
+ },
+ {
+  "circ": "Terrebonne",
+  "nom": "Ariane Drainville",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f4bad82fe702176b22828_TERR(Ariane%20Drainville)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Trois-Rivières",
+  "nom": "Steven Roy-Cullen",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e4dbae9816123ca38b8e_TRRI(Steven%20Roy-Cullen)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Ungava",
+  "nom": "Antoine Côté",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6aa98f189c6ef68a67b88e35_UNGA(Antoine%20C%C3%B4t%C3%A9)PETITE-p-500.webp"
+ },
+ {
+  "circ": "Vachon",
+  "nom": "Magdouda Oudjit",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f491182fe702176b1881a_VACH(Magdouda%20Oudjit)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Vanier-Les Rivières",
+  "nom": "Karoline Boucher",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f4875929b7552637e555d_VANI(Karoline%20Boucher)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Vaudreuil",
+  "nom": "Jeannette Uwantege",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9867bd06446a5f0f1d0d0f_VAUD(Jeannette%20Uwantege)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Verchères",
+  "nom": "Léonie Thibault Rousseau",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f4606c94b36d9b18bdf10_VERC(L%C3%A9onie%20Thibault%20Rousseau)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Verdun",
+  "nom": "Alejandra Zaga Mendez",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9074c25d558eb7cec2d72c_VERD(Alejandra%20Zaga%20Mendez)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Viau",
+  "nom": "Saïd Kassabie",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e5827a590275616cb427_VIAU(Sa%C3%AFd%20Kassabie)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Vimont-Auteuil",
+  "nom": "Stella Bourgon-Germain",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a85e55773524d62cd46e7de_VIMO(Stella%20Bougon-Germain)_PETITE-p-500.webp"
+ },
+ {
+  "circ": "Westmount-Saint-Louis",
+  "nom": "Olivier Sylvestre",
+  "photo": "https://cdn.prod.website-files.com/6a5a4432d91e17447025f57e/6a9f43f5b585368624f0c69f_WSL(Olivier%20Sylvestre)_PETITE-p-500.webp"
+ }
+]
