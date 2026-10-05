@@ -348,6 +348,13 @@ document.addEventListener("click", e => {
   const l = e.target.closest(".lv-ligne, .lv-vig");
   if (l) { choisir(+l.dataset.rid); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); }
 });
+// « Suivi par parti » : repliée par défaut, l'état choisi est gardé
+function replierPP(ouvert) {
+  $("lvPPSection").toggleAttribute("data-ferme", !ouvert);
+  $("lvPPReplier").setAttribute("aria-expanded", ouvert);
+}
+replierPP(lireLS(localStorage, "lvPPOuvert", false));
+$("lvPPReplier").addEventListener("click", () => { const o = $("lvPPReplier").getAttribute("aria-expanded") !== "true"; replierPP(o); ecrireLS(localStorage, "lvPPOuvert", o); });
 document.addEventListener("keydown", e => {
   const l = e.target.closest?.(".lv-ligne, .lv-vig");
   if (l && (e.key === "Enter" || e.key === " ") && e.target === l) { e.preventDefault(); choisir(+l.dataset.rid); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); }

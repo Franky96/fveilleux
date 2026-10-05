@@ -207,6 +207,13 @@
     .lv-rangee-ecart.neg { color: var(--muted); }
     .lv-rangee-ecart.nul { color: #E0A11B; }
     @media (max-width: 600px) { .lv-rangee { grid-template-columns: minmax(0, 1fr); gap: 6px; } .lv-rangee-ecart { padding-top: 0; } }
+    /* section repliable (« Suivi par parti », fermée par défaut) */
+    .lv-replier { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+    .lv-replier:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+    .lv-fleche { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--rule); font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+    .lv-replier[aria-expanded="true"] .lv-fleche { transform: rotate(90deg); }
+    .lv-repli[data-ferme] #lvPPCorps, .lv-repli[data-ferme] #lvPPChoix { display: none; }
+    @media (prefers-reduced-motion: reduce) { .lv-fleche { transition: none; } }
     .lv-vide { padding: 14px; border: 1px dashed var(--rule); border-radius: 10px; }
     /* statut pour le parti suivi : serré = ambre, remporté = couleur du parti, perdu/retard = atténué */
     .lv-st { font-weight: 700; color: var(--ink); }
@@ -366,13 +373,14 @@
           </div>
           <div id="lvSuivies"></div>
         </section>
-        <section class="lv-carteS" aria-labelledby="lvParPartiTitre">
+        <section class="lv-carteS lv-repli" id="lvPPSection" aria-labelledby="lvParPartiTitre" data-ferme>
           <span class="lv-eyebrow">Suivi par parti</span>
           <div class="lv-pp-tete">
-            <h3 id="lvParPartiTitre">Circonscriptions du parti</h3>
+            <h3 id="lvParPartiTitre"><button type="button" class="lv-replier" id="lvPPReplier" aria-expanded="false" aria-controls="lvPPCorps">
+              <span class="lv-fleche" aria-hidden="true">▸</span>Circonscriptions du parti</button></h3>
             <div class="lv-groupe" id="lvPPChoix" role="group" aria-label="Parti à suivre"></div>
           </div>
-          <div id="lvParParti"></div>
+          <div id="lvPPCorps"><div id="lvParParti"></div></div>
         </section>
       </div>
       <div class="lv-alertes" id="lvAlertes" aria-live="assertive"></div>
