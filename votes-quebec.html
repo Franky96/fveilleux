@@ -127,7 +127,7 @@
       grid-template-rows: auto 1fr; }
       /* fiche au-dessus des suivies ; en mode « Détaillé » (suivies plus hautes), elle retourne sous la carte */
       .lv-grid.suivi-det { grid-template-areas: "carte suivi" "panneau suivi"; } }   /* la hauteur des suivis va à la 2e rangée : pas de vide entre la carte et la fiche */
-    @media (min-width: 1800px) { .lv-wrap { max-width: 3360px; } #lvCarte { height: clamp(520px, 72vh, 1000px); } }
+    @media (min-width: 1800px) { .lv-wrap { max-width: 3360px; } .sc-tabs { max-width: calc(3360px - 2 * clamp(16px, 3vw, 56px)); }   /* onglets alignés à gauche avec le contenu */ #lvCarte { height: clamp(520px, 72vh, 1000px); } }
     .lv-cartecard { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
     .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
     .lv-zoom button { pointer-events: auto; }
