@@ -179,16 +179,17 @@ const partisDe = i => PROJ_P.filter(P => estSuiviePour(i, P));
 const sigle = o => o.p === "AUT" ? o.lab : o.p;
 
 // état d'une circonscription : résultats dès que le dépouillement a commencé, sinon projection Qc125
-function etat(i) {
+// proj = true : toujours la projection, même pendant le dépouillement (bouton « Prédictions » des suivies)
+function etat(i, proj = false) {
   const c = parRid[i];
-  if (c && c.tete) return { res: true, final: !!c.isResultatsFinaux, frac: c.frac,
+  if (!proj && c && c.tete) return { res: true, final: !!c.isResultatsFinaux, frac: c.frac,
     ordre: c.cands.map(k => ({ p: k.parti, lab: k.abreviationPartiPolitique, v: +k.tauxVote || 0 })) };
   const r = DATA.ridings[i];
   return { res: false, final: false, frac: 0, ordre: PROJ_P.map((p, j) => ({ p, lab: p, v: r.s[j] })).sort((a, b) => b.v - a.v) };
 }
 // position d'un parti dans une circonscription : groupe du tableau, écart (points) et adversaire
-function position(i, P) {
-  const e = etat(i), [a, b] = e.ordre, moi = e.ordre.find(o => o.p === P);
+function position(i, P, proj = false) {
+  const e = etat(i, proj), [a, b] = e.ordre, moi = e.ordre.find(o => o.p === P);
   if (!moi) return { e, g: "loin", ecart: -a.v, contre: a };
   if (a.p === P) { const ecart = moi.v - (b ? b.v : 0); return { e, g: e.final ? "elus" : ecart < SERRE ? "avSerre" : "avance", ecart, contre: b }; }
   const ecart = moi.v - a.v;
@@ -207,35 +208,49 @@ function ligne(i, pos, P) {
 
 // statut d'une circonscription suivie pour un parti
 const STATUTS = { serre: "Serrées", avance: "En avance", retard: "En retard", fini: "Terminées" };
-function statut(i, P) {
-  const pos = position(i, P);
+function statut(i, P, proj = false) {
+  const pos = position(i, P, proj);
   if (pos.e.final) return { g: "fini", lab: pos.ecart >= 0 ? "Remportée" : "Perdue", pos };
   if (Math.abs(pos.ecart) < SERRE) return { g: "serre", lab: "Serrée", pos };
   return pos.ecart > 0 ? { g: "avance", lab: pos.e.res ? "En avance" : "Prévue gagnante", pos } : { g: "retard", lab: pos.e.res ? "En retard" : "Prévue perdante", pos };
 }
-// petit rectangle d'une circonscription suivie : les 3 premiers (votes, sinon projection Qc125)
-function vignette(i, P) {
-  const r = DATA.ridings[i], e = etat(i), c = parRid[i];
-  let trois;
-  if (e.res) trois = c.cands.slice(0, 3).map(k => ({ p: k.parti, lab: sigle({ p: k.parti, lab: k.abreviationPartiPolitique }), nom: `${k.prenom} ${k.nom}`, v: +k.tauxVote || 0, n: k.nbVoteTotal }));
-  else {
-    const cand = (candidatures || []).filter(k => norm(k.nom_circonscription) === norm(r.n));
-    trois = e.ordre.slice(0, 3).map(o => { const k = cand.find(x => partiDe(x.abreviation_parti) === o.p);
-      return { p: o.p, lab: o.p, nom: k ? `${k.prenom_bulletin_vote} ${k.nom_bulletin_vote}` : NOMS[o.p], v: o.v, n: null }; });
-  }
-  const st = statut(i, P), pos = st.pos, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
-  // version compacte : nom, avancement, puis les 3 premiers (parti + pourcentage) ; le détail est dans la fiche
-  return `<article class="lv-vig" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}" title="${esc(r.n)} · ${st.lab}${Math.abs(pos.ecart) < 0.05 ? "" : ` · ${P} ${ecart} pt`} · ${trois.map(k => esc(k.nom) + " (" + esc(k.lab) + ")").join(", ")}">
-    <header><b>${esc(r.n)}</b>${etoile(i, P)}</header>
-    <div class="lv-vig-etat">${e.res ? (e.final ? "Final" : nf(100 * e.frac, 0) + " % bur.") : "Proj."}</div>
-    <ol>${trois.map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><em>${esc(k.lab)}</em><b>${nf(k.v, 1)} %</b></li>`).join("")}</ol>
-  </article>`;
+// circonscription suivie : seulement le nom (bordure : couleur du meneur) ; le détail s'affiche au survol
+let suivisProj = lireLS(localStorage, "lvSuivisProj", false);  // « Prédictions » : chiffres de la projection Qc125 même pendant le vote
+function troisPremiers(i, e) {
+  const r = DATA.ridings[i], c = parRid[i];
+  if (e.res) return c.cands.slice(0, 3).map(k => ({ p: k.parti, lab: sigle({ p: k.parti, lab: k.abreviationPartiPolitique }), nom: `${k.prenom} ${k.nom}`, v: +k.tauxVote || 0, n: k.nbVoteTotal }));
+  const cand = (candidatures || []).filter(k => norm(k.nom_circonscription) === norm(r.n));
+  return e.ordre.slice(0, 3).map(o => { const k = cand.find(x => partiDe(x.abreviation_parti) === o.p);
+    return { p: o.p, lab: o.p, nom: k ? `${k.prenom_bulletin_vote} ${k.nom_bulletin_vote}` : NOMS[o.p], v: o.v, n: null }; });
 }
+function vignette(i, P) {
+  const st = statut(i, P, suivisProj), e = st.pos.e;
+  return `<button type="button" class="lv-vig${e.ordre[0].p === P ? " mene" : ""}" data-rid="${i}" data-vp="${P}" style="--c:${COUL[e.ordre[0].p]}">${esc(DATA.ridings[i].n)}</button>`;
+}
+function detailVignette(i, P) {
+  const st = statut(i, P, suivisProj), pos = st.pos, e = pos.e, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
+  return `<b>${esc(DATA.ridings[i].n)}</b><small>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux dépouillés") : "Projection Qc125"} · ${st.lab}${Math.abs(pos.ecart) < 0.05 ? ` · ${P} à égalité` : ` · ${P} ${ecart} pt`}</small>`
+    + `<ol>${troisPremiers(i, e).map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em><b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>`;
+}
+// infobulle des circonscriptions suivies (survol ou focus clavier)
+function bulleSuivi(el) {
+  const t = $("lvVTip");
+  if (!el) { t.hidden = true; return; }
+  t.innerHTML = detailVignette(+el.dataset.rid, el.dataset.vp); t.hidden = false;
+  const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+  let x = r.left + r.width / 2 - w / 2, y = r.top - h - 8;
+  if (y < 8) y = r.bottom + 8;
+  t.style.left = Math.max(8, Math.min(innerWidth - w - 8, x)) + "px"; t.style.top = y + "px";
+}
+document.addEventListener("mouseover", e => { const v = e.target.closest?.(".lv-vig"); if (v) bulleSuivi(v); });
+document.addEventListener("mouseout", e => { const v = e.target.closest?.(".lv-vig"); if (v && !v.contains(e.relatedTarget)) bulleSuivi(null); });
+document.addEventListener("focusin", e => { const v = e.target.closest?.(".lv-vig"); bulleSuivi(v || null); });
+addEventListener("scroll", () => bulleSuivi(null), { passive: true });
 
 // luttes serrées : une rangée par écart arrondi (+3, +2, +1, égalité, −1, −2…), la plus grande avance en haut
 function rangees(ids, V) {
   const par = new Map();
-  for (const i of ids) { const k = Math.round(position(i, V).ecart) || 0; if (!par.has(k)) par.set(k, []); par.get(k).push(i); }
+  for (const i of ids) { const k = Math.round(position(i, V, suivisProj).ecart) || 0; if (!par.has(k)) par.set(k, []); par.get(k).push(i); }
   return [...par.entries()].sort((a, b) => b[0] - a[0]).map(([k, l]) =>
     `<div class="lv-rangee"><span class="lv-rangee-ecart ${k > 0 ? "pos" : k < 0 ? "neg" : "nul"}" style="--c:${COUL[V]}">${k === 0 ? "Égalité" : (k > 0 ? "+" : "−") + Math.abs(k) + (Math.abs(k) > 1 ? " pts" : " pt")}</span>`
     + `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div></div>`).join("");
@@ -248,12 +263,13 @@ function dessinerSuivi() {
   // --- circonscriptions suivies, par parti : de la plus grande avance au plus grand retard
   const nb = P => (suivis[P] || []).filter(n => DATA.ridings.some(r => r.n === n)).length;
   const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
-  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => position(b, V).ecart - position(a, V).ecart);   // +3, +2, +1, 0, −1, −2…
+  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => position(b, V, suivisProj).ecart - position(a, V, suivisProj).ecart);   // +3, +2, +1, 0, −1, −2…
+  $("lvSuivisProj").setAttribute("aria-pressed", suivisProj);
   $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
   // regroupées par statut : serrées d'abord (celles à surveiller), puis en avance, en retard, terminées
   const gs = { serre: [], avance: [], retard: [], fini: [] };
-  for (const i of ids) gs[statut(i, V).g].push(i);
-  const avantResS = !Object.values(parRid).some(c => c.tete);
+  for (const i of ids) gs[statut(i, V, suivisProj).g].push(i);
+  const avantResS = suivisProj || !Object.values(parRid).some(c => c.tete);
   const resume = ids.length ? `<div class="lv-suiv-resume"><b>${NOMS[V]}</b> · ${ids.length} suivie${ids.length > 1 ? "s" : ""}`
     + Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => ` · <span class="lv-st st-${g}" style="--c:${COUL[V]}">${l.length} ${STATUTS[g].toLowerCase()}</span>`).join("")
     + (avantResS ? ` <span class="lv-muted">(selon la projection Qc125)</span>` : "") + `</div>` : "";
@@ -342,6 +358,7 @@ function garderPlace(b, faire) {
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-suivre]");
   if (b) { e.stopPropagation(); garderPlace(b, () => basculerSuivi(+b.dataset.suivre, b.dataset.parti)); return; }
+  if (e.target.closest("#lvSuivisProj")) { suivisProj = !suivisProj; ecrireLS(localStorage, "lvSuivisProj", suivisProj); bulleSuivi(null); dessinerSuivi(); return; }
   const pv = e.target.closest("[data-pv]");
   if (pv) { partiVue = pv.dataset.pv; ecrireLS(localStorage, "lvPartiVue", partiVue); dessinerSuivi(); return; }
   const pp = e.target.closest("[data-pp]");
