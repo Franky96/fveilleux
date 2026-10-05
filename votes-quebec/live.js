@@ -205,6 +205,14 @@ function ligne(i, pos, P) {
     + `<span class="lv-ecart ${pos.ecart < 0 ? "neg" : ""}">${txt}</span><span class="lv-bur">${bureaux(pos.e)}</span></li>`;
 }
 
+// statut d'une circonscription suivie pour un parti
+const STATUTS = { serre: "Serrées", avance: "En avance", retard: "En retard", fini: "Terminées" };
+function statut(i, P) {
+  const pos = position(i, P);
+  if (pos.e.final) return { g: "fini", lab: pos.ecart >= 0 ? "Remportée" : "Perdue", pos };
+  if (Math.abs(pos.ecart) < SERRE) return { g: "serre", lab: "Serrée", pos };
+  return pos.ecart > 0 ? { g: "avance", lab: pos.e.res ? "En avance" : "Prévue gagnante", pos } : { g: "retard", lab: pos.e.res ? "En retard" : "Prévue perdante", pos };
+}
 // petit rectangle d'une circonscription suivie : les 3 premiers (votes, sinon projection Qc125)
 function vignette(i, P) {
   const r = DATA.ridings[i], e = etat(i), c = parRid[i];
@@ -215,10 +223,10 @@ function vignette(i, P) {
     trois = e.ordre.slice(0, 3).map(o => { const k = cand.find(x => partiDe(x.abreviation_parti) === o.p);
       return { p: o.p, lab: o.p, nom: k ? `${k.prenom_bulletin_vote} ${k.nom_bulletin_vote}` : NOMS[o.p], v: o.v, n: null }; });
   }
-  const pos = position(i, P), ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
+  const st = statut(i, P), pos = st.pos, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
   return `<article class="lv-vig" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}">
     <header><b>${esc(r.n)}</b>${etoile(i, P)}</header>
-    <div class="lv-vig-etat"><span>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux") : "Projection Qc125"}</span><span class="${pos.ecart < 0 ? "neg" : ""}">${P} ${ecart} pt</span></div>
+    <div class="lv-vig-etat"><span>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux") : "Projection Qc125"}</span><span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${P} ${ecart} pt</span></div>
     <ol>${trois.map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em>`
       + `<b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>
   </article>`;
@@ -232,11 +240,22 @@ function dessinerSuivi() {
   const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
   const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => Math.abs(position(a, V).ecart) - Math.abs(position(b, V).ecart));
   $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
-  $("lvSuivies").innerHTML = (ids.length
-    ? `<div class="lv-vigs">${ids.map(i => vignette(i, V)).join("")}</div>`
-    : `<p class="lv-muted">Aucune circonscription suivie pour ${NOMS[V]}. Clique sur ☆ dans le tableau par parti (elle sera suivie pour ce parti), ou sur « Suivre pour » dans la fiche d'une circonscription.</p>`)
-    + (journal.length ? `<span class="lv-eyebrow">Changements récents</span><ul class="lv-journal">${journal.slice(0, 12).map(j =>
-      `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul>` : "");
+  // regroupées par statut : serrées d'abord (celles à surveiller), puis en avance, en retard, terminées
+  const gs = { serre: [], avance: [], retard: [], fini: [] };
+  for (const i of ids) gs[statut(i, V).g].push(i);
+  const avantResS = !Object.values(parRid).some(c => c.tete);
+  const resume = ids.length ? `<div class="lv-suiv-resume"><b>${NOMS[V]}</b> · ${ids.length} suivie${ids.length > 1 ? "s" : ""}`
+    + Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => ` · <span class="lv-st st-${g}" style="--c:${COUL[V]}">${l.length} ${STATUTS[g].toLowerCase()}</span>`).join("")
+    + (avantResS ? ` <span class="lv-muted">(selon la projection Qc125)</span>` : "") + `</div>` : "";
+  const cartes = ids.length
+    ? Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => `<section class="lv-suiv-grp"><h4>${STATUTS[g]}${g === "serre" ? ` <small>moins de ${SERRE} pts d'écart</small>` : ""}</h4>`
+      + `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div></section>`).join("")
+    : `<p class="lv-muted lv-vide">Aucune circonscription suivie pour ${NOMS[V]}.<br>Pour en ajouter : clique sur ☆ dans le tableau « Suivi par parti » ci-dessous (avec ${V} choisi), ou sur « Suivre pour ${V} » dans la fiche d'une circonscription.</p>`;
+  const jr = journal.length ? `<aside class="lv-suiv-journal"><h4>Changements récents</h4><ul class="lv-journal">${journal.slice(0, 8).map(j =>
+      `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul>`
+    + (journal.length > 8 ? `<details><summary>${journal.length - 8} plus ancien${journal.length - 8 > 1 ? "s" : ""}</summary><ul class="lv-journal">${journal.slice(8).map(j =>
+      `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul></details>` : "") + `</aside>` : "";
+  $("lvSuivies").innerHTML = resume + `<div class="lv-suiv-corps${jr ? " avec-journal" : ""}"><div class="lv-suiv-cartes">${cartes}</div>${jr}</div>`;
   // --- tableau par parti
   const s = sieges(), tot = p => s[p].elus + s[p].avance;
   // parti par défaut : celui qui mène en sièges, ou avant les résultats celui qui en a le plus dans la projection

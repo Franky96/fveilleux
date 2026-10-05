@@ -189,7 +189,24 @@
     .lv-vig li em { font-style: normal; font-size: 0.7rem; color: var(--muted); }
     .lv-vig li b { font-variant-numeric: tabular-nums; }
     .lv-vig li small { justify-self: end; font-size: 0.68rem; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 400; }
-    #lvSuivies { display: grid; gap: 10px; }
+    #lvSuivies { display: grid; gap: 12px; }
+    .lv-suiv-resume { font-size: 0.85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+    .lv-suiv-resume > b { color: var(--ink); }
+    .lv-suiv-corps { display: grid; gap: 16px; align-items: start; }
+    .lv-suiv-corps.avec-journal { grid-template-columns: minmax(0, 1fr) 280px; }
+    .lv-suiv-cartes { display: grid; gap: 14px; }
+    .lv-suiv-grp { display: grid; gap: 8px; }
+    .lv-suiv-grp h4, .lv-suiv-journal h4 { margin: 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .lv-suiv-grp h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 4px; }
+    .lv-suiv-journal { display: grid; gap: 8px; padding-left: 16px; border-left: 1px solid var(--rule); }
+    .lv-suiv-journal summary { cursor: pointer; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .lv-vide { padding: 14px; border: 1px dashed var(--rule); border-radius: 10px; }
+    /* statut pour le parti suivi : serré = ambre, remporté = couleur du parti, perdu/retard = atténué */
+    .lv-st { font-weight: 700; color: var(--ink); }
+    .lv-st.st-serre { color: #E0A11B; }
+    .lv-st.st-retard, .lv-st.neg { color: var(--muted); }
+    .lv-st.st-fini:not(.neg) { color: var(--c); }
+    @media (max-width: 1100px) { .lv-suiv-corps.avec-journal { grid-template-columns: minmax(0, 1fr); } .lv-suiv-journal { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); padding-top: 10px; } }
     .lv-journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
     .lv-journal li { padding: 5px 8px; border-radius: 6px; background: var(--bg); }
     .lv-journal time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
