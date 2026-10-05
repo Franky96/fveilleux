@@ -183,17 +183,18 @@ const sigle = o => o.p === "AUT" ? o.lab : o.p;
 function etat(i, proj = false) {
   const c = parRid[i];
   if (!proj && c && c.tete) return { res: true, final: !!c.isResultatsFinaux, frac: c.frac,
-    ordre: c.cands.map(k => ({ p: k.parti, lab: k.abreviationPartiPolitique, v: +k.tauxVote || 0 })) };
+    ordre: c.cands.map(k => ({ p: k.parti, lab: k.abreviationPartiPolitique, v: +k.tauxVote || 0, n: +k.nbVoteTotal || 0 })) };
   const r = DATA.ridings[i];
   return { res: false, final: false, frac: 0, ordre: PROJ_P.map((p, j) => ({ p, lab: p, v: r.s[j] })).sort((a, b) => b.v - a.v) };
 }
 // position d'un parti dans une circonscription : groupe du tableau, écart (points) et adversaire
 function position(i, P, proj = false) {
   const e = etat(i, proj), [a, b] = e.ordre, moi = e.ordre.find(o => o.p === P);
-  if (!moi) return { e, g: "loin", ecart: -a.v, contre: a };
-  if (a.p === P) { const ecart = moi.v - (b ? b.v : 0); return { e, g: e.final ? "elus" : ecart < SERRE ? "avSerre" : "avance", ecart, contre: b }; }
+  // ecart : en points ; voix : écart en nombre de votes (résultats seulement)
+  if (!moi) return { e, g: "loin", ecart: -a.v, voix: e.res ? -a.n : null, contre: a };
+  if (a.p === P) { const ecart = moi.v - (b ? b.v : 0); return { e, g: e.final ? "elus" : ecart < SERRE ? "avSerre" : "avance", ecart, voix: e.res ? moi.n - (b ? b.n : 0) : null, contre: b }; }
   const ecart = moi.v - a.v;
-  return { e, g: e.final ? "perdu" : -ecart < SERRE ? "retSerre" : "loin", ecart, contre: a };
+  return { e, g: e.final ? "perdu" : -ecart < SERRE ? "retSerre" : "loin", ecart, voix: e.res ? moi.n - a.n : null, contre: a };
 }
 const bureaux = e => !e.res ? "proj." : e.final ? "final" : nf(100 * e.frac, 0) + " % bur.";
 const etoile = (i, P) => { const on = estSuiviePour(i, P);
@@ -207,10 +208,22 @@ function ligne(i, pos, P) {
 }
 
 // statut d'une circonscription suivie pour un parti
-const STATUTS = { serre: "Serrées", avance: "En avance", retard: "En retard", fini: "Terminées" };
+// pendant le dépouillement, les suivies se classent en NOMBRE DE VOTES d'écart (serrée : moins de 1 000 voix) ;
+// celles sans résultat restent à part (« Pas encore de résultats », selon la projection, en points)
+const SERRE_VOIX = 1000, TRANCHE_VOIX = 250;
+const STATUTS = { serre: "Serrées", avance: "En avance", retard: "En retard", fini: "Terminées", attente: "Pas encore de résultats" };
+const cleTri = pos => pos.voix != null ? pos.voix : pos.ecart;      // votes si résultats, sinon points de projection
+const txtEcart = (pos, P) => pos.voix != null
+  ? (pos.voix === 0 ? `${P} à égalité` : `${P} ${pos.voix > 0 ? "+" : "−"}${nf(Math.abs(pos.voix))} voix`)
+  : (Math.abs(pos.ecart) < 0.05 ? `${P} à égalité` : `${P} ${pos.ecart >= 0 ? "+" : "−"}${nf(Math.abs(pos.ecart), 1)} pt`);
 function statut(i, P, proj = false) {
   const pos = position(i, P, proj);
-  if (pos.e.final) return { g: "fini", lab: pos.ecart >= 0 ? "Remportée" : "Perdue", pos };
+  if (pos.e.final) return { g: "fini", lab: (pos.voix ?? pos.ecart) >= 0 ? "Remportée" : "Perdue", pos };
+  if (pos.e.res) {
+    if (Math.abs(pos.voix) < SERRE_VOIX) return { g: "serre", lab: "Serrée", pos };
+    return pos.voix > 0 ? { g: "avance", lab: "En avance", pos } : { g: "retard", lab: "En retard", pos };
+  }
+  if (!proj && Object.values(parRid).some(c => c.tete)) return { g: "attente", lab: "Pas encore de résultats", pos };
   if (Math.abs(pos.ecart) < SERRE) return { g: "serre", lab: "Serrée", pos };
   return pos.ecart > 0 ? { g: "avance", lab: pos.e.res ? "En avance" : "Prévue gagnante", pos } : { g: "retard", lab: pos.e.res ? "En retard" : "Prévue perdante", pos };
 }
@@ -227,11 +240,11 @@ let suivisDetail = lireLS(localStorage, "lvSuivisDetail", false); // « Détaill
 function vignette(i, P) {
   const st = statut(i, P, suivisProj), e = st.pos.e;
   if (suivisDetail) {
-    const pos = st.pos, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
+    const pos = st.pos;
     return `<article class="lv-vigd" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}">
       <header><b>${esc(DATA.ridings[i].n)}</b>${etoile(i, P)}</header>
       <div class="lv-vigd-etat"><span>${e.res ? (e.final ? "Final" : nf(100 * e.frac, 0) + " % bur.") : "Projection"}</span>`
-      + `<span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${Math.abs(pos.ecart) < 0.05 ? `${P} à égalité` : `${P} ${ecart} pt`}</span></div>
+      + `<span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${txtEcart(pos, P)}</span></div>
       <ol>${troisPremiers(i, e).map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em>`
         + `<b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>
     </article>`;
@@ -239,8 +252,9 @@ function vignette(i, P) {
   return `<button type="button" class="lv-vig${e.ordre[0].p === P ? " mene" : ""}" data-rid="${i}" data-vp="${P}" style="--c:${COUL[e.ordre[0].p]}">${esc(DATA.ridings[i].n)}</button>`;
 }
 function detailVignette(i, P) {
-  const st = statut(i, P, suivisProj), pos = st.pos, e = pos.e, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
-  return `<b>${esc(DATA.ridings[i].n)}</b><small>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux dépouillés") : "Projection Qc125"} · ${st.lab}${Math.abs(pos.ecart) < 0.05 ? ` · ${P} à égalité` : ` · ${P} ${ecart} pt`}</small>`
+  const st = statut(i, P, suivisProj), pos = st.pos, e = pos.e;
+  return `<b>${esc(DATA.ridings[i].n)}</b><small>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux dépouillés") : "Projection Qc125"} · ${st.lab} · ${txtEcart(pos, P)}`
+    + `${pos.voix != null ? ` (${pos.ecart >= 0 ? "+" : "−"}${nf(Math.abs(pos.ecart), 1)} pt)` : ""}</small>`
     + `<ol>${troisPremiers(i, e).map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em><b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>`;
 }
 // infobulle des circonscriptions suivies (survol ou focus clavier)
@@ -259,11 +273,20 @@ document.addEventListener("focusin", e => { const v = e.target.closest?.(".lv-vi
 addEventListener("scroll", () => bulleSuivi(null), { passive: true });
 
 // luttes serrées : une rangée par écart arrondi (+3, +2, +1, égalité, −1, −2…), la plus grande avance en haut
+// en votes : tranches de 250 voix (+750 à 999, +500 à 749 … égalité … −500 à 749)
 function rangees(ids, V) {
   const par = new Map();
-  for (const i of ids) { const k = Math.round(position(i, V, suivisProj).ecart) || 0; if (!par.has(k)) par.set(k, []); par.get(k).push(i); }
+  const voix = ids.some(i => position(i, V, suivisProj).voix != null);
+  for (const i of ids) {
+    const pos = position(i, V, suivisProj);
+    const k = voix ? (pos.voix === 0 ? 0 : Math.sign(pos.voix) * (Math.floor(Math.abs(pos.voix) / TRANCHE_VOIX) + 1)) : (Math.round(pos.ecart) || 0);
+    if (!par.has(k)) par.set(k, []); par.get(k).push(i);
+  }
+  const etiquette = k => k === 0 ? "Égalité" : voix
+    ? `${k > 0 ? "+" : "−"}${nf((Math.abs(k) - 1) * TRANCHE_VOIX || 1)} à ${nf(Math.abs(k) * TRANCHE_VOIX - 1)}`
+    : (k > 0 ? "+" : "−") + Math.abs(k) + (Math.abs(k) > 1 ? " pts" : " pt");
   return [...par.entries()].sort((a, b) => b[0] - a[0]).map(([k, l]) =>
-    `<div class="lv-rangee"><span class="lv-rangee-ecart ${k > 0 ? "pos" : k < 0 ? "neg" : "nul"}" style="--c:${COUL[V]}">${k === 0 ? "Égalité" : (k > 0 ? "+" : "−") + Math.abs(k) + (Math.abs(k) > 1 ? " pts" : " pt")}</span>`
+    `<div class="lv-rangee${voix ? " voix" : ""}"><span class="lv-rangee-ecart ${k > 0 ? "pos" : k < 0 ? "neg" : "nul"}" style="--c:${COUL[V]}">${etiquette(k)}${voix && k ? "<small>voix</small>" : ""}</span>`
     + `<div class="lv-vigs${suivisDetail ? " det" : ""}">${l.map(i => vignette(i, V)).join("")}</div></div>`).join("");
 }
 
@@ -274,20 +297,20 @@ function dessinerSuivi() {
   // --- circonscriptions suivies, par parti : de la plus grande avance au plus grand retard
   const nb = P => (suivis[P] || []).filter(n => DATA.ridings.some(r => r.n === n)).length;
   const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
-  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => position(b, V, suivisProj).ecart - position(a, V, suivisProj).ecart);   // +3, +2, +1, 0, −1, −2…
+  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => cleTri(position(b, V, suivisProj)) - cleTri(position(a, V, suivisProj)));   // +3, +2, +1, 0, −1, −2…
   $("lvSuivisProj").setAttribute("aria-pressed", suivisProj);
   $("lvSuivisDetail").setAttribute("aria-pressed", suivisDetail);
   document.querySelector("#vue-live .lv-grid").classList.toggle("suivi-det", suivisDetail);
   $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
   // regroupées par statut : serrées d'abord (celles à surveiller), puis en avance, en retard, terminées
-  const gs = { serre: [], avance: [], retard: [], fini: [] };
+  const gs = { serre: [], avance: [], retard: [], fini: [], attente: [] };
   for (const i of ids) gs[statut(i, V, suivisProj).g].push(i);
   const avantResS = suivisProj || !Object.values(parRid).some(c => c.tete);
   const resume = ids.length ? `<div class="lv-suiv-resume"><b>${NOMS[V]}</b> · ${ids.length} suivie${ids.length > 1 ? "s" : ""}`
     + Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => ` · <span class="lv-st st-${g}" style="--c:${COUL[V]}">${l.length} ${STATUTS[g].toLowerCase()}</span>`).join("")
     + (avantResS ? ` <span class="lv-muted">(selon la projection Qc125)</span>` : "") + `</div>` : "";
   const cartes = ids.length
-    ? Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => `<section class="lv-suiv-grp"><h4>${STATUTS[g]}${g === "serre" ? ` <small>moins de ${SERRE} pts d'écart</small>` : ""}</h4>`
+    ? Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => `<section class="lv-suiv-grp"><h4>${STATUTS[g]}${g === "serre" ? ` <small>${avantResS ? `moins de ${SERRE} pts d'écart` : `moins de ${nf(SERRE_VOIX)} voix d'écart`}</small>` : g === "attente" ? ` <small>selon la projection Qc125</small>` : ""}</h4>`
       + (g === "serre" ? rangees(l, V) : `<div class="lv-vigs${suivisDetail ? " det" : ""}">${l.map(i => vignette(i, V)).join("")}</div>`) + `</section>`).join("")
     : `<p class="lv-muted lv-vide">Aucune circonscription suivie pour ${NOMS[V]}.<br>Pour en ajouter : clique sur ☆ dans le tableau « Suivi par parti » ci-dessous (avec ${V} choisi), ou sur « Suivre pour ${V} » dans la fiche d'une circonscription.</p>`;
   const jr = journal.length ? `<aside class="lv-suiv-journal"><h4>Changements récents</h4><ul class="lv-journal">${journal.slice(0, 8).map(j =>
