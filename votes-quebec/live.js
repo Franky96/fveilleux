@@ -689,8 +689,15 @@ function construireCarte() {
     const k = Math.min(40, 0.9 / Math.max((x1 - x0) / MW, (y1 - y0) / MH));
     svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity.translate(MW / 2, MH / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
   };
-  $("lvZoom").addEventListener("click", e => {
-    const z = e.target.closest("button")?.dataset.z; if (!z) return;
+  // téléphone : « Suivis » et « Plein écran » en bas à gauche de la carte
+  const petit = matchMedia("(max-width: 600px)");
+  const placerBoutons = () => {
+    const dest = petit.matches ? $("lvZoomBas") : $("lvZoom");
+    for (const el of [document.querySelector(".lv-menu-suivis"), $("lvPlein")]) if (el.parentElement !== dest) dest.appendChild(el);
+  };
+  placerBoutons(); petit.addEventListener("change", placerBoutons);
+  $("lvCarte").parentElement.addEventListener("click", e => {
+    const z = e.target.closest(".lv-zoom button")?.dataset.z; if (!z) return;
     if (z === "tout") svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity);
     else if (z === "mtl") vers(-74.1, 45.33, -73.3, 45.75);
     else if (z === "qc") vers(-71.55, 46.68, -71.0, 47.0);

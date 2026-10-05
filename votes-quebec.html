@@ -289,6 +289,11 @@
     #lvCarte { display: block; width: 100%; height: clamp(420px, 72vh, 900px); background: var(--bg); touch-action: none; }
     /* plein écran : API du navigateur, ou couche fixe sur iPhone (pas de plein écran d'élément) */
     .lv-zoom .lv-plein-btn { margin-left: auto; }
+    /* téléphone : « Suivis » et « Plein écran » déplacés en bas à gauche de la carte (live.js les y met) */
+    .lv-zoom-bas { top: auto; bottom: 10px; right: auto; }
+    .lv-zoom-bas:empty { display: none; }
+    .lv-zoom-bas .lv-plein-btn { margin-left: 0; }
+    .lv-zoom-bas .lv-menu { top: auto; bottom: calc(100% + 6px); }
     /* téléphone : zoom au doigt (pincer), pas besoin des boutons de zoom */
     @media (max-width: 600px) { .lv-zoom [data-z="tout"], .lv-zoom [data-z="mtl"], .lv-zoom [data-z="qc"], .lv-zoom [data-z="plus"], .lv-zoom [data-z="moins"] { display: none; } }
     .lv-cartecard:fullscreen, .lv-cartecard.lv-plein { border: 0; border-radius: 0; width: 100%; height: 100%; }
@@ -412,6 +417,7 @@
             </span>
             <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
           </div>
+          <div class="lv-zoom lv-zoom-bas" id="lvZoomBas"></div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
           <div class="lv-tip" id="lvTip" hidden></div>
         </div>
