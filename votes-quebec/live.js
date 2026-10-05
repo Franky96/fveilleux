@@ -33,6 +33,12 @@ const DEMO = sessionStorage.getItem("userRole") === "admin" && PARAMS.has("demo"
 const PROJ_P = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];          // ordre des parts dans data.json (ridings[].s)
 let cartePred = false;                                       // carte entière de la prédiction (au lieu des résultats)
 let prediction = sessionStorage.getItem("lvPrediction") === "1", gPred = null, ancrages = null, zoomK = 1;
+// rang d'un parti dans la projection Qc125 d'une circonscription (0 = en tête) ; autres partis après les 5 principaux
+function rangProjection(i, parti) {
+  const r = DATA.ridings[i], j = PROJ_P.indexOf(parti);
+  if (j < 0) return 99;
+  return PROJ_P.map((_, k) => k).sort((a, b) => r.s[b] - r.s[a] || (r.o || []).indexOf(a) - (r.o || []).indexOf(b)).indexOf(j);
+}
 // gagnant prédit : plus grande part ; égalité départagée par l'ordre publié par Qc125 (ridings[].o)
 function predit(i) {
   const r = DATA.ridings[i]; let w = r.o && r.o.length ? r.o[0] : 0;
@@ -128,7 +134,9 @@ function indexer() {
   for (const c of resultats.circonscriptions) {
     const i = rang[norm(c.nomCirconscription)];
     if (i == null) continue;
-    const cands = (c.candidats || []).map(k => ({ ...k, parti: partiDe(k.abreviationPartiPolitique) })).sort((a, b) => b.nbVoteTotal - a.nbVoteTotal);
+    // par votes ; à égalité (début de soirée, 0 vote partout), dans l'ordre de la projection Qc125 de la circonscription
+    const cands = (c.candidats || []).map(k => ({ ...k, parti: partiDe(k.abreviationPartiPolitique) }))
+      .sort((a, b) => b.nbVoteTotal - a.nbVoteTotal || rangProjection(i, a.parti) - rangProjection(i, b.parti));
     const votes = cands.reduce((s, k) => s + (k.nbVoteTotal || 0), 0);
     parRid[i] = { ...c, cands, votes, tete: votes > 0 ? cands[0] : null, frac: c.nbBureauTotal ? c.nbBureauComplete / c.nbBureauTotal : 0 };
   }
@@ -226,7 +234,10 @@ function dessinerPanneau() {
     return;
   }
   const r = DATA.ridings[sel], c = parRid[sel], reg = DATA.regions.find(x => x.code === r.r)?.name || "";
-  const cand = (candidatures || []).filter(k => norm(k.nom_circonscription) === norm(r.n));
+  // avant les résultats : partis principaux dans l'ordre de leur projection Qc125 ici, puis les autres par nom
+  const cand = (candidatures || []).filter(k => norm(k.nom_circonscription) === norm(r.n))
+    .sort((a, b) => rangProjection(sel, partiDe(a.abreviation_parti)) - rangProjection(sel, partiDe(b.abreviation_parti))
+      || String(a.nom_bulletin_vote).localeCompare(String(b.nom_bulletin_vote), "fr"));
   const sortant = (prenom, nom) => cand.some(k => k.depute_sortant === "O" && norm(k.nom_bulletin_vote) === norm(nom) && norm(k.prenom_bulletin_vote) === norm(prenom));
   let html = `<span class="lv-eyebrow">${esc(reg)}</span><h3>${esc(r.n)}</h3>`;
   if (c && c.tete) {
