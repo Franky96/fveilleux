@@ -112,7 +112,19 @@
     .lv-parti b { font-size: 1.3rem; font-variant-numeric: tabular-nums; justify-self: end; grid-column: 4; grid-row: 1; }
     .lv-parti small { grid-column: 2 / 4; grid-row: 2; color: var(--muted); font-size: 0.72rem; }
     .lv-pvote { grid-column: 4; grid-row: 2; justify-self: end; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
-    .lv-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(320px, 1fr); gap: 20px; align-items: start; }
+    /* carte, fiche de circonscription et suivis :
+       étroit : l'un sous l'autre · moyen : carte + fiche à gauche, suivis à droite ·
+       très large (ultra wide) : fiche | carte | suivis, sur toute la largeur */
+    .lv-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "carte" "panneau" "suivi"; gap: 20px; align-items: start; }
+    .lv-grid > .lv-cartecard { grid-area: carte; }
+    .lv-grid > .lv-panneau { grid-area: panneau; }
+    .lv-grid > .lv-suivi { grid-area: suivi; }
+    @media (min-width: 1100px) { .lv-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-areas: "carte suivi" "panneau suivi"; } }
+    @media (min-width: 1800px) {
+      .lv-wrap { max-width: 3360px; }
+      .lv-grid { grid-template-columns: minmax(340px, 400px) minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "panneau carte suivi"; }
+      #lvCarte { height: clamp(520px, 78vh, 1100px); }
+    }
     .lv-cartecard { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
     .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
     .lv-zoom button { pointer-events: auto; }
@@ -141,7 +153,8 @@
     @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; text-align: left; } .lv-head-droite .lv-btn { white-space: nowrap; } }
     .lv-particip small { white-space: nowrap; }
     /* suivi : étoiles, liste suivie, tableau par parti, alertes */
-    .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-content: start; }
+    .lv-suivi .lv-carteS { container-type: inline-size; }
     .lv-carteS { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
     .lv-carteS h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .lv-pp-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -193,12 +206,12 @@
     .lv-suiv-resume { font-size: 0.85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
     .lv-suiv-resume > b { color: var(--ink); }
     .lv-suiv-corps { display: grid; gap: 16px; align-items: start; }
-    .lv-suiv-corps.avec-journal { grid-template-columns: minmax(0, 1fr) 280px; }
+    .lv-suiv-journal { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 10px; }
+    @container (min-width: 900px) { .lv-suiv-corps.avec-journal { grid-template-columns: minmax(0, 1fr) 260px; } .lv-suiv-journal { padding: 0 0 0 16px; border-top: 0; border-left: 1px solid var(--rule); } }
     .lv-suiv-cartes { display: grid; gap: 14px; }
     .lv-suiv-grp { display: grid; gap: 8px; }
     .lv-suiv-grp h4, .lv-suiv-journal h4 { margin: 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
     .lv-suiv-grp h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 4px; }
-    .lv-suiv-journal { display: grid; gap: 8px; padding-left: 16px; border-left: 1px solid var(--rule); }
     .lv-suiv-journal summary { cursor: pointer; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
     .lv-rangee { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: start; padding-top: 8px; border-top: 1px dashed var(--rule); }
     .lv-rangee:first-of-type { border-top: 0; padding-top: 0; }
@@ -233,7 +246,6 @@
     .lv-st.st-serre { color: #E0A11B; }
     .lv-st.st-retard, .lv-st.neg { color: var(--muted); }
     .lv-st.st-fini:not(.neg) { color: var(--c); }
-    @media (max-width: 1100px) { .lv-suiv-corps.avec-journal { grid-template-columns: minmax(0, 1fr); } .lv-suiv-journal { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); padding-top: 10px; } }
     .lv-journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
     .lv-journal li { padding: 5px 8px; border-radius: 6px; background: var(--bg); }
     .lv-journal time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
@@ -243,7 +255,6 @@
     .lv-alerte small { display: block; color: var(--muted); font-size: 0.72rem; }
     @keyframes lvEntre { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .lv-alerte { animation: none; } }
-    @media (max-width: 900px) { .lv-suivi { grid-template-columns: minmax(0, 1fr); } }
     .lv-pk { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--rule); }
     /* pastilles de prédiction : contour blanc + fin cerne noir, visibles même sur la couleur du même parti */
     .lv-preds { pointer-events: none; }
@@ -296,7 +307,7 @@
     .lv-liste small { display: block; color: var(--muted); font-size: 0.75rem; }
     .lv-proj { padding-top: 8px; border-top: 1px dashed var(--rule); }
     .lv-source { font-size: 0.78rem; }
-    @media (max-width: 900px) { .lv-grid { grid-template-columns: minmax(0, 1fr); } #lvCarte { height: 62vh; } }
+    @media (max-width: 900px) { #lvCarte { height: 62vh; } }
     @media (max-width: 600px) { .lv-partis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lv-parti b { font-size: 1.1rem; } .lv-parti small { font-size: 0.66rem; } }
     @media (prefers-reduced-motion: reduce) { .lv-seg, .lv-rid { transition: none; } }
     .loi39[hidden], .site-top .titre > [hidden] { display: none; }
@@ -378,9 +389,8 @@
           <div class="lv-tip" id="lvTip" hidden></div>
         </div>
         <aside class="lv-panneau" id="lvPanneau" aria-live="polite"></aside>
-      </div>
 
-      <!-- suivi : circonscriptions suivies (étoiles, alertes) et tableau par parti -->
+      <!-- suivi : circonscriptions suivies (étoiles, alertes) et tableau par parti, à droite de la carte sur grand écran -->
       <div class="lv-suivi">
         <section class="lv-carteS" aria-labelledby="lvSuiviesTitre">
           <span class="lv-eyebrow">Mes circonscriptions</span>
@@ -399,6 +409,7 @@
           </div>
           <div id="lvPPCorps"><div id="lvParParti"></div></div>
         </section>
+      </div>
       </div>
       <div class="lv-alertes" id="lvAlertes" aria-live="assertive"></div>
       <p class="lv-muted lv-source">Source : données ouvertes d'Élections Québec (résultats préliminaires, actualisés toutes les 2 à 5 minutes le soir du vote). Cette vue est temporaire.</p>
