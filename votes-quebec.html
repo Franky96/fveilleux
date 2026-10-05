@@ -289,7 +289,7 @@
     #lvCarte { display: block; width: 100%; height: clamp(420px, 72vh, 900px); background: var(--bg); touch-action: none; }
     /* plein écran : API du navigateur, ou couche fixe sur iPhone (pas de plein écran d'élément) */
     .lv-zoom .lv-plein-btn { margin-left: auto; }
-    /* téléphone : « Suivis » et « Plein écran » déplacés en bas à gauche de la carte (live.js les y met) */
+    /* « Suivis » et « Plein écran » en bas à gauche de la carte */
     .lv-zoom-bas { top: auto; bottom: 10px; right: auto; }
     .lv-zoom-bas:empty { display: none; }
     .lv-zoom-bas .lv-plein-btn { margin-left: 0; }
@@ -411,13 +411,14 @@
             <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
             <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
             <span class="lv-groupe" role="group" aria-label="Affichage de la carte (un seul à la fois, ou aucun)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button><button type="button" data-z="particip" id="lvCarteParticip" aria-pressed="false" title="Taux de participation par circonscription : plus c'est blanc, plus la participation est forte (blanc = 100 %)">Participation</button></span>
+          </div>
+          <div class="lv-zoom lv-zoom-bas" id="lvZoomBas">
             <span class="lv-menu-suivis">
               <button type="button" id="lvCarteSuivis" aria-haspopup="true" aria-expanded="false" aria-pressed="false" title="Entourer sur la carte les circonscriptions suivies pour un parti">★ Suivis</button>
               <span class="lv-menu" id="lvMenuSuivis" role="menu" hidden></span>
             </span>
             <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
           </div>
-          <div class="lv-zoom lv-zoom-bas" id="lvZoomBas"></div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
           <div class="lv-tip" id="lvTip" hidden></div>
         </div>
