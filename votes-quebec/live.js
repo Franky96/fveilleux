@@ -161,8 +161,10 @@ const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch
 let suivis = lireLS(localStorage, "lvSuivisParti", null);
 let partiSuivi = lireLS(localStorage, "lvPartiSuivi", null); // parti du tableau « Suivi par parti »
 let partiVue = lireLS(localStorage, "lvPartiVue", null);     // parti affiché dans « Suivies »
-let journal = lireLS(sessionStorage, "lvJournal", []);       // changements récents de la soirée
-let connus = lireLS(sessionStorage, "lvConnus", null);       // dernier meneur vu par circonscription suivie
+// la démo garde son propre journal : elle ne se mélange pas au direct
+const K_JOURNAL = DEMO !== null ? "lvJournalDemo" : "lvJournal", K_CONNUS = DEMO !== null ? "lvConnusDemo" : "lvConnus";
+let journal = lireLS(sessionStorage, K_JOURNAL, []);         // changements récents de la soirée
+let connus = lireLS(sessionStorage, K_CONNUS, null);         // dernier meneur vu par circonscription suivie
 // ancienne liste sans parti : chaque circonscription va au gagnant prédit
 function preparerSuivis() {
   if (suivis) return;
@@ -313,7 +315,7 @@ function dessinerSuivi() {
     ? Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => `<section class="lv-suiv-grp"><h4>${STATUTS[g]}${g === "serre" ? ` <small>${avantResS ? `moins de ${SERRE} pts d'écart` : `moins de ${nf(SERRE_VOIX)} voix d'écart`}</small>` : g === "attente" ? ` <small>selon la projection Qc125</small>` : ""}</h4>`
       + (g === "serre" ? rangees(l, V) : `<div class="lv-vigs${suivisDetail ? " det" : ""}">${l.map(i => vignette(i, V)).join("")}</div>`) + `</section>`).join("")
     : `<p class="lv-muted lv-vide">Aucune circonscription suivie pour ${NOMS[V]}.<br>Pour en ajouter : clique sur ☆ dans le tableau « Suivi par parti » ci-dessous (avec ${V} choisi), ou sur « Suivre pour ${V} » dans la fiche d'une circonscription.</p>`;
-  const jr = journal.length ? `<aside class="lv-suiv-journal"><h4>Changements récents</h4><ul class="lv-journal">${journal.slice(0, 8).map(j =>
+  const jr = journal.length ? `<aside class="lv-suiv-journal"><h4>Changements récents <button type="button" class="lv-effacer" id="lvEffacerJournal">Effacer</button></h4><ul class="lv-journal">${journal.slice(0, 8).map(j =>
       `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul>`
     + (journal.length > 8 ? `<details><summary>${journal.length - 8} plus ancien${journal.length - 8 > 1 ? "s" : ""}</summary><ul class="lv-journal">${journal.slice(8).map(j =>
       `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul></details>` : "") + `</aside>` : "";
@@ -346,6 +348,11 @@ function dessinerSuivi() {
 
 // après chaque lecture : avertit des changements dans les circonscriptions suivies
 function surveiller() {
+  // direct, avant les premiers résultats : on repart à zéro (efface ce qu'un essai ou la démo aurait laissé)
+  if (DEMO === null && !Object.values(parRid).some(c => c.tete)) {
+    if (journal.length || !connus || Object.keys(connus).length) { journal = []; connus = {}; ecrireLS(sessionStorage, K_JOURNAL, journal); ecrireLS(sessionStorage, K_CONNUS, connus); }
+    return;
+  }
   const vu = {};
   for (let i = 0; i < DATA.ridings.length; i++) {
     if (!estSuivie(i)) continue;
@@ -359,11 +366,11 @@ function surveiller() {
     else if (v.f && !avant.f) alerter(v.i, v.p, `${n} : ${v.lab} remporte la circonscription`, v.pour);
   }
   connus = { ...(connus || {}), ...vu };
-  ecrireLS(sessionStorage, "lvConnus", connus);
+  ecrireLS(sessionStorage, K_CONNUS, connus);
 }
 function alerter(i, p, txt, pour) {
   const h = new Date().toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" });
-  journal.unshift({ h, txt }); journal = journal.slice(0, 30); ecrireLS(sessionStorage, "lvJournal", journal);
+  journal.unshift({ h, txt }); journal = journal.slice(0, 30); ecrireLS(sessionStorage, K_JOURNAL, journal);
   const el = document.createElement("div");
   el.className = "lv-alerte"; el.style.setProperty("--c", COUL[p]); el.setAttribute("role", "status");
   el.innerHTML = `${esc(txt)}<small>${h} · suivie pour ${esc(pour)} · clique pour la voir</small>`;
@@ -394,6 +401,7 @@ function garderPlace(b, faire) {
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-suivre]");
   if (b) { e.stopPropagation(); garderPlace(b, () => basculerSuivi(+b.dataset.suivre, b.dataset.parti)); return; }
+  if (e.target.closest("#lvEffacerJournal")) { journal = []; ecrireLS(sessionStorage, K_JOURNAL, journal); dessinerSuivi(); return; }
   if (e.target.closest("#lvSuivisDetail")) { suivisDetail = !suivisDetail; ecrireLS(localStorage, "lvSuivisDetail", suivisDetail); bulleSuivi(null); dessinerSuivi(); return; }
   if (e.target.closest("#lvSuivisProj")) { suivisProj = !suivisProj; ecrireLS(localStorage, "lvSuivisProj", suivisProj); bulleSuivi(null); dessinerSuivi(); return; }
   const pv = e.target.closest("[data-pv]");

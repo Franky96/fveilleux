@@ -235,6 +235,10 @@
     .lv-suiv-grp { display: grid; gap: 8px; }
     .lv-suiv-grp h4, .lv-suiv-journal h4 { margin: 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
     .lv-suiv-grp h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 4px; }
+    .lv-suiv-journal h4 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .lv-effacer { font: inherit; font-size: 0.68rem; font-weight: 700; letter-spacing: 0; text-transform: none; padding: 2px 8px; border-radius: 99px;
+      border: 1px solid var(--rule); background: none; color: var(--muted); cursor: pointer; }
+    .lv-effacer:hover, .lv-effacer:focus-visible { color: var(--ink); border-color: var(--ink); }
     .lv-suiv-journal summary { cursor: pointer; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
     .lv-rangee { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: start; padding-top: 6px; border-top: 1px dashed var(--rule); }
     .lv-rangee.voix { grid-template-columns: 96px minmax(0, 1fr); }
