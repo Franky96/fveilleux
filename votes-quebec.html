@@ -116,6 +116,11 @@
     .lv-cartecard { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
     .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
     .lv-zoom button { pointer-events: auto; }
+    .lv-zoom button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    /* pastilles de prédiction : contour blanc + fin cerne noir, visibles même sur la couleur du même parti */
+    .lv-preds { pointer-events: none; }
+    .lv-pred-halo { fill: #000; opacity: 0.85; }
+    .lv-pred-pt { stroke: #fff; }
     #lvCarte { display: block; width: 100%; height: clamp(420px, 72vh, 900px); background: var(--bg); touch-action: none; }
     .lv-rid { stroke: var(--surface); stroke-width: 0.4px; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill-opacity 0.4s; }
     .lv-rid:hover { stroke: var(--ink); stroke-width: 1.2px; }
@@ -217,6 +222,7 @@
           <div class="lv-zoom" id="lvZoom">
             <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
             <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
+            <button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille : gagnant prédit par la projection Qc125 d'avant le vote">Prédiction</button>
           </div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
           <div class="lv-tip" id="lvTip" hidden></div>

@@ -25,9 +25,69 @@ function partiDe(abrev) {
   return "AUT";
 }
 
-let DATA, PATH, ZOOM, svg, gZ, gRid, gSel, tip, resultats = null, candidatures = null, parRid = {}, sel = null, minuterie = null, demarre = false;
+let PROJ_FN, DATA, PATH, ZOOM, svg, gZ, gRid, gSel, tip, resultats = null, candidatures = null, parRid = {}, sel = null, minuterie = null, demarre = false;
 const PARAMS = new URLSearchParams(location.search);
 const DEMO = sessionStorage.getItem("userRole") === "admin" && PARAMS.has("demo") ? Math.max(0, Math.min(100, +PARAMS.get("demo") || 40)) : null;
+
+/* ---------- prédiction (projection Qc125 d'avant le vote) ---------- */
+const PROJ_P = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];          // ordre des parts dans data.json (ridings[].s)
+let prediction = sessionStorage.getItem("lvPrediction") === "1", gPred = null, ancrages = null, zoomK = 1;
+// gagnant prédit : plus grande part ; égalité départagée par l'ordre publié par Qc125 (ridings[].o)
+function predit(i) {
+  const r = DATA.ridings[i]; let w = r.o && r.o.length ? r.o[0] : 0;
+  for (const j of (r.o && r.o.length ? r.o : PROJ_P.map((_, k) => k))) if (r.s[j] > r.s[w]) w = j;
+  return PROJ_P[w];
+}
+// Pôle d'inaccessibilité (polylabel, Mapbox) : point le plus au cœur d'un polygone, même s'il est très irrégulier
+function polylabel(rings, precision = 0.5){
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of rings[0]){ minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+  const segDist2 = (px, py, a, b) => { let x = a[0], y = a[1], dx = b[0]-x, dy = b[1]-y;
+    if (dx || dy){ const t = ((px-x)*dx + (py-y)*dy) / (dx*dx + dy*dy); if (t > 1){ x = b[0]; y = b[1]; } else if (t > 0){ x += dx*t; y += dy*t; } }
+    dx = px-x; dy = py-y; return dx*dx + dy*dy; };
+  const dist = (x, y) => { let inside = false, m = Infinity;       // distance signée au contour (positive dedans)
+    for (const ring of rings) for (let i = 0, j = ring.length-1; i < ring.length; j = i++){
+      const a = ring[i], b = ring[j];
+      if ((a[1] > y) !== (b[1] > y) && x < (b[0]-a[0])*(y-a[1])/(b[1]-a[1]) + a[0]) inside = !inside;
+      m = Math.min(m, segDist2(x, y, a, b)); }
+    return (inside ? 1 : -1) * Math.sqrt(m); };
+  const cell = (x, y, h) => { const d = dist(x, y); return {x, y, h, d, max: d + h*Math.SQRT2}; };
+  const size = Math.min(maxX-minX, maxY-minY); if (!size) return [minX, minY, 0];
+  let h = size/2, q = [];
+  for (let x = minX; x < maxX; x += size) for (let y = minY; y < maxY; y += size) q.push(cell(x+h, y+h, h));
+  let best = cell((minX+maxX)/2, (minY+maxY)/2, 0);
+  while (q.length){
+    q.sort((a, b) => b.max - a.max); const c = q.shift();
+    if (c.d > best.d) best = c;
+    if (c.max - best.d <= precision) continue;
+    h = c.h/2; q.push(cell(c.x-h, c.y-h, h), cell(c.x+h, c.y-h, h), cell(c.x-h, c.y+h, h), cell(c.x+h, c.y+h, h));
+  }
+  return [best.x, best.y, best.d];
+}
+
+function ancrer() {
+  if (ancrages) return ancrages;
+  ancrages = DATA.ridingGeo.features.map(f => {
+    const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
+    let best = [0, 0, -1];
+    for (const p of polys) { const c = polylabel(p.map(ring => ring.map(xy => PROJ_FN(xy))), 0.3); if (c[2] > best[2]) best = c; }
+    return { RID: f.properties.RID, x: best[0], y: best[1] };
+  });
+  return ancrages;
+}
+function dessinerPrediction() {
+  $("lvPred").setAttribute("aria-pressed", prediction);
+  if (!gPred) return;
+  gPred.style("display", prediction ? null : "none");
+  if (!prediction) return;
+  const g = gPred.selectAll("g.lv-pred").data(ancrer(), d => d.RID).join(enter => {
+    const e = enter.append("g").attr("class", "lv-pred");
+    e.append("circle").attr("class", "lv-pred-halo"); e.append("circle").attr("class", "lv-pred-pt"); return e; });
+  g.attr("transform", d => `translate(${d.x},${d.y})`);
+  // taille constante à l'écran : rayon et contour divisés par le zoom
+  g.select(".lv-pred-halo").attr("r", 5.4 / zoomK);
+  g.select(".lv-pred-pt").attr("r", 4.2 / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", 1.4 / zoomK);
+}
 
 /* ---------- chargement ---------- */
 async function lire(type) {
@@ -132,7 +192,11 @@ function dessinerPanneau() {
     const n = Object.values(parRid).filter(c => c.tete).length;
     p.innerHTML = `<span class="lv-eyebrow">Circonscriptions</span><h3>Clique sur une circonscription</h3>
       <p class="lv-muted">Couleur : parti en tête. Plus la couleur est pâle, moins il y a de bureaux de vote dépouillés ; gris : aucun résultat.</p>
-      <div class="lv-kv"><div><b>${n}</b><span>avec résultats</span></div><div><b>${SIEGES - n}</b><span>sans résultat</span></div><div><b>${MAJ}</b><span>majorité</span></div></div>`;
+      <div class="lv-kv"><div><b>${n}</b><span>avec résultats</span></div><div><b>${SIEGES - n}</b><span>sans résultat</span></div><div><b>${MAJ}</b><span>majorité</span></div></div>`
+      + (prediction ? (() => {
+        const faits = Object.entries(parRid).filter(([, c]) => c.tete), justes = faits.filter(([i, c]) => c.tete.parti === predit(+i)).length;
+        return `<p class="lv-muted lv-proj"><b>Prédiction</b> : chaque pastille montre le gagnant prédit par la projection Qc125 d'avant le vote.`
+          + (faits.length ? ` Elle est juste dans <b>${justes} / ${faits.length}</b> circonscriptions dépouillées.` : "") + `</p>`; })() : "");
     return;
   }
   const r = DATA.ridings[sel], c = parRid[sel], reg = DATA.regions.find(x => x.code === r.r)?.name || "";
@@ -164,7 +228,7 @@ function dessinerPanneau() {
   p.innerHTML = html;
 }
 
-function dessiner() { dessinerEtat(); dessinerBarre(); dessinerCarte(); dessinerPanneau(); }
+function dessiner() { dessinerEtat(); dessinerBarre(); dessinerCarte(); dessinerPrediction(); dessinerPanneau(); }
 
 function choisir(i) { sel = i; dessinerCarte(); dessinerPanneau(); if (innerWidth <= 900) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
 
@@ -173,7 +237,7 @@ function infobulle(e, f) {
   tip.hidden = false;
   const box = svg.node().parentNode.getBoundingClientRect();
   tip.style.left = (e.clientX - box.left + 12) + "px"; tip.style.top = (e.clientY - box.top + 12) + "px";
-  tip.innerHTML = `<b>${esc(r.n)}</b>` + (c && c.tete ? `${c.cands.slice(0, 3).map(k => `${esc(k.parti === "AUT" ? k.abreviationPartiPolitique : k.parti)} ${nf(k.tauxVote, 0)} %`).join(" · ")}<br><small>${nf(100 * c.frac, 0)} % des bureaux</small>` : "<small>Aucun résultat</small>");
+  tip.innerHTML = `<b>${esc(r.n)}</b>` + (prediction ? `<small>Prédiction : ${predit(i)}</small><br>` : "") + (c && c.tete ? `${c.cands.slice(0, 3).map(k => `${esc(k.parti === "AUT" ? k.abreviationPartiPolitique : k.parti)} ${nf(k.tauxVote, 0)} %`).join(" · ")}<br><small>${nf(100 * c.frac, 0)} % des bureaux</small>` : "<small>Aucun résultat</small>");
 }
 
 /* ---------- carte ---------- */
@@ -181,7 +245,7 @@ function construireCarte() {
   const MW = 600, MH = 704;
   for (const g of [DATA.ridingGeo, DATA.curRegionGeo].filter(Boolean)) for (const f of g.features)
     if (d3.geoArea(f) > 2 * Math.PI) { const rev = q => q.map(x => x.slice().reverse()); f.geometry.coordinates = f.geometry.type === "Polygon" ? rev(f.geometry.coordinates) : f.geometry.coordinates.map(rev); }
-  const proj = d3.geoConicConformal().rotate([71.6, 0]).parallels([46, 60]).fitExtent([[12, 12], [MW - 12, 648]], DATA.curRegionGeo || DATA.ridingGeo);
+  const proj = PROJ_FN = d3.geoConicConformal().rotate([71.6, 0]).parallels([46, 60]).fitExtent([[12, 12], [MW - 12, 648]], DATA.curRegionGeo || DATA.ridingGeo);
   PATH = d3.geoPath(proj);
   svg = d3.select("#lvCarte").attr("viewBox", `0 0 ${MW} ${MH}`);
   gZ = svg.append("g");
@@ -193,7 +257,12 @@ function construireCarte() {
     .on("mousemove", infobulle).on("mouseleave", () => { tip.hidden = true; });
   if (DATA.curRegionGeo) gZ.append("g").selectAll("path").data(DATA.curRegionGeo.features).join("path").attr("class", "lv-reg").attr("d", PATH);
   gSel = gZ.append("g");
-  ZOOM = d3.zoom().scaleExtent([1, 40]).translateExtent([[-100, -100], [MW + 100, MH + 100]]).on("zoom", e => gZ.attr("transform", e.transform));
+  gPred = gZ.append("g").attr("class", "lv-preds");
+  ZOOM = d3.zoom().scaleExtent([1, 40]).translateExtent([[-100, -100], [MW + 100, MH + 100]]).on("zoom", e => {
+    gZ.attr("transform", e.transform);
+    if (prediction && Math.abs(e.transform.k - zoomK) > 1e-3) { zoomK = e.transform.k; dessinerPrediction(); }
+    zoomK = e.transform.k;
+  });
   svg.call(ZOOM).on("dblclick.zoom", null);
   svg.on("click", e => { if (e.target === svg.node()) { sel = null; dessinerCarte(); dessinerPanneau(); } });
   const vers = (lon0, lat0, lon1, lat1) => {
@@ -208,6 +277,7 @@ function construireCarte() {
     else if (z === "qc") vers(-71.55, 46.68, -71.0, 47.0);
     else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
     else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
+    else if (z === "pred") { prediction = !prediction; sessionStorage.setItem("lvPrediction", prediction ? "1" : "0"); dessinerPrediction(); dessinerPanneau(); }
   });
   tip = $("lvTip");
 }
