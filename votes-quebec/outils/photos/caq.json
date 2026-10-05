@@ -1,0 +1,637 @@
+[
+ {
+  "circ": "Marguerite-Bourgeoys",
+  "nom": "Adam Ahmad",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/marguerite-bourgeoys-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Berthier",
+  "nom": "Alex Gagné",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/berthier-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Orford",
+  "nom": "Allison Turner",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/orford-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Ungava",
+  "nom": "Amélie Béchard",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/09/ungava-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Rivière-du-Loup-Témiscouata-Les Basques",
+  "nom": "Amélie Dionne",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/riviere-du-louptemiscouatales-basques-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Masson",
+  "nom": "Anik Girard",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/masson-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Saint-Henri-Sainte-Anne",
+  "nom": "Anthony Lavoie",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/lavoie-anthony-st-henri-ste-anne-600x600.png"
+ },
+ {
+  "circ": "Iberville",
+  "nom": "Audrey Bogemans",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/iberville-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Rouyn-Noranda-Témiscamingue",
+  "nom": "Béatrice Déry",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/rouyn-noranda-temiscamingue-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Hochelaga-Maisonneuve",
+  "nom": "Béatrice Hodonou",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/hodonou-beatrice-hochelaga-maisonneuve-600x600.png"
+ },
+ {
+  "circ": "Lévis",
+  "nom": "Bernard Drainville",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/levis-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Taschereau",
+  "nom": "Brigitte Martin",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/taschereau-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Saint-Jérôme",
+  "nom": "Carla Pierre-Paul",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/f-pierre-paul-carla-st-jerome-600x600.png"
+ },
+ {
+  "circ": "Bonaventure",
+  "nom": "Catherine Blouin",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/07/f-blouin-catherine-bonaventure-caq0154-600x600.png"
+ },
+ {
+  "circ": "Chomedey",
+  "nom": "Cattiouceca Ambroise",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/chomedey-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Vaudreuil",
+  "nom": "Chantal Darcy",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/vaudreuil-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Pointe-aux-Trembles",
+  "nom": "Chantal Rouleau",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/f-rouleau-chantal-p-a-t-caq28903-600x600.png"
+ },
+ {
+  "circ": "Labelle",
+  "nom": "Chantal Roussel",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/labelle-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Acadie",
+  "nom": "Christian Gnali",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/acadie-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Chauveau",
+  "nom": "Christian Lachance",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/chauveau-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Trois-Rivières",
+  "nom": "Christine Fréchette",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/08/f-frechette-christine-4-caq2450-600x600.png"
+ },
+ {
+  "circ": "Deux-Montagnes",
+  "nom": "Christine Maestracci",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/deux-montagnes-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Daniel-Johnson",
+  "nom": "Christine Nadeau",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/daniel-johnson-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Sainte-Rose",
+  "nom": "Christopher Skeete",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/sainte-rose-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Beauharnois",
+  "nom": "Claude Reid",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/beauharnois-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Granby",
+  "nom": "Claudine Leroux",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/granby-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "La Pinière",
+  "nom": "Clément Mireault",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/la-piniere-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Joliette",
+  "nom": "Clodine Desrochers",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/joliette-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Nicolet-Bécancour",
+  "nom": "Donald Martel",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/f-martel-donald-nicolet-becancour-caq0524-600x600.png"
+ },
+ {
+  "circ": "Sainte-Marie-Saint-Jacques",
+  "nom": "Eli Zytoon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/sainte-marie-saint-jacques-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Laurier-Dorion",
+  "nom": "Emil Parfyonov",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/laurier-dorion-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Groulx",
+  "nom": "Eric Girard",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/groulx-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Jeanne-Mance-Viger",
+  "nom": "Ernest Denon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/denon-ernest-jeanne-mance-viger-600x600.png"
+ },
+ {
+  "circ": "Sherbrooke",
+  "nom": "Fadéla Hamou",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/sherbrooke-pre-electorale-2026-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Les Plaines",
+  "nom": "Fatou Diop",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/les-plaines-pre-electorale-2026-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Bertrand",
+  "nom": "France-Élaine Duranceau",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/08/f-duranceau-france-elaine-bertrand-caq2092-600x600.png"
+ },
+ {
+  "circ": "Lac-Saint-Jean",
+  "nom": "François Cormier",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/lac-saint-jean-photo-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Mégantic",
+  "nom": "François Jacques",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/megantic-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Vanier-Les Rivières",
+  "nom": "Françoise Faverjon-Fortin",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/vanier-les-rivieres-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Viau",
+  "nom": "Frane Bisseck",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/viau-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Gouin",
+  "nom": "Frank Tremblay",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/gouin-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Saint-François",
+  "nom": "Geneviève Hébert",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/saint-francois-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "L'Assomption",
+  "nom": "Geneviève Pettersen",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/lassomption-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Maurice-Richard",
+  "nom": "Georges Chartier",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/chartier-georges-maurice-richard-600x600.png"
+ },
+ {
+  "circ": "LaFontaine",
+  "nom": "Guepsly Florvil",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/lafontaine-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Richmond",
+  "nom": "Guillaume Rousseau",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/richmond-pre-electorale-2026-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Laviolette-Saint-Maurice",
+  "nom": "Guy Veillette",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/laviolettesaint-maurice-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Matane-Matapédia-Mitis",
+  "nom": "Henry Maclaren",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/matane-matapedia-mitis-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Vachon",
+  "nom": "Ian Lafrenière",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/vachon-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Bourassa-Sauvé",
+  "nom": "Isabelle Lamy",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/bourassa-sauve-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Richelieu",
+  "nom": "Jean-Bernard Émond",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/richelieu-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Chambly",
+  "nom": "Jean-François Roberge",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/chambly-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Montmorency",
+  "nom": "Jean-François Simard",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/photo-profil-simard-jean-francois-montmorency-600x600.png"
+ },
+ {
+  "circ": "Sanguinet",
+  "nom": "Jean Lacroix",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/sans-titre-30-aout-2026-a-171052-6-600x600.png"
+ },
+ {
+  "circ": "Saint-Hyacinthe",
+  "nom": "Jessika Gardner",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/photo-profil-gardner-jessika-st-hyacinthe-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Rimouski",
+  "nom": "Julia Brillant-Ruest",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/rimouski-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Argenteuil",
+  "nom": "Julie-Andrée Numainville",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/argenteuil-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "D'Arcy-McGee",
+  "nom": "Junlian Leblanc",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/leblanc-junlian-darcy-mcgee-600x600.png"
+ },
+ {
+  "circ": "Notre-Dame-de-Grâce",
+  "nom": "Kaan Altintas",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/ndg-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Charlevoix-Côte-de-Beaupré",
+  "nom": "Kariane Bourassa",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/07/charlevoix-cote-de-beaupre-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Westmount-Saint-Louis",
+  "nom": "Karim Abi Haila",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/westmountsaint-louis-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Anjou-Louis-Riel",
+  "nom": "Karine Boivin Roy",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/06/f-boivin-roy-karine-anjou-louis-riel-caq29042-600x600.png"
+ },
+ {
+  "circ": "Duplessis",
+  "nom": "Kateri Champagne Jourdain",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/duplessis-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Mercier",
+  "nom": "Kelly-Anne Gagné",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/mercier-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Arthabaska-L'Érable",
+  "nom": "Keven Brasseur",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/arthabaska-lerable-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Papineau",
+  "nom": "Linda Gauthier",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/papineau-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Îles-de-la-Madeleine",
+  "nom": "Linda Lebel",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/photo-profil-lebel-linda-iles-dlm-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Rousseau",
+  "nom": "Louis-Charles Thouin",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/f-thouin-louis-charles-rousseau-caq1771-600x600.png"
+ },
+ {
+  "circ": "Fabre",
+  "nom": "Lucie Létourneau",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/fabre-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Marquette",
+  "nom": "Mahsa Barani",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/marquette-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Abitibi-Est",
+  "nom": "Manon Barbe",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/abitibi-est-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Brome-Missisquoi",
+  "nom": "Manuela Goya",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/brome-missisquoi-photo-profil-1200x1200px-1-600x600.png"
+ },
+ {
+  "circ": "Louis-Hébert",
+  "nom": "Marc-Antoine Bernier",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/louis-hebert-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Dubuc",
+  "nom": "Marc Grandbois",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/dubuc-photo-profil-1200x1200px-1-600x600.png"
+ },
+ {
+  "circ": "Pontiac",
+  "nom": "Mariana Mefleh",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/pontiac-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Châteauguay",
+  "nom": "Marie-Belle Gendron",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/chateauguay-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Champlain",
+  "nom": "Marie-Ève Myrand",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/champlain-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Verchères",
+  "nom": "Marie-Hélène Leboeuf",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/vercheres-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Charlesbourg",
+  "nom": "Marie-Josée Morency",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/Charlesbourg_photo-Profil-1200X1200px-600x600.png"
+ },
+ {
+  "circ": "Soulanges",
+  "nom": "Marilyne Picard",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/soulanges-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Blainville",
+  "nom": "Mario Laframboise",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/f-laframboise-mario-blainville-600x600.png"
+ },
+ {
+  "circ": "Mirabel",
+  "nom": "Marjolaine Ferron",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/mirabel-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Chutes-de-la-Chaudière",
+  "nom": "Martine Biron",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/08/chutes-de-la-chaudiere-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Chapleau",
+  "nom": "Mathieu Lévesque",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/chapleau-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Côte-du-Sud",
+  "nom": "Mathieu Rivest",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/cote-du-sud-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Camille-Laurin",
+  "nom": "Matys Lavigne",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/sans-titre-27-aout-2026-a-195129-2-2-600x600.png"
+ },
+ {
+  "circ": "Pierre-Laporte",
+  "nom": "Mélanie Martin",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2025/08/pierre-laporte-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Montarville",
+  "nom": "Nathalie Roy",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/montarville-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Jean-Lesage",
+  "nom": "Nathalie St-Pierre",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/jean-lesage-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Rosemont",
+  "nom": "Nour Aliyah Attié",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/rosemont-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Repentigny",
+  "nom": "Pascale Déry",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/07/f-dery-pascale-repentigny-caq0221-600x600.png"
+ },
+ {
+  "circ": "Marie-Lacoste-Gérin-Lajoie",
+  "nom": "Patrick Saindon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/marie-lacoste-gerin-lajoie-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Beauce-Nord",
+  "nom": "Philippe Simard",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/beauce-nord-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "La Prairie",
+  "nom": "Pierre Guillot-Hurtubise",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/la-prairie-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Bellefeuille",
+  "nom": "Rachel Renaud",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/bellefeuille-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Robert-Baldwin",
+  "nom": "Sophie Leroux",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/robert-baldwin-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Lotbinière-Frontenac",
+  "nom": "Roch Gamache",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/lotbiniere-frontenac-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Verdun",
+  "nom": "Roseline Olory",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/verdun-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Beauce-Sud",
+  "nom": "Samuel Poulin",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/beauce-sud-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Chicoutimi",
+  "nom": "Sandra Larouche",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/chicoutimi-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Jacques-Cartier",
+  "nom": "Santiago Proteau Sanchez",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/jacques-cartier-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Mont-Royal-Outremont",
+  "nom": "Sarah Beaumier",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/mont-royal-outremont-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Drummond-Bois-Francs",
+  "nom": "Sébastien Schneeberger",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/f-schneeberger-sebastien-drummond-bois-francs-caq0852-600x600.png"
+ },
+ {
+  "circ": "Marie-Victorin",
+  "nom": "Shirley Dorismond",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/01/marie-victorin-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Maskinongé",
+  "nom": "Simon Allaire",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/maskinonge-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Borduas",
+  "nom": "Simon Jolin-Barrette",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/borduas-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Mille-Îles",
+  "nom": "Sonia Amédomé",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/mille-iles-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Prévost",
+  "nom": "Sonia Bélanger",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/prevost-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Huntingdon",
+  "nom": "Stéphane Bisaillon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/huntingdon-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Taillon",
+  "nom": "Stéphane Lavoie",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/taillon-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Gaspé",
+  "nom": "Stéphane Sainte-Croix",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/gaspe-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Bellechasse",
+  "nom": "Stéphanie Lachance",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/bellechasse-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Abitibi-Ouest",
+  "nom": "Suzanne Blais",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2018/08/abitibi-ouest-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Hull",
+  "nom": "Suzanne Tremblay",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/hull-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Saint-Laurent",
+  "nom": "Tahmina Kabir",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/saint-laurent-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Nelligan",
+  "nom": "Tom Tang",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/nelligan-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Terrebonne",
+  "nom": "Valérie Doyon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/terrebonne-pre-electorale-2026-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Vimont-Auteuil",
+  "nom": "Valérie Schmaltz",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/vimont-auteuil-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "La Peltrie",
+  "nom": "Véronique Laprise",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/la-peltrie-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Laval-des-Rapides",
+  "nom": "Vincent Bolduc",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/laval-des-rapides-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Portneuf",
+  "nom": "Vincent Caron",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/portneuf-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Jean-Talon",
+  "nom": "William Denis",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2025/06/jean-talon-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Gatineau",
+  "nom": "William Robertson",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/07/gatineau-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Roberval",
+  "nom": "Yanick Baillargeon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/roberval-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Jonquière",
+  "nom": "Yannick Gagnon",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2022/05/jonquiere-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "Saint-Jean",
+  "nom": "Yves Bisson",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/08/saint-jean-photo-profil-1200x1200px-600x600.png"
+ },
+ {
+  "circ": "René-Lévesque",
+  "nom": "Yves Montigny",
+  "photo": "https://coalitionavenirquebec.org/wp-content/uploads/2026/06/rene-levesque-photo-profil-1200x1200px-600x600.png"
+ }
+]
