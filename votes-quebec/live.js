@@ -248,7 +248,9 @@ function dessinerSuivi() {
   DATA.ridings.forEach((_, i) => { const pos = position(i, P); grp[pos.g].push([i, pos]); });
   for (const k in grp) grp[k].sort((x, y) => Math.abs(x[1].ecart) - Math.abs(y[1].ecart));
   const avantRes = !Object.values(parRid).some(c => c.tete), menes = grp.elus.length + grp.avSerre.length + grp.avance.length;
-  const bloc = (titre, liste, ouvert, note = "") => `<details class="lv-sg" ${ouvert && liste.length ? "open" : ""}><summary><span>${titre}</span><small>${liste.length}</small></summary>`
+  // garde les groupes ouverts/fermés par l'utilisateur d'un rendu à l'autre
+  const etatsOuv = Object.fromEntries([...$("lvParParti").querySelectorAll("details[data-g]")].map(d => [d.dataset.g, d.open]));
+  const bloc = (titre, liste, ouvert, note = "", g = titre.slice(0, 12)) => `<details class="lv-sg" data-g="${esc(g)}" ${(etatsOuv[g] ?? ouvert) && liste.length ? "open" : ""}><summary><span>${titre}</span><small>${liste.length}</small></summary>`
     + (liste.length ? `${note}<ul class="lv-lignes">${liste.map(([i, pos]) => ligne(i, pos, P)).join("")}</ul>` : "") + `</details>`;
   $("lvParParti").innerHTML = `<p class="lv-muted">${avantRes ? `Avant le dépouillement : écarts selon la projection Qc125. ` : ""}<b style="color:var(--ink)">${NOMS[P]}</b> : `
       + `${avantRes ? "" : `${grp.elus.length} élu${grp.elus.length > 1 ? "s" : ""}, `}${menes - grp.elus.length} ${avantRes ? "prévue" + (menes > 1 ? "s" : "") : "en avance"} `
@@ -298,9 +300,19 @@ function basculerSuivi(i, P) {
   if (connus && estSuivie(i)) { const e = etat(i); if (e.res) connus[n] = { p: e.ordre[0].p, lab: sigle(e.ordre[0]), f: e.final }; }  // pas d'alerte pour l'état actuel
   dessinerSuivi(); dessinerPanneau();
 }
+// ajouter/retirer un suivi redessine des blocs au-dessus du bouton : on garde le bouton cliqué au même endroit à l'écran
+function garderPlace(b, faire) {
+  const zone = b.closest("[id]"), zoneId = zone && zone.id, sel_ = `[data-suivre="${b.dataset.suivre}"][data-parti="${b.dataset.parti}"]`;
+  const avant = b.getBoundingClientRect().top, avantZone = zone ? zone.getBoundingClientRect().top : 0;
+  faire();
+  const z = zoneId && document.getElementById(zoneId), nb = z && z.querySelector(sel_);
+  const dy = nb ? nb.getBoundingClientRect().top - avant : z ? z.getBoundingClientRect().top - avantZone : 0;
+  if (dy) window.scrollBy(0, dy);
+  if (nb) nb.focus({ preventScroll: true });
+}
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-suivre]");
-  if (b) { e.stopPropagation(); basculerSuivi(+b.dataset.suivre, b.dataset.parti); return; }
+  if (b) { e.stopPropagation(); garderPlace(b, () => basculerSuivi(+b.dataset.suivre, b.dataset.parti)); return; }
   const pv = e.target.closest("[data-pv]");
   if (pv) { partiVue = pv.dataset.pv; ecrireLS(localStorage, "lvPartiVue", partiVue); dessinerSuivi(); return; }
   const pp = e.target.closest("[data-pp]");
