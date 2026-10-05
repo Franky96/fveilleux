@@ -224,11 +224,11 @@ function vignette(i, P) {
       return { p: o.p, lab: o.p, nom: k ? `${k.prenom_bulletin_vote} ${k.nom_bulletin_vote}` : NOMS[o.p], v: o.v, n: null }; });
   }
   const st = statut(i, P), pos = st.pos, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
-  return `<article class="lv-vig" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}">
+  // version compacte : nom, avancement, puis les 3 premiers (parti + pourcentage) ; le détail est dans la fiche
+  return `<article class="lv-vig" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}" title="${esc(r.n)} · ${st.lab}${Math.abs(pos.ecart) < 0.05 ? "" : ` · ${P} ${ecart} pt`} · ${trois.map(k => esc(k.nom) + " (" + esc(k.lab) + ")").join(", ")}">
     <header><b>${esc(r.n)}</b>${etoile(i, P)}</header>
-    <div class="lv-vig-etat"><span>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux") : "Projection Qc125"}</span><span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${Math.abs(pos.ecart) < 0.05 ? `${P} à égalité` : `${P} ${ecart} pt`}</span></div>
-    <ol>${trois.map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em>`
-      + `<b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>
+    <div class="lv-vig-etat">${e.res ? (e.final ? "Final" : nf(100 * e.frac, 0) + " % bur.") : "Proj."}</div>
+    <ol>${trois.map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><em>${esc(k.lab)}</em><b>${nf(k.v, 1)} %</b></li>`).join("")}</ol>
   </article>`;
 }
 
