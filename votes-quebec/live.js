@@ -319,6 +319,7 @@ function construireCarte() {
     else if (z === "qc") vers(-71.55, 46.68, -71.0, 47.0);
     else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
     else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
+    else if (z === "plein") pleinEcran();
     else if (z === "cartepred" || z === "pred") {             // l'une ou l'autre, ou aucune
       cartePred = z === "cartepred" && !cartePred;
       prediction = z === "pred" && !prediction;
@@ -328,6 +329,22 @@ function construireCarte() {
     }
   });
   tip = $("lvTip");
+  const carte = $("lvCarte").parentElement;
+  const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const etatPlein = () => {
+    const on = !!ecran() || carte.classList.contains("lv-plein");
+    $("lvPlein").setAttribute("aria-pressed", on);
+    $("lvPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
+  };
+  function pleinEcran() {
+    if (ecran()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); etatPlein(); }
+    else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
+    else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); etatPlein(); }   // iPhone : couche fixe
+  }
+  document.addEventListener("fullscreenchange", etatPlein);
+  document.addEventListener("webkitfullscreenchange", etatPlein);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && carte.classList.contains("lv-plein")) pleinEcran(); });
 }
 
 /* ---------- démarrage (au premier affichage de l'onglet) ---------- */
