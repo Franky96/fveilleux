@@ -235,10 +235,10 @@ function vignette(i, P) {
 function dessinerSuivi() {
   if (!DATA) return;
   preparerSuivis();
-  // --- circonscriptions suivies, par parti : la lutte la plus serrée en premier
+  // --- circonscriptions suivies, par parti : de la plus grande avance au plus grand retard
   const nb = P => (suivis[P] || []).filter(n => DATA.ridings.some(r => r.n === n)).length;
   const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
-  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => Math.abs(position(a, V).ecart) - Math.abs(position(b, V).ecart));
+  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => position(b, V).ecart - position(a, V).ecart);   // +3, +2, +1, 0, −1, −2…
   $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
   // regroupées par statut : serrées d'abord (celles à surveiller), puis en avance, en retard, terminées
   const gs = { serre: [], avance: [], retard: [], fini: [] };
