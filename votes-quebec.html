@@ -129,9 +129,11 @@
     .lv-particip small { font-size: 0.72rem; color: var(--muted); }
     .lv-particip:hover, .lv-particip[aria-pressed="true"] { border-color: var(--ink); }
     .lv-particip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-    .lv-pgrad { position: relative; height: 14px; border-radius: 4px; border: 1px solid var(--rule); background: linear-gradient(90deg, #15171c, #5e6066, #ababab, #ffffff); }
+    .lv-pgrad { position: relative; height: 14px; border-radius: 4px; border: 1px solid var(--rule); background: linear-gradient(90deg, #000 0 10%, #212121 20%, #585858 40%, #979797 60%, #dbdbdb 80%, #fff 90% 100%); }
     .lv-pgrad i { position: absolute; top: -5px; bottom: -5px; width: 0; border-left: 2px solid #E5484D; }
-    .lv-pechelle { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
+    .lv-pechelle { position: relative; height: 1em; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
+    .lv-pechelle span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+    .lv-ptxt { pointer-events: none; font-weight: 700; font-variant-numeric: tabular-nums; }
     .lv-pcols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .lv-plist { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.8rem; }
     .lv-plist li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; }

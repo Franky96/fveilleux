@@ -79,7 +79,7 @@ function ancrer() {
     const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
     let best = [0, 0, -1];
     for (const p of polys) { const c = polylabel(p.map(ring => ring.map(xy => PROJ_FN(xy))), 0.3); if (c[2] > best[2]) best = c; }
-    return { RID: f.properties.RID, x: best[0], y: best[1] };
+    return { RID: f.properties.RID, x: best[0], y: best[1], r: best[2] };   // r : rayon libre autour du point
   });
   return ancrages;
 }
@@ -125,8 +125,21 @@ function tauxGlobal() {
   const v = Object.values(partRid);
   return v.length ? { v: v.reduce((a, b) => a + b, 0) / v.length, final: false, moyenne: true } : null;
 }
-// dégradé vers le blanc : blanc = 100 %
-const couleurParticip = v => d3.interpolateLab("#15171c", "#ffffff")(Math.max(0, Math.min(100, v)) / 100);
+// dégradé noir → blanc : noir jusqu'à 10 %, blanc à partir de 90 %, linéaire (en clarté perçue) entre les deux
+const clarteParticip = v => Math.max(0, Math.min(1, (v - 10) / 80));
+const couleurParticip = v => d3.interpolateLab("#000000", "#ffffff")(clarteParticip(v));
+let gPart = null;
+// pourcentage écrit sur chaque circonscription, taille constante à l'écran ; masqué si elle est trop petite au zoom actuel
+function dessinerEtiquettesParticip() {
+  if (!gPart) return;
+  gPart.style("display", carteParticip ? null : "none");
+  if (!carteParticip) return;
+  const pts = ancrer().map(a => ({ ...a, t: tauxParticip(a.RID) })).filter(a => a.t && a.r * zoomK >= 9);
+  gPart.selectAll("text").data(pts, d => d.RID).join("text")
+    .attr("x", d => d.x).attr("y", d => d.y).attr("dy", "0.35em").attr("text-anchor", "middle")
+    .style("font-size", (10 / zoomK) + "px").style("fill", d => clarteParticip(d.t.v) > 0.55 ? "#000" : "#fff")
+    .text(d => nf(d.t.v, 0) + " %");
+}
 
 function dessinerParticip() {
   const g = tauxGlobal(), el = $("lvParticip");
@@ -251,6 +264,7 @@ function remplir(i) {
 
 function dessinerCarte() {
   gRid.selectAll("path").each(function (f) { const [col, op] = remplir(f.properties.RID); this.style.fill = col; this.style.fillOpacity = op; });
+  dessinerEtiquettesParticip();
   const f = sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
 }
@@ -262,8 +276,8 @@ function dessinerPanneau() {
     const ligne = ([i, t]) => `<li><span class="lv-pk" style="background:${couleurParticip(t.v)}"></span>${esc(DATA.ridings[i].n)}<b>${nf(t.v, 1)} %</b></li>`;
     p.innerHTML = `<span class="lv-eyebrow">Taux de participation</span><h3>${g ? `${nf(g.v, 2)} % dans l'ensemble du Québec` : "Pas encore de taux publié"}</h3>
       <p class="lv-muted">${g && g.final ? "Taux final." : "Taux préliminaire publié par Élections Québec pendant la journée du vote ; il peut différer du taux final."} Chaque circonscription passe au taux final une fois tous ses bureaux dépouillés.</p>
-      <div class="lv-pgrad" role="img" aria-label="Dégradé : sombre à 0 %, blanc à 100 %">${g ? `<i style="left:${g.v}%" title="Québec : ${nf(g.v, 1)} %"></i>` : ""}</div>
-      <div class="lv-pechelle"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>`
+      <div class="lv-pgrad" role="img" aria-label="Dégradé : noir jusqu'à 10 %, blanc à partir de 90 %">${g ? `<i style="left:${g.v}%" title="Québec : ${nf(g.v, 1)} %"></i>` : ""}</div>
+      <div class="lv-pechelle">${[10, 30, 50, 70, 90].map(v => `<span style="left:${v}%">${v} %</span>`).join("")}</div>`
       + (liste.length ? `<div class="lv-pcols"><div><span class="lv-eyebrow">Plus fortes</span><ol class="lv-plist">${liste.slice(0, 5).map(ligne).join("")}</ol></div>
         <div><span class="lv-eyebrow">Plus faibles</span><ol class="lv-plist">${liste.slice(-5).reverse().map(ligne).join("")}</ol></div></div>` : "")
       + `<p class="lv-muted lv-source">Source : Élections Québec (taux préliminaire de la journée, puis résultats).</p>`;
@@ -362,9 +376,10 @@ function construireCarte() {
   if (DATA.curRegionGeo) gZ.append("g").selectAll("path").data(DATA.curRegionGeo.features).join("path").attr("class", "lv-reg").attr("d", PATH);
   gSel = gZ.append("g");
   gPred = gZ.append("g").attr("class", "lv-preds");
+  gPart = gZ.append("g").attr("class", "lv-ptxt");
   ZOOM = d3.zoom().scaleExtent([1, 40]).translateExtent([[-100, -100], [MW + 100, MH + 100]]).on("zoom", e => {
     gZ.attr("transform", e.transform);
-    if (prediction && Math.abs(e.transform.k - zoomK) > 1e-3) { zoomK = e.transform.k; dessinerPrediction(); }
+    if ((prediction || carteParticip) && Math.abs(e.transform.k - zoomK) > 1e-3) { zoomK = e.transform.k; dessinerPrediction(); dessinerEtiquettesParticip(); }
     zoomK = e.transform.k;
   });
   svg.call(ZOOM).on("dblclick.zoom", null);
