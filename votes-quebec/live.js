@@ -229,7 +229,7 @@ function dessinerPanneau() {
       <div class="lv-kv"><div><b>${n}</b><span>avec résultats</span></div><div><b>${SIEGES - n}</b><span>sans résultat</span></div><div><b>${MAJ}</b><span>majorité</span></div></div>`
       + (prediction ? (() => {
         const faits = Object.entries(parRid).filter(([, c]) => c.tete), justes = faits.filter(([i, c]) => c.tete.parti === predit(+i)).length;
-        return `<p class="lv-muted lv-proj"><b>Prédiction</b> : chaque pastille montre le gagnant prédit par la projection Qc125 d'avant le vote.`
+        return `<p class="lv-muted lv-proj"><b>Pastille prédiction</b> : chaque pastille montre le gagnant prédit par la projection Qc125 d'avant le vote.`
           + (faits.length ? ` Elle est juste dans <b>${justes} / ${faits.length}</b> circonscriptions dépouillées.` : "") + `</p>`; })() : "");
     return;
   }
@@ -319,8 +319,13 @@ function construireCarte() {
     else if (z === "qc") vers(-71.55, 46.68, -71.0, 47.0);
     else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
     else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
-    else if (z === "cartepred") { cartePred = !cartePred; $("lvCartePred").setAttribute("aria-pressed", cartePred); dessinerCarte(); dessinerPrediction(); dessinerPanneau(); }
-    else if (z === "pred") { prediction = !prediction; sessionStorage.setItem("lvPrediction", prediction ? "1" : "0"); dessinerPrediction(); dessinerPanneau(); }
+    else if (z === "cartepred" || z === "pred") {             // l'une ou l'autre, ou aucune
+      cartePred = z === "cartepred" && !cartePred;
+      prediction = z === "pred" && !prediction;
+      sessionStorage.setItem("lvPrediction", prediction ? "1" : "0");
+      $("lvCartePred").setAttribute("aria-pressed", cartePred);
+      dessinerCarte(); dessinerPrediction(); dessinerPanneau();
+    }
   });
   tip = $("lvTip");
 }

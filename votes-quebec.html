@@ -117,6 +117,9 @@
     .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
     .lv-zoom button { pointer-events: auto; }
     .lv-zoom button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .lv-seg { display: inline-flex; }                         /* Pastille / Carte prédiction : l'une ou l'autre, ou aucune */
+    .lv-seg button:first-child { border-radius: 8px 0 0 8px; }
+    .lv-seg button:last-child { border-radius: 0 8px 8px 0; margin-left: -1px; }
     /* pastilles de prédiction : contour blanc + fin cerne noir, visibles même sur la couleur du même parti */
     .lv-preds { pointer-events: none; }
     .lv-partis-pred { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
@@ -229,8 +232,7 @@
           <div class="lv-zoom" id="lvZoom">
             <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
             <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
-            <button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button>
-            <button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille : gagnant prédit par la projection Qc125 d'avant le vote">Prédiction</button>
+            <span class="lv-seg" role="group" aria-label="Prédiction Qc125 (l'une ou l'autre, ou aucune)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button></span>
           </div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
           <div class="lv-tip" id="lvTip" hidden></div>
