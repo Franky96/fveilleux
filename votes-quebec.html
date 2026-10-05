@@ -289,6 +289,8 @@
     #lvCarte { display: block; width: 100%; height: clamp(420px, 72vh, 900px); background: var(--bg); touch-action: none; }
     /* plein écran : API du navigateur, ou couche fixe sur iPhone (pas de plein écran d'élément) */
     .lv-zoom .lv-plein-btn { margin-left: auto; }
+    /* téléphone : zoom au doigt (pincer), pas besoin des boutons de zoom */
+    @media (max-width: 600px) { .lv-zoom [data-z="tout"], .lv-zoom [data-z="mtl"], .lv-zoom [data-z="qc"], .lv-zoom [data-z="plus"], .lv-zoom [data-z="moins"] { display: none; } }
     .lv-cartecard:fullscreen, .lv-cartecard.lv-plein { border: 0; border-radius: 0; width: 100%; height: 100%; }
     .lv-cartecard.lv-plein { position: fixed; inset: 0; z-index: 1000; height: 100dvh; }
     .lv-cartecard:fullscreen #lvCarte, .lv-cartecard.lv-plein #lvCarte { height: 100%; }
