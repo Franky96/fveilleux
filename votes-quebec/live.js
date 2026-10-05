@@ -347,7 +347,7 @@ document.addEventListener("click", e => {
   const pp = e.target.closest("[data-pp]");
   if (pp) { partiSuivi = pp.dataset.pp; ecrireLS(localStorage, "lvPartiSuivi", partiSuivi); dessinerSuivi(); return; }
   const l = e.target.closest(".lv-ligne, .lv-vig");
-  if (l) { choisir(+l.dataset.rid); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); }
+  if (l) choisir(+l.dataset.rid, false);                     // sélectionne sans faire défiler la page
 });
 // « Suivi par parti » : repliée par défaut, l'état choisi est gardé
 function replierPP(ouvert) {
@@ -358,7 +358,7 @@ replierPP(lireLS(localStorage, "lvPPOuvert", false));
 $("lvPPReplier").addEventListener("click", () => { const o = $("lvPPReplier").getAttribute("aria-expanded") !== "true"; replierPP(o); ecrireLS(localStorage, "lvPPOuvert", o); });
 document.addEventListener("keydown", e => {
   const l = e.target.closest?.(".lv-ligne, .lv-vig");
-  if (l && (e.key === "Enter" || e.key === " ") && e.target === l) { e.preventDefault(); choisir(+l.dataset.rid); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); }
+  if (l && (e.key === "Enter" || e.key === " ") && e.target === l) { e.preventDefault(); choisir(+l.dataset.rid, false); }
 });
 
 /* ---------- photos des candidats (sites des partis, voir outils/photos.py) ---------- */
@@ -583,7 +583,7 @@ function dessinerPanneau() {
 
 function dessiner() { dessinerEtat(); dessinerBarre(); dessinerCarte(); dessinerPrediction(); dessinerPanneau(); dessinerSuivi(); }
 
-function choisir(i) { sel = i; dessinerCarte(); dessinerPanneau(); if (innerWidth <= 900) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+function choisir(i, defiler = true) { sel = i; dessinerCarte(); dessinerPanneau(); if (defiler && innerWidth <= 900) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" }); }
 
 function infobulle(e, f) {
   const i = f.properties.RID, r = DATA.ridings[i], c = parRid[i];
