@@ -459,7 +459,16 @@ async function lire(type) {
   return r.json();
 }
 
+// décompte jusqu'à la prochaine lecture automatique (affiché dans le bouton « Mettre à jour »)
+let prochaine = 0;
+function afficherDecompte() {
+  const reste = Math.max(0, Math.ceil((prochaine - Date.now()) / 1000));
+  $("lvDecompte").textContent = document.hidden ? "en pause" : reste + " s";
+  $("lvMaj").style.setProperty("--fait", (1 - reste / RAFRAICHIR).toFixed(3));
+  $("lvMaj").title = `Lecture automatique toutes les ${RAFRAICHIR} s · prochaine dans ${reste} s`;
+}
 async function actualiser() {
+  prochaine = Date.now() + RAFRAICHIR * 1000;
   $("lvEtat").textContent = "Mise à jour…";
   lire("participation").then(d => { participation = d && d.disponible ? d : participation; indexerParticipation(); dessinerParticip(); if (carteParticip) { dessinerCarte(); dessinerPanneau(); } }).catch(() => {});
   try {
@@ -763,7 +772,12 @@ async function demarrer() {
     await actualiser();
   } catch (e) { $("lvEtat").textContent = "Chargement impossible : " + e.message; }
   // lecture régulière, seulement quand l'onglet est visible
-  minuterie = setInterval(() => { if (!document.hidden && !$("vue-live").hidden) actualiser(); }, RAFRAICHIR * 1000);
+  // chaque seconde : décompte ; à zéro, nouvelle lecture (seulement si l'onglet est visible)
+  minuterie = setInterval(() => {
+    if (!document.hidden && !$("vue-live").hidden && Date.now() >= prochaine) actualiser();
+    afficherDecompte();
+  }, 1000);
+  afficherDecompte();
   $("lvMaj").addEventListener("click", actualiser);
 }
 window.addEventListener("vue-live", demarrer);

@@ -86,6 +86,11 @@
     .lv-etat b { color: var(--ink); }
     .lv-btn, .lv-zoom button { font: inherit; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
     .lv-btn:hover, .lv-zoom button:hover { border-color: var(--ink); }
+    /* « Mettre à jour » : décompte de la prochaine lecture + barre qui se remplit */
+    .lv-maj-btn { position: relative; overflow: hidden; display: inline-flex; align-items: baseline; gap: 6px; }
+    .lv-maj-btn small { font-size: 0.72rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
+    .lv-maj-btn::after { content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--fait, 0) * 100%); background: #E5484D; transition: width 1s linear; }
+    @media (prefers-reduced-motion: reduce) { .lv-maj-btn::after { transition: none; } }
     .lv-btn:focus-visible, .lv-zoom button:focus-visible, .lv-rid:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     .live-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
       color: #E5484D; border: 1px solid #E5484D; border-radius: 99px; padding: 0.2rem 0.6rem; }
@@ -401,7 +406,7 @@
         </div>
         <div class="lv-head-droite">
           <button type="button" class="lv-particip" id="lvParticip" aria-pressed="false" title="Voir la participation par circonscription sur la carte" hidden><b>—</b><small>Participation</small></button>
-          <button type="button" class="lv-btn" id="lvMaj">Mettre à jour</button>
+          <button type="button" class="lv-btn lv-maj-btn" id="lvMaj">Mettre à jour <small id="lvDecompte" aria-live="off">60 s</small></button>
         </div>
       </header>
       <p class="lv-banniere" id="lvBanniere" hidden></p>
