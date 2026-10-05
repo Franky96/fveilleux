@@ -223,8 +223,19 @@ function troisPremiers(i, e) {
   return e.ordre.slice(0, 3).map(o => { const k = cand.find(x => partiDe(x.abreviation_parti) === o.p);
     return { p: o.p, lab: o.p, nom: k ? `${k.prenom_bulletin_vote} ${k.nom_bulletin_vote}` : NOMS[o.p], v: o.v, n: null }; });
 }
+let suivisDetail = lireLS(localStorage, "lvSuivisDetail", false); // « Détaillé » : rectangles avec candidats, pourcentages et votes
 function vignette(i, P) {
   const st = statut(i, P, suivisProj), e = st.pos.e;
+  if (suivisDetail) {
+    const pos = st.pos, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
+    return `<article class="lv-vigd" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}">
+      <header><b>${esc(DATA.ridings[i].n)}</b>${etoile(i, P)}</header>
+      <div class="lv-vigd-etat"><span>${e.res ? (e.final ? "Final" : nf(100 * e.frac, 0) + " % bur.") : "Projection"}</span>`
+      + `<span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${Math.abs(pos.ecart) < 0.05 ? `${P} à égalité` : `${P} ${ecart} pt`}</span></div>
+      <ol>${troisPremiers(i, e).map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em>`
+        + `<b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>
+    </article>`;
+  }
   return `<button type="button" class="lv-vig${e.ordre[0].p === P ? " mene" : ""}" data-rid="${i}" data-vp="${P}" style="--c:${COUL[e.ordre[0].p]}">${esc(DATA.ridings[i].n)}</button>`;
 }
 function detailVignette(i, P) {
@@ -253,7 +264,7 @@ function rangees(ids, V) {
   for (const i of ids) { const k = Math.round(position(i, V, suivisProj).ecart) || 0; if (!par.has(k)) par.set(k, []); par.get(k).push(i); }
   return [...par.entries()].sort((a, b) => b[0] - a[0]).map(([k, l]) =>
     `<div class="lv-rangee"><span class="lv-rangee-ecart ${k > 0 ? "pos" : k < 0 ? "neg" : "nul"}" style="--c:${COUL[V]}">${k === 0 ? "Égalité" : (k > 0 ? "+" : "−") + Math.abs(k) + (Math.abs(k) > 1 ? " pts" : " pt")}</span>`
-    + `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div></div>`).join("");
+    + `<div class="lv-vigs${suivisDetail ? " det" : ""}">${l.map(i => vignette(i, V)).join("")}</div></div>`).join("");
 }
 
 function dessinerSuivi() {
@@ -265,6 +276,7 @@ function dessinerSuivi() {
   const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
   const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => position(b, V, suivisProj).ecart - position(a, V, suivisProj).ecart);   // +3, +2, +1, 0, −1, −2…
   $("lvSuivisProj").setAttribute("aria-pressed", suivisProj);
+  $("lvSuivisDetail").setAttribute("aria-pressed", suivisDetail);
   $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
   // regroupées par statut : serrées d'abord (celles à surveiller), puis en avance, en retard, terminées
   const gs = { serre: [], avance: [], retard: [], fini: [] };
@@ -275,7 +287,7 @@ function dessinerSuivi() {
     + (avantResS ? ` <span class="lv-muted">(selon la projection Qc125)</span>` : "") + `</div>` : "";
   const cartes = ids.length
     ? Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => `<section class="lv-suiv-grp"><h4>${STATUTS[g]}${g === "serre" ? ` <small>moins de ${SERRE} pts d'écart</small>` : ""}</h4>`
-      + (g === "serre" ? rangees(l, V) : `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div>`) + `</section>`).join("")
+      + (g === "serre" ? rangees(l, V) : `<div class="lv-vigs${suivisDetail ? " det" : ""}">${l.map(i => vignette(i, V)).join("")}</div>`) + `</section>`).join("")
     : `<p class="lv-muted lv-vide">Aucune circonscription suivie pour ${NOMS[V]}.<br>Pour en ajouter : clique sur ☆ dans le tableau « Suivi par parti » ci-dessous (avec ${V} choisi), ou sur « Suivre pour ${V} » dans la fiche d'une circonscription.</p>`;
   const jr = journal.length ? `<aside class="lv-suiv-journal"><h4>Changements récents</h4><ul class="lv-journal">${journal.slice(0, 8).map(j =>
       `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul>`
@@ -358,12 +370,13 @@ function garderPlace(b, faire) {
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-suivre]");
   if (b) { e.stopPropagation(); garderPlace(b, () => basculerSuivi(+b.dataset.suivre, b.dataset.parti)); return; }
+  if (e.target.closest("#lvSuivisDetail")) { suivisDetail = !suivisDetail; ecrireLS(localStorage, "lvSuivisDetail", suivisDetail); bulleSuivi(null); dessinerSuivi(); return; }
   if (e.target.closest("#lvSuivisProj")) { suivisProj = !suivisProj; ecrireLS(localStorage, "lvSuivisProj", suivisProj); bulleSuivi(null); dessinerSuivi(); return; }
   const pv = e.target.closest("[data-pv]");
   if (pv) { partiVue = pv.dataset.pv; ecrireLS(localStorage, "lvPartiVue", partiVue); dessinerSuivi(); return; }
   const pp = e.target.closest("[data-pp]");
   if (pp) { partiSuivi = pp.dataset.pp; ecrireLS(localStorage, "lvPartiSuivi", partiSuivi); dessinerSuivi(); return; }
-  const l = e.target.closest(".lv-ligne, .lv-vig");
+  const l = e.target.closest(".lv-ligne, .lv-vig, .lv-vigd");
   if (l) choisir(+l.dataset.rid, false);                     // sélectionne sans faire défiler la page
 });
 // « Suivi par parti » : repliée par défaut, l'état choisi est gardé
@@ -374,7 +387,7 @@ function replierPP(ouvert) {
 replierPP(lireLS(localStorage, "lvPPOuvert", false));
 $("lvPPReplier").addEventListener("click", () => { const o = $("lvPPReplier").getAttribute("aria-expanded") !== "true"; replierPP(o); ecrireLS(localStorage, "lvPPOuvert", o); });
 document.addEventListener("keydown", e => {
-  const l = e.target.closest?.(".lv-ligne, .lv-vig");
+  const l = e.target.closest?.(".lv-ligne, .lv-vigd");
   if (l && (e.key === "Enter" || e.key === " ") && e.target === l) { e.preventDefault(); choisir(+l.dataset.rid, false); }
 });
 
