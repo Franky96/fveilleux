@@ -157,11 +157,25 @@ function dessinerParticip() {
 const SERRE = 5;                                             // lutte serrée : moins de 5 points d'écart
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
-let suivies = lireLS(localStorage, "lvSuivies", []);         // noms des circonscriptions suivies (gardés d'une visite à l'autre)
-let partiSuivi = lireLS(localStorage, "lvPartiSuivi", null);
+// circonscriptions suivies, par parti : { QS: ["Rosemont", …], … } (gardées d'une visite à l'autre)
+let suivis = lireLS(localStorage, "lvSuivisParti", null);
+let partiSuivi = lireLS(localStorage, "lvPartiSuivi", null); // parti du tableau « Suivi par parti »
+let partiVue = lireLS(localStorage, "lvPartiVue", null);     // parti affiché dans « Suivies »
 let journal = lireLS(sessionStorage, "lvJournal", []);       // changements récents de la soirée
 let connus = lireLS(sessionStorage, "lvConnus", null);       // dernier meneur vu par circonscription suivie
-const estSuivie = i => suivies.includes(DATA.ridings[i].n);
+// ancienne liste sans parti : chaque circonscription va au gagnant prédit
+function preparerSuivis() {
+  if (suivis) return;
+  suivis = {};
+  for (const n of lireLS(localStorage, "lvSuivies", [])) {
+    const i = DATA.ridings.findIndex(r => r.n === n); if (i < 0) continue;
+    (suivis[predit(i)] ||= []).push(n);
+  }
+  ecrireLS(localStorage, "lvSuivisParti", suivis);
+}
+const estSuiviePour = (i, P) => !!suivis && (suivis[P] || []).includes(DATA.ridings[i].n);
+const estSuivie = i => PROJ_P.some(P => estSuiviePour(i, P));
+const partisDe = i => PROJ_P.filter(P => estSuiviePour(i, P));
 const sigle = o => o.p === "AUT" ? o.lab : o.p;
 
 // état d'une circonscription : résultats dès que le dépouillement a commencé, sinon projection Qc125
@@ -181,24 +195,46 @@ function position(i, P) {
   return { e, g: e.final ? "perdu" : -ecart < SERRE ? "retSerre" : "loin", ecart, contre: a };
 }
 const bureaux = e => !e.res ? "proj." : e.final ? "final" : nf(100 * e.frac, 0) + " % bur.";
-const etoile = i => `<button type="button" class="lv-etoile" data-suivre="${i}" aria-pressed="${estSuivie(i)}" aria-label="${estSuivie(i) ? "Ne plus suivre" : "Suivre"} ${esc(DATA.ridings[i].n)}">${estSuivie(i) ? "★" : "☆"}</button>`;
-function ligne(i, pos, meneur = false) {
+const etoile = (i, P) => { const on = estSuiviePour(i, P);
+  return `<button type="button" class="lv-etoile" data-suivre="${i}" data-parti="${P}" aria-pressed="${on}" aria-label="${on ? "Ne plus suivre" : "Suivre"} ${esc(DATA.ridings[i].n)} pour ${P}">${on ? "★" : "☆"}</button>`; };
+function ligne(i, pos, P) {
   const lead = pos.e.ordre[0], pts = nf(Math.abs(pos.ecart), 1) + " pt";
-  const txt = Math.abs(pos.ecart) < 0.05 && pos.contre ? `${meneur ? esc(sigle(lead)) + " " : ""}égalité avec ${esc(sigle(pos.ecart >= 0 ? pos.contre : lead))}`
-    : pos.ecart >= 0 ? `${meneur ? esc(sigle(lead)) + " " : ""}+${pts}${pos.contre ? " sur " + esc(sigle(pos.contre)) : ""}` : `−${pts} vs ${esc(sigle(pos.contre))}`;
-  return `<li class="lv-ligne" data-rid="${i}" tabindex="0">${etoile(i)}<span class="lv-nom" style="--c:${COUL[lead.p]}"><i></i>${esc(DATA.ridings[i].n)}</span>`
+  const txt = Math.abs(pos.ecart) < 0.05 && pos.contre ? `égalité avec ${esc(sigle(pos.ecart >= 0 ? pos.contre : lead))}`
+    : pos.ecart >= 0 ? `+${pts}${pos.contre ? " sur " + esc(sigle(pos.contre)) : ""}` : `−${pts} vs ${esc(sigle(pos.contre))}`;
+  return `<li class="lv-ligne" data-rid="${i}" tabindex="0">${etoile(i, P)}<span class="lv-nom" style="--c:${COUL[lead.p]}"><i></i>${esc(DATA.ridings[i].n)}</span>`
     + `<span class="lv-ecart ${pos.ecart < 0 ? "neg" : ""}">${txt}</span><span class="lv-bur">${bureaux(pos.e)}</span></li>`;
+}
+
+// petit rectangle d'une circonscription suivie : les 3 premiers (votes, sinon projection Qc125)
+function vignette(i, P) {
+  const r = DATA.ridings[i], e = etat(i), c = parRid[i];
+  let trois;
+  if (e.res) trois = c.cands.slice(0, 3).map(k => ({ p: k.parti, lab: sigle({ p: k.parti, lab: k.abreviationPartiPolitique }), nom: `${k.prenom} ${k.nom}`, v: +k.tauxVote || 0, n: k.nbVoteTotal }));
+  else {
+    const cand = (candidatures || []).filter(k => norm(k.nom_circonscription) === norm(r.n));
+    trois = e.ordre.slice(0, 3).map(o => { const k = cand.find(x => partiDe(x.abreviation_parti) === o.p);
+      return { p: o.p, lab: o.p, nom: k ? `${k.prenom_bulletin_vote} ${k.nom_bulletin_vote}` : NOMS[o.p], v: o.v, n: null }; });
+  }
+  const pos = position(i, P), ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
+  return `<article class="lv-vig" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}">
+    <header><b>${esc(r.n)}</b>${etoile(i, P)}</header>
+    <div class="lv-vig-etat"><span>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux") : "Projection Qc125"}</span><span class="${pos.ecart < 0 ? "neg" : ""}">${P} ${ecart} pt</span></div>
+    <ol>${trois.map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em>`
+      + `<b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>
+  </article>`;
 }
 
 function dessinerSuivi() {
   if (!DATA) return;
-  // --- circonscriptions suivies : la plus serrée en premier
-  const ids = DATA.ridings.map((_, i) => i).filter(estSuivie);
-  const lignes = ids.map(i => { const e = etat(i), [a, b] = e.ordre; return [i, { e, ecart: a.v - (b ? b.v : 0), contre: b }]; })
-    .sort((x, y) => x[1].ecart - y[1].ecart);
-  $("lvSuivies").innerHTML = (lignes.length
-    ? `<ul class="lv-lignes">${lignes.map(([i, pos]) => ligne(i, pos, true)).join("")}</ul>`
-    : `<p class="lv-muted">Clique sur ☆ (dans la fiche d'une circonscription ou le tableau par parti) pour la suivre. Tu seras averti quand son meneur change ou quand elle est remportée.</p>`)
+  preparerSuivis();
+  // --- circonscriptions suivies, par parti : la lutte la plus serrée en premier
+  const nb = P => (suivis[P] || []).filter(n => DATA.ridings.some(r => r.n === n)).length;
+  const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
+  const ids = DATA.ridings.map((_, i) => i).filter(i => estSuiviePour(i, V)).sort((a, b) => Math.abs(position(a, V).ecart) - Math.abs(position(b, V).ecart));
+  $("lvSuiviesChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pv="${p}" style="--c:${COUL[p]}" aria-pressed="${p === V}">${p}${nb(p) ? ` <small>${nb(p)}</small>` : ""}</button>`).join("");
+  $("lvSuivies").innerHTML = (ids.length
+    ? `<div class="lv-vigs">${ids.map(i => vignette(i, V)).join("")}</div>`
+    : `<p class="lv-muted">Aucune circonscription suivie pour ${NOMS[V]}. Clique sur ☆ dans le tableau par parti (elle sera suivie pour ce parti), ou sur « Suivre pour » dans la fiche d'une circonscription.</p>`)
     + (journal.length ? `<span class="lv-eyebrow">Changements récents</span><ul class="lv-journal">${journal.slice(0, 12).map(j =>
       `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul>` : "");
   // --- tableau par parti
@@ -206,13 +242,14 @@ function dessinerSuivi() {
   // parti par défaut : celui qui mène en sièges, ou avant les résultats celui qui en a le plus dans la projection
   const nPred = {}; DATA.ridings.forEach((_, i) => { const p = predit(i); nPred[p] = (nPred[p] || 0) + 1; });
   const P = partiSuivi || [...PROJ_P].sort((a, b) => tot(b) - tot(a) || (nPred[b] || 0) - (nPred[a] || 0))[0];
+  partiCourant = P;
   $("lvPPChoix").innerHTML = PROJ_P.map(p => `<button type="button" data-pp="${p}" style="--c:${COUL[p]}" aria-pressed="${p === P}">${p}</button>`).join("");
   const grp = { elus: [], avSerre: [], retSerre: [], avance: [], perdu: [], loin: [] };
   DATA.ridings.forEach((_, i) => { const pos = position(i, P); grp[pos.g].push([i, pos]); });
   for (const k in grp) grp[k].sort((x, y) => Math.abs(x[1].ecart) - Math.abs(y[1].ecart));
   const avantRes = !Object.values(parRid).some(c => c.tete), menes = grp.elus.length + grp.avSerre.length + grp.avance.length;
   const bloc = (titre, liste, ouvert, note = "") => `<details class="lv-sg" ${ouvert && liste.length ? "open" : ""}><summary><span>${titre}</span><small>${liste.length}</small></summary>`
-    + (liste.length ? `${note}<ul class="lv-lignes">${liste.map(([i, pos]) => ligne(i, pos)).join("")}</ul>` : "") + `</details>`;
+    + (liste.length ? `${note}<ul class="lv-lignes">${liste.map(([i, pos]) => ligne(i, pos, P)).join("")}</ul>` : "") + `</details>`;
   $("lvParParti").innerHTML = `<p class="lv-muted">${avantRes ? `Avant le dépouillement : écarts selon la projection Qc125. ` : ""}<b style="color:var(--ink)">${NOMS[P]}</b> : `
       + `${avantRes ? "" : `${grp.elus.length} élu${grp.elus.length > 1 ? "s" : ""}, `}${menes - grp.elus.length} ${avantRes ? "prévue" + (menes > 1 ? "s" : "") : "en avance"} `
       + `(dont ${grp.avSerre.length} serrée${grp.avSerre.length > 1 ? "s" : ""}) et ${grp.retSerre.length} à moins de ${SERRE} points. `
@@ -230,44 +267,49 @@ function surveiller() {
   for (let i = 0; i < DATA.ridings.length; i++) {
     if (!estSuivie(i)) continue;
     const e = etat(i); if (!e.res) continue;
-    vu[DATA.ridings[i].n] = { p: e.ordre[0].p, lab: sigle(e.ordre[0]), f: e.final, i };
+    vu[DATA.ridings[i].n] = { p: e.ordre[0].p, lab: sigle(e.ordre[0]), f: e.final, i, pour: partisDe(i).join(", ") };
   }
   if (connus) for (const [n, v] of Object.entries(vu)) {
     const avant = connus[n];
-    if (!avant) alerter(v.i, v.p, `${n} : premiers résultats, ${v.lab} en avance`);
-    else if (avant.lab !== v.lab) alerter(v.i, v.p, `${n} : ${v.lab} passe devant ${avant.lab}`);
-    else if (v.f && !avant.f) alerter(v.i, v.p, `${n} : ${v.lab} remporte la circonscription`);
+    if (!avant) alerter(v.i, v.p, `${n} : premiers résultats, ${v.lab} en avance`, v.pour);
+    else if (avant.lab !== v.lab) alerter(v.i, v.p, `${n} : ${v.lab} passe devant ${avant.lab}`, v.pour);
+    else if (v.f && !avant.f) alerter(v.i, v.p, `${n} : ${v.lab} remporte la circonscription`, v.pour);
   }
   connus = { ...(connus || {}), ...vu };
   ecrireLS(sessionStorage, "lvConnus", connus);
 }
-function alerter(i, p, txt) {
+function alerter(i, p, txt, pour) {
   const h = new Date().toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" });
   journal.unshift({ h, txt }); journal = journal.slice(0, 30); ecrireLS(sessionStorage, "lvJournal", journal);
   const el = document.createElement("div");
   el.className = "lv-alerte"; el.style.setProperty("--c", COUL[p]); el.setAttribute("role", "status");
-  el.innerHTML = `${esc(txt)}<small>${h} · circonscription suivie · clique pour la voir</small>`;
+  el.innerHTML = `${esc(txt)}<small>${h} · suivie pour ${esc(pour)} · clique pour la voir</small>`;
   el.addEventListener("click", () => { el.remove(); choisir(i); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); });
   $("lvAlertes").prepend(el);
   setTimeout(() => el.remove(), 15000);
 }
-function basculerSuivi(i) {
-  const n = DATA.ridings[i].n;
-  suivies = estSuivie(i) ? suivies.filter(x => x !== n) : [...suivies, n];
-  ecrireLS(localStorage, "lvSuivies", suivies);
+let partiCourant = null;
+function basculerSuivi(i, P) {
+  preparerSuivis();
+  const n = DATA.ridings[i].n, liste = suivis[P] || [];
+  suivis[P] = estSuiviePour(i, P) ? liste.filter(x => x !== n) : [...liste, n];
+  ecrireLS(localStorage, "lvSuivisParti", suivis);
+  if (estSuiviePour(i, P)) { partiVue = P; ecrireLS(localStorage, "lvPartiVue", P); }
   if (connus && estSuivie(i)) { const e = etat(i); if (e.res) connus[n] = { p: e.ordre[0].p, lab: sigle(e.ordre[0]), f: e.final }; }  // pas d'alerte pour l'état actuel
   dessinerSuivi(); dessinerPanneau();
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-suivre]");
-  if (b) { e.stopPropagation(); basculerSuivi(+b.dataset.suivre); return; }
+  if (b) { e.stopPropagation(); basculerSuivi(+b.dataset.suivre, b.dataset.parti); return; }
+  const pv = e.target.closest("[data-pv]");
+  if (pv) { partiVue = pv.dataset.pv; ecrireLS(localStorage, "lvPartiVue", partiVue); dessinerSuivi(); return; }
   const pp = e.target.closest("[data-pp]");
   if (pp) { partiSuivi = pp.dataset.pp; ecrireLS(localStorage, "lvPartiSuivi", partiSuivi); dessinerSuivi(); return; }
-  const l = e.target.closest(".lv-ligne");
+  const l = e.target.closest(".lv-ligne, .lv-vig");
   if (l) { choisir(+l.dataset.rid); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); }
 });
 document.addEventListener("keydown", e => {
-  const l = e.target.closest?.(".lv-ligne");
+  const l = e.target.closest?.(".lv-ligne, .lv-vig");
   if (l && (e.key === "Enter" || e.key === " ") && e.target === l) { e.preventDefault(); choisir(+l.dataset.rid); $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" }); }
 });
 
@@ -428,7 +470,7 @@ function dessinerPanneau() {
       || String(a.nom_bulletin_vote).localeCompare(String(b.nom_bulletin_vote), "fr"));
   const sortant = (prenom, nom) => cand.some(k => k.depute_sortant === "O" && norm(k.nom_bulletin_vote) === norm(nom) && norm(k.prenom_bulletin_vote) === norm(prenom));
   let html = `<span class="lv-eyebrow">${esc(reg)}</span><h3>${esc(r.n)}</h3>`
-    + `<button type="button" class="lv-suivre" data-suivre="${sel}" aria-pressed="${estSuivie(sel)}">${estSuivie(sel) ? "★ Suivie" : "☆ Suivre cette circonscription"}</button>`;
+    + `<div class="lv-suivre-pour"><span>Suivre pour</span>${PROJ_P.map(P => `<button type="button" class="lv-suivre" data-suivre="${sel}" data-parti="${P}" style="--c:${COUL[P]}" aria-pressed="${estSuiviePour(sel, P)}">${estSuiviePour(sel, P) ? "★" : "☆"} ${P}</button>`).join("")}</div>`;
   if (c && c.tete) {
     const [a, b] = c.cands, ecart = b ? a.nbVoteTotal - b.nbVoteTotal : a.nbVoteTotal;
     html += `<div class="lv-chips"><span class="lv-chip ${c.isResultatsFinaux ? "fin" : ""}">${c.isResultatsFinaux ? "Résultat final" : `${nf(c.nbBureauComplete)} / ${nf(c.nbBureauTotal)} bureaux (${nf(100 * c.frac, 0)} %)`}</span></div>

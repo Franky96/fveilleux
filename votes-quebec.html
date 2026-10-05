@@ -141,7 +141,7 @@
     @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; text-align: left; } .lv-head-droite .lv-btn { white-space: nowrap; } }
     .lv-particip small { white-space: nowrap; }
     /* suivi : étoiles, liste suivie, tableau par parti, alertes */
-    .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; align-items: start; }
+    .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
     .lv-carteS { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
     .lv-carteS h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .lv-pp-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -167,8 +167,28 @@
     .lv-etoile[aria-pressed="true"] { color: #F5B83D; }
     .lv-etoile:hover { color: #F5B83D; }
     .lv-etoile:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
-    .lv-suivre { font: inherit; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; justify-self: start; }
-    .lv-suivre[aria-pressed="true"] { border-color: #F5B83D; color: #B07A00; background: color-mix(in srgb, #F5B83D 14%, var(--surface)); }
+    .lv-suivre-pour { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted); }
+    .lv-suivre-pour > span { margin-right: 2px; }
+    .lv-suivre { font: inherit; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-suivre[aria-pressed="true"] { border-color: var(--c); background: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .lv-pp-tete .lv-groupe button small { font-weight: 600; opacity: 0.8; }
+    /* vignettes des circonscriptions suivies : 3 premiers candidats */
+    .lv-vigs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+    .lv-vig { background: var(--bg); border-radius: 10px; border-top: 4px solid var(--c); padding: 8px 10px 10px; display: grid; gap: 6px; cursor: pointer; align-content: start; }
+    .lv-vig:hover, .lv-vig:focus-visible { outline: 2px solid var(--rule); outline-offset: 0; }
+    .lv-vig header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .lv-vig header b { font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-vig-etat { display: flex; justify-content: space-between; gap: 8px; font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .lv-vig-etat span:last-child { font-weight: 700; color: var(--ink); }
+    .lv-vig-etat span.neg { color: var(--muted); }
+    .lv-vig ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+    .lv-vig li { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto auto 3.4em; column-gap: 7px; align-items: baseline; font-size: 0.8rem; padding: 3px 6px 3px 0; border-radius: 5px; }
+    .lv-vig li.moi { background: color-mix(in srgb, var(--c) 16%, transparent); font-weight: 700; }
+    .lv-vig li i { align-self: stretch; border-radius: 2px; background: var(--c); }
+    .lv-vig li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-vig li em { font-style: normal; font-size: 0.7rem; color: var(--muted); }
+    .lv-vig li b { font-variant-numeric: tabular-nums; }
+    .lv-vig li small { justify-self: end; font-size: 0.68rem; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 400; }
     #lvSuivies { display: grid; gap: 10px; }
     .lv-journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
     .lv-journal li { padding: 5px 8px; border-radius: 6px; background: var(--bg); }
@@ -316,7 +336,10 @@
       <div class="lv-suivi">
         <section class="lv-carteS" aria-labelledby="lvSuiviesTitre">
           <span class="lv-eyebrow">Mes circonscriptions</span>
-          <h3 id="lvSuiviesTitre">Suivies</h3>
+          <div class="lv-pp-tete">
+            <h3 id="lvSuiviesTitre">Suivies</h3>
+            <div class="lv-groupe" id="lvSuiviesChoix" role="group" aria-label="Parti des circonscriptions suivies"></div>
+          </div>
           <div id="lvSuivies"></div>
         </section>
         <section class="lv-carteS" aria-labelledby="lvParPartiTitre">
