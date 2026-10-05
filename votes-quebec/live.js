@@ -1,6 +1,7 @@
 /* Votes Québec — onglet « En direct » : résultats de l'élection générale du 5 octobre 2026.
    Données : api/live.php (relais des données ouvertes d'Élections Québec, actualisées toutes les 2 à 5 min).
    Carte : les 127 circonscriptions de votes-quebec/data.json (mêmes contours que la carte actuelle de la simulation).
+   Participation : taux préliminaire de la journée (CSV d'Élections Québec), puis taux final de chaque circonscription.
    Démo (admin) : votes-quebec.html?demo=40#live rejoue 2022 à 40 % des bureaux dépouillés. */
 
 const SIEGES = 127, MAJ = Math.floor(SIEGES / 2) + 1;      // 64
@@ -85,7 +86,7 @@ function ancrer() {
 function dessinerPrediction() {
   $("lvPred").setAttribute("aria-pressed", prediction);
   if (!gPred) return;
-  gPred.style("display", prediction && !cartePred ? null : "none");   // inutile sur la carte de prédiction
+  gPred.style("display", prediction && !cartePred && !carteParticip ? null : "none");   // inutile sur la carte de prédiction
   if (!prediction || cartePred) return;
   const g = gPred.selectAll("g.lv-pred").data(ancrer(), d => d.RID).join(enter => {
     const e = enter.append("g").attr("class", "lv-pred");
@@ -94,6 +95,49 @@ function dessinerPrediction() {
   // taille constante à l'écran : rayon et contour divisés par le zoom
   g.select(".lv-pred-halo").attr("r", 5.4 / zoomK);
   g.select(".lv-pred-pt").attr("r", 4.2 / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", 1.4 / zoomK);
+}
+
+/* ---------- participation ---------- */
+let participation = null, partRid = {}, carteParticip = false;
+// circonscription d'Élections Québec → rang dans DATA.ridings : par nom, sinon par numéro via la liste des candidatures
+// (certains fichiers abrègent les noms, ex. « Riv.-du-Loup-Témis.-Basques »)
+function rangDe(nom, code) {
+  const parNom = Object.fromEntries(DATA.ridings.map((r, i) => [norm(r.n), i]));
+  if (parNom[norm(nom)] != null) return parNom[norm(nom)];
+  const k = (candidatures || []).find(x => +x.code_circonscription === +code);
+  return k ? parNom[norm(k.nom_circonscription)] : null;
+}
+function indexerParticipation() {
+  partRid = {};
+  for (const c of participation?.circonscriptions || []) { const i = rangDe(c.nom, c.code); if (i != null) partRid[i] = c.taux; }
+}
+// taux d'une circonscription : final une fois tous ses bureaux dépouillés, sinon le préliminaire de la journée
+function tauxParticip(i) {
+  const c = parRid[i];
+  if (c && c.isResultatsFinaux && +c.tauxParticipation) return { v: +c.tauxParticipation, final: true };
+  return partRid[i] != null ? { v: partRid[i], final: false } : null;
+}
+// ensemble du Québec : taux final, sinon le préliminaire publié par Élections Québec, sinon la moyenne des circonscriptions
+function tauxGlobal() {
+  const st = resultats?.statistiques;
+  if (st?.isResultatsFinaux && +st.tauxParticipationTotal) return { v: +st.tauxParticipationTotal, final: true };
+  if (participation?.ensemble) return { v: participation.ensemble, final: false };
+  const v = Object.values(partRid);
+  return v.length ? { v: v.reduce((a, b) => a + b, 0) / v.length, final: false, moyenne: true } : null;
+}
+// dégradé vers le blanc : blanc = 100 %
+const couleurParticip = v => d3.interpolateLab("#15171c", "#ffffff")(Math.max(0, Math.min(100, v)) / 100);
+
+function dessinerParticip() {
+  const g = tauxGlobal(), el = $("lvParticip");
+  $("lvCarteParticip").setAttribute("aria-pressed", carteParticip);
+  el.setAttribute("aria-pressed", carteParticip);
+  if (!g) { el.hidden = true; return; }
+  el.hidden = false;
+  const maj = participation?.maj ? new Date(participation.maj) : null;
+  el.querySelector("b").textContent = nf(g.v, 1) + " %";
+  el.querySelector("small").textContent = g.final ? "Participation finale"
+    : `Participation préliminaire${g.moyenne ? " (moyenne)" : ""}${maj && !isNaN(maj) ? " · " + maj.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" }) : ""}`;
 }
 
 /* ---------- photos des candidats (sites des partis, voir outils/photos.py) ---------- */
@@ -118,6 +162,7 @@ async function lire(type) {
 
 async function actualiser() {
   $("lvEtat").textContent = "Mise à jour…";
+  lire("participation").then(d => { participation = d && d.disponible ? d : participation; indexerParticipation(); dessinerParticip(); if (carteParticip) { dessinerCarte(); dessinerPanneau(); } }).catch(() => {});
   try {
     const d = await lire("resultats");
     resultats = d && d.circonscriptions ? d : null;
@@ -130,9 +175,8 @@ async function actualiser() {
 function indexer() {
   parRid = {};
   if (!resultats) return;
-  const rang = Object.fromEntries(DATA.ridings.map((r, i) => [norm(r.n), i]));
   for (const c of resultats.circonscriptions) {
-    const i = rang[norm(c.nomCirconscription)];
+    const i = rangDe(c.nomCirconscription, c.numeroCirconscription);
     if (i == null) continue;
     // par votes ; à égalité (début de soirée, 0 vote partout), dans l'ordre de la projection Qc125 de la circonscription
     const cands = (c.candidats || []).map(k => ({ ...k, parti: partiDe(k.abreviationPartiPolitique) }))
@@ -190,12 +234,12 @@ function dessinerEtat() {
   $("lvEtat").innerHTML = [
     st?.isResultatsFinaux ? "<b>Résultats finaux</b>" : "<b>Résultats préliminaires</b>",
     `bureaux dépouillés ${nf(st?.nbBureauVoteRempli)} / ${nf(st?.nbBureauVote)} (${nf(st?.tauxBureauVoteRempli, 1)} %)`,
-    `participation ${nf(+st?.tauxParticipationTotal || 0, 1)} %`,
     maj && !isNaN(maj) ? `données d'Élections Québec de ${maj.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" })}` : "",
   ].filter(Boolean).join(" · ");
 }
 
 function remplir(i) {
+  if (carteParticip) { const t = tauxParticip(i); return t ? [couleurParticip(t.v), 1] : ["var(--soft)", 0.5]; }
   if (cartePred) {                                           // carte de prédiction : gagnant Qc125, plus foncé si sa part est forte
     const r = DATA.ridings[i], p = predit(i), v = r.s[PROJ_P.indexOf(p)];
     return [COUL[p], Math.max(0.35, Math.min(1, (v - 15) / 35))];
@@ -213,6 +257,18 @@ function dessinerCarte() {
 
 function dessinerPanneau() {
   const p = $("lvPanneau");
+  if (sel == null && carteParticip) {
+    const g = tauxGlobal(), liste = Object.keys(DATA.ridings).map(i => [+i, tauxParticip(+i)]).filter(([, t]) => t).sort((a, b) => b[1].v - a[1].v);
+    const ligne = ([i, t]) => `<li><span class="lv-pk" style="background:${couleurParticip(t.v)}"></span>${esc(DATA.ridings[i].n)}<b>${nf(t.v, 1)} %</b></li>`;
+    p.innerHTML = `<span class="lv-eyebrow">Taux de participation</span><h3>${g ? `${nf(g.v, 2)} % dans l'ensemble du Québec` : "Pas encore de taux publié"}</h3>
+      <p class="lv-muted">${g && g.final ? "Taux final." : "Taux préliminaire publié par Élections Québec pendant la journée du vote ; il peut différer du taux final."} Chaque circonscription passe au taux final une fois tous ses bureaux dépouillés.</p>
+      <div class="lv-pgrad" role="img" aria-label="Dégradé : sombre à 0 %, blanc à 100 %">${g ? `<i style="left:${g.v}%" title="Québec : ${nf(g.v, 1)} %"></i>` : ""}</div>
+      <div class="lv-pechelle"><span>0 %</span><span>25 %</span><span>50 %</span><span>75 %</span><span>100 %</span></div>`
+      + (liste.length ? `<div class="lv-pcols"><div><span class="lv-eyebrow">Plus fortes</span><ol class="lv-plist">${liste.slice(0, 5).map(ligne).join("")}</ol></div>
+        <div><span class="lv-eyebrow">Plus faibles</span><ol class="lv-plist">${liste.slice(-5).reverse().map(ligne).join("")}</ol></div></div>` : "")
+      + `<p class="lv-muted lv-source">Source : Élections Québec (taux préliminaire de la journée, puis résultats).</p>`;
+    return;
+  }
   if (sel == null && cartePred) {
     const n = {}; DATA.ridings.forEach((_, i) => { const p = predit(i); n[p] = (n[p] || 0) + 1; });
     const ordre = Object.keys(n).sort((a, b) => n[b] - n[a]);
@@ -250,10 +306,11 @@ function dessinerPanneau() {
         <td><b>${esc(k.prenom)} ${esc(k.nom)}</b>${sortant(k.prenom, k.nom) ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.abreviationPartiPolitique)} · ${nf(k.nbVoteAvance)} par anticipation</small>
           <span class="lv-jauge"><i style="width:${Math.min(100, k.tauxVote)}%"></i></span></td>
         <td class="lv-num"><b>${nf(k.tauxVote, 1)} %</b><small>${nf(k.nbVoteTotal)}</small></td></tr>`).join("")}</tbody></table>
-      <div class="lv-kv"><div><b>${nf(+c.tauxParticipation || 0, 1)} %</b><span>participation</span></div><div><b>${nf(c.nbElecteurInscrit)}</b><span>inscrits</span></div>
+      <div class="lv-kv"><div><b>${tauxParticip(sel) ? nf(tauxParticip(sel).v, 1) + " %" : "—"}</b><span>participation${tauxParticip(sel)?.final ? "" : " (prélim.)"}</span></div><div><b>${nf(c.nbElecteurInscrit)}</b><span>inscrits</span></div>
         <div><b>${nf(c.nbVoteRejete)}</b><span>rejetés (${nf(c.tauxVoteRejete, 1)} %)</span></div></div>`;
   } else {
-    html += `<div class="lv-chips"><span class="lv-chip">Aucun résultat pour l'instant</span></div>`;
+    const tp = tauxParticip(sel);
+    html += `<div class="lv-chips"><span class="lv-chip">Aucun résultat pour l'instant</span>${tp ? `<span class="lv-chip">Participation préliminaire : ${nf(tp.v, 1)} %</span>` : ""}</div>`;
     if (cand.length) html += `<span class="lv-eyebrow">Candidatures (${cand.length})</span><ul class="lv-liste">${cand.map(k => {
       const pa = partiDe(k.abreviation_parti);
       return `<li style="--c:${COUL[pa]}">${avatar(pa, r.n, k.prenom_bulletin_vote, k.nom_bulletin_vote)}<span><b>${esc(k.prenom_bulletin_vote)} ${esc(k.nom_bulletin_vote)}</b>${k.depute_sortant === "O" ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.nom_parti || "Indépendant")}</small></span></li>`;
@@ -274,6 +331,11 @@ function infobulle(e, f) {
   tip.hidden = false;
   const box = svg.node().parentNode.getBoundingClientRect();
   tip.style.left = (e.clientX - box.left + 12) + "px"; tip.style.top = (e.clientY - box.top + 12) + "px";
+  if (carteParticip) {
+    const t = tauxParticip(i);
+    tip.innerHTML = `<b>${esc(r.n)}</b>${t ? `Participation : ${nf(t.v, 1)} %<br><small>${t.final ? "taux final" : "taux préliminaire"}</small>` : "<small>Pas de taux publié</small>"}`;
+    return;
+  }
   if (cartePred) {
     const top = PROJ_P.map((p, j) => [p, r.s[j]]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     tip.innerHTML = `<b>${esc(r.n)}</b>Prédiction : ${top.map(([p, v]) => `${p} ${nf(v)} %`).join(" · ")}<br><small>projection Qc125 d'avant le vote</small>`;
@@ -320,14 +382,18 @@ function construireCarte() {
     else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
     else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
     else if (z === "plein") pleinEcran();
-    else if (z === "cartepred" || z === "pred") {             // l'une ou l'autre, ou aucune
+    else if (z === "cartepred" || z === "pred" || z === "particip") basculer(z);
+  });
+  // Pastille prédiction / Carte prédiction / Participation : une seule à la fois, ou aucune
+  function basculer(z) {
       cartePred = z === "cartepred" && !cartePred;
       prediction = z === "pred" && !prediction;
+      carteParticip = z === "particip" && !carteParticip;
       sessionStorage.setItem("lvPrediction", prediction ? "1" : "0");
       $("lvCartePred").setAttribute("aria-pressed", cartePred);
-      dessinerCarte(); dessinerPrediction(); dessinerPanneau();
-    }
-  });
+      dessinerCarte(); dessinerPrediction(); dessinerParticip(); dessinerPanneau();
+  }
+  $("lvParticip").addEventListener("click", () => { basculer("particip"); if (innerWidth <= 900) $("lvCarte").scrollIntoView({ behavior: "smooth", block: "start" }); });
   tip = $("lvTip");
   const carte = $("lvCarte").parentElement;
   const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
@@ -354,7 +420,7 @@ async function demarrer() {
     DATA = await (await fetch("votes-quebec/data.json", { cache: "no-cache" })).json();
     construireCarte();
     fetch("votes-quebec/photos.json", { cache: "no-cache" }).then(x => x.ok ? x.json() : {}).then(d => { PHOTOS = d || {}; dessinerPanneau(); }).catch(() => {});
-    lire("candidatures").then(d => { candidatures = d.liste || null; dessinerPanneau(); }).catch(() => {});
+    lire("candidatures").then(d => { candidatures = d.liste || null; indexer(); indexerParticipation(); dessiner(); dessinerParticip(); }).catch(() => {});
     await actualiser();
   } catch (e) { $("lvEtat").textContent = "Chargement impossible : " + e.message; }
   // lecture régulière, seulement quand l'onglet est visible

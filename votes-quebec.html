@@ -117,9 +117,28 @@
     .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
     .lv-zoom button { pointer-events: auto; }
     .lv-zoom button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-    .lv-seg { display: inline-flex; }                         /* Pastille / Carte prédiction : l'une ou l'autre, ou aucune */
-    .lv-seg button:first-child { border-radius: 8px 0 0 8px; }
-    .lv-seg button:last-child { border-radius: 0 8px 8px 0; margin-left: -1px; }
+    .lv-groupe { display: inline-flex; }                      /* Pastille / Carte prédiction / Participation : une seule, ou aucune */
+    .lv-groupe button { border-radius: 0; margin-left: -1px; }
+    .lv-groupe button:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
+    .lv-groupe button:last-child { border-radius: 0 8px 8px 0; }
+    /* participation : chiffre de l'ensemble du Québec (en-tête) et légende du dégradé vers le blanc */
+    .lv-head-droite { display: flex; align-items: flex-end; gap: 10px; }
+    .lv-particip { font: inherit; display: grid; text-align: right; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-particip[hidden] { display: none; }
+    .lv-particip b { font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .lv-particip small { font-size: 0.72rem; color: var(--muted); }
+    .lv-particip:hover, .lv-particip[aria-pressed="true"] { border-color: var(--ink); }
+    .lv-particip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .lv-pgrad { position: relative; height: 14px; border-radius: 4px; border: 1px solid var(--rule); background: linear-gradient(90deg, #15171c, #5e6066, #ababab, #ffffff); }
+    .lv-pgrad i { position: absolute; top: -5px; bottom: -5px; width: 0; border-left: 2px solid #E5484D; }
+    .lv-pechelle { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
+    .lv-pcols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .lv-plist { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.8rem; }
+    .lv-plist li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+    .lv-plist b { font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; text-align: left; } .lv-head-droite .lv-btn { white-space: nowrap; } }
+    .lv-particip small { white-space: nowrap; }
+    .lv-pk { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--rule); }
     /* pastilles de prédiction : contour blanc + fin cerne noir, visibles même sur la couleur du même parti */
     .lv-preds { pointer-events: none; }
     .lv-partis-pred { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
@@ -220,7 +239,10 @@
           <h2>Élections générales du 5 octobre 2026</h2>
           <p class="lv-etat" id="lvEtat" aria-live="polite">Chargement…</p>
         </div>
-        <button type="button" class="lv-btn" id="lvMaj">Mettre à jour</button>
+        <div class="lv-head-droite">
+          <button type="button" class="lv-particip" id="lvParticip" aria-pressed="false" title="Voir la participation par circonscription sur la carte" hidden><b>—</b><small>Participation</small></button>
+          <button type="button" class="lv-btn" id="lvMaj">Mettre à jour</button>
+        </div>
       </header>
       <p class="lv-banniere" id="lvBanniere" hidden></p>
 
@@ -239,7 +261,7 @@
           <div class="lv-zoom" id="lvZoom">
             <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
             <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
-            <span class="lv-seg" role="group" aria-label="Prédiction Qc125 (l'une ou l'autre, ou aucune)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button></span>
+            <span class="lv-groupe" role="group" aria-label="Affichage de la carte (un seul à la fois, ou aucun)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button><button type="button" data-z="particip" id="lvCarteParticip" aria-pressed="false" title="Taux de participation par circonscription : plus c'est blanc, plus la participation est forte (blanc = 100 %)">Participation</button></span>
             <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
           </div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>

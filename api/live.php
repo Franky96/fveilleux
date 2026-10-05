@@ -9,6 +9,8 @@
  *   ?type=resultats     résultats de la soirée (resultats.json), cache 45 s
  *   ?type=candidatures  liste officielle des candidatures, cache 1 h
  *   ?type=demo&p=40     (admin) élections 2022 rejouées à 40 % des bureaux, pour tester l'affichage
+ *   ?type=participation taux de participation préliminaire de la journée du vote (CSV par circonscription
+ *                       + taux de l'ensemble du Québec lu dans la page d'Élections Québec), cache 2 min
  *
  * Seules ces adresses fixes sont lues : aucune adresse fournie par le visiteur n'est appelée.
  */
@@ -31,7 +33,9 @@ const SOURCES = [
   'resultats'    => [BASE . 'resultats/resultats.json', 45],
   'candidatures' => [BASE . 'candidatures/candidatures.json', 3600],
   'demo'         => [BASE . 'resultats/archives/gen2022-10-03/resultats.json', 86400],
+  'participation'=> ['https://donnees.electionsquebec.qc.ca/autres/provincial/taux_participation_preliminaire.csv', 120],
 ];
+const PAGE_PARTICIPATION = 'https://www.electionsquebec.qc.ca/resultats-et-statistiques/taux-de-participation-preliminaire/';
 $type = $_GET['type'] ?? 'resultats';
 if (!isset(SOURCES[$type])) errOut('Type inconnu', 400);
 if ($type === 'demo' && $role !== 'admin') errOut('Accès refusé', 403);
@@ -44,29 +48,53 @@ header('Cache-Control: no-store');
 $cache = sys_get_temp_dir() . '/fv_live_' . $type . '.json';
 $age   = is_file($cache) ? time() - filemtime($cache) : PHP_INT_MAX;
 
+// [code HTTP, corps, date Last-Modified (horodatage ou null)]
 function telecharger(string $url): array {
   if (function_exists('curl_init')) {                        // cURL d'abord (allow_url_fopen peut être désactivé)
     $ch = curl_init($url);
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_FOLLOWLOCATION => false,
-      CURLOPT_USERAGENT => 'fveilleux.com (resultats en direct)', CURLOPT_HTTPHEADER => ['Accept: application/json']]);
-    $corps = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
-    return [$code, $corps === false ? '' : (string)$corps];
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_FOLLOWLOCATION => false, CURLOPT_FILETIME => true,
+      CURLOPT_USERAGENT => 'fveilleux.com (resultats en direct)', CURLOPT_HTTPHEADER => ['Accept: application/json, text/csv, text/html']]);
+    $corps = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE); $t = (int)curl_getinfo($ch, CURLINFO_FILETIME); curl_close($ch);
+    return [$code, $corps === false ? '' : (string)$corps, $t > 0 ? $t : null];
   }
   $ctx = stream_context_create(['http' => [
     'timeout' => 8, 'ignore_errors' => true,
     'header'  => "User-Agent: fveilleux.com (resultats en direct)\r\nAccept: application/json\r\n",
   ]]);
   $corps = @file_get_contents($url, false, $ctx);
-  $code  = 0;
-  foreach ($http_response_header ?? [] as $h) if (preg_match('#^HTTP/\S+\s+(\d{3})#', $h, $m)) $code = (int)$m[1];
-  return [$code, $corps === false ? '' : $corps];
+  $code  = 0; $t = null;
+  foreach ($http_response_header ?? [] as $h) {
+    if (preg_match('#^HTTP/\S+\s+(\d{3})#', $h, $m)) $code = (int)$m[1];
+    elseif (stripos($h, 'Last-Modified:') === 0) $t = strtotime(trim(substr($h, 14))) ?: null;
+  }
+  return [$code, $corps === false ? '' : $corps, $t];
+}
+
+/* Participation : CSV « CODE;NOM;TAUX » (UTF-8 avec BOM, virgule ou point décimal) → tableau JSON */
+function lireParticipation(string $csv, ?int $maj): ?array {
+  $csv = preg_replace('/^\xEF\xBB\xBF/', '', $csv);
+  $lignes = preg_split('/\r\n|\n|\r/', trim($csv));
+  if (count($lignes) < 2) return ['disponible' => false];
+  $circ = [];
+  foreach (array_slice($lignes, 1) as $l) {
+    $c = str_getcsv($l, ';', '"', '');
+    if (count($c) < 3 || trim($c[2]) === '') continue;
+    $circ[] = ['code' => (int)$c[0], 'nom' => trim($c[1]), 'taux' => (float)str_replace(',', '.', $c[2])];
+  }
+  if (!$circ) return ['disponible' => false];
+  $d = ['disponible' => true, 'circonscriptions' => $circ, 'maj' => $maj ? date('c', $maj) : null, 'ensemble' => null];
+  // taux de l'ensemble du Québec : seulement dans la page web (pondéré par les électeurs inscrits, absent du CSV)
+  [$code, $html] = telecharger(PAGE_PARTICIPATION);
+  if ($code === 200 && preg_match('#id="tauxEnsemble"[^>]*>\s*([\d\s,.]+)\s*(?:&nbsp;|\xC2\xA0|\s)*%#u', $html, $m))
+    $d['ensemble'] = (float)str_replace([',', ' ', "\u{A0}"], ['.', '', ''], $m[1]);
+  return $d;
 }
 
 if ($age > $ttl) {
   $verrou = fopen($cache . '.lock', 'c');
   if ($verrou && flock($verrou, LOCK_EX | LOCK_NB)) {          // un seul téléchargement à la fois
-    [$code, $corps] = telecharger($url);
-    $json = $code === 200 ? json_decode($corps, true) : null;
+    [$code, $corps, $maj] = telecharger($url);
+    $json = $code !== 200 ? null : ($type === 'participation' ? lireParticipation($corps, $maj) : json_decode($corps, true));
     if (is_array($json)) {
       file_put_contents($cache, json_encode($json, JSON_UNESCAPED_UNICODE), LOCK_EX);
       $age = 0;
