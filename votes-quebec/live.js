@@ -244,6 +244,7 @@ function rangees(ids, V) {
 function dessinerSuivi() {
   if (!DATA) return;
   preparerSuivis();
+  dessinerContoursSuivis();
   // --- circonscriptions suivies, par parti : de la plus grande avance au plus grand retard
   const nb = P => (suivis[P] || []).filter(n => DATA.ridings.some(r => r.n === n)).length;
   const V = partiVue && PROJ_P.includes(partiVue) ? partiVue : PROJ_P.find(P => nb(P)) || "PQ";
@@ -469,9 +470,40 @@ function remplir(i) {
   return [COUL[c.tete.parti], c.isResultatsFinaux ? 1 : 0.35 + 0.6 * c.frac];
 }
 
+/* contour des circonscriptions suivies pour un parti (bouton « Suivis » de la carte) */
+let gSuiv = null, carteSuivis = lireLS(localStorage, "lvCarteSuivis", null);
+function dessinerContoursSuivis() {
+  const b = $("lvCarteSuivis");
+  if (b) { b.setAttribute("aria-pressed", !!carteSuivis); b.style.setProperty("--c", carteSuivis ? COUL[carteSuivis] : ""); b.textContent = carteSuivis ? `★ Suivis : ${carteSuivis}` : "★ Suivis"; }
+  if (!gSuiv || !suivis) return;
+  const fs = carteSuivis ? DATA.ridingGeo.features.filter(f => estSuiviePour(f.properties.RID, carteSuivis)) : [];
+  gSuiv.selectAll("path.lv-suivi-halo").data(fs, f => f.properties.RID).join("path").attr("class", "lv-suivi-halo").attr("d", PATH);
+  gSuiv.selectAll("path.lv-suivi-ligne").data(fs, f => f.properties.RID).join("path").attr("class", "lv-suivi-ligne").attr("d", PATH).style("stroke", COUL[carteSuivis]);
+  gSuiv.selectAll("path.lv-suivi-ligne").raise();
+}
+function menuSuivis(ouvrir) {
+  const m = $("lvMenuSuivis"), b = $("lvCarteSuivis");
+  if (ouvrir) {
+    preparerSuivis();
+    const nb = P => (suivis[P] || []).length;
+    m.innerHTML = PROJ_P.map(P => `<button type="button" role="menuitemradio" data-cs="${P}" aria-checked="${carteSuivis === P}" style="--c:${COUL[P]}"><i></i>${NOMS[P]}<small>${nb(P)}</small></button>`).join("")
+      + `<button type="button" role="menuitemradio" data-cs="" aria-checked="${!carteSuivis}" style="--c:var(--rule)"><i></i>Aucun contour<small></small></button>`;
+  }
+  m.hidden = !ouvrir; b.setAttribute("aria-expanded", ouvrir);
+  if (ouvrir) (m.querySelector('[aria-checked="true"]') || m.querySelector("button")).focus();
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("#lvCarteSuivis")) { menuSuivis($("lvMenuSuivis").hidden); return; }
+  const c = e.target.closest("[data-cs]");
+  if (c) { carteSuivis = c.dataset.cs || null; ecrireLS(localStorage, "lvCarteSuivis", carteSuivis); menuSuivis(false); dessinerContoursSuivis(); $("lvCarteSuivis").focus(); return; }
+  if (!e.target.closest("#lvMenuSuivis") && $("lvMenuSuivis") && !$("lvMenuSuivis").hidden) menuSuivis(false);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("lvMenuSuivis") && !$("lvMenuSuivis").hidden) { menuSuivis(false); $("lvCarteSuivis").focus(); } });
+
 function dessinerCarte() {
   gRid.selectAll("path").each(function (f) { const [col, op] = remplir(f.properties.RID); this.style.fill = col; this.style.fillOpacity = op; });
   dessinerEtiquettesParticip();
+  dessinerContoursSuivis();
   const f = sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
 }
@@ -582,6 +614,7 @@ function construireCarte() {
     .on("keydown", (e, f) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choisir(f.properties.RID); } })
     .on("mousemove", infobulle).on("mouseleave", () => { tip.hidden = true; });
   if (DATA.curRegionGeo) gZ.append("g").selectAll("path").data(DATA.curRegionGeo.features).join("path").attr("class", "lv-reg").attr("d", PATH);
+  gSuiv = gZ.append("g");
   gSel = gZ.append("g");
   gPred = gZ.append("g").attr("class", "lv-preds");
   gPart = gZ.append("g").attr("class", "lv-ptxt");

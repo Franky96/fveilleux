@@ -207,6 +207,19 @@
     .lv-rangee-ecart.neg { color: var(--muted); }
     .lv-rangee-ecart.nul { color: #E0A11B; }
     @media (max-width: 600px) { .lv-rangee { grid-template-columns: minmax(0, 1fr); gap: 6px; } .lv-rangee-ecart { padding-top: 0; } }
+    /* bouton « Suivis » de la carte : menu des partis, contour des circonscriptions suivies */
+    .lv-menu-suivis { position: relative; display: inline-flex; }
+    .lv-zoom #lvCarteSuivis[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .lv-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 5; min-width: 220px; display: grid; gap: 2px; padding: 6px; pointer-events: auto;
+      background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .lv-menu[hidden] { display: none; }
+    .lv-zoom .lv-menu button { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; text-align: left; border: 0; border-radius: 6px; padding: 7px 8px; background: none; }
+    .lv-zoom .lv-menu button:hover, .lv-zoom .lv-menu button:focus-visible { background: var(--bg); }
+    .lv-zoom .lv-menu button[aria-checked="true"] { background: var(--bg); color: var(--ink); }
+    .lv-menu button i { width: 12px; height: 12px; border-radius: 3px; border: 2px solid var(--c); }
+    .lv-menu button small { color: var(--muted); font-weight: 600; }
+    .lv-suivi-halo { fill: none; stroke: #000; stroke-opacity: 0.55; stroke-width: 5px; vector-effect: non-scaling-stroke; pointer-events: none; stroke-linejoin: round; }
+    .lv-suivi-ligne { fill: none; stroke-width: 2.6px; vector-effect: non-scaling-stroke; pointer-events: none; stroke-linejoin: round; }
     /* section repliable (« Suivi par parti », fermée par défaut) */
     .lv-replier { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-align: left; }
     .lv-replier:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
@@ -355,6 +368,10 @@
             <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
             <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
             <span class="lv-groupe" role="group" aria-label="Affichage de la carte (un seul à la fois, ou aucun)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button><button type="button" data-z="particip" id="lvCarteParticip" aria-pressed="false" title="Taux de participation par circonscription : plus c'est blanc, plus la participation est forte (blanc = 100 %)">Participation</button></span>
+            <span class="lv-menu-suivis">
+              <button type="button" id="lvCarteSuivis" aria-haspopup="true" aria-expanded="false" aria-pressed="false" title="Entourer sur la carte les circonscriptions suivies pour un parti">★ Suivis</button>
+              <span class="lv-menu" id="lvMenuSuivis" role="menu" hidden></span>
+            </span>
             <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
           </div>
           <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
