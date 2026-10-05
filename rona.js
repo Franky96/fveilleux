@@ -79,7 +79,9 @@ function getExpirationStatus(dateStr) {
   now.setHours(0, 0, 0, 0);
   const diff = (exp - now) / (1000 * 60 * 60 * 24);
   if (diff < 0)   return 'expired';
-  if (diff <= 30) return 'soon';
+  // jaune à partir de 2 mois avant la date (mois du calendrier, pas 60 jours)
+  const limite = new Date(now); limite.setMonth(limite.getMonth() + 2);
+  if (exp <= limite) return 'soon';
   return 'ok';
 }
 
