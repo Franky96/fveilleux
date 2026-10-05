@@ -175,6 +175,46 @@ function preparerSuivis() {
   }
   ecrireLS(localStorage, "lvSuivisParti", suivis);
 }
+/* Enregistrement : invité → ce navigateur seulement ; compte connecté → serveur (api/suivis.php), avec copie locale.
+   Premier passage d'un appareil : union de ce qui est déjà ici et de ce qui est sur le serveur (rien ne se perd),
+   ensuite le serveur fait foi (les changements faits sur un autre appareil arrivent au retour sur l'onglet). */
+const COMPTE = !!sessionStorage.getItem("userRole") && sessionStorage.getItem("userRole") !== "guest";
+const CLE_SYNC = "lvSuivisSync_" + (sessionStorage.getItem("userId") || sessionStorage.getItem("userName") || "compte");
+let envoi = null, envoiEnCours = false;
+function envoyerSuivis() {
+  envoiEnCours = true;
+  return fetch("api/suivis.php", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ suivis }) })
+    .catch(() => {}).finally(() => { envoiEnCours = false; });
+}
+function sauverSuivis() {
+  ecrireLS(localStorage, "lvSuivisParti", suivis);           // copie locale (invité, hors ligne)
+  if (!COMPTE) return;
+  clearTimeout(envoi); envoiEnCours = true;
+  envoi = setTimeout(envoyerSuivis, 400);
+}
+async function chargerSuivisServeur() {
+  if (!COMPTE || !DATA || envoiEnCours) return;
+  try {
+    const r = await fetch("api/suivis.php", { credentials: "include", cache: "no-store" });
+    if (!r.ok || envoiEnCours) return;                       // serveur indisponible : on garde la copie locale
+    const d = await r.json();
+    preparerSuivis();
+    const serveur = d.exists && d.data && d.data.suivis && typeof d.data.suivis === "object" ? d.data.suivis : null;
+    let fusion;
+    if (serveur && lireLS(localStorage, CLE_SYNC, false)) fusion = serveur;
+    else {                                                   // première fois sur cet appareil : union
+      fusion = {};
+      for (const P of PROJ_P) { const u = [...new Set([...((serveur || {})[P] || []), ...(suivis[P] || [])])]; if (u.length) fusion[P] = u; }
+    }
+    const change = JSON.stringify(fusion) !== JSON.stringify(suivis);
+    suivis = fusion; ecrireLS(localStorage, "lvSuivisParti", suivis);
+    if (!serveur || JSON.stringify(fusion) !== JSON.stringify(serveur)) await envoyerSuivis();
+    ecrireLS(localStorage, CLE_SYNC, true);
+    if (change) { dessinerSuivi(); dessinerPanneau(); }
+  } catch { /* hors ligne : copie locale */ }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) chargerSuivisServeur(); });
+
 const estSuiviePour = (i, P) => !!suivis && (suivis[P] || []).includes(DATA.ridings[i].n);
 const estSuivie = i => PROJ_P.some(P => estSuiviePour(i, P));
 const partisDe = i => PROJ_P.filter(P => estSuiviePour(i, P));
@@ -383,7 +423,7 @@ function basculerSuivi(i, P) {
   preparerSuivis();
   const n = DATA.ridings[i].n, liste = suivis[P] || [];
   suivis[P] = estSuiviePour(i, P) ? liste.filter(x => x !== n) : [...liste, n];
-  ecrireLS(localStorage, "lvSuivisParti", suivis);
+  sauverSuivis();
   if (estSuiviePour(i, P)) { partiVue = P; ecrireLS(localStorage, "lvPartiVue", P); }
   if (connus && estSuivie(i)) { const e = etat(i); if (e.res) connus[n] = { p: e.ordre[0].p, lab: sigle(e.ordre[0]), f: e.final }; }  // pas d'alerte pour l'état actuel
   dessinerSuivi(); dessinerPanneau();
@@ -781,6 +821,7 @@ async function demarrer() {
     construireCarte();
     fetch("votes-quebec/photos.json", { cache: "no-cache" }).then(x => x.ok ? x.json() : {}).then(d => { PHOTOS = d || {}; dessinerPanneau(); }).catch(() => {});
     lire("candidatures").then(d => { candidatures = d.liste || null; indexer(); indexerParticipation(); dessiner(); dessinerParticip(); }).catch(() => {});
+    chargerSuivisServeur();
     await actualiser();
   } catch (e) { $("lvEtat").textContent = "Chargement impossible : " + e.message; }
   // lecture régulière, seulement quand l'onglet est visible
