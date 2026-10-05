@@ -490,6 +490,11 @@ function menuSuivis(ouvrir) {
       + `<button type="button" role="menuitemradio" data-cs="" aria-checked="${!carteSuivis}" style="--c:var(--rule)"><i></i>Aucun contour<small></small></button>`;
   }
   m.hidden = !ouvrir; b.setAttribute("aria-expanded", ouvrir);
+  if (ouvrir) {                                              // reste dans la carte (qui coupe ce qui dépasse) : aligné à droite du bouton si besoin
+    m.style.left = "0px";
+    const carte = $("lvCarte").parentElement.getBoundingClientRect(), r = m.getBoundingClientRect();
+    if (r.right > carte.right - 8) m.style.left = Math.max(carte.left + 8 - b.getBoundingClientRect().left, carte.right - 8 - r.right) + "px";
+  }
   if (ouvrir) (m.querySelector('[aria-checked="true"]') || m.querySelector("button")).focus();
 }
 document.addEventListener("click", e => {
