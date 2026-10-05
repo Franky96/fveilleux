@@ -226,10 +226,19 @@ function vignette(i, P) {
   const st = statut(i, P), pos = st.pos, ecart = pos.ecart >= 0 ? `+${nf(pos.ecart, 1)}` : `−${nf(-pos.ecart, 1)}`;
   return `<article class="lv-vig" data-rid="${i}" tabindex="0" style="--c:${COUL[e.ordre[0].p]}">
     <header><b>${esc(r.n)}</b>${etoile(i, P)}</header>
-    <div class="lv-vig-etat"><span>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux") : "Projection Qc125"}</span><span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${P} ${ecart} pt</span></div>
+    <div class="lv-vig-etat"><span>${e.res ? (e.final ? "Résultat final" : nf(100 * e.frac, 0) + " % des bureaux") : "Projection Qc125"}</span><span class="lv-st st-${st.g}${pos.ecart < 0 ? " neg" : ""}" style="--c:${COUL[P]}">${st.lab} · ${Math.abs(pos.ecart) < 0.05 ? `${P} à égalité` : `${P} ${ecart} pt`}</span></div>
     <ol>${trois.map(k => `<li class="${k.p === P ? "moi" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.lab)}</em>`
       + `<b>${nf(k.v, 1)} %</b><small>${k.n != null ? nf(k.n) : ""}</small></li>`).join("")}</ol>
   </article>`;
+}
+
+// luttes serrées : une rangée par écart arrondi (+3, +2, +1, égalité, −1, −2…), la plus grande avance en haut
+function rangees(ids, V) {
+  const par = new Map();
+  for (const i of ids) { const k = Math.round(position(i, V).ecart) || 0; if (!par.has(k)) par.set(k, []); par.get(k).push(i); }
+  return [...par.entries()].sort((a, b) => b[0] - a[0]).map(([k, l]) =>
+    `<div class="lv-rangee"><span class="lv-rangee-ecart ${k > 0 ? "pos" : k < 0 ? "neg" : "nul"}" style="--c:${COUL[V]}">${k === 0 ? "Égalité" : (k > 0 ? "+" : "−") + Math.abs(k) + (Math.abs(k) > 1 ? " pts" : " pt")}</span>`
+    + `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div></div>`).join("");
 }
 
 function dessinerSuivi() {
@@ -249,7 +258,7 @@ function dessinerSuivi() {
     + (avantResS ? ` <span class="lv-muted">(selon la projection Qc125)</span>` : "") + `</div>` : "";
   const cartes = ids.length
     ? Object.entries(gs).filter(([, l]) => l.length).map(([g, l]) => `<section class="lv-suiv-grp"><h4>${STATUTS[g]}${g === "serre" ? ` <small>moins de ${SERRE} pts d'écart</small>` : ""}</h4>`
-      + `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div></section>`).join("")
+      + (g === "serre" ? rangees(l, V) : `<div class="lv-vigs">${l.map(i => vignette(i, V)).join("")}</div>`) + `</section>`).join("")
     : `<p class="lv-muted lv-vide">Aucune circonscription suivie pour ${NOMS[V]}.<br>Pour en ajouter : clique sur ☆ dans le tableau « Suivi par parti » ci-dessous (avec ${V} choisi), ou sur « Suivre pour ${V} » dans la fiche d'une circonscription.</p>`;
   const jr = journal.length ? `<aside class="lv-suiv-journal"><h4>Changements récents</h4><ul class="lv-journal">${journal.slice(0, 8).map(j =>
       `<li><time>${esc(j.h)}</time>${esc(j.txt)}</li>`).join("")}</ul>`
