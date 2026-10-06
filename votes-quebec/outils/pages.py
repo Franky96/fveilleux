@@ -16,8 +16,8 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
 FICHIER = {"live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
-           "france": "votes-france.html"}
-PAGES = ["live", "votes", "loi39"]          # tirées du gabarit ; « france » est faite à partir de la page Votes Québec (même cadre)
+           "france": "votes-france.html", "canada": "votes-canada.html"}
+PAGES = ["live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
 SCRIPTS = {"live": "votes-quebec/live.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
 
@@ -103,3 +103,31 @@ r('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des circonsc
 assert 'src="votes-quebec/intentions.js"' not in fr and '>Grand Montréal<' not in fr
 open(os.path.join(RACINE, FICHIER["france"]), "w", encoding="utf-8").write(fr)
 print(f"{FICHIER['france']:30} {len(fr):7} octets")
+
+# Votes Canada : même cadre que Votes Québec (Chambre des communes de 343 sièges, carte des circonscriptions, projection Qc125)
+ca = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
+def rc(a, b):
+    global ca
+    assert a in ca, "Votes Canada : introuvable dans la page Votes Québec : " + a[:60]
+    ca = ca.replace(a, b)
+rc("<title>Outils de Frank — Votes Québec</title>", "<title>Outils de Frank — Votes Canada</title>")
+rc('<span class="t-votes">Votes Québec · intentions de vote</span>', '<span class="t-votes">Votes Canada · intentions de vote fédérales</span>')
+rc(f'href="{FICHIER["votes"]}" aria-current="page"', f'href="{FICHIER["votes"]}"')
+rc(f'href="{FICHIER["canada"]}">', f'href="{FICHIER["canada"]}" aria-current="page">')
+rc('  <script type="module" src="votes-quebec/intentions.js"></script>', '  <script type="module" src="votes-canada/canada.js"></script>')
+rc('<section class="vue-live vue-votes" id="vue-votes"', '<section class="vue-live vue-votes vc" id="vue-votes"')
+rc('<span class="vi-badge">Intentions de vote</span>', '<span class="vi-badge">Canada · fédéral</span>')
+rc("Assemblée nationale · 127 sièges · majorité 64", "Chambre des communes · 343 sièges · majorité 172")
+rc('<svg id="viPlan" class="vi-plan" role="img" aria-label="Plan de l\'Assemblée nationale"></svg>',
+   '<svg id="viPlan" class="vi-plan vc-plan" role="img" aria-label="Plan de la Chambre des communes (343 sièges)"></svg>')
+ca = re.sub(r'<button type="button" data-z="tout">Tout le Québec</button>.*?<button type="button" data-z="sud">Sud</button>',
+            '<button type="button" data-z="tout">Canada</button><button type="button" data-z="sudqc">Sud du Québec</button><button type="button" data-z="mtl">Montréal</button>'
+            '<button type="button" data-z="tor">Toronto</button><button type="button" data-z="ott">Ottawa</button><button type="button" data-z="van">Vancouver</button>', ca, flags=re.S)
+ca = re.sub(r'<button type="button" data-per="3".*?Depuis 2022</button>',
+            '<button type="button" data-per="3" aria-pressed="false">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button>'
+            '<button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="0" aria-pressed="true">Depuis 2025</button>', ca, flags=re.S)
+rc('<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2022</span>', '<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2025</span>')
+rc('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 343 circonscriptions fédérales"')
+assert 'src="votes-quebec/intentions.js"' not in ca and '>Grand Montréal<' not in ca and 'data-z="sudqc"' in ca
+open(os.path.join(RACINE, FICHIER["canada"]), "w", encoding="utf-8").write(ca)
+print(f"{FICHIER['canada']:30} {len(ca):7} octets")

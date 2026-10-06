@@ -15,3 +15,6 @@ votes-quebec/outils/check.mjs
 
 # Votes France : téléchargements bruts (retéléchargés par outils/france.py)
 votes-france/outils/brut/
+
+# Votes Canada : téléchargements bruts (retéléchargés par outils/canada_geo.py)
+votes-canada/outils/brut/
