@@ -2,6 +2,7 @@
 
   - projection nationale : vote et sièges de chaque parti, avec leur fourchette (page d'accueil de Qc125 Canada) ;
   - les 343 fiches de circonscription : projection de chaque parti (± marge) et résultat de l'élection de 2025 ;
+  - la projection de chaque région de Qc125 (Atlantique, Québec, Ontario, Prairies, Alberta, Colombie-Britannique) ;
   - la carte de Qc125 : député actuel de chaque circonscription et son parti (changements de parti, sièges vacants).
 Qc125 met sa projection à jour environ une fois par semaine : les 343 fiches ne sont relues que si la date de mise à jour
 a changé (sinon rien n'est écrit). Seulement la bibliothèque standard : relancé par le pipeline aux 3 heures.
@@ -62,6 +63,28 @@ national = {p: {"v": round(vote[p]["values"], 1), "moe": round(vote[p].get("moe"
             for p in PARTIS if p in vote and p in sieges}
 if not 330 <= sum(x["s"] for x in national.values()) <= 345: raise SystemExit(f"Sièges nationaux illisibles : {national}")
 
+# projection régionale (pages de région de Qc125) : vote et sièges avec leur fourchette ; les sièges sont dans le même
+# ordre que le vote (Qc125 donne la même clé « LIB » à toutes les séries de sièges : on lit l'étiquette)
+REGIONS = {"ATL": ("atl", "Atlantique", ["NL", "PE", "NS", "NB"]), "QC": ("quebec", "Québec", ["QC"]), "ON": ("ontario", "Ontario", ["ON"]),
+           "PR": ("prairies", "Prairies", ["MB", "SK"]), "AB": ("alberta", "Alberta", ["AB"]), "BC": ("cb", "Colombie-Britannique", ["BC"])}
+def serie_lab(page, nom):
+    i = page.index(f"window.{nom}")
+    zone = page[page.index("parties", i): page.index("</script>", i)]
+    out = {}
+    for b in re.split(r"\bkey\s*:", zone)[1:]:
+        k = re.search(r"label\s*:\s*'([^']+)'", b)[1]
+        out[k] = {c: derniers(b, c) for c in ("values", "moe", "uppermoe", "lowermoe") if derniers(b, c) is not None}
+    return out
+regions = {}
+for code, (page_reg, nom, provs) in REGIONS.items():
+    pg = get(f"https://qc125.com/canada/{page_reg}.htm")
+    v, st = serie_lab(pg, "regionvote_DATA"), serie_lab(pg, "regionseats_DATA")
+    regions[code] = {"nom": nom, "provs": provs, "parts": {p: {"v": round(v[p]["values"], 1), "moe": round(v[p].get("moe", 0), 1), "s": round(st[p]["values"]) if p in st else 0,
+                     "smin": round(st[p].get("lowermoe", 0)) if p in st else 0, "smax": round(st[p].get("uppermoe", 0)) if p in st else 0}
+                     for p in PARTIS if p in v and v[p]["values"] >= 0.05}}
+    if "--cache" not in sys.argv: time.sleep(0.4)
+if not 330 <= sum(x["s"] for r in regions.values() for x in r["parts"].values()) <= 343: raise SystemExit(f"Sièges régionaux illisibles : {regions}")
+
 # député actuel (carte de Qc125)
 carte = get("https://qc125.com/canada/carte.htm")
 act = {}
@@ -103,7 +126,7 @@ for num in liens:
     circ[num] = {"s": dict(sorted(s.items(), key=lambda kv: -kv[1][0])), "e25": dict(sorted(e25.items(), key=lambda kv: -kv[1])), "act": act[num]}
     if "--cache" not in sys.argv: time.sleep(0.4)
 if erreurs: raise SystemExit("Fiches Qc125 illisibles, projection.json inchangé :\n" + "\n".join(erreurs[:20]))
-json.dump({"source": "Qc125 (qc125.com/canada)", "maj": maj, "national": national, "circ": circ},
+json.dump({"source": "Qc125 (qc125.com/canada)", "maj": maj, "national": national, "regions": regions, "circ": circ},
           open(SORTIE, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 g25 = {}
 for c in circ.values(): k = next(iter(c["e25"])); g25[k] = g25.get(k, 0) + 1
