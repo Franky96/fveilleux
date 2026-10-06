@@ -115,7 +115,7 @@ function dessinerTete() {
   $("viNote").textContent = "Projection : chaque circonscription est colorée selon le parti en tête dans la projection de Qc125 ; le nombre de sièges est celui de Qc125 (moyenne de ses simulations), avec sa fourchette.";
   let ex = $("vfExplic");
   if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
-  ex.innerHTML = `<b>Comment ça marche</b><p>Les 343 députés de la Chambre des communes sont élus au scrutin majoritaire à un tour, un par circonscription : le candidat qui a le plus de voix l'emporte, même sans majorité. Le parti qui obtient la confiance de la Chambre forme le gouvernement ; avec 172 sièges ou plus, il est majoritaire. La prochaine élection est prévue au plus tard le 15 octobre ${AN(2029)}, sauf dissolution.</p>`;
+  ex.innerHTML = `<p>Les 343 députés de la Chambre des communes sont élus au scrutin majoritaire à un tour, un par circonscription : le candidat qui a le plus de voix l'emporte, même sans majorité. Le parti qui obtient la confiance de la Chambre forme le gouvernement ; avec 172 sièges ou plus, il est majoritaire. La prochaine élection est prévue au plus tard le 15 octobre ${AN(2029)}, sauf dissolution.</p>`;
   // choix de la chambre affichée : projection, chambre actuelle ou élection de 2025
   let choix = $("vcChambre");
   if (!choix) {
