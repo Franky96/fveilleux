@@ -24,7 +24,7 @@ Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN po
 
 Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils/pages.src.html`, transformé par
 `votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, direct), `votes-quebec.html`,
-`loi39.html`, `votes-quebec-demo.html`, `votes-france.html` et `votes-canada.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
+`loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html` et `votes-usa.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
 (ou pages.py) puis relancer le script.** Onglets regroupés « Intentions de vote » / « Simulation » ; permission `votes-quebec`.
 
 Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/intentions.js`) :
@@ -35,4 +35,5 @@ Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/in
 3. panneau à droite : tout le territoire (vote et sièges, sièges par région…) ou la circonscription cliquée.
 Les mêmes identifiants `vi*` et classes CSS servent à toutes ces pages ; chaque pays a son module JS et ses données
 (ex. `votes-france/france.js`, `votes-france/data.json`, `votes-france/sondages.json`, scripts dans `votes-france/outils/` ;
-`votes-canada/canada.js` avec la projection Qc125 fédérale, `votes-canada/outils/`). Les années des résultats passés sont en pastille (`AN()`, classe `vf-an`).
+`votes-canada/canada.js` avec la projection Qc125 fédérale, `votes-canada/outils/` ; `votes-usa/usa.js`, consensus de 270toWin, `votes-usa/outils/`).
+Boutons de la carte, de gauche à droite : futur (projection/intentions), présent (assemblée actuelle), passé (élections) ; un groupe sans données n'apparaît pas. Les années des résultats passés sont en pastille (`AN()`, classe `vf-an`).

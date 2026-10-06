@@ -456,6 +456,12 @@
     .vc-choix { justify-self: start; }
     .vf-legende small { color: var(--muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
     .vc .lv-rid { stroke-width: 0.2px; }
+    /* Votes États-Unis : hémicycle de 435 sièges (comme Votes France) */
+    @media (min-width: 1000px) { .vu .vi-haut { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+    .vu .vi-plan.vf-hemi { max-width: none; }
+    .vu .lv-rid { stroke-width: 0.25px; }
+    .vi-vrow.vu-cote { grid-template-columns: 7.4em minmax(0, 1fr) 3em 4.4em; }
+    .vi-vrow.vu-cote b:first-child { white-space: nowrap; }
     .vi-vrow.vc-proj { grid-template-columns: 3.4em minmax(0, 1fr) 4.2em 6.6em; }
     .vi-vrow.vc-proj .vi-num { white-space: nowrap; }
     .vc-replie { border-top: 0; padding-top: 0; }
@@ -614,6 +620,9 @@
           </a>
           <a class="sc-tab" href="votes-canada.html" aria-current="page">
             <b>Votes Canada</b><small>Projection fédérale Qc125</small>
+          </a>
+          <a class="sc-tab" href="votes-usa.html">
+            <b>Votes États-Unis</b><small>Mi-mandat 2026 · Chambre</small>
           </a>
           <a class="sc-tab" href="votes-france.html">
             <b>Votes France</b><small>Présidentielle et législatives</small>

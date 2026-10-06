@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Outils de Frank — Votes Québec (démo)</title>
+  <title>Outils de Frank — Votes États-Unis</title>
   <script>
     if (location.hash === '#live') location.replace('intentions-simulations.html');
     if (location.hash === '#loi39') location.replace('loi39.html');
@@ -603,7 +603,7 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span><span class="t-live" hidden>Élections générales du 5 octobre 2026 · résultats en direct</span><span class="t-votes">Votes Québec · démo (intentions fictives)</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span><span class="t-live" hidden>Élections générales du 5 octobre 2026 · résultats en direct</span><span class="t-votes">Votes États-Unis · Chambre des représentants</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
@@ -615,13 +615,13 @@
           <a class="sc-tab sc-live" href="intentions-simulations.html">
             <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Élection du 5 octobre 2026</small>
           </a>
-          <a class="sc-tab" href="votes-quebec.html" aria-current="page">
+          <a class="sc-tab" href="votes-quebec.html">
             <b>Votes Québec</b><small>Intentions de vote à jour</small>
           </a>
           <a class="sc-tab" href="votes-canada.html">
             <b>Votes Canada</b><small>Projection fédérale Qc125</small>
           </a>
-          <a class="sc-tab" href="votes-usa.html">
+          <a class="sc-tab" href="votes-usa.html" aria-current="page">
             <b>Votes États-Unis</b><small>Mi-mandat 2026 · Chambre</small>
           </a>
           <a class="sc-tab" href="votes-france.html">
@@ -641,11 +641,11 @@
   </nav>
 
 
-  <section class="vue-live vue-votes" id="vue-votes">
+  <section class="vue-live vue-votes vu" id="vue-votes">
     <div class="lv-wrap">
       <header class="lv-head">
         <div>
-          <span class="vi-badge vi-badge-demo">Démo · données fictives</span>
+          <span class="vi-badge">États-Unis · Chambre des représentants</span>
           <h2 id="viTitre">Votes Québec</h2>
           <p class="lv-etat" id="viSource">Chargement…</p>
         </div>
@@ -653,17 +653,17 @@
       <p class="lv-muted" id="viNote"></p>
       <div class="vi-haut">
       <section class="lv-sieges vi-sieges" aria-labelledby="viSiegesTitre">
-        <span class="lv-eyebrow">Assemblée nationale · 127 sièges · majorité 64</span>
+        <span class="lv-eyebrow">Chambre des représentants · 435 sièges · majorité 218</span>
         <h3 id="viSiegesTitre">Sièges</h3>
-        <svg id="viPlan" class="vi-plan" role="img" aria-label="Plan de l'Assemblée nationale"></svg>
+        <svg id="viPlan" class="vi-plan vf-hemi" role="img" aria-label="Hémicycle de la Chambre des représentants (435 sièges)"></svg>
         <div class="vf-legende" id="viLegende"></div>
       </section>
       <section class="vi-evol" aria-labelledby="viEvolTitre">
-        <span class="lv-eyebrow" id="viEvolSur">Depuis l'élection de 2022</span>
+        <span class="lv-eyebrow" id="viEvolSur">Vote générique</span>
         <div class="vi-evol-tete">
-          <h3 id="viEvolTitre">Évolution des intentions de vote</h3>
+          <h3 id="viEvolTitre">Évolution du vote générique</h3>
           <div class="lv-groupe vi-periodes" id="viPeriodes" role="group" aria-label="Période affichée">
-            <button type="button" data-per="3" aria-pressed="false">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button><button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="24" aria-pressed="false">2 ans</button><button type="button" data-per="0" aria-pressed="true">Depuis 2022</button>
+            <button type="button" data-per="3" aria-pressed="true">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button><button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="0" aria-pressed="false">Depuis 2024</button>
           </div>
         </div>
         <div class="vi-evol-zone"><div id="viEvol"></div><div class="vi-evol-tip" id="viEvolTip" hidden></div></div>
@@ -681,11 +681,11 @@
           </div>
           <div class="vi-carte lv-cartecard">
             <div class="lv-zoom" id="viZoom">
-              <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button><button type="button" data-z="sud">Sud</button>
+              <button type="button" data-z="tout">États-Unis</button><button type="button" data-z="ne">Nord-Est</button><button type="button" data-z="gl">Grands Lacs</button><button type="button" data-z="ca">Californie</button><button type="button" data-z="tx">Texas</button><button type="button" data-z="fl">Floride</button>
               <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
             </div>
             <div class="lv-zoom lv-zoom-bas"><button type="button" data-z="plein" id="viPlein" class="lv-plein-btn" aria-pressed="false">⛶ Plein écran</button></div>
-            <svg id="viCarte" role="img" aria-label="Carte des 127 circonscriptions"></svg>
+            <svg id="viCarte" role="img" aria-label="Carte des 435 districts de la Chambre des représentants"></svg>
             <div class="lv-tip" id="viTip" hidden></div>
           </div>
           <div class="vi-echelle" id="viEchelle"></div>
@@ -698,8 +698,7 @@
 </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
-  <script>window.VI_DEMO = true;   // sondages fictifs, voir intentions.js</script>
-  <script type="module" src="votes-quebec/intentions.js"></script>
+  <script type="module" src="votes-usa/usa.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;font-family:system-ui,sans-serif;"></div>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>

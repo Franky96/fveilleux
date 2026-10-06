@@ -16,7 +16,7 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
 FICHIER = {"live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
-           "france": "votes-france.html", "canada": "votes-canada.html"}
+           "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html"}
 PAGES = ["live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
 SCRIPTS = {"live": "votes-quebec/live.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
@@ -131,3 +131,32 @@ rc('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 343 cir
 assert 'src="votes-quebec/intentions.js"' not in ca and '>Grand Montréal<' not in ca and 'data-z="sudqc"' in ca
 open(os.path.join(RACINE, FICHIER["canada"]), "w", encoding="utf-8").write(ca)
 print(f"{FICHIER['canada']:30} {len(ca):7} octets")
+
+# Votes États-Unis : même cadre (hémicycle de 435 sièges, carte des districts, consensus des prévisionnistes, vote générique)
+us = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
+def ru(a, b):
+    global us
+    assert a in us, "Votes États-Unis : introuvable dans la page Votes Québec : " + a[:60]
+    us = us.replace(a, b)
+ru("<title>Outils de Frank — Votes Québec</title>", "<title>Outils de Frank — Votes États-Unis</title>")
+ru('<span class="t-votes">Votes Québec · intentions de vote</span>', '<span class="t-votes">Votes États-Unis · Chambre des représentants</span>')
+ru(f'href="{FICHIER["votes"]}" aria-current="page"', f'href="{FICHIER["votes"]}"')
+ru(f'href="{FICHIER["usa"]}">', f'href="{FICHIER["usa"]}" aria-current="page">')
+ru('  <script type="module" src="votes-quebec/intentions.js"></script>', '  <script type="module" src="votes-usa/usa.js"></script>')
+ru('<section class="vue-live vue-votes" id="vue-votes"', '<section class="vue-live vue-votes vu" id="vue-votes"')
+ru('<span class="vi-badge">Intentions de vote</span>', '<span class="vi-badge">États-Unis · Chambre des représentants</span>')
+ru("Assemblée nationale · 127 sièges · majorité 64", "Chambre des représentants · 435 sièges · majorité 218")
+ru('<svg id="viPlan" class="vi-plan" role="img" aria-label="Plan de l\'Assemblée nationale"></svg>',
+   '<svg id="viPlan" class="vi-plan vf-hemi" role="img" aria-label="Hémicycle de la Chambre des représentants (435 sièges)"></svg>')
+us = re.sub(r'<button type="button" data-z="tout">Tout le Québec</button>.*?<button type="button" data-z="sud">Sud</button>',
+            '<button type="button" data-z="tout">États-Unis</button><button type="button" data-z="ne">Nord-Est</button><button type="button" data-z="gl">Grands Lacs</button>'
+            '<button type="button" data-z="ca">Californie</button><button type="button" data-z="tx">Texas</button><button type="button" data-z="fl">Floride</button>', us, flags=re.S)
+us = re.sub(r'<button type="button" data-per="3".*?Depuis 2022</button>',
+            '<button type="button" data-per="3" aria-pressed="true">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button>'
+            '<button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="0" aria-pressed="false">Depuis 2024</button>', us, flags=re.S)
+ru('<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2022</span>', '<span class="lv-eyebrow" id="viEvolSur">Vote générique</span>')
+ru('<h3 id="viEvolTitre">Évolution des intentions de vote</h3>', '<h3 id="viEvolTitre">Évolution du vote générique</h3>')
+ru('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 435 districts de la Chambre des représentants"')
+assert 'src="votes-quebec/intentions.js"' not in us and 'data-z="ne"' in us
+open(os.path.join(RACINE, FICHIER["usa"]), "w", encoding="utf-8").write(us)
+print(f"{FICHIER['usa']:30} {len(us):7} octets")

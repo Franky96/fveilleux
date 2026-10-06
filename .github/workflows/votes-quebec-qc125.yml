@@ -50,6 +50,8 @@ jobs:
           # Votes Canada : sondages fédéraux et projection Qc125 (les 343 fiches ne sont relues que si Qc125 a publié une nouvelle projection)
           (cd ../../votes-canada/outils && python3 sondages_ca.py) || echo "::warning::Sondages fédéraux non mis à jour"
           (cd ../../votes-canada/outils && python3 canada.py) || echo "::warning::Projection fédérale Qc125 non mise à jour"
+          # Votes États-Unis : consensus de 270toWin, Chambre actuelle (Clerk), vote générique (Silver Bulletin)
+          (cd ../../votes-usa/outils && python3 usa.py) || echo "::warning::Votes États-Unis non mis à jour"
 
       - name: data.json, simulation de référence et page
         working-directory: votes-quebec/outils
@@ -62,7 +64,7 @@ jobs:
 
       - name: Publier la vérification (et les données si elles ont changé)
         run: |
-          DONNEES="votes-canada/sondages.json votes-canada/projection.json votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
+          DONNEES="votes-usa/projection.json votes-usa/sondages.json votes-canada/sondages.json votes-canada/projection.json votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
           # la page elle-même ne doit pas changer : seules les données sont publiées
           AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
           if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi
