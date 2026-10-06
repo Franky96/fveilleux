@@ -7,6 +7,17 @@ Usage : /usr/bin/python3 sondages_pres.py   (dans le dossier outils/)
 """
 import json, os, re, urllib.request
 
+
+def verifie(page):
+    """Date de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
+    import datetime, json as _j, os as _o, zoneinfo
+    f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "..", "votes-verif.json")
+    v = _j.load(open(f, encoding="utf-8")) if _o.path.exists(f) else {}
+    a = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+    m = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+    v[page] = {"date": a.isoformat(), "texte": f"{a.day} {m[a.month - 1]} {a.year}"}
+    _j.dump(dict(sorted(v.items())), open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
 ICI = os.path.dirname(os.path.abspath(__file__))
 URL = "https://en.wikipedia.org/w/index.php?title=Opinion_polling_for_the_2027_French_presidential_election&action=raw"
 HDR = {"User-Agent": "fveilleuxBot/1.0 (https://fveilleux.com; franky.veilleux@gmail.com)"}
@@ -104,3 +115,4 @@ json.dump({"source": "Wikipédia, « Opinion polling for the 2027 French preside
            "candidats": {n: c for n, c in candidats.items() if n in utilises}, "sondages": sondages},
           open(os.path.join(ICI, "..", "sondages-pres.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(sondages)} sondages · du {sondages[0]['d']} au {sondages[-1]['d']} · {len(utilises)} candidats · dernier : {sondages[-1]['f']}")
+verifie("france")

@@ -15,6 +15,14 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
 
+// barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
+let VERIF = null;
+const lireVerif = cle => fetch("votes-verif.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).then(v => { VERIF = v[cle] || null; }).catch(() => {});
+function majBarre(nom, donnees) {
+  const t = document.querySelector(".t-votes"); if (!t) return;
+  t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
+}
+
 let DATA, ELEC, SOND, MODE, ETAT, sel = null, demarre = false;
 const etat = { mode: "lead", parti: null, pct: (() => { try { return localStorage.getItem("viPct") !== "0"; } catch { return true; } })() };                   // mode de la carte (comme la carte actuelle de Loi 39)
 const SEAT_ORDER = ["QS", "PQ", "PLQ", "CAQ", "PCQ"];      // départage à égalité de sièges (plan de l'Assemblée)
@@ -146,6 +154,9 @@ function chamber(svgEl, seatsBy, n) {
 
 /* ---------- en-tête, plan de l'Assemblée, partis ---------- */
 function dessinerTete() {
+  const vrais = SOND.sondages.filter(s => !s.e && !(DEMO && s.d > DATE_ELECTION)), dernierS = vrais[vrais.length - 1];
+  majBarre(DEMO ? "Votes Québec · démo (intentions fictives)" : "Votes Québec",
+    (MODE === "election" ? "résultat de l'élection du 5 octobre 2026" : DEMO ? "projection fictive" : `projection Qc125 du ${esc(DATA.maj?.texte || "—")}`) + (dernierS ? ` · dernier sondage le ${dateFr(dernierS.d)}` : ""));
   $("viTitre").textContent = ETAT.titre;
   $("viSource").innerHTML = ETAT.source;
   $("viNote").textContent = ETAT.note;
@@ -441,7 +452,7 @@ async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
-    [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json")]);
+    [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec")]);
     ETAT = construireEtat();
     dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;

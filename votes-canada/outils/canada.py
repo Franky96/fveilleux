@@ -10,6 +10,17 @@ Usage : /usr/bin/python3 canada.py [--force]   (dans le dossier outils/)
 """
 import html, json, os, re, sys, time, urllib.request
 
+
+def verifie(page):
+    """Date de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
+    import datetime, json as _j, os as _o, zoneinfo
+    f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "..", "votes-verif.json")
+    v = _j.load(open(f, encoding="utf-8")) if _o.path.exists(f) else {}
+    a = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+    m = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+    v[page] = {"date": a.isoformat(), "texte": f"{a.day} {m[a.month - 1]} {a.year}"}
+    _j.dump(dict(sorted(v.items())), open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
 ICI = os.path.dirname(os.path.abspath(__file__))
 SORTIE = os.path.join(ICI, "..", "projection.json")
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
@@ -56,7 +67,7 @@ accueil = get("https://qc125.com/canada/")
 maj = mise_a_jour(accueil)
 ancien = json.load(open(SORTIE, encoding="utf-8")) if os.path.exists(SORTIE) else {}
 if ancien.get("maj", {}).get("date") == maj["date"] and "--force" not in sys.argv and "--cache" not in sys.argv:
-    print(f"Projection Qc125 du {maj['texte']} déjà enregistrée : rien à faire."); raise SystemExit(0)
+    print(f"Projection Qc125 du {maj['texte']} déjà enregistrée : rien à faire."); verifie("canada"); raise SystemExit(0)
 vote, sieges = serie(accueil, "indexvote_DATA"), serie(accueil, "indexseats_DATA")
 national = {p: {"v": round(vote[p]["values"], 1), "moe": round(vote[p].get("moe", 0), 1), "s": round(sieges[p]["values"]),
                 "smin": round(sieges[p].get("lowermoe", sieges[p]["values"])), "smax": round(sieges[p].get("uppermoe", sieges[p]["values"]))}
@@ -131,3 +142,4 @@ json.dump({"source": "Qc125 (qc125.com/canada)", "maj": maj, "national": nationa
 g25 = {}
 for c in circ.values(): k = next(iter(c["e25"])); g25[k] = g25.get(k, 0) + 1
 print(f"Projection Qc125 du {maj['texte']} · sièges {({p: x['s'] for p, x in national.items()})} · gagnants 2025 {g25}")
+verifie("canada")

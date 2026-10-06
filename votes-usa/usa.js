@@ -19,6 +19,14 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+
+// barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
+let VERIF = null;
+const lireVerif = cle => fetch("votes-verif.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).then(v => { VERIF = v[cle] || null; }).catch(() => {});
+function majBarre(nom, donnees) {
+  const t = document.querySelector(".t-votes"); if (!t) return;
+  t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
+}
 const AN = a => String(a);
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
@@ -102,7 +110,9 @@ function changerType(t) {
 }
 function dessinerTete() {
   document.querySelectorAll("#vfType button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === TYPE));
-  document.querySelector(".t-votes").textContent = TYPE === "sen" ? "Votes États-Unis · Sénat" : "Votes États-Unis · Chambre des représentants";
+  const mg = SOND.moyenne[SOND.moyenne.length - 1];
+  majBarre(TYPE === "sen" ? "Votes États-Unis · Sénat" : "Votes États-Unis · Chambre",
+    `consensus 270toWin du ${dateFr(TYPE === "sen" ? SEN().maj : PROJ.maj)} · vote générique au ${dateFr(mg.d)}`);
   document.querySelector(".vue-votes .vi-badge").textContent = TYPE === "sen" ? "États-Unis · Sénat" : "États-Unis · Chambre des représentants";
   $("viPlan").setAttribute("aria-label", TYPE === "sen" ? "Hémicycle du Sénat (100 sièges)" : "Hémicycle de la Chambre des représentants (435 sièges)");
   const sond = SOND.sondages, dernier = sond[sond.length - 1], m = SOND.moyenne[SOND.moyenne.length - 1];
@@ -557,7 +567,7 @@ async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
-    [DATA, PROJ, R24, SOND] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"), lireJ("votes-usa/sondages.json")]);
+    [DATA, PROJ, R24, SOND] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"), lireJ("votes-usa/sondages.json"), lireVerif("usa")]);
     DATA.etats.forEach(e => { AB_DE[e.fips] = e.ab; ETAT_NOM[e.ab] = e.nom; });
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
     ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();

@@ -8,6 +8,17 @@ Usage : /usr/bin/python3 sondages_fr.py   (dans le dossier outils/)
 """
 import json, os, re, urllib.request
 
+
+def verifie(page):
+    """Date de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
+    import datetime, json as _j, os as _o, zoneinfo
+    f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "..", "votes-verif.json")
+    v = _j.load(open(f, encoding="utf-8")) if _o.path.exists(f) else {}
+    a = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+    m = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+    v[page] = {"date": a.isoformat(), "texte": f"{a.day} {m[a.month - 1]} {a.year}"}
+    _j.dump(dict(sorted(v.items())), open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
 ICI = os.path.dirname(os.path.abspath(__file__))
 URL = "https://en.wikipedia.org/w/index.php?title=Next_French_legislative_election&action=raw"
 HDR = {"User-Agent": "fveilleuxBot/1.0 (https://fveilleux.com; franky.veilleux@gmail.com)"}
@@ -74,3 +85,4 @@ sondages.insert(0, {"d": "2024-06-30", "f": "Élection (1er tour)", "e": True, "
 json.dump({"source": "Wikipédia, « Next French legislative election » (sondages publiés, sources citées)", "sondages": sondages},
           open(os.path.join(ICI, "..", "sondages.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(sondages) - 1} sondages · du {sondages[1]['d']} au {sondages[-1]['d']} · dernier : {sondages[-1]['f']}")
+verifie("france")

@@ -16,6 +16,14 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+
+// barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
+let VERIF = null;
+const lireVerif = cle => fetch("votes-verif.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).then(v => { VERIF = v[cle] || null; }).catch(() => {});
+function majBarre(nom, donnees) {
+  const t = document.querySelector(".t-votes"); if (!t) return;
+  t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
+}
 // années : texte normal (pas de pastille, contrairement à Votes France)
 const AN = a => String(a);   // années en texte normal sur cette page
 const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" });
@@ -109,6 +117,7 @@ function chambre(svgEl, seatsBy, n) {
 const CHAMBRES = { proj: "Projection Qc125", act: "Chambre actuelle", e25: "Élection 2025" };
 function dessinerTete() {
   const sond = SOND.sondages.filter(s => !s.e && s.d > DATE_ELECTION), dernier = sond[sond.length - 1];
+  majBarre("Votes Canada", `projection Qc125 du ${dateFr(PROJ.maj.date)}${dernier ? ` · dernier sondage le ${dateFr(dernier.d)}` : ""}`);
   $("viTitre").textContent = "Intentions de vote fédérales";
   $("viSource").innerHTML = `Projection Qc125 du ${dateAn(PROJ.maj.date)} · ${sond.length} sondages depuis l'élection du 28 avril ${AN(2025)}`
     + (dernier ? ` · dernier : ${esc(dernier.f)}, ${dateAn(dernier.d)}` : "");
@@ -508,7 +517,7 @@ async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
-    [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json")]);
+    [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"), lireVerif("canada")]);
     preparer();
     dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;

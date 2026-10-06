@@ -23,6 +23,14 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+
+// barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
+let VERIF = null;
+const lireVerif = cle => fetch("votes-verif.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).then(v => { VERIF = v[cle] || null; }).catch(() => {});
+function majBarre(nom, donnees) {
+  const t = document.querySelector(".t-votes"); if (!t) return;
+  t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
+}
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
 
@@ -77,7 +85,9 @@ function dessinerTete() {
   ex.innerHTML = TYPE === "pres"
     ? `<p>Le président de la République est élu directement par les électeurs pour 5 ans, et ne peut pas faire plus de deux mandats de suite (Emmanuel Macron ne peut donc pas se représenter en 2027). Si personne n'obtient plus de 50 % des voix au 1er tour, les deux premiers s'affrontent au 2e tour, deux semaines plus tard. Le président nomme le Premier ministre, qui dirige le gouvernement, mais ce gouvernement doit pouvoir survivre aux votes de l'Assemblée nationale.</p>`
     : `<p>Les 577 députés de l'Assemblée nationale sont élus pour 5 ans, un par circonscription, en deux tours : on est élu dès le 1er tour avec plus de 50 % des voix (et au moins 25 % des inscrits) ; sinon, les candidats qui ont au moins 12,5 % des inscrits passent au 2e tour, et le premier l'emporte. Les députés se regroupent en groupes parlementaires (15 membres au moins). Le Premier ministre est nommé par le président, mais son gouvernement peut être renversé par une motion de censure votée à la majorité absolue (289 députés) ; le président peut, lui, dissoudre l'Assemblée et provoquer des élections anticipées, comme en juin 2024.</p>`;
-  document.querySelector(".t-votes").textContent = TYPE === "leg" ? "Votes France · législatives" : "Votes France · présidentielle 2027";
+  const dS = s => s.sondages.filter(x => !x.e).map(x => x.d).sort().pop();
+  majBarre(TYPE === "leg" ? "Votes France · législatives" : "Votes France · présidentielle 2027",
+    TYPE === "leg" ? `Assemblée au ${dateFr(A.date)} · dernier sondage le ${dateFr(dS(SOND))}` : `dernier sondage le ${dateFr(dS(PRES))}`);
   document.querySelector(".vue-votes .vi-badge").textContent = TYPE === "leg" ? "France · législatives" : "France · présidentielle 2027";
   if (TYPE === "pres") {
     const [top] = p.moy;
@@ -519,7 +529,7 @@ async function demarrer() {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     let ASS;
     [DATA, SOND, PRES, ASS, P22] = await Promise.all([lireJ("votes-france/data.json"), lireJ("votes-france/sondages.json"), lireJ("votes-france/sondages-pres.json"),
-      lireJ("votes-france/assemblee.json"), lireJ("votes-france/pres2022.json")]);
+      lireJ("votes-france/assemblee.json"), lireJ("votes-france/pres2022.json"), lireVerif("france")]);
     BLOCS = DATA.blocs; DATA.circ.forEach(c => { PAR_ID[c.id] = c; c.act = ASS.act[c.id] || null; });
     DATA.assemblee = ASS;
     // couleurs officielles des groupes ; les trop foncées sont éclaircies pour rester lisibles sur fond sombre

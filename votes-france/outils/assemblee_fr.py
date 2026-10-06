@@ -8,6 +8,17 @@ Usage : /usr/bin/python3 assemblee_fr.py   (dans le dossier outils/)
 """
 import io, json, os, urllib.request, zipfile, datetime
 
+
+def verifie(page):
+    """Date de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
+    import datetime, json as _j, os as _o, zoneinfo
+    f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "..", "votes-verif.json")
+    v = _j.load(open(f, encoding="utf-8")) if _o.path.exists(f) else {}
+    a = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+    m = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+    v[page] = {"date": a.isoformat(), "texte": f"{a.day} {m[a.month - 1]} {a.year}"}
+    _j.dump(dict(sorted(v.items())), open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
 ICI = os.path.dirname(os.path.abspath(__file__))
 URL = "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/deputes_actifs_mandats_actifs_organes/AMO10_deputes_actifs_mandats_actifs_organes.json.zip"
 OUTREMER = {"971": "ZA", "972": "ZB", "973": "ZC", "974": "ZD", "975": "ZS", "976": "ZM", "977": "ZX", "986": "ZW", "987": "ZP", "988": "ZN", "099": "ZZ", "99": "ZZ"}
@@ -46,3 +57,4 @@ date = max(datetime.datetime(*i.date_time) for i in z.infolist()).date().isoform
 json.dump({"date": date, "groupes": ordre, "vacants": 577 - total, "act": dict(sorted(act.items()))},
           open(os.path.join(ICI, "..", "assemblee.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{total} députés en exercice · {577 - total} sièges vacants · données du {date} · " + ", ".join(f"{g['id']} {g['n']}" for g in ordre))
+verifie("france")

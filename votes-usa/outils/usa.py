@@ -11,6 +11,17 @@ Usage : /usr/bin/python3 usa.py   (dans le dossier outils/)
 """
 import csv, html, io, json, os, re, urllib.request, datetime
 
+
+def verifie(page):
+    """Date de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
+    import datetime, json as _j, os as _o, zoneinfo
+    f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "..", "votes-verif.json")
+    v = _j.load(open(f, encoding="utf-8")) if _o.path.exists(f) else {}
+    a = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+    m = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+    v[page] = {"date": a.isoformat(), "texte": f"{a.day} {m[a.month - 1]} {a.year}"}
+    _j.dump(dict(sorted(v.items())), open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
 ICI = os.path.dirname(os.path.abspath(__file__))
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}
@@ -120,3 +131,4 @@ if len(sondages) < 100 or len(moy) < 100: raise SystemExit(f"Sondages illisibles
 json.dump({"source": "Silver Bulletin (moyenne du vote générique et liste des sondages)", "moyenne": moy, "sondages": sondages},
           open(os.path.join(ICI, "..", "sondages.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(sondages)} sondages du {sondages[0]['d']} au {sondages[-1]['d']} · moyenne au {moy[-1]['d']} : D {moy[-1]['D']} R {moy[-1]['R']}")
+verifie("usa")
