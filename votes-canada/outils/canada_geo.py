@@ -42,8 +42,11 @@ if not os.path.exists(TERRE):
 from shapely.geometry import box
 nord = box(-142, 51, -55, 84)
 terre = unary_union([shape(f["geometry"]).intersection(nord) for f in json.load(open(TERRE, encoding="utf-8"))["features"]]).buffer(0)
+terre_simple = {False: terre.simplify(0.01, preserve_topology=True).buffer(0), True: terre.simplify(0.02, preserve_topology=True).buffer(0)}
 for num in ("61001", "62001"):   # côtes arctiques plus simples (carte à l'échelle du pays) ; petites îles retirées plus bas
-    g = unary_union(geoms[num]).intersection(terre).simplify(0.02 if num == "62001" else 0.01, preserve_topology=True)
+    # c'est le trait de côte qui est simplifié, pas la circonscription : les frontières terrestres (60e parallèle,
+    # Nunavut–Manitoba…) restent exactement celles des voisines, sans fente entre elles
+    g = unary_union(geoms[num]).intersection(terre_simple[num == "62001"])
     geoms[num] = [unary_union([p for p in getattr(g, "geoms", [g]) if p.geom_type == "Polygon" and p.area >= (0.4 if num == "62001" else 0.12)])]
 # Québec : les contours fédéraux couvrent le fleuve et les rivières (Montréal n'y est pas une île) ; on les découpe avec la
 # terre de la carte de Votes Québec (circonscriptions provinciales, sans l'eau) pour avoir la même allure
