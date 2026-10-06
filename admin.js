@@ -40,7 +40,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'distant',      icon: '🖥️', label: 'Connexion à distance' },
-  { key: 'votes-quebec', icon: '🗳️', label: 'Votes Québec'    },
+  { key: 'votes-quebec', icon: '🗳️', label: 'Intentions de vote et simulations' },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
     { key: '7wonders',    icon: '🏛️', label: '7 Wonders'       },
@@ -65,7 +65,7 @@ const SECTIONS_INVITABLES = [
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société' },
   { key: 'rona',          icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',         icon: '🌐', label: 'OSINT Map'       },
-  { key: 'votes-quebec',  icon: '🗳️', label: 'Votes Québec'    },
+  { key: 'votes-quebec',  icon: '🗳️', label: 'Intentions de vote et simulations' },
 ];
 
 // Anciens noms de permissions → nom de la page qu'elles ouvrent (mêmes règles dans api/permissions.php)
@@ -359,7 +359,7 @@ const PERMS_STRUCTURE = [
   { key: 'pageTest',  label: 'Page de tests' },
   { key: 'osint',     label: 'OSINT Map' },
   { key: 'distant',   label: 'Connexion à distance' },
-  { key: 'votes-quebec', label: 'Votes Québec' },
+  { key: 'votes-quebec', label: 'Intentions de vote et simulations' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },
     { key: 'csdb',      label: 'CSDB' },
