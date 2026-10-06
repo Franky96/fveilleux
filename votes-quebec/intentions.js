@@ -121,9 +121,6 @@ function dessinerTete() {
   const lead = ordre[0];
   $("viSiegesTitre").textContent = `${NOMS[lead]} : ${s[lead]} sièges, gouvernement ${s[lead] >= MAJ ? "majoritaire" : "minoritaire"}`;
   chamber($("viPlan"), s, SIEGES);
-  const partis = [...P5, "AUT"].filter(p => (ETAT.national[p] || 0) > 0.05).sort((a, b) => (s[b] || 0) - (s[a] || 0) || ETAT.national[b] - ETAT.national[a]);
-  $("viPartis").innerHTML = partis.map(p => `<div class="lv-parti" style="--c:${COUL[p]}"><i></i><span class="lv-pnom">${p === "AUT" ? "Autres" : p}</span>`
-    + `<b>${s[p] || 0}</b><small>${(s[p] || 0) > 1 ? "sièges" : "siège"}</small><span class="lv-pvote">${nf(ETAT.national[p], 1)} %</span></div>`).join("");
 }
 
 /* ---------- carte (fonctions de la « carte actuelle » de Loi 39) ---------- */
@@ -328,40 +325,53 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- évolution des intentions de vote ---------- */
+// période affichée (mois ; 0 = depuis l'élection de 2022), gardée d'une visite à l'autre
+let periode = (() => { try { return +localStorage.getItem("viPeriode") || 0; } catch { return 0; } })();
 function dessinerEvolution() {
-  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(420, W * 0.42));
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
   const m = { t: 16, r: 54, b: 28, l: 34 };
-  const sond = SOND.sondages.filter(s => !s.e);
+  const t = s => new Date(s + "T12:00:00");
+  const tous = SOND.sondages.filter(s => !s.e);
+  const fin_ = d3.max([new Date(), ...tous.map(s => t(s.d))]);
+  const debut = periode ? d3.max([t("2022-10-01"), d3.timeMonth.offset(fin_, -periode)]) : t("2022-10-01");
+  const dans = d => t(d) >= debut;
+  const sond = tous.filter(s => dans(s.d));
   const elections = SOND.sondages.filter(s => s.e).map(s => ({ d: s.d, ...Object.fromEntries(P5.map(p => [p, s[p]])) }));
   if (!elections.some(x => x.d === DATE_ELECTION)) elections.push({ d: DATE_ELECTION, ...Object.fromEntries(P5.map(p => [p, ELEC.national[p]])) });
-  const t = s => new Date(s + "T12:00:00");
-  const x = d3.scaleTime().domain([t("2022-10-01"), d3.max([new Date(), ...sond.map(s => t(s.d))])]).range([m.l, W - m.r]);
-  const y = d3.scaleLinear().domain([0, Math.ceil((d3.max(sond, s => d3.max(P5, p => s[p])) + 4) / 10) * 10]).range([H - m.b, m.t]);
+  const elecVis = elections.filter(e => dans(e.d));
+  document.querySelectorAll("#viPeriodes button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.per === periode));
+  $("viEvolSur").textContent = periode ? `${periode < 12 ? periode + " derniers mois" : periode === 12 ? "Dernière année" : periode / 12 + " dernières années"}` : "Depuis l'élection de 2022";
+  const x = d3.scaleTime().domain([debut, fin_]).range([m.l, W - m.r]);
+  const yMax = d3.max([...sond, ...elecVis], s => d3.max(P5, p => s[p])) || 40;
+  const y = d3.scaleLinear().domain([0, Math.ceil((yMax + 4) / 10) * 10]).range([H - m.b, m.t]);
   // tendance : moyenne pondérée des sondages autour de chaque semaine (noyau gaussien, écart-type 21 jours),
   // calculée seulement entre le premier et le dernier sondage
-  const SIGMA = 21, t0 = t(sond[0].d), t1 = t(sond[sond.length - 1].d);
+  // (la tendance est calculée sur tous les sondages, puis coupée à la période : pas d'effet de bord au début)
+  const SIGMA = periode && periode <= 6 ? 10 : 21, t0 = t(tous[0].d), t1 = t(tous[tous.length - 1].d);
   const dates = [];
   for (let d = new Date(t0); d <= t1; d = new Date(+d + 7 * 864e5)) dates.push(d.toISOString().slice(0, 10));
-  if (dates[dates.length - 1] !== sond[sond.length - 1].d) dates.push(sond[sond.length - 1].d);
+  if (dates[dates.length - 1] !== tous[tous.length - 1].d) dates.push(tous[tous.length - 1].d);
+  const datesVis = dates.filter(dans);
   const poids = (d, s) => Math.exp(-0.5 * ((t(d) - t(s.d)) / 864e5 / SIGMA) ** 2);
   const cache = {};
-  const moy = p => cache[p] ||= dates.map(d => { let a = 0, w = 0; for (const s of sond) { const k = poids(d, s); a += k * s[p]; w += k; } return { d, v: a / w }; });
-  const nbAutour = d => sond.filter(s => Math.abs(t(d) - t(s.d)) / 864e5 <= 30).length;
+  const moy = p => cache[p] ||= datesVis.map(d => { let a = 0, w = 0; for (const s of tous) { const k = poids(d, s); a += k * s[p]; w += k; } return { d, v: a / w }; });
+  const nbAutour = d => tous.filter(s => Math.abs(t(d) - t(s.d)) / 864e5 <= 30).length;
   const ligne = d3.line().x(o => x(t(o.d))).y(o => y(o.v)).curve(d3.curveMonotoneX);
   const svgE = d3.select(el).html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "Évolution des intentions de vote depuis 2022");
-  svgE.append("g").attr("class", "vi-axe").attr("transform", `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(W < 600 ? 4 : 8).tickFormat(d => d.toLocaleDateString("fr-CA", { month: "short", year: "numeric" })).tickSizeOuter(0));
+  svgE.append("g").attr("class", "vi-axe").attr("transform", `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(W < 600 ? 4 : periode && periode <= 6 ? 6 : 8)
+    .tickFormat(d => d.toLocaleDateString("fr-CA", periode && periode <= 6 ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" })).tickSizeOuter(0));
   svgE.append("g").attr("class", "vi-axe vi-grille").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(v => v + " %"));
-  for (const e of elections) {
+  for (const e of elecVis) {
     svgE.append("line").attr("class", "vi-elec").attr("x1", x(t(e.d))).attr("x2", x(t(e.d))).attr("y1", m.t).attr("y2", H - m.b);
     const aDroite = x(t(e.d)) > W / 2;   // étiquette à gauche du trait près du bord droit
     svgE.append("text").attr("class", "vi-elec-txt").attr("x", x(t(e.d)) + (aDroite ? -4 : 4)).attr("y", m.t + 10).attr("text-anchor", aDroite ? "end" : "start").text("Élection " + e.d.slice(0, 4));
   }
   const fin = {};
   for (const p of P5) {
-    svgE.append("g").selectAll("circle").data(sond).join("circle").attr("class", "vi-pt").attr("cx", s => x(t(s.d))).attr("cy", s => y(s[p])).attr("r", 2.2).style("fill", COUL[p]);
+    svgE.append("g").selectAll("circle").data(sond).join("circle").attr("class", "vi-pt").attr("cx", s => x(t(s.d))).attr("cy", s => y(s[p])).attr("r", periode && periode <= 12 ? 3.2 : 2.2).style("fill", COUL[p]);
     const mm = moy(p); fin[p] = mm[mm.length - 1];
     svgE.append("path").attr("class", "vi-ligne").attr("d", ligne(mm)).style("stroke", COUL[p]);
-    svgE.append("g").selectAll("rect").data(elections).join("rect").attr("class", "vi-elec-pt").attr("width", 8).attr("height", 8)
+    svgE.append("g").selectAll("rect").data(elecVis).join("rect").attr("class", "vi-elec-pt").attr("width", 8).attr("height", 8)
       .attr("transform", e => `translate(${x(t(e.d))},${y(e[p])}) rotate(45) translate(-4,-4)`).style("fill", COUL[p]);
   }
   // étiquettes de fin de ligne (écartées pour ne pas se chevaucher)
@@ -372,7 +382,7 @@ function dessinerEvolution() {
   const tipE = $("viEvolTip"), repere = svgE.append("line").attr("class", "vi-repere").attr("y1", m.t).attr("y2", H - m.b).style("display", "none");
   svgE.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
     .on("mousemove", ev => {
-      const [mx] = d3.pointer(ev), dt = x.invert(mx), d = dates.reduce((a, b) => Math.abs(t(b) - dt) < Math.abs(t(a) - dt) ? b : a);
+      const [mx] = d3.pointer(ev), dt = x.invert(mx), d = datesVis.reduce((a, b) => Math.abs(t(b) - dt) < Math.abs(t(a) - dt) ? b : a);
       repere.style("display", null).attr("x1", x(t(d))).attr("x2", x(t(d)));
       const vals = P5.map(p => [p, moy(p).find(o => o.d === d).v]).sort((a, b) => b[1] - a[1]);
       const n = nbAutour(d);
@@ -382,7 +392,7 @@ function dessinerEvolution() {
       tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
-  $("viEvolNote").textContent = `${sond.length} sondages nationaux depuis l'élection de 2022 (Qc125). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultats des élections.`;
+  $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultats des élections.`;
 }
 
 /* ---------- démarrage ---------- */
@@ -393,6 +403,8 @@ async function demarrer() {
     [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json")]);
     ETAT = construireEtat();
     dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
+    $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
+      periode = +b.dataset.per; try { localStorage.setItem("viPeriode", periode); } catch {} dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
   } catch (e) { $("viSource").textContent = "Chargement impossible : " + e.message; console.error(e); }
 }

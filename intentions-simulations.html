@@ -425,11 +425,14 @@
     .vi-ramp { display: inline-block; width: 140px; height: 10px; border-radius: 5px; border: 1px solid var(--rule); }
     .vi-lbl { fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-linejoin: round; font-weight: 700; pointer-events: none; font-variant-numeric: tabular-nums; }
     .vi-lab .vi-nom { font-weight: 600; fill: var(--muted); }
-    .vi-sieges-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-    .vi-sieges-corps { display: grid; grid-template-columns: minmax(240px, 360px) minmax(0, 1fr); gap: 20px; align-items: center; }
-    .vi-plan { display: block; width: 100%; height: auto; max-height: 520px; }
-    .vi-partis { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); align-content: center; }
-    @media (max-width: 700px) { .vi-sieges-corps { grid-template-columns: minmax(0, 1fr); } .vi-plan { max-width: 340px; margin: 0 auto; } .vi-partis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    /* haut de page : plan de l'Assemblée (à gauche) et évolution des intentions de vote (à droite) */
+    .vi-haut { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    @media (min-width: 1000px) { .vi-haut { grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); } }
+    .vi-sieges { align-content: start; }
+    .vi-plan { display: block; width: 100%; max-width: 380px; height: auto; margin: 0 auto; }
+    .vi-evol-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .vi-periodes button { font: inherit; font-size: 0.78rem; font-weight: 600; padding: 5px 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .vi-periodes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
     .vi-pills { display: flex; flex-wrap: wrap; gap: 6px; }
     .vi-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--soft); font-variant-numeric: tabular-nums; }
     .vi-pill i { width: 9px; height: 9px; border-radius: 50%; }
@@ -468,7 +471,7 @@
     .vi-cands span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .vi-cands em { font-style: normal; font-size: 0.72rem; color: var(--muted); }
     .vi-cands b { font-variant-numeric: tabular-nums; }
-    .vi-evol { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+    .vi-evol { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
     .vi-evol h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .vi-evol-zone { position: relative; }
     #viEvol svg { display: block; width: 100%; height: auto; overflow: visible; }
