@@ -119,6 +119,24 @@
     .lv-pvote { grid-column: 4; grid-row: 2; justify-self: end; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
     /* carte, fiche de circonscription et suivis :
        étroit : l'un sous l'autre · large : carte à gauche, fiche puis suivies à droite (mode « Détaillé » : fiche sous la carte) */
+    /* rectangles de parti cliquables → liste des élu·e·s et des circonscriptions en avance */
+    button.lv-parti { font: inherit; color: inherit; text-align: left; border: 1px solid transparent; cursor: pointer; }
+    button.lv-parti:hover { border-color: var(--rule); }
+    button.lv-parti[aria-expanded="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--bg)); }
+    button.lv-parti:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .lv-listelus { display: grid; gap: 8px; padding: 12px; border-radius: 10px; background: var(--bg); border-top: 3px solid var(--c); }
+    .lv-listelus[hidden] { display: none; }
+    .lv-elus-tete { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .lv-elus-tete span { color: var(--muted); font-size: 0.8rem; flex: 1; }
+    .lv-listelus h4 { margin: 4px 0 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .lv-listelus ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 6px; }
+    .lv-elu { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 0.82rem; }
+    .lv-elu:hover, .lv-elu:focus-visible { outline: 1px solid var(--c); }
+    .lv-elu .lv-ava { width: 34px; height: 34px; }
+    .lv-elu span { display: grid; min-width: 0; }
+    .lv-elu span b, .lv-elu span small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-elu small { color: var(--muted); font-size: 0.72rem; }
+    .lv-elu-ecart { text-align: right; font-variant-numeric: tabular-nums; }
     .lv-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "carte" "panneau" "suivi"; gap: 20px; align-items: start; }
     .lv-grid > .lv-cartecard { grid-area: carte; }
     .lv-grid > .lv-panneau { grid-area: panneau; }
@@ -444,6 +462,7 @@
         </div>
         <p class="lv-muted lv-legende"><i class="lv-k plein"></i>élu·e (résultat final) <i class="lv-k pale"></i>en avance · sur 127 sièges</p>
         <div class="lv-partis" id="lvPartis"></div>
+        <div class="lv-listelus" id="lvElus" aria-live="polite" hidden></div>
       </section>
 
       <div class="lv-grid">

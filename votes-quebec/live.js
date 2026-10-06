@@ -573,9 +573,36 @@ function dessinerBarre() {
     const k = partiDe(p.abreviationPartiPolitique); vote[k] = (vote[k] || 0) + (+p.tauxVoteTotal || 0);
   }
   $("lvPartis").innerHTML = PARTIS.filter(p => tot(p) > 0 || vote[p] > 0.05).sort((a, b) => tot(b) - tot(a) || (vote[b] || 0) - (vote[a] || 0)).map(p =>
-    `<div class="lv-parti" style="--c:${COUL[p]}"><i></i><span class="lv-pnom">${p === "AUT" ? "Autres" : p}</span>`
-    + `<b>${tot(p)}</b><small>${s[p].elus} élu${s[p].elus > 1 ? "s" : ""} · ${s[p].avance} en avance</small><span class="lv-pvote">${vote[p] != null ? nf(vote[p], 1) + " %" : "—"}</span></div>`).join("");
+    `<button type="button" class="lv-parti" data-pe="${p}" aria-expanded="${partiElus === p}" style="--c:${COUL[p]}" title="Voir les élus et les circonscriptions en avance"><i></i><span class="lv-pnom">${p === "AUT" ? "Autres" : p}</span>`
+    + `<b>${tot(p)}</b><small>${s[p].elus} élu${s[p].elus > 1 ? "s" : ""} · ${s[p].avance} en avance</small><span class="lv-pvote">${vote[p] != null ? nf(vote[p], 1) + " %" : "—"}</span></button>`).join("");
+  dessinerElus();
 }
+
+// clic sur un rectangle de parti : ses élu·e·s (résultat final), puis ses circonscriptions en avance
+let partiElus = null;
+function dessinerElus() {
+  const z = $("lvElus"), P = partiElus;
+  if (!P) { z.hidden = true; z.innerHTML = ""; return; }
+  const lignes = Object.entries(parRid).filter(([, c]) => c.tete && c.tete.parti === P).map(([i, c]) => {
+    const [a, b] = c.cands; return { i: +i, c, a, voix: a.nbVoteTotal - (b ? b.nbVoteTotal : 0), pts: a.tauxVote - (b ? b.tauxVote : 0), b };
+  }).sort((x, y) => y.voix - x.voix);
+  const elus = lignes.filter(l => l.c.isResultatsFinaux), avance = lignes.filter(l => !l.c.isResultatsFinaux);
+  const item = l => `<li class="lv-elu" data-rid="${l.i}" tabindex="0" style="--c:${COUL[P]}">${avatar(P, DATA.ridings[l.i].n, l.a.prenom, l.a.nom)}`
+    + `<span><b>${esc(l.a.prenom)} ${esc(l.a.nom)}</b><small>${esc(DATA.ridings[l.i].n)}</small></span>`
+    + `<span class="lv-elu-ecart"><b>+${nf(l.voix)}</b><small>${l.c.isResultatsFinaux ? "élu·e" : nf(100 * l.c.frac, 0) + " % bur."}${l.b ? " · vs " + esc(l.b.parti === "AUT" ? l.b.abreviationPartiPolitique : l.b.parti) : ""}</small></span></li>`;
+  z.hidden = false;
+  z.style.setProperty("--c", COUL[P]);
+  z.innerHTML = `<div class="lv-elus-tete"><b>${NOMS[P]}</b><span>${elus.length} élu${elus.length > 1 ? "·e·s" : "·e"} · ${avance.length} en avance</span><button type="button" class="lv-effacer" data-pe-fermer>Fermer</button></div>`
+    + (elus.length ? `<h4>Élu·e·s</h4><ul>${elus.map(item).join("")}</ul>` : `<p class="lv-muted">Aucun résultat final pour l'instant : une circonscription est remportée quand tous ses bureaux sont dépouillés.</p>`)
+    + (avance.length ? `<h4>En avance</h4><ul>${avance.map(item).join("")}</ul>` : "");
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-pe-fermer]")) { partiElus = null; dessinerBarre(); return; }
+  const b = e.target.closest("#lvPartis [data-pe]");
+  if (b) { partiElus = partiElus === b.dataset.pe ? null : b.dataset.pe; dessinerBarre(); return; }
+  const l = e.target.closest(".lv-elu");
+  if (l) choisir(+l.dataset.rid);
+});
 
 function dessinerEtat() {
   const st = resultats?.statistiques;
