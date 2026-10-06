@@ -1,4 +1,4 @@
-/* Votes États-Unis — Chambre des représentants, élections de mi-mandat du 3 novembre 2026 ; même gabarit que « Votes Canada ».
+/* Votes États-Unis — projections pour le Congrès (Chambre des représentants et Sénat) ; même gabarit que « Votes Canada ».
    Projection : cote de chaque district selon le consensus de 270toWin (7 prévisionnistes), sur les districts de 2026
    (projection.json, outils/usa.py). Chambre actuelle : membres en exercice selon le Clerk de la Chambre. Élection de 2024 :
    résultat de chaque district (resultats-2024.json, outils/resultats24.py). Chambre actuelle et 2024 : districts de 2024
@@ -106,12 +106,12 @@ function dessinerTete() {
   document.querySelector(".vue-votes .vi-badge").textContent = TYPE === "sen" ? "États-Unis · Sénat" : "États-Unis · Chambre des représentants";
   $("viPlan").setAttribute("aria-label", TYPE === "sen" ? "Hémicycle du Sénat (100 sièges)" : "Hémicycle de la Chambre des représentants (435 sièges)");
   const sond = SOND.sondages, dernier = sond[sond.length - 1], m = SOND.moyenne[SOND.moyenne.length - 1];
-  $("viTitre").textContent = "Élections de mi-mandat du 3 novembre 2026";
+  $("viTitre").textContent = TYPE === "sen" ? "Sénat : projection" : "Chambre des représentants : projection";
   $("viSource").innerHTML = TYPE === "sen" ? `Sénat · consensus de 270toWin du ${dateFr(SEN().maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})` : `Chambre des représentants · consensus de 270toWin du ${dateFr(PROJ.maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})`;
   $("viNote").textContent = TYPE === "sen" ? "Projection : chaque État où un siège est en jeu est coloré selon la cote de sa course dans le consensus de sept prévisionnistes ; les sièges non renouvelés gardent leur parti." : "Projection : chaque district est coloré selon sa cote dans le consensus de sept prévisionnistes (sûr, probable, penché ou à égalité). Les prévisionnistes ne publient pas de pourcentage par district.";
   let ex = $("vfExplic");
   if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
-  ex.innerHTML = TYPE === "sen" ? `<p>Le Sénat compte 100 sénateurs, deux par État, élus pour six ans ; un tiers des sièges est renouvelé tous les deux ans. Le 3 novembre 2026, 35 sièges sont en jeu : les 33 sièges ordinaires et deux élections partielles (Ohio et Floride). La majorité est de 51 sièges ; à 50 contre 50, le vice-président (JD Vance, républicain) départage.</p>` : `<p>Les 435 membres de la Chambre des représentants sont élus pour deux ans, un par district. En général, le candidat qui a le plus de voix l'emporte (l'Alaska et le Maine utilisent le vote préférentiel). Il faut 218 sièges pour la majorité. Le même jour, 35 des 100 sièges du Sénat sont aussi en jeu. Neuf États ont redessiné leurs districts depuis 2024 : la projection utilise les districts de 2026, la Chambre actuelle et l'élection de 2024 ceux de 2024.</p>`;
+  ex.innerHTML = TYPE === "sen" ? `<p>Le Sénat compte 100 sénateurs, deux par État, élus pour six ans ; un tiers des sièges est renouvelé tous les deux ans. À la prochaine élection, 35 sièges sont en jeu : les 33 sièges ordinaires et deux élections partielles (Ohio et Floride). La majorité est de 51 sièges ; à 50 contre 50, le vice-président (JD Vance, républicain) départage.</p>` : `<p>Les 435 membres de la Chambre des représentants sont élus pour deux ans, un par district. En général, le candidat qui a le plus de voix l'emporte (l'Alaska et le Maine utilisent le vote préférentiel). Il faut 218 sièges pour la majorité. Neuf États ont redessiné leurs districts depuis 2024 : la projection utilise les districts de 2026, la Chambre actuelle et l'élection de 2024 ceux de 2024.</p>`;
   let choix = $("vcChambre");
   if (!choix) {
     choix = document.createElement("div"); choix.id = "vcChambre"; choix.className = "lv-groupe vi-periodes vc-choix"; choix.setAttribute("role", "group"); choix.setAttribute("aria-label", "Chambre affichée");
