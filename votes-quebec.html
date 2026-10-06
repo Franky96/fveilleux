@@ -307,9 +307,27 @@
     .lv-zoom .lv-info-btn { display: none; }
     .lv-cartecard:fullscreen .lv-info-btn, .lv-cartecard.lv-plein .lv-info-btn { display: inline-block; }
     .lv-zoom .lv-info-btn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-    .lv-panneau.lv-panneau-plein { position: absolute; z-index: 4; top: 10px; right: 10px; max-height: calc(100% - 70px); width: min(380px, calc(100% - 20px));
+    /* barre des sièges compacte, en plein écran seulement : en bas à droite (hors de la carte), translucide */
+    .lv-barre-plein { display: none; }
+    .lv-cartecard:fullscreen .lv-barre-plein, .lv-cartecard.lv-plein .lv-barre-plein {
+      display: grid; gap: 5px; position: absolute; z-index: 3; bottom: 10px; right: 10px; width: min(380px, calc(100% - 420px));
+      min-width: 280px; padding: 8px 12px 9px; border-radius: 10px; background: rgba(10, 11, 14, 0.78); color: #F4F5F7; border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); pointer-events: none; font-size: 0.75rem; }
+    .lv-bp-tete { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .lv-bp-tete span { color: #A7AEBB; font-size: 0.7rem; font-variant-numeric: tabular-nums; }
+    .lv-bp-barre { position: relative; display: flex; height: 8px; border-radius: 4px; overflow: visible; background: rgba(255,255,255,0.1); }
+    .lv-bp-barre span { position: relative; height: 100%; background: color-mix(in srgb, var(--c) 50%, #1A1D24); }
+    .lv-bp-barre span:first-child { border-radius: 4px 0 0 4px; }
+    .lv-bp-barre span i { position: absolute; inset: 0 auto 0 0; background: var(--c); }
+    .lv-bp-barre em { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2px solid #F4F5F7; }
+    .lv-bp-partis { display: flex; flex-wrap: wrap; gap: 4px 10px; color: #C9CED8; font-variant-numeric: tabular-nums; }
+    .lv-bp-partis span { display: inline-flex; align-items: center; gap: 4px; }
+    .lv-bp-partis i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+    .lv-bp-partis b { color: #F4F5F7; }
+    @media (max-width: 900px) { .lv-cartecard:fullscreen .lv-barre-plein, .lv-cartecard.lv-plein .lv-barre-plein { left: 10px; right: 10px; width: auto; min-width: 0; bottom: 58px; } }
+    .lv-panneau.lv-panneau-plein { position: absolute; z-index: 4; top: 10px; right: 10px; max-height: calc(100% - 120px); width: min(380px, calc(100% - 20px));
       overflow: auto; overscroll-behavior: contain; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
-    @media (max-width: 600px) { .lv-panneau.lv-panneau-plein { top: auto; bottom: 60px; left: 10px; right: 10px; width: auto; max-height: 55%; } }
+    @media (max-width: 600px) { .lv-panneau.lv-panneau-plein { top: auto; bottom: 140px; left: 10px; right: 10px; width: auto; max-height: 50%; } }
     /* téléphone : zoom au doigt (pincer), pas besoin des boutons de zoom */
     @media (max-width: 600px) { .lv-zoom [data-z="tout"], .lv-zoom [data-z="mtl"], .lv-zoom [data-z="qc"], .lv-zoom [data-z="plus"], .lv-zoom [data-z="moins"] { display: none; } }
     .lv-cartecard:fullscreen, .lv-cartecard.lv-plein { border: 0; border-radius: 0; width: 100%; height: 100%; }
@@ -435,6 +453,7 @@
             <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
             <span class="lv-groupe" role="group" aria-label="Affichage de la carte (un seul à la fois, ou aucun)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button><button type="button" data-z="particip" id="lvCarteParticip" aria-pressed="false" title="Taux de participation par circonscription : plus c'est blanc, plus la participation est forte (blanc = 100 %)">Participation</button></span>
           </div>
+          <div class="lv-barre-plein" id="lvBarrePlein" aria-label="Sièges"></div>
           <div class="lv-zoom lv-zoom-bas" id="lvZoomBas">
             <span class="lv-menu-suivis">
               <button type="button" id="lvCarteSuivis" aria-haspopup="true" aria-expanded="false" aria-pressed="false" title="Entourer sur la carte les circonscriptions suivies pour un parti">★ Suivis</button>

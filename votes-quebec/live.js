@@ -552,6 +552,11 @@ function dessinerBarre() {
   const pct = n => (100 * n / SIEGES) + "%";
   $("lvBarre").innerHTML = ordre.map(p => `<span class="lv-seg" style="width:${pct(tot(p))};--c:${COUL[p]}" title="${NOMS[p]} : ${tot(p)} siège${tot(p) > 1 ? "s" : ""}">`
     + `<i class="lv-elus" style="width:${100 * s[p].elus / tot(p)}%"></i><b>${p === "AUT" ? "Aut." : p} ${tot(p)}</b></span>`).join("");
+  // version compacte pour le plein écran : barre fine, ligne de majorité, sièges par parti en dessous
+  const nRes = Object.values(parRid).filter(c => c.tete).length;
+  $("lvBarrePlein").innerHTML = `<div class="lv-bp-tete"><b>${nRes ? (tot(ordre[0]) >= MAJ ? `${ordre[0]} majoritaire` : `${ordre[0]} en tête`) : "Sièges"}</b><span>majorité ${MAJ} · ${nRes}/${SIEGES} circ.</span></div>`
+    + `<div class="lv-bp-barre">${ordre.map(p => `<span style="width:${pct(tot(p))};--c:${COUL[p]}"><i style="width:${100 * s[p].elus / tot(p)}%"></i></span>`).join("")}<em style="left:${100 * MAJ / SIEGES}%"></em></div>`
+    + `<div class="lv-bp-partis">${nRes ? ordre.map(p => `<span style="--c:${COUL[p]}"><i></i>${p === "AUT" ? "Aut." : p} <b>${tot(p)}</b></span>`).join("") : `<span>En attente des premiers résultats</span>`}</div>`;
   // étiquette selon la place : « PQ 54 », sinon « 54 », sinon rien
   for (const seg of $("lvBarre").querySelectorAll(".lv-seg")) {
     const b = seg.querySelector("b"); if (!b) continue;
