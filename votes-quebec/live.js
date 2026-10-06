@@ -117,15 +117,18 @@ function indexerParticipation() {
   for (const c of participation?.circonscriptions || []) { const i = rangDe(c.nom, c.code); if (i != null) partRid[i] = c.taux; }
 }
 // taux d'une circonscription : final une fois tous ses bureaux dépouillés, sinon le préliminaire de la journée
+// le taux des résultats compte seulement les bureaux dépouillés : on le prend quand (presque) tous le sont
+const QUASI = 0.95;
 function tauxParticip(i) {
   const c = parRid[i];
-  if (c && c.isResultatsFinaux && +c.tauxParticipation) return { v: +c.tauxParticipation, final: true };
+  if (c && +c.tauxParticipation && (c.isResultatsFinaux || c.frac >= QUASI)) return { v: +c.tauxParticipation, final: !!c.isResultatsFinaux, res: true };
   return partRid[i] != null ? { v: partRid[i], final: false } : null;
 }
 // ensemble du Québec : taux final, sinon le préliminaire publié par Élections Québec, sinon la moyenne des circonscriptions
 function tauxGlobal() {
   const st = resultats?.statistiques;
-  if (st?.isResultatsFinaux && +st.tauxParticipationTotal) return { v: +st.tauxParticipationTotal, final: true };
+  if (+st?.tauxParticipationTotal && (st.isResultatsFinaux || +st.tauxBureauVoteRempli >= 100 * QUASI))
+    return { v: +st.tauxParticipationTotal, final: !!st.isResultatsFinaux, res: true, bureaux: +st.tauxBureauVoteRempli };
   if (participation?.ensemble) return { v: participation.ensemble, final: false };
   const v = Object.values(partRid);
   return v.length ? { v: v.reduce((a, b) => a + b, 0) / v.length, final: false, moyenne: true } : null;
@@ -155,6 +158,7 @@ function dessinerParticip() {
   const maj = participation?.maj ? new Date(participation.maj) : null;
   el.querySelector("b").textContent = nf(g.v, 1) + " %";
   el.querySelector("small").textContent = g.final ? "Participation finale"
+    : g.res ? `Participation · ${nf(g.bureaux, 1)} % des bureaux dépouillés`
     : `Participation préliminaire${g.moyenne ? " (moyenne)" : ""}${maj && !isNaN(maj) ? " · " + maj.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" }) : ""}`;
 }
 
@@ -683,7 +687,7 @@ function dessinerPanneau() {
     const g = tauxGlobal(), liste = Object.keys(DATA.ridings).map(i => [+i, tauxParticip(+i)]).filter(([, t]) => t).sort((a, b) => b[1].v - a[1].v);
     const ligne = ([i, t]) => `<li><span class="lv-pk" style="background:${couleurParticip(t.v)}"></span>${esc(DATA.ridings[i].n)}<b>${nf(t.v, 1)} %</b></li>`;
     p.innerHTML = `<span class="lv-eyebrow">Taux de participation</span><h3>${g ? `${nf(g.v, 2)} % dans l'ensemble du Québec` : "Pas encore de taux publié"}</h3>
-      <p class="lv-muted">${g && g.final ? "Taux final." : "Taux préliminaire publié par Élections Québec pendant la journée du vote ; il peut différer du taux final."} Chaque circonscription passe au taux final une fois tous ses bureaux dépouillés.</p>
+      <p class="lv-muted">${g && g.final ? "Taux final." : g && g.res ? `Taux tiré des résultats (${nf(g.bureaux, 1)} % des bureaux dépouillés) ; il deviendra final au recensement des votes.` : "Taux préliminaire publié par Élections Québec pendant la journée du vote ; il peut différer du taux final."} Chaque circonscription passe au taux des résultats quand au moins 95 % de ses bureaux sont dépouillés.</p>
       <div class="lv-pgrad" role="img" aria-label="Dégradé : noir jusqu'à 10 %, blanc à partir de 90 %">${g ? `<i style="left:${g.v}%" title="Québec : ${nf(g.v, 1)} %"></i>` : ""}</div>
       <div class="lv-pechelle">${[10, 30, 50, 70, 90].map(v => `<span style="left:${v}%">${v} %</span>`).join("")}</div>`
       + (liste.length ? `<div class="lv-pcols"><div><span class="lv-eyebrow">Plus fortes</span><ol class="lv-plist">${liste.slice(0, 5).map(ligne).join("")}</ol></div>
@@ -729,7 +733,7 @@ function dessinerPanneau() {
         <td><b>${esc(k.prenom)} ${esc(k.nom)}</b>${sortant(k.prenom, k.nom) ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(k.abreviationPartiPolitique)} · ${nf(k.nbVoteAvance)} par anticipation</small>
           <span class="lv-jauge"><i style="width:${Math.min(100, k.tauxVote)}%"></i></span></td>
         <td class="lv-num"><b>${nf(k.tauxVote, 1)} %</b><small>${nf(k.nbVoteTotal)}</small></td></tr>`).join("")}</tbody></table>
-      <div class="lv-kv"><div><b>${tauxParticip(sel) ? nf(tauxParticip(sel).v, 1) + " %" : "—"}</b><span>participation${tauxParticip(sel)?.final ? "" : " (prélim.)"}</span></div><div><b>${nf(c.nbElecteurInscrit)}</b><span>inscrits</span></div>
+      <div class="lv-kv"><div><b>${tauxParticip(sel) ? nf(tauxParticip(sel).v, 1) + " %" : "—"}</b><span>participation${tauxParticip(sel)?.final || tauxParticip(sel)?.res ? "" : " (prélim.)"}</span></div><div><b>${nf(c.nbElecteurInscrit)}</b><span>inscrits</span></div>
         <div><b>${nf(c.nbVoteRejete)}</b><span>rejetés (${nf(c.tauxVoteRejete, 1)} %)</span></div></div>`;
   } else {
     const tp = tauxParticip(sel);
@@ -756,7 +760,7 @@ function infobulle(e, f) {
   tip.style.left = (e.clientX - box.left + 12) + "px"; tip.style.top = (e.clientY - box.top + 12) + "px";
   if (carteParticip) {
     const t = tauxParticip(i);
-    tip.innerHTML = `<b>${esc(r.n)}</b>${t ? `Participation : ${nf(t.v, 1)} %<br><small>${t.final ? "taux final" : "taux préliminaire"}</small>` : "<small>Pas de taux publié</small>"}`;
+    tip.innerHTML = `<b>${esc(r.n)}</b>${t ? `Participation : ${nf(t.v, 1)} %<br><small>${t.final ? "taux final" : t.res ? "selon les résultats" : "taux préliminaire de la journée"}</small>` : "<small>Pas de taux publié</small>"}`;
     return;
   }
   if (cartePred) {
