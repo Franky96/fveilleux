@@ -20,9 +20,41 @@ const etat = { mode: "lead", parti: null, pct: (() => { try { return localStorag
 const SEAT_ORDER = ["QS", "PQ", "PLQ", "CAQ", "PCQ"];      // départage à égalité de sièges (plan de l'Assemblée)
 
 /* ---------- état courant : résultat de l'élection, ou projection Qc125 ---------- */
+/* ---------- démo (votes-quebec-demo.html) : sondages fictifs après l'élection, projetés par écart uniforme ---------- */
+const DEMO = !!window.VI_DEMO;
+const SONDAGES_DEMO = [   // intentions fictives : le PQ s'effrite, la CAQ remonte (exemple seulement)
+  ["2026-10-22", "Léger", 29, 24, 13, 20, 12], ["2026-11-05", "Pallas Data", 28, 25, 15, 19, 11], ["2026-11-19", "Léger", 27, 24, 16, 20, 11],
+  ["2026-12-03", "Mainstreet Research", 26, 25, 18, 19, 10], ["2026-12-17", "Léger", 26, 24, 19, 19, 11], ["2027-01-14", "Pallas Data", 25, 24, 21, 18, 10],
+  ["2027-01-28", "Léger", 24, 25, 22, 18, 10], ["2027-02-11", "Research Co.", 24, 23, 24, 18, 10],
+];
+function ajouterDemo() {
+  for (const [d, f, PQ, PLQ, CAQ, PCQ, QS] of SONDAGES_DEMO) SOND.sondages.push({ d, f, e: false, n: "1 000", PQ, PLQ, CAQ, PCQ, QS });
+}
+// écart uniforme : chaque parti gagne ou perd, dans chaque circonscription, ce qu'il gagne ou perd au national
+function etatDemo(apres) {
+  const recents = apres.slice(-4), nat = Object.fromEntries(P5.map(p => [p, d3.mean(recents, s => s[p])]));
+  const ecart = Object.fromEntries(P5.map(p => [p, nat[p] - ELEC.national[p]]));
+  const sieges = {};
+  const circ = DATA.ridings.map(r => {
+    const c = ELEC.circ[r.n]; if (!c) return null;
+    const parts = {};
+    for (const [p, v] of Object.entries(c.s)) parts[p] = Math.max(0.5, v + (ecart[p] || 0));
+    const tot = Object.values(parts).reduce((a, b) => a + b, 0);
+    for (const p in parts) parts[p] = 100 * parts[p] / tot;
+    const ordre = Object.entries(parts).sort((a, b) => b[1] - a[1]);
+    sieges[ordre[0][0]] = (sieges[ordre[0][0]] || 0) + 1;
+    return { g: ordre[0][0], parts: Object.fromEntries(ordre), marge: ordre[0][1] - ordre[1][1], e: r.e };
+  });
+  return { titre: "Intentions de vote (démo)", national: { ...nat, AUT: 100 - P5.reduce((a, p) => a + nat[p], 0) }, sieges, circ, libProj: "Projection (démo)",
+    source: `<b>Démo</b> · intentions de vote fictives (moyenne des ${recents.length} derniers sondages inventés) · projection par écart uniforme à partir du résultat de 2026`,
+    note: "Exemple seulement : les sondages après le 5 octobre 2026 sont inventés pour montrer la page quand les vraies intentions de vote arriveront." };
+}
+
 function construireEtat() {
+  if (DEMO) ajouterDemo();
   const apres = SOND.sondages.filter(s => !s.e && s.d > DATE_ELECTION);
   MODE = apres.length ? "projection" : "election";
+  if (DEMO && apres.length) return etatDemo(apres);
   if (MODE === "election") {
     const circ = DATA.ridings.map(r => {
       const c = ELEC.circ[r.n];
@@ -47,7 +79,7 @@ function construireEtat() {
   const somme = Object.values(nat).reduce((a, b) => a + b, 0);
   P5.forEach(p => nat[p] = 100 * nat[p] / somme);
   const dernier = apres[apres.length - 1];
-  return { titre: "Intentions de vote", national: nat, sieges, circ,
+  return { titre: "Intentions de vote", national: nat, sieges, circ, libProj: "Projection Qc125",
     source: `Projection Qc125 du ${DATA.maj?.texte || "—"} · dernier sondage : ${esc(dernier.f)}, ${dateFr(dernier.d)}`,
     note: `${apres.length} sondage${apres.length > 1 ? "s" : ""} publié${apres.length > 1 ? "s" : ""} depuis l'élection.` };
 }
@@ -251,7 +283,7 @@ function peindre() {
   labs.select("text.vi-nom").text(f => DATA.ridings[f.properties.RID].n);
   placerEtiquettes();
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
-  const quoi = MODE === "election" ? "résultat de l'élection" : "projection Qc125";
+  const quoi = MODE === "election" ? "résultat de l'élection" : ETAT.libProj.toLowerCase();
   $("viEchelle").innerHTML = etat.mode === "vote"
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription${etat.pct ? ` (chiffre = % du ${p}, plus de circonscriptions en zoomant)` : ""}</span>`
     : etat.mode === "second" ? `Couleur : parti arrivé deuxième dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
@@ -295,7 +327,7 @@ function dessinerPanneau() {
     const serres = ETAT.circ.map((c, i) => [i, c]).filter(([, c]) => c && c.marge < 5).sort((a, b) => a[1].marge - b[1].marge);
     z.innerHTML = `<span class="lv-eyebrow">${MODE === "election" ? "Élection 2026" : "Intentions de vote"} · 127 circonscriptions</span><h3>Tout le Québec</h3>
       <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[lead]}"></i>${lead} ${s[lead] >= MAJ ? "majoritaire" : "minoritaire"} : ${s[lead]} / 127</span><span class="vi-pill">Majorité : ${MAJ}</span></div>
-      <p class="lv-muted">${MODE === "election" ? "Résultat dans chaque circonscription : le parti en tête l'emporte." : "Projection Qc125 dans chaque circonscription : le parti en tête l'emporte."} Clique sur une circonscription pour son détail.</p>
+      <p class="lv-muted">${MODE === "election" ? "Résultat dans chaque circonscription : le parti en tête l'emporte." : `${ETAT.libProj} dans chaque circonscription : le parti en tête l'emporte.`} Clique sur une circonscription pour son détail.</p>
       <span class="lv-eyebrow">Vote et sièges</span><div class="vi-vrows">${lignes}</div>
       <span class="lv-eyebrow">Sièges par région</span>
       <div class="vi-table"><table><thead><tr><th>Région</th>${P5.map(p => `<th style="color:${COUL[p]}">${p}</th>`).join("")}</tr></thead><tbody>${parReg}</tbody></table></div>
@@ -311,7 +343,7 @@ function dessinerPanneau() {
       <span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span><span class="vi-pill">${nf(r.e)} électeurs</span></div>
     <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tout le Québec</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
       ${r.id ? `<a class="vi-lien" href="https://qc125.com/${r.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>` : ""}</div>
-    <span class="lv-eyebrow">${MODE === "election" ? "Résultat" : "Projection Qc125"}</span>
+    <span class="lv-eyebrow">${MODE === "election" ? "Résultat" : ETAT.libProj}</span>
     <div class="vi-vrows">${parts.map(([p, v]) => `<div class="vi-vrow${p === c.g ? " win" : ""}"><b style="color:${COUL[p]}">${p === "AUT" ? "Autres" : p}</b>`
       + `<span class="vi-jauge"><i style="width:${Math.min(100, v * 2)}%;background:${COUL[p]}"></i></span><span class="vi-num">${nf(v, MODE === "election" ? 1 : 0)} %</span><span></span></div>`).join("")}</div>`
     + (c.cands ? `<span class="lv-eyebrow">Candidats en tête</span><ul class="vi-cands">${c.cands.map(k => `<li style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.sigle)}</em><b>${nf(k.v)}</b></li>`).join("")}</ul>` : "")
@@ -394,7 +426,7 @@ function dessinerEvolution() {
       tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
-  $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultats des élections.`;
+  $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125${DEMO ? `, dont ${sond.filter(x => x.d > DATE_ELECTION).length} fictifs pour la démo` : ""}). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultats des élections.`;
 }
 
 /* ---------- démarrage ---------- */

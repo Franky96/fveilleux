@@ -60,3 +60,14 @@ def page(vue):
 
 
 for v in FICHIER: page(v)
+
+# démo de la page des intentions de vote (sondages fictifs) : pas dans les onglets, adresse directe seulement
+demo = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
+demo = demo.replace("<title>Outils de Frank — Votes Québec</title>", "<title>Outils de Frank — Votes Québec (démo)</title>")
+demo = demo.replace('  <script type="module" src="votes-quebec/intentions.js"></script>',
+                    '  <script>window.VI_DEMO = true;   // sondages fictifs, voir intentions.js</script>\n  <script type="module" src="votes-quebec/intentions.js"></script>')
+demo = demo.replace('<span class="t-votes">Votes Québec · intentions de vote</span>', '<span class="t-votes">Votes Québec · démo (intentions fictives)</span>')
+demo = demo.replace('<span class="vi-badge">Intentions de vote</span>', '<span class="vi-badge vi-badge-demo">Démo · données fictives</span>')
+assert "VI_DEMO" in demo
+open(os.path.join(RACINE, "votes-quebec-demo.html"), "w", encoding="utf-8").write(demo)
+print(f"{'votes-quebec-demo.html':30} {len(demo):7} octets")
