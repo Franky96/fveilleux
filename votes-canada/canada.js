@@ -374,8 +374,8 @@ function dessinerPanneau() {
       z.innerHTML = `${tete(`Projection Qc125 · ${dateAn(PROJ.maj.date)}`, s)}
         <p class="lv-muted">Si l'élection avait lieu aujourd'hui. ${R && !R.parts ? "Vote : moyenne simple des circonscriptions (Qc125 ne publie pas de projection pour cette province seule)." : "Sièges : moyenne des simulations de Qc125, suivie de sa fourchette."} Clique sur une circonscription pour son détail.</p>
         <span class="lv-eyebrow">Vote et sièges projetés${R ? ` · ${esc(R.nom)}` : ""}</span><div class="vi-vrows">${parts.map(p => jauge(p, COUL[p], NN[p].v, `<b>${NN[p].s || 0}</b>${NN[p].smax != null ? ` <small>${NN[p].smin}–${NN[p].smax}</small>` : ""}`, 60, "vc-proj")).join("")}</div>
-        <span class="lv-eyebrow">Par rapport à l'élection de ${AN(2025)}</span>
-        <div class="vi-vrows">${P.filter(p => R ? (s[p] || e25[p]) : E25NAT[p] != null).map(p => `<div class="vi-vrow"><b style="color:${COUL[p]}">${p}</b><span class="vi-num" style="text-align:left">${R ? `<small>${e25[p] || 0} élus en ${AN(2025)}</small>` : `${ecart(N[p].v - E25NAT[p], 1, " pts")} <small>de vote</small>`}</span><span></span><span class="vi-num"><b>${ecart((s[p] || 0) - (e25[p] || 0))}</b> <small>sièges</small></span></div>`).join("")}</div>
+        <details class="lv-sg vc-replie"><summary><span>Par rapport à l'élection de ${AN(2025)}</span></summary>
+        <div class="vi-vrows">${P.filter(p => R ? (s[p] || e25[p]) : E25NAT[p] != null).map(p => `<div class="vi-vrow"><b style="color:${COUL[p]}">${p}</b><span class="vi-num" style="text-align:left">${R ? `<small>${e25[p] || 0} élus en ${AN(2025)}</small>` : `${ecart(N[p].v - E25NAT[p], 1, " pts")} <small>de vote</small>`}</span><span></span><span class="vi-num"><b>${ecart((s[p] || 0) - (e25[p] || 0))}</b> <small>sièges</small></span></div>`).join("")}</div></details>
         ${meilleures(CP, "projection")}
         ${tableProvinces(CP, "Sièges par province · parti en tête dans la projection")}
         <span class="lv-eyebrow">Les plus serrées (moins de 5 points)</span>${listeCirc(serres.slice(0, 12), c => c.marge ? `${c.g} +${nf(c.marge, 0)}` : `${c.g} · égalité`)}
@@ -410,8 +410,12 @@ function dessinerPanneau() {
   const lignes = (c, moe) => Object.entries(c.parts).filter(([, v]) => v >= 0.5).sort((x, y) => y[1] - x[1]).map(([p, v]) =>
     `<div class="vi-vrow${p === c.g ? " win" : ""}"><b style="color:${COUL[p] || COUL.AUT}">${p}</b><span class="vi-jauge"><i style="width:${Math.min(100, v * 100 / 60)}%;background:${COUL[p] || COUL.AUT}"></i></span>`
     + `<span class="vi-num">${nf(v, moe ? 0 : 1)} %</span><span class="vi-num">${moe && moe[p] != null ? `<small>± ${moe[p]}</small>` : ""}</span></div>`).join("");
-  const blocProj = cp ? `<span class="lv-eyebrow">Projection Qc125 · ${dateAn(PROJ.maj.date)}</span><div class="vi-vrows">${lignes(cp, cp.moe)}</div>` : "";
-  const blocE25 = ce ? `<span class="lv-eyebrow">Élection du 28 avril ${AN(2025)}</span><div class="vi-vrows">${lignes(ce)}</div>` : "";
+  // le bloc qui ne correspond pas à la carte est replié : 2025 en mode projection, projection en mode Députés ou 2025
+  const replie = (titre, corps) => `<details class="lv-sg vc-replie"><summary><span>${titre}</span></summary><div class="vi-vrows">${corps}</div></details>`;
+  const blocProj = !cp ? "" : g === "proj" ? `<span class="lv-eyebrow">Projection Qc125 · ${dateAn(PROJ.maj.date)}</span><div class="vi-vrows">${lignes(cp, cp.moe)}</div>`
+    : replie(`Projection Qc125 · ${dateAn(PROJ.maj.date)}`, lignes(cp, cp.moe));
+  const blocE25 = !ce ? "" : g === "proj" ? replie(`Élection du 28 avril ${AN(2025)}`, lignes(ce))
+    : `<span class="lv-eyebrow">Élection du 28 avril ${AN(2025)}</span><div class="vi-vrows">${lignes(ce)}</div>`;
   const depute = `<p class="vi-elu" style="--c:${a ? COUL[a.p] || COUL.AUT : "var(--soft)"}">${a ? `<b>${esc(a.nom)}</b> · ${NOMS[a.p] || a.p}${a.note ? ` <small>(${esc(a.note)})</small>` : ""}` : "<b>Siège vacant</b> (élection partielle à venir)"}</p>`;
   const pillsC = g === "e25" ? (ce ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[ce.g]}"></i>Élu en ${AN(2025)} : ${ce.g}</span><span class="vi-pill">Avance : ${nf(ce.marge, 1)} pts</span></div>` : "")
     : (cp ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[cp.g]}"></i>En tête (projection) : ${cp.g}</span><span class="vi-pill">${cp.marge ? `Avance : ${nf(cp.marge, 0)} pts` : "À égalité (projection arrondie)"}</span>`
@@ -420,7 +424,7 @@ function dessinerPanneau() {
     ${g === "act" ? depute + pillsC : pillsC}
     <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← ${etat.reg ? esc(REGIONS()[etat.reg].nom) : "Tout le Canada"}</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
       <a class="vi-lien" href="https://qc125.com/canada/${r.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a></div>
-    ${g === "e25" ? blocE25 + blocProj : blocProj + blocE25}
+    ${g === "proj" ? blocProj + blocE25 : blocE25 + blocProj}
     ${g === "act" ? "" : `<span class="lv-eyebrow">Député actuel</span>${depute}`}`;
 }
 document.addEventListener("click", e => {
