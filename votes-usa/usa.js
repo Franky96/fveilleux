@@ -375,6 +375,16 @@ const jauge = (lab, coul, v, droite = "", max = 80) => `<div class="vi-vrow"><b 
   + `<span class="vi-num">${nf(v, 1)} %</span><span class="vi-num">${droite}</span></div>`;
 const liste = (items, couleur, droite) => `<ul class="vi-serres">${items.map(id => `<li data-rid="${id}" tabindex="0" style="--c:${couleur(id)}"><i></i>${esc(nomDe(id))}<b>${droite(id)}</b></li>`).join("") || "<li>Aucun</li>"}</ul>`;
 const detenu = c => ["D", "R"].includes(c.held) ? `détenu par ${c.held}` : "nouveau district";
+// explication des cotes (repliée dans le panneau)
+const explicationCotes = () => replie("Comment lire les cotes", `<div class="vu-explic">
+  <p>Les prévisionnistes ne publient pas de pourcentage par course : ils classent chaque course selon les chances de chaque parti. Le consensus de 270toWin réunit les cotes de sept d'entre eux (Cook Political Report, Sabato's Crystal Ball, Inside Elections, etc.).</p>
+  <ul>
+    <li style="--c:${COTE.D3[0]}"><i></i><span><b>Sûr</b> : pas compétitive ; le parti l'emporte presque certainement.</span></li>
+    <li style="--c:${COTE.D2[0]}"><i></i><span><b>Probable</b> : avantage net, mais la course pourrait devenir serrée si la campagne tourne mal pour le favori.</span></li>
+    <li style="--c:${COTE.D1[0]}"><i></i><span><b>Penché</b> : compétitive, avec un léger avantage pour un parti ; un renversement n'étonnerait personne.</span></li>
+    <li style="--c:${COTE.T[0]}"><i></i><span><b>À égalité</b> (« toss-up ») : aucun favori, les deux partis ont des chances comparables.</span></li>
+  </ul>
+  <p>Les teintes vont du foncé (sûr) au pâle (penché), en bleu pour les démocrates et en rouge pour les républicains. Les « favoris » de chaque parti additionnent ses courses sûres, probables et penchées.</p></div>`);
 const replie = (titre, corps, n = "") => `<details class="lv-sg vc-replie"><summary><span>${titre}</span>${n !== "" ? `<small>${n}</small>` : ""}</summary>${corps}</details>`;
 function panneauSenat(z) {
   const E = SEN().etats, fips = Object.keys(E), g = groupe();
@@ -412,6 +422,7 @@ function panneauSenat(z) {
   const nonren = Object.fromEntries(parts.filter(p => p.k[0] === "n").map(p => [p.k.slice(1), p.n]));
   z.innerHTML = `${menu}<span class="lv-eyebrow">Consensus de 270toWin · ${dateFr(SEN().maj)}</span><h3>Tous les États-Unis</h3>
     <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL.D}"></i>D favoris : ${d}</span><span class="vi-pill"><i style="background:${COUL.R}"></i>R favoris : ${r}</span><span class="vi-pill"><i style="background:${COTE.T[0]}"></i>À égalité : ${100 - d - r}</span><span class="vi-pill">Majorité : 51</span></div>
+    ${explicationCotes()}
     <p class="lv-muted">Sièges favoris = sièges non renouvelés en 2026 (${nonren.D || 0} D, ${nonren.I || 0} indépendants, ${nonren.R || 0} R) + courses de 2026 qui penchent vers chaque parti. Clique sur un État pour son détail.</p>
     <span class="lv-eyebrow">Les ${courses.length} courses de 2026, par cote</span><div class="vi-vrows">${COTES.map(k => ligne(COTE[k][1], COTE[k][0], n[k] || 0, 15)).join("")}</div>
     <span class="lv-eyebrow">Courses à égalité</span>${lst(egal, () => COTE.T[0], f => `détenu par ${course(f).held}`)}
@@ -429,7 +440,8 @@ function dessinerPanneau() {
       const bascules = ids.filter(id => { const c = PROJ.circ[id], k = camp(c.r); return k !== "T" && ["D", "R"].includes(c.held) && k !== c.held; });
       z.innerHTML = `${menuEtats()}<span class="lv-eyebrow">Consensus de 270toWin · ${dateFr(PROJ.maj)}</span><h3>${esc(nomZ)}</h3>
         <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL.D}"></i>D favoris : ${d}</span><span class="vi-pill"><i style="background:${COUL.R}"></i>R favoris : ${r}</span><span class="vi-pill"><i style="background:${COTE.T[0]}"></i>À égalité : ${t}</span>${etat.st ? `<span class="vi-pill">${ids.length} district${ids.length > 1 ? "s" : ""}</span>` : `<span class="vi-pill">Majorité : ${MAJ}</span>`}</div>
-        <p class="lv-muted">Cote de chaque district selon sept prévisionnistes (Cook Political Report, Sabato's Crystal Ball, Inside Elections…). « Sûr » : course jouée d'avance ; « penché » : avantage léger. Clique sur un district pour son détail.</p>
+        <p class="lv-muted">Cote de chaque district selon sept prévisionnistes. Clique sur un district pour son détail.</p>
+        ${explicationCotes()}
         <span class="lv-eyebrow">Districts par cote</span><div class="vi-vrows">${COTES.map(k => ligne(COTE[k][1], COTE[k][0], n[k] || 0, etat.st ? ids.length : 200)).join("")}</div>
         <span class="lv-eyebrow">Courses à égalité</span>${liste(egal, () => COTE.T[0], id => detenu(PROJ.circ[id]))}
         ${replie("Courses penchées (avantage léger)", liste(penches, id => COTE[PROJ.circ[id].r][0], id => COTE[PROJ.circ[id].r][1]), penches.length)}
