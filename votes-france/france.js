@@ -9,8 +9,16 @@ const SIEGES = 577, MAJ = 289;
 const NOMS = { EXG: "Extrême gauche", NFP: "Gauche (NFP)", DVG: "Divers gauche", REG: "Régionalistes", ENS: "Ensemble (centre)", DVC: "Divers centre",
   LR: "Les Républicains", DVD: "Divers droite", RN: "RN et alliés (UDR)", EXD: "Extrême droite", DIV: "Divers" };
 const COURT = { EXG: "EXG", NFP: "NFP", DVG: "DVG", REG: "Rég.", ENS: "ENS", DVC: "DVC", LR: "LR", DVD: "DVD", RN: "RN-UDR", EXD: "EXD", DIV: "Div." };
-const COUL = { EXG: "#7A1A1A", NFP: "#A01D6C", DVG: "#E07AAE", REG: "#6E6585", ENS: "#F5A623", DVC: "#D4AF0F", LR: "#1B8FD0",
-  DVD: "#64BDE6", RN: "#8B6331", EXD: "#B08D57", DIV: "#A58FD4" };
+// Une seule palette par famille politique, partout sur la page (blocs de 2024, groupes actuels, candidats) :
+// LFI rouge · PS rose · écologistes vert · PCF rouge sombre · Ensemble/Renaissance orange · MoDem orange foncé ·
+// Horizons bleu ciel · LR bleu · RN bleu indigo · Reconquête brun
+const FAMILLE = { LO: "#7A1A1A", EXG: "#7A1A1A", NPA: "#8E1B1B", PCF: "#B5172B", GDR: "#B5172B", LFI: "#C00D0D", "LFI-NFP": "#C00D0D",
+  "Picardie debout": "#D95F43", "Debout !": "#D95F43", PS: "#E8579A", SOC: "#E8579A", "Place publique": "#E8579A", "La Convention": "#E8579A", GRS: "#C8507A",
+  "Écologistes": "#3E9B4F", ECOS: "#3E9B4F", LIOT: "#E0C040", Renaissance: "#F5A623", Ensemble: "#F5A623", EPR: "#F5A623", MoDem: "#F07E26", DEM: "#F07E26",
+  Horizons: "#2AA7DE", HOR: "#2AA7DE", "République unie": "#8E7CC3", LR: "#1B5FB0", DR: "#1B5FB0", "Nous France": "#1B5FB0", DLF: "#5C7BA8",
+  RN: "#4656B0", UDDPLR: "#7484D6", UDR: "#7484D6", "Reconquête": "#8C6B3E", "Résistons": "#A0896B", NI: "#8D949A", "Indépendant": "#8D949A" };
+const COUL = { EXG: "#7A1A1A", NFP: "#CC2443", DVG: "#F09AC0", REG: "#6E6585", ENS: "#F5A623", DVC: "#D4AF0F", LR: "#1B5FB0",
+  DVD: "#6C8FC7", RN: "#4656B0", EXD: "#8C6B3E", DIV: "#8D949A" };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -23,9 +31,10 @@ let DATA, SOND, PRES, P22, BLOCS, PAR_ID = {}, GP = {}, sel = null, demarre = fa
 // type de page : « leg » (législatives : Assemblée, élection de 2024) ou « pres » (présidentielle 2027 : sondages, 2022)
 let TYPE = location.hash === "#legislatives" ? "leg" : location.hash === "#presidentielle" ? "pres" : lireLS("vfType", "pres");
 const etat = { mode: TYPE === "leg" ? "actuel" : "lead", parti: null, cand: null, pct: lireLS("vfPct", true) };
-const MODES = { leg: [["actuel", "Député actuel"], ["lead", "Élu en 2024"], ["second", "Meilleur 2e (2024)"], ["vote", "Vote 2024"], ["estime", "Vote actuel"]],
-  pres: [["lead", "En tête en 2022"], ["second", "Meilleur 2e (2022)"], ["vote", "Vote 2022"]] };
-const coulC = n => P22.candidats[n]?.c || PRES.candidats[n]?.c || "#8D949A";
+// boutons de la carte : la situation actuelle à part, puis les modes de la dernière élection, groupés
+const MODES = { leg: { actuel: [["actuel", "Député actuel"]], titre: "Élection de 2024", election: [["lead", "Élu"], ["second", "Meilleur 2e"], ["vote", "Vote"]] },
+  pres: { actuel: [], titre: "Présidentielle 2022", election: [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]] } };
+const coulC = n => FAMILLE[P22.candidats[n]?.parti || PRES.candidats[n]?.parti] || P22.candidats[n]?.c || PRES.candidats[n]?.c || "#8D949A";
 const parti22 = n => P22.candidats[n]?.parti || PRES.candidats[n]?.parti || "";
 
 /* ---------- moyennes des derniers sondages ---------- */
@@ -112,20 +121,8 @@ let svg, gZ, gCirc, gDep, gSel, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.z
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const partDe = (c, b) => (c && c.s[b]) || 0;
 const deuxieme = c => Object.entries(c.s).sort((a, b) => b[1] - a[1])[1] || [c.g, 0];
-/* « Vote actuel » (estimation) : vote de 2024 de la circonscription + écart entre les derniers sondages législatifs et 2024,
-   bloc par bloc (écart uniforme) ; les blocs absents des sondages gardent leur score de 2024 ; total ramené à 100 %. */
-const ESTIME = {};
-function estime(c) {
-  if (ESTIME[c.id]) return ESTIME[c.id];
-  const r = moyenneRecente(); if (!r) return c.s;
-  const out = {};
-  for (const [b, v] of Object.entries(c.s)) out[b] = Math.max(0.3, v + (r.moy[b] > 0 ? r.moy[b] - (DATA.national[b] || 0) : 0));
-  const tot = d3.sum(Object.values(out));
-  for (const b in out) out[b] = 100 * out[b] / tot;
-  return ESTIME[c.id] = Object.fromEntries(Object.entries(out).sort((a, b) => b[1] - a[1]));
-}
-const voteMode = () => etat.mode === "vote" || etat.mode === "estime";
-const partVue = (c, b) => etat.mode === "estime" ? (estime(c)[b] || 0) : partDe(c, b);
+const voteMode = () => etat.mode === "vote";
+const partVue = (c, b) => partDe(c, b);
 function remplir(id) {
   const c = PAR_ID[id];
   if (!c) return ["var(--soft)", 1];
@@ -138,7 +135,6 @@ function remplir(id) {
   }
   if (etat.mode === "actuel") return c.act ? [GP[c.act.gp]?.c || "#8D949A", 0.92] : ["var(--soft)", 1];
   if (etat.mode === "second") { const [b, v] = deuxieme(c); return [COUL[b], Math.max(0.3, Math.min(1, (v - 10) / 30))]; }
-  if (etat.mode === "estime" && !etat.parti) { const [b, v] = Object.entries(estime(c))[0]; return [COUL[b], Math.max(0.35, Math.min(1, (v - 15) / 35))]; }
   if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, partVue(c, etat.parti) / 50))];
   return [COUL[c.g], Math.max(0.35, Math.min(1, (partDe(c, c.g) - 15) / 35))];
 }
@@ -231,13 +227,16 @@ function construireCarte() {
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
     if (TYPE === "pres") etat.cand = b.dataset.p;
-    else etat.parti = etat.mode === "estime" && etat.parti === b.dataset.p ? null : b.dataset.p;   // 2e clic : retour au bloc en tête
+    else etat.parti = b.dataset.p;
     if (!voteMode()) etat.mode = "vote"; peindre(); });
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("vfPct", etat.pct); peindre(); });
 }
 // boutons de mode et pastilles, selon le type de page
 function outilsCarte() {
-  $("viModes").innerHTML = MODES[TYPE].map(([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`).join("");
+  const M = MODES[TYPE], bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
+  $("viModes").className = "vf-modes";
+  $("viModes").innerHTML = (M.actuel.length ? `<span class="lv-groupe">${M.actuel.map(bouton).join("")}</span>` : "")
+    + `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`;
   $("viChips").innerHTML = TYPE === "pres"
     ? Object.entries(P22.national).filter(([, v]) => v >= 4).map(([k]) => `<button type="button" class="vi-chip" style="--c:${coulC(k)}" data-p="${esc(k)}">${esc(nomCourt(k))}</button>`).join("")
     : BLOCS.filter(b => DATA.national[b] >= 2).map(b => `<button type="button" class="vi-chip" style="--c:${COUL[b]}" data-p="${b}">${COURT[b]}</button>`).join("");
@@ -245,7 +244,6 @@ function outilsCarte() {
 function changerMode(m) {
   etat.mode = m;
   if (sel != null) dessinerPanneau();
-  if (m === "estime") etat.parti = null;   // « Vote actuel » : d'abord le bloc en tête estimé ; une pastille montre un bloc
   if (m === "vote" && TYPE === "leg" && !etat.parti) etat.parti = Object.keys(DATA.sieges).sort((a, b) => DATA.sieges[b] - DATA.sieges[a])[0];
   if (m === "vote" && TYPE === "pres" && !etat.cand) etat.cand = Object.keys(P22.national)[0];
   peindre();
@@ -275,12 +273,7 @@ function peindre() {
     return;
   }
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
-  const rr = moyenneRecente();
-  $("viEchelle").innerHTML = etat.mode === "estime" && !p
-    ? `<span class="vf-legende">${BLOCS.filter(b => rr?.moy[b] >= 3).map(b => `<span style="--c:${COUL[b]}"><i></i>${COURT[b]}</span>`).join("")}</span><span>· bloc en tête, <b>estimation</b> du vote actuel (2024 + écart des ${rr?.n || 0} derniers sondages législatifs, dernier le ${rr ? dateFr(rr.a) : "—"}). Choisis un bloc pour voir son % partout.</span>`
-    : etat.mode === "estime"
-    ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· ${NOMS[p]} : <b>estimation</b> du vote actuel dans chaque circonscription (2024 + écart des ${rr?.n || 0} derniers sondages législatifs, dernier le ${rr ? dateFr(rr.a) : "—"})${etat.pct ? " · chiffre = %" : ""}</span>`
-    : etat.mode === "vote"
+  $("viEchelle").innerHTML = etat.mode === "vote"
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· ${NOMS[p]} au 1er tour de 2024 dans chaque circonscription${etat.pct ? " (chiffre = %, plus de circonscriptions en zoomant)" : ""}</span>`
     : etat.mode === "second" ? "Couleur : bloc arrivé deuxième au 1er tour de 2024 dans chaque circonscription. Plus la couleur est foncée, plus son score est élevé."
     : etat.mode === "lead" ? "Couleur : bloc du député élu en 2024. Plus la couleur est foncée, plus son score au 1er tour était élevé. Outre-mer en encarts ; les Français de l'étranger sont dans le panneau."
@@ -293,7 +286,6 @@ function infobulle(e, f) {
   t.innerHTML = c ? `<b>${esc(c.n)}</b><small>${esc(c.r)}${TYPE === "leg" && etat.mode === "actuel" ? "" : ` · ${nf(c.e)} inscrits`}</small><br>${c.act ? `Député : ${esc(c.act.nom)} (${esc(c.act.gp)})` : "Siège vacant"}<br>`
     + (TYPE === "pres" ? `<small>Présidentielle 2022 : ${Object.entries(P22.circ[c.id] || {}).slice(0, 3).map(([k, v]) => `${esc(nomCourt(k))} ${nf(v, 1)} %`).join(" · ")}</small>`
       : etat.mode === "actuel" ? `<small>${c.act ? esc(GP[c.act.gp]?.nom || c.act.gp) : ""}</small>`
-      : etat.mode === "estime" ? `<small>Vote actuel (estimation) : ${Object.entries(estime(c)).slice(0, 3).map(([b, v]) => `${COURT[b]} ${nf(v, 0)} %`).join(" · ")}</small>`
     : `<small>Élu en 2024 : ${esc(c.elu)} (${esc(c.gnu)})</small><br><small>1er tour : ${Object.entries(c.s).slice(0, 3).map(([b, v]) => `${COURT[b]} ${nf(v, 1)} %`).join(" · ")}</small>`) : f.properties.id;
 }
 function pleinEcran() {
@@ -371,16 +363,6 @@ function dessinerPanneau() {
   }
   const c = PAR_ID[sel]; if (!c) return;
   const tracee = DATA.geo.features.some(f => f.properties.id === c.id), g = c.act ? GP[c.act.gp] : null;
-  if (etat.mode === "estime") {   // « Vote actuel » : estimation
-    const e = estime(c), rr = moyenneRecente();
-    z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(c.r)}</span><h3>${esc(c.n)}</h3>
-      <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[Object.keys(e)[0]]}"></i>En tête (estimation) : ${COURT[Object.keys(e)[0]]}</span><span class="vi-pill">Député actuel : ${c.act ? `${esc(c.act.nom)} (${esc(c.act.gp)})` : "vacant"}</span></div>
-      <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Toute la France</button>${tracee ? `<button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>` : ""}</div>
-      <span class="lv-eyebrow">Vote actuel estimé, par bloc (1er tour)</span>
-      <div class="vi-vrows">${Object.entries(e).filter(([, v]) => v >= 0.5).map(([b, v]) => ligneVote(b, v, `<small>${v - (c.s[b] || 0) >= 0 ? "+" : "−"}${nf(Math.abs(v - (c.s[b] || 0)), 1)} pt</small>`)).join("")}</div>
-      <p class="lv-muted">Estimation : résultat du 1er tour de 2024 ici, corrigé de l'écart national entre les ${rr?.n || 0} derniers sondages législatifs (${rr ? dateFr(rr.a) : "—"}) et 2024. Ce n'est pas un sondage local, et le 2e tour peut tout changer. Colonne de droite : écart avec 2024.</p>`;
-    return;
-  }
   if (etat.mode === "actuel") {   // mode « Député actuel » : seulement l'état actuel (l'élection de 2024 est dans les autres modes)
     const voisins = DATA.circ.filter(x => x.d === c.d && x.id !== c.id);
     z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(c.r)}</span><h3>${esc(c.n)}</h3>
@@ -518,8 +500,7 @@ async function demarrer() {
     BLOCS = DATA.blocs; DATA.circ.forEach(c => { PAR_ID[c.id] = c; c.act = ASS.act[c.id] || null; });
     DATA.assemblee = ASS;
     // couleurs officielles des groupes ; les trop foncées sont éclaircies pour rester lisibles sur fond sombre
-    const PLUS_CLAIR = { RN: "#4656B0", GDR: "#B3263A", UDDPLR: "#4C7FC4" };
-    DATA.assemblee.groupes.forEach(g => { if (PLUS_CLAIR[g.id]) g.c = PLUS_CLAIR[g.id]; GP[g.id] = g; });
+    DATA.assemblee.groupes.forEach(g => { g.c = FAMILLE[g.id] || g.c; GP[g.id] = g; });   // même palette que les partis
     ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return; periode = +b.dataset.per; ecrireLS("vfPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
