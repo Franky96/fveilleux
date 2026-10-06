@@ -72,6 +72,27 @@ for sr in cd.iterShapeRecords():
     c24[st + ("00" if n in ("00", "98") else n)] = shape(sr.shape.__geo_interface__).buffer(0)
 etr = census("cb_2024_us_state_500k", "st")
 terre = {sr.record["STATEFP"]: shape(sr.shape.__geo_interface__).buffer(0) for sr in etr.iterShapeRecords() if sr.record["STATEFP"] in FIPS}
+# rivières et baies intérieures des grandes villes (Hudson, East River, Potomac, Delaware…) : les fichiers cartographiques
+# ne retirent que l'océan ; on retire ici les grands plans d'eau des comtés concernés (Census TIGER, AREAWATER)
+COMTES_EAU = ["36061", "36047", "36081", "36005", "36085", "36119", "34017", "34003", "34013", "34039", "34023",   # New York
+              "25025", "25017", "25021", "42101", "34007", "42045", "11001", "51013", "51510", "24031", "24033",  # Boston, Philadelphie, Washington
+              "53033", "26163"]                                                                                       # Seattle, Detroit
+eau = []
+for c in COMTES_EAU:
+    zf = os.path.join(ICI, "brut", "eau", f"tl_{c}.zip")
+    if not os.path.exists(zf):
+        os.makedirs(os.path.dirname(zf), exist_ok=True)
+        open(zf, "wb").write(urllib.request.urlopen(f"https://www2.census.gov/geo/tiger/TIGER2024/AREAWATER/tl_2024_{c}_areawater.zip", timeout=180).read())
+    import zipfile, io as _io
+    z = zipfile.ZipFile(zf); base = [n for n in z.namelist() if n.endswith(".shp")][0][:-4]
+    r = shapefile.Reader(shp=_io.BytesIO(z.read(base + ".shp")), shx=_io.BytesIO(z.read(base + ".shx")), dbf=_io.BytesIO(z.read(base + ".dbf")))
+    for sr in r.iterShapeRecords():
+        if sr.record["AWATER"] >= 1_000_000: eau.append(shape(sr.shape.__geo_interface__).buffer(0))   # plus de 1 km²
+eau = unary_union(eau)
+for k in list(c24):
+    if c24[k].intersects(eau): c24[k] = c24[k].difference(eau).buffer(0)
+for st in list(terre):
+    if terre[st].intersects(eau): terre[st] = terre[st].difference(eau).buffer(0)
 c26 = {}
 for k, d in g26.items():
     if k[:2] in etats24: c26[k] = shape(geom(d)).buffer(0).intersection(terre[k[:2]])
@@ -82,19 +103,45 @@ def alleger(g, tol, min_aire):
 c24["0200"] = alleger(c24["0200"], 0.02, 0.05); terre["02"] = c24["0200"]
 if len(c24) != 435: raise SystemExit(f"{len(c24)} districts du Census (435 attendus)")
 
-def simplifier(geoms, tol):
+def simplifier(geoms, tol_max, tol_min=0.0002):
+    """Simplification adaptative qui garde les frontières communes : on construit la topologie (arcs partagés), puis chaque
+    arc est simplifié selon le plus petit district qui le borde (fin en ville, plus grossier à la campagne)."""
+    from shapely.geometry import LineString
     fc = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"id": k}, "geometry": mapping(g)} for k, g in sorted(geoms.items())]}
-    out = json.loads(topojson.Topology(fc, prequantize=False, toposimplify=tol, simplify_algorithm="dp").to_geojson())
-    def arr(o): return [arr(x) for x in o] if isinstance(o[0], (list, tuple)) else [round(o[0], 4), round(o[1], 4)]
-    # petites îles retirées (moins de 1 % du district et de 0,002 degré carré)
+    tp = topojson.Topology(fc, prequantize=False, toposimplify=0).output
+    arcs = tp["arcs"]
+    obj = next(iter(tp["objects"].values()))["geometries"]
+    taille = [float("inf")] * len(arcs)                 # racine de l'aire du plus petit district voisin de chaque arc
+    def parcourir(a, f):
+        if isinstance(a, int): yield a if a >= 0 else ~a
+        else:
+            for x in a: yield from parcourir(x, f)
+    for o in obj:
+        if not o.get("arcs"): continue
+        r = geoms[o["properties"]["id"]].area ** 0.5
+        for k in parcourir(o["arcs"], None): taille[k] = min(taille[k], r)
+    simp = []
+    for a, t in zip(arcs, taille):
+        tol = max(tol_min, min(tol_max, 0.006 * (t if t != float("inf") else 1)))
+        simp.append([[round(x, 4), round(y, 4)] for x, y in (LineString(a).simplify(tol, preserve_topology=False).coords if len(a) > 2 else a)])
+    def anneau(idx):
+        out = []
+        for k in idx:
+            q = simp[k] if k >= 0 else simp[~k][::-1]
+            out.extend(q if not out else q[1:])
+        return out
     feats = []
-    for f in out["features"]:
-        g = shape(f["geometry"]).buffer(0)
-        parts = list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
-        grand = max(p.area for p in parts)
-        g = unary_union([p for p in parts if p.area >= min(0.002, grand * 0.01)])
-        m = mapping(g)
-        feats.append({"type": "Feature", "properties": {"id": f["properties"]["id"]}, "geometry": {"type": m["type"], "coordinates": arr(m["coordinates"])}})
+    for o in obj:
+        if not o.get("arcs"): continue
+        polys = [o["arcs"]] if o["type"] == "Polygon" else o["arcs"]
+        parts = [[anneau(r) for r in p] for p in polys]
+        parts = [p for p in parts if len(p[0]) >= 4]
+        # petites îles retirées (moins de 1 % du district et de 0,0005 degré carré)
+        aires = [abs(shape({"type": "Polygon", "coordinates": p}).area) for p in parts]
+        grand = max(aires) if aires else 0
+        parts = [p for p, a in zip(parts, aires) if a >= min(0.0005, grand * 0.01)]
+        feats.append({"type": "Feature", "properties": {"id": o["properties"]["id"]},
+                      "geometry": {"type": "MultiPolygon", "coordinates": parts} if len(parts) > 1 else {"type": "Polygon", "coordinates": parts[0]}})
     return {"type": "FeatureCollection", "features": sorted(feats, key=lambda f: f["properties"]["id"])}
 
 ids = sorted(g26)
@@ -109,10 +156,15 @@ sortie = {
     "districts": [{"id": k, "st": FIPS[k[:2]][0], "n": nom(k)} for k in ids],
     "districts24": [{"id": k, "st": FIPS[k[:2]][0], "n": nom(k)} for k in ids24],
     # 2024 : les 435 districts (Census) ; 2026 : seulement les États redécoupés (ailleurs, ce sont ceux de 2024)
-    "geo24": simplifier(c24, 0.003),
-    "geo26": simplifier(c26, 0.003),
-    "geoEtats": simplifier(terre, 0.01),
+    "geo24": simplifier(c24, 0.004),
+    "geo26": simplifier(c26, 0.004),
 }
+# États : union des districts de 2024 déjà simplifiés (les frontières tombent exactement sur celles des districts)
+def arr(o): return [arr(x) for x in o] if isinstance(o[0], (list, tuple)) else [round(o[0], 4), round(o[1], 4)]
+par_etat = {}
+for f in sortie["geo24"]["features"]: par_etat.setdefault(f["properties"]["id"][:2], []).append(shape(f["geometry"]).buffer(0))
+sortie["geoEtats"] = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"id": st},
+    "geometry": (lambda m: {"type": m["type"], "coordinates": arr(m["coordinates"])})(mapping(unary_union(gs).buffer(0)))} for st, gs in sorted(par_etat.items())]}
 for f in sortie["geoEtats"]["features"]: f["properties"] = {"fips": f["properties"]["id"]}
 json.dump(sortie, open(os.path.join(ICI, "..", "data.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(ids)} districts de 2026 ({len(c26)} redessinés), {len(ids24)} de 2024 · États redécoupés : {', '.join(sortie['redecoupes'])} · {os.path.getsize(os.path.join(ICI, '..', 'data.json')) // 1024} Ko")
