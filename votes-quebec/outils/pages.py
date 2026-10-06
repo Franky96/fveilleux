@@ -91,7 +91,7 @@ r('<section class="vue-live vue-votes" id="vue-votes"', '<section class="vue-liv
 r('<span class="vi-badge">Intentions de vote</span>', '<span class="vi-badge">France · législatives</span>')
 r("Assemblée nationale · 127 sièges · majorité 64", "Assemblée nationale · 577 sièges · majorité absolue 289")
 r('<svg id="viPlan" class="vi-plan" role="img" aria-label="Plan de l\'Assemblée nationale"></svg>',
-  '<svg id="viPlan" class="vi-plan vf-hemi" role="img" aria-label="Hémicycle de l\'Assemblée nationale (577 sièges)"></svg>\n        <div class="vf-legende" id="viLegende"></div>')
+  '<svg id="viPlan" class="vi-plan vf-hemi" role="img" aria-label="Hémicycle de l\'Assemblée nationale (577 sièges)"></svg>')
 fr = re.sub(r'<button type="button" data-z="tout">Tout le Québec</button>.*?<button type="button" data-z="sud">Sud</button>',
             '<button type="button" data-z="tout">France</button><button type="button" data-z="idf">Île-de-France</button><button type="button" data-z="paris">Paris</button>'
             '<button type="button" data-z="lyon">Lyon</button><button type="button" data-z="marseille">Marseille</button>', fr, flags=re.S)

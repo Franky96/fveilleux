@@ -153,6 +153,9 @@ function dessinerTete() {
   const lead = ordre[0];
   $("viSiegesTitre").textContent = `${NOMS[lead]} : ${s[lead]} sièges, gouvernement ${s[lead] >= MAJ ? "majoritaire" : "minoritaire"}`;
   chamber($("viPlan"), s, SIEGES);
+  // sous le plan, en petit : sièges de chaque parti (comme Votes France)
+  $("viLegende").innerHTML = [...P5, "AUT"].filter(p => s[p]).sort((a, b) => s[b] - s[a])
+    .map(p => `<span style="--c:${COUL[p]}"><i></i>${NOMS[p]} <b>${s[p]}</b></span>`).join("");
 }
 
 /* ---------- carte (fonctions de la « carte actuelle » de Loi 39) ---------- */
