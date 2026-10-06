@@ -34,6 +34,8 @@ const etat = { mode: TYPE === "leg" ? "actuel" : "lead", parti: null, cand: null
 // boutons de la carte : la situation actuelle à part, puis les modes de la dernière élection, groupés
 const MODES = { leg: { actuel: [["actuel", "Député actuel"]], titre: "Élection", an: 2024, election: [["lead", "Élu"], ["second", "Meilleur 2e"], ["vote", "Vote"]] },
   pres: { actuel: [], titre: "Présidentielle", an: 2022, election: [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]] } };
+// année d'un résultat, en évidence (pastille contrastée)
+const AN = a => `<span class="vf-an">${a}</span>`;
 const coulC = n => FAMILLE[P22.candidats[n]?.parti || PRES.candidats[n]?.parti] || P22.candidats[n]?.c || PRES.candidats[n]?.c || "#8D949A";
 const parti22 = n => P22.candidats[n]?.parti || PRES.candidats[n]?.parti || "";
 
@@ -76,19 +78,19 @@ function dessinerTete() {
   if (TYPE === "pres") {
     const [top] = p.moy;
     $("viTitre").textContent = "Présidentielle 2027 : intentions de vote";
-    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateFr(p.de)} au ${dateFr(p.a)} (1er tour) · premier tour en avril 2027`;
+    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateFr(p.de)} au ${dateFr(p.a)} (1er tour) · premier tour en avril ${AN(2027)}`;
     $("viNote").textContent = "Les candidats testés varient d'un sondage à l'autre (plusieurs scénarios) : la moyenne garde le premier scénario de chaque sondage. La carte montre le 1er tour de la présidentielle de 2022 dans chaque circonscription.";
     eyebrow.textContent = `1er tour · moyenne de ${p.n} sondages`;
     $("viSiegesTitre").textContent = `${nomCourt(top[0])} en tête : ${nf(top[1], 1)} %`;
     const max = Math.max(40, top[1]);
-    bloc.innerHTML = p.moy.filter(([, v]) => v >= 1).map(([k, v]) => `<div class="vf-cand" style="--c:${coulC(k)}"><span><b>${esc(k)}</b><small>${esc(parti22(k))}${P22.national[k] != null ? ` · 2022 : ${nf(P22.national[k], 1)} %` : ""}</small></span>`
+    bloc.innerHTML = p.moy.filter(([, v]) => v >= 1).map(([k, v]) => `<div class="vf-cand" style="--c:${coulC(k)}"><span><b>${esc(k)}</b><small>${esc(parti22(k))}${P22.national[k] != null ? ` · ${AN(2022)} ${nf(P22.national[k], 1)} %` : ""}</small></span>`
       + `<span class="vf-cand-barre"><i style="width:${100 * v / max}%"></i></span><b class="vf-cand-v">${nf(v, 1)} %</b></div>`).join("")
-      + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour. En 2022 : ${Object.entries(P22.national).slice(0, 3).map(([k, v]) => `${esc(nomCourt(k))} ${nf(v, 1)} %`).join(" · ")}.</p>`;
+      + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour. En ${AN(2022)} : ${Object.entries(P22.national).slice(0, 3).map(([k, v]) => `${esc(nomCourt(k))} ${nf(v, 1)} %`).join(" · ")}.</p>`;
     return;
   }
   eyebrow.textContent = `Assemblée nationale · 577 sièges · majorité absolue ${MAJ}`;
   $("viTitre").textContent = "Législatives : l'Assemblée actuelle";
-  $("viSource").innerHTML = `Assemblée nationale au ${dateFr(A.date)} (députés en exercice) · élue en juillet 2024`;
+  $("viSource").innerHTML = `Assemblée nationale au ${dateFr(A.date)} (députés en exercice) · élue en juillet ${AN(2024)}`;
   $("viNote").textContent = "Aucun sondage d'intentions de vote aux législatives n'a été publié depuis octobre 2025 (registre de la Commission des sondages) : la page montre l'Assemblée telle qu'elle est aujourd'hui. Prochaines législatives au plus tard en 2029, sauf dissolution.";
   $("viSiegesTitre").textContent = lead.n >= MAJ ? `${lead.nom} : ${lead.n} sièges, majorité absolue` : `Aucune majorité absolue · premier groupe : ${lead.id} (${lead.n} sièges)`;
   hemicycle($("viPlan"), [...A.groupes.map(g => ({ k: g.id, n: g.n, c: g.c, nom: g.nom })), ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant" }] : [])]);
@@ -221,9 +223,9 @@ function construireCarte() {
     if (z === "tout") { choisir(null); svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); }
     else if (z === "plus") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1.8);
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
-    else if (z === "plein") pleinEcran();
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
+  $("viPlein").addEventListener("click", pleinEcran);   // bouton en bas de la carte, hors de la barre de zoom
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
     if (TYPE === "pres") etat.cand = b.dataset.p;
@@ -232,8 +234,6 @@ function construireCarte() {
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("vfPct", etat.pct); peindre(); });
 }
 // boutons de mode et pastilles, selon le type de page
-// année d'un résultat, en évidence (pastille contrastée)
-const AN = a => `<span class="vf-an">${a}</span>`;
 function outilsCarte() {
   const M = MODES[TYPE], bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
@@ -266,6 +266,10 @@ function peindre() {
   labs.select("text.vi-val").text(f => nf(TYPE === "pres" ? (P22.circ[f.properties.id]?.[etat.cand] || 0) : partVue(PAR_ID[f.properties.id], etat.parti), 0) + " %");
   labs.select("text.vi-nom").text(f => PAR_ID[f.properties.id]?.n || "");
   placerEtiquettes();
+  let an = $("vfAnCarte");
+  if (!an) { an = document.createElement("div"); an.id = "vfAnCarte"; an.className = "vf-an-carte"; $("viCarte").before(an); }
+  an.innerHTML = TYPE === "pres" ? `Présidentielle ${AN(2022)} · 1er tour`
+    : etat.mode === "actuel" ? `Assemblée au ${dateFr(DATA.assemblee.date)}` : `Législatives ${AN(2024)} · ${etat.mode === "lead" ? "élus" : "1er tour"}`;
   if (TYPE === "pres") {
     const q = etat.cand, rampe = q ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${coulC(q)} 6%, var(--surface)), ${coulC(q)})"></span>` : "";
     $("viEchelle").innerHTML = AN(2022) + (etat.mode === "vote"
@@ -382,7 +386,7 @@ function dessinerPanneau() {
     <span class="lv-eyebrow">Élection de ${AN(2024)}</span>
     <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[c.g]}"></i>Élu${c.t === 1 ? " dès le 1er tour" : " au 2e tour"} : ${esc(c.elu)} (${esc(c.gnu)})</span>
       <span class="vi-pill">${nf(c.e)} inscrits</span><span class="vi-pill">Participation (1er tour) : ${nf(c.part, 1)} %</span></div>
-    <span class="lv-eyebrow">1er tour (30 juin 2024), par bloc</span>
+    <span class="lv-eyebrow">1er tour (30 juin ${AN(2024)}), par bloc</span>
     <div class="vi-vrows">${Object.entries(c.s).filter(([, v]) => v >= 0.5).map(([b, v]) => ligneVote(b, v)).join("")}</div>
     <span class="lv-eyebrow">Candidats en tête au 1er tour</span>
     <ul class="vi-cands">${c.c.map(k => `<li style="--c:${COUL[k.b]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.nu)}</em><b>${nf(k.p, 1)} %</b></li>`).join("")}</ul>`;

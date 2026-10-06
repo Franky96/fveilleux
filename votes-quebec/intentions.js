@@ -254,9 +254,9 @@ function construireCarte() {
     if (z === "tout") { choisir(null); svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); }
     else if (z === "plus") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1.8);
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
-    else if (z === "plein") pleinEcran();
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
+  $("viPlein").addEventListener("click", pleinEcran);   // bouton en bas de la carte, hors de la barre de zoom
   // modes de la carte : parti en tête, meilleur deuxième, vote d'un parti
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; try { localStorage.setItem("viPct", etat.pct ? "1" : "0"); } catch {} peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
