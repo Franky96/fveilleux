@@ -323,8 +323,8 @@ function panneauPres(z) {
       <div class="vi-vrows">${Object.entries(P22.national).map(([k, v]) => jauge(esc(nomCourt(k)), coulC(k), v, `<small>${esc(parti22(k))}</small>`, 50, "vf-pres")).join("")}</div>
       <span class="lv-eyebrow">En tête en 2022, par région (circonscriptions)</span>
       <div class="vi-table"><table><thead><tr><th>Région</th>${COLS.map(k => `<th style="color:${coulC(k)}">${esc(nomCourt(k))}</th>`).join("")}<th>Autres</th></tr></thead><tbody>${parReg}</tbody></table></div>
-      <span class="lv-eyebrow">Hors carte (${horsCarte.length})</span>
-      <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${coulC(tete(c.id))}"><i></i>${esc(c.n)}<b>${esc(nomCourt(tete(c.id) || ""))}</b></li>`).join("")}</ul>`;
+      <details class="lv-sg vf-hors"><summary><span>Hors carte : outre-mer et Français de l'étranger</span><small>${horsCarte.length}</small></summary>
+      <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${coulC(tete(c.id))}"><i></i>${esc(c.n)}<b>${esc(nomCourt(tete(c.id) || ""))}</b></li>`).join("")}</ul></details>`;
     return;
   }
   const c = PAR_ID[sel]; if (!c) return;
@@ -357,8 +357,8 @@ function dessinerPanneau() {
       + `<span class="lv-eyebrow">Élection de 2024 : 1er tour et sièges</span><div class="vi-vrows">${BLOCS.filter(b => s[b] || nat[b] >= 1).sort((a, b) => (s[b] || 0) - (s[a] || 0)).map(b => ligneVote(b, nat[b] || 0, `<b>${s[b] || 0}</b> <small>élus</small>`)).join("")}</div>
       <span class="lv-eyebrow">Députés actuels par région</span>
       <div class="vi-table"><table><thead><tr><th>Région</th>${COLS.map(b => `<th style="color:${GP[b]?.c}">${b.replace("-NFP", "")}</th>`).join("")}<th>Autres</th></tr></thead><tbody>${parReg}</tbody></table></div>
-      <span class="lv-eyebrow">Hors carte (${horsCarte.length})</span>
-      <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${c.act ? GP[c.act.gp]?.c : "var(--soft)"}"><i></i>${esc(c.n)}<b>${c.act ? esc(c.act.gp) : "vacant"}</b></li>`).join("")}</ul>`;
+      <details class="lv-sg vf-hors"><summary><span>Hors carte : outre-mer et Français de l'étranger</span><small>${horsCarte.length}</small></summary>
+      <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${c.act ? GP[c.act.gp]?.c : "var(--soft)"}"><i></i>${esc(c.n)}<b>${c.act ? esc(c.act.gp) : "vacant"}</b></li>`).join("")}</ul></details>`;
     return;
   }
   const c = PAR_ID[sel]; if (!c) return;
