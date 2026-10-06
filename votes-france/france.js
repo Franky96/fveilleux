@@ -56,6 +56,12 @@ function dessinerTete() {
   if (!bloc) { bloc = document.createElement("div"); bloc.id = "vfCands"; bloc.className = "vf-cands"; $("viLegende").after(bloc); }
   $("viPlan").style.display = $("viLegende").style.display = TYPE === "leg" ? "" : "none";
   bloc.hidden = TYPE === "leg";
+  // court texte d'explication du système politique, selon le mode
+  let ex = $("vfExplic");
+  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  ex.innerHTML = TYPE === "pres"
+    ? `<b>Comment ça marche</b><p>Le président de la République est élu directement par les électeurs pour 5 ans, et ne peut pas faire plus de deux mandats de suite (Emmanuel Macron ne peut donc pas se représenter en 2027). Si personne n'obtient plus de 50 % des voix au 1er tour, les deux premiers s'affrontent au 2e tour, deux semaines plus tard. Le président nomme le Premier ministre, qui dirige le gouvernement, mais ce gouvernement doit pouvoir survivre aux votes de l'Assemblée nationale.</p>`
+    : `<b>Comment ça marche</b><p>Les 577 députés de l'Assemblée nationale sont élus pour 5 ans, un par circonscription, en deux tours : on est élu dès le 1er tour avec plus de 50 % des voix (et au moins 25 % des inscrits) ; sinon, les candidats qui ont au moins 12,5 % des inscrits passent au 2e tour, et le premier l'emporte. Les députés se regroupent en groupes parlementaires (15 membres au moins). Le Premier ministre est nommé par le président, mais son gouvernement peut être renversé par une motion de censure votée à la majorité absolue (289 députés) ; le président peut, lui, dissoudre l'Assemblée et provoquer des élections anticipées, comme en juin 2024.</p>`;
   document.querySelector(".t-votes").textContent = TYPE === "leg" ? "Votes France · législatives" : "Votes France · présidentielle 2027";
   document.querySelector(".vue-votes .vi-badge").textContent = TYPE === "leg" ? "France · législatives" : "France · présidentielle 2027";
   if (TYPE === "pres") {
@@ -221,6 +227,7 @@ function outilsCarte() {
 }
 function changerMode(m) {
   etat.mode = m;
+  if (sel != null) dessinerPanneau();
   if (m === "vote" && TYPE === "leg" && !etat.parti) etat.parti = Object.keys(DATA.sieges).sort((a, b) => DATA.sieges[b] - DATA.sieges[a])[0];
   if (m === "vote" && TYPE === "pres" && !etat.cand) etat.cand = Object.keys(P22.national)[0];
   peindre();
@@ -260,9 +267,10 @@ function infobulle(e, f) {
   const c = PAR_ID[f.properties.id], t = $("viTip"), box = svg.node().parentNode.getBoundingClientRect();
   let px = e.clientX - box.left + 14; if (px > box.width - 230) px -= 250;
   t.hidden = false; t.style.left = px + "px"; t.style.top = (e.clientY - box.top + 14) + "px";
-  t.innerHTML = c ? `<b>${esc(c.n)}</b><small>${esc(c.r)} · ${nf(c.e)} inscrits</small><br>${c.act ? `Député : ${esc(c.act.nom)} (${esc(c.act.gp)})` : "Siège vacant"}<br>`
+  t.innerHTML = c ? `<b>${esc(c.n)}</b><small>${esc(c.r)}${TYPE === "leg" && etat.mode === "actuel" ? "" : ` · ${nf(c.e)} inscrits`}</small><br>${c.act ? `Député : ${esc(c.act.nom)} (${esc(c.act.gp)})` : "Siège vacant"}<br>`
     + (TYPE === "pres" ? `<small>Présidentielle 2022 : ${Object.entries(P22.circ[c.id] || {}).slice(0, 3).map(([k, v]) => `${esc(nomCourt(k))} ${nf(v, 1)} %`).join(" · ")}</small>`
-      : `<small>Élu en 2024 : ${esc(c.elu)} (${esc(c.gnu)})</small><br><small>1er tour : ${Object.entries(c.s).slice(0, 3).map(([b, v]) => `${COURT[b]} ${nf(v, 1)} %`).join(" · ")}</small>`) : f.properties.id;
+      : etat.mode === "actuel" ? `<small>${c.act ? esc(GP[c.act.gp]?.nom || c.act.gp) : ""}</small>`
+    : `<small>Élu en 2024 : ${esc(c.elu)} (${esc(c.gnu)})</small><br><small>1er tour : ${Object.entries(c.s).slice(0, 3).map(([b, v]) => `${COURT[b]} ${nf(v, 1)} %`).join(" · ")}</small>`) : f.properties.id;
 }
 function pleinEcran() {
   const carte = $("viCarte").parentElement, ecran = document.fullscreenElement || document.webkitFullscreenElement;
@@ -339,6 +347,17 @@ function dessinerPanneau() {
   }
   const c = PAR_ID[sel]; if (!c) return;
   const tracee = DATA.geo.features.some(f => f.properties.id === c.id), g = c.act ? GP[c.act.gp] : null;
+  if (etat.mode === "actuel") {   // mode « Député actuel » : seulement l'état actuel (l'élection de 2024 est dans les autres modes)
+    const voisins = DATA.circ.filter(x => x.d === c.d && x.id !== c.id);
+    z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(c.r)}</span><h3>${esc(c.n)}</h3>
+      <p class="vi-elu" style="--c:${g ? g.c : "var(--soft)"}">${c.act ? `<b>${esc(c.act.nom)}</b> · député en exercice` : "<b>Siège vacant</b> (élection partielle à venir)"}</p>
+      ${g ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${g.c}"></i>${esc(g.nom)}</span><span class="vi-pill">Groupe de ${g.n} députés (${nf(100 * g.n / 577, 1)} %)</span></div>` : ""}
+      <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Toute la France</button>${tracee ? `<button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>` : ""}</div>
+      ${voisins.length ? `<span class="lv-eyebrow">Les autres députés du département (${esc(c.dn)})</span>
+      <ul class="vi-serres">${voisins.map(x => `<li data-id="${x.id}" tabindex="0" style="--c:${x.act ? GP[x.act.gp]?.c : "var(--soft)"}"><i></i>${esc(x.n.replace(/^.*\(/, "").replace(")", " circ."))} · ${x.act ? esc(x.act.nom) : "vacant"}<b>${x.act ? esc(x.act.gp) : "—"}</b></li>`).join("")}</ul>` : ""}
+      <p class="lv-muted">Assemblée au ${dateFr(DATA.assemblee.date)}. Pour le résultat de l'élection de 2024 dans cette circonscription : mode « Élu en 2024 ».</p>`;
+    return;
+  }
   z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(c.r)}</span><h3>${esc(c.n)}</h3>
     <p class="vi-elu" style="--c:${g ? g.c : "var(--soft)"}">${c.act ? `<b>${esc(c.act.nom)}</b> · ${esc(g?.nom || c.act.gp)}` : "<b>Siège vacant</b> (élection partielle à venir)"}</p>
     <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Toute la France</button>${tracee ? `<button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>` : ""}</div>
