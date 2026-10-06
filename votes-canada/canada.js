@@ -248,13 +248,14 @@ function construireCarte() {
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
     etat.parti = b.dataset.p; if (!voteMode()) etat.mode = groupe() === "e25" ? "e25vote" : "vote"; peindre(); if (sel == null) dessinerPanneau(); });
 }
-// boutons de mode, en groupes (comme Votes France) : député actuel · projection · élection de 2025
+// boutons de mode, en groupes (comme Votes France) : projection · élection de 2025 · chambre actuelle
 function outilsCarte() {
   const bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
-  $("viModes").innerHTML = `<span class="lv-groupe">${bouton(["act", "Député actuel"])}</span>`
-    + `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection Qc125</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>`
-    + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
+  // projection d'abord (le sujet de la page) ; élection de 2025 et chambre actuelle ensuite, pour comparer
+  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection Qc125</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>`
+    + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`
+    + `<span class="vf-mode-grp"><span class="vf-mode-lab">Chambre actuelle</span><span class="lv-groupe">${bouton(["act", "Députés"])}</span></span>`;
 }
 function changerMode(m) {
   etat.mode = m;
