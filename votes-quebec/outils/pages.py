@@ -149,7 +149,7 @@ ru("Assemblée nationale · 127 sièges · majorité 64", "Chambre des représen
 ru('<svg id="viPlan" class="vi-plan" role="img" aria-label="Plan de l\'Assemblée nationale"></svg>',
    '<svg id="viPlan" class="vi-plan vf-hemi" role="img" aria-label="Hémicycle de la Chambre des représentants (435 sièges)"></svg>')
 us = re.sub(r'<button type="button" data-z="tout">Tout le Québec</button>.*?<button type="button" data-z="sud">Sud</button>',
-            '<button type="button" data-z="tout">États-Unis</button><button type="button" data-z="ne">Nord-Est</button><button type="button" data-z="gl">Grands Lacs</button>'
+            '<button type="button" data-z="tout">États-Unis</button><button type="button" data-z="ne">Nord-Est</button><button type="button" data-z="nyc">New York</button><button type="button" data-z="gl">Grands Lacs</button>'
             '<button type="button" data-z="ca">Californie</button><button type="button" data-z="tx">Texas</button><button type="button" data-z="fl">Floride</button>', us, flags=re.S)
 us = re.sub(r'<button type="button" data-per="3".*?Depuis 2022</button>',
             '<button type="button" data-per="3" aria-pressed="true">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button>'

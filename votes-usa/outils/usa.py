@@ -2,6 +2,7 @@
 
   - cote de chaque district de 2026 : consensus de 270toWin (7 prévisionnistes : Cook, Sabato, Inside Elections…),
     avec le représentant sortant et les candidats de l'élection générale ;
+  - Sénat : cote de chaque course de 2026 (consensus de 270toWin), sénateurs actuels et candidats ;
   - Chambre actuelle : membres en exercice selon le Clerk de la Chambre (MemberData.xml), sièges vacants compris ;
   - vote générique (démocrate ou républicain au Congrès) : moyenne quotidienne et liste des sondages de Silver Bulletin
     (graphiques Datawrapper publics).
@@ -65,11 +66,36 @@ if len(act) != 435: raise SystemExit(f"{len(act)} sièges lus chez le Clerk (435
 
 mc = re.match(r"([A-Z][a-z]+)\.? (\d+), (\d{4})", pub[1]) if pub else None
 clerk = f"{mc[3]}-{MOIS[mc[1][:3]]:02d}-{int(mc[2]):02d}" if mc and mc[1][:3] in MOIS else ""
+# --- Sénat : consensus de 270toWin (deux chiffres par État, un par siège ; 9 = pas d'élection), sénateurs actuels, candidats
+ps = get("https://www.270towin.com/2026-senate-election/consensus-2026-senate-forecast")
+chs = re.search(r"new SenateMap\('(\w{101,})'", ps)[1]
+ordre_s = ["02", "01", "05", "04", "06", "08", "09", "10", "12", "13", "15", "19", "16", "17", "18", "20", "21", "22", "25", "24", "23", "26", "27", "29", "28",
+           "30", "37", "38", "31", "33", "34", "35", "32", "36", "39", "40", "41", "42", "44", "45", "46", "47", "48", "49", "51", "50", "53", "55", "54", "56"]   # map.senate.class.js
+ssieges = objet_js(ps, "map_d3.seats =")
+ms = re.search(r"map_d3\.date_created_formatted = '([A-Z][a-z]+)\.? (\d+), (\d{4})", ps)
+senat = {"maj": f"{ms[3]}-{MOIS[ms[1][:3]]:02d}-{int(ms[2]):02d}" if ms else maj, "etats": {}}
+for i, f in enumerate(ordre_s):
+    codes = chs[2 * i: 2 * i + 2]
+    e = {"senateurs": [], "courses": []}
+    for num in ("1", "2"):
+        st = (ssieges.get(f) or {}).get(num) or {}
+        e["senateurs"].append({"nom": (st.get("seat_rep_name") or "").strip(), "p": st.get("seat_party") or "", "fin": st.get("seat_rep_elected")})
+        code = codes[int(num) - 1]
+        if code != "9":
+            cands = [{"nom": c.get("full_name") or "", "p": c.get("party") or "", "inc": int(c.get("is_incumbent") or 0)}
+                     for c in st.get("candidates") or [] if str(c.get("general_election_active")) == "2"]
+            e["courses"].append({"r": COTE.get(code, "N"), "siege": int(num), "special": bool(st.get("special_election")), "held": st.get("seat_party") or "",
+                                 "ret": bool(st.get("retired_notes")), "cands": sorted(cands, key=lambda c: (c["p"] not in ("D", "R"), c["p"]))})
+    senat["etats"][f] = e
+nc = sum(len(e["courses"]) for e in senat["etats"].values())
+if not 33 <= nc <= 37 or sum(len(e["senateurs"]) for e in senat["etats"].values()) != 100:
+    raise SystemExit(f"Sénat illisible ({nc} courses) : projection.json inchangé.")
 json.dump({"source": "Consensus de 270toWin (Cook Political Report, Sabato's Crystal Ball, Inside Elections, etc.)", "maj": maj,
-           "clerk": clerk, "circ": circ, "actuel": act},
+           "clerk": clerk, "circ": circ, "actuel": act, "senat": senat},
           open(os.path.join(ICI, "..", "projection.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 compte = {}
 for c in circ.values(): compte[c["r"]] = compte.get(c["r"], 0) + 1
+print(f"Sénat : {nc} courses, consensus du {senat['maj']} : " + str({k: sum(1 for e in senat['etats'].values() for c in e['courses'] if c['r'] == k) for k in COTE.values()}))
 print(f"Consensus du {maj} : {dict(sorted(compte.items()))} · Clerk ({pub[1] if pub else '?'}) : "
       + str({k: sum(1 for a in act.values() if (a or {}).get('p', 'VAC') == k) for k in ('R', 'D', 'I', 'VAC')}))
 

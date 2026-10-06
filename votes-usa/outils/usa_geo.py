@@ -1,10 +1,12 @@
 """Votes États-Unis : contours des 435 districts de la Chambre des représentants → ../data.json
 
-Source : la carte interactive de 270toWin (us_districts_2026_topo.json), qui contient les districts de 2026 (après les
+Contours précis du Census (fichiers cartographiques 1:500 000, découpés au trait de côte) pour les districts de 2024 ;
+districts de 2026 des États redécoupés : carte interactive de 270toWin, découpée avec la terre de chaque État (Census).
+Source des tracés de 2026 : la carte interactive de 270toWin (us_districts_2026_topo.json), qui contient les districts de 2026 (après les
 redécoupages de 2025-2026 : Californie, Texas, Floride, Ohio, Caroline du Nord, Tennessee, Alabama, Louisiane, Utah) et,
 pour ces États, les districts de 2024 (ceux des représentants actuels et de l'élection de 2024).
 Fichier fixe : les données qui bougent (cotes, représentants, sondages) sont dans projection.json et sondages.json (usa.py).
-Usage : /usr/bin/python3 usa_geo.py   (dans le dossier outils/ ; seulement la bibliothèque standard)
+Usage : /usr/bin/python3 usa_geo.py   (dans le dossier outils/ ; pip install pyshp shapely topojson)
 """
 import json, os, urllib.request
 
@@ -48,24 +50,69 @@ dists = t["objects"]["districts"]["geometries"]
 for d in dists: d["properties"]["GEOID"] = d["properties"]["STATEFP"] + d["properties"]["DIST"]   # parfois un nombre (Massachusetts)
 g26 = {d["properties"]["GEOID"]: d for d in dists if d["properties"]["election"] == "2026"}
 g24 = {d["properties"]["GEOID"]: d for d in dists if d["properties"]["election"] == "2024"}
+etats24 = {k[:2] for k in g24}                       # États dont les districts ont changé depuis 2024
+
+# --- contours précis : fichiers cartographiques du Census (1:500 000, découpés au trait de côte)
+#     districts du 119e Congrès (ceux de 2024) ; terre de chaque État, pour découper les districts de 2026 de 270toWin
+import shapefile                                      # pip install pyshp shapely topojson
+from shapely.geometry import shape, mapping
+from shapely.ops import unary_union
+import topojson
+def census(nom, dossier):
+    zf = os.path.join(ICI, "brut", nom + ".zip")
+    if not os.path.exists(zf):
+        open(zf, "wb").write(urllib.request.urlopen(f"https://www2.census.gov/geo/tiger/GENZ2024/shp/{nom}.zip", timeout=180).read())
+    import zipfile; zipfile.ZipFile(zf).extractall(os.path.join(ICI, "brut", dossier))
+    return shapefile.Reader(os.path.join(ICI, "brut", dossier, nom))
+cd = census("cb_2024_us_cd119_500k", "cd")
+c24 = {}
+for sr in cd.iterShapeRecords():
+    st, n = sr.record["STATEFP"], sr.record["CD119FP"]
+    if st not in FIPS: continue                       # délégués (DC, Porto Rico…)
+    c24[st + ("00" if n in ("00", "98") else n)] = shape(sr.shape.__geo_interface__).buffer(0)
+etr = census("cb_2024_us_state_500k", "st")
+terre = {sr.record["STATEFP"]: shape(sr.shape.__geo_interface__).buffer(0) for sr in etr.iterShapeRecords() if sr.record["STATEFP"] in FIPS}
+c26 = {}
+for k, d in g26.items():
+    if k[:2] in etats24: c26[k] = shape(geom(d)).buffer(0).intersection(terre[k[:2]])
+# Alaska : côte très découpée (Aléoutiennes…) ; aucune voisine sur la carte, on la simplifie à part
+def alleger(g, tol, min_aire):
+    g = g.simplify(tol, preserve_topology=True)
+    return unary_union([p for p in getattr(g, "geoms", [g]) if p.area >= min_aire])
+c24["0200"] = alleger(c24["0200"], 0.02, 0.05); terre["02"] = c24["0200"]
+if len(c24) != 435: raise SystemExit(f"{len(c24)} districts du Census (435 attendus)")
+
+def simplifier(geoms, tol):
+    fc = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"id": k}, "geometry": mapping(g)} for k, g in sorted(geoms.items())]}
+    out = json.loads(topojson.Topology(fc, prequantize=False, toposimplify=tol, simplify_algorithm="dp").to_geojson())
+    def arr(o): return [arr(x) for x in o] if isinstance(o[0], (list, tuple)) else [round(o[0], 4), round(o[1], 4)]
+    # petites îles retirées (moins de 1 % du district et de 0,002 degré carré)
+    feats = []
+    for f in out["features"]:
+        g = shape(f["geometry"]).buffer(0)
+        parts = list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
+        grand = max(p.area for p in parts)
+        g = unary_union([p for p in parts if p.area >= min(0.002, grand * 0.01)])
+        m = mapping(g)
+        feats.append({"type": "Feature", "properties": {"id": f["properties"]["id"]}, "geometry": {"type": m["type"], "coordinates": arr(m["coordinates"])}})
+    return {"type": "FeatureCollection", "features": sorted(feats, key=lambda f: f["properties"]["id"])}
+
 ids = sorted(g26)
 if len(ids) != 435: raise SystemExit(f"{len(ids)} districts de 2026 (435 attendus)")
-etats24 = {k[:2] for k in g24}                       # États dont les districts ont changé depuis 2024
-ids24 = sorted({k for k in g24} | {k for k in ids if k[:2] not in etats24})
+ids24 = sorted(c24)
 def nom(k):
     ab, n = FIPS[k[:2]]
     return f"{n} (district unique)" if k[2:] == "00" else f"{n} {int(k[2:])}"
-feat = lambda k, g: {"type": "Feature", "properties": {"id": k}, "geometry": geom(g)}
 sortie = {
     "etats": [{"fips": f, "ab": a, "nom": n} for f, (a, n) in sorted(FIPS.items(), key=lambda x: x[1][1])],
     "redecoupes": sorted(FIPS[e][0] for e in etats24),
     "districts": [{"id": k, "st": FIPS[k[:2]][0], "n": nom(k)} for k in ids],
     "districts24": [{"id": k, "st": FIPS[k[:2]][0], "n": nom(k)} for k in ids24],
-    "geo26": {"type": "FeatureCollection", "features": [feat(k, g26[k]) for k in ids]},
-    # 2024 : seulement les districts des États redécoupés (ailleurs, ceux de 2026 sont les mêmes)
-    "geo24": {"type": "FeatureCollection", "features": [feat(k, g24[k]) for k in sorted(g24)]},
-    "geoEtats": {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"fips": s["properties"]["STATEFP"]}, "geometry": geom(s)}
-                                                           for s in t["objects"]["states"]["geometries"] if s["properties"]["STATEFP"] in FIPS]},
+    # 2024 : les 435 districts (Census) ; 2026 : seulement les États redécoupés (ailleurs, ce sont ceux de 2024)
+    "geo24": simplifier(c24, 0.003),
+    "geo26": simplifier(c26, 0.003),
+    "geoEtats": simplifier(terre, 0.01),
 }
+for f in sortie["geoEtats"]["features"]: f["properties"] = {"fips": f["properties"]["id"]}
 json.dump(sortie, open(os.path.join(ICI, "..", "data.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-print(f"{len(ids)} districts de 2026, {len(ids24)} de 2024 · États redécoupés : {', '.join(sortie['redecoupes'])} · {os.path.getsize(os.path.join(ICI, '..', 'data.json')) // 1024} Ko")
+print(f"{len(ids)} districts de 2026 ({len(c26)} redessinés), {len(ids24)} de 2024 · États redécoupés : {', '.join(sortie['redecoupes'])} · {os.path.getsize(os.path.join(ICI, '..', 'data.json')) // 1024} Ko")

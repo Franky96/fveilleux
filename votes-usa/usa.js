@@ -23,17 +23,36 @@ const AN = a => String(a);
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
 
+// type de page : Chambre des représentants (« ch ») ou Sénat (« sen ») — choix en haut de la page, comme Votes France
+let TYPE = location.hash === "#senat" ? "sen" : location.hash === "#chambre" ? "ch" : lireLS("vuType", "ch");
 let DATA, PROJ, R24, SOND, NOM26 = {}, NOM24 = {}, AB_DE = {}, ETAT_NOM = {}, F26, F24, sel = null, demarre = false;
 const etat = { mode: "cote", parti: null, pct: lireLS("viPct", true), chambre: "proj", st: null };
 const groupe = () => etat.mode === "act" ? "act" : etat.mode.startsWith("e24") ? "e24" : "proj";
+const SEN = () => PROJ.senat;
+const course = f => SEN().etats[f]?.courses[0];                       // course de 2026 dans l'État (une au plus)
+const coteSen = f => course(f)?.r;
+const delegation = f => { const ps = (SEN().etats[f]?.senateurs || []).map(x => x.p === "I" ? "D" : x.p); return ps[0] === ps[1] ? ps[0] : "S"; };
+const COUL_DELEG = { D: "#2F6BD8", R: "#D63A3A", S: "#8A6FD1" };
 const voteMode = () => etat.mode === "e24vote";
 const cle24 = id => `${AB_DE[id.slice(0, 2)]}-${+id.slice(2)}`;          // « 0612 » → « CA-12 » (résultats de 2024)
-const nomDe = id => (groupe() === "proj" ? NOM26[id] : NOM24[id]) || NOM26[id] || NOM24[id] || id;
-const dans = id => !etat.st || AB_DE[id.slice(0, 2)] === etat.st;
+const nomDe = id => TYPE === "sen" ? ETAT_NOM[AB_DE[id]] || id : (groupe() === "proj" ? NOM26[id] : NOM24[id]) || NOM26[id] || NOM24[id] || id;
+const dans = id => TYPE === "sen" || !etat.st || AB_DE[id.slice(0, 2)] === etat.st;
 const r24 = id => R24.circ[cle24(id)];
 
 /* ---------- sièges par chambre affichée ---------- */
+const NONREN = { D: ["#8FA9DE", "D (siège non renouvelé)"], I: ["#B7A6E2", "Indépendant (non renouvelé)"], R: ["#E3A0A0", "R (siège non renouvelé)"] };
+function partsSenat(k) {
+  const n = {};
+  for (const e of Object.values(SEN().etats)) e.senateurs.forEach((x, i) => {
+    const c = e.courses.find(c => c.siege === i + 1);
+    const cle = k === "act" ? (x.p || "VAC") : c ? c.r : "n" + (x.p || "R");
+    n[cle] = (n[cle] || 0) + 1;
+  });
+  if (k === "act") return ["D", "I", "VAC", "R"].filter(p => n[p]).map(p => ({ k: p, n: n[p], c: COUL[p], nom: p === "VAC" ? "Siège vacant" : NOMS[p] }));
+  return ["nD", "nI", ...COTES, "nR"].filter(r => n[r]).map(r => r[0] === "n" ? { k: r, n: n[r], c: NONREN[r[1]][0], nom: NONREN[r[1]][1] } : { k: r, n: n[r], c: COTE[r][0], nom: COTE[r][1] });
+}
 function partsChambre(k) {
+  if (TYPE === "sen") return partsSenat(k);
   if (k === "proj") {
     const n = {}; Object.values(PROJ.circ).forEach(c => n[c.r] = (n[c.r] || 0) + 1);
     return COTES.filter(r => n[r]).map(r => ({ k: r, n: n[r], c: COTE[r][0], nom: COTE[r][1] }));
@@ -45,8 +64,8 @@ function partsChambre(k) {
   return ["D", "R"].filter(p => R24.sieges[p]).map(p => ({ k: p, n: R24.sieges[p], c: COUL[p], nom: NOMS[p] }));
 }
 // hémicycle (comme Votes France) : rangées en demi-cercle, de gauche (démocrates) à droite (républicains)
-function hemicycle(svgEl, parts, sous) {
-  const R = 12, r0 = 0.42, W = 1000, H = 520, cx = W / 2, cy = H - 20, Rmax = 470;
+function hemicycle(svgEl, parts, sous, SIEGES = 435) {
+  const R = SIEGES > 200 ? 12 : 6, r0 = 0.42, W = 1000, H = 520, cx = W / 2, cy = H - 20, Rmax = 470;
   const rayons = d3.range(R).map(i => r0 + i * (1 - r0) / (R - 1)), somme = d3.sum(rayons);
   const parRangee = rayons.map(r => Math.round(SIEGES * r / somme)); parRangee[R - 1] += SIEGES - d3.sum(parRangee);
   const places = [];
@@ -54,7 +73,7 @@ function hemicycle(svgEl, parts, sous) {
     for (let k = 0; k < n; k++) { const a = Math.PI - k * Math.PI / (n - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
   places.sort((p, q) => q.a - p.a || p.r - q.r);
   const sieges = parts.flatMap(p => d3.range(p.n).map(() => p));
-  const pas = Rmax * (1 - r0) / (R - 1), rayon = pas * 0.42;
+  const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * 0.42, 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
     .style("fill", (p, i) => sieges[i] ? (sieges[i].k === "VAC" ? "none" : sieges[i].c) : "var(--soft)")
@@ -66,14 +85,33 @@ function hemicycle(svgEl, parts, sous) {
 
 /* ---------- en-tête, Chambre ---------- */
 const CHAMBRES = { proj: "Projection", act: "Chambre actuelle", e24: "Élection 2024" };
+function ajouterChoixType() {
+  const tete = document.querySelector(".vue-votes .lv-head"); if (!tete || $("vfType")) return;
+  const g = document.createElement("div");
+  g.className = "lv-groupe vf-type"; g.id = "vfType"; g.setAttribute("role", "group"); g.setAttribute("aria-label", "Chambre affichée");
+  g.innerHTML = `<button type="button" data-t="ch">Chambre des représentants</button><button type="button" data-t="sen">Sénat</button>`;
+  tete.appendChild(g);
+  g.addEventListener("click", e => { const b = e.target.closest("button[data-t]"); if (!b || b.dataset.t === TYPE) return; changerType(b.dataset.t); });
+}
+function changerType(t) {
+  TYPE = t; ecrireLS("vuType", t);
+  history.replaceState(null, "", location.pathname + location.search + (t === "sen" ? "#senat" : "#chambre"));
+  etat.mode = "cote"; etat.chambre = "proj"; etat.st = null; sel = null; jeu = null;
+  svg.transition().duration(0).call(ZOOM.transform, d3.zoomIdentity);
+  dessinerTete(); outilsCarte(); tracerDistricts(); peindre(); dessinerPanneau();
+}
 function dessinerTete() {
+  document.querySelectorAll("#vfType button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === TYPE));
+  document.querySelector(".t-votes").textContent = TYPE === "sen" ? "Votes États-Unis · Sénat" : "Votes États-Unis · Chambre des représentants";
+  document.querySelector(".vue-votes .vi-badge").textContent = TYPE === "sen" ? "États-Unis · Sénat" : "États-Unis · Chambre des représentants";
+  $("viPlan").setAttribute("aria-label", TYPE === "sen" ? "Hémicycle du Sénat (100 sièges)" : "Hémicycle de la Chambre des représentants (435 sièges)");
   const sond = SOND.sondages, dernier = sond[sond.length - 1], m = SOND.moyenne[SOND.moyenne.length - 1];
   $("viTitre").textContent = "Élections de mi-mandat du 3 novembre 2026";
-  $("viSource").innerHTML = `Chambre des représentants · consensus de 270toWin du ${dateFr(PROJ.maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})`;
-  $("viNote").textContent = "Projection : chaque district est coloré selon sa cote dans le consensus de sept prévisionnistes (sûr, probable, penché ou à égalité). Les prévisionnistes ne publient pas de pourcentage par district.";
+  $("viSource").innerHTML = TYPE === "sen" ? `Sénat · consensus de 270toWin du ${dateFr(SEN().maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})` : `Chambre des représentants · consensus de 270toWin du ${dateFr(PROJ.maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})`;
+  $("viNote").textContent = TYPE === "sen" ? "Projection : chaque État où un siège est en jeu est coloré selon la cote de sa course dans le consensus de sept prévisionnistes ; les sièges non renouvelés gardent leur parti." : "Projection : chaque district est coloré selon sa cote dans le consensus de sept prévisionnistes (sûr, probable, penché ou à égalité). Les prévisionnistes ne publient pas de pourcentage par district.";
   let ex = $("vfExplic");
   if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
-  ex.innerHTML = `<p>Les 435 membres de la Chambre des représentants sont élus pour deux ans, un par district. En général, le candidat qui a le plus de voix l'emporte (l'Alaska et le Maine utilisent le vote préférentiel). Il faut 218 sièges pour la majorité. Le même jour, 35 des 100 sièges du Sénat sont aussi en jeu. Neuf États ont redessiné leurs districts depuis 2024 : la projection utilise les districts de 2026, la Chambre actuelle et l'élection de 2024 ceux de 2024.</p>`;
+  ex.innerHTML = TYPE === "sen" ? `<p>Le Sénat compte 100 sénateurs, deux par État, élus pour six ans ; un tiers des sièges est renouvelé tous les deux ans. Le 3 novembre 2026, 35 sièges sont en jeu : les 33 sièges ordinaires et deux élections partielles (Ohio et Floride). La majorité est de 51 sièges ; à 50 contre 50, le vice-président (JD Vance, républicain) départage.</p>` : `<p>Les 435 membres de la Chambre des représentants sont élus pour deux ans, un par district. En général, le candidat qui a le plus de voix l'emporte (l'Alaska et le Maine utilisent le vote préférentiel). Il faut 218 sièges pour la majorité. Le même jour, 35 des 100 sièges du Sénat sont aussi en jeu. Neuf États ont redessiné leurs districts depuis 2024 : la projection utilise les districts de 2026, la Chambre actuelle et l'élection de 2024 ceux de 2024.</p>`;
   let choix = $("vcChambre");
   if (!choix) {
     choix = document.createElement("div"); choix.id = "vcChambre"; choix.className = "lv-groupe vi-periodes vc-choix"; choix.setAttribute("role", "group"); choix.setAttribute("aria-label", "Chambre affichée");
@@ -84,7 +122,8 @@ function dessinerTete() {
   dessinerChambre();
 }
 function dessinerChambre() {
-  document.querySelectorAll("#vcChambre button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ch === etat.chambre));
+  document.querySelectorAll("#vcChambre button").forEach(b => { b.hidden = TYPE === "sen" && b.dataset.ch === "e24"; b.setAttribute("aria-pressed", b.dataset.ch === etat.chambre); });
+  if (TYPE === "sen") return dessinerChambreSenat();
   const parts = partsChambre(etat.chambre), eb = $("viPlan").closest("section").querySelector(".lv-eyebrow");
   const somme = side => d3.sum(parts.filter(p => (p.k[0] === side)), p => p.n);
   if (etat.chambre === "proj") {
@@ -96,7 +135,23 @@ function dessinerChambre() {
     eb.textContent = etat.chambre === "act" ? `Chambre des représentants · membres en exercice au ${dateFr(PROJ.clerk)}` : "Chambre des représentants · élection du 5 novembre 2024";
     $("viSiegesTitre").textContent = `${NOMS[lead]} : ${n[lead]} sièges${n[lead] >= MAJ ? ", majorité" : ""}`;
   }
-  hemicycle($("viPlan"), parts, `représentants · majorité ${MAJ}`);
+  hemicycle($("viPlan"), parts, `représentants · majorité ${MAJ}`, 435);
+  $("viLegende").innerHTML = parts.map(p => `<span style="--c:${p.k === "VAC" ? "var(--muted)" : p.c}"><i></i>${p.nom} <b>${p.n}</b></span>`).join("");
+}
+
+function dessinerChambreSenat() {
+  const parts = partsChambre(etat.chambre), eb = $("viPlan").closest("section").querySelector(".lv-eyebrow");
+  const tot = f => d3.sum(parts.filter(f), p => p.n);
+  if (etat.chambre === "proj") {
+    const d = tot(p => p.k[0] === "D" || p.k === "nD" || p.k === "nI"), r = tot(p => p.k[0] === "R" || p.k === "nR"), t = 100 - d - r;
+    eb.textContent = `Sénat · consensus du ${dateFr(SEN().maj)}`;
+    $("viSiegesTitre").textContent = d >= 51 ? `Démocrates favoris : ${d} sièges (majorité 51)` : r >= 50 ? `Républicains favoris : ${r} sièges${r === 50 ? " avec le vice-président" : ""}` : `Aucun camp favori : D ${d}, R ${r}, ${t} à égalité`;
+  } else {
+    const n = Object.fromEntries(parts.map(p => [p.k, p.n]));
+    eb.textContent = "Sénat · sénateurs en exercice";
+    $("viSiegesTitre").textContent = `Républicains ${n.R || 0}, démocrates ${n.D || 0}${n.I ? ` et ${n.I} indépendants (avec les démocrates)` : ""}`;
+  }
+  hemicycle($("viPlan"), parts, "sénateurs · majorité 51", 100);
   $("viLegende").innerHTML = parts.map(p => `<span style="--c:${p.k === "VAC" ? "var(--muted)" : p.c}"><i></i>${p.nom} <b>${p.n}</b></span>`).join("");
 }
 
@@ -105,9 +160,13 @@ const MW = 900, MH = 560;
 let svg, gZ, gRid, gReg, gSel, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity, jeu = null;
 const PRESETS = {};
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const features = () => groupe() === "proj" ? F26 : F24;
+const features = () => TYPE === "sen" ? DATA.geoEtats.features : groupe() === "proj" ? F26 : F24;
 function remplir(id) {
   const fade = o => dans(id) ? o : o * 0.22;
+  if (TYPE === "sen") {
+    if (etat.mode === "act") return [COUL_DELEG[delegation(id)], 0.85];
+    const r = coteSen(id); return r ? [COTE[r][0], 0.95] : ["var(--soft)", 1];
+  }
   if (groupe() === "proj") { const c = PROJ.circ[id]; return c ? [COTE[c.r]?.[0] || COTE.N[0], fade(0.95)] : ["var(--soft)", 1]; }
   if (etat.mode === "act") { const a = PROJ.actuel[id]; return a ? [COUL[a.p] || COUL.AUT, fade(0.85)] : ["var(--soft)", 1]; }
   const c = r24(id); if (!c) return ["var(--soft)", 1];
@@ -142,7 +201,7 @@ function polylabel(rings, precision = 0.5) {
 }
 const ANCRE = {};
 function ancre(f) {
-  const k = f.properties.id + (F26.includes(f) ? ":26" : ":24");
+  const k = f.properties.id + (TYPE === "sen" ? ":st" : DATA.geo26.features.includes(f) ? ":26" : ":24");
   if (ANCRE[k]) return ANCRE[k];
   const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
   let best = [0, 0, -1];
@@ -169,7 +228,7 @@ function zoomVers(f, pad = 0.85) {
 }
 // districts affichés : ceux de 2026 (projection) ou de 2024 (Chambre actuelle, élection de 2024)
 function tracerDistricts() {
-  const set = groupe() === "proj" ? "26" : "24";
+  const set = TYPE === "sen" ? "st" : groupe() === "proj" ? "26" : "24";
   if (jeu === set) return; jeu = set;
   gRid.selectAll("path").data(features(), f => f.properties.id + set).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => nomDe(f.properties.id))
@@ -179,10 +238,12 @@ function tracerDistricts() {
   gLbl.selectAll("*").remove();
 }
 function construireCarte() {
-  F26 = DATA.geo26.features;
+  // 2024 : les 435 districts du Census ; 2026 : les mêmes, sauf dans les États redécoupés (tracés de 2026)
+  F24 = DATA.geo24.features;
   const redec = new Set(DATA.redecoupes.map(ab => DATA.etats.find(e => e.ab === ab).fips));
-  F24 = [...F26.filter(f => !redec.has(f.properties.id.slice(0, 2))), ...DATA.geo24.features];
-  for (const f of [...F26, ...DATA.geo24.features, ...DATA.geoEtats.features])
+  F26 = [...F24.filter(f => !redec.has(f.properties.id.slice(0, 2))), ...DATA.geo26.features];
+  DATA.geoEtats.features.forEach(f => f.properties.id = f.properties.fips);
+  for (const f of [...DATA.geo24.features, ...DATA.geo26.features, ...DATA.geoEtats.features])
     if (d3.geoArea(f) > 2 * Math.PI) { const rev = q => q.map(x => x.slice().reverse()); f.geometry.coordinates = f.geometry.type === "Polygon" ? rev(f.geometry.coordinates) : f.geometry.coordinates.map(rev); }
   PROJ_FN = d3.geoAlbersUsa().fitExtent([[10, 10], [MW - 10, MH - 10]], DATA.geoEtats);
   PATH = d3.geoPath(PROJ_FN);
@@ -193,6 +254,7 @@ function construireCarte() {
   gZ = svg.append("g");
   gRid = gZ.append("g"); gReg = gZ.append("g"); gSel = gZ.append("g"); gLbl = gZ.append("g");
   gReg.selectAll("path").data(DATA.geoEtats.features).join("path").attr("class", "lv-reg").attr("d", PATH);
+  PRESETS.nyc = { type: "Feature", geometry: { type: "MultiPoint", coordinates: [[-74.3, 40.48], [-73.65, 40.95]] } };
   tracerDistricts();
   ZOOM = d3.zoom().scaleExtent([1, 120]).translateExtent([[-40, -40], [MW + 40, MH + 40]])
     .on("zoom", e => { gZ.attr("transform", e.transform); curK = e.transform.k; curT = e.transform; placerEtiquettes(); });
@@ -218,6 +280,12 @@ function construireCarte() {
 function outilsCarte() {
   const bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
+  $("viChips").style.display = TYPE === "sen" ? "none" : "";
+  if (TYPE === "sen") {
+    $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection · consensus</span><span class="lv-groupe">${bouton(["cote", "Cote"])}</span></span>`
+      + `<span class="vf-mode-grp"><span class="vf-mode-lab">Sénat actuel</span><span class="lv-groupe">${bouton(["act", "Sénateurs"])}</span></span>`;
+    return;
+  }
   $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection · consensus</span><span class="lv-groupe">${bouton(["cote", "Cote"])}</span></span>`
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Chambre actuelle</span><span class="lv-groupe">${bouton(["act", "Représentants"])}</span></span>`
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection 2024</span><span class="lv-groupe">${[["e24", "Élu"], ["e24vote", "Vote"]].map(bouton).join("")}</span></span>`;
@@ -226,7 +294,7 @@ function changerMode(m) {
   const avant = groupe();
   etat.mode = m;
   if (voteMode() && !etat.parti) etat.parti = "D";
-  if (groupe() !== avant) { if (sel != null && !features().some(f => f.properties.id === sel)) sel = null; tracerDistricts(); }
+  if (groupe() !== avant && TYPE === "ch") { if (sel != null && !features().some(f => f.properties.id === sel)) sel = null; tracerDistricts(); }
   if (etat.chambre !== groupe()) { etat.chambre = groupe(); dessinerChambre(); }
   peindre(); dessinerPanneau();
 }
@@ -247,9 +315,12 @@ function peindre() {
   placerEtiquettes();
   let an = $("vfAnCarte");
   if (!an) { an = document.createElement("div"); an.id = "vfAnCarte"; an.className = "vf-an-carte"; $("viCarte").before(an); }
-  an.innerHTML = groupe() === "act" ? "Représentants actuels" : groupe() === "e24" ? "Élection 2024" : `Consensus · ${dateFr(PROJ.maj)}`;
+  an.innerHTML = TYPE === "sen" ? (groupe() === "act" ? "Sénateurs actuels" : `Sénat · consensus · ${dateFr(SEN().maj)}`) : groupe() === "act" ? "Représentants actuels" : groupe() === "e24" ? "Élection 2024" : `Consensus · ${dateFr(PROJ.maj)}`;
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
-  $("viEchelle").innerHTML = groupe() === "proj"
+  $("viEchelle").innerHTML = TYPE === "sen" ? (groupe() === "proj"
+    ? `<span class="vf-legende">${COTES.map(r => `<span style="--c:${COTE[r][0]}"><i></i>${COTE[r][1]}</span>`).join("")}<span style="--c:var(--soft)"><i></i>pas d'élection</span></span><span>· cote de la course de 2026 dans chaque État</span>`
+    : `<span class="vf-legende">${[["D", "Deux démocrates"], ["R", "Deux républicains"], ["S", "Partagé"]].map(([k, t]) => `<span style="--c:${COUL_DELEG[k]}"><i></i>${t}</span>`).join("")}</span><span>· parti des deux sénateurs actuels (indépendants comptés avec les démocrates)</span>`)
+    : groupe() === "proj"
     ? `<span class="vf-legende">${COTES.map(r => `<span style="--c:${COTE[r][0]}"><i></i>${COTE[r][1]}</span>`).join("")}</span><span>· cote de chaque district de 2026 (consensus de 270toWin)</span>`
     : etat.mode === "act" ? `<span class="vf-legende">${["D", "R"].map(k => `<span style="--c:${COUL[k]}"><i></i>${NOMS[k]}</span>`).join("")}<span style="--c:var(--soft)"><i></i>vacant</span></span><span>· parti du représentant actuel (districts de 2024)</span>`
     : voteMode() ? `<span>0 %</span>${ramp}<span>75 % et +</span><span>· vote ${p === "D" ? "démocrate" : "républicain"} en 2024 dans chaque district${etat.pct ? " (chiffre = %)" : ""}</span>`
@@ -259,6 +330,12 @@ function infobulle(e, f) {
   const id = f.properties.id, t = $("viTip"), box = svg.node().parentNode.getBoundingClientRect();
   let px = e.clientX - box.left + 14; if (px > box.width - 230) px -= 250;
   t.hidden = false; t.style.left = px + "px"; t.style.top = (e.clientY - box.top + 14) + "px";
+  if (TYPE === "sen") {
+    const c = course(id), sn = SEN().etats[id]?.senateurs || [];
+    t.innerHTML = `<b>${esc(nomDe(id))}</b><small>${sn.map(x => `${esc(x.nom)} (${x.p})`).join(" · ")}</small><br>`
+      + (c ? `Course de 2026${c.special ? " (partielle)" : ""} : ${COTE[c.r]?.[1]}<br><small>${c.cands.filter(k => ["D", "R", "I"].includes(k.p)).map(k => `${esc(k.nom)} (${k.p})`).join(" · ")}</small>` : "<small>Pas d'élection au Sénat en 2026</small>");
+    return;
+  }
   if (groupe() === "proj") {
     const c = PROJ.circ[id];
     t.innerHTML = `<b>${esc(nomDe(id))}</b><small>Districts de 2026</small><br>Cote : ${COTE[c?.r]?.[1] || "—"}<br><small>Sortant : ${esc(c?.rep || "—")}${c?.held ? ` (${c.held})` : ""}${c?.ret ? " · ne se représente pas" : ""}</small>`;
@@ -299,7 +376,50 @@ const jauge = (lab, coul, v, droite = "", max = 80) => `<div class="vi-vrow"><b 
 const liste = (items, couleur, droite) => `<ul class="vi-serres">${items.map(id => `<li data-rid="${id}" tabindex="0" style="--c:${couleur(id)}"><i></i>${esc(nomDe(id))}<b>${droite(id)}</b></li>`).join("") || "<li>Aucun</li>"}</ul>`;
 const detenu = c => ["D", "R"].includes(c.held) ? `détenu par ${c.held}` : "nouveau district";
 const replie = (titre, corps, n = "") => `<details class="lv-sg vc-replie"><summary><span>${titre}</span>${n !== "" ? `<small>${n}</small>` : ""}</summary>${corps}</details>`;
+function panneauSenat(z) {
+  const E = SEN().etats, fips = Object.keys(E), g = groupe();
+  const menu = `<details class="vc-menu"><summary>État : <b>${sel ? esc(nomDe(sel)) : "Tous les États-Unis"}</b></summary>
+    <div class="vc-menu-liste">${[[null, "Tous les États-Unis"], ...DATA.etats.map(e => [e.fips, e.nom])]
+      .map(([k, t]) => `<button type="button" data-etatsen="${k || ""}" aria-pressed="${(k || null) === sel}">${esc(t)}${k && course(k) ? " ●" : ""}</button>`).join("")}</div></details>`;
+  const lst = (items, couleur, droite) => `<ul class="vi-serres">${items.map(f => `<li data-rid="${f}" tabindex="0" style="--c:${couleur(f)}"><i></i>${esc(nomDe(f))}<b>${droite(f)}</b></li>`).join("") || "<li>Aucun</li>"}</ul>`;
+  if (sel) {
+    const e = E[sel], c = course(sel);
+    z.innerHTML = `${menu}<span class="lv-eyebrow">Sénat · ${esc(nomDe(sel))}</span><h3>${esc(nomDe(sel))}</h3>
+      <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tous les États-Unis</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button></div>
+      ${c ? `<span class="lv-eyebrow">Course de 2026${c.special ? " · élection partielle" : ""}</span>
+        <div class="vi-pills"><span class="vi-pill"><i style="background:${COTE[c.r][0]}"></i>Cote : ${COTE[c.r][1]}</span><span class="vi-pill">Siège détenu par ${esc(c.held)}</span>${c.ret ? `<span class="vi-pill">Le sortant ne se représente pas</span>` : ""}</div>
+        ${c.cands.length ? `<ul class="vi-cands">${c.cands.map(k => `<li style="--c:${COUL[k.p] || COUL.AUT}"><i></i><span>${esc(k.nom)}${k.inc ? " <small>(sortant)</small>" : ""}</span><em>${esc(k.p)}</em><b></b></li>`).join("")}</ul>` : ""}`
+        : `<p class="lv-muted">Pas d'élection au Sénat dans cet État en 2026.</p>`}
+      <span class="lv-eyebrow">Sénateurs actuels</span>
+      ${e.senateurs.map(x => `<p class="vi-elu" style="--c:${COUL[x.p] || COUL.AUT}"><b>${esc(x.nom)}</b> · ${NOMS[x.p] || x.p}${x.fin ? ` · mandat jusqu'en ${x.fin === 2026 ? "2027 (siège en jeu)" : x.fin + 1}` : ""}</p>`).join("")}`;
+    return;
+  }
+  if (g === "act") {
+    const n = {}; fips.forEach(f => E[f].senateurs.forEach(x => n[x.p] = (n[x.p] || 0) + 1));
+    const partages = fips.filter(f => delegation(f) === "S");
+    z.innerHTML = `${menu}<span class="lv-eyebrow">Sénat actuel</span><h3>Tous les États-Unis</h3>
+      <div class="vi-pills">${["R", "D", "I"].filter(k => n[k]).map(k => `<span class="vi-pill"><i style="background:${COUL[k]}"></i>${NOMS[k]}${k === "I" ? "s" : ""} : ${n[k]}</span>`).join("")}</div>
+      <p class="lv-muted">Les indépendants (Angus King, Bernie Sanders) votent avec les démocrates.</p>
+      <span class="lv-eyebrow">Sièges par parti</span><div class="vi-vrows">${["R", "D", "I"].filter(k => n[k]).map(k => ligne(k, COUL[k], n[k], 60, `${n[k]} %`)).join("")}</div>
+      <span class="lv-eyebrow">États à délégation partagée</span>${lst(partages, () => COUL_DELEG.S, f => E[f].senateurs.map(x => x.p).join(" + "))}`;
+    return;
+  }
+  const n = {}; fips.forEach(f => E[f].courses.forEach(c => n[c.r] = (n[c.r] || 0) + 1));
+  const parts = partsSenat("proj"), tot = f => d3.sum(parts.filter(f), p => p.n);
+  const d = tot(p => p.k[0] === "D" || p.k === "nD" || p.k === "nI"), r = tot(p => p.k[0] === "R" || p.k === "nR");
+  const courses = fips.filter(f => course(f)), egal = courses.filter(f => coteSen(f) === "T");
+  const bascules = courses.filter(f => { const c = course(f), k = camp(c.r); return k !== "T" && ["D", "R"].includes(c.held) && k !== (c.held === "I" ? "D" : c.held); });
+  const nonren = Object.fromEntries(parts.filter(p => p.k[0] === "n").map(p => [p.k.slice(1), p.n]));
+  z.innerHTML = `${menu}<span class="lv-eyebrow">Consensus de 270toWin · ${dateFr(SEN().maj)}</span><h3>Tous les États-Unis</h3>
+    <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL.D}"></i>D favoris : ${d}</span><span class="vi-pill"><i style="background:${COUL.R}"></i>R favoris : ${r}</span><span class="vi-pill"><i style="background:${COTE.T[0]}"></i>À égalité : ${100 - d - r}</span><span class="vi-pill">Majorité : 51</span></div>
+    <p class="lv-muted">Sièges favoris = sièges non renouvelés en 2026 (${nonren.D || 0} D, ${nonren.I || 0} indépendants, ${nonren.R || 0} R) + courses de 2026 qui penchent vers chaque parti. Clique sur un État pour son détail.</p>
+    <span class="lv-eyebrow">Les ${courses.length} courses de 2026, par cote</span><div class="vi-vrows">${COTES.map(k => ligne(COTE[k][1], COTE[k][0], n[k] || 0, 15)).join("")}</div>
+    <span class="lv-eyebrow">Courses à égalité</span>${lst(egal, () => COTE.T[0], f => `détenu par ${course(f).held}`)}
+    ${replie("Sièges qui changeraient de parti", lst(bascules, f => COUL[camp(coteSen(f))], f => `${camp(coteSen(f))} <small>(détenu par ${course(f).held})</small>`), bascules.length)}
+    ${replie("Toutes les courses", lst(courses.sort((a, b) => COTES.indexOf(coteSen(a)) - COTES.indexOf(coteSen(b))), f => COTE[coteSen(f)][0], f => COTE[coteSen(f)][1]), courses.length)}`;
+}
 function dessinerPanneau() {
+  if (TYPE === "sen") return panneauSenat($("viPanneau"));
   const z = $("viPanneau"), g = groupe(), nomZ = etat.st ? ETAT_NOM[etat.st] : "Tous les États-Unis";
   if (sel == null) {
     if (g === "proj") {
@@ -358,8 +478,10 @@ function dessinerPanneau() {
 document.addEventListener("click", e => {
   if (!e.target.closest("#viPanneau")) return;
   const rs = e.target.closest("[data-regsel]"); if (rs) { choisirEtat(rs.dataset.regsel || null); return; }
+  const es = e.target.closest("[data-etatsen]");
+  if (es) { const f = es.dataset.etatsen || null; sel = f; if (f) zoomVers(DATA.geoEtats.features.find(x => x.properties.id === f), 0.9); else svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); peindre(); dessinerPanneau(); return; }
   const l = e.target.closest("[data-rid]"); if (l) { choisir(l.dataset.rid); return; }
-  if (e.target.closest("[data-tout]")) { choisirEtat(etat.st); return; }
+  if (e.target.closest("[data-tout]")) { if (TYPE === "sen") { sel = null; svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); peindre(); dessinerPanneau(); } else choisirEtat(etat.st); return; }
   if (e.target.closest("[data-zoomsel]") && sel != null) zoomVers(features().find(x => x.properties.id === sel), 0.5);
 });
 document.addEventListener("keydown", e => {
@@ -426,7 +548,7 @@ async function demarrer() {
     [DATA, PROJ, R24, SOND] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"), lireJ("votes-usa/sondages.json")]);
     DATA.etats.forEach(e => { AB_DE[e.fips] = e.ab; ETAT_NOM[e.ab] = e.nom; });
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
-    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
+    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vuPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
