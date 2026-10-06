@@ -45,6 +45,8 @@ jobs:
           python3 election.py || echo "::warning::Résultat de l'élection non mis à jour"
           # Votes France : sondages des prochaines législatives (tableau Wikipédia)
           (cd ../../votes-france/outils && python3 sondages_fr.py) || echo "::warning::Sondages France non mis à jour"
+          (cd ../../votes-france/outils && python3 sondages_pres.py) || echo "::warning::Sondages présidentielle non mis à jour"
+          (cd ../../votes-france/outils && python3 assemblee_fr.py) || echo "::warning::Assemblée nationale non mise à jour"
 
       - name: data.json, simulation de référence et page
         working-directory: votes-quebec/outils
@@ -57,7 +59,7 @@ jobs:
 
       - name: Publier la vérification (et les données si elles ont changé)
         run: |
-          DONNEES="votes-france/sondages.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
+          DONNEES="votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
           # la page elle-même ne doit pas changer : seules les données sont publiées
           AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
           if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi
