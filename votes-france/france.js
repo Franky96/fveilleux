@@ -36,6 +36,10 @@ const MODES = { leg: { actuel: [["actuel", "Député actuel"]], titre: "Électio
   pres: { actuel: [], titre: "Présidentielle", an: 2022, election: [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]] } };
 // année d'un résultat, en évidence (pastille contrastée)
 const AN = a => `<span class="vf-an">${a}</span>`;
+// date avec l'année en pastille ; période sur une même année : « 1 septembre – 29 septembre 2026 »
+const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" });
+const dateAn = iso => `${jourMois(iso)} ${AN(iso.slice(0, 4))}`;
+const periodeAn = (de, a) => de.slice(0, 4) === a.slice(0, 4) ? `${jourMois(de)} – ${dateAn(a)}` : `${dateAn(de)} – ${dateAn(a)}`;
 const coulC = n => FAMILLE[P22.candidats[n]?.parti || PRES.candidats[n]?.parti] || P22.candidats[n]?.c || PRES.candidats[n]?.c || "#8D949A";
 const parti22 = n => P22.candidats[n]?.parti || PRES.candidats[n]?.parti || "";
 
@@ -78,7 +82,7 @@ function dessinerTete() {
   if (TYPE === "pres") {
     const [top] = p.moy;
     $("viTitre").textContent = "Présidentielle 2027 : intentions de vote";
-    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateFr(p.de)} au ${dateFr(p.a)} (1er tour) · premier tour en avril ${AN(2027)}`;
+    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateAn(p.de)} au ${dateAn(p.a)} (1er tour) · premier tour en avril ${AN(2027)}`;
     $("viNote").textContent = "Les candidats testés varient d'un sondage à l'autre (plusieurs scénarios) : la moyenne garde le premier scénario de chaque sondage. La carte montre le 1er tour de la présidentielle de 2022 dans chaque circonscription.";
     eyebrow.textContent = `1er tour · moyenne de ${p.n} sondages`;
     $("viSiegesTitre").textContent = `${nomCourt(top[0])} en tête : ${nf(top[1], 1)} %`;
@@ -90,7 +94,7 @@ function dessinerTete() {
   }
   eyebrow.textContent = `Assemblée nationale · 577 sièges · majorité absolue ${MAJ}`;
   $("viTitre").textContent = "Législatives : l'Assemblée actuelle";
-  $("viSource").innerHTML = `Assemblée nationale au ${dateFr(A.date)} (députés en exercice) · élue en juillet ${AN(2024)}`;
+  $("viSource").innerHTML = `Assemblée nationale au ${dateAn(A.date)} (députés en exercice) · élue en juillet ${AN(2024)}`;
   $("viNote").textContent = "Aucun sondage d'intentions de vote aux législatives n'a été publié depuis octobre 2025 (registre de la Commission des sondages) : la page montre l'Assemblée telle qu'elle est aujourd'hui. Prochaines législatives au plus tard en 2029, sauf dissolution.";
   $("viSiegesTitre").textContent = lead.n >= MAJ ? `${lead.nom} : ${lead.n} sièges, majorité absolue` : `Aucune majorité absolue · premier groupe : ${lead.id} (${lead.n} sièges)`;
   hemicycle($("viPlan"), [...A.groupes.map(g => ({ k: g.id, n: g.n, c: g.c, nom: g.nom })), ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant" }] : [])]);
@@ -269,7 +273,7 @@ function peindre() {
   let an = $("vfAnCarte");
   if (!an) { an = document.createElement("div"); an.id = "vfAnCarte"; an.className = "vf-an-carte"; $("viCarte").before(an); }
   an.innerHTML = TYPE === "pres" ? `Présidentielle ${AN(2022)} · 1er tour`
-    : etat.mode === "actuel" ? `Assemblée au ${dateFr(DATA.assemblee.date)}` : `Législatives ${AN(2024)} · ${etat.mode === "lead" ? "élus" : "1er tour"}`;
+    : etat.mode === "actuel" ? `Assemblée au ${dateAn(DATA.assemblee.date)}` : `Législatives ${AN(2024)} · ${etat.mode === "lead" ? "élus" : "1er tour"}`;
   if (TYPE === "pres") {
     const q = etat.cand, rampe = q ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${coulC(q)} 6%, var(--surface)), ${coulC(q)})"></span>` : "";
     $("viEchelle").innerHTML = AN(2022) + (etat.mode === "vote"
@@ -283,7 +287,7 @@ function peindre() {
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· ${NOMS[p]} au 1er tour de 2024 dans chaque circonscription${etat.pct ? " (chiffre = %, plus de circonscriptions en zoomant)" : ""}</span>`
     : etat.mode === "second" ? "Couleur : bloc arrivé deuxième au 1er tour de 2024 dans chaque circonscription. Plus la couleur est foncée, plus son score est élevé."
     : etat.mode === "lead" ? "Couleur : bloc du député élu en 2024. Plus la couleur est foncée, plus son score au 1er tour était élevé. Outre-mer en encarts ; les Français de l'étranger sont dans le panneau."
-    : `<span class="vf-legende">${DATA.assemblee.groupes.map(g => `<span style="--c:${g.c}"><i></i>${esc(g.id)}</span>`).join("")}<span style="--c:var(--soft)"><i></i>vacant</span></span><span>· groupe du député actuel (Assemblée au ${dateFr(DATA.assemblee.date)})</span>`);
+    : `<span class="vf-legende">${DATA.assemblee.groupes.map(g => `<span style="--c:${g.c}"><i></i>${esc(g.id)}</span>`).join("")}<span style="--c:var(--soft)"><i></i>vacant</span></span><span>· groupe du député actuel (Assemblée au ${dateAn(DATA.assemblee.date)})</span>`);
 }
 function infobulle(e, f) {
   const c = PAR_ID[f.properties.id], t = $("viTip"), box = svg.node().parentNode.getBoundingClientRect();
@@ -323,7 +327,7 @@ function panneauPres(z) {
       return `<tr><td><button type="button" class="vi-lien" data-reg="${esc(reg)}">${esc(reg)}</button></td>${COLS.map(k => `<td class="${n[k] ? "has" : ""}" style="--c:${coulC(k)}">${n[k] || "·"}</td>`).join("")}<td class="${n.AUT ? "has" : ""}" style="--c:var(--ink)">${n.AUT || "·"}</td></tr>`; }).join("");
     z.innerHTML = `<span class="lv-eyebrow">Présidentielle ${AN(2027)} · 1er tour</span><h3>Toute la France</h3>
       <div class="vi-pills"><span class="vi-pill"><i style="background:${coulC(p.moy[0][0])}"></i>${esc(nomCourt(p.moy[0][0]))} ${nf(p.moy[0][1], 1)} %</span><span class="vi-pill"><i style="background:${coulC(p.moy[1][0])}"></i>${esc(nomCourt(p.moy[1][0]))} ${nf(p.moy[1][1], 1)} %</span><span class="vi-pill">${p.n} sondages</span></div>
-      <span class="lv-eyebrow">Intentions de vote · ${dateFr(p.de)} – ${dateFr(p.a)}</span>
+      <span class="lv-eyebrow">Intentions de vote · ${periodeAn(p.de, p.a)}</span>
       <div class="vi-vrows">${p.moy.filter(([, v]) => v >= 0.5).map(([k, v]) => jauge(esc(nomCourt(k)), coulC(k), v, `<small>${esc(parti22(k))}</small>`, 50, "vf-pres")).join("")}</div>
       <span class="lv-eyebrow">Présidentielle ${AN(2022)} · 1er tour</span>
       <div class="vi-vrows">${Object.entries(P22.national).map(([k, v]) => jauge(esc(nomCourt(k)), coulC(k), v, `<small>${esc(parti22(k))}</small>`, 50, "vf-pres")).join("")}</div>
@@ -353,12 +357,12 @@ function dessinerPanneau() {
       DATA.circ.filter(c => c.r === reg).forEach(c => { const g = c.act?.gp; if (g && n[g] != null) n[g]++; else n.AUT++; });
       return `<tr><td><button type="button" class="vi-lien" data-reg="${esc(reg)}">${esc(reg)}</button></td>${COLS.map(b => `<td class="${n[b] ? "has" : ""}" style="--c:${GP[b]?.c || "var(--ink)"}">${n[b] || "·"}</td>`).join("")}<td class="${n.AUT ? "has" : ""}" style="--c:var(--ink)">${n.AUT || "·"}</td></tr>`; }).join("");
     const horsCarte = DATA.circ.filter(c => !DATA.geo.features.some(f => f.properties.id === c.id));
-    z.innerHTML = `<span class="lv-eyebrow">Assemblée nationale · ${dateFr(A.date)}</span><h3>Toute la France</h3>
+    z.innerHTML = `<span class="lv-eyebrow">Assemblée nationale · ${dateAn(A.date)}</span><h3>Toute la France</h3>
       <div class="vi-pills"><span class="vi-pill"><i style="background:${lead.c}"></i>Premier groupe : ${esc(lead.id)} ${lead.n} / 577</span><span class="vi-pill">Majorité absolue : ${MAJ}</span>${A.vacants ? `<span class="vi-pill">${A.vacants} sièges vacants</span>` : ""}</div>
       <span class="lv-eyebrow">Groupes parlementaires</span>
       <div class="vi-vrows">${groupes.map(g => `<div class="vi-vrow vf-gp" title="${esc(g.nom)}"><b style="color:${g.c}">${esc(g.id)}</b><span class="vi-jauge"><i style="width:${100 * g.n / 130}%;background:${g.c}"></i></span><span class="vi-num"><b>${g.n}</b></span><span class="vi-num"><small>${nf(100 * g.n / 577, 1)} %</small></span></div>`).join("")}</div>
 `
-      + (r ? `<span class="lv-eyebrow">Législatives · dernier sondage le ${dateFr(r.a)}</span><div class="vi-vrows">${BLOCS.filter(b => r.moy[b] >= 1).sort((a, b) => r.moy[b] - r.moy[a])
+      + (r ? `<span class="lv-eyebrow">Législatives · dernier sondage le ${dateAn(r.a)}</span><div class="vi-vrows">${BLOCS.filter(b => r.moy[b] >= 1).sort((a, b) => r.moy[b] - r.moy[a])
           .map(b => ligneVote(b, r.moy[b])).join("")}</div><p class="lv-muted lv-source">Moyenne des ${r.n} derniers sondages législatifs (${r.firmes.map(esc).join(", ")}) · aucun depuis</p>` : "")
       + `<span class="lv-eyebrow">Élection de ${AN(2024)} : 1er tour et sièges</span><div class="vi-vrows">${BLOCS.filter(b => s[b] || nat[b] >= 1).sort((a, b) => (s[b] || 0) - (s[a] || 0)).map(b => ligneVote(b, nat[b] || 0, `<b>${s[b] || 0}</b> <small>élus</small>`)).join("")}</div>
       <span class="lv-eyebrow">Députés actuels par région</span>
@@ -377,7 +381,7 @@ function dessinerPanneau() {
       <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Toute la France</button>${tracee ? `<button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>` : ""}</div>
       ${voisins.length ? `<span class="lv-eyebrow">Les autres députés du département (${esc(c.dn)})</span>
       <ul class="vi-serres">${voisins.map(x => `<li data-id="${x.id}" tabindex="0" style="--c:${x.act ? GP[x.act.gp]?.c : "var(--soft)"}"><i></i>${esc(x.n.replace(/^.*\(/, "").replace(")", " circ."))} · ${x.act ? esc(x.act.nom) : "vacant"}<b>${x.act ? esc(x.act.gp) : "—"}</b></li>`).join("")}</ul>` : ""}
-      <p class="lv-muted">Assemblée au ${dateFr(DATA.assemblee.date)}. Pour le résultat de l'élection de 2024 dans cette circonscription : bouton « Élu » (Élection 2024).</p>`;
+      <p class="lv-muted">Assemblée au ${dateAn(DATA.assemblee.date)}. Pour le résultat de l'élection de ${AN(2024)} dans cette circonscription : bouton « Élu » (Élection ${AN(2024)}).</p>`;
     return;
   }
   z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(c.r)}</span><h3>${esc(c.n)}</h3>
@@ -410,7 +414,7 @@ function donneesSerie() {
     for (const x of PRES.sondages.filter(x => (fin - new Date(x.d + "T12:00:00")) / 864e5 <= 183)) for (const [k, v] of Object.entries(x.v)) (cands[k] ||= []).push(v);
     const lignes = Object.entries(cands).filter(([, v]) => d3.mean(v) >= 4 && v.length >= 3).map(([k]) => k);
     return { lignes, lab: k => nomCourt(k), coul: k => PRES.candidats[k]?.c || "#8D949A", debut: "2023-03-01", sigma: 30,
-      points: PRES.sondages.map(x => ({ d: x.d, f: x.f, n: x.n, v: x.v })), elections: [], titre: "Présidentielle 2027 · 1er tour",
+      points: PRES.sondages.map(x => ({ d: x.d, f: x.f, n: x.n, v: x.v })), elections: [], titre: `Présidentielle ${AN(2027)} · 1er tour`,
       note: n => `${n} sondage${n > 1 ? "s" : ""} sur la période (1er tour, premier scénario de chaque sondage : les candidats testés varient d'un sondage à l'autre ; source : tableau Wikipédia qui cite la notice de chaque sondage). Lignes : tendance · points : sondages.` };
   }
   const lignes = ["NFP", "ENS", "LR", "RN", "EXD"];
@@ -431,7 +435,7 @@ function dessinerEvolution() {
   const sond = tous.filter(s => dans(s.d)), elecVis = S.elections.filter(e => dans(e.d));
   document.querySelectorAll("#viPeriodes button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.per === periode));
   const tout = document.querySelector('#viPeriodes [data-per="0"]'); if (tout) tout.textContent = `Depuis ${S.debut.slice(0, 4)}`;
-  $("viEvolSur").textContent = `${S.titre} · ${periode ? (periode < 12 ? `${periode} derniers mois` : periode === 12 ? "dernière année" : `${periode / 12} dernières années`) : `depuis ${S.debut.slice(0, 4)}`}`;
+  $("viEvolSur").innerHTML = `${S.titre} · ${periode ? (periode < 12 ? `${periode} derniers mois` : periode === 12 ? "dernière année" : `${periode / 12} dernières années`) : `depuis ${AN(S.debut.slice(0, 4))}`}`;
   const x = d3.scaleTime().domain([debut, fin_]).range([m.l, W - m.r]);
   const yMax = d3.max([...sond, ...elecVis], s => d3.max(S.lignes, p => s.v[p] || 0)) || 40;
   const y = d3.scaleLinear().domain([0, Math.ceil((yMax + 4) / 10) * 10]).range([H - m.b, m.t]);
