@@ -12,3 +12,6 @@ __pycache__/
 /loi39-simulation.html
 votes-quebec/exemple.html
 votes-quebec/outils/check.mjs
+
+# Votes France : téléchargements bruts (retéléchargés par outils/france.py)
+votes-france/outils/brut/

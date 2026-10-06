@@ -19,3 +19,19 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 
 Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN porte un attribut `integrity="sha384-…"` et `crossorigin="anonymous"` (SRI). Pour changer de version d'une bibliothèque, recalculer l'empreinte :
 `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A` (préfixer par `sha384-`). Sans ça, le navigateur bloque le fichier.
+
+## Section « Intentions de vote et simulations » — cadre de base des pages d'intentions de vote
+
+Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils/pages.src.html`, transformé par
+`votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, direct), `votes-quebec.html`,
+`loi39.html`, `votes-quebec-demo.html` et `votes-france.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
+(ou pages.py) puis relancer le script.** Onglets regroupés « Intentions de vote » / « Simulation » ; permission `votes-quebec`.
+
+Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/intentions.js`) :
+1. en haut, côte à côte : l'Assemblée (plan ou hémicycle) dans son rectangle, et l'évolution des intentions de vote
+   (graphique avec choix de période, tendance + points des sondages + losanges des élections) ;
+2. carte des circonscriptions avec les fonctions de la « carte actuelle » de Loi 39 : Parti en tête / Meilleur deuxième /
+   Vote (pastilles de parti, bouton « % Pourcentage »), zooms prédéfinis, plein écran, légende sous la carte ;
+3. panneau à droite : tout le territoire (vote et sièges, sièges par région…) ou la circonscription cliquée.
+Les mêmes identifiants `vi*` et classes CSS servent à toutes ces pages ; chaque pays a son module JS et ses données
+(ex. `votes-france/france.js`, `votes-france/data.json`, `votes-france/sondages.json`, scripts dans `votes-france/outils/`).
