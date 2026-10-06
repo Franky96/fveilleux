@@ -82,7 +82,7 @@ function dessinerTete() {
   if (TYPE === "pres") {
     const [top] = p.moy;
     $("viTitre").textContent = "Présidentielle 2027 : intentions de vote";
-    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateAn(p.de)} au ${dateAn(p.a)} (1er tour) · premier tour en avril ${AN(2027)}`;
+    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateFr(p.de)} au ${dateFr(p.a)} (1er tour) · premier tour en avril 2027`;
     $("viNote").textContent = "Les candidats testés varient d'un sondage à l'autre (plusieurs scénarios) : la moyenne garde le premier scénario de chaque sondage. La carte montre le 1er tour de la présidentielle de 2022 dans chaque circonscription.";
     eyebrow.textContent = `1er tour · moyenne de ${p.n} sondages`;
     $("viSiegesTitre").textContent = `${nomCourt(top[0])} en tête : ${nf(top[1], 1)} %`;
@@ -94,7 +94,7 @@ function dessinerTete() {
   }
   eyebrow.textContent = `Assemblée nationale · 577 sièges · majorité absolue ${MAJ}`;
   $("viTitre").textContent = "Législatives : l'Assemblée actuelle";
-  $("viSource").innerHTML = `Assemblée nationale au ${dateAn(A.date)} (députés en exercice) · élue en juillet ${AN(2024)}`;
+  $("viSource").innerHTML = `Assemblée nationale au ${dateFr(A.date)} (députés en exercice) · élue en juillet 2024`;
   $("viNote").textContent = "Aucun sondage d'intentions de vote aux législatives n'a été publié depuis octobre 2025 (registre de la Commission des sondages) : la page montre l'Assemblée telle qu'elle est aujourd'hui. Prochaines législatives au plus tard en 2029, sauf dissolution.";
   $("viSiegesTitre").textContent = lead.n >= MAJ ? `${lead.nom} : ${lead.n} sièges, majorité absolue` : `Aucune majorité absolue · premier groupe : ${lead.id} (${lead.n} sièges)`;
   hemicycle($("viPlan"), [...A.groupes.map(g => ({ k: g.id, n: g.n, c: g.c, nom: g.nom })), ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant" }] : [])]);
@@ -242,7 +242,7 @@ function outilsCarte() {
   const M = MODES[TYPE], bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
   $("viModes").innerHTML = (M.actuel.length ? `<span class="lv-groupe">${M.actuel.map(bouton).join("")}</span>` : "")
-    + `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre} ${AN(M.an)}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`;
+    + `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre} ${M.an}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`;
   $("viChips").innerHTML = TYPE === "pres"
     ? Object.entries(P22.national).filter(([, v]) => v >= 4).map(([k]) => `<button type="button" class="vi-chip" style="--c:${coulC(k)}" data-p="${esc(k)}">${esc(nomCourt(k))}</button>`).join("")
     : BLOCS.filter(b => DATA.national[b] >= 2).map(b => `<button type="button" class="vi-chip" style="--c:${COUL[b]}" data-p="${b}">${COURT[b]}</button>`).join("");
@@ -276,18 +276,18 @@ function peindre() {
     : etat.mode === "actuel" ? `Assemblée au ${dateAn(DATA.assemblee.date)}` : `Législatives ${AN(2024)} · ${etat.mode === "lead" ? "élus" : "1er tour"}`;
   if (TYPE === "pres") {
     const q = etat.cand, rampe = q ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${coulC(q)} 6%, var(--surface)), ${coulC(q)})"></span>` : "";
-    $("viEchelle").innerHTML = AN(2022) + (etat.mode === "vote"
+    $("viEchelle").innerHTML = (etat.mode === "vote"
       ? `<span>0 %</span>${rampe}<span>50 % et +</span><span>· ${esc(q)} au 1er tour de 2022 dans chaque circonscription${etat.pct ? " (chiffre = %)" : ""}</span>`
       : etat.mode === "second" ? "Couleur : candidat arrivé deuxième au 1er tour de la présidentielle 2022 dans chaque circonscription."
       : `<span class="vf-legende">${Object.entries(P22.national).filter(([, v]) => v >= 4).map(([k]) => `<span style="--c:${coulC(k)}"><i></i>${esc(nomCourt(k))}</span>`).join("")}</span><span>· candidat en tête au 1er tour de 2022 dans chaque circonscription (plus foncé = score plus élevé)</span>`);
     return;
   }
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
-  $("viEchelle").innerHTML = (etat.mode === "actuel" ? "" : AN(2024)) + (etat.mode === "vote"
+  $("viEchelle").innerHTML = (etat.mode === "vote"
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· ${NOMS[p]} au 1er tour de 2024 dans chaque circonscription${etat.pct ? " (chiffre = %, plus de circonscriptions en zoomant)" : ""}</span>`
     : etat.mode === "second" ? "Couleur : bloc arrivé deuxième au 1er tour de 2024 dans chaque circonscription. Plus la couleur est foncée, plus son score est élevé."
     : etat.mode === "lead" ? "Couleur : bloc du député élu en 2024. Plus la couleur est foncée, plus son score au 1er tour était élevé. Outre-mer en encarts ; les Français de l'étranger sont dans le panneau."
-    : `<span class="vf-legende">${DATA.assemblee.groupes.map(g => `<span style="--c:${g.c}"><i></i>${esc(g.id)}</span>`).join("")}<span style="--c:var(--soft)"><i></i>vacant</span></span><span>· groupe du député actuel (Assemblée au ${dateAn(DATA.assemblee.date)})</span>`);
+    : `<span class="vf-legende">${DATA.assemblee.groupes.map(g => `<span style="--c:${g.c}"><i></i>${esc(g.id)}</span>`).join("")}<span style="--c:var(--soft)"><i></i>vacant</span></span><span>· groupe du député actuel (Assemblée au ${dateFr(DATA.assemblee.date)})</span>`);
 }
 function infobulle(e, f) {
   const c = PAR_ID[f.properties.id], t = $("viTip"), box = svg.node().parentNode.getBoundingClientRect();
