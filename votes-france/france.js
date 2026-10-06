@@ -241,8 +241,9 @@ function construireCarte() {
 function outilsCarte() {
   const M = MODES[TYPE], bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
-  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre} ${M.an}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`
-    + (M.actuel.length ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Assemblée actuelle</span><span class="lv-groupe">${M.actuel.map(bouton).join("")}</span></span>` : "");
+  // ordre commun aux pages d'intentions : futur (intentions, aucune à jour ici) · présent (assemblée actuelle) · passé (élection)
+  $("viModes").innerHTML = (M.actuel.length ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Assemblée actuelle</span><span class="lv-groupe">${M.actuel.map(bouton).join("")}</span></span>` : "")
+    + `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre} ${M.an}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`;
   $("viChips").innerHTML = TYPE === "pres"
     ? Object.entries(P22.national).filter(([, v]) => v >= 4).map(([k]) => `<button type="button" class="vi-chip" style="--c:${coulC(k)}" data-p="${esc(k)}">${esc(nomCourt(k))}</button>`).join("")
     : BLOCS.filter(b => DATA.national[b] >= 2).map(b => `<button type="button" class="vi-chip" style="--c:${COUL[b]}" data-p="${b}">${COURT[b]}</button>`).join("");

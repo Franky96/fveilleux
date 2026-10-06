@@ -259,6 +259,10 @@ function construireCarte() {
   $("viPlein").addEventListener("click", pleinEcran);   // bouton en bas de la carte, hors de la barre de zoom
   // modes de la carte : parti en tête, meilleur deuxième, vote d'un parti
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; try { localStorage.setItem("viPct", etat.pct ? "1" : "0"); } catch {} peindre(); });
+  // ordre commun aux pages d'intentions : futur (projection) · présent · passé ; juste après l'élection, seule l'élection existe
+  $("viModes").className = "vf-modes";
+  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">${MODE === "election" ? "Élection 2026" : esc(ETAT.libProj)}</span><span class="lv-groupe">`
+    + [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`).join("") + "</span></span>";
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").innerHTML = P5.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${p}</button>`).join("");
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return; etat.parti = b.dataset.p; if (etat.mode !== "vote") etat.mode = "vote"; peindre(); });
