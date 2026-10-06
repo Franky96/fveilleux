@@ -98,7 +98,10 @@
     .lv-maj-btn small { font-size: 0.72rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
     .lv-maj-btn::after { content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--fait, 0) * 100%); background: #E5484D; transition: width 1s linear; }
     @media (prefers-reduced-motion: reduce) { .lv-maj-btn::after { transition: none; } }
-    .lv-btn:focus-visible, .lv-zoom button:focus-visible, .lv-rid:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .lv-btn:focus-visible, .lv-zoom button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    /* circonscriptions : pas de cadre de focus (Chrome le dessine autour de la boîte englobante) ; au clavier, contour épais */
+    .lv-rid:focus { outline: none; }
+    .lv-rid:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.5px; }
     .live-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
       color: #E5484D; border: 1px solid #E5484D; border-radius: 99px; padding: 0.2rem 0.6rem; }
     .lv-banniere { margin: 0; padding: 12px 14px; border-radius: 10px; border: 1px dashed var(--rule); background: var(--surface); color: var(--muted); font-size: 0.9rem; }
