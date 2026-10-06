@@ -90,7 +90,7 @@ function dessinerPrediction() {
   if (!prediction || cartePred) return;
   // pas de chevauchement : au zoom actuel, on garde d'abord les pastilles des grandes circonscriptions
   // et on masque celles qui toucheraient une pastille déjà placée (elles réapparaissent en zoomant)
-  const MIN = 12 / zoomK, gardes = [];
+  const MIN = 14 / zoomK, gardes = [];
   for (const d of [...ancrer()].sort((a, b) => b.r - a.r))
     if (gardes.every(o => (o.x - d.x) ** 2 + (o.y - d.y) ** 2 >= MIN * MIN)) gardes.push(d);
   const g = gPred.selectAll("g.lv-pred").data(gardes, d => d.RID).join(enter => {
@@ -98,8 +98,8 @@ function dessinerPrediction() {
     e.append("circle").attr("class", "lv-pred-halo"); e.append("circle").attr("class", "lv-pred-pt"); return e; });
   g.attr("transform", d => `translate(${d.x},${d.y})`);
   // taille constante à l'écran : rayon et contour divisés par le zoom
-  g.select(".lv-pred-halo").attr("r", 5.4 / zoomK);
-  g.select(".lv-pred-pt").attr("r", 4.2 / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", 1.4 / zoomK);
+  g.select(".lv-pred-halo").attr("r", 6.4 / zoomK);
+  g.select(".lv-pred-pt").attr("r", 5 / zoomK).style("fill", d => COUL[predit(d.RID)]).style("stroke-width", 1.6 / zoomK);
 }
 
 /* ---------- participation ---------- */
