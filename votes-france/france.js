@@ -32,7 +32,7 @@ let DATA, SOND, PRES, P22, BLOCS, PAR_ID = {}, GP = {}, sel = null, demarre = fa
 let TYPE = location.hash === "#legislatives" ? "leg" : location.hash === "#presidentielle" ? "pres" : lireLS("vfType", "pres");
 const etat = { mode: TYPE === "leg" ? "actuel" : "lead", parti: null, cand: null, pct: lireLS("vfPct", true) };
 // boutons de la carte : la situation actuelle à part, puis les modes de la dernière élection, groupés
-const MODES = { leg: { actuel: [["actuel", "Député actuel"]], titre: "Élection", an: 2024, election: [["lead", "Élu"], ["second", "Meilleur 2e"], ["vote", "Vote"]] },
+const MODES = { leg: { actuel: [["actuel", "Députés"]], titre: "Élection", an: 2024, election: [["lead", "Élu"], ["second", "Meilleur 2e"], ["vote", "Vote"]] },
   pres: { actuel: [], titre: "Présidentielle", an: 2022, election: [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]] } };
 // année d'un résultat, en évidence (pastille contrastée)
 const AN = a => `<span class="vf-an">${a}</span>`;
@@ -241,15 +241,15 @@ function construireCarte() {
 function outilsCarte() {
   const M = MODES[TYPE], bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
-  $("viModes").innerHTML = (M.actuel.length ? `<span class="lv-groupe">${M.actuel.map(bouton).join("")}</span>` : "")
-    + `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre} ${M.an}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`;
+  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">${M.titre} ${M.an}</span><span class="lv-groupe">${M.election.map(bouton).join("")}</span></span>`
+    + (M.actuel.length ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Assemblée actuelle</span><span class="lv-groupe">${M.actuel.map(bouton).join("")}</span></span>` : "");
   $("viChips").innerHTML = TYPE === "pres"
     ? Object.entries(P22.national).filter(([, v]) => v >= 4).map(([k]) => `<button type="button" class="vi-chip" style="--c:${coulC(k)}" data-p="${esc(k)}">${esc(nomCourt(k))}</button>`).join("")
     : BLOCS.filter(b => DATA.national[b] >= 2).map(b => `<button type="button" class="vi-chip" style="--c:${COUL[b]}" data-p="${b}">${COURT[b]}</button>`).join("");
 }
 function changerMode(m) {
   etat.mode = m;
-  if (sel != null) dessinerPanneau();
+  dessinerPanneau();
   if (m === "vote" && TYPE === "leg" && !etat.parti) etat.parti = Object.keys(DATA.sieges).sort((a, b) => DATA.sieges[b] - DATA.sieges[a])[0];
   if (m === "vote" && TYPE === "pres" && !etat.cand) etat.cand = Object.keys(P22.national)[0];
   peindre();
@@ -321,15 +321,15 @@ function panneauPres(z) {
   const horsCarte = DATA.circ.filter(c => !DATA.geo.features.some(f => f.properties.id === c.id));
   const tete = id => Object.keys(P22.circ[id] || {})[0];
   if (sel == null) {
-    const p = presRecente(), COLS = Object.keys(P22.national).slice(0, 3);
+    const COLS = Object.keys(P22.national).slice(0, 3);
     const parReg = DATA.regions.map(reg => { const n = { AUT: 0 }; COLS.forEach(k => n[k] = 0);
       DATA.circ.filter(c => c.r === reg).forEach(c => { const k = tete(c.id); if (n[k] != null) n[k]++; else n.AUT++; });
       return `<tr><td><button type="button" class="vi-lien" data-reg="${esc(reg)}">${esc(reg)}</button></td>${COLS.map(k => `<td class="${n[k] ? "has" : ""}" style="--c:${coulC(k)}">${n[k] || "·"}</td>`).join("")}<td class="${n.AUT ? "has" : ""}" style="--c:var(--ink)">${n.AUT || "·"}</td></tr>`; }).join("");
-    z.innerHTML = `<span class="lv-eyebrow">Présidentielle ${AN(2027)} · 1er tour</span><h3>Toute la France</h3>
-      <div class="vi-pills"><span class="vi-pill"><i style="background:${coulC(p.moy[0][0])}"></i>${esc(nomCourt(p.moy[0][0]))} ${nf(p.moy[0][1], 1)} %</span><span class="vi-pill"><i style="background:${coulC(p.moy[1][0])}"></i>${esc(nomCourt(p.moy[1][0]))} ${nf(p.moy[1][1], 1)} %</span><span class="vi-pill">${p.n} sondages</span></div>
-      <span class="lv-eyebrow">Intentions de vote · ${periodeAn(p.de, p.a)}</span>
-      <div class="vi-vrows">${p.moy.filter(([, v]) => v >= 0.5).map(([k, v]) => jauge(esc(nomCourt(k)), coulC(k), v, `<small>${esc(parti22(k))}</small>`, 50, "vf-pres")).join("")}</div>
-      <span class="lv-eyebrow">Présidentielle ${AN(2022)} · 1er tour</span>
+    const n22 = Object.entries(P22.national);
+    z.innerHTML = `<span class="lv-eyebrow">Présidentielle ${AN(2022)} · 1er tour (10 avril)</span><h3>Toute la France</h3>
+      <div class="vi-pills"><span class="vi-pill"><i style="background:${coulC(n22[0][0])}"></i>${esc(nomCourt(n22[0][0]))} ${nf(n22[0][1], 1)} %</span><span class="vi-pill"><i style="background:${coulC(n22[1][0])}"></i>${esc(nomCourt(n22[1][0]))} ${nf(n22[1][1], 1)} %</span></div>
+      <p class="lv-muted">Ce que montre la carte : le dernier vrai vote dans chaque circonscription. Les intentions de vote pour 2027 sont en haut de la page.</p>
+      <span class="lv-eyebrow">Résultat national</span>
       <div class="vi-vrows">${Object.entries(P22.national).map(([k, v]) => jauge(esc(nomCourt(k)), coulC(k), v, `<small>${esc(parti22(k))}</small>`, 50, "vf-pres")).join("")}</div>
       <span class="lv-eyebrow">En tête en ${AN(2022)}, par région (circonscriptions)</span>
       <div class="vi-table"><table><thead><tr><th>Région</th>${COLS.map(k => `<th style="color:${coulC(k)}">${esc(nomCourt(k))}</th>`).join("")}<th>Autres</th></tr></thead><tbody>${parReg}</tbody></table></div>
@@ -350,25 +350,30 @@ function dessinerPanneau() {
   const z = $("viPanneau"), s = DATA.sieges, nat = DATA.national, A = DATA.assemblee;
   if (TYPE === "pres") return panneauPres(z);
   if (sel == null) {
-    const r = moyenneRecente();
-    const groupes = A.groupes.slice().sort((a, b) => b.n - a.n), lead = groupes[0];
-    const COLS = ["RN", "EPR", "LFI-NFP", "SOC", "DR"];
-    const parReg = DATA.regions.map(reg => { const n = { AUT: 0 }; COLS.forEach(b => n[b] = 0);
-      DATA.circ.filter(c => c.r === reg).forEach(c => { const g = c.act?.gp; if (g && n[g] != null) n[g]++; else n.AUT++; });
-      return `<tr><td><button type="button" class="vi-lien" data-reg="${esc(reg)}">${esc(reg)}</button></td>${COLS.map(b => `<td class="${n[b] ? "has" : ""}" style="--c:${GP[b]?.c || "var(--ink)"}">${n[b] || "·"}</td>`).join("")}<td class="${n.AUT ? "has" : ""}" style="--c:var(--ink)">${n.AUT || "·"}</td></tr>`; }).join("");
+    // le panneau suit la carte : Assemblée actuelle (bouton « Députés ») ou élection de 2024 (Élu, Meilleur 2e, Vote)
     const horsCarte = DATA.circ.filter(c => !DATA.geo.features.some(f => f.properties.id === c.id));
-    z.innerHTML = `<span class="lv-eyebrow">Assemblée nationale · ${dateAn(A.date)}</span><h3>Toute la France</h3>
-      <div class="vi-pills"><span class="vi-pill"><i style="background:${lead.c}"></i>Premier groupe : ${esc(lead.id)} ${lead.n} / 577</span><span class="vi-pill">Majorité absolue : ${MAJ}</span>${A.vacants ? `<span class="vi-pill">${A.vacants} sièges vacants</span>` : ""}</div>
-      <span class="lv-eyebrow">Groupes parlementaires</span>
-      <div class="vi-vrows">${groupes.map(g => `<div class="vi-vrow vf-gp" title="${esc(g.nom)}"><b style="color:${g.c}">${esc(g.id)}</b><span class="vi-jauge"><i style="width:${100 * g.n / 130}%;background:${g.c}"></i></span><span class="vi-num"><b>${g.n}</b></span><span class="vi-num"><small>${nf(100 * g.n / 577, 1)} %</small></span></div>`).join("")}</div>
-`
-      + (r ? `<span class="lv-eyebrow">Législatives · dernier sondage le ${dateAn(r.a)}</span><div class="vi-vrows">${BLOCS.filter(b => r.moy[b] >= 1).sort((a, b) => r.moy[b] - r.moy[a])
-          .map(b => ligneVote(b, r.moy[b])).join("")}</div><p class="lv-muted lv-source">Moyenne des ${r.n} derniers sondages législatifs (${r.firmes.map(esc).join(", ")}) · aucun depuis</p>` : "")
-      + `<span class="lv-eyebrow">Élection de ${AN(2024)} : 1er tour et sièges</span><div class="vi-vrows">${BLOCS.filter(b => s[b] || nat[b] >= 1).sort((a, b) => (s[b] || 0) - (s[a] || 0)).map(b => ligneVote(b, nat[b] || 0, `<b>${s[b] || 0}</b> <small>élus</small>`)).join("")}</div>
-      <span class="lv-eyebrow">Députés actuels par région</span>
-      <div class="vi-table"><table><thead><tr><th>Région</th>${COLS.map(b => `<th style="color:${GP[b]?.c}">${b.replace("-NFP", "")}</th>`).join("")}<th>Autres</th></tr></thead><tbody>${parReg}</tbody></table></div>
-      <details class="lv-sg vf-hors"><summary><span>Hors carte : outre-mer et Français de l'étranger</span><small>${horsCarte.length}</small></summary>
-      <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${c.act ? GP[c.act.gp]?.c : "var(--soft)"}"><i></i>${esc(c.n)}<b>${c.act ? esc(c.act.gp) : "vacant"}</b></li>`).join("")}</ul></details>`;
+    const table = (titre, COLS, coul, lab, de) => { const lignes = DATA.regions.map(reg => { const n = { AUT: 0 }; COLS.forEach(b => n[b] = 0);
+        DATA.circ.filter(c => c.r === reg).forEach(c => { const k = de(c); if (k && n[k] != null) n[k]++; else n.AUT++; });
+        return `<tr><td><button type="button" class="vi-lien" data-reg="${esc(reg)}">${esc(reg)}</button></td>${COLS.map(b => `<td class="${n[b] ? "has" : ""}" style="--c:${coul(b)}">${n[b] || "·"}</td>`).join("")}<td class="${n.AUT ? "has" : ""}" style="--c:var(--ink)">${n.AUT || "·"}</td></tr>`; }).join("");
+      return `<span class="lv-eyebrow">${titre}</span><div class="vi-table"><table><thead><tr><th>Région</th>${COLS.map(b => `<th style="color:${coul(b)}">${lab(b)}</th>`).join("")}<th>Autres</th></tr></thead><tbody>${lignes}</tbody></table></div>`; };
+    const hors = (couleur, droite) => `<details class="lv-sg vf-hors"><summary><span>Hors carte : outre-mer et Français de l'étranger</span><small>${horsCarte.length}</small></summary>
+      <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${couleur(c)}"><i></i>${esc(c.n)}<b>${droite(c)}</b></li>`).join("")}</ul></details>`;
+    if (etat.mode === "actuel") {
+      const groupes = A.groupes.slice().sort((a, b) => b.n - a.n), lead = groupes[0];
+      z.innerHTML = `<span class="lv-eyebrow">Assemblée nationale · ${dateAn(A.date)}</span><h3>Toute la France</h3>
+        <div class="vi-pills"><span class="vi-pill"><i style="background:${lead.c}"></i>Premier groupe : ${esc(lead.id)} ${lead.n} / 577</span><span class="vi-pill">Majorité absolue : ${MAJ}</span>${A.vacants ? `<span class="vi-pill">${A.vacants} sièges vacants</span>` : ""}</div>
+        <span class="lv-eyebrow">Groupes parlementaires</span>
+        <div class="vi-vrows">${groupes.map(g => `<div class="vi-vrow vf-gp" title="${esc(g.nom)}"><b style="color:${g.c}">${esc(g.id)}</b><span class="vi-jauge"><i style="width:${100 * g.n / 130}%;background:${g.c}"></i></span><span class="vi-num"><b>${g.n}</b></span><span class="vi-num"><small>${nf(100 * g.n / 577, 1)} %</small></span></div>`).join("")}</div>
+        ${table("Députés actuels par région", ["RN", "EPR", "LFI-NFP", "SOC", "DR"], b => GP[b]?.c || "var(--ink)", b => b.replace("-NFP", ""), c => c.act?.gp)}
+        ${hors(c => c.act ? GP[c.act.gp]?.c : "var(--soft)", c => c.act ? esc(c.act.gp) : "vacant")}`;
+      return;
+    }
+    const tete = BLOCS.filter(b => s[b]).sort((a, b) => s[b] - s[a]);
+    z.innerHTML = `<span class="lv-eyebrow">Élection de ${AN(2024)} · 30 juin et 7 juillet</span><h3>Toute la France</h3>
+      <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[tete[0]]}"></i>Premier bloc : ${COURT[tete[0]]} ${s[tete[0]]} / 577</span><span class="vi-pill">Majorité absolue : ${MAJ}</span></div>
+      <span class="lv-eyebrow">1er tour et sièges</span><div class="vi-vrows">${BLOCS.filter(b => s[b] || nat[b] >= 1).sort((a, b) => (s[b] || 0) - (s[a] || 0)).map(b => ligneVote(b, nat[b] || 0, `<b>${s[b] || 0}</b> <small>élus</small>`)).join("")}</div>
+      ${table(`Élus en ${AN(2024)} par région`, tete.slice(0, 5), b => COUL[b], b => COURT[b], c => c.g)}
+      ${hors(c => COUL[c.g], c => `${COURT[c.g]} <small>${esc(c.elu)}</small>`)}`;
     return;
   }
   const c = PAR_ID[sel]; if (!c) return;
@@ -381,7 +386,7 @@ function dessinerPanneau() {
       <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Toute la France</button>${tracee ? `<button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>` : ""}</div>
       ${voisins.length ? `<span class="lv-eyebrow">Les autres députés du département (${esc(c.dn)})</span>
       <ul class="vi-serres">${voisins.map(x => `<li data-id="${x.id}" tabindex="0" style="--c:${x.act ? GP[x.act.gp]?.c : "var(--soft)"}"><i></i>${esc(x.n.replace(/^.*\(/, "").replace(")", " circ."))} · ${x.act ? esc(x.act.nom) : "vacant"}<b>${x.act ? esc(x.act.gp) : "—"}</b></li>`).join("")}</ul>` : ""}
-      <p class="lv-muted">Assemblée au ${dateAn(DATA.assemblee.date)}. Pour le résultat de l'élection de ${AN(2024)} dans cette circonscription : bouton « Élu » (Élection ${AN(2024)}).</p>`;
+      <p class="lv-muted">Assemblée au ${dateAn(DATA.assemblee.date)}. Pour le résultat de l'élection de ${AN(2024)} dans cette circonscription : bouton « Élu » (Élection 2024, au-dessus de la carte).</p>`;
     return;
   }
   z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(c.r)}</span><h3>${esc(c.n)}</h3>
@@ -482,6 +487,13 @@ function dessinerEvolution() {
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   $("viEvolNote").textContent = S.note(sond.length);
+  // législatives : moyenne des derniers sondages, sous le graphique (le panneau de droite reste consacré à la carte)
+  let boite = $("vfSondMoy");
+  if (!boite) { boite = document.createElement("div"); boite.id = "vfSondMoy"; boite.className = "vf-sondmoy"; $("viEvolNote").before(boite); }
+  const rs = TYPE === "leg" ? moyenneRecente() : null;
+  boite.hidden = !rs;
+  if (rs) boite.innerHTML = `<span class="lv-eyebrow">Derniers sondages · moyenne des ${rs.n} derniers (${rs.firmes.map(esc).join(", ")}), jusqu'au ${dateAn(rs.a)}</span>
+    <div class="vf-legende">${BLOCS.filter(b => rs.moy[b] >= 1).sort((a, b) => rs.moy[b] - rs.moy[a]).map(b => `<span style="--c:${COUL[b]}"><i></i>${COURT[b]} <b>${nf(rs.moy[b], 1)} %</b></span>`).join("")}</div>`;
 }
 // choix législatives / présidentielle, en haut de la page : change toute la page
 function ajouterChoixType() {
