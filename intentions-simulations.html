@@ -413,6 +413,42 @@
     .vue-votes .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
       border: 1px solid var(--rule); border-radius: 99px; padding: 0.2rem 0.6rem; }
     .vi-carte { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+    .vi-cartebloc { display: grid; gap: 10px; min-width: 0; }
+    .vi-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .vi-outils .lv-groupe button, .vi-chip { font: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .vi-outils .lv-groupe button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .vi-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .vi-chip { border-radius: 99px; padding: 5px 11px; }
+    .vi-chip[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .vi-chips[aria-disabled="true"] .vi-chip { opacity: 0.55; }
+    .vi-echelle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+    .vi-ramp { display: inline-block; width: 140px; height: 10px; border-radius: 5px; border: 1px solid var(--rule); }
+    .vi-lbl { fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-linejoin: round; font-weight: 700; pointer-events: none; font-variant-numeric: tabular-nums; }
+    .vi-lab .vi-nom { font-weight: 600; fill: var(--muted); }
+    .vi-sieges-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .vi-sieges-corps { display: grid; grid-template-columns: minmax(240px, 360px) minmax(0, 1fr); gap: 20px; align-items: center; }
+    .vi-plan { display: block; width: 100%; height: auto; max-height: 520px; }
+    .vi-partis { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); align-content: center; }
+    @media (max-width: 700px) { .vi-sieges-corps { grid-template-columns: minmax(0, 1fr); } .vi-plan { max-width: 340px; margin: 0 auto; } .vi-partis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .vi-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .vi-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--soft); font-variant-numeric: tabular-nums; }
+    .vi-pill i { width: 9px; height: 9px; border-radius: 50%; }
+    .vi-liens { display: flex; gap: 14px; flex-wrap: wrap; }
+    .vi-lien { font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule); }
+    .vi-lien:hover { text-decoration-color: var(--ink); }
+    .vi-vrows { display: grid; gap: 5px; }
+    .vi-vrow { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 4.4em 5.6em; gap: 8px; align-items: center; font-size: 0.85rem; }
+    .vi-vrow.win b:first-child { text-decoration: underline; text-underline-offset: 3px; }
+    .vi-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .vi-num small { color: var(--muted); font-size: 0.7rem; }
+    .vi-table { overflow-x: auto; }
+    .vi-table table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    .vi-table th, .vi-table td { padding: 4px 6px; border-top: 1px solid var(--rule); text-align: center; }
+    .vi-table th:first-child, .vi-table td:first-child { text-align: left; }
+    .vi-table td.has { font-weight: 800; color: var(--c); }
+    .vi-table td:not(.has) { color: var(--muted); }
+    .vi-carte:fullscreen, .vi-carte.lv-plein { border: 0; border-radius: 0; }
+    .vi-carte:fullscreen #viCarte, .vi-carte.lv-plein #viCarte { height: 100%; }
     #viCarte { display: block; width: 100%; height: clamp(420px, 70vh, 860px); background: var(--bg); touch-action: none; }
     .vi-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
     @media (min-width: 1100px) { .vi-grid { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); } }
