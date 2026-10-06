@@ -56,6 +56,12 @@ terre_qc = unary_union([ferme(f["geometry"]) for f in qc["ridingGeo"]["features"
 for num in [n for n in geoms if n.startswith("24")]:
     g = unary_union(geoms[num]).intersection(terre_qc)
     if not g.is_empty: geoms[num] = [g]
+# Colombie-Britannique : même chose sur la côte (île de Vancouver, îles du golfe, Haida Gwaii) avec les terres de Natural Earth
+cb = box(-139.5, 48.0, -114.0, 60.1)
+terre_cb = unary_union([shape(f["geometry"]).intersection(cb) for f in json.load(open(TERRE, encoding="utf-8"))["features"]]).buffer(0)
+for num in [n for n in geoms if n.startswith("59")]:
+    g = unary_union(geoms[num]).intersection(terre_cb)
+    if not g.is_empty: geoms[num] = [g]
 # petites îles (Arctique surtout) : on garde les morceaux de plus de 0,02 degré carré, et toujours le plus grand
 def nettoyer(geo):
     parts = list(geo.geoms) if geo.geom_type == "MultiPolygon" else [geo]
