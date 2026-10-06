@@ -606,7 +606,7 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>29 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span><span class="t-live" hidden>Élections générales du 5 octobre 2026 · résultats en direct</span><span class="t-votes" hidden>Votes Québec · intentions de vote</span></p>
+    <p class="titre"><span class="t-loi39">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Élections générales du 5 octobre 2026 · résultats en direct</span><span class="t-votes" hidden>Votes Québec · intentions de vote</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
@@ -650,7 +650,7 @@
   <header class="top">
     <div class="big num" id="l39-bigNum"><small>sièges sur 125</small></div>
     <div class="headline">
-      <span class="eyebrow kicker">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × projection Qc125 du <span data-maj>28 septembre 2026</span><span data-verif hidden> · vérifiée le <span></span></span></span>
+      <span class="eyebrow kicker">Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span>
       <h1 id="l39-headline">Le PQ serait minoritaire avec la loi 39</h1>
       <p class="lede" id="l39-lede"></p>
       <div class="coal" id="l39-statusPills"></div>
@@ -661,12 +661,12 @@
   <section aria-labelledby="l39-h-chg">
     <div class="sec-head">
       <h2 id="l39-h-chg">Ce qui changerait</h2>
-      <p class="muted">Les mêmes votes projetés par Qc125, comptés de deux façons. Le <b>mode actuel</b> les prend tels quels dans les 127 circonscriptions réelles. La <b>loi 39</b> est <b>simulée</b> : aucune carte officielle à 80 circonscriptions n'existe, celle-ci a été construite pour respecter la loi, puis 45 sièges de région compensent l'écart entre votes et sièges. <a href="#l39-h-meth">Méthode et limites</a></p>
+      <p class="muted">Les mêmes votes, ceux de l'élection générale du 5 octobre 2026, comptés de deux façons. Le <b>mode actuel</b> les prend tels quels dans les 127 circonscriptions réelles. La <b>loi 39</b> est <b>simulée</b> : aucune carte officielle à 80 circonscriptions n'existe, celle-ci a été construite pour respecter la loi, puis 45 sièges de région compensent l'écart entre votes et sièges. <a href="#l39-h-meth">Méthode et limites</a></p>
     </div>
     <div class="chg-grid">
       <div class="tablebox">
         <table class="chg-t">
-          <thead><tr><th></th><th><span class="lg">Mode actuel</span><span class="sh">Actuel</span> <span class="tag real">Qc125</span></th><th>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></th><th>Écart</th></tr></thead>
+          <thead><tr><th></th><th><span class="lg">Mode actuel</span><span class="sh">Actuel</span> <span class="tag real">Élection</span></th><th>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes de l'élection y sont transposés (voir Méthode et limites).">simulé</span></th><th>Écart</th></tr></thead>
           <tbody id="l39-chgBody"></tbody>
         </table>
       </div>
@@ -691,7 +691,7 @@
         <svg id="l39-hemiA" viewBox="0 0 400 215" role="img" aria-label="Plan de l'Assemblée, mode actuel"></svg>
       </figure>
       <figure class="hemi" style="margin:0">
-        <div class="cap"><b>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">simulé</span></b><span class="muted num" id="l39-capB"></span></div>
+        <div class="cap"><b>Loi 39 <span class="tag sim" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes de l'élection y sont transposés (voir Méthode et limites).">simulé</span></b><span class="muted num" id="l39-capB"></span></div>
         <svg id="l39-hemiB" viewBox="0 0 400 215" role="img" aria-label="Plan de l'Assemblée selon la loi 39"></svg>
         <div class="legend"><span><i class="dot sq" style="background:var(--muted)"></i>Siège de circonscription</span><span style="color:var(--muted)"><i class="dot ring sq"></i>Siège de région (compensatoire)</span></div>
       </figure>
@@ -714,7 +714,7 @@
               <label for="l39-thr"><span>Seuil national (art. 379.2)</span><span class="num" id="l39-thrV">10 %</span></label>
               <input type="range" id="l39-thr" min="0" max="20" step="0.5" value="10">
             </div>
-            <button type="button" class="btn" id="l39-reset">Revenir à la projection Qc125</button>
+            <button type="button" class="btn" id="l39-reset">Revenir au résultat de l'élection</button>
           </div>
         </div>
     </div>
@@ -725,7 +725,7 @@
   <section aria-labelledby="l39-h-map">
     <div class="sec-head">
       <h2 id="l39-h-map">La carte</h2>
-      <p class="muted">Basculez entre la carte actuelle (les 127 circonscriptions réelles, projection Qc125) et la carte simulée de la loi 39 : ses 17 régions ou ses 80 circonscriptions hypothétiques. Cliquez sur la carte pour voir le détail. Pour zoomer, utilisez la molette, le pincement ou les raccourcis.</p>
+      <p class="muted">Basculez entre la carte actuelle (les 127 circonscriptions réelles, résultat de l'élection) et la carte simulée de la loi 39 : ses 17 régions ou ses 80 circonscriptions hypothétiques. Cliquez sur la carte pour voir le détail. Pour zoomer, utilisez la molette, le pincement ou les raccourcis.</p>
     </div>
     <div class="mapgrid">
       <div class="mapcard">
@@ -760,7 +760,7 @@
             <button type="button" data-z="panel" id="l39-panelBtn" class="fsonly" aria-pressed="false">Détail</button>
             <button type="button" data-z="scen" id="l39-scenBtn" class="fsonly" aria-pressed="false">Scénario</button>
           </div>
-          <span class="tag sim mapbadge" id="l39-mapBadge" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).">Loi 39 · simulé</span>
+          <span class="tag sim mapbadge" id="l39-mapBadge" title="Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes de l'élection y sont transposés (voir Méthode et limites).">Loi 39 · simulé</span>
           <div class="tip" id="l39-tip" hidden></div>
         </div>
         <div class="scale" id="l39-scale"></div>
@@ -803,16 +803,16 @@
         <ul>
           <li><b>Une carte à 80 circonscriptions a dû être inventée.</b> La loi n'a jamais été appliquée, donc aucune carte officielle n'existe. La simulation du gouvernement (2020) avait utilisé les 78 circonscriptions fédérales, plus les Îles-de-la-Madeleine et l'Ungava. Mais la carte fédérale de 2025 ne respecte pas la répartition de la loi (18 circonscriptions à Montréal au lieu de 15, par exemple). On a donc construit un découpage qui respecte la loi : dans chaque région, le nombre exact de circonscriptions de l'article 14.2. Chaque circonscription part d'un point de départ et grandit uniquement vers des sections de vote voisines, ce qui la garde d'un seul tenant. Franchir une limite de municipalité ou de circonscription actuelle est pénalisé, pour garder les villes et quartiers ensemble. Chaque circonscription est à moins de 9 % de la moyenne d'électeurs de sa région (la Loi électorale permet 25 %). Les Îles-de-la-Madeleine et l'Ungava restent telles quelles. Un autre découpage tout aussi valable donnerait des résultats un peu différents.</li>
           <li><b>Vote de liste = vote de circonscription.</b> La loi prévoit un second bulletin. Ici, on suppose que chaque électeur vote pour le même parti aux deux niveaux.</li>
-          <li><b>Transposition des votes.</b> Qc125 projette les 127 circonscriptions actuelles. Le vote d'une nouvelle circonscription est la moyenne des projections des circonscriptions actuelles d'où viennent ses électeurs, pondérée par leur nombre. On suppose donc que le vote est uniforme à l'intérieur d'une circonscription actuelle.</li>
+          <li><b>Transposition des votes.</b> Les résultats officiels sont connus pour les 127 circonscriptions actuelles. Le vote d'une nouvelle circonscription est la moyenne des résultats des circonscriptions actuelles d'où viennent ses électeurs, pondérée par leur nombre. On suppose donc que le vote est uniforme à l'intérieur d'une circonscription actuelle.</li>
           <li><b>Électeurs inscrits 2026</b> (Élections Québec) pour répartir les sièges entre les régions, comme le prévoit la loi. Les régions suivent les limites de 2019 prévues par la loi, reconstituées à partir des circonscriptions actuelles.</li>
           <li><b>Rattachements incertains</b> : Daniel-Johnson est placée en Montérégie et Côte-du-Sud en Chaudière-Appalaches.</li>
-          <li><b>Aucune marge d'erreur</b> : on utilise la valeur centrale de chaque projection, sans intervalle.</li>
+          <li><b>Votes réels, répartition estimée</b> : les votes sont ceux de l'élection ; seule leur répartition dans les 80 circonscriptions hypothétiques est estimée.</li>
         </ul>
       </div>
     </div>
     <div class="sources">
       <span class="eyebrow">Sources</span>
-      <span>Projections par circonscription : <a href="https://qc125.com/districts.htm" target="_blank" rel="noopener">Qc125, Philippe J. Fournier</a>, mise à jour du <span data-maj>28 septembre 2026</span><span data-verif hidden> ; données revérifiées chaque jour, dernière vérification le <span></span></span>.</span>
+      <span>Résultats par circonscription : <a href="https://www.electionsquebec.qc.ca/resultats-et-statistiques/" target="_blank" rel="noopener">Élections Québec</a>, élection générale du 5 octobre 2026 (résultats officiels).</span>
       <span>Règles : Projet de loi n<sup>o</sup> 39, <i>Loi établissant un nouveau mode de scrutin</i>, Assemblée nationale du Québec, 2019.</span>
       <span>Électeurs et sections de vote 2026 : <a href="https://www.dgeq.org/donnees.html" target="_blank" rel="noopener">données ouvertes d'Élections Québec</a> (électeurs inscrits par circonscription et sections de vote avec électeurs).</span>
       <span>Méthode de référence : <a href="https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/conseil-executif/publications-adm/autres_documents/reforme-scrutin_simulation_.pdf" target="_blank" rel="noopener">Gouvernement du Québec, « Simulation — Mode de scrutin mixte avec compensation régionale », janvier 2020</a>.</span>

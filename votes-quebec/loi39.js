@@ -1,6 +1,10 @@
 // Simulation loi 39 : à charger avec type="module", après d3 (global).
 const ROOT = document.querySelector(".loi39");
 const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json", {cache: "no-cache"})).json();
+// base des votes : résultat officiel de l'élection du 5 octobre 2026 (build_data80.py), sinon projection Qc125
+const ELECTION = !!(DATA.source && DATA.source.type === "election");
+const SRC = ELECTION ? {court: "Élection 2026", nom: "résultat de l'élection", circ: "Résultat de l'élection", gagnant: "Élu en 2026", vote: "Vote", w: "Gagnant"}
+                     : {court: "Projection Qc125", nom: "projection Qc125", circ: "Projection Qc125", gagnant: "Gagnant Qc125", vote: "Vote projeté", w: "Gagnant projeté"};
 
 const P = ["PQ","PLQ","CAQ","PCQ","QS"];
 const PNAME = {PQ:"Parti québécois",PLQ:"Parti libéral du Québec",CAQ:"Coalition avenir Québec",PCQ:"Parti conservateur du Québec",QS:"Québec solidaire"};
@@ -42,12 +46,13 @@ function simulate(){
   const votes = {}, fptpReg = {}, dReg = {}, fptp = zero();
   for (const r of DATA.regions){ votes[r.code] = [0,0,0,0,0]; fptpReg[r.code] = zero(); dReg[r.code] = zero(); }
   const nat = [0,0,0,0,0];
-  // Les 127 circonscriptions actuelles (projection Qc125) : mode actuel et votes régionaux
-  const ridings = DATA.ridings.map(rd => {
+  // Les 127 circonscriptions actuelles (résultat de l'élection, sinon projection Qc125) : mode actuel et votes régionaux
+  const ridings = DATA.ridings.map(rd0 => {
+    const rd = ELECTION ? {...rd0, s: rd0.se, o: rd0.oe} : rd0;
     const S = rd.s.reduce((a,b)=>a+b,0);
     const v = rd.s.map((x,i) => x/S*k[i]);
     v.forEach((x,i) => { votes[rd.r][i] += rd.e*x; nat[i] += rd.e*x; });
-    let w = rd.o[0];                              // ordre d'origine qc125 pour départager
+    let w = rd.o[0];                              // ordre de départage (gagnant officiel d'abord)
     for (const i of rd.o) if (v[i] > v[w]) w = i;
     fptp[P[w]]++; fptpReg[rd.r][P[w]]++;
     const t = v.reduce((a,b)=>a+b,0);
@@ -537,13 +542,13 @@ function paintMap(){
   const p = state.party, col = p==="ALL" ? ALLC : PV[p];
   const ramp = `<span class="ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${col} 6%, var(--surface)), ${col})"></span>`;
   document.getElementById("l39-hint").textContent = isCur
-    ? "Carte actuelle : les 127 circonscriptions de la carte électorale 2026 (Élections Québec), avec la projection Qc125 de chacune. C'est le mode de scrutin en vigueur, sans simulation."
+    ? `Carte actuelle : les 127 circonscriptions de la carte électorale 2026 (Élections Québec), avec le ${SRC.nom} dans chacune. C'est le mode de scrutin en vigueur, sans simulation.`
     : "Loi 39 : découpage hypothétique à 80 circonscriptions, tracé pour cette simulation à partir des sections de vote 2026 (voir « Méthode »).";
   sc.innerHTML = !byReg
     ? (state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription (chiffre = % du ${p}, plus de circonscriptions en zoomant)</span>`
-       : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? "actuelle (projection Qc125)" : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
-       : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (projection Qc125). Plus la couleur est foncée, plus son score est élevé.`
-       : `Couleur : gagnant projeté de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
+       : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? `actuelle (${SRC.nom})` : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
+       : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (${SRC.nom}). Plus la couleur est foncée, plus son score est élevé.`
+       : `Couleur : ${SRC.w.toLowerCase()} de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
     : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
     : p==="ALL" ? (state.mode==="seat"
@@ -694,7 +699,7 @@ function renderRegionPanel(){
     <div style="display:grid;gap:8px"><span class="eyebrow">Vote et sièges obtenus</span>${rows}
       <div class="legend"><span><i class="dot" style="background:var(--muted)"></i>circonscription</span><span style="color:var(--muted)"><i class="dot ring"></i>région</span></div></div>
     ${compBlock(code, R)}
-    <details open><summary>Les ${R.districts.length} circonscriptions de la région (carte hypothétique) et gagnant projeté</summary><div class="rides">${rides}</div></details>`;
+    <details open><summary>Les ${R.districts.length} circonscriptions de la région (carte hypothétique) et ${SRC.w.toLowerCase()}</summary><div class="rides">${rides}</div></details>`;
 }
 
 function renderRidingPanel(){
@@ -715,7 +720,7 @@ function renderRidingPanel(){
       <span class="eyebrow">Circonscription hypothétique · ${esc(r.name)}</span>
       <h3 style="font-size:1.4rem">${esc(x.name)}</h3>
       <div class="meta">
-        <span class="pill"><i class="dot" style="background:${PV[x.w]}"></i>Gagnant projeté : ${x.w}</span>
+        <span class="pill"><i class="dot" style="background:${PV[x.w]}"></i>${SRC.w} : ${x.w}</span>
         <span class="pill num">Avance : ${fmt(x.margin)} pts</span>
         <span class="pill num">${x.e.toLocaleString("fr-CA")} électeurs</span>
       </div>
@@ -724,11 +729,11 @@ function renderRidingPanel(){
         <button type="button" class="linkbtn" data-zoomsel>Zoomer ici</button>
       </div>
     </div>
-    <div style="display:grid;gap:8px"><span class="eyebrow">Vote projeté</span>${rows}</div>
+    <div style="display:grid;gap:8px"><span class="eyebrow">${SRC.vote}</span>${rows}</div>
     <div class="explain">
       <span class="eyebrow">De quoi est faite cette circonscription</span>
-      <p>Elle regroupe des sections de vote de ${x.comp.length} circonscription${x.comp.length>1?"s":""} actuelle${x.comp.length>1?"s":""}. Son vote projeté est la moyenne des projections Qc125 de ces circonscriptions, pondérée par le nombre d'électeurs qui en viennent.</p>
-      <div class="tablebox"><table class="ctable"><thead><tr><th>Circonscription actuelle</th><th>Part des électeurs</th><th>Gagnant Qc125</th></tr></thead>
+      <p>Elle regroupe des sections de vote de ${x.comp.length} circonscription${x.comp.length>1?"s":""} actuelle${x.comp.length>1?"s":""}. Son vote est la moyenne des votes (${SRC.nom}) de ces circonscriptions, pondérée par le nombre d'électeurs qui en viennent.</p>
+      <div class="tablebox"><table class="ctable"><thead><tr><th>Circonscription actuelle</th><th>Part des électeurs</th><th>${SRC.gagnant}</th></tr></thead>
         <tbody>${parts}</tbody></table></div>
     </div>
     <div class="note">
@@ -751,7 +756,7 @@ function renderAllCurPanel(){
       <span class="eyebrow">Carte actuelle · 127 circonscriptions</span>
       <h3 style="font-size:1.4rem">Tout le Québec</h3>
       <div class="meta"><span class="pill"><i class="dot" style="background:${PV[lead]}"></i>${lead} ${f[lead] >= 64 ? "majoritaire" : "minoritaire"} : ${f[lead]} / 127</span><span class="pill">Majorité : 64</span></div>
-      <p class="muted" style="font-size:.86rem">Projection Qc125 dans chaque circonscription réelle : le parti en tête l'emporte, sans compensation. Cliquez sur une circonscription pour son détail.</p>
+      <p class="muted" style="font-size:.86rem">${SRC.circ} dans chaque circonscription réelle : le parti en tête l'emporte, sans compensation. Cliquez sur une circonscription pour son détail.</p>
     </div>
     <div style="display:grid;gap:8px"><span class="eyebrow">Vote et sièges</span>${rows}</div>
     <div style="display:grid;gap:8px"><span class="eyebrow">Sièges par région (limites de 2019)</span>
@@ -782,7 +787,7 @@ function renderCurPanel(){
         <a class="linkbtn" href="https://qc125.com/${x.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>
       </div>
     </div>
-    <div style="display:grid;gap:8px"><span class="eyebrow">Projection Qc125</span>${rows}</div>
+    <div style="display:grid;gap:8px"><span class="eyebrow">${SRC.circ}</span>${rows}</div>
     <div class="explain">
       <span class="eyebrow">Avec la loi 39 <span class="tag sim" title="${SIM_TIP}">simulé</span></span>
       <p>Ses électeurs se retrouveraient dans ${dests.length} circonscription${dests.length>1?"s":""} de la carte simulée à 80 :</p>
@@ -840,7 +845,7 @@ document.getElementById("l39-c-loi").addEventListener("click", () => setView(loi
 document.getElementById("l39-v-reg").addEventListener("click", () => setView("reg"));
 document.getElementById("l39-v-circ").addEventListener("click", () => setView("circ"));
 
-const SIM_TIP = "Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes Qc125 y sont transposés (voir Méthode et limites).";
+const SIM_TIP = `Simulé : la loi 39 n'a jamais été appliquée. La carte à 80 circonscriptions a été construite pour cette page et les votes (${SRC.nom}) y sont transposés (voir Méthode et limites).`;
 // chaque segment de la barre affiche son nombre : « PQ 54 », sinon « 54 », sinon juste sous la barre
 function fitGlance(){
   document.getElementById("l39-glance").querySelectorAll(".gbar").forEach(gb => {
@@ -872,7 +877,7 @@ function render(){
     `La CAQ passe de ${RES.fptp.CAQ} à ${tot.CAQ} siège${tot.CAQ>1?"s":""}.`;
   const modified = state.target.some((t,i)=>Math.abs(t-BASE[i])>0.05) || state.thr !== 10;
   document.getElementById("l39-statusPills").innerHTML =
-    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">Projection Qc125</span>`) +
+    (modified ? `<span class="pill mod">Scénario modifié</span>` : `<span class="pill">${SRC.court}</span>`) +
     `<span class="pill">Seuil ${fmt(state.thr,state.thr%1?1:0)} % : ${RES.eligible.length} parti${RES.eligible.length>1?"s":""} admissible${RES.eligible.length>1?"s":""}</span>`;
 
   // le parti qui a le plus de sièges part de la gauche : on voit tout de suite sa distance à la ligne de majorité

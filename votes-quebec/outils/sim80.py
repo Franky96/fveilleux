@@ -4,6 +4,9 @@ from collections import Counter
 P=["PQ","PLQ","CAQ","PCQ","QS"]
 D=json.load(open('data.json'))
 R=D['ridings']
+# base de la simulation : résultat de l'élection quand il est définitif, sinon projection Qc125
+if D.get('source',{}).get('type')=='election':
+    for x in R: x['s'],x['o']=x['se'],x['oe']
 def hq(w,n):
     q=sorted(((v/d,k) for k,v in w.items() for d in range(1,n+1)),reverse=True)[:n]; return Counter(k for _,k in q)
 el={r['code']:r['electors'] for r in D['regions']}

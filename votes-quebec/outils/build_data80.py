@@ -30,6 +30,21 @@ for r in csv.DictReader(open("elec_circ.csv", encoding="latin1"), delimiter=";")
         byn[norm(cep2name[c])]["e"] = int(r["NOMBRE_ELECTEURS_APRES_REVISION_ORDINAIRE"] or r["NOMBRE_ELECTEURS_AU_DECRET"])
 assert all("e" in x for x in rid), [x["n"] for x in rid if "e" not in x]
 
+# résultat officiel de l'élection du 5 octobre 2026 (election.py, Élections Québec) : la simulation Loi 39 le prend comme
+# base dès qu'il est définitif ; « s » garde la projection Qc125 (utilisée par Votes Québec quand les sondages reprendront)
+SOURCE = {"type": "qc125"}
+if os.path.exists("../election-2026.json"):
+    EL = json.load(open("../election-2026.json", encoding="utf-8"))
+    if EL.get("final"):
+        elec = {norm(n): c for n, c in EL["circ"].items()}
+        assert all(norm(x["n"]) in elec for x in rid), [x["n"] for x in rid if norm(x["n"]) not in elec]
+        for x in rid:
+            c, g = elec[norm(x["n"])]["s"], elec[norm(x["n"])]["g"]
+            x["se"] = [c.get(p, 0) for p in P]
+            # ordre pour départager : le gagnant officiel d'abord (parts arrondies à 0,1 : Vachon, PLQ et PQ à 27,5 %)
+            x["oe"] = sorted(range(len(P)), key=lambda i: (-x["se"][i], P[i] != g))
+        SOURCE = {"type": "election", "date": EL["date"], "texte": "5 octobre 2026", "titre": EL.get("titre", "")}
+
 # 80 circonscriptions hypothétiques
 D = json.load(open("m80/districts.json", encoding="utf-8"))
 idx = {x["n"]: i for i, x in enumerate(rid)}
@@ -67,6 +82,6 @@ if cr:
 
 data = {"regions": [{"code": code[n], "name": n, "electors": D["elec_reg"][n]} for n in CODES],
         "ridings": rid, "districts": districts, "districtGeo": dg, "regionGeo": rg, "ridingGeo": cg, "curRegionGeo": cr,
-        "maj": json.load(open("maj.json", encoding="utf-8")) if os.path.exists("maj.json") else {}}
+        "maj": json.load(open("maj.json", encoding="utf-8")) if os.path.exists("maj.json") else {}, "source": SOURCE}
 open("data.json", "w", encoding="utf-8").write(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
 print("data.json", os.path.getsize("data.json"), "octets ·", len(rid), "circ. actuelles ·", len(districts), "hypothétiques")
