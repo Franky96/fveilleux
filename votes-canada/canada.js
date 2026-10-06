@@ -437,7 +437,7 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- évolution des intentions de vote ---------- */
-let periode = lireLS("vcPeriode", 0);
+let periode = lireLS("vcPeriode", 3);   // 3 derniers mois par défaut
 function dessinerEvolution() {
   const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
   const m = { t: 16, r: 54, b: 28, l: 34 };

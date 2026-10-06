@@ -124,8 +124,8 @@ ca = re.sub(r'<button type="button" data-z="tout">Tout le Québec</button>.*?<bu
             '<button type="button" data-z="tout">Canada</button><button type="button" data-z="sudqc">Sud du Québec</button><button type="button" data-z="mtl">Montréal</button>'
             '<button type="button" data-z="tor">Toronto</button><button type="button" data-z="ott">Ottawa</button><button type="button" data-z="van">Vancouver</button>', ca, flags=re.S)
 ca = re.sub(r'<button type="button" data-per="3".*?Depuis 2022</button>',
-            '<button type="button" data-per="3" aria-pressed="false">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button>'
-            '<button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="0" aria-pressed="true">Depuis 2025</button>', ca, flags=re.S)
+            '<button type="button" data-per="3" aria-pressed="true">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button>'
+            '<button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="0" aria-pressed="false">Depuis 2025</button>', ca, flags=re.S)
 rc('<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2022</span>', '<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2025</span>')
 rc('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 343 circonscriptions fédérales"')
 assert 'src="votes-quebec/intentions.js"' not in ca and '>Grand Montréal<' not in ca and 'data-z="sudqc"' in ca
