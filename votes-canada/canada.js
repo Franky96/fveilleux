@@ -16,8 +16,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
-// année en évidence (pastille contrastée, comme Votes France)
-const AN = a => `<span class="vf-an">${a}</span>`;
+// années : texte normal (pas de pastille, contrairement à Votes France)
+const AN = a => String(a);   // années en texte normal sur cette page
 const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" });
 const dateAn = iso => `${jourMois(iso)} ${AN(iso.slice(0, 4))}`;
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };

@@ -45,6 +45,14 @@ terre = unary_union([shape(f["geometry"]).intersection(nord) for f in json.load(
 for num in ("61001", "62001"):   # côtes arctiques plus simples (carte à l'échelle du pays) ; petites îles retirées plus bas
     g = unary_union(geoms[num]).intersection(terre).simplify(0.02 if num == "62001" else 0.01, preserve_topology=True)
     geoms[num] = [unary_union([p for p in getattr(g, "geoms", [g]) if p.geom_type == "Polygon" and p.area >= (0.4 if num == "62001" else 0.12)])]
+# Québec : les contours fédéraux couvrent le fleuve et les rivières (Montréal n'y est pas une île) ; on les découpe avec la
+# terre de la carte de Votes Québec (circonscriptions provinciales, sans l'eau) pour avoir la même allure
+qc = json.load(open(os.path.join(ICI, "..", "..", "votes-quebec", "data.json"), encoding="utf-8"))
+def ferme(g): return shape(g).buffer(0)
+terre_qc = unary_union([ferme(f["geometry"]) for f in qc["ridingGeo"]["features"]]).buffer(0)
+for num in [n for n in geoms if n.startswith("24")]:
+    g = unary_union(geoms[num]).intersection(terre_qc)
+    if not g.is_empty: geoms[num] = [g]
 # petites îles (Arctique surtout) : on garde les morceaux de plus de 0,02 degré carré, et toujours le plus grand
 def nettoyer(geo):
     parts = list(geo.geoms) if geo.geom_type == "MultiPolygon" else [geo]
