@@ -422,6 +422,9 @@
     .vi-chip { border-radius: 99px; padding: 5px 11px; }
     .vi-chip[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
     .vi-chips[aria-disabled="true"] .vi-chip { opacity: 0.55; }
+    .vi-pct { --c: var(--ink); }
+    .vi-pct[aria-pressed="true"] { color: var(--surface); text-shadow: none; }
+    .vi-pct[hidden] { display: none; }
     .vi-echelle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
     .vi-ramp { display: inline-block; width: 140px; height: 10px; border-radius: 5px; border: 1px solid var(--rule); }
     .vi-lbl { fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-linejoin: round; font-weight: 700; pointer-events: none; font-variant-numeric: tabular-nums; }
@@ -661,6 +664,7 @@
               <button type="button" data-m="lead" aria-pressed="true">Parti en tête</button><button type="button" data-m="second" aria-pressed="false">Meilleur deuxième</button><button type="button" data-m="vote" aria-pressed="false">Vote</button>
             </div>
             <div class="vi-chips" id="viChips" aria-label="Parti affiché"></div>
+            <button type="button" class="vi-chip vi-pct" id="viPct" aria-pressed="true" title="Afficher ou masquer le pourcentage dans chaque circonscription (mode Vote)">% Pourcentage</button>
           </div>
           <div class="vi-carte lv-cartecard">
             <div class="lv-zoom" id="viZoom">

@@ -16,7 +16,7 @@ const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigit
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
 
 let DATA, ELEC, SOND, MODE, ETAT, sel = null, demarre = false;
-const etat = { mode: "lead", parti: null };                   // mode de la carte (comme la carte actuelle de Loi 39)
+const etat = { mode: "lead", parti: null, pct: (() => { try { return localStorage.getItem("viPct") !== "0"; } catch { return true; } })() };                   // mode de la carte (comme la carte actuelle de Loi 39)
 const SEAT_ORDER = ["QS", "PQ", "PLQ", "CAQ", "PCQ"];      // départage à égalité de sièges (plan de l'Assemblée)
 
 /* ---------- état courant : résultat de l'élection, ou projection Qc125 ---------- */
@@ -223,6 +223,7 @@ function construireCarte() {
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
   // modes de la carte : parti en tête, meilleur deuxième, vote d'un parti
+  $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; try { localStorage.setItem("viPct", etat.pct ? "1" : "0"); } catch {} peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").innerHTML = P5.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${p}</button>`).join("");
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return; etat.parti = b.dataset.p; if (etat.mode !== "vote") etat.mode = "vote"; peindre(); });
@@ -241,7 +242,8 @@ function peindre() {
   const f = sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
   // étiquettes : en mode Vote, le % du parti dans chaque circonscription
-  const labs = gLbl.selectAll("g.vi-lab").data(etat.mode === "vote" ? DATA.ridingGeo.features : [], f => f.properties.RID)
+  $("viPct").hidden = etat.mode !== "vote"; $("viPct").setAttribute("aria-pressed", etat.pct);
+  const labs = gLbl.selectAll("g.vi-lab").data(etat.mode === "vote" && etat.pct ? DATA.ridingGeo.features : [], f => f.properties.RID)
     .join(enter => { const g = enter.append("g").attr("class", "vi-lab");
       g.append("text").attr("class", "vi-lbl vi-nom").attr("text-anchor", "middle").attr("dy", "-0.85em");
       g.append("text").attr("class", "vi-lbl vi-val").attr("text-anchor", "middle").attr("dy", "0.35em"); return g; });
@@ -251,7 +253,7 @@ function peindre() {
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
   const quoi = MODE === "election" ? "résultat de l'élection" : "projection Qc125";
   $("viEchelle").innerHTML = etat.mode === "vote"
-    ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription (chiffre = % du ${p}, plus de circonscriptions en zoomant)</span>`
+    ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription${etat.pct ? ` (chiffre = % du ${p}, plus de circonscriptions en zoomant)` : ""}</span>`
     : etat.mode === "second" ? `Couleur : parti arrivé deuxième dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
     : `Couleur : parti en tête dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé.`;
 }
