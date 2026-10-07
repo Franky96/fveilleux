@@ -23,9 +23,10 @@ Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN po
 ## Section « Intentions de vote et simulations » — cadre de base des pages d'intentions de vote
 
 Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils/pages.src.html`, transformé par
-`votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, direct), `votes-quebec.html`,
+`votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, `votes-quebec/accueil.js`), `votes-quebec.html`,
 `loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html` et `votes-usa.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
-(ou pages.py) puis relancer le script.** Onglets regroupés « Intentions de vote » / « Simulation » ; permission `votes-quebec`.
+(ou pages.py) puis relancer le script.** Onglets : Accueil, puis une page par endroit (Votes Québec, Canada, États-Unis, France) ; les simulations d'un endroit vont dans
+son sous-menu (ligne sous les onglets, ex. Votes Québec : Intentions de vote · Simulations : Loi 39) ; permission `votes-quebec`.
 
 Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/intentions.js`) :
 1. en haut, côte à côte : l'Assemblée (plan ou hémicycle) dans son rectangle, et l'évolution des intentions de vote

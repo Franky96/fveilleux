@@ -72,8 +72,16 @@
     .sc-groupe { display: grid; gap: 0.3rem; flex: none; }
     .sc-groupe + .sc-groupe { padding-left: 1rem; border-left: 1px solid var(--st-rule); }
     .sc-groupe-titre { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-muted); }
-    .sc-groupe-btns { display: flex; gap: 0.5rem; }
-    @media (max-width: 600px) { .sc-tabs { gap: 0.5rem; } .sc-groupe + .sc-groupe { padding-left: 0.5rem; } .sc-groupe:first-child { flex: 2 1 0; } .sc-groupe:last-child { flex: 1 1 0; } .sc-groupe-btns .sc-tab { flex: 1 1 0; } }
+    .sc-groupe-btns { display: flex; gap: 0.5rem; width: max-content; }
+    .sc-tab, .sc-sous-tab { width: max-content; flex-shrink: 0; }
+    @media (max-width: 600px) { .sc-tabs { gap: 0.5rem; } .sc-groupe + .sc-groupe { padding-left: 0.5rem; } .sc-tab b, .sc-tab small { white-space: nowrap; }
+      .sc-sous-tab small { display: none; } .sc-sous-titre { margin-left: 0.25rem; padding-left: 0.6rem; } }
+    /* sous-menu d'un endroit (Votes Québec : intentions de vote, simulations) */
+    .sc-sous { max-width: 1680px; margin: 0.55rem auto 0; display: flex; align-items: center; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+    .sc-sous-tab { flex-direction: row; align-items: baseline; gap: 0.5rem; padding: 0.3rem 0.75rem; display: flex; white-space: nowrap; }
+    .sc-sous-tab b { font-size: 0.8rem; }
+    .sc-sous-tab small { font-size: 0.7rem; }
+    .sc-sous-titre { margin-left: 0.5rem; padding-left: 1rem; border-left: 1px solid var(--st-rule); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-muted); flex: none; }
     .sc-dot { width: 8px; height: 8px; border-radius: 50%; background: #E5484D; flex: none; animation: sc-pouls 1.6s ease-in-out infinite; }
     .sc-live b { color: #E5484D; }
     .sc-live[aria-selected="true"] b { color: #E5484D; }
@@ -599,7 +607,7 @@
     .vi-evol-tip span { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
     .vi-evol-tip i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
     .vi-evol-tip b { margin-left: auto; }
-    @media (max-width: 600px) { .sc-tab { flex: 1 1 0; min-width: 0; padding: 0.4rem 0.6rem; } .sc-tab small { font-size: 0.68rem; } }
+    @media (max-width: 600px) { .sc-tab { padding: 0.4rem 0.6rem; } .sc-tab small { font-size: 0.68rem; } }
     #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
       transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
@@ -628,7 +636,6 @@
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
       <div class="sc-groupe" role="presentation">
-        <span class="sc-groupe-titre" aria-hidden="true">&nbsp;</span>
         <div class="sc-groupe-btns">
           <a class="sc-tab" href="intentions-simulations.html" aria-current="page">
             <b>Accueil</b><small>Vue d'ensemble</small>
@@ -636,10 +643,9 @@
         </div>
       </div>
       <div class="sc-groupe" role="presentation">
-        <span class="sc-groupe-titre">Intentions de vote</span>
         <div class="sc-groupe-btns">
           <a class="sc-tab" href="votes-quebec.html">
-            <b>Votes Québec</b><small>Intentions de vote à jour</small>
+            <b>Votes Québec</b><small>Intentions de vote et simulations</small>
           </a>
           <a class="sc-tab" href="votes-canada.html">
             <b>Votes Canada</b><small>Projection fédérale Qc125</small>
@@ -649,14 +655,6 @@
           </a>
           <a class="sc-tab" href="votes-france.html">
             <b>Votes France</b><small>Présidentielle et législatives</small>
-          </a>
-        </div>
-      </div>
-      <div class="sc-groupe" role="presentation">
-        <span class="sc-groupe-titre">Simulation</span>
-        <div class="sc-groupe-btns">
-          <a class="sc-tab" href="loi39.html">
-            <b>Loi 39 • Québec</b><small>Mixte compensatoire régional</small>
           </a>
         </div>
       </div>

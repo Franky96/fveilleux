@@ -39,11 +39,13 @@ def page(vue):
         attrs, contenu = m.group(1), m.group(2)
         v = re.search(r'data-vue="(\w+)"', attrs).group(1)
         classe = re.search(r'class="([^"]+)"', attrs).group(1)
-        courant = ' aria-current="page"' if v == vue else ""
+        # « Votes Québec » (ligne du haut) reste la page courante sur ses simulations (loi 39)
+        courant = ' aria-current="page"' if v == vue or (vue == "loi39" and v == "votes" and "sc-sous-tab" not in classe) else ""
         return f'<a class="{classe}" href="{FICHIER[v]}"{courant}>{contenu}</a>'
     s = re.sub(r'<button type="button" role="tab"([^>]*)>(.*?)</button>', onglet, s, flags=re.S)
-    s = s.replace('<div class="sc-tabs" role="tablist">', '<div class="sc-tabs">')
-    s = s.replace('<nav class="scrutins" aria-label="Mode de scrutin">', '<nav class="scrutins" aria-label="Pages de la section">')
+    s = s.replace('<div class="sc-tabs" role="tablist">', '<div class="sc-tabs">').replace('<div class="sc-sous" role="tablist"', '<div class="sc-sous"')
+    # sous-menu du Québec : seulement sur ses pages (intentions de vote, simulations)
+    s = re.sub(r"<!-- DEBUT:sous-quebec -->\n(.*?)<!-- FIN:sous-quebec -->\n", (lambda m: m.group(1)) if vue in ("votes", "loi39") else "", s, flags=re.S)
     # barre du haut : seulement le titre de cette page
     for v in PAGES:
         s = re.sub(rf'<span class="t-{v}"( hidden)?>', f'<span class="t-{v}"{"" if v == vue else " hidden"}>', s)
@@ -78,6 +80,7 @@ print(f"{'votes-quebec-demo.html':30} {len(demo):7} octets")
 DCP = ('  <script src="https://cdn.jsdelivr.net/npm/d3-composite-projections@1.4.0/d3-composite-projections.min.js" '
        'integrity="sha384-dK0GmBUFxZ31MeEofuH+L50Mmk9vmuYWJasEPIp8s+UNQqdM0mppT/VtywRGXicv" crossorigin="anonymous"></script>\n')
 fr = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
+fr = re.sub(r'\n    <!-- sous-menu du Québec.*?</div>\n', "\n", fr, count=1, flags=re.S)
 def r(a, b):
     global fr
     assert a in fr, "Votes France : introuvable dans la page Votes Québec : " + a[:60]
@@ -106,6 +109,7 @@ print(f"{FICHIER['france']:30} {len(fr):7} octets")
 
 # Votes Canada : même cadre que Votes Québec (Chambre des communes de 343 sièges, carte des circonscriptions, projection Qc125)
 ca = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
+ca = re.sub(r'\n    <!-- sous-menu du Québec.*?</div>\n', "\n", ca, count=1, flags=re.S)
 def rc(a, b):
     global ca
     assert a in ca, "Votes Canada : introuvable dans la page Votes Québec : " + a[:60]
@@ -134,6 +138,7 @@ print(f"{FICHIER['canada']:30} {len(ca):7} octets")
 
 # Votes États-Unis : même cadre (hémicycle de 435 sièges, carte des districts, consensus des prévisionnistes, vote générique)
 us = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
+us = re.sub(r'\n    <!-- sous-menu du Québec.*?</div>\n', "\n", us, count=1, flags=re.S)
 def ru(a, b):
     global us
     assert a in us, "Votes États-Unis : introuvable dans la page Votes Québec : " + a[:60]
