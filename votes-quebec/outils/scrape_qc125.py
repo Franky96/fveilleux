@@ -31,7 +31,8 @@ for rid, name in links:
     seg = t[t.find("Historique récent"): t.find("Mise à jour", t.find("Historique récent"))]
     # Ordre conservé tel que publié (sert à départager les égalités, comme Qc125)
     shares = {p: int(v) for p, v in re.findall(r"\b(PQ|PLQ|CAQ|PCQ|QS)\b (\d+)% ±", seg)}
-    if sum(shares.values()) < 90 or set(shares) != set(PARTIES):
+    # depuis l'élection de 2026, une fiche n'affiche que les partis présents dans la circonscription (absent = 0 %)
+    if sum(shares.values()) < 90 or len(shares) < 3:
         erreurs.append(f"{rid} {name} {shares}")
     m = re.search(r"Mise à jour : (\d{1,2}) (" + "|".join(MOIS) + r") (\d{4})", t)
     if m: dates.append((int(m[3]), MOIS.index(m[2]) + 1, int(m[1])))
