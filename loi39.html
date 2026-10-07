@@ -458,7 +458,8 @@
     .vue-votes[aria-busy="true"] .lv-wrap { visibility: hidden; height: 0; overflow: hidden; }
     .vue-votes[aria-busy="true"]::before { content: "Chargement…"; display: block; max-width: 1680px; margin: 0 auto; padding: 40px clamp(16px, 3vw, 56px); color: var(--muted); font-size: 0.95rem; }
     /* Accueil de la section : une carte par page */
-    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 18px; }
+    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); grid-auto-rows: minmax(min-content, 1fr); gap: 18px; }
+    .ac-carte { min-height: 460px; }
     .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
     .ac-carte:hover, .ac-carte:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
     .ac-carte h3 { margin: 0; font-size: 1.25rem; }
@@ -468,7 +469,7 @@
     .ac-phrase { font-size: 0.88rem; line-height: 1.5; }
     .ac-dates { font-size: 0.75rem; color: var(--muted); }
     .ac-lien { font-size: 0.85rem; font-weight: 700; }
-    .ac-large { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+    .ac-large { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; }   /* même taille que les autres ; simulations dessous */
     .ac-large:hover, .ac-large:focus-within { transform: none; }
     .ac-principal { display: grid; gap: 8px; align-content: start; color: inherit; text-decoration: none; }
     .ac-principal:hover .ac-lien, .ac-sous:hover .ac-lien { text-decoration: underline; }
@@ -479,7 +480,6 @@
     .ac-sous > small, .ac-sous p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
     .ac-sous-chiffre { font: 800 1.4rem/1.1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
     .ac-sous-chiffre small { font: 500 0.8rem "Public Sans", system-ui, sans-serif; color: var(--muted); }
-    @media (max-width: 760px) { .ac-large { grid-template-columns: minmax(0, 1fr); } }
     .ac-barre { position: relative; display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin: 4px 0; }
     .ac-barre span { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 0.68rem; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
     .ac-barre i { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }

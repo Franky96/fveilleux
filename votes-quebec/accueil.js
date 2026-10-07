@@ -21,7 +21,7 @@ function barre(parts, total, maj) {
     ${maj ? `<i style="left:${100 * maj / total}%" title="majorité : ${maj}"></i>` : ""}</div>`;
 }
 function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donnees, verif, sous }) {
-  // carte large : contenu de la page à gauche, ses simulations en plus petit à droite (deux liens, pas de lien imbriqué)
+  // carte avec sous-carte : contenu de la page, puis ses simulations en plus petit dessous (deux liens, pas de lien imbriqué)
   if (sous) return `<div class="ac-carte ac-large"><a class="ac-principal" href="${url}">
     <span class="lv-eyebrow">${eyebrow}</span>
     <h3>${titre}</h3>
