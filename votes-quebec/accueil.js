@@ -1,5 +1,5 @@
 /* Accueil de la section « Intentions de vote et simulations » (intentions-simulations.html).
-   Une carte par page : chiffres clés tirés des mêmes données que la page (fichiers légers seulement), barre des sièges,
+   Une carte par endroit (ses simulations en petit dans sa carte) : chiffres clés tirés des mêmes données que la page (fichiers légers seulement), barre des sièges,
    date des données et dernière vérification (votes-verif.json). Les résultats en direct (live.js) reviendront le soir
    d'une élection. */
 
@@ -20,7 +20,18 @@ function barre(parts, total, maj) {
     `<span style="flex:${p.n};background:${p.c}" title="${esc(p.lab)} : ${p.n}">${p.n / total > 0.13 ? `${esc(p.lab)} ${p.n}` : p.n / total > 0.05 ? p.n : ""}</span>`).join("")}
     ${maj ? `<i style="left:${100 * maj / total}%" title="majorité : ${maj}"></i>` : ""}</div>`;
 }
-function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donnees, verif }) {
+function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donnees, verif, sous }) {
+  // carte large : contenu de la page à gauche, ses simulations en plus petit à droite (deux liens, pas de lien imbriqué)
+  if (sous) return `<div class="ac-carte ac-large"><a class="ac-principal" href="${url}">
+    <span class="lv-eyebrow">${eyebrow}</span>
+    <h3>${titre}</h3>
+    <div class="ac-chiffre">${chiffre}</div>
+    <p class="ac-legende">${legende}</p>
+    ${barreHtml}
+    <p class="ac-phrase">${phrase}</p>
+    <p class="ac-dates">${donnees}${verif ? ` · vérifiées le ${esc(verif.texte)}` : ""}</p>
+    <span class="ac-lien">Ouvrir la page →</span></a>
+    <div class="ac-sims"><span class="lv-eyebrow">Simulations</span>${sous}</div></div>`;
   return `<a class="ac-carte" href="${url}">
     <span class="lv-eyebrow">${eyebrow}</span>
     <h3>${titre}</h3>
@@ -40,6 +51,17 @@ async function demarrer() {
     lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json")]);
   const v = V || {}, cartes = [];
 
+  // Loi 39 : simulation sur les votes du Québec, en petit dans la carte de Votes Québec
+  let sousQc = "";
+  if (L39) {
+    const ordre = Object.keys(L39.loi39).sort((a, b) => L39.loi39[b] - L39.loi39[a]), lead = ordre[0], maj = Math.floor(L39.sieges_loi39 / 2) + 1;
+    sousQc = `<a class="ac-sous" href="loi39.html">
+      <b>Loi 39</b><small>Mixte compensatoire régional · 80 circonscriptions + 45 sièges de région</small>
+      <div class="ac-sous-chiffre">${lead} ${L39.loi39[lead]} <small>sur ${L39.sieges_loi39} · ${L39.loi39[lead] >= maj ? "majoritaire" : "minoritaire"}</small></div>
+      ${barre(ordre.map(p => ({ lab: p, n: L39.loi39[p], c: CQ[p] })), L39.sieges_loi39, maj)}
+      <p>Avec le ${esc(L39.texte)} : ${ordre.map(p => `${p} ${L39.actuel[p]} → ${L39.loi39[p]}`).join(" · ")}</p>
+      <span class="ac-lien">Ouvrir la simulation →</span></a>`;
+  }
   // Votes Québec : dernier résultat (aucun sondage depuis l'élection) ou sondages
   if (QE) {
     const s = QE.sieges, ordre = Object.keys(s).sort((a, b) => s[b] - s[a]), lead = ordre[0];
@@ -48,7 +70,7 @@ async function demarrer() {
       chiffre: `${lead} ${s[lead]}`, legende: `sièges sur 127 · gouvernement ${s[lead] >= 64 ? "majoritaire" : "minoritaire"}`,
       barreHtml: barre(ordre.map(p => ({ lab: p, n: s[p], c: CQ[p] || "var(--aut)" })), 127, 64),
       phrase: `Résultat de l'élection du 5 octobre 2026 : ${ordre.map(p => `${p} ${nf(QE.national[p], 1)} %`).join(" · ")}. Les intentions de vote remplaceront ce résultat au premier sondage.`,
-      donnees: `élection du 5 octobre 2026${dernier ? ` · dernier sondage le ${dateFr(dernier.d)}` : ""}`, verif: v.quebec }));
+      donnees: `élection du 5 octobre 2026${dernier ? ` · dernier sondage le ${dateFr(dernier.d)}` : ""}`, verif: v.quebec, sous: sousQc }));
   }
   // Votes Canada : projection Qc125
   if (CP) {
@@ -92,15 +114,6 @@ async function demarrer() {
       barreHtml: barre([...g.map(x => ({ lab: x.id, n: x.n, c: x.c })), { lab: "vacants", n: FA.vacants || 0, c: "var(--soft)" }], 577, 289),
       phrase: `Assemblée nationale actuelle (aucun sondage législatif depuis octobre 2025).${pres}`,
       donnees: `Assemblée au ${dateFr(FA.date)}${dPres}`, verif: v.france }));
-  }
-  // Loi 39 : simulation sur les votes du Québec
-  if (L39) {
-    const ordre = Object.keys(L39.loi39).sort((a, b) => L39.loi39[b] - L39.loi39[a]), lead = ordre[0], maj = Math.floor(L39.sieges_loi39 / 2) + 1;
-    cartes.push(carte({ url: "loi39.html", eyebrow: "Simulation · Québec", titre: "Loi 39 • Québec",
-      chiffre: `${lead} ${L39.loi39[lead]}`, legende: `sièges sur ${L39.sieges_loi39} avec la loi 39 · ${L39.loi39[lead] >= maj ? "majoritaire" : "minoritaire"} (mode actuel : ${L39.actuel[lead]} sur ${L39.sieges_actuel})`,
-      barreHtml: barre(ordre.map(p => ({ lab: p, n: L39.loi39[p], c: CQ[p] })), L39.sieges_loi39, maj),
-      phrase: `Mode mixte compensatoire régional : 80 circonscriptions et 45 sièges de région. Avec le ${esc(L39.texte)} : ${ordre.map(p => `${p} ${L39.actuel[p]} → ${L39.loi39[p]}`).join(" · ")}.`,
-      donnees: L39.texte, verif: null }));
   }
   $("acCartes").innerHTML = cartes.join("") || `<p class="lv-muted">Chargement impossible.</p>`;
 }

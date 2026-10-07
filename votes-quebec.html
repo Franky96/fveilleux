@@ -470,6 +470,18 @@
     .ac-phrase { font-size: 0.88rem; line-height: 1.5; }
     .ac-dates { font-size: 0.75rem; color: var(--muted); }
     .ac-lien { font-size: 0.85rem; font-weight: 700; }
+    .ac-large { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+    .ac-large:hover, .ac-large:focus-within { transform: none; }
+    .ac-principal { display: grid; gap: 8px; align-content: start; color: inherit; text-decoration: none; }
+    .ac-principal:hover .ac-lien, .ac-sous:hover .ac-lien { text-decoration: underline; }
+    .ac-sims { display: grid; gap: 8px; align-content: start; }
+    .ac-sous { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--ink); text-decoration: none; transition: border-color 0.2s; }
+    .ac-sous:hover, .ac-sous:focus-visible { border-color: var(--ink); }
+    .ac-sous > b { font-size: 1rem; }
+    .ac-sous > small, .ac-sous p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+    .ac-sous-chiffre { font: 800 1.4rem/1.1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
+    .ac-sous-chiffre small { font: 500 0.8rem "Public Sans", system-ui, sans-serif; color: var(--muted); }
+    @media (max-width: 760px) { .ac-large { grid-template-columns: minmax(0, 1fr); } }
     .ac-barre { position: relative; display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin: 4px 0; }
     .ac-barre span { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 0.68rem; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
     .ac-barre i { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }
