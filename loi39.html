@@ -454,6 +454,9 @@
     #viEchelle > .vf-an { font-size: 0.78rem; margin-right: 2px; }
     .vf-mode-lab { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
     .vf-hors .vi-serres { margin-top: 8px; }
+    /* tant que le module n'a pas affiché ses données : pas de gabarit vide, seulement « Chargement… » */
+    .vue-votes[aria-busy="true"] .lv-wrap { visibility: hidden; height: 0; overflow: hidden; }
+    .vue-votes[aria-busy="true"]::before { content: "Chargement…"; display: block; max-width: 1680px; margin: 0 auto; padding: 40px clamp(16px, 3vw, 56px); color: var(--muted); font-size: 0.95rem; }
     /* Accueil de la section : une carte par page */
     .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 18px; }
     .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }

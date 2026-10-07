@@ -538,5 +538,6 @@ async function demarrer() {
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return; periode = +b.dataset.per; ecrireLS("vfPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
   } catch (e) { $("viSource").textContent = "Chargement impossible : " + e.message; console.error(e); }
+  $("vue-votes").removeAttribute("aria-busy");   // affiche la page (données prêtes, ou message d'erreur)
 }
 demarrer();

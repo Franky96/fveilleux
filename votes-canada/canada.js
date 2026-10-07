@@ -524,6 +524,7 @@ async function demarrer() {
       periode = +b.dataset.per; ecrireLS("vcPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
   } catch (e) { $("viSource").textContent = "Chargement impossible : " + e.message; console.error(e); }
+  $("vue-votes").removeAttribute("aria-busy");   // affiche la page (données prêtes, ou message d'erreur)
 }
 window.addEventListener("vue-votes", demarrer);
 if (!$("vue-votes").hidden) demarrer();

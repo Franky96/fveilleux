@@ -31,7 +31,7 @@ def page(vue):
     for v in PAGES:
         bloc = re.compile(rf"<!-- DEBUT:{v} -->\n(.*?)<!-- FIN:{v} -->\n", re.S)
         s = bloc.sub((lambda m: m.group(1)) if v == vue else "", s)
-    s = s.replace(' role="tabpanel" aria-labelledby="tab-live" hidden>', ">").replace(' role="tabpanel" aria-labelledby="tab-votes" hidden>', ">")
+    s = s.replace(' role="tabpanel" aria-labelledby="tab-live" hidden>', ">").replace(' role="tabpanel" aria-labelledby="tab-votes" aria-busy="true" hidden>', ' aria-busy="true">')
     s = s.replace(' role="tabpanel" aria-labelledby="tab-loi39"', "")
     s = re.sub(r"<title>.*?</title>", f"<title>Outils de Frank — {TITRE[vue]}</title>", s, count=1)
     # onglets → liens vers les pages
@@ -81,6 +81,7 @@ DCP = ('  <script src="https://cdn.jsdelivr.net/npm/d3-composite-projections@1.4
        'integrity="sha384-dK0GmBUFxZ31MeEofuH+L50Mmk9vmuYWJasEPIp8s+UNQqdM0mppT/VtywRGXicv" crossorigin="anonymous"></script>\n')
 fr = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
 fr = re.sub(r'\n    <!-- sous-menu du Québec.*?</div>\n', "\n", fr, count=1, flags=re.S)
+fr = fr.replace('<h2 id="viTitre">Votes Québec</h2>', '<h2 id="viTitre">Votes France</h2>')
 def r(a, b):
     global fr
     assert a in fr, "Votes France : introuvable dans la page Votes Québec : " + a[:60]
@@ -110,6 +111,7 @@ print(f"{FICHIER['france']:30} {len(fr):7} octets")
 # Votes Canada : même cadre que Votes Québec (Chambre des communes de 343 sièges, carte des circonscriptions, projection Qc125)
 ca = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
 ca = re.sub(r'\n    <!-- sous-menu du Québec.*?</div>\n', "\n", ca, count=1, flags=re.S)
+ca = ca.replace('<h2 id="viTitre">Votes Québec</h2>', '<h2 id="viTitre">Votes Canada</h2>')
 def rc(a, b):
     global ca
     assert a in ca, "Votes Canada : introuvable dans la page Votes Québec : " + a[:60]
@@ -139,6 +141,7 @@ print(f"{FICHIER['canada']:30} {len(ca):7} octets")
 # Votes États-Unis : même cadre (hémicycle de 435 sièges, carte des districts, consensus des prévisionnistes, vote générique)
 us = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()
 us = re.sub(r'\n    <!-- sous-menu du Québec.*?</div>\n', "\n", us, count=1, flags=re.S)
+us = us.replace('<h2 id="viTitre">Votes Québec</h2>', '<h2 id="viTitre">Votes États-Unis</h2>')
 def ru(a, b):
     global us
     assert a in us, "Votes États-Unis : introuvable dans la page Votes Québec : " + a[:60]
