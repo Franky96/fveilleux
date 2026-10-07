@@ -416,7 +416,7 @@
     @media (prefers-reduced-motion: reduce) { .lv-seg, .lv-rid { transition: none; } }
     .loi39[hidden], .site-top .titre > [hidden] { display: none; }
     /* Onglet « Votes Québec » : intentions de vote (intentions.js) — mêmes jetons de couleur que « En direct » */
-    .vue-votes .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    .vue-votes .vi-badge, .vue-accueil .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
       border: 1px solid var(--rule); border-radius: 99px; padding: 0.2rem 0.6rem; }
     /* Votes France : hémicycle plus large que le plan du Québec */
     @media (min-width: 1000px) { .vf .vi-haut { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
@@ -448,6 +448,21 @@
     #viEchelle > .vf-an { font-size: 0.78rem; margin-right: 2px; }
     .vf-mode-lab { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
     .vf-hors .vi-serres { margin-top: 8px; }
+    /* Accueil de la section : une carte par page */
+    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 18px; }
+    .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
+    .ac-carte:hover, .ac-carte:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
+    .ac-carte h3 { margin: 0; font-size: 1.25rem; }
+    .ac-chiffre { font: 800 2.2rem/1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
+    .ac-legende, .ac-phrase, .ac-dates { margin: 0; }
+    .ac-legende { font-size: 0.85rem; color: var(--muted); }
+    .ac-phrase { font-size: 0.88rem; line-height: 1.5; }
+    .ac-dates { font-size: 0.75rem; color: var(--muted); }
+    .ac-lien { font-size: 0.85rem; font-weight: 700; }
+    .ac-barre { position: relative; display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin: 4px 0; }
+    .ac-barre span { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 0.68rem; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+    .ac-barre i { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }
+    @media (prefers-reduced-motion: reduce) { .ac-carte { transition: none; } .ac-carte:hover { transform: none; } }
     .vf-sondmoy { display: grid; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--rule); }
     .vf-sondmoy[hidden] { display: none; }
     /* Votes Canada : Chambre des communes à l'horizontale (plus large que le plan du Québec), choix de la chambre affichée */
@@ -608,18 +623,23 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Élections générales du 5 octobre 2026 · résultats en direct</span><span class="t-votes">Votes Québec · démo (intentions fictives)</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes Québec · démo (intentions fictives)</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
       <div class="sc-groupe" role="presentation">
+        <span class="sc-groupe-titre">Section</span>
+        <div class="sc-groupe-btns">
+          <a class="sc-tab" href="intentions-simulations.html">
+            <b>Accueil</b><small>Vue d'ensemble</small>
+          </a>
+        </div>
+      </div>
+      <div class="sc-groupe" role="presentation">
         <span class="sc-groupe-titre">Intentions de vote</span>
         <div class="sc-groupe-btns">
-          <a class="sc-tab sc-live" href="intentions-simulations.html">
-            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Élection du 5 octobre 2026</small>
-          </a>
           <a class="sc-tab" href="votes-quebec.html" aria-current="page">
             <b>Votes Québec</b><small>Intentions de vote à jour</small>
           </a>

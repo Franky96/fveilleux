@@ -38,3 +38,9 @@ for c in el:
 print('vote',{p:round(v,1) for p,v in ns.items()})
 print('DIST',DIST); print('LIST',LIST)
 for p in P: print(p,'actuel',fptp[p],'circ',d[p],'rég',l[p],'total',d[p]+l[p])
+# résumé pour la page d'accueil de la section (intentions-simulations.html)
+src=D.get('source',{})
+json.dump({"source":src.get('type','qc125'),"texte":(f"résultat de l'élection du {src['texte']}" if src.get('type')=='election' else f"projection Qc125 du {D.get('maj',{}).get('texte','')}"),
+           "vote":{p:round(v,1) for p,v in ns.items()},"actuel":{p:fptp[p] for p in P},"loi39":{p:d[p]+l[p] for p in P},
+           "sieges_actuel":len(R),"sieges_loi39":sum(d.values())+sum(l.values())},
+          open('../loi39-resume.json','w',encoding='utf-8'),ensure_ascii=False,separators=(',',':'))

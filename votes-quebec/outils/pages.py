@@ -1,6 +1,6 @@
 """Section « Intentions de vote et simulations » : une page par onglet, tirées d'un même gabarit (pages.src.html).
 
-    intentions-simulations.html  accueil de la section (pour l'instant : résultats en direct)
+    intentions-simulations.html  accueil de la section (une carte par page ; live.js revient le soir d'une élection)
     votes-quebec.html            intentions de vote (résultat de l'élection jusqu'au premier sondage)
     loi39.html                   simulation de la loi 39
 
@@ -19,7 +19,7 @@ FICHIER = {"live": "intentions-simulations.html", "votes": "votes-quebec.html" i
            "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html"}
 PAGES = ["live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
-SCRIPTS = {"live": "votes-quebec/live.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
+SCRIPTS = {"live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
 
 src = open(os.path.join(ICI, "pages.src.html"), encoding="utf-8").read()
 src = re.sub(r"<!-- GABARIT :.*?-->\n", "", src, count=1)

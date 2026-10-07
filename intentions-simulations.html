@@ -414,7 +414,7 @@
     @media (prefers-reduced-motion: reduce) { .lv-seg, .lv-rid { transition: none; } }
     .loi39[hidden], .site-top .titre > [hidden] { display: none; }
     /* Onglet « Votes Québec » : intentions de vote (intentions.js) — mêmes jetons de couleur que « En direct » */
-    .vue-votes .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    .vue-votes .vi-badge, .vue-accueil .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
       border: 1px solid var(--rule); border-radius: 99px; padding: 0.2rem 0.6rem; }
     /* Votes France : hémicycle plus large que le plan du Québec */
     @media (min-width: 1000px) { .vf .vi-haut { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
@@ -446,6 +446,21 @@
     #viEchelle > .vf-an { font-size: 0.78rem; margin-right: 2px; }
     .vf-mode-lab { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
     .vf-hors .vi-serres { margin-top: 8px; }
+    /* Accueil de la section : une carte par page */
+    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 18px; }
+    .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
+    .ac-carte:hover, .ac-carte:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
+    .ac-carte h3 { margin: 0; font-size: 1.25rem; }
+    .ac-chiffre { font: 800 2.2rem/1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
+    .ac-legende, .ac-phrase, .ac-dates { margin: 0; }
+    .ac-legende { font-size: 0.85rem; color: var(--muted); }
+    .ac-phrase { font-size: 0.88rem; line-height: 1.5; }
+    .ac-dates { font-size: 0.75rem; color: var(--muted); }
+    .ac-lien { font-size: 0.85rem; font-weight: 700; }
+    .ac-barre { position: relative; display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin: 4px 0; }
+    .ac-barre span { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 0.68rem; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+    .ac-barre i { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }
+    @media (prefers-reduced-motion: reduce) { .ac-carte { transition: none; } .ac-carte:hover { transform: none; } }
     .vf-sondmoy { display: grid; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--rule); }
     .vf-sondmoy[hidden] { display: none; }
     /* Votes Canada : Chambre des communes à l'horizontale (plus large que le plan du Québec), choix de la chambre affichée */
@@ -606,18 +621,23 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live">Élections générales du 5 octobre 2026 · résultats en direct</span><span class="t-votes" hidden>Votes Québec · intentions de vote</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live">Intentions de vote et simulations · accueil</span><span class="t-votes" hidden>Votes Québec · intentions de vote</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
       <div class="sc-groupe" role="presentation">
+        <span class="sc-groupe-titre">Section</span>
+        <div class="sc-groupe-btns">
+          <a class="sc-tab" href="intentions-simulations.html" aria-current="page">
+            <b>Accueil</b><small>Vue d'ensemble</small>
+          </a>
+        </div>
+      </div>
+      <div class="sc-groupe" role="presentation">
         <span class="sc-groupe-titre">Intentions de vote</span>
         <div class="sc-groupe-btns">
-          <a class="sc-tab sc-live" href="intentions-simulations.html" aria-current="page">
-            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Élection du 5 octobre 2026</small>
-          </a>
           <a class="sc-tab" href="votes-quebec.html">
             <b>Votes Québec</b><small>Intentions de vote à jour</small>
           </a>
@@ -643,82 +663,16 @@
     </div>
   </nav>
 
-  <section class="vue-live" id="vue-live">
+  <section class="vue-live vue-accueil" id="vue-live">
     <div class="lv-wrap">
       <header class="lv-head">
         <div>
-          <span class="live-badge"><i class="sc-dot" aria-hidden="true"></i>En direct</span>
-          <h2>Élections générales du 5 octobre 2026</h2>
-          <p class="lv-etat" id="lvEtat" aria-live="polite">Chargement…</p>
-        </div>
-        <div class="lv-head-droite">
-          <button type="button" class="lv-particip" id="lvParticip" aria-pressed="false" title="Voir la participation par circonscription sur la carte" hidden><b>—</b><small>Participation</small></button>
-          <button type="button" class="lv-btn lv-maj-btn" id="lvMaj">Mettre à jour <small id="lvDecompte" aria-live="off">60 s</small></button>
+          <span class="vi-badge">Vue d'ensemble</span>
+          <h2>Intentions de vote et simulations</h2>
+          <p class="lv-etat">Projections et intentions de vote à jour, et simulation de la loi 39. Chaque carte mène à sa page ; les données sont vérifiées toutes les 3 heures.</p>
         </div>
       </header>
-      <p class="lv-banniere" id="lvBanniere" hidden></p>
-
-      <section class="lv-sieges" aria-labelledby="lvSiegesTitre">
-        <h3 id="lvSiegesTitre">Sièges</h3>
-        <div class="lv-barre-zone">
-          <div class="lv-barre" id="lvBarre"></div>
-          <div class="lv-maj" style="left:calc(100% * 64 / 127)"><span>Majorité : 64</span></div>
-        </div>
-        <p class="lv-muted lv-legende"><i class="lv-k plein"></i>élu·e (résultat final) <i class="lv-k pale"></i>en avance · sur 127 sièges</p>
-        <div class="lv-partis" id="lvPartis"></div>
-        <div class="lv-listelus" id="lvElus" aria-live="polite" hidden></div>
-      </section>
-
-      <div class="lv-grid">
-        <div class="lv-cartecard">
-          <div class="lv-zoom" id="lvZoom">
-            <button type="button" data-z="tout">Tout le Québec</button><button type="button" data-z="mtl">Grand Montréal</button><button type="button" data-z="qc">Québec</button>
-            <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
-            <span class="lv-groupe" role="group" aria-label="Affichage de la carte (un seul à la fois, ou aucun)"><button type="button" data-z="pred" id="lvPred" aria-pressed="false" title="Pastille sur chaque circonscription : gagnant prédit par la projection Qc125 d'avant le vote">Pastille prédiction</button><button type="button" data-z="cartepred" id="lvCartePred" aria-pressed="false" title="Carte entière colorée selon la projection Qc125 d'avant le vote">Carte prédiction</button><button type="button" data-z="particip" id="lvCarteParticip" aria-pressed="false" title="Taux de participation par circonscription : plus c'est blanc, plus la participation est forte (blanc = 100 %)">Participation</button></span>
-          </div>
-          <div class="lv-barre-plein" id="lvBarrePlein" aria-label="Sièges"></div>
-          <div class="lv-zoom lv-zoom-bas" id="lvZoomBas">
-            <span class="lv-menu-suivis">
-              <button type="button" id="lvCarteSuivis" aria-haspopup="true" aria-expanded="false" aria-pressed="false" title="Entourer sur la carte les circonscriptions suivies pour un parti">★ Suivis</button>
-              <span class="lv-menu" id="lvMenuSuivis" role="menu" hidden></span>
-            </span>
-            <button type="button" id="lvInfo" class="lv-info-btn" aria-pressed="false" title="Afficher la fiche de la circonscription par-dessus la carte">ⓘ Info</button>
-            <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
-          </div>
-          <svg id="lvCarte" role="img" aria-label="Carte des 127 circonscriptions, colorées selon le parti en tête"></svg>
-          <div class="lv-tip" id="lvTip" hidden></div>
-        </div>
-        <aside class="lv-panneau" id="lvPanneau" aria-live="polite"></aside>
-
-      <!-- suivi : circonscriptions suivies (étoiles, alertes) et tableau par parti, à droite de la carte sur grand écran -->
-      <div class="lv-suivi">
-        <section class="lv-carteS" aria-labelledby="lvSuiviesTitre">
-          <span class="lv-eyebrow">Mes circonscriptions</span>
-          <div class="lv-pp-tete">
-            <h3 id="lvSuiviesTitre">Suivies</h3>
-            <div class="lv-suiv-outils">
-              <button type="button" class="lv-suivre lv-proj-btn" id="lvSuivisDetail" aria-pressed="false" title="Rectangles détaillés : candidats, pourcentages et votes">Détaillé</button>
-              <button type="button" class="lv-suivre lv-proj-btn" id="lvSuivisProj" aria-pressed="false" title="Afficher les chiffres de la projection Qc125 d'avant le vote, même pendant le dépouillement">Prédictions</button>
-              <div class="lv-groupe" id="lvSuiviesChoix" role="group" aria-label="Parti des circonscriptions suivies"></div>
-            </div>
-          </div>
-          <div id="lvSuivies"></div>
-        </section>
-        <section class="lv-carteS lv-repli" id="lvPPSection" aria-labelledby="lvParPartiTitre" data-ferme>
-          <span class="lv-eyebrow">Suivi par parti</span>
-          <div class="lv-pp-tete">
-            <h3 id="lvParPartiTitre"><button type="button" class="lv-replier" id="lvPPReplier" aria-expanded="false" aria-controls="lvPPCorps">
-              <span class="lv-fleche" aria-hidden="true">▸</span>Choix des suivis</button></h3>
-            <div class="lv-groupe" id="lvPPChoix" role="group" aria-label="Parti à suivre"></div>
-          </div>
-          <div id="lvPPCorps"><div id="lvParParti"></div></div>
-        </section>
-      </div>
-      </div>
-      <div class="lv-alertes" id="lvAlertes" aria-live="assertive"></div>
-      <div class="lv-vtip" id="lvVTip" role="tooltip" hidden></div>
-      <div class="lv-photo" id="lvPhoto" aria-hidden="true" hidden></div>
-      <p class="lv-muted lv-source">Source : données ouvertes d'Élections Québec (résultats préliminaires, actualisés toutes les 2 à 5 minutes le soir du vote). Cette vue est temporaire.</p>
+      <div class="ac-cartes" id="acCartes"><p class="lv-muted">Chargement…</p></div>
     </div>
   </section>
 
@@ -726,7 +680,7 @@
 </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
-  <script type="module" src="votes-quebec/live.js"></script>
+  <script type="module" src="votes-quebec/accueil.js"></script>
   <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;font-family:system-ui,sans-serif;"></div>
   <script src="version.js"></script>
   <script src="theme-toggle.js"></script>
