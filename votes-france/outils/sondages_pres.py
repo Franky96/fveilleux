@@ -9,13 +9,13 @@ import json, os, re, urllib.request
 
 
 def verifie(page):
-    """Date de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
+    """Date et heure de la vérification (heure de Montréal) dans /votes-verif.json : affichée sur la page même si rien n'a changé."""
     import datetime, json as _j, os as _o, zoneinfo
     f = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "..", "..", "votes-verif.json")
     v = _j.load(open(f, encoding="utf-8")) if _o.path.exists(f) else {}
-    a = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")).date()
+    h = datetime.datetime.now(zoneinfo.ZoneInfo("America/Montreal")); a = h.date()
     m = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
-    v[page] = {"date": a.isoformat(), "texte": f"{a.day} {m[a.month - 1]} {a.year}"}
+    v[page] = {"date": a.isoformat(), "heure": h.strftime("%H:%M"), "texte": f"{a.day} {m[a.month - 1]} {a.year} à {h.hour} h {h.minute:02d}"}
     _j.dump(dict(sorted(v.items())), open(f, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
 ICI = os.path.dirname(os.path.abspath(__file__))
