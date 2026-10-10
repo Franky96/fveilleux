@@ -1,22 +1,22 @@
 {
  "canada": {
   "date": "2026-10-10",
-  "heure": "05:56",
-  "texte": "10 octobre 2026 à 5 h 56"
+  "heure": "13:23",
+  "texte": "10 octobre 2026 à 13 h 23"
  },
  "france": {
   "date": "2026-10-10",
-  "heure": "05:56",
-  "texte": "10 octobre 2026 à 5 h 56"
+  "heure": "13:23",
+  "texte": "10 octobre 2026 à 13 h 23"
  },
  "quebec": {
   "date": "2026-10-10",
-  "heure": "05:56",
-  "texte": "10 octobre 2026 à 5 h 56"
+  "heure": "13:23",
+  "texte": "10 octobre 2026 à 13 h 23"
  },
  "usa": {
   "date": "2026-10-10",
-  "heure": "05:56",
-  "texte": "10 octobre 2026 à 5 h 56"
+  "heure": "13:23",
+  "texte": "10 octobre 2026 à 13 h 23"
  }
 }
