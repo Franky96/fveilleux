@@ -18,7 +18,7 @@ const DATE_ELECTION = "2024-11-05";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
-const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }).replace(/^1 /, "1er ");
 
 // barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
 let VERIF = null;
@@ -115,10 +115,10 @@ function dessinerTete() {
     `consensus 270toWin du ${dateFr(TYPE === "sen" ? SEN().maj : PROJ.maj)} · vote générique au ${dateFr(mg.d)}`);
   document.querySelector(".vue-votes .vi-badge").textContent = TYPE === "sen" ? "États-Unis · Sénat" : "États-Unis · Chambre des représentants";
   $("viPlan").setAttribute("aria-label", TYPE === "sen" ? "Hémicycle du Sénat (100 sièges)" : "Hémicycle de la Chambre des représentants (435 sièges)");
-  const sond = SOND.sondages, dernier = sond[sond.length - 1], m = SOND.moyenne[SOND.moyenne.length - 1];
   $("viTitre").textContent = TYPE === "sen" ? "Sénat : projection" : "Chambre des représentants : projection";
-  $("viSource").innerHTML = TYPE === "sen" ? `Sénat · consensus de 270toWin du ${dateFr(SEN().maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})` : `Chambre des représentants · consensus de 270toWin du ${dateFr(PROJ.maj)} · vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} % (moyenne de Silver Bulletin, ${dateFr(m.d)})`;
-  $("viNote").textContent = TYPE === "sen" ? "Projection : chaque État où un siège est en jeu est coloré selon la cote de sa course dans le consensus de sept prévisionnistes ; les sièges non renouvelés gardent leur parti." : "Projection : chaque district est coloré selon sa cote dans le consensus de sept prévisionnistes (sûr, probable, penché ou à égalité). Les prévisionnistes ne publient pas de pourcentage par district.";
+  // les dates (consensus, vote générique, vérification) sont dans la barre du haut : ici, seulement ce qu'elle ne dit pas
+  $("viSource").innerHTML = `Source : consensus de sept prévisionnistes (270toWin) · vote générique : D ${nf(mg.D, 1)} %, R ${nf(mg.R, 1)} % (moyenne de Silver Bulletin)`;
+  $("viNote").textContent = ""; $("viNote").hidden = true;
   let ex = $("vfExplic");
   if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
   ex.innerHTML = TYPE === "sen" ? `<p>Le Sénat compte 100 sénateurs, deux par État, élus pour six ans ; un tiers des sièges est renouvelé tous les deux ans. À la prochaine élection, 35 sièges sont en jeu : les 33 sièges ordinaires et deux élections partielles (Ohio et Floride). La majorité est de 51 sièges ; à 50 contre 50, le vice-président (JD Vance, républicain) départage.</p>` : `<p>Les 435 membres de la Chambre des représentants sont élus pour deux ans, un par district. En général, le candidat qui a le plus de voix l'emporte (l'Alaska et le Maine utilisent le vote préférentiel). Il faut 218 sièges pour la majorité. Neuf États ont redessiné leurs districts depuis 2024 : la projection utilise les districts de 2026, la Chambre actuelle et l'élection de 2024 ceux de 2024.</p>`;
@@ -138,7 +138,7 @@ function dessinerChambre() {
   const somme = side => d3.sum(parts.filter(p => (p.k[0] === side)), p => p.n);
   if (etat.chambre === "proj") {
     const d = somme("D"), r = somme("R"), t = SIEGES - d - r;
-    eb.textContent = `Chambre des représentants · consensus du ${dateFr(PROJ.maj)}`;
+    eb.textContent = "Chambre des représentants · consensus 270toWin";
     $("viSiegesTitre").textContent = d >= MAJ ? `Démocrates favoris : ${d} sièges (majorité ${MAJ})` : r >= MAJ ? `Républicains favoris : ${r} sièges (majorité ${MAJ})` : `Aucun camp n'atteint ${MAJ} : D ${d}, R ${r}, ${t} à égalité`;
   } else {
     const n = Object.fromEntries(parts.map(p => [p.k, p.n])), lead = (n.D || 0) >= (n.R || 0) ? "D" : "R";
@@ -154,7 +154,7 @@ function dessinerChambreSenat() {
   const tot = f => d3.sum(parts.filter(f), p => p.n);
   if (etat.chambre === "proj") {
     const d = tot(p => p.k[0] === "D" || p.k === "nD" || p.k === "nI"), r = tot(p => p.k[0] === "R" || p.k === "nR"), t = 100 - d - r;
-    eb.textContent = `Sénat · consensus du ${dateFr(SEN().maj)}`;
+    eb.textContent = "Sénat · consensus 270toWin";
     $("viSiegesTitre").textContent = d >= 51 ? `Démocrates favoris : ${d} sièges (majorité 51)` : r >= 50 ? `Républicains favoris : ${r} sièges${r === 50 ? " avec le vice-président" : ""}` : `Aucun camp favori : D ${d}, R ${r}, ${t} à égalité`;
   } else {
     const n = Object.fromEntries(parts.map(p => [p.k, p.n]));
@@ -430,7 +430,7 @@ function panneauSenat(z) {
   const courses = fips.filter(f => course(f)), egal = courses.filter(f => coteSen(f) === "T");
   const bascules = courses.filter(f => { const c = course(f), k = camp(c.r); return k !== "T" && ["D", "R"].includes(c.held) && k !== (c.held === "I" ? "D" : c.held); });
   const nonren = Object.fromEntries(parts.filter(p => p.k[0] === "n").map(p => [p.k.slice(1), p.n]));
-  z.innerHTML = `${menu}<span class="lv-eyebrow">Consensus de 270toWin · ${dateFr(SEN().maj)}</span><h3>Tous les États-Unis</h3>
+  z.innerHTML = `${menu}<span class="lv-eyebrow">Consensus de 270toWin</span><h3>Tous les États-Unis</h3>
     <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL.D}"></i>D favoris : ${d}</span><span class="vi-pill"><i style="background:${COUL.R}"></i>R favoris : ${r}</span><span class="vi-pill"><i style="background:${COTE.T[0]}"></i>À égalité : ${100 - d - r}</span><span class="vi-pill">Majorité : 51</span></div>
     ${explicationCotes()}
     <p class="lv-muted">Sièges favoris = sièges non renouvelés en 2026 (${nonren.D || 0} D, ${nonren.I || 0} indépendants, ${nonren.R || 0} R) + courses de 2026 qui penchent vers chaque parti. Clique sur un État pour son détail.</p>
@@ -448,9 +448,9 @@ function dessinerPanneau() {
       const d = d3.sum(["D3", "D2", "D1"], r => n[r] || 0), r = d3.sum(["R3", "R2", "R1"], k => n[k] || 0), t = n.T || 0;
       const egal = ids.filter(id => PROJ.circ[id].r === "T"), penches = ids.filter(id => ["D1", "R1"].includes(PROJ.circ[id].r));
       const bascules = ids.filter(id => { const c = PROJ.circ[id], k = camp(c.r); return k !== "T" && ["D", "R"].includes(c.held) && k !== c.held; });
-      z.innerHTML = `${menuEtats()}<span class="lv-eyebrow">Consensus de 270toWin · ${dateFr(PROJ.maj)}</span><h3>${esc(nomZ)}</h3>
+      z.innerHTML = `${menuEtats()}<span class="lv-eyebrow">Consensus de 270toWin</span><h3>${esc(nomZ)}</h3>
         <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL.D}"></i>D favoris : ${d}</span><span class="vi-pill"><i style="background:${COUL.R}"></i>R favoris : ${r}</span><span class="vi-pill"><i style="background:${COTE.T[0]}"></i>À égalité : ${t}</span>${etat.st ? `<span class="vi-pill">${ids.length} district${ids.length > 1 ? "s" : ""}</span>` : `<span class="vi-pill">Majorité : ${MAJ}</span>`}</div>
-        <p class="lv-muted">Cote de chaque district selon sept prévisionnistes. Clique sur un district pour son détail.</p>
+        <p class="lv-muted">Cote de chaque district selon sept prévisionnistes (ils ne publient pas de pourcentage par district). Clique sur un district pour son détail.</p>
         ${explicationCotes()}
         <span class="lv-eyebrow">Districts par cote</span><div class="vi-vrows">${COTES.map(k => ligne(COTE[k][1], COTE[k][0], n[k] || 0, etat.st ? ids.length : 200)).join("")}</div>
         <span class="lv-eyebrow">Courses à égalité</span>${liste(egal, () => COTE.T[0], id => detenu(PROJ.circ[id]))}
@@ -463,7 +463,7 @@ function dessinerPanneau() {
     if (g === "act") {
       const n = {}; ids.forEach(id => { const a = PROJ.actuel[id]; const k = a ? a.p : "VAC"; n[k] = (n[k] || 0) + 1; });
       const vac = ids.filter(id => !PROJ.actuel[id]);
-      z.innerHTML = `${menuEtats()}<span class="lv-eyebrow">Chambre actuelle · Clerk de la Chambre, ${dateFr(PROJ.clerk)}</span><h3>${esc(nomZ)}</h3>
+      z.innerHTML = `${menuEtats()}<span class="lv-eyebrow">Chambre actuelle · Clerk de la Chambre</span><h3>${esc(nomZ)}</h3>
         <div class="vi-pills">${["R", "D"].map(k => `<span class="vi-pill"><i style="background:${COUL[k]}"></i>${NOMS[k]} : ${n[k] || 0}</span>`).join("")}${n.VAC ? `<span class="vi-pill">${n.VAC} vacant${n.VAC > 1 ? "s" : ""}</span>` : ""}</div>
         <p class="lv-muted">Membres en exercice, dans les districts de 2024 (élus en 2024 ou lors d'une élection partielle).</p>
         <span class="lv-eyebrow">Sièges par parti</span><div class="vi-vrows">${["R", "D", "I", "VAC"].filter(k => n[k]).map(k => ligne(k === "VAC" ? "Vacants" : k, k === "VAC" ? "var(--muted)" : COUL[k], n[k], etat.st ? ids.length : 240, k === "VAC" ? "" : `${nf(100 * n[k] / ids.length, 1)} %`)).join("")}</div>
@@ -487,7 +487,7 @@ function dessinerPanneau() {
   const blocProj = c ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COTE[c.r]?.[0]}"></i>Cote : ${COTE[c.r]?.[1]}</span><span class="vi-pill">${detenu(c).replace("détenu", "Détenu").replace("nouveau", "Nouveau")}</span></div>
       <p class="lv-muted">Sortant : ${esc(c.rep || "—")}${c.ret ? " (ne se représente pas)" : ""}${c.mp != null ? ` · présidentielle 2024 sur ce district : ${c.mp < 0 ? "R" : "D"}+${nf(Math.abs(c.mp), 1)}` : ""}</p>
       ${c.cands.length ? `<ul class="vi-cands">${c.cands.map(k => `<li style="--c:${COUL[k.p] || COUL.AUT}"><i></i><span>${esc(k.nom)}${k.inc ? " <small>(sortant)</small>" : ""}</span><em>${esc(k.p)}</em><b></b></li>`).join("")}</ul>` : ""}` : "";
-  const titreProj = `Projection 2026 · consensus du ${dateFr(PROJ.maj)}${g !== "proj" && redec ? " (district redessiné)" : ""}`;
+  const titreProj = `Projection 2026 · consensus${g !== "proj" && redec ? " (district redessiné)" : ""}`;
   const titre24 = `Élection du 5 novembre 2024${g === "proj" && redec ? " (anciens districts)" : ""}`;
   const depute = `<p class="vi-elu" style="--c:${a ? COUL[a.p] || COUL.AUT : "var(--soft)"}">${a ? `<b>${esc(a.nom)}</b> · ${NOMS[a.p] || a.p}` : "<b>Siège vacant</b>"}</p>`;
   z.innerHTML = `<span class="lv-eyebrow">District · ${esc(ETAT_NOM[AB_DE[id.slice(0, 2)]])}</span><h3>${esc(nomDe(id))}</h3>

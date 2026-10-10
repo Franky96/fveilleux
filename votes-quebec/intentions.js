@@ -13,7 +13,7 @@ const DATE_ELECTION = "2026-10-05";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
-const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }).replace(/^1 /, "1er ");
 
 // barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
 let VERIF = null;
@@ -88,7 +88,8 @@ function construireEtat() {
   P5.forEach(p => nat[p] = 100 * nat[p] / somme);
   const dernier = apres[apres.length - 1];
   return { titre: "Intentions de vote", national: nat, sieges, circ, libProj: "Projection Qc125",
-    source: `Projection Qc125 du ${DATA.maj?.texte || "—"} · dernier sondage : ${esc(dernier.f)}, ${dateFr(dernier.d)}`,
+    // les dates (projection, dernier sondage) sont dans la barre du haut
+    source: `Source : Qc125 · dernier sondage : ${esc(dernier.f)}`,
     note: `${apres.length} sondage${apres.length > 1 ? "s" : ""} publié${apres.length > 1 ? "s" : ""} depuis l'élection.` };
 }
 

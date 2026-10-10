@@ -22,7 +22,7 @@ const COUL = { EXG: "#7A1A1A", NFP: "#CC2443", DVG: "#F09AC0", REG: "#6E6585", E
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
-const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }).replace(/^1 /, "1er ");
 
 // barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
 let VERIF = null;
@@ -45,7 +45,7 @@ const MODES = { leg: { actuel: [["actuel", "Députés"]], titre: "Élection", an
 // année d'un résultat, en évidence (pastille contrastée)
 const AN = a => `<span class="vf-an">${a}</span>`;
 // date avec l'année en pastille ; période sur une même année : « 1 septembre – 29 septembre 2026 »
-const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" });
+const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" }).replace(/^1 /, "1er ");
 const dateAn = iso => `${jourMois(iso)} ${AN(iso.slice(0, 4))}`;
 const periodeAn = (de, a) => de.slice(0, 4) === a.slice(0, 4) ? `${jourMois(de)} – ${dateAn(a)}` : `${dateAn(de)} – ${dateAn(a)}`;
 const coulC = n => FAMILLE[P22.candidats[n]?.parti || PRES.candidats[n]?.parti] || P22.candidats[n]?.c || PRES.candidats[n]?.c || "#8D949A";
@@ -92,19 +92,20 @@ function dessinerTete() {
   if (TYPE === "pres") {
     const [top] = p.moy;
     $("viTitre").textContent = "Présidentielle 2027 : intentions de vote";
-    $("viSource").innerHTML = `Moyenne de ${p.n} sondages du ${dateFr(p.de)} au ${dateFr(p.a)} (1er tour) · premier tour en avril 2027`;
-    $("viNote").textContent = "Les candidats testés varient d'un sondage à l'autre (plusieurs scénarios) : la moyenne garde le premier scénario de chaque sondage. La carte montre le 1er tour de la présidentielle de 2022 dans chaque circonscription.";
+    // les dates (dernier sondage, vérification) sont dans la barre du haut : ici, seulement ce qu'elle ne dit pas
+    $("viSource").innerHTML = `Premier tour en avril 2027 · moyenne des sondages publiés depuis le ${dateFr(p.de)}`;
+    $("viNote").textContent = "Les candidats testés varient d'un sondage à l'autre (plusieurs scénarios) : la moyenne garde le premier scénario de chaque sondage.";
     eyebrow.textContent = `1er tour · moyenne de ${p.n} sondages`;
     $("viSiegesTitre").textContent = `${nomCourt(top[0])} en tête : ${nf(top[1], 1)} %`;
     const max = Math.max(40, top[1]);
     bloc.innerHTML = p.moy.filter(([, v]) => v >= 1).map(([k, v]) => `<div class="vf-cand" style="--c:${coulC(k)}"><span><b>${esc(k)}</b><small>${esc(parti22(k))}${P22.national[k] != null ? ` · ${AN(2022)} ${nf(P22.national[k], 1)} %` : ""}</small></span>`
       + `<span class="vf-cand-barre"><i style="width:${100 * v / max}%"></i></span><b class="vf-cand-v">${nf(v, 1)} %</b></div>`).join("")
-      + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour. En ${AN(2022)} : ${Object.entries(P22.national).slice(0, 3).map(([k, v]) => `${esc(nomCourt(k))} ${nf(v, 1)} %`).join(" · ")}.</p>`;
+      + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour.</p>`;
     return;
   }
   eyebrow.textContent = `Assemblée nationale · 577 sièges · majorité absolue ${MAJ}`;
   $("viTitre").textContent = "Législatives : l'Assemblée actuelle";
-  $("viSource").innerHTML = `Assemblée nationale au ${dateFr(A.date)} (députés en exercice) · élue en juillet 2024`;
+  $("viSource").innerHTML = "Députés en exercice · Assemblée élue en juillet 2024";
   $("viNote").textContent = "Aucun sondage d'intentions de vote aux législatives n'a été publié depuis octobre 2025 (registre de la Commission des sondages) : la page montre l'Assemblée telle qu'elle est aujourd'hui. Prochaines législatives au plus tard en 2029, sauf dissolution.";
   $("viSiegesTitre").textContent = lead.n >= MAJ ? `${lead.nom} : ${lead.n} sièges, majorité absolue` : `Aucune majorité absolue · premier groupe : ${lead.id} (${lead.n} sièges)`;
   hemicycle($("viPlan"), [...A.groupes.map(g => ({ k: g.id, n: g.n, c: g.c, nom: g.nom })), ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant" }] : [])]);
@@ -371,7 +372,7 @@ function dessinerPanneau() {
       <ul class="vi-serres">${horsCarte.map(c => `<li data-id="${c.id}" tabindex="0" style="--c:${couleur(c)}"><i></i>${esc(c.n)}<b>${droite(c)}</b></li>`).join("")}</ul></details>`;
     if (etat.mode === "actuel") {
       const groupes = A.groupes.slice().sort((a, b) => b.n - a.n), lead = groupes[0];
-      z.innerHTML = `<span class="lv-eyebrow">Assemblée nationale · ${dateAn(A.date)}</span><h3>Toute la France</h3>
+      z.innerHTML = `<span class="lv-eyebrow">Assemblée nationale actuelle</span><h3>Toute la France</h3>
         <div class="vi-pills"><span class="vi-pill"><i style="background:${lead.c}"></i>Premier groupe : ${esc(lead.id)} ${lead.n} / 577</span><span class="vi-pill">Majorité absolue : ${MAJ}</span>${A.vacants ? `<span class="vi-pill">${A.vacants} sièges vacants</span>` : ""}</div>
         <span class="lv-eyebrow">Groupes parlementaires</span>
         <div class="vi-vrows">${groupes.map(g => `<div class="vi-vrow vf-gp" title="${esc(g.nom)}"><b style="color:${g.c}">${esc(g.id)}</b><span class="vi-jauge"><i style="width:${100 * g.n / 130}%;background:${g.c}"></i></span><span class="vi-num"><b>${g.n}</b></span><span class="vi-num"><small>${nf(100 * g.n / 577, 1)} %</small></span></div>`).join("")}</div>
@@ -431,13 +432,13 @@ function donneesSerie() {
     const lignes = Object.entries(cands).filter(([, v]) => d3.mean(v) >= 4 && v.length >= 3).map(([k]) => k);
     return { lignes, lab: k => nomCourt(k), coul: k => PRES.candidats[k]?.c || "#8D949A", debut: "2023-03-01", sigma: 30,
       points: PRES.sondages.map(x => ({ d: x.d, f: x.f, n: x.n, v: x.v })), elections: [], titre: `Présidentielle ${AN(2027)} · 1er tour`,
-      note: n => `${n} sondage${n > 1 ? "s" : ""} sur la période (1er tour, premier scénario de chaque sondage : les candidats testés varient d'un sondage à l'autre ; source : tableau Wikipédia qui cite la notice de chaque sondage). Lignes : tendance · points : sondages.` };
+      note: n => `${n} sondage${n > 1 ? "s" : ""} sur la période (1er tour, premier scénario de chaque sondage ; source : tableau Wikipédia qui cite la notice de chaque sondage). Lignes : tendance · points : sondages.` };
   }
   const lignes = ["NFP", "ENS", "LR", "RN", "EXD"];
   return { lignes, lab: k => COURT[k], coul: k => COUL[k], debut: "2024-06-01", sigma: 45,
     points: SOND.sondages.filter(x => !x.e).map(x => ({ d: x.d, f: x.f, n: x.n, v: Object.fromEntries(BLOCS.filter(b => x[b] != null).map(b => [b, x[b]])) })),
     elections: SOND.sondages.filter(x => x.e).map(x => ({ d: x.d, v: Object.fromEntries(BLOCS.map(b => [b, x[b] || 0])) })), titre: "Législatives · 1er tour",
-    note: n => `${n} sondage${n > 1 ? "s" : ""} sur la période (intentions de vote aux législatives, premier scénario ; aucun publié depuis octobre 2025). Lignes : tendance · points : sondages · losanges : 1er tour de 2024.` };
+    note: n => `${n} sondage${n > 1 ? "s" : ""} sur la période (intentions de vote aux législatives, premier scénario). Lignes : tendance · points : sondages · losanges : 1er tour de 2024.` };
 }
 function dessinerEvolution() {
   const S = donneesSerie();
@@ -503,7 +504,7 @@ function dessinerEvolution() {
   if (!boite) { boite = document.createElement("div"); boite.id = "vfSondMoy"; boite.className = "vf-sondmoy"; $("viEvolNote").before(boite); }
   const rs = TYPE === "leg" ? moyenneRecente() : null;
   boite.hidden = !rs;
-  if (rs) boite.innerHTML = `<span class="lv-eyebrow">Derniers sondages · moyenne des ${rs.n} derniers (${rs.firmes.map(esc).join(", ")}), jusqu'au ${dateAn(rs.a)}</span>
+  if (rs) boite.innerHTML = `<span class="lv-eyebrow">Derniers sondages · moyenne des ${rs.n} derniers (${rs.firmes.map(esc).join(", ")})</span>
     <div class="vf-legende">${BLOCS.filter(b => rs.moy[b] >= 1).sort((a, b) => rs.moy[b] - rs.moy[a]).map(b => `<span style="--c:${COUL[b]}"><i></i>${COURT[b]} <b>${nf(rs.moy[b], 1)} %</b></span>`).join("")}</div>`;
 }
 // choix législatives / présidentielle, en haut de la page : change toute la page

@@ -15,7 +15,7 @@ const DATE_ELECTION = "2025-04-28";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
-const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }).replace(/^1 /, "1er ");
 
 // barre du haut : date des données et dernière vérification (votes-verif.json, écrit chaque jour par le pipeline aux 3 heures)
 let VERIF = null;
@@ -26,7 +26,7 @@ function majBarre(nom, donnees) {
 }
 // années : texte normal (pas de pastille, contrairement à Votes France)
 const AN = a => String(a);   // années en texte normal sur cette page
-const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" });
+const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" }).replace(/^1 /, "1er ");
 const dateAn = iso => `${jourMois(iso)} ${AN(iso.slice(0, 4))}`;
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
@@ -119,9 +119,10 @@ function dessinerTete() {
   const sond = SOND.sondages.filter(s => !s.e && s.d > DATE_ELECTION), dernier = sond[sond.length - 1];
   majBarre("Votes Canada", `projection Qc125 du ${dateFr(PROJ.maj.date)}${dernier ? ` · dernier sondage le ${dateFr(dernier.d)}` : ""}`);
   $("viTitre").textContent = "Intentions de vote fédérales";
-  $("viSource").innerHTML = `Projection Qc125 du ${dateAn(PROJ.maj.date)} · ${sond.length} sondages depuis l'élection du 28 avril ${AN(2025)}`
-    + (dernier ? ` · dernier : ${esc(dernier.f)}, ${dateAn(dernier.d)}` : "");
-  $("viNote").textContent = "Projection : chaque circonscription est colorée selon le parti en tête dans la projection de Qc125 ; le nombre de sièges est celui de Qc125 (moyenne de ses simulations), avec sa fourchette.";
+  // les dates (projection, dernier sondage, vérification) sont dans la barre du haut : ici, seulement ce qu'elle ne dit pas
+  $("viSource").innerHTML = `Source : Qc125 · ${sond.length} sondages depuis l'élection du 28 avril ${AN(2025)}`
+    + (dernier ? ` · dernier sondage : ${esc(dernier.f)}` : "");
+  $("viNote").textContent = ""; $("viNote").hidden = true;
   let ex = $("vfExplic");
   if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
   ex.innerHTML = `<p>Les 343 députés de la Chambre des communes sont élus au scrutin majoritaire à un tour, un par circonscription : le candidat qui a le plus de voix l'emporte, même sans majorité. Le parti qui obtient la confiance de la Chambre forme le gouvernement ; avec 172 sièges ou plus, il est majoritaire. La prochaine élection est prévue au plus tard le 15 octobre ${AN(2029)}, sauf dissolution.</p>`;
@@ -143,7 +144,7 @@ function dessinerChambre() {
   $("viSiegesTitre").textContent = etat.chambre === "act" ? `${NOMS[lead]} : ${s[lead]} sièges, gouvernement ${statut}`
     : etat.chambre === "e25" ? `${NOMS[lead]} : ${s[lead]} sièges élus, gouvernement ${statut}` : `${NOMS[lead]} : ${s[lead]} sièges, gouvernement ${statut}`;
   const eb = $("viPlan").closest("section").querySelector(".lv-eyebrow");
-  eb.innerHTML = etat.chambre === "proj" ? `Chambre des communes · projection du ${dateAn(PROJ.maj.date)}`
+  eb.innerHTML = etat.chambre === "proj" ? "Chambre des communes · projection Qc125"
     : etat.chambre === "act" ? "Chambre des communes · composition actuelle" : `Chambre des communes · élection du 28 avril ${AN(2025)}`;
   chambre($("viPlan"), s, SIEGES);
   $("viLegende").innerHTML = [...SEAT_ORDER].filter(p => s[p]).sort((a, b) => (a === "VAC") - (b === "VAC") || s[b] - s[a])
@@ -380,7 +381,7 @@ function dessinerPanneau() {
       const parts = Object.keys(NN).filter(p => NN[p].v >= 0.5).sort((a, b) => (NN[b].s || 0) - (NN[a].s || 0) || NN[b].v - NN[a].v);
       const serres = CP.map((c, i) => [i, c]).filter(([i, c]) => c && c.marge < 5 && dans(i)).sort((a, b) => a[1].marge - b[1].marge);
       const bascules = CP.map((c, i) => [i, c]).filter(([i, c]) => c && CE[i] && c.g !== CE[i].g && dans(i));
-      z.innerHTML = `${tete(`Projection Qc125 · ${dateAn(PROJ.maj.date)}`, s)}
+      z.innerHTML = `${tete("Projection Qc125", s)}
         <p class="lv-muted">Si l'élection avait lieu aujourd'hui. ${R && !R.parts ? "Vote : moyenne simple des circonscriptions (Qc125 ne publie pas de projection pour cette province seule)." : "Sièges : moyenne des simulations de Qc125, suivie de sa fourchette."} Clique sur une circonscription pour son détail.</p>
         <span class="lv-eyebrow">Vote et sièges projetés${R ? ` · ${esc(R.nom)}` : ""}</span><div class="vi-vrows">${parts.map(p => jauge(p, COUL[p], NN[p].v, `<b>${NN[p].s || 0}</b>${NN[p].smax != null ? ` <small>${NN[p].smin}–${NN[p].smax}</small>` : ""}`, 60, "vc-proj")).join("")}</div>
         <details class="lv-sg vc-replie"><summary><span>Par rapport à l'élection de ${AN(2025)}</span></summary>
@@ -407,7 +408,7 @@ function dessinerPanneau() {
     }
     const changes = CA.map((a, i) => [i, a]).filter(([i, a]) => (!a || a.note) && dans(i));
     z.innerHTML = `${tete("Chambre des communes · composition actuelle", act)}
-      <p class="lv-muted">Député de chaque circonscription aujourd'hui, changements de parti compris (carte de Qc125, ${dateAn(PROJ.maj.date)}).</p>
+      <p class="lv-muted">Député de chaque circonscription aujourd'hui, changements de parti compris (carte de Qc125).</p>
       <span class="lv-eyebrow">Sièges par parti</span>
       <div class="vi-vrows">${SEAT_ORDER.filter(p => act[p]).map(p => `<div class="vi-vrow vf-gp"><b style="color:${p === "VAC" ? "var(--muted)" : COUL[p]}">${p === "VAC" ? "Vacants" : p}</b><span class="vi-jauge"><i style="width:${100 * act[p] / (R ? total : 200)}%;background:${p === "VAC" ? "var(--muted)" : COUL[p]}"></i></span><span class="vi-num"><b>${act[p]}</b></span><span class="vi-num"><small>${p === "VAC" ? "" : `${ecart(act[p] - (e25[p] || 0))} depuis ${AN(2025)}`}</small></span></div>`).join("")}</div>
       <span class="lv-eyebrow">Changements depuis l'élection : sièges vacants et changements de parti</span>
@@ -421,8 +422,8 @@ function dessinerPanneau() {
     + `<span class="vi-num">${nf(v, moe ? 0 : 1)} %</span><span class="vi-num">${moe && moe[p] != null ? `<small>± ${moe[p]}</small>` : ""}</span></div>`).join("");
   // le bloc qui ne correspond pas à la carte est replié : 2025 en mode projection, projection en mode Députés ou 2025
   const replie = (titre, corps) => `<details class="lv-sg vc-replie"><summary><span>${titre}</span></summary><div class="vi-vrows">${corps}</div></details>`;
-  const blocProj = !cp ? "" : g === "proj" ? `<span class="lv-eyebrow">Projection Qc125 · ${dateAn(PROJ.maj.date)}</span><div class="vi-vrows">${lignes(cp, cp.moe)}</div>`
-    : replie(`Projection Qc125 · ${dateAn(PROJ.maj.date)}`, lignes(cp, cp.moe));
+  const blocProj = !cp ? "" : g === "proj" ? `<span class="lv-eyebrow">Projection Qc125</span><div class="vi-vrows">${lignes(cp, cp.moe)}</div>`
+    : replie("Projection Qc125", lignes(cp, cp.moe));
   const blocE25 = !ce ? "" : g === "proj" ? replie(`Élection du 28 avril ${AN(2025)}`, lignes(ce))
     : `<span class="lv-eyebrow">Élection du 28 avril ${AN(2025)}</span><div class="vi-vrows">${lignes(ce)}</div>`;
   const depute = `<p class="vi-elu" style="--c:${a ? COUL[a.p] || COUL.AUT : "var(--soft)"}">${a ? `<b>${esc(a.nom)}</b> · ${NOMS[a.p] || a.p}${a.note ? ` <small>(${esc(a.note)})</small>` : ""}` : "<b>Siège vacant</b> (élection partielle à venir)"}</p>`;
