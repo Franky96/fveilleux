@@ -44,11 +44,12 @@ function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donne
 }
 
 async function demarrer() {
-  const [V, QE, QS, CP, CS, UP, US, FA, FP, L39] = await Promise.all([
+  const [V, QE, QS, CP, CS, UP, US, FA, FP, L39, UPR] = await Promise.all([
     lireJ("votes-verif.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"),
     lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"),
     lireJ("votes-usa/projection.json"), lireJ("votes-usa/sondages.json"),
-    lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json")]);
+    lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json"),
+    lireJ("votes-usa/presidentielle.json")]);
   const v = V || {}, cartes = [];
 
   // Loi 39 : simulation sur les votes du Québec, en petit dans la carte de Votes Québec
@@ -94,10 +95,17 @@ async function demarrer() {
       sen = ` Sénat : D ${k.D}, R ${k.R}, ${k.T} à égalité (majorité 51).`;
     }
     const m = US?.moyenne?.[US.moyenne.length - 1];
+    // présidentielle 2028 : meneur de chaque primaire (moyenne des sondages des 30 jours précédant le dernier, comme la page)
+    const meneur = p => { const S = UPR?.primaires?.[p]?.sondages; if (!S?.length) return null;
+      const fin = new Date(S[S.length - 1].d), rec = S.filter(x => (fin - new Date(x.d)) / 864e5 <= 30), r = rec.length >= 5 ? rec : S.slice(-5), c = {};
+      r.forEach(x => Object.entries(x.v).forEach(([k, v]) => (c[k] ||= []).push(v)));
+      const [k, v] = Object.entries(c).map(([k, v]) => [k, v.reduce((a, b) => a + b, 0) / v.length]).sort((a, b) => b[1] - a[1])[0];
+      return `${esc(k.split(" ").slice(-1)[0])} (${nf(v, 0)} %)`; };
+    const pres = meneur("D") && meneur("R") ? ` Présidentielle 2028, en tête des primaires : ${meneur("D")} chez les démocrates, ${meneur("R")} chez les républicains.` : "";
     cartes.push(carte({ url: "votes-usa.html", eyebrow: "Projection · États-Unis", titre: "Votes États-Unis",
       chiffre: `D ${d} · R ${r}`, legende: `sièges favoris à la Chambre (sur 435, majorité 218) · ${t} à égalité`,
       barreHtml: barre(["D3", "D2", "D1", "T", "R1", "R2", "R3"].map(k => ({ lab: k[0] === "T" ? "Égalité" : k[0], n: n[k] || 0, c: CU[k] })), 435, 218),
-      phrase: `Chambre des représentants, consensus de sept prévisionnistes.${sen}${m ? ` Vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} %.` : ""}`,
+      phrase: `Chambre des représentants, consensus de sept prévisionnistes.${sen}${m ? ` Vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} %.` : ""}${pres}`,
       donnees: `consensus 270toWin du ${dateFr(UP.maj)}${m ? ` · vote générique au ${dateFr(m.d)}` : ""}`, verif: v.usa }));
   }
   // Votes France : Assemblée actuelle et présidentielle 2027

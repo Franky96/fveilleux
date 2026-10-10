@@ -1,8 +1,11 @@
-/* Votes États-Unis — projections pour le Congrès (Chambre des représentants et Sénat) ; même gabarit que « Votes Canada ».
+/* Votes États-Unis — projections pour le Congrès (Chambre des représentants et Sénat) et intentions de vote pour la
+   présidentielle de 2028 ; même gabarit que « Votes Canada ».
    Projection : cote de chaque district selon le consensus de 270toWin (7 prévisionnistes), sur les districts de 2026
    (projection.json, outils/usa.py). Chambre actuelle : membres en exercice selon le Clerk de la Chambre. Élection de 2024 :
    résultat de chaque district (resultats-2024.json, outils/resultats24.py). Chambre actuelle et 2024 : districts de 2024
    (9 États ont été redécoupés depuis). Évolution : vote générique, moyenne et sondages de Silver Bulletin (sondages.json).
+   Présidentielle : sondages des primaires et duels de l'élection générale (presidentielle.json, outils/presidentielle.py),
+   résultats de 2024 et 2020 par État (presidentielles.json, outils/resultats_pres.py).
    Contours : data.json (outils/usa_geo.py, carte de 270toWin). */
 
 const SIEGES = 435, MAJ = 218;
@@ -31,20 +34,24 @@ const AN = a => String(a);
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
 
-// type de page : Chambre des représentants (« ch ») ou Sénat (« sen ») — choix en haut de la page, comme Votes France
-let TYPE = location.hash === "#senat" ? "sen" : location.hash === "#chambre" ? "ch" : lireLS("vuType", "ch");
-let DATA, PROJ, R24, SOND, NOM26 = {}, NOM24 = {}, AB_DE = {}, ETAT_NOM = {}, F26, F24, sel = null, demarre = false;
-const etat = { mode: "cote", parti: null, pct: lireLS("viPct", true), chambre: "proj", st: null };
-const groupe = () => etat.mode === "act" ? "act" : etat.mode.startsWith("e24") ? "e24" : "proj";
+// type de page : Chambre des représentants (« ch »), Sénat (« sen ») ou présidentielle (« pres ») — choix en haut de la page, comme Votes France
+const HASH = { ch: "#chambre", sen: "#senat", pres: "#presidentielle" };
+let TYPE = Object.keys(HASH).find(k => HASH[k] === location.hash) || lireLS("vuType", "ch");
+if (!HASH[TYPE]) TYPE = "ch";
+let DATA, PROJ, R24, SOND, PRES, RP, NOM26 = {}, NOM24 = {}, AB_DE = {}, ETAT_NOM = {}, F26, F24, sel = null, demarre = false;
+const MODE0 = { ch: "cote", sen: "cote", pres: "p24" };            // mode de carte par défaut de chaque type
+const etat = { mode: MODE0[TYPE], parti: null, pct: lireLS("viPct", true), chambre: "proj", st: null };
+const groupe = () => TYPE === "pres" ? (etat.mode.startsWith("p20") ? "p20" : "p24")
+  : etat.mode === "act" ? "act" : etat.mode.startsWith("e24") ? "e24" : "proj";
 const SEN = () => PROJ.senat;
 const course = f => SEN().etats[f]?.courses[0];                       // course de 2026 dans l'État (une au plus)
 const coteSen = f => course(f)?.r;
 const delegation = f => { const ps = (SEN().etats[f]?.senateurs || []).map(x => x.p === "I" ? "D" : x.p); return ps[0] === ps[1] ? ps[0] : "S"; };
 const COUL_DELEG = { D: "#2F6BD8", R: "#D63A3A", S: "#8A6FD1" };
-const voteMode = () => etat.mode === "e24vote";
+const voteMode = () => etat.mode.endsWith("vote");
 const cle24 = id => `${AB_DE[id.slice(0, 2)]}-${+id.slice(2)}`;          // « 0612 » → « CA-12 » (résultats de 2024)
-const nomDe = id => TYPE === "sen" ? ETAT_NOM[AB_DE[id]] || id : (groupe() === "proj" ? NOM26[id] : NOM24[id]) || NOM26[id] || NOM24[id] || id;
-const dans = id => TYPE === "sen" || !etat.st || AB_DE[id.slice(0, 2)] === etat.st;
+const nomDe = id => TYPE !== "ch" ? ETAT_NOM[AB_DE[id]] || id : (groupe() === "proj" ? NOM26[id] : NOM24[id]) || NOM26[id] || NOM24[id] || id;
+const dans = id => TYPE !== "ch" || !etat.st || AB_DE[id.slice(0, 2)] === etat.st;
 const r24 = id => R24.circ[cle24(id)];
 
 /* ---------- sièges par chambre affichée ---------- */
@@ -96,20 +103,24 @@ const CHAMBRES = { proj: "Projection", act: "Chambre actuelle", e24: "Élection 
 function ajouterChoixType() {
   const tete = document.querySelector(".vue-votes .lv-head"); if (!tete || $("vfType")) return;
   const g = document.createElement("div");
-  g.className = "lv-groupe vf-type"; g.id = "vfType"; g.setAttribute("role", "group"); g.setAttribute("aria-label", "Chambre affichée");
-  g.innerHTML = `<button type="button" data-t="ch">Chambre des représentants</button><button type="button" data-t="sen">Sénat</button>`;
+  g.className = "lv-groupe vf-type"; g.id = "vfType"; g.setAttribute("role", "group"); g.setAttribute("aria-label", "Élection affichée");
+  g.innerHTML = `<button type="button" data-t="ch">Chambre des représentants</button><button type="button" data-t="sen">Sénat</button><button type="button" data-t="pres">Présidentielle ${AN(2028)}</button>`;
   tete.appendChild(g);
   g.addEventListener("click", e => { const b = e.target.closest("button[data-t]"); if (!b || b.dataset.t === TYPE) return; changerType(b.dataset.t); });
 }
 function changerType(t) {
   TYPE = t; ecrireLS("vuType", t);
-  history.replaceState(null, "", location.pathname + location.search + (t === "sen" ? "#senat" : "#chambre"));
-  etat.mode = "cote"; etat.chambre = "proj"; etat.st = null; sel = null; jeu = null;
+  history.replaceState(null, "", location.pathname + location.search + HASH[t]);
+  etat.mode = MODE0[t]; etat.parti = null; etat.chambre = "proj"; etat.st = null; sel = null; jeu = null;
   svg.transition().duration(0).call(ZOOM.transform, d3.zoomIdentity);
-  dessinerTete(); outilsCarte(); tracerDistricts(); peindre(); dessinerPanneau();
+  dessinerTete(); outilsCarte(); tracerDistricts(); peindre(); dessinerPanneau(); dessinerEvolution();
 }
 function dessinerTete() {
   document.querySelectorAll("#vfType button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === TYPE));
+  let ex = $("vfExplic");
+  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  creerChoix();
+  if (TYPE === "pres") return dessinerTetePres(ex);
   const mg = SOND.moyenne[SOND.moyenne.length - 1];
   majBarre(TYPE === "sen" ? "Votes États-Unis · Sénat" : "Votes États-Unis · Chambre",
     `consensus 270toWin du ${dateFr(TYPE === "sen" ? SEN().maj : PROJ.maj)} · vote générique au ${dateFr(mg.d)}`);
@@ -119,19 +130,28 @@ function dessinerTete() {
   // les dates (consensus, vote générique, vérification) sont dans la barre du haut : ici, seulement ce qu'elle ne dit pas
   $("viSource").innerHTML = `Source : consensus de sept prévisionnistes (270toWin) · vote générique : D ${nf(mg.D, 1)} %, R ${nf(mg.R, 1)} % (moyenne de Silver Bulletin)`;
   $("viNote").textContent = ""; $("viNote").hidden = true;
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
   ex.innerHTML = TYPE === "sen" ? `<p>Le Sénat compte 100 sénateurs, deux par État, élus pour six ans ; un tiers des sièges est renouvelé tous les deux ans. À la prochaine élection, 35 sièges sont en jeu : les 33 sièges ordinaires et deux élections partielles (Ohio et Floride). La majorité est de 51 sièges ; à 50 contre 50, le vice-président (JD Vance, républicain) départage.</p>` : `<p>Les 435 membres de la Chambre des représentants sont élus pour deux ans, un par district. En général, le candidat qui a le plus de voix l'emporte (l'Alaska et le Maine utilisent le vote préférentiel). Il faut 218 sièges pour la majorité. Neuf États ont redessiné leurs districts depuis 2024 : la projection utilise les districts de 2026, la Chambre actuelle et l'élection de 2024 ceux de 2024.</p>`;
-  let choix = $("vcChambre");
-  if (!choix) {
-    choix = document.createElement("div"); choix.id = "vcChambre"; choix.className = "lv-groupe vi-periodes vc-choix"; choix.setAttribute("role", "group"); choix.setAttribute("aria-label", "Chambre affichée");
-    choix.innerHTML = Object.entries(CHAMBRES).map(([k, t]) => `<button type="button" data-ch="${k}">${t}</button>`).join("");
-    $("viSiegesTitre").after(choix);
-    choix.addEventListener("click", e => { const b = e.target.closest("button[data-ch]"); if (!b) return; etat.chambre = b.dataset.ch; dessinerChambre(); });
-  }
   dessinerChambre();
 }
+// choix du rectangle du haut : chambre affichée (Congrès) ou primaires et duels (présidentielle)
+function creerChoix() {
+  if ($("vcChambre")) return;
+  const choix = document.createElement("div"); choix.id = "vcChambre"; choix.className = "lv-groupe vi-periodes vc-choix"; choix.setAttribute("role", "group"); choix.setAttribute("aria-label", "Chambre affichée");
+  choix.innerHTML = Object.entries(CHAMBRES).map(([k, t]) => `<button type="button" data-ch="${k}">${t}</button>`).join("");
+  $("viSiegesTitre").after(choix);
+  choix.addEventListener("click", e => { const b = e.target.closest("button[data-ch]"); if (!b) return; etat.chambre = b.dataset.ch; dessinerChambre(); });
+  const cp = document.createElement("div"); cp.id = "vuChoixPres"; cp.className = "lv-groupe vi-periodes vc-choix"; cp.setAttribute("role", "group"); cp.setAttribute("aria-label", "Intentions de vote affichées");
+  cp.innerHTML = Object.entries(CHOIX_PRES).map(([k, t]) => `<button type="button" data-cp="${k}">${t}</button>`).join("");
+  choix.after(cp);
+  cp.addEventListener("click", e => { const b = e.target.closest("button[data-cp]"); if (!b) return; etatP.choix = b.dataset.cp; ecrireLS("vuPresChoix", etatP.choix); dessinerChambre(); dessinerEvolution(); });
+  const bloc = document.createElement("div"); bloc.id = "vuCands"; bloc.className = "vf-cands vu-cands"; $("viLegende").after(bloc);
+  bloc.addEventListener("click", e => { const b = e.target.closest("[data-duel]"); if (!b) return; etatP.duel = b.dataset.duel; dessinerChambre(); dessinerEvolution(); });
+}
 function dessinerChambre() {
+  const pres = TYPE === "pres";
+  $("viPlan").style.display = $("viLegende").style.display = pres ? "none" : "";
+  $("vuCands").hidden = !pres; $("vcChambre").hidden = pres; $("vuChoixPres").hidden = !pres;
+  if (pres) return dessinerChambrePres();
   document.querySelectorAll("#vcChambre button").forEach(b => { b.hidden = TYPE === "sen" && b.dataset.ch === "e24"; b.setAttribute("aria-pressed", b.dataset.ch === etat.chambre); });
   if (TYPE === "sen") return dessinerChambreSenat();
   const parts = partsChambre(etat.chambre), eb = $("viPlan").closest("section").querySelector(".lv-eyebrow");
@@ -165,14 +185,106 @@ function dessinerChambreSenat() {
   $("viLegende").innerHTML = parts.map(p => `<span style="--c:${p.k === "VAC" ? "var(--muted)" : p.c}"><i></i>${p.nom} <b>${p.n}</b></span>`).join("");
 }
 
+/* ---------- présidentielle 2028 : en-tête, primaires et duels ---------- */
+const CHOIX_PRES = { D: "Primaire démocrate", R: "Primaire républicaine", duels: "Duels" };
+const etatP = { choix: lireLS("vuPresChoix", "D"), duel: null };
+if (!CHOIX_PRES[etatP.choix]) etatP.choix = "D";
+// fonction de chaque personnalité testée dans les sondages (information d'appoint sous le nom)
+const ROLES = {
+  "Kamala Harris": "Vice-présidente de 2021 à 2025, candidate en 2024", "Gavin Newsom": "Gouverneur de Californie",
+  "Pete Buttigieg": "Secrétaire aux Transports de 2021 à 2025", "Alexandria Ocasio-Cortez": "Représentante de New York",
+  "Josh Shapiro": "Gouverneur de Pennsylvanie", "JB Pritzker": "Gouverneur de l'Illinois", "Cory Booker": "Sénateur du New Jersey",
+  "Tim Walz": "Gouverneur du Minnesota, colistier en 2024", "Mark Kelly": "Sénateur de l'Arizona", "Andy Beshear": "Gouverneur du Kentucky",
+  "Jon Ossoff": "Sénateur de la Géorgie", "Gretchen Whitmer": "Gouverneure du Michigan", "Wes Moore": "Gouverneur du Maryland",
+  "Stephen A. Smith": "Commentateur sportif", "Chris Murphy": "Sénateur du Connecticut", "Ro Khanna": "Représentant de Californie",
+  "JD Vance": "Vice-président", "Marco Rubio": "Secrétaire d'État", "Donald Trump Jr.": "Fils aîné de Donald Trump",
+  "Ron DeSantis": "Gouverneur de Floride", "Ted Cruz": "Sénateur du Texas", "Nikki Haley": "Ambassadrice à l'ONU de 2017 à 2018, candidate en 2024",
+  "Robert F. Kennedy Jr.": "Secrétaire à la Santé", "Vivek Ramaswamy": "Entrepreneur, candidat en 2024",
+  "Donald Trump": "Président (ne peut pas se représenter)", "Tucker Carlson": "Animateur", "Byron Donalds": "Représentant de Floride" };
+const PALETTE = ["#2F6BD8", "#E0812A", "#2E9E5B", "#8E5CC4", "#C8463D", "#1AA3B8", "#9C7A4A", "#D64F94", "#5E7387", "#A3A82C", "#3F51B5"];
+const COUL_CAND = {};
+const nomCourt = n => ({ "Donald Trump Jr.": "Trump Jr.", "Robert F. Kennedy Jr.": "Kennedy", "Stephen A. Smith": "Smith" })[n] || n.split(" ").slice(-1)[0];
+const jours = (a, b) => (new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5;
+const pl = (n, mot) => `${n} ${mot}${n > 1 ? "s" : ""}`;
+const ge = n => `${n} grand${n > 1 ? "s" : ""} électeur${n > 1 ? "s" : ""}`;
+// moyenne récente d'une primaire : sondages des 30 jours précédant le dernier (au moins les 5 derniers) ;
+// chaque sondage teste sa propre liste : la moyenne d'un candidat ne compte que les sondages où il figure
+function moyennePrimaire(p) {
+  const S = PRES.primaires[p].sondages, fin = S[S.length - 1].d;
+  let rec = S.filter(x => jours(x.d, fin) <= 30); if (rec.length < 5) rec = S.slice(-5);
+  const c = {}; rec.forEach(x => Object.entries(x.v).forEach(([k, v]) => (c[k] ||= []).push(v)));
+  return { n: rec.length, de: rec[0].d, moy: Object.entries(c).map(([k, v]) => ({ k, v: d3.mean(v), n: v.length })).sort((a, b) => b.v - a.v) };
+}
+// couleur de chaque candidat : rang dans la moyenne récente de sa primaire (même couleur dans le rectangle et le graphique)
+function couleursPrimaires() {
+  for (const p of ["D", "R"]) {
+    const ordre = moyennePrimaire(p).moy.map(x => x.k), freq = {};
+    PRES.primaires[p].sondages.forEach(x => Object.keys(x.v).forEach(k => freq[k] = (freq[k] || 0) + 1));
+    Object.keys(freq).sort((a, b) => freq[b] - freq[a]).forEach(k => { if (!ordre.includes(k)) ordre.push(k); });
+    ordre.forEach((k, i) => COUL_CAND[k] = PALETTE[i % PALETTE.length]);
+  }
+}
+const dernierSondagePres = () => d3.max([...PRES.primaires.D.sondages, ...PRES.primaires.R.sondages, ...PRES.duels.flatMap(x => x.sondages)], x => x.d);
+// duels sondés depuis un an, du plus sondé au moins sondé ; moyenne des cinq derniers sondages de chacun
+function duelsActifs() {
+  const fin = dernierSondagePres();
+  return PRES.duels.filter(x => jours(x.sondages[x.sondages.length - 1].d, fin) <= 365)
+    .sort((a, b) => b.sondages.length - a.sondages.length || (b.sondages[b.sondages.length - 1].d > a.sondages[a.sondages.length - 1].d ? 1 : -1));
+}
+const duelChoisi = () => { const L = duelsActifs(); return L.find(x => x.titre === etatP.duel) || L[0]; };
+const moyDuel = x => { const r = x.sondages.slice(-5); return { R: d3.mean(r, s => s.R), D: d3.mean(r, s => s.D), n: r.length }; };
+function dessinerTetePres(ex) {
+  majBarre("Votes États-Unis · présidentielle 2028", `dernier sondage le ${dateFr(dernierSondagePres())}`);
+  document.querySelector(".vue-votes .vi-badge").textContent = "États-Unis · Présidentielle 2028";
+  $("viTitre").textContent = `Présidentielle ${AN(2028)} : intentions de vote`;
+  $("viSource").innerHTML = "Source : sondages nationaux compilés par Wikipédia (avec un lien vers chacun) · moyennes publiées de 270toWin et RealClearPolling";
+  $("viNote").textContent = ""; $("viNote").hidden = true;
+  ex.innerHTML = `<p>Le président est élu pour quatre ans par un collège de 538 grands électeurs, répartis entre les États selon leur population (le District de Columbia en a 3). Dans 48 États et dans le District de Columbia, le candidat en tête remporte tous les grands électeurs ; le Maine et le Nebraska en donnent deux au gagnant de l'État et un au gagnant de chaque district. Il faut 270 grands électeurs pour être élu. Donald Trump ne peut pas se représenter (22e amendement). Chaque parti choisit son candidat lors de primaires, État par État, de janvier à juin ${AN(2028)} ; l'élection aura lieu le 7 novembre ${AN(2028)}.</p>`;
+  dessinerChambre();
+}
+function dessinerChambrePres() {
+  document.querySelectorAll("#vuChoixPres button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cp === etatP.choix));
+  const eb = $("viPlan").closest("section").querySelector(".lv-eyebrow"), bloc = $("vuCands");
+  if (etatP.choix === "duels") {
+    const L = duelsActifs(), ch = duelChoisi(), m = moyDuel(ch), tete = m.D >= m.R ? "D" : "R", autre = tete === "D" ? "R" : "D", ecart = Math.abs(m.D - m.R);
+    eb.textContent = "Élection générale · duels testés dans les sondages";
+    $("viSiegesTitre").textContent = ecart < 0.05 ? `${nomCourt(ch.R)} et ${nomCourt(ch.D)} à égalité` : `${nomCourt(ch[tete])} devant ${nomCourt(ch[autre])} : +${nf(ecart, 1)} point${ecart >= 2 ? "s" : ""}`;
+    bloc.innerHTML = L.map(x => { const a = moyDuel(x);
+      return `<button type="button" class="vu-duel" data-duel="${esc(x.titre)}" aria-pressed="${x === ch}">
+        <span class="vu-duel-noms"><b style="color:${COUL.R}">${esc(x.R)} <span>${nf(a.R, 0)} %</span></b><small>${pl(x.sondages.length, "sondage")}</small><b style="color:${COUL.D}"><span>${nf(a.D, 0)} %</span> ${esc(x.D)}</b></span>
+        <span class="vu-duel-barre"><i style="width:${a.R}%;background:${COUL.R}"></i><i style="width:${a.D}%;background:${COUL.D}"></i></span></button>`; }).join("")
+      + `<p class="lv-muted lv-source">Moyenne des cinq derniers sondages de chaque duel (ou de tous s'il y en a moins) ; l'espace entre les deux barres : indécis et autres candidats. Clique sur un duel pour voir son évolution.</p>`;
+    return;
+  }
+  const p = etatP.choix, M = moyennePrimaire(p), top = M.moy[0], ag = PRES.primaires[p].agregats, max = Math.max(40, top.v);
+  eb.textContent = `Primaire ${p === "D" ? "démocrate" : "républicaine"} · moyenne de ${M.n} sondages`;
+  $("viSiegesTitre").textContent = `${nomCourt(top.k)} en tête : ${nf(top.v, 1)} %`;
+  bloc.innerHTML = M.moy.filter(x => x.v >= 1).map(x => { const sous = [ROLES[x.k], x.n < M.n ? `testé dans ${x.n} sondage${x.n > 1 ? "s" : ""} sur ${M.n}` : ""].filter(Boolean).join(" · ");
+    return `<div class="vf-cand" style="--c:${COUL_CAND[x.k]}"><span><b>${esc(x.k)}</b><small>${esc(sous)}</small></span>`
+      + `<span class="vf-cand-barre"><i style="width:${100 * x.v / max}%"></i></span><b class="vf-cand-v">${nf(x.v, 1)} %</b></div>`; }).join("")
+    + `<p class="lv-muted lv-source">Moyenne des sondages publiés depuis le ${dateFr(M.de)} ; chaque sondage teste sa propre liste de candidats (la moyenne d'un candidat ne compte que les sondages où il figure).`
+    + (ag.length ? ` Moyennes publiées : ${ag.map(a => `${esc(a.nom)} (${dateFr(a.d)}) : ${Object.entries(a.v).sort((x, y) => y[1] - x[1]).slice(0, 3).map(([k, v]) => `${esc(nomCourt(k))} ${nf(v, 1)} %`).join(", ")}`).join(" · ")}.` : "") + "</p>";
+}
+
 /* ---------- carte ---------- */
 const MW = 900, MH = 560;
 let svg, gZ, gRid, gReg, gSel, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity, jeu = null;
 const PRESETS = {};
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const features = () => TYPE === "sen" ? DATA.geoEtats.features : groupe() === "proj" ? F26 : F24;
+const features = () => TYPE !== "ch" ? DATA.geoEtats.features : groupe() === "proj" ? F26 : F24;
+// présidentielle : résultat de l'année affichée dans un État (clé : code FIPS), nuance selon l'écart entre les deux premiers
+const anPres = () => groupe() === "p20" ? "2020" : "2024";
+const RES = () => RP[anPres()];
+const resEtat = id => RES().etats[AB_DE[id]];
+const nuance = x => { const m = Math.abs(x.D - x.R); return x.g + (m >= 15 ? "3" : m >= 5 ? "2" : "1"); };
+const ecartTxt = x => `${x.g} +${nf(Math.abs(x.D - x.R), 1)}`;
 function remplir(id) {
   const fade = o => dans(id) ? o : o * 0.22;
+  if (TYPE === "pres") {
+    const x = resEtat(id); if (!x) return ["var(--soft)", 1];
+    if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, (x[etat.parti] - 20) / 50))];
+    return [COTE[nuance(x)][0], 0.95];
+  }
   if (TYPE === "sen") {
     if (etat.mode === "act") return [COUL_DELEG[delegation(id)], 0.85];
     const r = coteSen(id); return r ? [COTE[r][0], 0.95] : ["var(--soft)", 1];
@@ -211,7 +323,7 @@ function polylabel(rings, precision = 0.5) {
 }
 const ANCRE = {};
 function ancre(f) {
-  const k = f.properties.id + (TYPE === "sen" ? ":st" : DATA.geo26.features.includes(f) ? ":26" : ":24");
+  const k = f.properties.id + (TYPE !== "ch" ? ":st" : DATA.geo26.features.includes(f) ? ":26" : ":24");
   if (ANCRE[k]) return ANCRE[k];
   const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
   let best = [0, 0, -1];
@@ -238,7 +350,7 @@ function zoomVers(f, pad = 0.85) {
 }
 // districts affichés : ceux de 2026 (projection) ou de 2024 (Chambre actuelle, élection de 2024)
 function tracerDistricts() {
-  const set = TYPE === "sen" ? "st" : groupe() === "proj" ? "26" : "24";
+  const set = TYPE !== "ch" ? "st" : groupe() === "proj" ? "26" : "24";
   if (jeu === set) return; jeu = set;
   gRid.selectAll("path").data(features(), f => f.properties.id + set).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => nomDe(f.properties.id))
@@ -282,15 +394,25 @@ function construireCarte() {
   $("viPlein").addEventListener("click", pleinEcran);
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("viPct", etat.pct); peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
-  $("viChips").innerHTML = P.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${p === "D" ? "Démocrates" : "Républicains"}</button>`).join("");
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
-    etat.parti = b.dataset.p; if (!voteMode()) changerMode("e24vote"); else { peindre(); if (sel == null) dessinerPanneau(); } });
+    etat.parti = b.dataset.p; if (!voteMode()) changerMode(TYPE === "pres" ? groupe() + "vote" : "e24vote"); else { peindre(); if (sel == null) dessinerPanneau(); } });
 }
-// boutons : futur (projection) · présent (Chambre actuelle) · passé (élection de 2024)
+// pastilles du mode Vote : partis (Chambre) ou candidats de l'élection affichée (présidentielle)
+function majChips() {
+  const lab = p => TYPE === "pres" ? `${RES().noms[p].split(" ").slice(-1)[0]} (${p})` : p === "D" ? "Démocrates" : "Républicains";
+  $("viChips").innerHTML = P.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}" aria-pressed="${voteMode() && p === etat.parti}">${esc(lab(p))}</button>`).join("");
+}
+// boutons : futur (projection) · présent (Chambre actuelle) · passé (élection de 2024) ; présidentielle : élections passées seulement
+// (pas de projection par État pour 2028 : trop peu de sondages par État)
 function outilsCarte() {
   const bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
   $("viChips").style.display = TYPE === "sen" ? "none" : "";
+  majChips();
+  if (TYPE === "pres") {
+    $("viModes").innerHTML = ["2024", "2020"].map(a => `<span class="vf-mode-grp"><span class="vf-mode-lab">Présidentielle ${AN(a)}</span><span class="lv-groupe">${[["p" + a.slice(2), "En tête"], ["p" + a.slice(2) + "vote", "Vote"]].map(bouton).join("")}</span></span>`).join("");
+    return;
+  }
   if (TYPE === "sen") {
     $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection · consensus</span><span class="lv-groupe">${bouton(["cote", "Cote"])}</span></span>`
       + `<span class="vf-mode-grp"><span class="vf-mode-lab">Sénat actuel</span><span class="lv-groupe">${bouton(["act", "Sénateurs"])}</span></span>`;
@@ -305,7 +427,8 @@ function changerMode(m) {
   etat.mode = m;
   if (voteMode() && !etat.parti) etat.parti = "D";
   if (groupe() !== avant && TYPE === "ch") { if (sel != null && !features().some(f => f.properties.id === sel)) sel = null; tracerDistricts(); }
-  if (etat.chambre !== groupe()) { etat.chambre = groupe(); dessinerChambre(); }
+  if (TYPE === "pres") majChips();
+  else if (etat.chambre !== groupe()) { etat.chambre = groupe(); dessinerChambre(); }
   peindre(); dessinerPanneau();
 }
 function peindre() {
@@ -316,17 +439,27 @@ function peindre() {
   const f = sel != null ? features().find(x => x.properties.id === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
   $("viPct").hidden = !voteMode(); $("viPct").setAttribute("aria-pressed", etat.pct);
-  const labs = gLbl.selectAll("g.vi-lab").data(voteMode() && etat.pct ? features().filter(f => dans(f.properties.id)) : [], f => f.properties.id)
+  // étiquettes : pourcentage (mode Vote) ; présidentielle, mode En tête : grands électeurs de chaque État
+  const avecLab = voteMode() ? etat.pct : TYPE === "pres";
+  const labs = gLbl.selectAll("g.vi-lab").data(avecLab ? features().filter(f => dans(f.properties.id) && (TYPE !== "pres" || resEtat(f.properties.id))) : [], f => f.properties.id)
     .join(enter => { const g = enter.append("g").attr("class", "vi-lab");
       g.append("text").attr("class", "vi-lbl vi-nom").attr("text-anchor", "middle").attr("dy", "-0.85em");
       g.append("text").attr("class", "vi-lbl vi-val").attr("text-anchor", "middle").attr("dy", "0.35em"); return g; });
-  labs.select("text.vi-val").text(f => { const c = r24(f.properties.id); return c ? nf(c.s[etat.parti] || 0, 0) + " %" : ""; });
+  labs.select("text.vi-val").text(f => { if (TYPE === "pres") { const x = resEtat(f.properties.id); return voteMode() ? nf(x[etat.parti], 0) + " %" : x.ve; }
+    const c = r24(f.properties.id); return c ? nf(c.s[etat.parti] || 0, 0) + " %" : ""; });
   labs.select("text.vi-nom").text(f => nomDe(f.properties.id));
   placerEtiquettes();
   let an = $("vfAnCarte");
   if (!an) { an = document.createElement("div"); an.id = "vfAnCarte"; an.className = "vf-an-carte"; $("viCarte").before(an); }
-  an.innerHTML = TYPE === "sen" ? (groupe() === "act" ? "Sénateurs actuels" : `Sénat · consensus · ${dateFr(SEN().maj)}`) : groupe() === "act" ? "Représentants actuels" : groupe() === "e24" ? "Élection 2024" : `Consensus · ${dateFr(PROJ.maj)}`;
+  an.innerHTML = TYPE === "pres" ? `Présidentielle ${AN(anPres())}` : TYPE === "sen" ? (groupe() === "act" ? "Sénateurs actuels" : `Sénat · consensus · ${dateFr(SEN().maj)}`) : groupe() === "act" ? "Représentants actuels" : groupe() === "e24" ? "Élection 2024" : `Consensus · ${dateFr(PROJ.maj)}`;
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
+  if (TYPE === "pres") {
+    const N = RES().noms, court = k => N[k].split(" ").slice(-1)[0];
+    $("viEchelle").innerHTML = voteMode()
+      ? `<span>20 %</span>${ramp}<span>70 % et +</span><span>· vote pour ${esc(N[p])} en ${anPres()} dans chaque État${etat.pct ? " (chiffre = %)" : ""}</span>`
+      : `<span class="vf-legende">${[["D3", "+15 et plus"], ["D2", "+5 à 15"], ["D1", "moins de 5"], ["R1", "moins de 5"], ["R2", "+5 à 15"], ["R3", "+15 et plus"]].map(([k, t]) => `<span style="--c:${COTE[k][0]}"><i></i>${esc(court(k[0]))} ${t}</span>`).join("")}</span><span>· écart entre les deux premiers dans chaque État en ${anPres()} ; chiffre : grands électeurs de l'État</span>`;
+    return;
+  }
   $("viEchelle").innerHTML = TYPE === "sen" ? (groupe() === "proj"
     ? `<span class="vf-legende">${COTES.map(r => `<span style="--c:${COTE[r][0]}"><i></i>${COTE[r][1]}</span>`).join("")}<span style="--c:var(--soft)"><i></i>pas d'élection</span></span><span>· cote de la course de 2026 dans chaque État</span>`
     : `<span class="vf-legende">${[["D", "Deux démocrates"], ["R", "Deux républicains"], ["S", "Partagé"]].map(([k, t]) => `<span style="--c:${COUL_DELEG[k]}"><i></i>${t}</span>`).join("")}</span><span>· parti des deux sénateurs actuels (indépendants comptés avec les démocrates)</span>`)
@@ -340,6 +473,12 @@ function infobulle(e, f) {
   const id = f.properties.id, t = $("viTip"), box = svg.node().parentNode.getBoundingClientRect();
   let px = e.clientX - box.left + 14; if (px > box.width - 230) px -= 250;
   t.hidden = false; t.style.left = px + "px"; t.style.top = (e.clientY - box.top + 14) + "px";
+  if (TYPE === "pres") {
+    const x = resEtat(id), N = RES().noms; if (!x) { t.hidden = true; return; }
+    t.innerHTML = `<b>${esc(nomDe(id))}</b><small>${ge(x.ve)} · présidentielle ${anPres()}</small><br>`
+      + ["R", "D"].sort((a, b) => x[b] - x[a]).map(k => `${esc(N[k].split(" ").slice(-1)[0])} ${nf(x[k], 1)} %`).join(" · ") + `<br><small>Écart : ${ecartTxt(x)}</small>`;
+    return;
+  }
   if (TYPE === "sen") {
     const c = course(id), sn = SEN().etats[id]?.senateurs || [];
     t.innerHTML = `<b>${esc(nomDe(id))}</b><small>${sn.map(x => `${esc(x.nom)} (${x.p})`).join(" · ")}</small><br>`
@@ -439,7 +578,59 @@ function panneauSenat(z) {
     ${replie("Sièges qui changeraient de parti", lst(bascules, f => COUL[camp(coteSen(f))], f => `${camp(coteSen(f))} <small>(détenu par ${course(f).held})</small>`), bascules.length)}
     ${replie("Toutes les courses", lst(courses.sort((a, b) => COTES.indexOf(coteSen(a)) - COTES.indexOf(coteSen(b))), f => COTE[coteSen(f)][0], f => COTE[coteSen(f)][1]), courses.length)}`;
 }
+// présidentielle : tous les États-Unis ou un État (résultats de 2024 et 2020, délégation actuelle au Congrès)
+const ETATS_P = () => [...DATA.etats, { fips: "11", ab: "DC", nom: "District de Columbia" }].sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+function panneauPres(z) {
+  const an = anPres(), R = RES(), N = R.noms, autreAn = an === "2024" ? "2020" : "2024", A = RP[autreAn];
+  const court = k => N[k].split(" ").slice(-1)[0];
+  const menu = `<details class="vc-menu"><summary>État : <b>${sel ? esc(nomDe(sel)) : "Tous les États-Unis"}</b></summary>
+    <div class="vc-menu-liste">${[[null, "Tous les États-Unis"], ...ETATS_P().map(e => [e.fips, e.nom])]
+      .map(([k, t]) => `<button type="button" data-etatsen="${k || ""}" aria-pressed="${(k || null) === sel}">${esc(t)}</button>`).join("")}</div></details>`;
+  const fipsDe = ab => ETATS_P().find(e => e.ab === ab).fips;
+  const lst = (abs, droite) => `<ul class="vi-serres">${abs.map(ab => `<li data-rid="${fipsDe(ab)}" tabindex="0" style="--c:${COTE[nuance(R.etats[ab])][0]}"><i></i>${esc(ETAT_NOM[ab])}<b>${droite(ab)}</b></li>`).join("") || "<li>Aucun</li>"}</ul>`;
+  const jauges = (x, noms) => `<div class="vi-vrows">${["R", "D"].sort((a, b) => x[b] - x[a]).map(k => jauge(esc(noms[k].split(" ").slice(-1)[0]), COUL[k], x[k], `<small>${k}</small>`, 100)).join("")}${jauge("Autres", COUL.AUT, x.AUT, "", 100)}</div>`;
+  const districts = (res, ab) => Object.entries(res.districts).filter(([k]) => k.startsWith(ab + "-"));
+  if (sel) {
+    const ab = AB_DE[sel], x = R.etats[ab];
+    const gagne = k => { const n = x.veg[k] + d3.sum(districts(R, ab), ([, d]) => d.veg[k]); return n ? `${court(k)} : ${ge(n)}` : ""; };
+    const e24 = RP["2024"].etats[ab], e20 = RP["2020"].etats[ab];
+    const vire = (e24.R - e24.D) - (e20.R - e20.D);                      // déplacement de l'écart de 2020 à 2024 (positif : vers les républicains)
+    const sen = SEN().etats[sel]?.senateurs || [], reps = Object.entries(PROJ.actuel).filter(([id]) => id.startsWith(sel));
+    const nrep = {}; reps.forEach(([, a]) => { const k = a ? a.p : "VAC"; nrep[k] = (nrep[k] || 0) + 1; });
+    const blocAn = (res, a) => { const v = res.etats[ab], ds = districts(res, ab);
+      return `${jauges(v, res.noms)}<p class="lv-muted">Écart : ${ecartTxt(v)} · ${v.voix.toLocaleString("fr-CA")} voix${ds.length ? ` · par district : ${ds.map(([k, d]) => `${k} ${ecartTxt(d)}`).join(", ")}` : ""}</p>`; };
+    z.innerHTML = `${menu}<span class="lv-eyebrow">État · ${ge(x.ve)}${ab === "DC" ? " (capitale fédérale)" : ""}</span><h3>${esc(nomDe(sel))}</h3>
+      <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tous les États-Unis</button>${ab !== "DC" ? `<button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>` : ""}</div>
+      <div class="vi-pills">${["R", "D"].filter(k => gagne(k)).map(k => `<span class="vi-pill"><i style="background:${COUL[k]}"></i>${gagne(k)}</span>`).join("")}</div>
+      <span class="lv-eyebrow">Présidentielle du ${dateFr(R.date)}</span>${blocAn(R, an)}
+      ${replie(`Présidentielle du ${dateFr(A.date)}`, blocAn(A, autreAn))}
+      <p class="lv-muted">De 2020 à 2024, l'écart s'est déplacé de ${nf(Math.abs(vire), 1)} point${Math.abs(vire) >= 2 ? "s" : ""} vers les ${vire < 0 ? "démocrates" : "républicains"}.${e20.ve !== e24.ve ? ` Grands électeurs : ${e20.ve} en 2020, ${e24.ve} depuis 2024 (nouvelle répartition après le recensement de 2020).` : ""}</p>
+      ${ab === "DC" ? `<p class="lv-muted">Le District de Columbia n'a pas de sénateur et n'élit à la Chambre qu'une déléguée sans droit de vote.</p>`
+        : `<span class="lv-eyebrow">Au Congrès aujourd'hui</span>
+      ${sen.map(s => `<p class="vi-elu" style="--c:${COUL[s.p] || COUL.AUT}"><b>${esc(s.nom)}</b> · sénateur${s.p ? ` (${s.p})` : ""}</p>`).join("")}
+      <p class="lv-muted">Représentants : ${["R", "D", "I", "VAC"].filter(k => nrep[k]).map(k => `${nrep[k]} ${k === "VAC" ? `vacant${nrep[k] > 1 ? "s" : ""}` : k}`).join(" · ")}</p>`}`;
+    return;
+  }
+  const abs = Object.keys(R.etats), marge = ab => Math.abs(R.etats[ab].D - R.etats[ab].R);
+  const serres = abs.filter(ab => marge(ab) < 5).sort((a, b) => marge(a) - marge(b));
+  const bascules = abs.filter(ab => RP["2024"].etats[ab].g !== RP["2020"].etats[ab].g);
+  const dBasc = Object.keys(RP["2024"].districts).filter(k => RP["2024"].districts[k].g !== RP["2020"].districts[k]?.g);
+  const tous = abs.slice().sort((a, b) => (R.etats[b].D - R.etats[b].R) - (R.etats[a].D - R.etats[a].R));
+  const vainq = R.ve.D > R.ve.R ? "D" : "R";
+  z.innerHTML = `${menu}<span class="lv-eyebrow">Présidentielle du ${dateFr(R.date)}</span><h3>Tous les États-Unis</h3>
+    <div class="vi-pills">${[vainq, vainq === "D" ? "R" : "D"].map(k => `<span class="vi-pill"><i style="background:${COUL[k]}"></i>${esc(N[k])} : ${R.ve[k]}</span>`).join("")}<span class="vi-pill">Majorité : 270</span></div>
+    <span class="lv-eyebrow">Grands électeurs</span>
+    <div class="ac-barre" role="img" aria-label="${esc(N.D)} ${R.ve.D}, ${esc(N.R)} ${R.ve.R}"><span style="flex:${R.ve.D};background:${COUL.D}">${esc(court("D"))} ${R.ve.D}</span><span style="flex:${R.ve.R};background:${COUL.R}">${esc(court("R"))} ${R.ve.R}</span><i style="left:${100 * 270 / 538}%" title="majorité : 270"></i></div>
+    <span class="lv-eyebrow">Vote populaire</span>${jauges(R.national, N)}
+    <p class="lv-muted">${esc(N.R)} : ${R.voix.R.toLocaleString("fr-CA")} voix · ${esc(N.D)} : ${R.voix.D.toLocaleString("fr-CA")} voix. Clique sur un État pour son détail.</p>
+    <span class="lv-eyebrow">Les plus serrés (moins de 5 points)</span>${lst(serres, ab => `${ecartTxt(R.etats[ab])} <small>· ${R.etats[ab].ve}</small>`)}
+    ${replie(an === "2024" ? "États qui ont changé de camp depuis 2020" : "États qui changeront de camp en 2024", lst(bascules, ab => `${RP["2020"].etats[ab].g} → ${RP["2024"].etats[ab].g} <small>· ${R.etats[ab].ve}</small>`)
+      + (dBasc.length ? `<p class="lv-muted">Districts : ${dBasc.map(k => `${k} (${RP["2020"].districts[k].g} → ${RP["2024"].districts[k].g})`).join(", ")}.</p>` : ""), bascules.length)}
+    ${replie("Tous les États, du plus démocrate au plus républicain", lst(tous, ab => `${ecartTxt(R.etats[ab])} <small>· ${R.etats[ab].ve}</small>`), tous.length)}
+    <p class="lv-muted">Chiffre après l'écart : grands électeurs de l'État. Le Maine et le Nebraska donnent aussi un grand électeur par district (${an} : ${Object.entries(R.districts).filter(([k, d]) => d.g !== R.etats[k.slice(0, 2)].g).map(([k, d]) => `${k} à ${court(d.g)}`).join(", ") || "aucun district contre le gagnant de l'État"}).</p>`;
+}
 function dessinerPanneau() {
+  if (TYPE === "pres") return panneauPres($("viPanneau"));
   if (TYPE === "sen") return panneauSenat($("viPanneau"));
   const z = $("viPanneau"), g = groupe(), nomZ = etat.st ? ETAT_NOM[etat.st] : "Tous les États-Unis";
   if (sel == null) {
@@ -501,10 +692,11 @@ document.addEventListener("click", e => {
   if (!e.target.closest("#viPanneau")) return;
   const rs = e.target.closest("[data-regsel]"); if (rs) { choisirEtat(rs.dataset.regsel || null); return; }
   const es = e.target.closest("[data-etatsen]");
-  if (es) { const f = es.dataset.etatsen || null; sel = f; if (f) zoomVers(DATA.geoEtats.features.find(x => x.properties.id === f), 0.9); else svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); peindre(); dessinerPanneau(); return; }
+  if (es) { const f = es.dataset.etatsen || null, ft = f && DATA.geoEtats.features.find(x => x.properties.id === f); sel = f;
+    if (ft) zoomVers(ft, 0.9); else if (!f) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); peindre(); dessinerPanneau(); return; }
   const l = e.target.closest("[data-rid]"); if (l) { choisir(l.dataset.rid); return; }
-  if (e.target.closest("[data-tout]")) { if (TYPE === "sen") { sel = null; svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); peindre(); dessinerPanneau(); } else choisirEtat(etat.st); return; }
-  if (e.target.closest("[data-zoomsel]") && sel != null) zoomVers(features().find(x => x.properties.id === sel), 0.5);
+  if (e.target.closest("[data-tout]")) { if (TYPE !== "ch") { sel = null; svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); peindre(); dessinerPanneau(); } else choisirEtat(etat.st); return; }
+  const fz = e.target.closest("[data-zoomsel]") && sel != null && features().find(x => x.properties.id === sel); if (fz) zoomVers(fz, 0.5);
 });
 document.addEventListener("keydown", e => {
   const l = e.target.closest?.("#viPanneau [data-rid]"); if (l && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); choisir(l.dataset.rid); }
@@ -513,6 +705,8 @@ document.addEventListener("keydown", e => {
 /* ---------- évolution du vote générique ---------- */
 let periode = lireLS("vuPeriode", 3);   // 3 derniers mois par défaut
 function dessinerEvolution() {
+  if (TYPE === "pres") return dessinerEvolutionPres();
+  $("viEvolTitre").textContent = "Évolution du vote générique";
   const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
   const m = { t: 16, r: 54, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
@@ -562,13 +756,88 @@ function dessinerEvolution() {
   $("viEvolNote").textContent = `${sond.length} sondages nationaux sur la période (« pour quel parti voterez-vous au Congrès ? »). Lignes : moyenne de Silver Bulletin · points : sondages · losanges : vote populaire à la Chambre en 2024.`;
 }
 
+/* ---------- évolution des intentions de vote : présidentielle 2028 (primaire choisie ou duel choisi) ---------- */
+function seriePres() {
+  if (etatP.choix === "duels") {
+    const x = duelChoisi();
+    return { lignes: ["R", "D"], lab: k => nomCourt(x[k]), coul: k => COUL[k], sigma: 45, titre: `Duel ${nomCourt(x.R)}–${nomCourt(x.D)}`,
+      points: x.sondages.map(s => ({ d: s.d, f: s.f, n: s.n, v: { R: s.R, D: s.D } })),
+      note: n => `${pl(n, "sondage")} sur la période (élection générale, ${x.R} contre ${x.D}). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages.` };
+  }
+  const p = etatP.choix, S = PRES.primaires[p].sondages, fin = S[S.length - 1].d, c = {};
+  // candidats suivis : au moins 4 % en moyenne et 3 sondages sur les 6 derniers mois
+  S.filter(x => jours(x.d, fin) <= 183).forEach(x => Object.entries(x.v).forEach(([k, v]) => (c[k] ||= []).push(v)));
+  return { lignes: Object.entries(c).filter(([, v]) => d3.mean(v) >= 4 && v.length >= 3).map(([k]) => k), lab: nomCourt, coul: k => COUL_CAND[k] || COUL.AUT,
+    sigma: 30, titre: `Primaire ${p === "D" ? "démocrate" : "républicaine"}`, points: S,
+    note: n => `${pl(n, "sondage")} sur la période (sondages nationaux de la primaire ${p === "D" ? "démocrate" : "républicaine"} ; chaque sondage teste sa propre liste de candidats). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages.` };
+}
+function dessinerEvolutionPres() {
+  const S = seriePres();
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
+  const m = { t: 16, r: 92, b: 28, l: 34 };
+  const t = s => new Date(s + "T12:00:00");
+  const tous = S.points;
+  const debutTout = t("2024-01-01"), fin_ = d3.max([new Date(), ...tous.map(s => t(s.d))]);
+  // un duel n'a souvent que quelques sondages : s'il y en a moins de cinq sur la période choisie, on montre tout depuis 2024
+  const debutDe = per => per ? d3.max([debutTout, d3.timeMonth.offset(fin_, -per)]) : debutTout;
+  const per = etatP.choix === "duels" && tous.filter(s => t(s.d) >= debutDe(periode)).length < 5 ? 0 : periode;
+  const debut = debutDe(per);
+  const dans_ = d => t(d) >= debut, sond = tous.filter(s => dans_(s.d));
+  document.querySelectorAll("#viPeriodes button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.per === per));
+  $("viEvolSur").textContent = `${S.titre} · ${per ? (per < 12 ? `${per} derniers mois` : per === 12 ? "dernière année" : `${per / 12} dernières années`) : "depuis 2024"}`;
+  $("viEvolTitre").textContent = "Évolution des intentions de vote";
+  const x = d3.scaleTime().domain([debut, fin_]).range([m.l, W - m.r]);
+  const yMax = d3.max(sond, s => d3.max(S.lignes, p => s.v[p] || 0)) || 40;
+  const yMin = etatP.choix === "duels" ? Math.max(0, Math.floor((d3.min(sond, s => Math.min(s.v.R, s.v.D)) - 6) / 10) * 10) : 0;
+  const y = d3.scaleLinear().domain([yMin || 0, Math.ceil((yMax + 4) / 10) * 10]).range([H - m.b, m.t]);
+  // tendance : moyenne pondérée (noyau gaussien) aux semaines, seulement sur les sondages où le candidat figure
+  const dates = [];
+  if (tous.length) for (let d = t(tous[0].d); d <= t(tous[tous.length - 1].d); d = new Date(+d + 7 * 864e5)) dates.push(d.toISOString().slice(0, 10));
+  if (tous.length && dates[dates.length - 1] !== tous[tous.length - 1].d) dates.push(tous[tous.length - 1].d);
+  const datesVis = dates.filter(dans_);
+  const poids = (d, s) => Math.exp(-0.5 * ((t(d) - t(s.d)) / 864e5 / S.sigma) ** 2);
+  const moy = p => { const avec = tous.filter(s => s.v[p] != null), premier = avec[0]?.d, dernier = avec[avec.length - 1]?.d;
+    return datesVis.filter(d => d >= premier && d <= dernier).map(d => { let a = 0, w = 0; for (const s of avec) { const k = poids(d, s); a += k * s.v[p]; w += k; } return { d, v: a / w }; }); };
+  const ligne = d3.line().x(o => x(t(o.d))).y(o => y(o.v)).curve(d3.curveMonotoneX);
+  const svgE = d3.select(el).html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", `Évolution des intentions de vote : ${S.titre}`);
+  const court = per && per <= 6;
+  svgE.append("g").attr("class", "vi-axe").attr("transform", `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(W < 600 ? 4 : W < 1000 ? 5 : court ? 6 : 8)
+    .tickFormat(d => d.toLocaleDateString("fr-CA", court ? { day: "numeric", month: "short" } : { month: "short", year: "numeric" })).tickSizeOuter(0));
+  svgE.append("g").attr("class", "vi-axe vi-grille").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(v => v + " %"));
+  const fin = {};
+  for (const p of S.lignes) {
+    svgE.append("g").selectAll("circle").data(sond.filter(s => s.v[p] != null)).join("circle").attr("class", "vi-pt").attr("cx", s => x(t(s.d))).attr("cy", s => y(s.v[p])).attr("r", 3.2).style("fill", S.coul(p));
+    const mm = moy(p); if (mm.length) fin[p] = mm[mm.length - 1];
+    if (mm.length > 1) svgE.append("path").attr("class", "vi-ligne").attr("d", ligne(mm)).style("stroke", S.coul(p));
+  }
+  const etiq = S.lignes.filter(p => fin[p]).map(p => ({ p, y: y(fin[p].v), v: fin[p].v, x: x(t(fin[p].d)) })).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < etiq.length; i++) if (etiq[i].y - etiq[i - 1].y < 13) etiq[i].y = etiq[i - 1].y + 13;
+  svgE.append("g").selectAll("text").data(etiq).join("text").attr("class", "vi-fin").attr("x", d => d.x + 6).attr("y", d => d.y + 4).style("fill", d => S.coul(d.p)).text(d => `${S.lab(d.p)} ${nf(d.v, 0)}`);
+  const tipE = $("viEvolTip"), repere = svgE.append("line").attr("class", "vi-repere").attr("y1", m.t).attr("y2", H - m.b).style("display", "none");
+  svgE.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
+    .on("mousemove", ev => {
+      if (!sond.length) return;
+      const [mx] = d3.pointer(ev), dt = x.invert(mx), s = sond.reduce((a, b) => Math.abs(t(b.d) - dt) < Math.abs(t(a.d) - dt) ? b : a);
+      repere.style("display", null).attr("x1", x(t(s.d))).attr("x2", x(t(s.d)));
+      tipE.hidden = false; tipE.innerHTML = `<b>${esc(s.f)}</b><small>${dateFr(s.d)}${s.n ? ` · ${esc(s.n)}` : ""}</small>`
+        + Object.entries(s.v).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span style="--c:${S.coul(k)}"><i></i>${esc(etatP.choix === "duels" ? S.lab(k) : k)} <b>${nf(v, 1)} %</b></span>`).join("");
+      const r = el.getBoundingClientRect(), px = x(t(s.d)) * r.width / W;
+      tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
+    })
+    .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  $("viEvolNote").textContent = S.note(sond.length) + (per !== periode ? " Trop peu de sondages sur la période choisie : tout est affiché depuis 2024." : "");
+}
+
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
-    [DATA, PROJ, R24, SOND] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"), lireJ("votes-usa/sondages.json"), lireVerif("usa")]);
+    [DATA, PROJ, R24, SOND, PRES, RP] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"),
+      lireJ("votes-usa/sondages.json"), lireJ("votes-usa/presidentielle.json"), lireJ("votes-usa/presidentielles.json"), lireVerif("usa")]);
     DATA.etats.forEach(e => { AB_DE[e.fips] = e.ab; ETAT_NOM[e.ab] = e.nom; });
+    AB_DE["11"] = "DC"; ETAT_NOM.DC = "District de Columbia";             // présidentielle seulement (pas de district ni de sénateur)
+    couleursPrimaires();
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
     ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;

@@ -492,6 +492,21 @@
     @media (min-width: 1000px) { .vc .vi-haut { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
     .vc .vi-plan.vc-plan { max-width: none; }
     .vc-choix { justify-self: start; }
+    .vc-choix[hidden] { display: none; }
+    /* Votes États-Unis, présidentielle : duels de l'élection générale (bouton = choix du duel du graphique) */
+    .vu-cands { gap: 10px; }
+    .vu-cands .vf-cand { grid-template-columns: minmax(0, 17em) minmax(0, 1fr) 4.4em; }
+    .vu-cands .vf-cand small { white-space: normal; }
+    .vu-duel { display: grid; gap: 5px; width: 100%; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+    .vu-duel[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+    .vu-duel:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vu-duel-noms { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 0.88rem; }
+    .vu-duel-noms b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vu-duel-noms b span { font-variant-numeric: tabular-nums; }
+    .vu-duel-noms b:last-child { text-align: right; }
+    .vu-duel-noms small { color: var(--muted); font-size: 0.72rem; }
+    .vu-duel-barre { display: flex; justify-content: space-between; height: 10px; border-radius: 4px; overflow: hidden; background: var(--soft); }
+    .vu-duel-barre i { display: block; height: 100%; }
     .vf-legende small { color: var(--muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
     .vc .lv-rid { stroke-width: 0.2px; }
     /* Votes États-Unis : hémicycle de 435 sièges (comme Votes France) */
@@ -668,7 +683,7 @@
             <b>Votes Canada</b><small>Projection fédérale Qc125</small>
           </a>
           <a class="sc-tab" href="votes-usa.html">
-            <b>Votes États-Unis</b><small>Chambre et Sénat</small>
+            <b>Votes États-Unis</b><small>Congrès et présidentielle</small>
           </a>
           <a class="sc-tab" href="votes-france.html" aria-current="page">
             <b>Votes France</b><small>Présidentielle et législatives</small>
