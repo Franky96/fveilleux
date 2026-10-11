@@ -623,6 +623,13 @@
     .vi-evol { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
     .vi-evol h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .vi-evol-zone { position: relative; }
+    /* zoom vertical (votes-quebec/zoom-y.js) : la molette reste dans le graphique ; zoomé, on le glisse pour monter ou descendre */
+    #viEvol { overscroll-behavior: contain; }
+    #viEvol.vi-zoome svg { cursor: grab; user-select: none; -webkit-user-select: none; }
+    #viEvol.vi-zoom-prise svg { cursor: grabbing; }
+    .vi-zoom-piste { fill: var(--soft); }
+    .vi-zoom-curseur { fill: var(--muted); cursor: ns-resize; }
+    .vi-zoom-barre:hover .vi-zoom-curseur, .vi-zoom-prise .vi-zoom-curseur { fill: var(--ink); }
     #viEvol svg { display: block; width: 100%; height: auto; overflow: visible; }
     .vi-axe text { fill: var(--muted); font-size: 11px; }
     .vi-axe path, .vi-axe line { stroke: var(--rule); }
