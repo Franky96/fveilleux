@@ -4,7 +4,7 @@
    Évolution : tous les sondages nationaux depuis l'élection de 2022 (sondages.json, Qc125).
    Carte et panneaux : mêmes fonctions que la « carte actuelle » de la simulation Loi 39 (loi39.js) — parti en tête,
    meilleur deuxième, vote par parti avec le % de chaque circonscription ; plan de l'Assemblée au lieu de la barre. */
-import { domaineY, decouper } from "./zoom-y.js";
+import { domaineY, decouper, placerBulle } from "./zoom-y.js";
 
 const SIEGES = 127, MAJ = 64;
 const P5 = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];                // ordre de data.json (ridings[].s)
@@ -444,7 +444,7 @@ function dessinerEvolution() {
       tipE.hidden = false; tipE.innerHTML = `<b>Semaine du ${dateFr(d)}</b><small>tendance · ${n} sondage${n > 1 ? "s" : ""} à ±30 jours</small>`
         + vals.map(([p, v]) => `<span style="--c:${COUL[p]}"><i></i>${p} <b>${nf(v, 1)} %</b></span>`).join("");
       const r = el.getBoundingClientRect(), px = x(t(d)) * r.width / W;
-      tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
+      placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125${DEMO ? `, dont ${sond.filter(x => x.d > DATE_ELECTION).length} fictifs pour la démo` : ""}). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultats des élections.`;

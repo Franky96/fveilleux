@@ -4,7 +4,7 @@
    de Qc125 (changements de parti, sièges vacants). Élection du 28 avril 2025 : résultat de chaque circonscription.
    Évolution : tous les sondages nationaux depuis l'élection de 2025 (sondages.json, outils/sondages_ca.py).
    Contours des 343 circonscriptions (découpage de 2023) : data.json (outils/canada_geo.py). */
-import { domaineY, decouper } from "../votes-quebec/zoom-y.js";
+import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -509,7 +509,7 @@ function dessinerEvolution() {
       tipE.hidden = false; tipE.innerHTML = `<b>Semaine du ${dateFr(d)}</b><small>tendance · ${n} sondage${n > 1 ? "s" : ""} à ±30 jours</small>`
         + vals.map(([p, v]) => `<span style="--c:${COUL[p]}"><i></i>${p} <b>${nf(v, 1)} %</b></span>`).join("");
       const r = el.getBoundingClientRect(), px = x(t(d)) * r.width / W;
-      tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
+      placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultat de l'élection.`;

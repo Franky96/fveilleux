@@ -4,7 +4,7 @@
    ajoutées à data.json par outils/assemblee_fr.py) — c'est l'état le plus récent tant qu'aucun sondage législatif récent n'existe.
    Intentions de vote : législatives (sondages.json, rares depuis la fin de 2025) et présidentielle 2027 (sondages-pres.json),
    tableaux Wikipédia qui citent chaque sondeur. Aucune projection en sièges (2 tours : trop incertain par circonscription). */
-import { domaineY, decouper } from "../votes-quebec/zoom-y.js";
+import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 
 const SIEGES = 577, MAJ = 289;
 const NOMS = { EXG: "Extrême gauche", NFP: "Gauche (NFP)", DVG: "Divers gauche", REG: "Régionalistes", ENS: "Ensemble (centre)", DVC: "Divers centre",
@@ -497,7 +497,7 @@ function dessinerEvolution() {
       tipE.hidden = false; tipE.innerHTML = `<b>${esc(s.f)}</b><small>${dateFr(s.d)}${s.n ? ` · ${esc(s.n)} répondants` : ""}</small>`
         + Object.entries(s.v).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span style="--c:${S.coul(k)}"><i></i>${esc(S.lab(k))} <b>${nf(v, 1)} %</b></span>`).join("");
       const r = el.getBoundingClientRect(), px = x(t(s.d)) * r.width / W;
-      tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
+      placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   $("viEvolNote").textContent = S.note(sond.length);

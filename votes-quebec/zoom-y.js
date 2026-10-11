@@ -107,3 +107,11 @@ export function decouper(svgE, el, y, m, W, H) {
   g.append("rect").attr("class", "vi-zoom-curseur").attr("x", x).attr("y", Math.min(haut, m.t + h - long)).attr("width", 5).attr("height", long).attr("rx", 2.5)
     .append("title").text("Glisser pour monter ou descendre dans le graphique");
 }
+
+// bulle d'info d'un graphique : à droite du repère vertical, ou à gauche s'il n'y a pas la place
+// (elle ne cache ainsi jamais le repère ni le bout des courbes et leurs étiquettes)
+export function placerBulle(tipE, px, largeur) {
+  const w = tipE.offsetWidth;
+  tipE.style.left = (px + 12 + w <= largeur - 4 ? px + 12 : Math.max(4, px - 12 - w)) + "px";
+  tipE.style.top = "8px";
+}

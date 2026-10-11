@@ -7,7 +7,7 @@
    Présidentielle : sondages des primaires et duels de l'élection générale (presidentielle.json, outils/presidentielle.py),
    résultats de 2024 et 2020 par État (presidentielles.json, outils/resultats_pres.py).
    Contours : data.json (outils/usa_geo.py, carte de 270toWin). */
-import { domaineY, decouper } from "../votes-quebec/zoom-y.js";
+import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 
 const SIEGES = 435, MAJ = 218;
 const P = ["D", "R"];
@@ -775,7 +775,7 @@ function dessinerEvolution() {
       tipE.hidden = false; tipE.innerHTML = `<b>${dateFr(o.d)}</b><small>moyenne de Silver Bulletin · ${n} sondage${n > 1 ? "s" : ""} à ±15 jours</small>`
         + P.map(p => `<span style="--c:${COUL[p]}"><i></i>${p === "D" ? "Démocrates" : "Républicains"} <b>${nf(o[p], 1)} %</b></span>`).join("");
       const r = el.getBoundingClientRect(), px = x(t(o.d)) * r.width / W;
-      tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
+      placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   $("viEvolNote").textContent = `${sond.length} sondages nationaux sur la période (« pour quel parti voterez-vous au Congrès ? »). Lignes : moyenne de Silver Bulletin · points : sondages · losanges : vote populaire à la Chambre en 2024.`;
@@ -858,7 +858,7 @@ function dessinerEvolutionPres() {
       tipE.hidden = false; tipE.innerHTML = `<b>${esc(s.f)}</b><small>${dateFr(s.d)}${s.n ? ` · ${esc(s.n)}` : ""}</small>`
         + Object.entries(s.v).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span style="--c:${S.coul(k)}"><i></i>${esc(etatP.choix === "duels" || S.direct ? S.lab(k) : k)} <b>${nf(v, 1)} %</b></span>`).join("");
       const r = el.getBoundingClientRect(), px = x(t(s.d)) * r.width / W;
-      tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
+      placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   $("viEvolNote").textContent = S.note(sond.length) + (per !== periode ? ` Trop peu de sondages sur la période choisie : tout est affiché ${depuis}.` : "");
