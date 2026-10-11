@@ -639,8 +639,9 @@
     .vi-dlg::backdrop { background: rgba(5, 8, 14, 0.62); backdrop-filter: blur(2px); }
     .vi-dlg-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 14px 16px; padding: 18px 24px 0; border-bottom: 1px solid var(--rule); }
     .vi-dlg-tete > div:first-child { padding-bottom: 2px; }
-    /* deux parties bien distinctes : système politique (violet) et système électoral (sarcelle) */
-    .vi-dlg { --sys-pol: #7A5AF8; --sys-elec: #0E9F8E; }
+    /* deux parties bien distinctes : système politique (or) et système électoral (sarcelle), hors des couleurs des partis */
+    .vi-dlg { --sys-pol: #9A6A10; --sys-elec: #0B8577; }
+    :root[data-theme="dark"] .vi-dlg { --sys-pol: #E2B041; --sys-elec: #19B3A1; }
     .vi-dlg-onglets { flex-basis: 100%; display: flex; gap: 4px; margin-bottom: -1px; }
     .vi-dlg-onglets[hidden] { display: none; }
     .vi-dlg-onglets button { display: grid; gap: 1px; text-align: left; padding: 8px 16px 10px; border: 1px solid transparent; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
