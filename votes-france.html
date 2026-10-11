@@ -639,10 +639,33 @@
     .vi-dlg { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--bg, var(--surface)); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,0.45); }
     .vi-dlg[open] { display: flex; flex-direction: column; }
     .vi-dlg::backdrop { background: rgba(5, 8, 14, 0.62); backdrop-filter: blur(2px); }
-    .vi-dlg-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 24px 14px; border-bottom: 1px solid var(--rule); }
+    .vi-dlg-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 14px 16px; padding: 18px 24px 0; border-bottom: 1px solid var(--rule); }
+    .vi-dlg-tete > div:first-child { padding-bottom: 2px; }
+    /* deux parties bien distinctes : système politique (violet) et système électoral (sarcelle) */
+    .vi-dlg { --sys-pol: #7A5AF8; --sys-elec: #0E9F8E; }
+    .vi-dlg-onglets { flex-basis: 100%; display: flex; gap: 4px; margin-bottom: -1px; }
+    .vi-dlg-onglets[hidden] { display: none; }
+    .vi-dlg-onglets button { display: grid; gap: 1px; text-align: left; padding: 8px 16px 10px; border: 1px solid transparent; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+    .vi-dlg-onglets button small { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+    .vi-dlg-onglets button:hover { color: var(--ink); }
+    .vi-dlg-onglets button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+    .vi-dlg-onglets button[aria-selected="true"] { color: var(--ink); background: var(--surface); border-color: var(--rule); border-bottom-color: var(--c-part); }
+    .vi-dlg-onglets button[data-partie="politique"] { --c-part: var(--sys-pol); }
+    .vi-dlg-onglets button[data-partie="electoral"] { --c-part: var(--sys-elec); }
+    .vi-dlg-onglets button[aria-selected="true"] small { color: var(--c-part); }
+    .vi-dlg-partie { display: grid; gap: 26px; }
+    .vi-dlg-partie[hidden] { display: none; }
+    .vi-dlg-partie-politique { --c-part: var(--sys-pol); }
+    .vi-dlg-partie-electoral { --c-part: var(--sys-elec); }
+    .vi-dlg-chapeau { display: grid; gap: 4px; max-width: 74ch; padding-left: 14px; border-left: 4px solid var(--c-part); font-size: 1.02rem; }
+    .vi-dlg-chapeau span { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; font-weight: 700; color: var(--c-part); }
+    .vi-dlg-partie h3 { display: flex; align-items: center; gap: 10px; }
+    .vi-dlg-partie h3::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--c-part); }
+    .vi-dlg-partie .vi-dlg-chiffres b { color: var(--c-part); }
+    .vi-dlg-corps a[data-aller] { color: var(--c-lien, inherit); font-weight: 700; }
     .vi-dlg-tete h2 { margin: 4px 0 0; font-family: "Literata", Georgia, serif; font-size: clamp(1.3rem, 2.6vw, 1.75rem); text-wrap: balance; }
     .vi-dlg-fermer { flex: none; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
-    .vi-dlg-corps { overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px 28px; display: grid; gap: 26px; font-size: 0.95rem; line-height: 1.6; }
+    .vi-dlg-corps { overflow-y: auto; overscroll-behavior: contain; padding: 22px 24px 28px; display: grid; gap: 26px; font-size: 0.95rem; line-height: 1.6; }
     .vi-dlg-corps section { display: grid; gap: 8px; max-width: 74ch; }
     .vi-dlg-corps h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .vi-dlg-corps p { margin: 0; }
@@ -663,7 +686,7 @@
     .vi-dlg-legende { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 0.8rem; }
     .vi-dlg-legende span::before { content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 6px; border-radius: 3px; background: var(--ink); vertical-align: middle; }
     .vi-dlg-legende span + span::before { opacity: 0.45; }
-    @media (max-width: 700px) { .vi-dlg-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vi-dlg-tete, .vi-dlg-corps { padding-left: 16px; padding-right: 16px; } .vi-dlg-vs-ligne { grid-template-columns: 3.4em minmax(0, 1fr) 8.6em; } }
+    @media (max-width: 700px) { .vi-dlg-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vi-dlg-chiffres b { font-size: 1.2rem; overflow-wrap: anywhere; } .vi-dlg-onglets button { padding: 6px 10px 8px; font-size: 0.88rem; } .vi-dlg-tete, .vi-dlg-corps { padding-left: 16px; padding-right: 16px; } .vi-dlg-vs-ligne { grid-template-columns: 3.4em minmax(0, 1fr) 8.6em; } }
     /* zoom vertical (votes-quebec/zoom-y.js) : la molette reste dans le graphique ; zoomé, on le glisse pour monter ou descendre */
     #viEvol { overscroll-behavior: contain; }
     #viEvol.vi-zoome svg { cursor: grab; user-select: none; -webkit-user-select: none; }
@@ -753,12 +776,13 @@
           <h2 id="viTitre">Votes France</h2>
           <p class="lv-etat" id="viSource">Chargement…</p>
           <!-- explication du système électoral : le module de la page remplit la fenêtre et affiche le bouton -->
-          <button type="button" class="vi-systeme-btn" id="viSysteme" aria-haspopup="dialog" hidden><span aria-hidden="true">?</span>Comprendre le système électoral</button>
+          <button type="button" class="vi-systeme-btn" id="viSysteme" aria-haspopup="dialog" hidden><span aria-hidden="true">?</span>Comprendre le système politique et électoral</button>
         </div>
         <dialog class="vi-dlg" id="viSystemeDlg" aria-labelledby="viSystemeTitre">
           <div class="vi-dlg-tete">
-            <div><span class="lv-eyebrow" id="viSystemeSur">Système électoral</span><h2 id="viSystemeTitre">Comprendre le système électoral</h2></div>
+            <div><span class="lv-eyebrow" id="viSystemeSur">Système politique et électoral</span><h2 id="viSystemeTitre">Comprendre le système politique et électoral</h2></div>
             <button type="button" class="vi-dlg-fermer" id="viSystemeFermer">Fermer <span aria-hidden="true">✕</span></button>
+            <div class="vi-dlg-onglets" id="viSystemeOnglets" role="tablist" aria-label="Parties de l'explication" hidden></div>
           </div>
           <div class="vi-dlg-corps" id="viSystemeCorps"></div>
         </dialog>
