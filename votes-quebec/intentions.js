@@ -477,13 +477,24 @@ function systemeElectoral() {
       <span class="vi-dlg-vs-barres"><i style="width:${2 * V[p]}%"></i><i style="width:${Math.max(0.6, 2 * pctS(p))}%"></i></span>
       <small>${nf(V[p], 1)} % des voix<br>${S[p] || 0} siège${(S[p] || 0) > 1 ? "s" : ""} (${nf(pctS(p), 0)} %)</small></div>`).join("");
   $("viSystemeSur").textContent = "Québec · Assemblée nationale";
-  $("viSystemeTitre").textContent = "Le système électoral du Québec";
+  $("viSystemeTitre").textContent = "Le système politique et électoral du Québec";
   $("viSystemeCorps").innerHTML = `
     <section class="vi-dlg-chiffres" aria-label="En bref">
       <div><b>${N}</b><small>circonscriptions, un député chacune</small></div>
       <div><b>${MAJ}</b><small>sièges pour un gouvernement majoritaire</small></div>
       <div><b>1 tour</b><small>le candidat qui a le plus de voix est élu</small></div>
       <div><b>4 ans</b><small>élection à date fixe ; prochaine le 7 octobre 2030</small></div>
+    </section>
+    <section>
+      <h3>Le régime politique</h3>
+      <p>Le Québec est une <b>province du Canada</b>, une <b>monarchie constitutionnelle</b> dotée d'un <b>régime parlementaire</b> de tradition britannique (dit « de Westminster »).</p>
+      <ul>
+        <li><b>Chef de l'État</b> : le roi du Canada (Charles III depuis 2022), représenté au Québec par le <b>lieutenant-gouverneur</b>, nommé par le gouverneur général sur recommandation du premier ministre du Canada. Son rôle est surtout symbolique : il sanctionne les lois, nomme le premier ministre et dissout l'Assemblée, toujours selon les règles et les conventions du régime, sur l'avis du gouvernement.</li>
+        <li><b>Pouvoir législatif</b> : le Parlement du Québec, formé du lieutenant-gouverneur et de l'<b>Assemblée nationale</b>, la seule chambre depuis l'abolition du Conseil législatif en 1968. Les députés adoptent les lois et le budget, et contrôlent le gouvernement (période des questions, commissions).</li>
+        <li><b>Pouvoir exécutif</b> : le <b>premier ministre</b> et le Conseil des ministres, choisis parmi les élus. C'est un <b>gouvernement responsable</b> : il ne reste en place que tant qu'il garde la confiance de la majorité des députés. Le chef du gouvernement n'est donc pas élu directement : c'est l'élection des députés qui détermine qui gouverne.</li>
+        <li><b>Pouvoir judiciaire</b> : des tribunaux indépendants du gouvernement ; en droit privé, le Québec applique son propre Code civil, hérité de la tradition française.</li>
+        <li><b>Fédération</b> : la Constitution du Canada partage les compétences. Québec s'occupe notamment de la santé, de l'éducation, du droit civil, des municipalités et des ressources naturelles ; Ottawa, de la défense, de la monnaie, du droit criminel et des affaires étrangères. Les Québécois élisent donc aussi des députés à la Chambre des communes (voir la page <a href="votes-canada.html">Votes Canada</a>).</li>
+      </ul>
     </section>
     <section>
       <h3>Une élection, ${N} courses</h3>
