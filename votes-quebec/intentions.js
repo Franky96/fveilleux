@@ -309,6 +309,9 @@ function peindre() {
     : etat.mode === "second" ? `Couleur : parti arrivé deuxième dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
     : `Couleur : parti en tête dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé.`;
 }
+// gagnant de la circonscription (candidat du parti en tête ; le premier en voix s'il manque)
+const deputeDe = c => c?.cands?.length ? c.cands.find(k => k.p === c.g) || c.cands[0] : null;
+const ecartVoix = c => { const d = deputeDe(c), autre = (c?.cands || []).filter(k => k !== d).sort((a, b) => b.v - a.v)[0]; return d && autre ? d.v - autre.v : null; };
 function infobulle(e, f) {
   const i = f.properties.RID, c = ETAT.circ[i], r = DATA.ridings[i], t = $("viTip");
   const box = svg.node().parentNode.getBoundingClientRect();
@@ -316,7 +319,8 @@ function infobulle(e, f) {
   t.hidden = false; t.style.left = px + "px"; t.style.top = (e.clientY - box.top + 14) + "px";
   const reg = DATA.regions.find(x => x.code === r.r)?.name || "";
   t.innerHTML = `<b>${esc(r.n)}</b><small>${esc(reg)} · ${nf(r.e)} électeurs</small><br>`
-    + (c ? Object.entries(c.parts).filter(([p]) => p !== "AUT").slice(0, 3).map(([p, v]) => `${p} ${nf(v, MODE === "election" ? 1 : 0)} %`).join(" · ") : "Aucune donnée");
+    + (c ? Object.entries(c.parts).filter(([p]) => p !== "AUT").slice(0, 3).map(([p, v]) => `${p} ${nf(v, MODE === "election" ? 1 : 0)} %`).join(" · ") : "Aucune donnée")
+    + (MODE === "election" && deputeDe(c) ? `<br><small>${c.final ? "Député" : "En avance"} : ${esc(deputeDe(c).nom)} (${deputeDe(c).p})</small>` : "");
 }
 // plein écran de la carte (API du navigateur, sinon couche fixe sur iPhone)
 function pleinEcran() {
@@ -358,15 +362,20 @@ function dessinerPanneau() {
   const r = DATA.ridings[sel], c = ETAT.circ[sel], reg = DATA.regions.find(x => x.code === r.r)?.name || "";
   if (!c) { z.innerHTML = `<span class="lv-eyebrow">${esc(reg)}</span><h3>${esc(r.n)}</h3><p class="lv-muted">Aucune donnée.</p>`; return; }
   const parts = Object.entries(c.parts).filter(([, v]) => v >= 0.5);
+  // élection terminée : le gagnant est le député de la circonscription, mis en évidence en haut de la fiche
+  const dep = MODE === "election" ? deputeDe(c) : null;
   z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>
-    <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[c.g]}"></i>${MODE === "election" ? "Élu" : "En tête"} : ${c.g}</span>
-      <span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span><span class="vi-pill">${nf(r.e)} électeurs</span></div>
+    ${dep ? `<span class="lv-eyebrow">${c.final ? "Député de la circonscription" : "En avance · résultat préliminaire"}</span>
+    <p class="vi-elu vi-depute" style="--c:${COUL[dep.p] || COUL.AUT}"><b>${esc(dep.nom)}</b><span>${esc(NOMS[dep.p] || dep.sigle)}</span>
+      <small>Victoire avec ${nf(dep.v)} voix (${nf(c.parts[dep.p] || 0, 1)} %)${ecartVoix(c) != null ? ` · ${nf(ecartVoix(c))} voix d'avance (${nf(c.marge, 1)} point${c.marge >= 2 ? "s" : ""})` : ""}</small></p>` : ""}
+    <div class="vi-pills">${dep ? "" : `<span class="vi-pill"><i style="background:${COUL[c.g]}"></i>${MODE === "election" ? "Élu" : "En tête"} : ${c.g}</span>`}
+      ${dep ? "" : `<span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span>`}<span class="vi-pill">${nf(r.e)} électeurs</span></div>
     <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tout le Québec</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
       ${r.id ? `<a class="vi-lien" href="https://qc125.com/${r.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>` : ""}</div>
     <span class="lv-eyebrow">${MODE === "election" ? "Résultat" : ETAT.libProj}</span>
     <div class="vi-vrows">${parts.map(([p, v]) => `<div class="vi-vrow${p === c.g ? " win" : ""}"><b style="color:${COUL[p]}">${p === "AUT" ? "Autres" : p}</b>`
       + `<span class="vi-jauge"><i style="width:${Math.min(100, v * 2)}%;background:${COUL[p]}"></i></span><span class="vi-num">${nf(v, MODE === "election" ? 1 : 0)} %</span><span></span></div>`).join("")}</div>`
-    + (c.cands ? `<span class="lv-eyebrow">Candidats en tête</span><ul class="vi-cands">${c.cands.map(k => `<li style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}</span><em>${esc(k.sigle)}</em><b>${nf(k.v)}</b></li>`).join("")}</ul>` : "")
+    + (c.cands ? `<span class="lv-eyebrow">Candidats en tête</span><ul class="vi-cands">${c.cands.map(k => `<li class="${k === dep ? "vi-cand-elu" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}${k === dep ? ` <small>${c.final ? "député" : "en avance"}</small>` : ""}</span><em>${esc(k.sigle)}</em><b>${nf(k.v)}</b></li>`).join("")}</ul>` : "")
     + (c.part ? `<p class="lv-muted">Participation : ${nf(c.part, 1)} %${c.final ? "" : " · résultat préliminaire"}</p>` : "");
 }
 document.addEventListener("click", e => {

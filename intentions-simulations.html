@@ -554,6 +554,13 @@
     .vi-vrow.vf-pres small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
     .vf .vi-vrow > b:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .vi-elu { margin: 0; padding-left: 10px; border-left: 4px solid var(--c); font-size: 0.9rem; }
+    /* Votes Québec : député de la circonscription cliquée (élection terminée), en évidence en haut de la fiche */
+    .vi-depute { display: grid; gap: 2px; padding: 10px 12px; border-left-width: 6px; border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--c) 14%, var(--surface)); }
+    .vi-depute b { font-size: 1.15rem; }
+    .vi-depute span { font-size: 0.88rem; font-weight: 700; color: var(--c); }
+    .vi-depute small { font-size: 0.8rem; color: var(--muted); }
+    .vi-cands li.vi-cand-elu span { font-weight: 700; }
+    .vi-cands li.vi-cand-elu small { margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: var(--c); color: #fff; font-size: 0.68rem; font-weight: 700; }
     .vf .vi-serres li { grid-template-columns: 10px minmax(0, 1fr) auto; }
     .vue-votes .vi-badge-demo { color: #E0A11B; border-color: #E0A11B; }
     .vi-carte { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
