@@ -437,6 +437,9 @@
     .vf-dep { stroke-width: 0.9px; }
     .vf-encarts { fill: none; stroke: var(--rule); stroke-width: 1px; vector-effect: non-scaling-stroke; }
     /* Votes France : choix législatives / présidentielle (en haut), et intentions présidentielles à la place de l'hémicycle */
+    /* choix de l'élection (France, États-Unis) : toujours sur sa propre ligne sous le titre, pour ne pas changer de place
+       selon la longueur de la ligne de source */
+    .lv-head:has(> .vf-type) { flex-direction: column; align-items: flex-start; }
     .vf-type button { font: inherit; font-size: 0.9rem; font-weight: 700; padding: 8px 16px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
     .vf-type button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
     .vf-type button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
