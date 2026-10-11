@@ -102,10 +102,12 @@ async function demarrer() {
       const [k, v] = Object.entries(c).map(([k, v]) => [k, v.reduce((a, b) => a + b, 0) / v.length]).sort((a, b) => b[1] - a[1])[0];
       return `${esc(k.split(" ").slice(-1)[0])} (${nf(v, 0)} %)`; };
     const pres = meneur("D") && meneur("R") ? ` Présidentielle 2028, en tête des primaires : ${meneur("D")} chez les démocrates, ${meneur("R")} chez les républicains.` : "";
+    const mp = UPR?.marches?.parti, chD = mp ? (mp.polymarket.D + mp.kalshi.D) / 2 : null;
+    const marche = chD != null ? ` Marchés de prédiction : ${chD >= 50 ? `démocrates favoris (${nf(chD, 0)} %)` : `républicains favoris (${nf((mp.polymarket.R + mp.kalshi.R) / 2, 0)} %)`}.` : "";
     cartes.push(carte({ url: "votes-usa.html", eyebrow: "Projection · États-Unis", titre: "Votes États-Unis",
       chiffre: `D ${d} · R ${r}`, legende: `sièges favoris à la Chambre (sur 435, majorité 218) · ${t} à égalité`,
       barreHtml: barre(["D3", "D2", "D1", "T", "R1", "R2", "R3"].map(k => ({ lab: k[0] === "T" ? "Égalité" : k[0], n: n[k] || 0, c: CU[k] })), 435, 218),
-      phrase: `Chambre des représentants, consensus de sept prévisionnistes.${sen}${m ? ` Vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} %.` : ""}${pres}`,
+      phrase: `Chambre des représentants, consensus de sept prévisionnistes.${sen}${m ? ` Vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} %.` : ""}${pres}${marche}`,
       donnees: `consensus 270toWin du ${dateFr(UP.maj)}${m ? ` · vote générique au ${dateFr(m.d)}` : ""}`, verif: v.usa }));
   }
   // Votes France : Assemblée actuelle et présidentielle 2027

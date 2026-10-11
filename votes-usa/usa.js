@@ -186,7 +186,7 @@ function dessinerChambreSenat() {
 }
 
 /* ---------- présidentielle 2028 : en-tête, primaires et duels ---------- */
-const CHOIX_PRES = { D: "Primaire démocrate", R: "Primaire républicaine", duels: "Duels" };
+const CHOIX_PRES = { D: "Primaire démocrate", R: "Primaire républicaine", duels: "Duels", marches: "Marchés de prédiction" };
 const etatP = { choix: lireLS("vuPresChoix", "D"), duel: null };
 if (!CHOIX_PRES[etatP.choix]) etatP.choix = "D";
 // fonction de chaque personnalité testée dans les sondages (information d'appoint sous le nom)
@@ -232,12 +232,19 @@ function duelsActifs() {
     .sort((a, b) => b.sondages.length - a.sondages.length || (b.sondages[b.sondages.length - 1].d > a.sondages[a.sondages.length - 1].d ? 1 : -1));
 }
 const duelChoisi = () => { const L = duelsActifs(); return L.find(x => x.titre === etatP.duel) || L[0]; };
+// marchés de prédiction (Polymarket, Kalshi) : moyenne des deux plateformes quand les deux ont le marché
+const MAR = () => PRES.marches;
+const moyMarche = x => { const v = [x.polymarket, x.kalshi].filter(y => y != null); return v.length ? d3.mean(v) : null; };
+const partiMarche = k => d3.mean([MAR().parti.polymarket[k], MAR().parti.kalshi[k]]);
+const chanceInvest = (p, nom) => { const x = MAR()?.[p === "D" ? "nomD" : "nomR"].find(y => y.nom === nom); return x ? moyMarche(x) : null; };
 const moyDuel = x => { const r = x.sondages.slice(-5); return { R: d3.mean(r, s => s.R), D: d3.mean(r, s => s.D), n: r.length }; };
 function dessinerTetePres(ex) {
-  majBarre("Votes États-Unis · présidentielle 2028", `dernier sondage le ${dateFr(dernierSondagePres())}`);
+  majBarre("Votes États-Unis · présidentielle 2028", `dernier sondage le ${dateFr(dernierSondagePres())}${MAR() ? ` · marchés au ${dateFr(MAR().maj)}` : ""}`);
+  document.querySelector('#vuChoixPres [data-cp="marches"]').hidden = !MAR();
+  if (!MAR() && etatP.choix === "marches") etatP.choix = "D";
   document.querySelector(".vue-votes .vi-badge").textContent = "États-Unis · Présidentielle 2028";
   $("viTitre").textContent = `Présidentielle ${AN(2028)} : intentions de vote`;
-  $("viSource").innerHTML = "Source : sondages nationaux compilés par Wikipédia (avec un lien vers chacun) · moyennes publiées de 270toWin et RealClearPolling";
+  $("viSource").innerHTML = "Source : sondages nationaux compilés par Wikipédia (avec un lien vers chacun) · moyennes publiées de 270toWin et RealClearPolling · marchés de prédiction Polymarket et Kalshi";
   $("viNote").textContent = ""; $("viNote").hidden = true;
   ex.innerHTML = `<p>Le président est élu pour quatre ans par un collège de 538 grands électeurs, répartis entre les États selon leur population (le District de Columbia en a 3). Dans 48 États et dans le District de Columbia, le candidat en tête remporte tous les grands électeurs ; le Maine et le Nebraska en donnent deux au gagnant de l'État et un au gagnant de chaque district. Il faut 270 grands électeurs pour être élu. Donald Trump ne peut pas se représenter (22e amendement). Chaque parti choisit son candidat lors de primaires, État par État, de janvier à juin ${AN(2028)} ; l'élection aura lieu le 7 novembre ${AN(2028)}.</p>`;
   dessinerChambre();
@@ -256,10 +263,26 @@ function dessinerChambrePres() {
       + `<p class="lv-muted lv-source">Moyenne des cinq derniers sondages de chaque duel (ou de tous s'il y en a moins) ; l'espace entre les deux barres : indécis et autres candidats. Clique sur un duel pour voir son évolution.</p>`;
     return;
   }
+  if (etatP.choix === "marches") {
+    const D = partiMarche("D"), R = partiMarche("R"), fav = D >= R ? "D" : "R", G = MAR().gagnant, max = Math.max(30, ...G.map(moyMarche));
+    eb.textContent = "Marchés de prédiction · Polymarket et Kalshi";
+    $("viSiegesTitre").textContent = `${fav === "D" ? "Démocrates" : "Républicains"} favoris : ${nf(Math.max(D, R), 0)} % de chances`;
+    const src = x => [x.polymarket != null ? `Polymarket ${nf(x.polymarket, 1)} %` : "", x.kalshi != null ? `Kalshi ${nf(x.kalshi, 1)} %` : ""].filter(Boolean).join(" · ");
+    bloc.innerHTML = `<span class="lv-eyebrow">Parti gagnant</span>
+      <div class="ac-barre" role="img" aria-label="Démocrates ${nf(D, 0)} %, républicains ${nf(R, 0)} %"><span style="flex:${D};background:${COUL.D}">Démocrates ${nf(D, 0)} %</span><span style="flex:${R};background:${COUL.R}">Républicains ${nf(R, 0)} %</span><i style="left:50%"></i></div>
+      <p class="lv-muted lv-source">Démocrates : Polymarket ${nf(MAR().parti.polymarket.D, 1)} %, Kalshi ${nf(MAR().parti.kalshi.D, 1)} % · républicains : Polymarket ${nf(MAR().parti.polymarket.R, 1)} %, Kalshi ${nf(MAR().parti.kalshi.R, 1)} %</p>
+      <span class="lv-eyebrow">Chances de remporter la présidence</span>`
+      + G.map(x => { const v = moyMarche(x), sous = [ROLES[x.nom], src(x)].filter(Boolean).join(" · ");
+        return `<div class="vf-cand" style="--c:${COUL[x.p] || COUL.AUT}"><span><b>${esc(x.nom)}${x.p ? ` <small>(${x.p})</small>` : ""}</b><small>${esc(sous)}</small></span>`
+          + `<span class="vf-cand-barre"><i style="width:${100 * v / max}%"></i></span><b class="vf-cand-v">${nf(v, 1)} %</b></div>`; }).join("")
+      + `<p class="lv-muted lv-source">Prix du contrat « oui », qui paie 1 $ si la personne (ou le parti) gagne : un prix de 20 cents équivaut à 20 % de chances selon les parieurs. Ce ne sont pas des sondages : les marchés réagissent vite aux nouvelles, mais ceux des personnalités moins connues sont peu actifs. Moyenne des deux plateformes quand les deux ont le marché.</p>`;
+    return;
+  }
   const p = etatP.choix, M = moyennePrimaire(p), top = M.moy[0], ag = PRES.primaires[p].agregats, max = Math.max(40, top.v);
   eb.textContent = `Primaire ${p === "D" ? "démocrate" : "républicaine"} · moyenne de ${M.n} sondages`;
   $("viSiegesTitre").textContent = `${nomCourt(top.k)} en tête : ${nf(top.v, 1)} %`;
-  bloc.innerHTML = M.moy.filter(x => x.v >= 1).map(x => { const sous = [ROLES[x.k], x.n < M.n ? `testé dans ${x.n} sondage${x.n > 1 ? "s" : ""} sur ${M.n}` : ""].filter(Boolean).join(" · ");
+  bloc.innerHTML = M.moy.filter(x => x.v >= 1).map(x => { const ci = chanceInvest(p, x.k);
+    const sous = [ROLES[x.k], x.n < M.n ? `testé dans ${x.n} sondage${x.n > 1 ? "s" : ""} sur ${M.n}` : "", ci != null ? `chances d'investiture selon les marchés : ${nf(ci, ci < 1 ? 1 : 0)} %` : ""].filter(Boolean).join(" · ");
     return `<div class="vf-cand" style="--c:${COUL_CAND[x.k]}"><span><b>${esc(x.k)}</b><small>${esc(sous)}</small></span>`
       + `<span class="vf-cand-barre"><i style="width:${100 * x.v / max}%"></i></span><b class="vf-cand-v">${nf(x.v, 1)} %</b></div>`; }).join("")
     + `<p class="lv-muted lv-source">Moyenne des sondages publiés depuis le ${dateFr(M.de)} ; chaque sondage teste sa propre liste de candidats (la moyenne d'un candidat ne compte que les sondages où il figure).`
@@ -758,6 +781,12 @@ function dessinerEvolution() {
 
 /* ---------- évolution des intentions de vote : présidentielle 2028 (primaire choisie ou duel choisi) ---------- */
 function seriePres() {
+  if (etatP.choix === "marches") {
+    const k = MAR().parti.kalshi;
+    return { lignes: ["D", "R"], lab: k => k === "D" ? "Démocrates" : "Républicains", coul: k => COUL[k], direct: true, titre: "Marchés · parti gagnant",
+      points: MAR().historique.filter(x => x.R != null).map(x => ({ d: x.d, f: "Polymarket", n: "", v: { D: x.D, R: x.R } })),
+      note: n => `Chances de victoire de chaque parti selon Polymarket, prix quotidien (${pl(n, "jour")} sur la période). Kalshi aujourd'hui : démocrates ${nf(k.D, 1)} %, républicains ${nf(k.R, 1)} %.` };
+  }
   if (etatP.choix === "duels") {
     const x = duelChoisi();
     return { lignes: ["R", "D"], lab: k => nomCourt(x[k]), coul: k => COUL[k], sigma: 45, titre: `Duel ${nomCourt(x.R)}–${nomCourt(x.D)}`,
@@ -777,18 +806,21 @@ function dessinerEvolutionPres() {
   const m = { t: 16, r: 92, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
   const tous = S.points;
-  const debutTout = t("2024-01-01"), fin_ = d3.max([new Date(), ...tous.map(s => t(s.d))]);
+  // marchés : historique depuis l'ouverture du marché (juillet 2025) ; sondages : depuis 2024
+  const debutTout = t(S.direct && tous.length ? tous[0].d : "2024-01-01"), fin_ = d3.max([new Date(), ...tous.map(s => t(s.d))]);
+  const depuis = S.direct ? `depuis ${debutTout.toLocaleDateString("fr-CA", { month: "long", year: "numeric" })}` : "depuis 2024";
   // un duel n'a souvent que quelques sondages : s'il y en a moins de cinq sur la période choisie, on montre tout depuis 2024
   const debutDe = per => per ? d3.max([debutTout, d3.timeMonth.offset(fin_, -per)]) : debutTout;
   const per = etatP.choix === "duels" && tous.filter(s => t(s.d) >= debutDe(periode)).length < 5 ? 0 : periode;
   const debut = debutDe(per);
   const dans_ = d => t(d) >= debut, sond = tous.filter(s => dans_(s.d));
   document.querySelectorAll("#viPeriodes button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.per === per));
-  $("viEvolSur").textContent = `${S.titre} · ${per ? (per < 12 ? `${per} derniers mois` : per === 12 ? "dernière année" : `${per / 12} dernières années`) : "depuis 2024"}`;
-  $("viEvolTitre").textContent = "Évolution des intentions de vote";
+  $("viEvolSur").textContent = `${S.titre} · ${per ? (per < 12 ? `${per} derniers mois` : per === 12 ? "dernière année" : `${per / 12} dernières années`) : depuis}`;
+  $("viEvolTitre").textContent = S.direct ? "Évolution des chances de victoire" : "Évolution des intentions de vote";
   const x = d3.scaleTime().domain([debut, fin_]).range([m.l, W - m.r]);
   const yMax = d3.max(sond, s => d3.max(S.lignes, p => s.v[p] || 0)) || 40;
-  const yMin = etatP.choix === "duels" ? Math.max(0, Math.floor((d3.min(sond, s => Math.min(s.v.R, s.v.D)) - 6) / 10) * 10) : 0;
+  const yMin = etatP.choix === "marches" ? Math.max(0, Math.floor((d3.min(sond, s => Math.min(s.v.R, s.v.D)) - 6) / 10) * 10)
+    : etatP.choix === "duels" ? Math.max(0, Math.floor((d3.min(sond, s => Math.min(s.v.R, s.v.D)) - 6) / 10) * 10) : 0;
   const y = d3.scaleLinear().domain([yMin || 0, Math.ceil((yMax + 4) / 10) * 10]).range([H - m.b, m.t]);
   // tendance : moyenne pondérée (noyau gaussien) aux semaines, seulement sur les sondages où le candidat figure
   const dates = [];
@@ -806,8 +838,9 @@ function dessinerEvolutionPres() {
   svgE.append("g").attr("class", "vi-axe vi-grille").attr("transform", `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(v => v + " %"));
   const fin = {};
   for (const p of S.lignes) {
-    svgE.append("g").selectAll("circle").data(sond.filter(s => s.v[p] != null)).join("circle").attr("class", "vi-pt").attr("cx", s => x(t(s.d))).attr("cy", s => y(s.v[p])).attr("r", 3.2).style("fill", S.coul(p));
-    const mm = moy(p); if (mm.length) fin[p] = mm[mm.length - 1];
+    // marchés : un prix par jour, tracé tel quel (pas de points ni de moyenne)
+    if (!S.direct) svgE.append("g").selectAll("circle").data(sond.filter(s => s.v[p] != null)).join("circle").attr("class", "vi-pt").attr("cx", s => x(t(s.d))).attr("cy", s => y(s.v[p])).attr("r", 3.2).style("fill", S.coul(p));
+    const mm = S.direct ? sond.filter(s => s.v[p] != null).map(s => ({ d: s.d, v: s.v[p] })) : moy(p); if (mm.length) fin[p] = mm[mm.length - 1];
     if (mm.length > 1) svgE.append("path").attr("class", "vi-ligne").attr("d", ligne(mm)).style("stroke", S.coul(p));
   }
   const etiq = S.lignes.filter(p => fin[p]).map(p => ({ p, y: y(fin[p].v), v: fin[p].v, x: x(t(fin[p].d)) })).sort((a, b) => a.y - b.y);
@@ -820,12 +853,12 @@ function dessinerEvolutionPres() {
       const [mx] = d3.pointer(ev), dt = x.invert(mx), s = sond.reduce((a, b) => Math.abs(t(b.d) - dt) < Math.abs(t(a.d) - dt) ? b : a);
       repere.style("display", null).attr("x1", x(t(s.d))).attr("x2", x(t(s.d)));
       tipE.hidden = false; tipE.innerHTML = `<b>${esc(s.f)}</b><small>${dateFr(s.d)}${s.n ? ` · ${esc(s.n)}` : ""}</small>`
-        + Object.entries(s.v).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span style="--c:${S.coul(k)}"><i></i>${esc(etatP.choix === "duels" ? S.lab(k) : k)} <b>${nf(v, 1)} %</b></span>`).join("");
+        + Object.entries(s.v).filter(([, v]) => v >= 1).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span style="--c:${S.coul(k)}"><i></i>${esc(etatP.choix === "duels" || S.direct ? S.lab(k) : k)} <b>${nf(v, 1)} %</b></span>`).join("");
       const r = el.getBoundingClientRect(), px = x(t(s.d)) * r.width / W;
       tipE.style.left = Math.min(r.width - tipE.offsetWidth - 4, Math.max(4, px + 12)) + "px"; tipE.style.top = "8px";
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
-  $("viEvolNote").textContent = S.note(sond.length) + (per !== periode ? " Trop peu de sondages sur la période choisie : tout est affiché depuis 2024." : "");
+  $("viEvolNote").textContent = S.note(sond.length) + (per !== periode ? ` Trop peu de sondages sur la période choisie : tout est affiché ${depuis}.` : "");
 }
 
 /* ---------- démarrage ---------- */

@@ -5,11 +5,14 @@ Source : Wikipédia anglais (sondages nationaux compilés avec un lien vers chaq
     (un tableau par année : maison de sondage, dates, échantillon, pourcentage de chaque candidat testé) ; le tableau
     « Polling aggregation » donne aussi les moyennes publiées par 270toWin et RealClearPolling ;
   - élection générale : section « Opinion polling » de « 2028 United States presidential election », un tableau par duel
-    (ex. JD Vance contre Gavin Newsom).
+    (ex. JD Vance contre Gavin Newsom) ;
+  - marchés de prédiction (API publiques) : Polymarket (prix et historique quotidien) et Kalshi (prix du moment) pour le parti
+    gagnant, le gagnant de la présidence et les investitures démocrate et républicaine. Si un marché est illisible,
+    on garde les valeurs précédentes (les sondages restent mis à jour).
 Seulement la bibliothèque standard : relancé par le pipeline aux 3 heures. Rien n'est écrit si une page est illisible.
 Usage : /usr/bin/python3 presidentielle.py   (dans le dossier outils/)
 """
-import json, os, re, urllib.request
+import datetime, json, os, re, time, urllib.error, urllib.request
 from wikitab import tableaux
 
 
@@ -103,10 +106,72 @@ for t in tableaux(page("2028_United_States_presidential_election")):
         duels.append({"titre": t["titre"], "R": noms["R"], "D": noms["D"], "sondages": sorted(liste, key=lambda s: s["d"])})
 if not duels: raise SystemExit("Aucun duel lu pour l'élection générale : presidentielle.json inchangé.")
 
-json.dump({"source": "Wikipédia (sondages nationaux de la présidentielle 2028 et des primaires)", "primaires": primaires, "duels": duels},
+# --- marchés de prédiction : probabilité = prix du contrat « oui » (milieu de l'écart achat-vente), en %
+def get_json(url, essais=5):
+    for k in range(essais):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={**HDR, "Accept": "application/json"}), timeout=60) as rep:
+                return json.loads(rep.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code != 429 or k == essais - 1: raise
+            time.sleep(4 * (k + 1))                           # Kalshi limite le nombre de requêtes
+def nom_marche(n):
+    n = n.replace("J.D.", "JD").replace("Donald J. Trump", "Donald Trump").replace("’", "'").strip()
+    return {"Dwayne 'The Rock' Johnson": "Dwayne Johnson", "AOC": "Alexandria Ocasio-Cortez"}.get(n, n)
+def polymarket(slug):
+    e = get_json(f"https://gamma-api.polymarket.com/events?slug={slug}")[0]
+    out = {}
+    for m in e["markets"]:
+        if m.get("closed") or not m.get("active") or not m.get("outcomePrices") or not float(m.get("volume") or 0): continue   # doublons inactifs
+        # comme l'affiche Polymarket : milieu de l'écart achat-vente, ou dernier échange si l'écart dépasse 10 cents (marché peu actif)
+        b, a = float(m.get("bestBid") or 0), float(m.get("bestAsk") or 0)
+        p = (b + a) / 2 if a and a - b <= 0.10 else float(m.get("lastTradePrice") or json.loads(m["outcomePrices"])[0])
+        out[nom_marche(m.get("groupItemTitle") or m["question"])] = {"v": round(100 * p, 1), "jeton": json.loads(m["clobTokenIds"])[0]}
+    return out
+def kalshi(evenement):
+    out = {}
+    for m in get_json(f"https://api.elections.kalshi.com/trade-api/v2/markets?event_ticker={evenement}&limit=200")["markets"]:
+        if m.get("status") != "active": continue
+        b, a, l = (float(m.get(k) or 0) for k in ("yes_bid_dollars", "yes_ask_dollars", "last_price_dollars"))
+        out[nom_marche(m.get("yes_sub_title") or "")] = round(100 * ((b + a) / 2 if b and a else l), 1)
+    time.sleep(3)
+    return out
+def historique(jeton):
+    h = get_json(f"https://clob.polymarket.com/prices-history?market={jeton}&interval=max&fidelity=1440")["history"]
+    jours = {}
+    for x in h: jours[datetime.datetime.fromtimestamp(x["t"], datetime.timezone.utc).date().isoformat()] = round(100 * x["p"], 1)
+    return [{"d": d, "v": v} for d, v in sorted(jours.items())]
+def classer(pm, ks, n, parti=None):
+    noms = set(pm) | set(ks)
+    moy = lambda k: sum(x for x in (pm.get(k, {}).get("v"), ks.get(k)) if x is not None) / sum(1 for x in (pm.get(k), ks.get(k)) if x is not None)
+    return [{"nom": k, **({"p": parti(k)} if parti else {}), "polymarket": pm.get(k, {}).get("v"), "kalshi": ks.get(k)}
+            for k in sorted(noms, key=lambda k: -moy(k))[:n]]
+ancien = os.path.join(ICI, "..", "presidentielle.json")
+try:
+    pp, kp = polymarket("which-party-wins-2028-us-presidential-election"), kalshi("KXPRESPARTY-2028")
+    parti = {"polymarket": {"D": pp["Democratic"]["v"], "R": pp["Republican"]["v"]},
+             "kalshi": {"D": kp["Democratic party"], "R": kp["Republican party"]}}
+    pnd, knd = polymarket("democratic-presidential-nominee-2028"), kalshi("KXPRESNOMD-28")
+    pnr, knr = polymarket("republican-presidential-nominee-2028"), kalshi("KXPRESNOMR-28")
+    pg, kg = polymarket("presidential-election-winner-2028"), kalshi("KXPRESPERSON-28")
+    nomD, nomR = classer(pnd, knd, 15), classer(pnr, knr, 15)
+    camp = lambda k: "D" if k in {x["nom"] for x in nomD} else "R" if k in {x["nom"] for x in nomR} else ""
+    hd, hr = historique(pp["Democratic"]["jeton"]), dict((x["d"], x["v"]) for x in historique(pp["Republican"]["jeton"]))
+    marches = {"maj": datetime.date.today().isoformat(), "parti": parti, "gagnant": classer(pg, kg, 12, camp), "nomD": nomD, "nomR": nomR,
+               "historique": [{"d": x["d"], "D": x["v"], "R": hr.get(x["d"])} for x in hd]}
+    if not 90 <= parti["polymarket"]["D"] + parti["polymarket"]["R"] <= 110 or len(marches["historique"]) < 30:
+        raise ValueError("prix du parti gagnant incohérents")
+except Exception as e:                                         # marché illisible : valeurs précédentes
+    print(f"Marchés de prédiction non mis à jour ({e})")
+    marches = (json.load(open(ancien, encoding="utf-8")) if os.path.exists(ancien) else {}).get("marches")
+
+json.dump({"source": "Wikipédia (sondages nationaux de la présidentielle 2028 et des primaires) ; marchés : Polymarket et Kalshi",
+           "primaires": primaires, "duels": duels, **({"marches": marches} if marches else {})},
           open(os.path.join(ICI, "..", "presidentielle.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 for p, x in primaires.items():
     print(f"Primaire {p} : {len(x['sondages'])} sondages du {x['sondages'][0]['d']} au {x['sondages'][-1]['d']} · moyennes publiées : "
           + ", ".join(f"{a['nom']} ({a['d']})" for a in x["agregats"]))
 print(f"{len(duels)} duels : " + ", ".join(f"{x['R']} – {x['D']} ({len(x['sondages'])})" for x in duels))
+if marches: print(f"Marchés du {marches['maj']} : parti gagnant {marches['parti']} · en tête : "
+                 + ", ".join(f"{x['nom']} ({x['polymarket']} / {x['kalshi']})" for x in marches["gagnant"][:4]))
 verifie("usa")

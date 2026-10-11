@@ -36,6 +36,6 @@ Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/in
 3. panneau à droite : tout le territoire (vote et sièges, sièges par région…) ou la circonscription cliquée.
 Les mêmes identifiants `vi*` et classes CSS servent à toutes ces pages ; chaque pays a son module JS et ses données
 (ex. `votes-france/france.js`, `votes-france/data.json`, `votes-france/sondages.json`, scripts dans `votes-france/outils/` ;
-`votes-canada/canada.js` avec la projection Qc125 fédérale, `votes-canada/outils/` ; `votes-usa/usa.js`, consensus de 270toWin, `votes-usa/outils/` ; choix Chambre · Sénat · Présidentielle 2028 : sondages des primaires et duels
+`votes-canada/canada.js` avec la projection Qc125 fédérale, `votes-canada/outils/` ; `votes-usa/usa.js`, consensus de 270toWin, `votes-usa/outils/` ; choix Chambre · Sénat · Présidentielle 2028 : sondages des primaires et duels, marchés de prédiction Polymarket et Kalshi
 (`presidentielle.json`, `outils/presidentielle.py`, dans le pipeline) et résultats 2024/2020 par État (`presidentielles.json`, `outils/resultats_pres.py`, fichier fixe)).
 Boutons de la carte, de gauche à droite : futur (projection/intentions), présent (assemblée actuelle), passé (élections) ; un groupe sans données n'apparaît pas. Les années des résultats passés sont en pastille (`AN()`, classe `vf-an`).
