@@ -1,7 +1,7 @@
 /* Zoom vertical des graphiques d'évolution (pages d'intentions de vote : Québec, Canada, France, États-Unis).
-   Sur le graphique, la page ne défile jamais (la molette appartient au graphique) :
-     - molette : vers le haut, resserre l'axe des Y autour du pointeur (les courbes proches se séparent) ;
-       vers le bas, élargit jusqu'à la vue complète ;
+   La molette seule fait toujours défiler la page (on peut descendre la page même avec le pointeur sur un graphique) :
+     - Ctrl + molette (ou pincer sur le pavé tactile) : vers le haut, resserre l'axe des Y autour du pointeur
+       (les courbes proches se séparent) ; vers le bas, élargit jusqu'à la vue complète ;
      - une fois zoomé, pour monter ou descendre dans le graphique : glisser le graphique vers le haut ou le bas
        (souris enfoncée), glisser la barre de défilement à droite, ou Maj + molette ;
      - double-clic : vue complète.
@@ -42,14 +42,16 @@ function brancher(el, e) {
   const deplacer = d => { if (!e.dom) return; const [a, b] = e.dom; e.dom = borner(e, a + d, b + d); planifier(); };
 
   el.addEventListener("wheel", ev => {
-    ev.preventDefault();                                   // la page ne défile pas quand le pointeur est sur le graphique
+    const zoom = ev.ctrlKey || ev.metaKey, monter = ev.shiftKey && !zoom && e.dom;
+    if (!zoom && !monter) return;                          // molette seule : la page défile normalement
+    ev.preventDefault();                                   // Ctrl + molette : pas de zoom du navigateur ; Maj + molette : pas de défilement
     const svg = el.querySelector("svg");
     if (!svg || !e.y) return;
     const brut = ev.shiftKey && !ev.deltaY ? ev.deltaX : ev.deltaY;   // Maj + molette : certains navigateurs envoient deltaX
     const dy = brut * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 400 : 1);
     if (!dy) return;
     const [da, db] = e.def, [a, b] = e.dom || e.def;
-    if (ev.shiftKey) { deplacer(-dy * (b - a) / hauteurZone() * echelle()); return; }
+    if (monter) { deplacer(-dy * (b - a) / hauteurZone() * echelle()); return; }
     if (dy > 0 && !e.dom) return;                          // déjà en vue complète
     const r = svg.getBoundingClientRect();
     const v = Math.min(b, Math.max(a, e.y.invert((ev.clientY - r.top) * echelle())));
@@ -95,10 +97,14 @@ export function decouper(svgE, el, y, m, W, H) {
   svgE.selectAll(".vi-pt, .vi-ligne, .vi-elec-pt").each(function () { zone.appendChild(this); });
   svgE.selectAll(".vi-grille .tick text").each(function () { this.textContent = this.textContent.replace(".", ","); });
   svgE.selectAll(".vi-fin").style("display", function () { const v = +this.getAttribute("y") - 4; return v < m.t - 6 || v > H - m.b + 6 ? "none" : null; });
-  if (!e?.dom) return;
+  if (!e?.dom) {
+    svgE.append("text").attr("class", "vi-elec-txt vi-zoom-txt").attr("x", W - m.r).attr("y", Math.max(9, m.t - 5)).attr("text-anchor", "end")
+      .text("Ctrl + molette : zoom vertical");
+    return;
+  }
   const fmt = v => (Math.round(v * 10) / 10).toLocaleString("fr-CA");
   svgE.append("text").attr("class", "vi-elec-txt vi-zoom-txt").attr("x", W - m.r).attr("y", Math.max(9, m.t - 5)).attr("text-anchor", "end")
-    .text(`Zoom : ${fmt(e.dom[0])} à ${fmt(e.dom[1])} % · glisser pour monter ou descendre · double-clic : vue complète`);
+    .text(`Zoom : ${fmt(e.dom[0])} à ${fmt(e.dom[1])} % · glisser ou Maj + molette pour monter ou descendre · double-clic : vue complète`);
   // barre de défilement : la piste représente tout l'axe de départ, le curseur la partie affichée
   const [da, db] = e.def, h = H - m.t - m.b, x = W - m.r + 1;
   const haut = m.t + h * (db - e.dom[1]) / (db - da), long = Math.max(14, h * (e.dom[1] - e.dom[0]) / (db - da));
