@@ -460,13 +460,94 @@ function dessinerEvolution() {
 }
 
 /* ---------- démarrage ---------- */
+/* ---------- « Comprendre le système électoral » : grande fenêtre d'explication ----------
+   Le texte suit la Loi électorale et le Règlement de l'Assemblée nationale ; les chiffres viennent du résultat de
+   l'élection du 5 octobre 2026 (election-2026.json) et de la simulation Loi 39 (loi39-resume.json, lue à l'ouverture). */
+function systemeElectoral() {
+  const btn = $("viSysteme"), dlg = $("viSystemeDlg");
+  if (!btn || !dlg || !ELEC) return;
+  const N = Object.keys(ELEC.circ).length, MAJ = Math.floor(N / 2) + 1;
+  const circ = Object.entries(ELEC.circ), gagnant = c => Math.max(...Object.values(c.s));
+  const sousMoitie = circ.filter(([, c]) => gagnant(c) < 50).length, sous40 = circ.filter(([, c]) => gagnant(c) < 40).length;
+  const [plusBas, cBas] = circ.slice().sort((a, b) => gagnant(a[1]) - gagnant(b[1]))[0];
+  const brut = ELEC.circ["Vachon"], vachon = brut && { g: brut.g, cands: brut.c }, dV = deputeDe(vachon), eV = ecartVoix(vachon);   // course la plus serrée
+  const S = ELEC.sieges, V = ELEC.national, partis = P5.filter(p => V[p] != null).sort((a, b) => (S[b] || 0) - (S[a] || 0) || V[b] - V[a]);
+  const lead = partis[0], pctS = p => 100 * (S[p] || 0) / N;
+  const lignes = partis.map(p => `<div class="vi-dlg-vs-ligne" style="--c:${COUL[p]}"><b>${p}</b>
+      <span class="vi-dlg-vs-barres"><i style="width:${2 * V[p]}%"></i><i style="width:${Math.max(0.6, 2 * pctS(p))}%"></i></span>
+      <small>${nf(V[p], 1)} % des voix<br>${S[p] || 0} siège${(S[p] || 0) > 1 ? "s" : ""} (${nf(pctS(p), 0)} %)</small></div>`).join("");
+  $("viSystemeSur").textContent = "Québec · Assemblée nationale";
+  $("viSystemeTitre").textContent = "Le système électoral du Québec";
+  $("viSystemeCorps").innerHTML = `
+    <section class="vi-dlg-chiffres" aria-label="En bref">
+      <div><b>${N}</b><small>circonscriptions, un député chacune</small></div>
+      <div><b>${MAJ}</b><small>sièges pour un gouvernement majoritaire</small></div>
+      <div><b>1 tour</b><small>le candidat qui a le plus de voix est élu</small></div>
+      <div><b>4 ans</b><small>élection à date fixe ; prochaine le 7 octobre 2030</small></div>
+    </section>
+    <section>
+      <h3>Une élection, ${N} courses</h3>
+      <p>Le Québec utilise le <b>scrutin majoritaire uninominal à un tour</b>, le même mode que pour la Chambre des communes à Ottawa. Le territoire est découpé en ${N} circonscriptions. Dans chacune, les électeurs votent une seule fois, pour un candidat ; celui qui obtient le plus de voix devient le député, même s'il n'a pas la majorité. Il n'y a ni deuxième tour ni vote pour une liste de parti.</p>
+      <p>Comme les votes se partagent souvent entre quatre ou cinq partis, on peut gagner avec bien moins de la moitié des voix. En 2026, <b>${sousMoitie} des ${N} députés</b> ont été élus avec moins de 50 % des voix, et ${sous40} avec moins de 40 %. Le score le plus bas : ${nf(gagnant(cBas), 1)} % dans ${esc(plusBas)}.${dV && eV != null ? ` À Vachon, ${esc(dV.nom)} (${dV.p}) l'a emporté par ${nf(eV)} voix.` : ""}</p>
+    </section>
+    <section>
+      <h3>Du vote aux sièges</h3>
+      <p>Les sièges ne sont pas répartis selon le pourcentage de voix de chaque parti à l'échelle du Québec : seul compte le nombre de circonscriptions gagnées. Un parti dont l'appui est concentré dans quelques régions peut obtenir plus de sièges qu'un parti dont l'appui est réparti partout, même avec moins de voix.</p>
+      <div class="vi-dlg-vs">${lignes}</div>
+      <div class="vi-dlg-legende"><span>part des voix</span><span>part des sièges</span></div>
+      <p>En 2026, le ${NOMS[lead]} a obtenu ${nf(V[lead], 1)} % des voix et ${S[lead]} sièges, soit ${nf(pctS(lead), 0)} % de l'Assemblée.${(S.CAQ || 0) === 0 && V.CAQ ? ` La Coalition avenir Québec, avec ${nf(V.CAQ, 1)} % des voix, n'a fait élire aucun député : elle n'est arrivée première dans aucune circonscription.` : ""}</p>
+    </section>
+    <section>
+      <h3>Former le gouvernement</h3>
+      <ul>
+        <li><b>Gouvernement majoritaire</b> : un parti qui fait élire au moins ${MAJ} députés sur ${N} contrôle l'Assemblée et peut faire adopter ses lois seul.</li>
+        <li><b>Gouvernement minoritaire</b> : si aucun parti n'atteint ${MAJ} sièges, le parti qui gouverne a besoin de l'appui (ou de l'abstention) d'au moins un autre parti pour les votes importants, comme le budget. Une défaite sur une question de confiance peut faire tomber le gouvernement et déclencher une élection.</li>
+        <li><b>Premier ministre</b> : le lieutenant-gouverneur nomme premier ministre la personne la plus susceptible d'obtenir la confiance de l'Assemblée, en pratique le chef du parti qui a le plus de sièges.</li>
+        <li><b>Opposition officielle</b> : le deuxième parti en nombre de sièges ; son chef est le chef de l'opposition officielle.</li>
+        <li><b>Groupe parlementaire</b> : un parti est reconnu comme groupe (temps de parole, budget de recherche, places en commission) s'il a au moins 12 députés ou s'il a obtenu au moins 20 % des voix.</li>
+        <li><b>Présidence</b> : les députés élisent l'un d'entre eux président de l'Assemblée. Il dirige les débats en toute neutralité et ne vote qu'en cas d'égalité.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Quand vote-t-on ?</h3>
+      <p>Depuis 2013, les élections générales ont lieu à <b>date fixe</b> : le premier lundi d'octobre, tous les quatre ans. Après celle du 5 octobre 2026, la prochaine est prévue le <b>7 octobre 2030</b>. Une élection peut toutefois avoir lieu plus tôt si l'Assemblée est dissoute, par exemple quand un gouvernement minoritaire perd la confiance des députés. Quand un siège se libère entre deux élections (démission, décès), une élection partielle a lieu dans cette circonscription seulement.</p>
+    </section>
+    <section>
+      <h3>Qui vote, et comment</h3>
+      <p>Pour voter, il faut être citoyen canadien, avoir 18 ans le jour du vote, être domicilié au Québec depuis au moins six mois et être inscrit sur la liste électorale. On vote dans sa circonscription : le jour de l'élection, par anticipation les jours précédents, ou au bureau du directeur du scrutin. Les élections sont organisées par Élections Québec, un organisme indépendant qui relève de l'Assemblée nationale. En 2026, la participation a été de ${nf(ELEC.participation, 1)} %.</p>
+    </section>
+    <section>
+      <h3>La carte électorale</h3>
+      <p>Les limites des circonscriptions sont tracées par une commission indépendante, la Commission de la représentation électorale, et revues après deux élections générales. Chaque circonscription doit compter à peu près le même nombre d'électeurs (au plus 25 % de plus ou de moins que la moyenne), sauf exceptions prévues par la loi pour de très grands territoires peu peuplés et pour les Îles-de-la-Madeleine. L'Assemblée comptait 125 sièges de 1989 à 2022 ; elle en compte ${N} depuis l'élection de 2026.</p>
+    </section>
+    <section>
+      <h3>Et si le mode de scrutin changeait ?</h3>
+      <p>Le débat sur une réforme revient régulièrement, justement à cause de l'écart entre les voix et les sièges. En 2019, le projet de loi n<sup>o</sup> 39 proposait un <b>mode mixte compensatoire régional</b> : 80 députés élus dans des circonscriptions comme aujourd'hui, et 45 sièges de région attribués aux partis pour rapprocher leur part des sièges de leur part des voix (un parti devait obtenir au moins 10 % des voix à l'échelle du Québec pour y avoir droit). Le projet n'a jamais été adopté.</p>
+      <p class="vi-dlg-note" id="viSystemeL39">La page <a href="loi39.html">Loi 39</a> simule ce mode de scrutin avec le résultat de 2026.</p>
+    </section>`;
+  btn.hidden = false;
+  const fermer = () => dlg.close();
+  btn.addEventListener("click", () => {
+    dlg.showModal(); $("viSystemeCorps").scrollTop = 0;
+    // résumé de la simulation Loi 39, lu à la première ouverture
+    if (!dlg.dataset.l39) { dlg.dataset.l39 = "1";
+      fetch("votes-quebec/loi39-resume.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(L => {
+        if (!L?.loi39) return;
+        const ordre = Object.keys(L.loi39).sort((a, b) => L.loi39[b] - L.loi39[a]), m39 = Math.floor(L.sieges_loi39 / 2) + 1, t = ordre[0];
+        $("viSystemeL39").innerHTML = `Avec le ${esc(L.texte)}, la loi 39 aurait donné : ${ordre.map(p => `${p} ${L.actuel[p]} → <b>${L.loi39[p]}</b>`).join(" · ")} (sur ${L.sieges_loi39} sièges, majorité ${m39}) : le ${esc(NOMS[t] || t)} serait ${L.loi39[t] >= m39 ? "majoritaire" : "minoritaire"}. Voir la simulation complète sur la page <a href="loi39.html">Loi 39</a>.`;
+      }).catch(() => {});
+    }
+  });
+  $("viSystemeFermer").addEventListener("click", fermer);
+  dlg.addEventListener("click", e => { if (e.target === dlg) fermer(); });   // clic sur le fond assombri
+}
 async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec")]);
     ETAT = construireEtat();
-    dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
+    dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; try { localStorage.setItem("viPeriode", periode); } catch {} dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

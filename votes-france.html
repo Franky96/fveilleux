@@ -630,6 +630,40 @@
     .vi-evol { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
     .vi-evol h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .vi-evol-zone { position: relative; }
+    /* « Comprendre le système électoral » : bouton sous la source, grande fenêtre d'explication (élément <dialog>) */
+    .vi-systeme-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 7px 14px 7px 8px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+    .vi-systeme-btn[hidden] { display: none; }
+    .vi-systeme-btn span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--surface); font-size: 0.8rem; }
+    .vi-systeme-btn:hover { border-color: var(--ink); }
+    .vi-systeme-btn:focus-visible, .vi-dlg-fermer:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vi-dlg { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--bg, var(--surface)); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,0.45); }
+    .vi-dlg[open] { display: flex; flex-direction: column; }
+    .vi-dlg::backdrop { background: rgba(5, 8, 14, 0.62); backdrop-filter: blur(2px); }
+    .vi-dlg-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 24px 14px; border-bottom: 1px solid var(--rule); }
+    .vi-dlg-tete h2 { margin: 4px 0 0; font-family: "Literata", Georgia, serif; font-size: clamp(1.3rem, 2.6vw, 1.75rem); text-wrap: balance; }
+    .vi-dlg-fermer { flex: none; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .vi-dlg-corps { overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px 28px; display: grid; gap: 26px; font-size: 0.95rem; line-height: 1.6; }
+    .vi-dlg-corps section { display: grid; gap: 8px; max-width: 74ch; }
+    .vi-dlg-corps h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .vi-dlg-corps p { margin: 0; }
+    .vi-dlg-corps ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+    .vi-dlg-corps a { color: inherit; }
+    .vi-dlg-chiffres { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; max-width: none !important; }
+    .vi-dlg-chiffres div { display: grid; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--rule); }
+    .vi-dlg-chiffres b { font-family: "Literata", Georgia, serif; font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .vi-dlg-chiffres small { color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
+    .vi-dlg-note { padding: 10px 14px; border-left: 4px solid var(--ink); border-radius: 0 8px 8px 0; background: var(--surface); font-size: 0.9rem; }
+    .vi-dlg-vs { display: grid; gap: 10px; margin-top: 4px; }
+    .vi-dlg-vs-ligne { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 10.5em; gap: 10px; align-items: center; font-size: 0.88rem; }
+    .vi-dlg-vs-ligne > b { color: var(--c); }
+    .vi-dlg-vs-barres { display: grid; gap: 3px; }
+    .vi-dlg-vs-barres i { display: block; height: 9px; border-radius: 3px; background: var(--c); }
+    .vi-dlg-vs-barres i + i { opacity: 0.45; }
+    .vi-dlg-vs-ligne small { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+    .vi-dlg-legende { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 0.8rem; }
+    .vi-dlg-legende span::before { content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 6px; border-radius: 3px; background: var(--ink); vertical-align: middle; }
+    .vi-dlg-legende span + span::before { opacity: 0.45; }
+    @media (max-width: 700px) { .vi-dlg-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vi-dlg-tete, .vi-dlg-corps { padding-left: 16px; padding-right: 16px; } .vi-dlg-vs-ligne { grid-template-columns: 3.4em minmax(0, 1fr) 8.6em; } }
     /* zoom vertical (votes-quebec/zoom-y.js) : la molette reste dans le graphique ; zoomé, on le glisse pour monter ou descendre */
     #viEvol { overscroll-behavior: contain; }
     #viEvol.vi-zoome svg { cursor: grab; user-select: none; -webkit-user-select: none; }
@@ -718,7 +752,16 @@
           <span class="vi-badge">France · législatives</span>
           <h2 id="viTitre">Votes France</h2>
           <p class="lv-etat" id="viSource">Chargement…</p>
+          <!-- explication du système électoral : le module de la page remplit la fenêtre et affiche le bouton -->
+          <button type="button" class="vi-systeme-btn" id="viSysteme" aria-haspopup="dialog" hidden><span aria-hidden="true">?</span>Comprendre le système électoral</button>
         </div>
+        <dialog class="vi-dlg" id="viSystemeDlg" aria-labelledby="viSystemeTitre">
+          <div class="vi-dlg-tete">
+            <div><span class="lv-eyebrow" id="viSystemeSur">Système électoral</span><h2 id="viSystemeTitre">Comprendre le système électoral</h2></div>
+            <button type="button" class="vi-dlg-fermer" id="viSystemeFermer">Fermer <span aria-hidden="true">✕</span></button>
+          </div>
+          <div class="vi-dlg-corps" id="viSystemeCorps"></div>
+        </dialog>
       </header>
       <p class="lv-muted" id="viNote"></p>
       <div class="vi-haut">
