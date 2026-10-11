@@ -4,6 +4,7 @@
    de Qc125 (changements de parti, sièges vacants). Élection du 28 avril 2025 : résultat de chaque circonscription.
    Évolution : tous les sondages nationaux depuis l'élection de 2025 (sondages.json, outils/sondages_ca.py).
    Contours des 343 circonscriptions (découpage de 2023) : data.json (outils/canada_geo.py). */
+import { domaineY, decouper } from "../votes-quebec/zoom-y.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -466,7 +467,7 @@ function dessinerEvolution() {
   $("viEvolSur").innerHTML = periode ? `${periode < 12 ? periode + " derniers mois" : periode === 12 ? "Dernière année" : periode / 12 + " dernières années"}` : `Depuis l'élection de ${AN(2025)}`;
   const x = d3.scaleTime().domain([debut, fin_]).range([m.l, W - m.r]);
   const yMax = d3.max([...sond, ...elecVis], s => d3.max(P, p => s[p])) || 40;
-  const y = d3.scaleLinear().domain([0, Math.ceil((yMax + 4) / 10) * 10]).range([H - m.b, m.t]);
+  const y = d3.scaleLinear().domain(domaineY(el, [0, Math.ceil((yMax + 4) / 10) * 10], String(periode), dessinerEvolution)).range([H - m.b, m.t]);   // molette : zoom vertical
   // tendance : moyenne pondérée des sondages autour de chaque semaine (noyau gaussien), calculée sur tous les sondages
   const SIGMA = periode && periode <= 6 ? 10 : 18, t0 = t(tous[0].d), t1 = t(tous[tous.length - 1].d);
   const dates = [];
@@ -497,6 +498,7 @@ function dessinerEvolution() {
   const etiq = P.map(p => ({ p, y: y(fin[p].v), v: fin[p].v })).sort((a, b) => a.y - b.y);
   for (let i = 1; i < etiq.length; i++) if (etiq[i].y - etiq[i - 1].y < 13) etiq[i].y = etiq[i - 1].y + 13;
   svgE.append("g").selectAll("text").data(etiq).join("text").attr("class", "vi-fin").attr("x", W - m.r + 6).attr("y", d => d.y + 4).style("fill", d => COUL[d.p]).text(d => `${d.p} ${nf(d.v, 0)}`);
+  decouper(svgE, el, y, m, W, H);
   const tipE = $("viEvolTip"), repere = svgE.append("line").attr("class", "vi-repere").attr("y1", m.t).attr("y2", H - m.b).style("display", "none");
   svgE.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
     .on("mousemove", ev => {

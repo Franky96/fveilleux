@@ -7,6 +7,7 @@
    Présidentielle : sondages des primaires et duels de l'élection générale (presidentielle.json, outils/presidentielle.py),
    résultats de 2024 et 2020 par État (presidentielles.json, outils/resultats_pres.py).
    Contours : data.json (outils/usa_geo.py, carte de 270toWin). */
+import { domaineY, decouper } from "../votes-quebec/zoom-y.js";
 
 const SIEGES = 435, MAJ = 218;
 const P = ["D", "R"];
@@ -743,7 +744,7 @@ function dessinerEvolution() {
   $("viEvolSur").textContent = periode ? `Vote générique · ${periode < 12 ? periode + " derniers mois" : periode === 12 ? "dernière année" : periode / 12 + " dernières années"}` : "Vote générique · depuis l'élection de 2024";
   const x = d3.scaleTime().domain([debut, fin_]).range([m.l, W - m.r]);
   const vals = [...sond.flatMap(s => [s.D, s.R]), ...moy.flatMap(s => [s.D, s.R]), ...elec.flatMap(e => [e.D, e.R])];
-  const y = d3.scaleLinear().domain([Math.floor((d3.min(vals) - 3) / 5) * 5, Math.ceil((d3.max(vals) + 2) / 5) * 5]).range([H - m.b, m.t]);
+  const y = d3.scaleLinear().domain(domaineY(el, [Math.floor((d3.min(vals) - 3) / 5) * 5, Math.ceil((d3.max(vals) + 2) / 5) * 5], "generique" + periode, dessinerEvolution)).range([H - m.b, m.t]);   // molette : zoom vertical
   const ligneD = d3.line().x(o => x(t(o.d))).curve(d3.curveMonotoneX);
   const svgE = d3.select(el).html("").append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("role", "img").attr("aria-label", "Évolution du vote générique au Congrès");
   svgE.append("g").attr("class", "vi-axe").attr("transform", `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(W < 600 ? 4 : periode && periode <= 6 ? 6 : 8)
@@ -764,6 +765,7 @@ function dessinerEvolution() {
   const etiq = P.map(p => ({ p, y: y(fin[p]), v: fin[p] })).sort((a, b) => a.y - b.y);
   for (let i = 1; i < etiq.length; i++) if (etiq[i].y - etiq[i - 1].y < 13) etiq[i].y = etiq[i - 1].y + 13;
   svgE.append("g").selectAll("text").data(etiq).join("text").attr("class", "vi-fin").attr("x", W - m.r + 6).attr("y", d => d.y + 4).style("fill", d => COUL[d.p]).text(d => `${d.p} ${nf(d.v, 1)}`);
+  decouper(svgE, el, y, m, W, H);
   const tipE = $("viEvolTip"), repere = svgE.append("line").attr("class", "vi-repere").attr("y1", m.t).attr("y2", H - m.b).style("display", "none");
   svgE.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
     .on("mousemove", ev => {
@@ -821,7 +823,7 @@ function dessinerEvolutionPres() {
   const yMax = d3.max(sond, s => d3.max(S.lignes, p => s.v[p] || 0)) || 40;
   const yMin = etatP.choix === "marches" ? Math.max(0, Math.floor((d3.min(sond, s => Math.min(s.v.R, s.v.D)) - 6) / 10) * 10)
     : etatP.choix === "duels" ? Math.max(0, Math.floor((d3.min(sond, s => Math.min(s.v.R, s.v.D)) - 6) / 10) * 10) : 0;
-  const y = d3.scaleLinear().domain([yMin || 0, Math.ceil((yMax + 4) / 10) * 10]).range([H - m.b, m.t]);
+  const y = d3.scaleLinear().domain(domaineY(el, [yMin || 0, Math.ceil((yMax + 4) / 10) * 10], S.titre + per, dessinerEvolution)).range([H - m.b, m.t]);   // molette : zoom vertical
   // tendance : moyenne pondérée (noyau gaussien) aux semaines, seulement sur les sondages où le candidat figure
   const dates = [];
   if (tous.length) for (let d = t(tous[0].d); d <= t(tous[tous.length - 1].d); d = new Date(+d + 7 * 864e5)) dates.push(d.toISOString().slice(0, 10));
@@ -846,6 +848,7 @@ function dessinerEvolutionPres() {
   const etiq = S.lignes.filter(p => fin[p]).map(p => ({ p, y: y(fin[p].v), v: fin[p].v, x: x(t(fin[p].d)) })).sort((a, b) => a.y - b.y);
   for (let i = 1; i < etiq.length; i++) if (etiq[i].y - etiq[i - 1].y < 13) etiq[i].y = etiq[i - 1].y + 13;
   svgE.append("g").selectAll("text").data(etiq).join("text").attr("class", "vi-fin").attr("x", d => d.x + 6).attr("y", d => d.y + 4).style("fill", d => S.coul(d.p)).text(d => `${S.lab(d.p)} ${nf(d.v, 0)}`);
+  decouper(svgE, el, y, m, W, H);
   const tipE = $("viEvolTip"), repere = svgE.append("line").attr("class", "vi-repere").attr("y1", m.t).attr("y2", H - m.b).style("display", "none");
   svgE.append("rect").attr("x", m.l).attr("y", m.t).attr("width", W - m.l - m.r).attr("height", H - m.t - m.b).attr("fill", "transparent")
     .on("mousemove", ev => {
