@@ -657,11 +657,10 @@ function systemeElectoral() {
       ${point(5, `Une réforme du mode de scrutin, promise en 2015, a été <b>abandonnée en 2017</b>.`)}
     </ol>`;
   // espace insécable avant « : ; % ? » et après « (pas de signe seul en début de ligne)
-  const insec = t => t.replace(/ ([:;%?!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
   preparerSysteme({ sur: "Canada · Parlement fédéral", titre: "Le système politique et électoral du Canada",
     parties: [
-      { id: "politique", onglet: "Système politique", chapeau: insec("Qui gouverne et comment : le régime, le Parlement, la formation du gouvernement et le partage des pouvoirs avec les provinces."), html: insec(politique), court: insec(politiqueCourt) },
-      { id: "electoral", onglet: "Système électoral", chapeau: insec("Comment on choisit les députés : le mode de scrutin, des voix aux sièges, le calendrier, les électeurs et la carte."), html: insec(electoral), court: insec(electoralCourt) }] });
+      { id: "politique", onglet: "Système politique", chapeau: "Qui gouverne et comment : le régime, le Parlement, la formation du gouvernement et le partage des pouvoirs avec les provinces.", html: politique, court: politiqueCourt },
+      { id: "electoral", onglet: "Système électoral", chapeau: "Comment on choisit les députés : le mode de scrutin, des voix aux sièges, le calendrier, les électeurs et la carte.", html: electoral, court: electoralCourt }] });
 }
 
 /* ---------- démarrage ---------- */

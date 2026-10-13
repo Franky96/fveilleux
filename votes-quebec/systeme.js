@@ -9,12 +9,15 @@
      aLOuverture  : appelée à chaque ouverture (ex. lire des données de plus à la première ouverture)
 */
 const $ = id => document.getElementById(id);
+// espace insécable avant « : ; % ? ! » » et après « « » : la ponctuation ne commence jamais une ligne
+const insec = t => (t || "").replace(/ ([:;%?!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
 
 export function preparerSysteme({ sur, titre, parties, aLOuverture }) {
   const btn = $("viSysteme"), dlg = $("viSystemeDlg"), onglets = $("viSystemeOnglets"), corps = $("viSystemeCorps");
   if (!btn || !dlg || !corps || !parties?.length) return null;
+  parties = parties.map(p => ({ ...p, chapeau: insec(p.chapeau), html: insec(p.html), court: p.court && insec(p.court) }));
   $("viSystemeSur").textContent = sur;
-  $("viSystemeTitre").textContent = titre;
+  $("viSystemeTitre").textContent = insec(titre);
   onglets.innerHTML = parties.map((p, i) => `<button type="button" role="tab" id="viSysOng-${p.id}" aria-controls="viSysPart-${p.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-partie="${p.id}">`
     + `<small>Partie ${i + 1}</small>${p.onglet}</button>`).join("");
   onglets.hidden = parties.length < 2;

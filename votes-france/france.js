@@ -528,7 +528,7 @@ function changerType(t) {
 
 /* ---------- « Comprendre le système politique et électoral » : grande fenêtre en deux parties (votes-quebec/systeme.js) ----------
    Même cadre que Votes Québec (intentions.js, systemeElectoral()), commune aux deux vues (présidentielle et législatives).
-   Partie 1, système politique : Ve République, président, gouvernement, Parlement, Assemblée actuelle, État unitaire.
+   Partie 1, système politique : Cinquième République, président, gouvernement, Parlement, Assemblée actuelle, État unitaire.
    Partie 2, système électoral : législatives à deux tours, des voix aux sièges (2024), dissolution, présidentielle, électeurs.
    Les chiffres viennent des données de la page : data.json (législatives 2024), assemblee.json (Assemblée actuelle),
    pres2022.json (présidentielle 2022) et sondages-pres.json (sondages 2027). */
@@ -575,14 +575,14 @@ function systemeElectoral() {
   const p22 = Object.entries(P22.national), pr = presRecente(), haut = pr.moy[0]?.[1] || 0;
   const politique = `
     <section class="vi-dlg-chiffres" aria-label="En bref : système politique">
-      <div><b class="vi-dlg-long">République <span style="white-space:nowrap">semi-présidentielle</span></b><small>la Ve République, fondée par la Constitution de 1958</small></div>
+      <div><b class="vi-dlg-long">République <span style="white-space:nowrap">semi-présidentielle</span></b><small>la Cinquième République, fondée par la Constitution de 1958</small></div>
       <div><b>2 chambres</b><small>l'Assemblée nationale (${N} députés) et le Sénat (348 sénateurs)</small></div>
       <div><b>${MAJ}</b><small>députés pour renverser le gouvernement (motion de censure)</small></div>
       <div><b class="vi-dlg-long">État unitaire</b><small>les lois sont votées à Paris pour tout le pays ; ce n'est pas une fédération</small></div>
     </section>
     <section>
-      <h3>Le régime : la Ve République</h3>
-      <p>La France vit sous la <b>Ve République</b>, fondée par la Constitution du 4 octobre 1958. C'est un régime <b>semi-présidentiel</b> : le pouvoir exécutif a deux têtes. Le <b>président de la République</b>, élu directement par les électeurs, a des pouvoirs propres ; le <b>Premier ministre</b> et son gouvernement dirigent la politique du pays au quotidien et doivent garder l'appui de l'Assemblée nationale, comme dans un régime parlementaire.</p>
+      <h3>Le régime : la Cinquième République</h3>
+      <p>La France vit sous la <b>Cinquième République</b>, fondée par la Constitution du 4 octobre 1958. C'est un régime <b>semi-présidentiel</b> : le pouvoir exécutif a deux têtes. Le <b>président de la République</b>, élu directement par les électeurs, a des pouvoirs propres ; le <b>Premier ministre</b> et son gouvernement dirigent la politique du pays au quotidien et doivent garder l'appui de l'Assemblée nationale, comme dans un régime parlementaire.</p>
       <ul>
         <li><b>Pouvoir exécutif</b> : le président de la République, le Premier ministre et les ministres.</li>
         <li><b>Pouvoir législatif</b> : le Parlement, formé de l'Assemblée nationale et du Sénat. Il vote les lois et le budget, et contrôle le gouvernement.</li>
@@ -661,7 +661,7 @@ function systemeElectoral() {
     </section>
     <section>
       <h3>La présidentielle</h3>
-      <p>Le président est élu au <b>suffrage universel direct</b>, lui aussi en <b>deux tours</b>. Un candidat qui obtient plus de 50 % des voix au 1er tour est élu ; sinon, deux semaines plus tard, seuls les <b>deux premiers</b> s'affrontent au 2e tour. Aucun président de la Ve République n'a été élu dès le 1er tour.</p>
+      <p>Le président est élu au <b>suffrage universel direct</b>, lui aussi en <b>deux tours</b>. Un candidat qui obtient plus de 50 % des voix au 1er tour est élu ; sinon, deux semaines plus tard, seuls les <b>deux premiers</b> s'affrontent au 2e tour. Aucun président de la Cinquième République n'a été élu dès le 1er tour.</p>
       <ul>
         <li><b>Pour être candidat</b>, il faut recueillir au moins <b>500 parrainages</b> d'élus (maires, parlementaires, conseillers départementaux et régionaux…), venant d'au moins 30 départements ou collectivités d'outre-mer, sans plus d'un dixième dans un même département. Les noms des parrains sont publiés.</li>
         <li>En 2022, ${p22.length} candidats se sont présentés ; au 1er tour, ${esc(p22[0][0])} (${nf(p22[0][1], 1)} %) et ${esc(p22[1][0])} (${nf(p22[1][1], 1)} %) se sont qualifiés pour le 2e tour.</li>
@@ -685,7 +685,7 @@ function systemeElectoral() {
   const point = (n, html) => `<li><b>${n}</b><span>${html}</span></li>`;
   const politiqueCourt = `${tuilesPol}
     <ol class="vi-dlg-court">
-      ${point(1, `La France est une <b>république semi-présidentielle</b> (la Ve République, depuis 1958) : le pouvoir exécutif est partagé entre le président de la République et le Premier ministre.`)}
+      ${point(1, `La France est une <b>république semi-présidentielle</b> (la Cinquième République, depuis 1958) : le pouvoir exécutif est partagé entre le président de la République et le Premier ministre.`)}
       ${point(2, `Le <b>président</b> est élu directement pour 5 ans, deux mandats de suite au plus. Il nomme le Premier ministre, peut dissoudre l'Assemblée et est le chef des armées.`)}
       ${point(3, `Le <b>gouvernement</b> doit survivre aux votes de l'Assemblée nationale : une motion de censure votée par <b>${MAJ} députés</b> le renverse.`)}
       ${point(4, `Le Parlement a <b>deux chambres</b> : ${N} députés élus directement, qui ont le dernier mot, et 348 sénateurs élus par des élus locaux. Aujourd'hui, aucun groupe n'a la majorité : le plus grand, ${esc(gros.id)}, a ${gros.n} sièges.`)}
@@ -702,11 +702,10 @@ function systemeElectoral() {
       ${point(4, `<b>La présidentielle</b> se joue aussi en deux tours, à deux semaines d'écart ; il faut 500 parrainages d'élus pour être candidat. Prochaine élection : avril 2027.`)}
       ${point(5, `<b>Pour voter</b> : être Français, avoir 18 ans et être inscrit sur les listes électorales ; procuration possible. L'outre-mer élit ${nOM} députés et les Français de l'étranger, ${nEtr}.`)}
     </ol>`;
-  const insec = h => h.replace(/ ([%:;])/g, "\u00a0$1");   // espace insécable avant « % », « : » et « ; » (pas de « 33,2 » seul en fin de ligne)
-  preparerSysteme({ sur: "France · Ve République", titre: "Le système politique et électoral de la France",
+  preparerSysteme({ sur: "France · Cinquième République", titre: "Le système politique et électoral de la France",
     parties: [
-      { id: "politique", onglet: "Système politique", chapeau: insec("Qui gouverne et comment : le président, le gouvernement, le Parlement et le partage des pouvoirs."), html: insec(politique), court: insec(politiqueCourt) },
-      { id: "electoral", onglet: "Système électoral", chapeau: insec("Comment on choisit les élus : les législatives à deux tours, des voix aux sièges, la présidentielle et les électeurs."), html: insec(electoral), court: insec(electoralCourt) }] });
+      { id: "politique", onglet: "Système politique", chapeau: "Qui gouverne et comment : le président, le gouvernement, le Parlement et le partage des pouvoirs.", html: politique, court: politiqueCourt },
+      { id: "electoral", onglet: "Système électoral", chapeau: "Comment on choisit les élus : les législatives à deux tours, des voix aux sièges, la présidentielle et les électeurs.", html: electoral, court: electoralCourt }] });
 }
 
 /* ---------- démarrage ---------- */
