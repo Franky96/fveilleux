@@ -547,11 +547,34 @@ function systemeElectoral() {
       <p>Le débat sur une réforme revient régulièrement, justement à cause de l'écart entre les voix et les sièges. En 2019, le projet de loi n<sup>o</sup> 39 proposait un <b>mode mixte compensatoire régional</b> : 80 députés élus dans des circonscriptions comme aujourd'hui, et 45 sièges de région attribués aux partis pour rapprocher leur part des sièges de leur part des voix (un parti devait obtenir au moins 10 % des voix à l'échelle du Québec pour y avoir droit). Le projet n'a jamais été adopté.</p>
       <p class="vi-dlg-note" id="viSystemeL39">La page <a href="loi39.html">Loi 39</a> simule ce mode de scrutin avec le résultat de 2026.</p>
     </section>`;
+  // versions courtes : l'essentiel en quelques points, mêmes chiffres clés et même graphique des voix et des sièges
+  const tuilesPol = politique.slice(0, politique.indexOf("</section>") + 10), tuilesElec = electoral.slice(0, electoral.indexOf("</section>") + 10);
+  const point = (n, html) => `<li><b>${n}</b><span>${html}</span></li>`;
+  const politiqueCourt = `${tuilesPol}
+    <ol class="vi-dlg-court">
+      ${point(1, `Le Québec est une <b>province du Canada</b> et une <b>monarchie constitutionnelle</b> : le roi est le chef de l'État, mais il ne gouverne pas.`)}
+      ${point(2, `Les électeurs élisent les <b>${N} députés</b> de l'Assemblée nationale, qui votent les lois et le budget.`)}
+      ${point(3, `Le chef du parti qui a le plus de sièges devient <b>premier ministre</b> et forme le gouvernement, qui doit garder la confiance des députés.`)}
+      ${point(4, `Avec <b>${MAJ} sièges</b> ou plus, le gouvernement est <b>majoritaire</b> ; sinon, il est <b>minoritaire</b> et a besoin de l'appui d'un autre parti.${S[lead] < MAJ ? ` Depuis 2026, le ${NOMS[lead]} gouverne en minorité avec ${S[lead]} sièges.` : ""}`)}
+      ${point(5, `Québec gère notamment la santé, l'éducation et le droit civil ; Ottawa, la défense, la monnaie et le droit criminel.`)}
+    </ol>`;
+  const electoralCourt = `${tuilesElec}
+    <ol class="vi-dlg-court">
+      ${point(1, `<b>Un vote, un tour</b> : dans chacune des ${N} circonscriptions, le candidat qui a le plus de voix est élu, même sans majorité. En 2026, ${sousMoitie} députés sur ${N} ont gagné avec moins de 50 % des voix.`)}
+      ${point(2, `<b>Les sièges ne suivent pas les voix</b> : seul compte le nombre de circonscriptions gagnées.`)}
+    </ol>
+    <div class="vi-dlg-vs">${lignes}</div>
+    <div class="vi-dlg-legende"><span>part des voix</span><span>part des sièges</span></div>
+    <ol class="vi-dlg-court" start="3">
+      ${point(3, `<b>Tous les quatre ans</b>, le premier lundi d'octobre (prochaine élection : 7 octobre 2030), sauf élection anticipée.`)}
+      ${point(4, `<b>Pour voter</b> : être citoyen canadien, avoir 18 ans et habiter au Québec depuis six mois.`)}
+      ${point(5, `Une réforme vers un mode <b>mixte compensatoire</b> (projet de loi 39) a été proposée en 2019, puis abandonnée : voir la simulation <a href="loi39.html">Loi 39</a>.`)}
+    </ol>`;
   let l39 = false;
   preparerSysteme({ sur: "Québec · Assemblée nationale", titre: "Le système politique et électoral du Québec",
     parties: [
-      { id: "politique", onglet: "Système politique", chapeau: "Qui gouverne et comment : le régime, les institutions et la formation du gouvernement.", html: politique },
-      { id: "electoral", onglet: "Système électoral", chapeau: "Comment on choisit les députés : le mode de scrutin, des voix aux sièges, le calendrier et les électeurs.", html: electoral }],
+      { id: "politique", onglet: "Système politique", chapeau: "Qui gouverne et comment : le régime, les institutions et la formation du gouvernement.", html: politique, court: politiqueCourt },
+      { id: "electoral", onglet: "Système électoral", chapeau: "Comment on choisit les députés : le mode de scrutin, des voix aux sièges, le calendrier et les électeurs.", html: electoral, court: electoralCourt }],
     aLOuverture: () => {
       if (l39) return; l39 = true;                        // résumé de la simulation Loi 39, lu à la première ouverture
       fetch("votes-quebec/loi39-resume.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(L => {

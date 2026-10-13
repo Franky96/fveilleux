@@ -653,7 +653,18 @@
     .vi-dlg-onglets button[data-partie="politique"] { --c-part: var(--sys-pol); }
     .vi-dlg-onglets button[data-partie="electoral"] { --c-part: var(--sys-elec); }
     .vi-dlg-onglets button[aria-selected="true"] small { color: var(--c-part); }
-    .vi-dlg-partie { display: grid; gap: 26px; }
+    .vi-dlg-partie, .vi-dlg-version { display: grid; gap: 26px; }
+    .vi-dlg-version[hidden] { display: none; }
+    .vi-dlg-tete > div:first-child { flex: 1 1 22em; min-width: 0; }
+    .vi-dlg-actions { flex: none; display: flex; align-items: center; gap: 8px; }
+    .vi-dlg-version > .vi-dlg-vs, .vi-dlg-version > .vi-dlg-legende { max-width: 74ch; }
+    .vi-dlg-bascule[hidden] { display: none; }
+    .vi-dlg-bascule button { font: inherit; font-size: 0.82rem; font-weight: 700; padding: 6px 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--muted); cursor: pointer; }
+    .vi-dlg-bascule button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .vi-dlg-bascule button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vi-dlg-court { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; max-width: 74ch; }
+    .vi-dlg-court li { display: grid; grid-template-columns: 2.1em minmax(0, 1fr); gap: 10px; align-items: start; }
+    .vi-dlg-court li > b:first-child { display: grid; place-items: center; height: 2.1em; border-radius: 8px; background: color-mix(in srgb, var(--c-part) 18%, var(--surface)); color: var(--c-part); font-size: 0.85rem; }
     .vi-dlg-partie[hidden] { display: none; }
     .vi-dlg-partie-politique { --c-part: var(--sys-pol); }
     .vi-dlg-partie-electoral { --c-part: var(--sys-elec); }
