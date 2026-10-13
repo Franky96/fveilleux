@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Outils de Frank — Votes Allemagne</title>
+  <script>
+    if (location.hash === '#live') location.replace('intentions-simulations.html');
+    if (location.hash === '#loi39') location.replace('loi39.html');
+    const _pL = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+    if (!sessionStorage.getItem('loggedIn') ||
+        (!_pL.includes('votes-quebec') && !_pL.includes('loi39') && sessionStorage.getItem('userRole') !== 'admin')) {
+      window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
+    }
+    // Thème du site (clair / sombre) appliqué aussi à la simulation
+    document.documentElement.dataset.theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=Public+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="votes-quebec/loi39.css">
+  <style>
+    /* Pas de style.css ici : ses règles générales (button, header, input…) déformeraient la simulation.
+       La barre du haut et l'interrupteur de thème reprennent donc le style du site. */
+    * { box-sizing: border-box; }
+    /* Barre du haut : mêmes couleurs que la simulation (tokens de votes-quebec/loi39.css) */
+    .site-top, body { --st-bg:#0C1019; --st-surface:#141A27; --st-rule:#273045; --st-ink:#E6E9F1; --st-muted:#98A1B4; }
+    html[data-theme="light"] .site-top, html[data-theme="light"] body { --st-bg:#F1F3F7; --st-surface:#FFFFFF; --st-rule:#D6DCE6; --st-ink:#121929; --st-muted:#586176; }
+    body { margin: 0; background: var(--st-bg); }
+    .site-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem;
+      padding: 0.5rem 1.5rem; background: var(--st-surface); border-bottom: 1px solid var(--st-rule);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .site-top a.retour { justify-self: start; background: transparent; color: var(--st-muted); border: 1px solid var(--st-rule); padding: 0.3rem 0.85rem;
+      border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+    .site-top a.retour:hover { border-color: var(--st-ink); color: var(--st-ink); }
+    .site-top a.retour:focus-visible, #theme-toggle:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    .site-top .titre { text-align: center; margin: 0; color: var(--st-ink); font-size: 0.9rem; font-weight: 600; }
+    .site-top { position: relative; z-index: 50; }
+    /* interrupteur + menu hamburger du site (page-controls.js), aux couleurs de la page */
+    .page-topbar-controls { grid-column: -2; justify-self: end; position: relative; display: flex; align-items: center; gap: 0.5rem; }
+    #hamburger-btn { width: auto; background: transparent; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px;
+      padding: 7px; border-radius: 8px; transition: background 0.2s; -webkit-tap-highlight-color: transparent; }
+    #hamburger-btn:hover { background: var(--st-bg); }
+    #hamburger-btn:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    #hamburger-btn span { display: block; width: 20px; height: 2px; background: var(--st-ink); border-radius: 2px;
+      transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: center; }
+    #hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    #hamburger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    #hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    #hamburger-menu { display: none; position: absolute; top: calc(100% + 0.5rem); right: 0; z-index: 60; background: var(--st-surface);
+      border: 1px solid var(--st-rule); border-radius: 12px; padding: 0.4rem; min-width: 195px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #hamburger-menu.open { display: block; }
+    .hbg-item { display: none; align-items: center; gap: 0.65rem; width: 100%; padding: 0.65rem 0.85rem; background: transparent; border: none;
+      -webkit-appearance: none; appearance: none; border-radius: 8px; color: var(--st-ink); font: inherit; font-size: 0.88rem; cursor: pointer;
+      text-decoration: none; text-align: left; white-space: nowrap; margin: 0; box-sizing: border-box; }
+    .hbg-item:hover, .hbg-item:focus-visible { background: var(--st-bg); outline: none; }
+    #logoutBtn.hbg-item { display: flex; color: #E5484D; margin-top: 0.4rem; }
+    .hbg-sep { display: none; height: 1px; background: var(--st-rule); margin: 0.3rem 0.5rem; }
+    @media (prefers-reduced-motion: reduce) { #hamburger-btn span { transition: none; } }
+    /* Choix du mode de scrutin */
+    .scrutins { background: var(--st-bg); border-bottom: 1px solid var(--st-rule); padding: 0.6rem clamp(16px, 3vw, 56px);
+      font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .sc-tabs { max-width: 1680px; margin: 0 auto; display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+    .sc-tab { flex: none; display: grid; gap: 1px; text-align: left; padding: 0.45rem 0.9rem; border-radius: 9px; cursor: pointer;
+      background: transparent; border: 1px solid var(--st-rule); color: var(--st-muted); font: inherit; }
+    .sc-tab b { font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem; }
+    .sc-tab small { font-size: 0.72rem; }
+    .sc-tab:hover { border-color: var(--st-ink); color: var(--st-ink); }
+    .sc-tab:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
+    .sc-tab[aria-selected="true"], .sc-tab[aria-current="page"] { background: var(--st-ink); border-color: var(--st-ink); color: var(--st-bg); }
+    a.sc-tab { text-decoration: none; }
+    .sc-tabs { align-items: flex-end; gap: 1rem; }
+    .sc-groupe { display: grid; gap: 0.3rem; flex: none; }
+    .sc-groupe + .sc-groupe { padding-left: 1rem; border-left: 1px solid var(--st-rule); }
+    .sc-groupe-titre { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-muted); }
+    .sc-groupe-btns { display: flex; gap: 0.5rem; width: max-content; }
+    .sc-tab, .sc-sous-tab { width: max-content; flex-shrink: 0; }
+    @media (max-width: 600px) { .sc-tabs { gap: 0.5rem; } .sc-groupe + .sc-groupe { padding-left: 0.5rem; } .sc-tab b, .sc-tab small { white-space: nowrap; }
+      .sc-sous-tab small { display: none; } .sc-sous-titre { margin-left: 0.25rem; padding-left: 0.6rem; } }
+    /* sous-menu d'un endroit (Votes Québec : intentions de vote, simulations) */
+    .sc-sous { max-width: 1680px; margin: 0.55rem auto 0; display: flex; align-items: center; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+    .sc-sous-tab { flex-direction: row; align-items: baseline; gap: 0.5rem; padding: 0.3rem 0.75rem; display: flex; white-space: nowrap; }
+    .sc-sous-tab b { font-size: 0.8rem; }
+    .sc-sous-tab small { font-size: 0.7rem; }
+    .sc-sous-titre { margin-left: 0.5rem; padding-left: 1rem; border-left: 1px solid var(--st-rule); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-muted); flex: none; }
+    .sc-dot { width: 8px; height: 8px; border-radius: 50%; background: #E5484D; flex: none; animation: sc-pouls 1.6s ease-in-out infinite; }
+    .sc-live b { color: #E5484D; }
+    .sc-live[aria-selected="true"] b { color: #E5484D; }
+    @keyframes sc-pouls { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    @media (prefers-reduced-motion: reduce) { .sc-dot { animation: none; } }
+    /* Vue « En direct » (temporaire) : mêmes couleurs que la simulation */
+    .vue-live { --bg:#F1F3F7; --surface:#FFFFFF; --ink:#121929; --muted:#586176; --rule:#D6DCE6; --soft:#E7EBF2;
+      --pq:#0101CC; --plq:#D90000; --caq:#0FA3E0; --pcq:#172853; --qs:#FF5402; --aut:#8A8F99;
+      background: var(--bg); color: var(--ink); min-height: 60vh; font-family: "Public Sans", system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+    :root[data-theme="dark"] .vue-live { --bg:#0C1019; --surface:#141A27; --ink:#E6E9F1; --muted:#98A1B4; --rule:#273045; --soft:#1B2233;
+      --pq:#5A6BFF; --plq:#FF4D4D; --caq:#3CC6FF; --pcq:#8FA0DA; --qs:#FF7A3A; --aut:#7C8494; }
+    .vue-live[hidden] { display: none; }
+    .lv-wrap { max-width: 1680px; margin: 0 auto; padding: 24px clamp(16px, 3vw, 56px) 56px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .lv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+    .lv-head h2 { margin: 6px 0 4px; font-family: "Literata", Georgia, serif; font-size: clamp(1.4rem, 3vw, 2rem); text-wrap: balance; }
+    .lv-etat { margin: 0; color: var(--muted); font-size: 0.88rem; }
+    .lv-etat b { color: var(--ink); }
+    .lv-btn, .lv-zoom button { font: inherit; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-btn:hover, .lv-zoom button:hover { border-color: var(--ink); }
+    /* « Mettre à jour » : décompte de la prochaine lecture + barre qui se remplit */
+    .lv-maj-btn { position: relative; overflow: hidden; display: inline-flex; align-items: baseline; gap: 6px; }
+    .lv-maj-btn small { font-size: 0.72rem; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
+    .lv-maj-btn::after { content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--fait, 0) * 100%); background: #E5484D; transition: width 1s linear; }
+    @media (prefers-reduced-motion: reduce) { .lv-maj-btn::after { transition: none; } }
+    .lv-btn:focus-visible, .lv-zoom button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    /* circonscriptions : pas de cadre de focus (Chrome le dessine autour de la boîte englobante) ; au clavier, contour épais */
+    .lv-rid:focus { outline: none; }
+    .lv-rid:focus-visible { outline: none; stroke: var(--ink); stroke-width: 2.5px; }
+    .live-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #E5484D; border: 1px solid #E5484D; border-radius: 99px; padding: 0.2rem 0.6rem; }
+    .lv-banniere { margin: 0; padding: 12px 14px; border-radius: 10px; border: 1px dashed var(--rule); background: var(--surface); color: var(--muted); font-size: 0.9rem; }
+    .lv-banniere b { color: var(--ink); }
+    .lv-muted { color: var(--muted); margin: 0; font-size: 0.85rem; }
+    .lv-sieges { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+    .lv-sieges h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .lv-barre-zone { position: relative; padding-top: 22px; }
+    .lv-barre { display: flex; height: 38px; border-radius: 8px; overflow: hidden; background: var(--soft); }
+    .lv-seg { position: relative; height: 100%; background: color-mix(in srgb, var(--c) 45%, var(--soft)); display: flex; align-items: center; justify-content: center; min-width: 0; transition: width 0.6s ease; }
+    .lv-seg + .lv-seg { border-left: 2px solid var(--surface); }
+    .lv-elus { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); }
+    .lv-seg b { position: relative; font-size: 0.78rem; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.55); white-space: nowrap; }
+    .lv-maj { position: absolute; top: 18px; bottom: -4px; width: 0; border-left: 2px solid var(--ink); }
+    .lv-maj span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.72rem; font-weight: 700; white-space: nowrap; color: var(--ink); line-height: 1; }
+    .lv-legende { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.78rem; }
+    .lv-k { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background: var(--muted); }
+    .lv-k.pale { opacity: 0.4; margin-left: 8px; }
+    .lv-partis { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+    .lv-parti { display: grid; grid-template-columns: 10px auto 1fr auto; grid-template-rows: auto auto; column-gap: 8px; align-items: baseline; padding: 8px 10px; border-radius: 8px; background: var(--bg); }
+    .lv-parti i { grid-row: 1 / 3; width: 10px; height: 100%; border-radius: 3px; background: var(--c); align-self: stretch; }
+    .lv-pnom { font-weight: 700; }
+    .lv-parti b { font-size: 1.3rem; font-variant-numeric: tabular-nums; justify-self: end; grid-column: 4; grid-row: 1; }
+    .lv-parti small { grid-column: 2 / 4; grid-row: 2; color: var(--muted); font-size: 0.72rem; }
+    .lv-pvote { grid-column: 4; grid-row: 2; justify-self: end; color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+    /* carte, fiche de circonscription et suivis :
+       étroit : l'un sous l'autre · large : carte à gauche, fiche puis suivies à droite (mode « Détaillé » : fiche sous la carte) */
+    /* rectangles de parti cliquables → liste des élu·e·s et des circonscriptions en avance */
+    button.lv-parti { font: inherit; color: inherit; text-align: left; border: 1px solid transparent; cursor: pointer; }
+    button.lv-parti:hover { border-color: var(--rule); }
+    button.lv-parti[aria-expanded="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--bg)); }
+    button.lv-parti:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .lv-listelus { display: grid; gap: 8px; padding: 12px; border-radius: 10px; background: var(--bg); border-top: 3px solid var(--c); }
+    .lv-listelus[hidden] { display: none; }
+    .lv-elus-tete { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .lv-elus-tete span { color: var(--muted); font-size: 0.8rem; flex: 1; }
+    .lv-listelus h4 { margin: 4px 0 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .lv-listelus ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 6px; }
+    .lv-elu { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 0.82rem; }
+    .lv-elu:hover, .lv-elu:focus-visible { outline: 1px solid var(--c); }
+    .lv-elu .lv-ava { width: 34px; height: 34px; }
+    .lv-elu span { display: grid; min-width: 0; }
+    .lv-elu span b, .lv-elu span small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-elu small { color: var(--muted); font-size: 0.72rem; }
+    .lv-elu-ecart { text-align: right; font-variant-numeric: tabular-nums; }
+    .lv-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "carte" "panneau" "suivi"; gap: 20px; align-items: start; }
+    .lv-grid > .lv-cartecard { grid-area: carte; }
+    .lv-grid > .lv-panneau { grid-area: panneau; }
+    .lv-grid > .lv-suivi { grid-area: suivi; }
+    @media (min-width: 1100px) { .lv-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: "carte panneau" "carte suivi";
+      grid-template-rows: auto 1fr; }
+      /* fiche au-dessus des suivies ; en mode « Détaillé » (suivies plus hautes), elle retourne sous la carte */
+      .lv-grid.suivi-det { grid-template-areas: "carte suivi" "panneau suivi"; } }   /* la hauteur des suivis va à la 2e rangée : pas de vide entre la carte et la fiche */
+    @media (min-width: 1800px) { .lv-wrap { max-width: 3360px; } .sc-tabs { max-width: calc(3360px - 2 * clamp(16px, 3vw, 56px)); }   /* onglets alignés à gauche avec le contenu */ #lvCarte { height: clamp(520px, 72vh, 1000px); } }
+    .lv-cartecard { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+    .lv-zoom { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+    .lv-zoom button { pointer-events: auto; }
+    .lv-zoom button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .lv-groupe { display: inline-flex; }                      /* Pastille / Carte prédiction / Participation : une seule, ou aucune */
+    .lv-groupe button { border-radius: 0; margin-left: -1px; }
+    .lv-groupe button:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
+    .lv-groupe button:last-child { border-radius: 0 8px 8px 0; }
+    .lv-groupe button:only-child { border-radius: 8px; }          /* bouton seul dans son groupe (ex. « Députés ») */
+    /* participation : chiffre de l'ensemble du Québec (en-tête) et légende du dégradé vers le blanc */
+    .lv-head-droite { display: flex; align-items: flex-end; gap: 10px; }
+    .lv-particip { font: inherit; display: grid; text-align: right; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-particip[hidden] { display: none; }
+    .lv-particip b { font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .lv-particip small { font-size: 0.72rem; color: var(--muted); }
+    .lv-particip:hover, .lv-particip[aria-pressed="true"] { border-color: var(--ink); }
+    .lv-particip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .lv-pgrad { position: relative; height: 14px; border-radius: 4px; border: 1px solid var(--rule); background: linear-gradient(90deg, #000 0 10%, #212121 20%, #585858 40%, #979797 60%, #dbdbdb 80%, #fff 90% 100%); }
+    .lv-pgrad i { position: absolute; top: -5px; bottom: -5px; width: 0; border-left: 2px solid #E5484D; }
+    .lv-pechelle { position: relative; height: 1em; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: -6px; }
+    .lv-pechelle span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+    .lv-ptxt { pointer-events: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .lv-pcols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .lv-plist { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.8rem; }
+    .lv-plist li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+    .lv-plist b { font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) { .lv-pcols { grid-template-columns: minmax(0, 1fr); } .lv-head-droite { width: 100%; } .lv-particip { flex: 1; min-width: 0; text-align: left; } .lv-particip small { white-space: normal; } .lv-head-droite .lv-btn { white-space: nowrap; } }
+    .lv-particip small { white-space: nowrap; }
+    /* suivi : étoiles, liste suivie, tableau par parti, alertes */
+    .lv-suivi { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-content: start; }
+    .lv-suivi .lv-carteS { container-type: inline-size; }
+    .lv-carteS { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
+    .lv-carteS h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .lv-pp-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .lv-pp-tete .lv-groupe button { font: inherit; font-size: 0.78rem; font-weight: 700; padding: 5px 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-pp-tete .lv-groupe button[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .lv-pp-resume { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lv-sg { border-top: 1px solid var(--rule); padding-top: 8px; }
+    .lv-sg > summary { cursor: pointer; font-size: 0.8rem; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+    .lv-sg > summary::-webkit-details-marker { display: none; }
+    .lv-sg > summary::before { content: "▸"; color: var(--muted); }
+    .lv-sg[open] > summary::before { content: "▾"; }
+    .lv-sg > summary span { flex: 1; }
+    .lv-sg > summary small { color: var(--muted); font-weight: 600; }
+    .lv-lignes { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; }
+    .lv-ligne { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 6px; font-size: 0.84rem; cursor: pointer; }
+    .lv-ligne:hover, .lv-ligne:focus-visible { background: var(--bg); outline: none; }
+    .lv-ligne .lv-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-ligne .lv-nom i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 6px; vertical-align: 1px; }
+    .lv-ecart { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+    .lv-ecart.neg { color: var(--muted); }
+    .lv-bur { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 4.5em; text-align: right; }
+    .lv-etoile { font: inherit; font-size: 1.05rem; line-height: 1; width: 26px; height: 26px; border-radius: 6px; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0; }
+    .lv-etoile[aria-pressed="true"] { color: #F5B83D; }
+    .lv-etoile:hover { color: #F5B83D; }
+    .lv-etoile:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+    .lv-suivre-pour { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted); }
+    .lv-suivre-pour > span { margin-right: 2px; }
+    .lv-suivre { font: inherit; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .lv-suivre[aria-pressed="true"] { border-color: var(--c); background: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .lv-pp-tete .lv-groupe button small { font-weight: 600; opacity: 0.8; }
+    .lv-pp-tete .lv-groupe { max-width: 100%; }
+    @container (max-width: 480px) { .lv-pp-tete .lv-groupe { width: 100%; } .lv-pp-tete .lv-groupe button { flex: 1 1 0; min-width: 0; padding: 5px 4px; } }
+    /* vignettes des circonscriptions suivies : 3 premiers candidats */
+    .lv-vigs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .lv-vig { font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink); background: var(--bg); border: 1px solid var(--rule); border-left: 4px solid var(--c);
+      border-radius: 6px; padding: 4px 9px; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-vig.mene { background: color-mix(in srgb, var(--c) 16%, var(--bg)); }
+    .lv-vig:hover, .lv-vig:focus-visible { border-color: var(--ink); border-left-color: var(--c); outline: none; }
+    /* mode « Détaillé » : rectangles complets */
+    .lv-vigs.det { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 8px; }
+    .lv-vigd { min-width: 0; background: var(--bg); border-radius: 10px; border-top: 4px solid var(--c); padding: 7px 10px 9px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; cursor: pointer; align-content: start; }
+    .lv-vigd:hover, .lv-vigd:focus-visible { outline: 2px solid var(--rule); outline-offset: 0; }
+    .lv-vigd header { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .lv-vigd header b { min-width: 0; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-vigd-etat { display: flex; justify-content: space-between; gap: 8px; font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .lv-vigd-etat span { white-space: nowrap; }
+    .lv-vigd-etat span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .lv-vigd ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+    .lv-vigd li { display: grid; grid-template-columns: 4px minmax(0, 1fr) auto auto 3.4em; column-gap: 7px; align-items: baseline; font-size: 0.8rem; padding: 3px 6px 3px 0; border-radius: 5px; }
+    .lv-vigd li.moi { background: color-mix(in srgb, var(--c) 16%, transparent); font-weight: 700; }
+    .lv-vigd li i { align-self: stretch; border-radius: 2px; background: var(--c); }
+    .lv-vigd li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-vigd li em { font-style: normal; font-size: 0.7rem; color: var(--muted); }
+    .lv-vigd li b { font-variant-numeric: tabular-nums; }
+    .lv-vigd li small { justify-self: end; font-size: 0.68rem; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 400; }
+    .lv-suiv-outils { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .lv-proj-btn[aria-pressed="true"] { --c: var(--ink); }
+    .lv-proj-btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); text-shadow: none; }
+    /* infobulle des suivies : détail actuel (ou projection) */
+    /* infobulles : fond noir, texte clair, dans les deux thèmes (meilleur contraste) */
+    .lv-vtip, .lv-tip { --tip-muted: #A7AEBB; background: #0A0B0E; color: #F4F5F7; border: 1px solid #2C313B; }
+    .lv-vtip { position: fixed; z-index: 1200; pointer-events: none; width: max-content; max-width: min(320px, calc(100vw - 16px)); border-radius: 10px; padding: 8px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-size: 0.8rem; display: grid; gap: 4px; }
+    .lv-vtip[hidden] { display: none; }
+    .lv-vtip > small { color: var(--tip-muted); font-size: 0.72rem; }
+    .lv-vtip ol { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 2px; }
+    .lv-vtip li { display: grid; grid-template-columns: 3px minmax(0, 1fr) auto auto auto; column-gap: 7px; align-items: center; padding: 2px 6px 2px 0; border-radius: 4px; }
+    .lv-vtip li.moi { background: color-mix(in srgb, var(--c) 28%, #0A0B0E); font-weight: 700; }
+    .lv-vtip li i { align-self: stretch; border-radius: 2px; background: var(--c); }
+    .lv-vtip li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lv-vtip li em { font-style: normal; font-size: 0.7rem; color: var(--tip-muted); }
+    .lv-vtip li b { font-variant-numeric: tabular-nums; }
+    .lv-vtip li small { font-size: 0.68rem; color: var(--tip-muted); font-variant-numeric: tabular-nums; min-width: 3em; text-align: right; }
+    #lvSuivies { display: grid; gap: 12px; }
+    .lv-suiv-resume { font-size: 0.85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+    .lv-suiv-resume > b { color: var(--ink); }
+    .lv-suiv-corps { display: grid; gap: 16px; align-items: start; }
+    .lv-suiv-journal { display: grid; gap: 8px; border-top: 1px solid var(--rule); padding-top: 10px; }
+    @container (min-width: 900px) { .lv-suiv-corps.avec-journal { grid-template-columns: minmax(0, 1fr) 260px; } .lv-suiv-journal { padding: 0 0 0 16px; border-top: 0; border-left: 1px solid var(--rule); } }
+    .lv-suiv-cartes { display: grid; gap: 14px; }
+    .lv-suiv-grp { display: grid; gap: 8px; }
+    .lv-suiv-grp h4, .lv-suiv-journal h4 { margin: 0; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+    .lv-suiv-grp h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 4px; }
+    .lv-suiv-journal h4 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .lv-effacer { font: inherit; font-size: 0.68rem; font-weight: 700; letter-spacing: 0; text-transform: none; padding: 2px 8px; border-radius: 99px;
+      border: 1px solid var(--rule); background: none; color: var(--muted); cursor: pointer; }
+    .lv-effacer:hover, .lv-effacer:focus-visible { color: var(--ink); border-color: var(--ink); }
+    .lv-suiv-journal summary { cursor: pointer; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+    .lv-rangee { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; align-items: start; padding-top: 6px; border-top: 1px dashed var(--rule); }
+    .lv-rangee.voix { grid-template-columns: 96px minmax(0, 1fr); }
+    .lv-rangee-ecart small { display: block; font-size: 0.68rem; font-weight: 600; color: var(--muted); }
+    .lv-rangee:first-of-type { border-top: 0; padding-top: 0; }
+    .lv-rangee-ecart { font-weight: 800; font-size: 0.9rem; font-variant-numeric: tabular-nums; padding-top: 4px; color: var(--ink); }
+    .lv-rangee-ecart.pos { color: var(--c); }
+    .lv-rangee-ecart.neg { color: var(--muted); }
+    .lv-rangee-ecart.nul { color: #E0A11B; }
+    @media (max-width: 600px) { .lv-rangee { grid-template-columns: minmax(0, 1fr); gap: 6px; } .lv-rangee-ecart { padding-top: 0; } }
+    /* bouton « Suivis » de la carte : menu des partis, contour des circonscriptions suivies */
+    .lv-menu-suivis { position: relative; display: inline-flex; }
+    .lv-zoom #lvCarteSuivis[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .lv-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 5; min-width: 220px; display: grid; gap: 2px; padding: 6px; pointer-events: auto;
+      background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .lv-menu[hidden] { display: none; }
+    .lv-zoom .lv-menu button { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center; text-align: left; border: 0; border-radius: 6px; padding: 7px 8px; background: none; }
+    .lv-zoom .lv-menu button:hover, .lv-zoom .lv-menu button:focus-visible { background: var(--bg); }
+    .lv-zoom .lv-menu button[aria-checked="true"] { background: var(--bg); color: var(--ink); }
+    .lv-menu button i { width: 12px; height: 12px; border-radius: 3px; border: 2px solid var(--c); }
+    .lv-menu button small { color: var(--muted); font-weight: 600; }
+    .lv-suivi-halo { fill: none; stroke: #000; stroke-opacity: 0.55; stroke-width: 5px; vector-effect: non-scaling-stroke; pointer-events: none; stroke-linejoin: round; }
+    .lv-suivi-ligne { fill: none; stroke-width: 2.6px; vector-effect: non-scaling-stroke; pointer-events: none; stroke-linejoin: round; }
+    /* section repliable (« Suivi par parti », fermée par défaut) */
+    .lv-replier { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+    .lv-replier:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+    .lv-fleche { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--rule); font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+    .lv-replier[aria-expanded="true"] .lv-fleche { transform: rotate(90deg); }
+    .lv-repli[data-ferme] #lvPPCorps, .lv-repli[data-ferme] #lvPPChoix { display: none; }
+    @media (prefers-reduced-motion: reduce) { .lv-fleche { transition: none; } }
+    .lv-vide { padding: 14px; border: 1px dashed var(--rule); border-radius: 10px; }
+    /* statut pour le parti suivi : serré = ambre, remporté = couleur du parti, perdu/retard = atténué */
+    .lv-st { font-weight: 700; color: var(--ink); }
+    .lv-st.st-serre { color: #E0A11B; }
+    .lv-st.st-retard, .lv-st.neg { color: var(--muted); }
+    .lv-st.st-fini:not(.neg) { color: var(--c); }
+    .lv-journal { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
+    .lv-journal li { padding: 5px 8px; border-radius: 6px; background: var(--bg); }
+    .lv-journal time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+    .lv-alertes { position: fixed; right: 16px; bottom: 16px; z-index: 1100; display: grid; gap: 8px; max-width: min(360px, calc(100vw - 32px)); }
+    .lv-alerte { background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-left: 5px solid var(--c); border-radius: 10px; padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-size: 0.86rem; cursor: pointer; animation: lvEntre 0.25s ease-out; }
+    .lv-alerte small { display: block; color: var(--muted); font-size: 0.72rem; }
+    @keyframes lvEntre { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .lv-alerte { animation: none; } }
+    .lv-pk { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--rule); }
+    /* pastilles de prédiction : contour blanc + fin cerne noir, visibles même sur la couleur du même parti */
+    .lv-preds { pointer-events: none; }
+    .lv-partis-pred { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .lv-pred-halo { fill: #000; opacity: 0.85; }
+    .lv-pred-pt { stroke: #fff; }
+    #lvCarte { display: block; width: 100%; height: clamp(420px, 72vh, 900px); background: var(--bg); touch-action: none; }
+    /* plein écran : API du navigateur, ou couche fixe sur iPhone (pas de plein écran d'élément) */
+    .lv-zoom .lv-plein-btn { margin-left: auto; }
+    /* « Suivis » et « Plein écran » en bas à gauche de la carte */
+    .lv-zoom-bas { top: auto; bottom: 10px; right: auto; }
+    .lv-zoom-bas:empty { display: none; }
+    .lv-zoom-bas .lv-plein-btn { margin-left: 0; }
+    .lv-zoom-bas .lv-menu { top: auto; bottom: calc(100% + 6px); }
+    /* « Info » : seulement en plein écran ; la fiche s'affiche alors par-dessus la carte, à droite */
+    .lv-zoom .lv-info-btn { display: none; }
+    .lv-cartecard:fullscreen .lv-info-btn, .lv-cartecard.lv-plein .lv-info-btn { display: inline-block; }
+    .lv-zoom .lv-info-btn[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    /* barre des sièges compacte, en plein écran seulement : en bas à droite (hors de la carte), translucide */
+    .lv-barre-plein { display: none; }
+    .lv-cartecard:fullscreen .lv-barre-plein, .lv-cartecard.lv-plein .lv-barre-plein {
+      display: grid; gap: 5px; position: absolute; z-index: 3; bottom: 10px; right: 10px; width: min(380px, calc(100% - 420px));
+      min-width: 280px; padding: 8px 12px 9px; border-radius: 10px; background: rgba(10, 11, 14, 0.78); color: #F4F5F7; border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); pointer-events: none; font-size: 0.75rem; }
+    .lv-bp-tete { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .lv-bp-tete span { color: #A7AEBB; font-size: 0.7rem; font-variant-numeric: tabular-nums; }
+    .lv-bp-barre { position: relative; display: flex; height: 8px; border-radius: 4px; overflow: visible; background: rgba(255,255,255,0.1); }
+    .lv-bp-barre span { position: relative; height: 100%; background: color-mix(in srgb, var(--c) 50%, #1A1D24); }
+    .lv-bp-barre span:first-child { border-radius: 4px 0 0 4px; }
+    .lv-bp-barre span i { position: absolute; inset: 0 auto 0 0; background: var(--c); }
+    .lv-bp-barre em { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2px solid #F4F5F7; }
+    .lv-bp-partis { display: flex; flex-wrap: wrap; gap: 4px 10px; color: #C9CED8; font-variant-numeric: tabular-nums; }
+    .lv-bp-partis span { display: inline-flex; align-items: center; gap: 4px; }
+    .lv-bp-partis i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+    .lv-bp-partis b { color: #F4F5F7; }
+    @media (max-width: 900px) { .lv-cartecard:fullscreen .lv-barre-plein, .lv-cartecard.lv-plein .lv-barre-plein { left: 10px; right: 10px; width: auto; min-width: 0; bottom: 58px; } }
+    .lv-panneau.lv-panneau-plein { position: absolute; z-index: 4; top: 10px; right: 10px; max-height: calc(100% - 120px); width: min(380px, calc(100% - 20px));
+      overflow: auto; overscroll-behavior: contain; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+    @media (max-width: 600px) { .lv-panneau.lv-panneau-plein { top: auto; bottom: 140px; left: 10px; right: 10px; width: auto; max-height: 50%; } }
+    /* téléphone : zoom au doigt (pincer), pas besoin des boutons de zoom */
+    @media (max-width: 600px) { .lv-zoom [data-z="tout"], .lv-zoom [data-z="mtl"], .lv-zoom [data-z="qc"], .lv-zoom [data-z="plus"], .lv-zoom [data-z="moins"] { display: none; } }
+    .lv-cartecard:fullscreen, .lv-cartecard.lv-plein { border: 0; border-radius: 0; width: 100%; height: 100%; }
+    .lv-cartecard.lv-plein { position: fixed; inset: 0; z-index: 1000; height: 100dvh; }
+    .lv-cartecard:fullscreen #lvCarte, .lv-cartecard.lv-plein #lvCarte { height: 100%; }
+    body.lv-plein-actif { overflow: hidden; }
+    body.lv-plein-actif [data-version-badge] { visibility: hidden; }
+    .lv-rid { stroke: var(--surface); stroke-width: 0.4px; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill-opacity 0.4s; }
+    .lv-rid:hover { stroke: var(--ink); stroke-width: 1.2px; }
+    .lv-reg { fill: none; stroke: var(--surface); stroke-width: 1.4px; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .lv-selline { fill: none; stroke: var(--ink); stroke-width: 2.5px; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .lv-tip { position: absolute; z-index: 3; pointer-events: none; border-radius: 8px;
+      padding: 6px 9px; font-size: 0.8rem; box-shadow: 0 6px 20px rgba(0,0,0,0.25); max-width: 260px; }
+    .lv-tip b { display: block; }
+    .lv-tip small { color: var(--tip-muted); }
+    .lv-panneau { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; display: grid; gap: 12px; align-content: start; }
+    .lv-panneau h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.35rem; text-wrap: balance; }
+    .lv-eyebrow { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .lv-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .lv-chip { font-size: 0.75rem; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: var(--soft); }
+    .lv-chip.fin { background: var(--ink); color: var(--surface); }
+    .lv-tete { margin: 0; padding-left: 10px; border-left: 4px solid var(--c); font-size: 0.92rem; }
+    .lv-cands { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .lv-cands td { padding: 7px 4px; border-top: 1px solid var(--rule); vertical-align: top; }
+    .lv-cands small { display: block; color: var(--muted); font-size: 0.72rem; }
+    .lv-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .lv-ava { display: block; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; object-position: center 20%;
+      border: 2px solid var(--c); background: var(--soft); flex: none; }
+    .lv-ini { display: grid; place-items: center; background: var(--c); color: #fff; font-size: 0.78rem; font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+    .lv-cands td:first-child { width: 48px; }
+    img.lv-ava { cursor: zoom-in; }
+    /* photo agrandie au survol */
+    .lv-photo { position: fixed; z-index: 1200; pointer-events: none; display: grid; gap: 6px; justify-items: center; padding: 8px; border-radius: 12px;
+      background: #0A0B0E; color: #F4F5F7; border: 1px solid #2C313B; box-shadow: 0 12px 34px rgba(0,0,0,0.4); }
+    .lv-photo[hidden] { display: none; }
+    .lv-photo img { display: block; width: 220px; height: 220px; object-fit: cover; object-position: center 20%; border-radius: 8px; border-bottom: 4px solid var(--c); background: #1A1D24; }
+    .lv-photo span { font-size: 0.82rem; font-weight: 700; max-width: 220px; text-align: center; }
+    .lv-liste li { align-items: center; }
+    .lv-pt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-top: 5px; }
+    .lv-jauge { display: block; height: 4px; border-radius: 2px; background: var(--soft); margin-top: 4px; overflow: hidden; }
+    .lv-jauge i { display: block; height: 100%; background: var(--c); }
+    .lv-sortant { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border: 1px solid var(--rule); border-radius: 4px; padding: 0 4px; }
+    .lv-kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .lv-kv div { background: var(--bg); border-radius: 8px; padding: 8px; display: grid; }
+    .lv-kv b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .lv-kv span { font-size: 0.72rem; color: var(--muted); }
+    .lv-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .lv-liste li { display: grid; grid-template-columns: 40px 1fr; gap: 10px; }
+    .lv-liste small { display: block; color: var(--muted); font-size: 0.75rem; }
+    .lv-proj { padding-top: 8px; border-top: 1px dashed var(--rule); }
+    .lv-source { font-size: 0.78rem; }
+    @media (max-width: 900px) { #lvCarte { height: 62vh; } }
+    @media (max-width: 600px) { .lv-partis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lv-parti b { font-size: 1.1rem; } .lv-parti small { font-size: 0.66rem; } }
+    @media (prefers-reduced-motion: reduce) { .lv-seg, .lv-rid { transition: none; } }
+    .loi39[hidden], .site-top .titre > [hidden] { display: none; }
+    /* Onglet « Votes Québec » : intentions de vote (intentions.js) — mêmes jetons de couleur que « En direct » */
+    .vue-votes .vi-badge, .vue-accueil .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+      border: 1px solid var(--rule); border-radius: 99px; padding: 0.2rem 0.6rem; }
+    /* Votes France : hémicycle plus large que le plan du Québec */
+    @media (min-width: 1000px) { .vf .vi-haut { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+    .vf .vi-plan.vf-hemi { max-width: none; }
+    .vf-hemi-n { fill: var(--ink); font: 800 64px "Literata", Georgia, serif; }
+    .vf-hemi-maj { fill: var(--muted); font: 600 20px "Public Sans", system-ui, sans-serif; }
+    .vf-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.8rem; color: var(--muted); }
+    .vf-legende span { display: inline-flex; align-items: center; gap: 6px; }
+    .vf-legende i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+    .vf-legende b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .vf .lv-rid { stroke-width: 0.25px; }
+    .vf-dep { stroke-width: 0.9px; }
+    .vf-encarts { fill: none; stroke: var(--rule); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+    /* Votes France : choix législatives / présidentielle (en haut), et intentions présidentielles à la place de l'hémicycle */
+    /* choix de l'élection (France, États-Unis) : toujours sur sa propre ligne sous le titre, pour ne pas changer de place
+       selon la longueur de la ligne de source */
+    .lv-head:has(> .vf-type) { flex-direction: column; align-items: flex-start; }
+    .vf-type button { font: inherit; font-size: 0.9rem; font-weight: 700; padding: 8px 16px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .vf-type button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .vf-type button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vf-explic { max-width: 980px; padding: 12px 16px; border-left: 4px solid var(--ink); border-radius: 0 10px 10px 0; background: var(--surface); font-size: 0.9rem; line-height: 1.55; }
+    .vf-explic b { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .vf-explic p { margin: 4px 0 0; }
+    .vf-modes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+    .vf-mode-grp { display: inline-flex; flex-wrap: wrap; max-width: 100%; align-items: center; gap: 8px; padding-left: 16px; border-left: 1px solid var(--rule); }
+    .vf-modes > .vf-mode-grp:first-child { padding-left: 0; border-left: 0; }
+    .vf-an { display: inline-block; padding: 1px 6px; border-radius: 4px; background: var(--ink); color: var(--surface); font-weight: 800; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; line-height: 1.35; }
+    .vf-an-carte { display: none; position: absolute; top: 12px; right: 12px; z-index: 3; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--rule); font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+    .vf-an-carte .vf-an { font-size: 0.95rem; margin: 0 2px; }
+    .vi-carte:fullscreen .vf-an-carte, .vi-carte.lv-plein .vf-an-carte { display: block; }
+    .vf-mode-lab .vf-an { font-size: 0.82rem; margin-left: 2px; }
+    #viEchelle > .vf-an { font-size: 0.78rem; margin-right: 2px; }
+    .vf-mode-lab { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .vf-hors .vi-serres { margin-top: 8px; }
+    /* tant que le module n'a pas affiché ses données : pas de gabarit vide, seulement « Chargement… » */
+    .vue-votes[aria-busy="true"] .lv-wrap { visibility: hidden; height: 0; overflow: hidden; }
+    .vue-votes[aria-busy="true"]::before { content: "Chargement…"; display: block; max-width: 1680px; margin: 0 auto; padding: 40px clamp(16px, 3vw, 56px); color: var(--muted); font-size: 0.95rem; }
+    /* Accueil de la section : une carte par page */
+    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); grid-auto-rows: minmax(min-content, 1fr); gap: 18px; }
+    .ac-carte { min-height: 460px; }
+    .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
+    .ac-carte:hover, .ac-carte:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
+    .ac-carte h3 { margin: 0; font-size: 1.25rem; }
+    .ac-chiffre { font: 800 2.2rem/1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
+    .ac-legende, .ac-phrase, .ac-dates { margin: 0; }
+    .ac-legende { font-size: 0.85rem; color: var(--muted); }
+    .ac-phrase { font-size: 0.88rem; line-height: 1.5; }
+    .ac-dates { font-size: 0.75rem; color: var(--muted); }
+    .ac-lien { font-size: 0.85rem; font-weight: 700; }
+    .ac-large { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; }   /* même taille que les autres ; simulations dessous */
+    .ac-large:hover, .ac-large:focus-within { transform: none; }
+    .ac-principal { display: grid; gap: 8px; align-content: start; color: inherit; text-decoration: none; }
+    .ac-principal:hover .ac-lien, .ac-sous:hover .ac-lien { text-decoration: underline; }
+    .ac-sims { display: grid; gap: 8px; align-content: start; }
+    .ac-sous { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--ink); text-decoration: none; transition: border-color 0.2s; }
+    .ac-sous:hover, .ac-sous:focus-visible { border-color: var(--ink); }
+    .ac-sous > b { font-size: 1rem; }
+    .ac-sous > small, .ac-sous p { margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+    .ac-sous-chiffre { font: 800 1.4rem/1.1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
+    .ac-sous-chiffre small { font: 500 0.8rem "Public Sans", system-ui, sans-serif; color: var(--muted); }
+    .ac-barre { position: relative; display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin: 4px 0; }
+    .ac-barre span { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 0.68rem; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+    .ac-barre i { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ink); opacity: 0.55; }
+    @media (prefers-reduced-motion: reduce) { .ac-carte { transition: none; } .ac-carte:hover { transform: none; } }
+    .vf-sondmoy { display: grid; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--rule); }
+    .vf-sondmoy[hidden] { display: none; }
+    /* Votes Canada : Chambre des communes à l'horizontale (plus large que le plan du Québec), choix de la chambre affichée */
+    @media (min-width: 1000px) { .vc .vi-haut { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+    .vc .vi-plan.vc-plan { max-width: none; }
+    .vc-choix { justify-self: start; }
+    .vc-choix[hidden] { display: none; }
+    /* Votes États-Unis, présidentielle : duels de l'élection générale (bouton = choix du duel du graphique) */
+    .vu-cands { gap: 10px; }
+    .vu-cands .vf-cand { grid-template-columns: minmax(0, 17em) minmax(0, 1fr) 4.4em; }
+    .vu-cands .vf-cand small { white-space: normal; }
+    .vu-duel { display: grid; gap: 5px; width: 100%; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+    .vu-duel[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+    .vu-duel:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vu-duel-noms { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 0.88rem; }
+    .vu-duel-noms b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vu-duel-noms b span { font-variant-numeric: tabular-nums; }
+    .vu-duel-noms b:last-child { text-align: right; }
+    .vu-duel-noms small { color: var(--muted); font-size: 0.72rem; }
+    .vu-duel-barre { display: flex; justify-content: space-between; height: 10px; border-radius: 4px; overflow: hidden; background: var(--soft); }
+    .vu-duel-barre i { display: block; height: 100%; }
+    .vf-legende small { color: var(--muted); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+    .vc .lv-rid { stroke-width: 0.2px; }
+    /* Votes États-Unis : hémicycle de 435 sièges (comme Votes France) */
+    @media (min-width: 1000px) { .vu .vi-haut { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+    .vu .vi-plan.vf-hemi { max-width: none; }
+    .vu .lv-rid { stroke-width: 0.25px; }
+    .vi-vrow.vu-cote { grid-template-columns: 7.4em minmax(0, 1fr) 3em 4.4em; }
+    .vi-vrow.vu-cote b:first-child { white-space: nowrap; }
+    .vu-explic { display: grid; gap: 8px; margin-top: 10px; font-size: 0.85rem; line-height: 1.5; }
+    .vu-explic p { margin: 0; }
+    .vu-explic ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .vu-explic li { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 8px; align-items: start; }
+    .vu-explic li i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); margin-top: 5px; }
+    .vi-vrow.vc-proj { grid-template-columns: 3.4em minmax(0, 1fr) 4.2em 6.6em; }
+    .vi-vrow.vc-proj .vi-num { white-space: nowrap; }
+    .vc-replie { border-top: 0; padding-top: 0; }
+    .vc-replie > summary { align-items: center; font-size: 0.95rem; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); }
+    .vc-replie > summary:hover, .vc-replie > summary:focus-visible { background: var(--soft); }
+    .vc-replie > summary::before { font-size: 1rem; color: var(--ink); }
+    .vc-replie > summary::after { content: "Afficher"; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+    .vc-replie[open] > summary::after { content: "Masquer"; }
+    .vc-replie .vi-vrows { margin-top: 10px; }
+    .vc-menu { position: relative; margin-bottom: 6px; }
+    .vc-menu summary { display: inline-flex; gap: 6px; align-items: center; list-style: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+    .vc-menu summary::-webkit-details-marker { display: none; }
+    .vc-menu summary::after { content: "▾"; color: var(--muted); }
+    .vc-menu[open] summary::after { content: "▴"; }
+    .vc-menu-liste { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; display: grid; min-width: 240px; max-height: 60vh; overflow-y: auto; padding: 4px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+    .vc-menu-liste button { font: inherit; font-size: 0.85rem; text-align: left; padding: 7px 10px; border: 0; border-radius: 6px; background: none; color: var(--ink); cursor: pointer; }
+    .vc-menu-liste button:hover, .vc-menu-liste button:focus-visible { background: var(--soft); }
+    .vc-menu-liste button[aria-pressed="true"] { font-weight: 800; background: var(--soft); }
+    .vc .vi-serres b small { font-weight: 500; color: var(--muted); }
+    .vf-cands { display: grid; gap: 8px; }
+    .vf-cands[hidden] { display: none; }
+    .vf-cand { display: grid; grid-template-columns: minmax(0, 13em) minmax(0, 1fr) 4.4em; gap: 12px; align-items: center; }
+    .vf-cand > span:first-child { display: grid; min-width: 0; }
+    .vf-cand b { font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vf-cand small { font-size: 0.72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vf-cand-barre { height: 16px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+    .vf-cand-barre i { display: block; height: 100%; background: var(--c); border-radius: 4px; }
+    .vf-cand-v { text-align: right; font-variant-numeric: tabular-nums; font-size: 1rem; }
+    @media (max-width: 600px) { .vf-cand { grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 3.8em; gap: 8px; } }
+    .vi-vrow.vf-pres { grid-template-columns: 7.2em minmax(0, 1fr) 4.4em 6.2em; }
+    .vi-vrow.vf-pres small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .vf .vi-vrow > b:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vi-elu { margin: 0; padding-left: 10px; border-left: 4px solid var(--c); font-size: 0.9rem; }
+    /* Votes Québec : député de la circonscription cliquée (élection terminée), en évidence en haut de la fiche */
+    .vi-depute { display: grid; gap: 2px; padding: 10px 12px; border-left-width: 6px; border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--c) 14%, var(--surface)); }
+    .vi-depute b { font-size: 1.15rem; }
+    .vi-depute span { font-size: 0.88rem; font-weight: 700; color: var(--c); }
+    .vi-depute small { font-size: 0.8rem; color: var(--muted); }
+    .vi-cands li.vi-cand-elu span { font-weight: 700; }
+    .vi-cands li.vi-cand-elu small { margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: var(--c); color: #fff; font-size: 0.68rem; font-weight: 700; }
+    .vf .vi-serres li { grid-template-columns: 10px minmax(0, 1fr) auto; }
+    .vue-votes .vi-badge-demo { color: #E0A11B; border-color: #E0A11B; }
+    .vi-carte { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+    .vi-cartebloc { display: grid; gap: 10px; min-width: 0; }
+    .vi-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .vi-outils .lv-groupe button, .vi-chip { font: inherit; font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .vi-outils .lv-groupe button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .vi-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .vi-chip { border-radius: 99px; padding: 5px 11px; }
+    .vi-chip[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+    .vi-chips[aria-disabled="true"] .vi-chip { opacity: 0.55; }
+    .vi-pct { --c: var(--ink); }
+    .vi-pct[aria-pressed="true"] { color: var(--surface); text-shadow: none; }
+    .vi-pct[hidden] { display: none; }
+    .vi-echelle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+    .vi-ramp { display: inline-block; width: 140px; height: 10px; border-radius: 5px; border: 1px solid var(--rule); }
+    .vi-lbl { fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-linejoin: round; font-weight: 700; pointer-events: none; font-variant-numeric: tabular-nums; }
+    .vi-lab .vi-nom { font-weight: 600; fill: var(--muted); }
+    /* haut de page : plan de l'Assemblée (à gauche) et évolution des intentions de vote (à droite) */
+    .vi-haut { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    @media (min-width: 1000px) { .vi-haut { grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); } }
+    .vi-sieges { align-content: start; }
+    .vi-plan { display: block; width: 100%; max-width: 380px; height: auto; margin: 0 auto; }
+    .vi-evol-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .vi-periodes button { font: inherit; font-size: 0.78rem; font-weight: 600; padding: 5px 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
+    .vi-periodes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .vi-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .vi-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--soft); font-variant-numeric: tabular-nums; }
+    .vi-pill i { width: 9px; height: 9px; border-radius: 50%; }
+    .vi-liens { display: flex; gap: 14px; flex-wrap: wrap; }
+    .vi-lien { font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule); }
+    .vi-lien:hover { text-decoration-color: var(--ink); }
+    .vi-vrows { display: grid; gap: 5px; }
+    .vi-vrow { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 4.4em 5.6em; gap: 8px; align-items: center; font-size: 0.85rem; }
+    .vi-vrow.win b:first-child { text-decoration: underline; text-underline-offset: 3px; }
+    .vi-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .vi-num small { color: var(--muted); font-size: 0.7rem; }
+    .vi-table { overflow-x: auto; }
+    .vi-table table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    .vi-table th, .vi-table td { padding: 4px 6px; border-top: 1px solid var(--rule); text-align: center; }
+    .vi-table th:first-child, .vi-table td:first-child { text-align: left; }
+    .vi-table td.has { font-weight: 800; color: var(--c); }
+    .vi-table td:not(.has) { color: var(--muted); }
+    .vi-carte:fullscreen, .vi-carte.lv-plein { border: 0; border-radius: 0; }
+    .vi-carte:fullscreen #viCarte, .vi-carte.lv-plein #viCarte { height: 100%; }
+    #viCarte { display: block; width: 100%; height: clamp(420px, 70vh, 860px); background: var(--bg); touch-action: none; }
+    .vi-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (min-width: 1100px) { .vi-grid { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); } }
+    @media (max-width: 900px) { #viCarte { height: 60vh; } }
+    @media (max-width: 600px) { #viZoom [data-z] { display: none; } }
+    .vi-serres, .vi-parts, .vi-cands { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+    .vi-serres li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 6px; background: var(--bg); cursor: pointer; font-size: 0.85rem; }
+    .vi-serres li:hover, .vi-serres li:focus-visible { outline: 1px solid var(--c); }
+    .vi-serres i, .vi-cands i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+    .vi-serres b { font-variant-numeric: tabular-nums; }
+    .vi-parts li { display: grid; grid-template-columns: 4.5em minmax(0, 1fr) 4.5em; gap: 8px; align-items: center; font-size: 0.86rem; }
+    .vi-parts li span:first-child { font-weight: 700; }
+    .vi-parts b { text-align: right; font-variant-numeric: tabular-nums; }
+    .vi-jauge { height: 10px; border-radius: 5px; background: var(--soft); overflow: hidden; }
+    .vi-jauge i { display: block; height: 100%; background: var(--c); }
+    .vi-cands li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 0.85rem; }
+    .vi-cands span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vi-cands em { font-style: normal; font-size: 0.72rem; color: var(--muted); }
+    .vi-cands b { font-variant-numeric: tabular-nums; }
+    .vi-evol { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
+    .vi-evol h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .vi-evol-zone { position: relative; }
+    /* « Comprendre le système électoral » : bouton sous la source, grande fenêtre d'explication (élément <dialog>) */
+    .vi-systeme-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 7px 14px 7px 8px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+    .vi-systeme-btn[hidden] { display: none; }
+    .vi-systeme-btn span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--surface); font-size: 0.8rem; }
+    .vi-systeme-btn:hover { border-color: var(--ink); }
+    .vi-systeme-btn:focus-visible, .vi-dlg-fermer:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vi-dlg { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--bg, var(--surface)); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,0.45); }
+    /* hauteur fixe : la fenêtre (et ses onglets) ne bouge pas quand on change de partie ou de version ; le texte défile dedans */
+    .vi-dlg[open] { display: flex; flex-direction: column; height: min(900px, calc(100dvh - 48px)); }
+    .vi-dlg-corps { flex: 1 1 auto; min-height: 0; align-content: start; }
+    .vi-dlg::backdrop { background: rgba(5, 8, 14, 0.62); backdrop-filter: blur(2px); }
+    .vi-dlg-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 14px 16px; padding: 18px 24px 0; border-bottom: 1px solid var(--rule); }
+    .vi-dlg-tete > div:first-child { padding-bottom: 2px; }
+    /* deux parties bien distinctes : système politique (or) et système électoral (sarcelle), hors des couleurs des partis */
+    .vi-dlg { --sys-pol: #9A6A10; --sys-elec: #0B8577; }
+    :root[data-theme="dark"] .vi-dlg { --sys-pol: #E2B041; --sys-elec: #19B3A1; }
+    .vi-dlg-onglets { flex-basis: 100%; display: flex; gap: 4px; margin-bottom: -1px; }
+    .vi-dlg-onglets[hidden] { display: none; }
+    .vi-dlg-onglets button { display: grid; gap: 1px; text-align: left; padding: 8px 16px 10px; border: 1px solid transparent; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; }
+    .vi-dlg-onglets button small { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+    .vi-dlg-onglets button:hover { color: var(--ink); }
+    .vi-dlg-onglets button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+    .vi-dlg-onglets button[aria-selected="true"] { color: var(--ink); background: var(--surface); border-color: var(--rule); border-bottom-color: var(--c-part); }
+    .vi-dlg-onglets button[data-partie="politique"] { --c-part: var(--sys-pol); }
+    .vi-dlg-onglets button[data-partie="electoral"] { --c-part: var(--sys-elec); }
+    .vi-dlg-onglets button[aria-selected="true"] small { color: var(--c-part); }
+    .vi-dlg-partie, .vi-dlg-version { display: grid; gap: 26px; }
+    .vi-dlg-version[hidden] { display: none; }
+    .vi-dlg-tete > div:first-child { flex: 1 1 22em; min-width: 0; }
+    .vi-dlg-actions { flex: none; display: flex; align-items: center; gap: 8px; }
+    .vi-dlg-version > .vi-dlg-vs, .vi-dlg-version > .vi-dlg-legende { max-width: 74ch; }
+    .vi-dlg-bascule[hidden] { display: none; }
+    .vi-dlg-bascule button { font: inherit; font-size: 0.82rem; font-weight: 700; padding: 6px 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--muted); cursor: pointer; }
+    .vi-dlg-bascule button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+    .vi-dlg-bascule button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vi-dlg-court { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; max-width: 74ch; }
+    .vi-dlg-court li { display: grid; grid-template-columns: 2.1em minmax(0, 1fr); gap: 10px; align-items: start; }
+    .vi-dlg-court li > b:first-child { display: grid; place-items: center; height: 2.1em; border-radius: 8px; background: color-mix(in srgb, var(--c-part) 18%, var(--surface)); color: var(--c-part); font-size: 0.85rem; }
+    .vi-dlg-partie[hidden] { display: none; }
+    .vi-dlg-partie-politique { --c-part: var(--sys-pol); }
+    .vi-dlg-partie-electoral { --c-part: var(--sys-elec); }
+    .vi-dlg-chapeau { display: grid; gap: 4px; max-width: 74ch; padding-left: 14px; border-left: 4px solid var(--c-part); font-size: 1.02rem; }
+    .vi-dlg-chapeau span { font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; font-weight: 700; color: var(--c-part); }
+    .vi-dlg-partie h3 { display: flex; align-items: center; gap: 10px; }
+    .vi-dlg-partie h3::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--c-part); }
+    .vi-dlg-partie .vi-dlg-chiffres b { color: var(--c-part); }
+    .vi-dlg-corps a[data-aller] { color: var(--c-lien, inherit); font-weight: 700; }
+    .vi-dlg-tete h2 { margin: 4px 0 0; font-family: "Literata", Georgia, serif; font-size: clamp(1.3rem, 2.6vw, 1.75rem); text-wrap: balance; }
+    .vi-dlg-fermer { flex: none; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .vi-dlg-corps { overflow-y: auto; overscroll-behavior: contain; padding: 22px 24px 28px; display: grid; gap: 26px; font-size: 0.95rem; line-height: 1.6; }
+    .vi-dlg-corps section { display: grid; gap: 8px; max-width: 74ch; }
+    .vi-dlg-corps h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .vi-dlg-corps p { margin: 0; }
+    .vi-dlg-corps ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+    .vi-dlg-corps a { color: inherit; }
+    .vi-dlg-chiffres { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; max-width: none !important; }
+    .vi-dlg-chiffres div { display: grid; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--rule); }
+    .vi-dlg-chiffres b { font-family: "Literata", Georgia, serif; font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .vi-dlg-chiffres small { color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
+    /* expression de plusieurs mots (ex. « Monarchie constitutionnelle ») : jamais coupée en plein mot ; la taille suit la
+       largeur de la case (« constitutionnelle » ≈ 10,5 fois la taille du texte) */
+    .vi-dlg-chiffres div { container-type: inline-size; }
+    .vi-dlg-chiffres b.vi-dlg-long { font-size: min(1.15rem, calc(100cqi / 11)); line-height: 1.2; overflow-wrap: normal; hyphens: none; }
+    /* tableau Loi 39 (mode actuel / loi 39) dans l'explication du Québec */
+    .vi-dlg-l39 { display: grid; gap: 8px; max-width: 74ch; }
+    .vi-dlg-l39 p { margin: 0; font-size: 0.9rem; color: var(--muted); }
+    .vi-dlg-l39 a { color: var(--ink); font-weight: 700; }
+    .vi-dlg-tab { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .vi-dlg-tab caption { text-align: left; padding-bottom: 6px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .vi-dlg-tab th, .vi-dlg-tab td { padding: 7px 10px; border-bottom: 1px solid var(--rule); text-align: right; }
+    .vi-dlg-tab thead th { vertical-align: bottom; font-size: 0.82rem; }
+    .vi-dlg-tab thead th small { display: block; font-weight: 400; font-size: 0.72rem; color: var(--muted); }
+    .vi-dlg-tab th:first-child { text-align: left; }
+    .vi-dlg-tab tbody th { font-weight: 700; color: var(--c); white-space: nowrap; }
+    @media (max-width: 700px) { .vi-dlg-tab th, .vi-dlg-tab td { padding: 6px 6px; } .vi-dlg-tab tbody th i { margin-right: 5px; } }
+    .vi-dlg-tab tbody th i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 3px; background: var(--c); }
+    .vi-dlg-tab td.plus { color: var(--sys-elec); font-weight: 700; }
+    .vi-dlg-tab td.moins { color: var(--muted); }
+    .vi-dlg-note { padding: 10px 14px; border-left: 4px solid var(--ink); border-radius: 0 8px 8px 0; background: var(--surface); font-size: 0.9rem; }
+    .vi-dlg-vs { display: grid; gap: 10px; margin-top: 4px; }
+    .vi-dlg-vs-ligne { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 10.5em; gap: 10px; align-items: center; font-size: 0.88rem; }
+    .vi-dlg-vs-ligne > b { color: var(--c); }
+    .vi-dlg-vs-barres { display: grid; gap: 3px; }
+    .vi-dlg-vs-barres i { display: block; height: 9px; border-radius: 3px; background: var(--c); }
+    .vi-dlg-vs-barres i + i { opacity: 0.45; }
+    .vi-dlg-vs-ligne small { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+    .vi-dlg-legende { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 0.8rem; }
+    .vi-dlg-legende span::before { content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 6px; border-radius: 3px; background: var(--ink); vertical-align: middle; }
+    .vi-dlg-legende span + span::before { opacity: 0.45; }
+    @media (max-width: 700px) { .vi-dlg-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vi-dlg-chiffres b { font-size: 1.2rem; overflow-wrap: anywhere; } .vi-dlg-onglets button { padding: 6px 10px 8px; font-size: 0.88rem; } .vi-dlg-tete, .vi-dlg-corps { padding-left: 16px; padding-right: 16px; } .vi-dlg-vs-ligne { grid-template-columns: 3.4em minmax(0, 1fr) 8.6em; } }
+    /* zoom vertical (votes-quebec/zoom-y.js) : la molette reste dans le graphique ; zoomé, on le glisse pour monter ou descendre */
+    #viEvol { overscroll-behavior: contain; }
+    #viEvol.vi-zoome svg { cursor: grab; user-select: none; -webkit-user-select: none; }
+    #viEvol.vi-zoom-prise svg { cursor: grabbing; }
+    .vi-zoom-piste { fill: var(--soft); }
+    .vi-zoom-curseur { fill: var(--muted); cursor: ns-resize; }
+    .vi-zoom-barre:hover .vi-zoom-curseur, .vi-zoom-prise .vi-zoom-curseur { fill: var(--ink); }
+    #viEvol svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .vi-axe text { fill: var(--muted); font-size: 11px; }
+    .vi-axe path, .vi-axe line { stroke: var(--rule); }
+    .vi-grille .domain { display: none; }
+    .vi-grille line { stroke-dasharray: 2 3; }
+    .vi-pt { opacity: 0.28; }
+    .vi-ligne { fill: none; stroke-width: 2.4px; }
+    .vi-elec { stroke: var(--muted); stroke-dasharray: 4 4; }
+    .vi-elec-txt { fill: var(--muted); font-size: 10px; font-weight: 700; }
+    .vi-elec-pt { stroke: var(--surface); stroke-width: 1.5px; }
+    .vi-fin { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .vi-repere { stroke: var(--ink); stroke-width: 1px; opacity: 0.5; pointer-events: none; }
+    .vi-evol-tip { position: absolute; z-index: 3; pointer-events: none; display: grid; gap: 3px; min-width: 150px; padding: 8px 10px; border-radius: 10px;
+      background: #0A0B0E; color: #F4F5F7; border: 1px solid #2C313B; box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-size: 0.8rem; }
+    .vi-evol-tip[hidden] { display: none; }
+    .vi-evol-tip small { color: #A7AEBB; font-size: 0.7rem; }
+    .vi-evol-tip span { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+    .vi-evol-tip i { width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+    .vi-evol-tip b { margin-left: auto; }
+    @media (max-width: 600px) { .sc-tab { padding: 0.4rem 0.6rem; } .sc-tab small { font-size: 0.68rem; } }
+    #theme-toggle { width: 60px; height: 24px; border-radius: 12px; background: var(--st-bg); border: 1px solid var(--st-rule); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: space-between; padding: 0 5px; position: relative; flex-shrink: 0;
+      transition: background 0.35s, border-color 0.35s; -webkit-tap-highlight-color: transparent; }
+    .tg-icon { font-size: 0.6rem; line-height: 1; pointer-events: none; position: relative; z-index: 2; }
+    #theme-toggle-knob { position: absolute; width: 18px; height: 18px; border-radius: 50%; top: 50%; transform: translateY(-50%); left: 2px;
+      background: var(--st-ink); box-shadow: 0 1px 3px rgba(0,0,0,0.35); transition: left 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s; pointer-events: none; z-index: 3; }
+    html.light #theme-toggle-knob { left: 38px; }
+    @media (prefers-reduced-motion: reduce) { #theme-toggle, #theme-toggle-knob { transition: none; } }
+    .site-top .titre { font-size: 0.82rem; text-wrap: balance; }
+    .site-top .titre sup { font-size: 0.7em; }
+    /* la ligne « Simulation · … » est dans la barre : on ne la répète pas en tête de la page */
+    @media (min-width: 601px) { .loi39 .kicker { display: none; } }
+    @media (max-width: 600px) {
+      .site-top { padding: 0.45rem 1rem; grid-template-columns: auto 1fr; }   /* titre masqué : interrupteur à droite */
+      .site-top .titre { display: none; }
+    }
+  </style>
+  <style>
+    /* Votes Allemagne : couleurs des partis (CDU/CSU en gris très foncé en thème clair, gris clair en thème sombre) */
+    .va { --cdu:#2B2B2E; --csu:#35506E; --spd:#E3000F; --afd:#009EE0; --gru:#1AA037; --lin:#BE3075; --bsw:#6D3A8E; --fdp:#D9B600;
+      --fw:#F28C00; --ssw:#00337F; --vaut:#9AA0AA; --fl:#848B97; }
+    :root[data-theme="dark"] .va { --cdu:#D5D8DE; --csu:#8FB0D6; --spd:#FF4B55; --afd:#3BB8F2; --gru:#3CC25A; --lin:#F0569C; --bsw:#B184D6;
+      --fdp:#FFE14D; --fw:#FFA63D; --ssw:#6E9BEF; --vaut:#7C8494; --fl:#8F97A5; }
+    @media (min-width: 1000px) { .va .vi-haut { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+    .va .vi-plan.vf-hemi { max-width: none; }
+    .va .lv-rid { stroke-width: 0.25px; }
+    .vi-vrow.va-proj { grid-template-columns: 4.2em minmax(0, 1fr) 4.2em 5.4em; }
+    .vi-vrow.va-proj .vi-num { white-space: nowrap; }
+    .va .vi-table td, .va .vi-table th { padding-left: 3px; padding-right: 3px; }
+    .va .vi-table td .vi-lien { text-align: left; }
+    .va-note { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0; }
+    .va-sans-siege { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
+      border: 1px dashed var(--muted); border-radius: 4px; padding: 0 5px; margin-left: 4px; }
+  </style>
+</head>
+<body>
+  <div class="site-top" data-topbar>
+    <a href="dashboard.html" class="retour">&#8592; Accueil</a>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes Allemagne · Bundestag</span></p>
+  </div>
+
+  <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
+  <nav class="scrutins" aria-label="Pages de la section">
+    <div class="sc-tabs">
+      <div class="sc-groupe" role="presentation">
+        <div class="sc-groupe-btns">
+          <a class="sc-tab" href="intentions-simulations.html">
+            <b>Accueil</b><small>Vue d'ensemble</small>
+          </a>
+        </div>
+      </div>
+      <div class="sc-groupe" role="presentation">
+        <div class="sc-groupe-btns">
+          <a class="sc-tab" href="votes-quebec.html">
+            <b>Votes Québec</b><small>Intentions de vote et simulations</small>
+          </a>
+          <a class="sc-tab" href="votes-canada.html">
+            <b>Votes Canada</b><small>Projection fédérale Qc125</small>
+          </a>
+          <a class="sc-tab" href="votes-usa.html">
+            <b>Votes États-Unis</b><small>Congrès et présidentielle</small>
+          </a>
+          <a class="sc-tab" href="votes-france.html">
+            <b>Votes France</b><small>Présidentielle et législatives</small>
+          </a>
+          <a class="sc-tab" href="votes-allemagne.html" aria-current="page">
+            <b>Votes Allemagne</b><small>Bundestag</small>
+          </a>
+<!-- ONGLET-SUISSE (remis quand la page sera prête)
+          <a class="sc-tab" href="votes-suisse.html">
+            <b>Votes Suisse</b><small>Conseil national</small>
+          </a>
+ONGLET-SUISSE -->
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
+  <section class="vue-live vue-votes va" id="vue-votes" aria-busy="true">
+    <div class="lv-wrap">
+      <header class="lv-head">
+        <div>
+          <span class="vi-badge">Allemagne · Bundestag</span>
+          <h2 id="viTitre">Votes Allemagne</h2>
+          <p class="lv-etat" id="viSource">Chargement…</p>
+          <!-- explication du système électoral : le module de la page remplit la fenêtre et affiche le bouton -->
+          <button type="button" class="vi-systeme-btn" id="viSysteme" aria-haspopup="dialog" hidden><span aria-hidden="true">?</span>Comprendre le système politique et électoral</button>
+        </div>
+        <dialog class="vi-dlg" id="viSystemeDlg" aria-labelledby="viSystemeTitre">
+          <div class="vi-dlg-tete">
+            <div><span class="lv-eyebrow" id="viSystemeSur">Système politique et électoral</span><h2 id="viSystemeTitre">Comprendre le système politique et électoral</h2></div>
+            <button type="button" class="vi-dlg-fermer" id="viSystemeFermer">Fermer <span aria-hidden="true">✕</span></button>
+            <div class="vi-dlg-onglets" id="viSystemeOnglets" role="tablist" aria-label="Parties de l'explication" hidden></div>
+          </div>
+          <div class="vi-dlg-corps" id="viSystemeCorps"></div>
+        </dialog>
+      </header>
+      <p class="lv-muted" id="viNote"></p>
+      <div class="vi-haut">
+      <section class="lv-sieges vi-sieges" aria-labelledby="viSiegesTitre">
+        <span class="lv-eyebrow">Bundestag · 630 sièges · majorité 316</span>
+        <h3 id="viSiegesTitre">Sièges</h3>
+        <svg id="viPlan" class="vi-plan vf-hemi" role="img" aria-label="Hémicycle du Bundestag (630 sièges)"></svg>
+        <div class="vf-legende" id="viLegende"></div>
+      </section>
+      <section class="vi-evol" aria-labelledby="viEvolTitre">
+        <span class="lv-eyebrow" id="viEvolSur">Depuis l'élection de 2025</span>
+        <div class="vi-evol-tete">
+          <h3 id="viEvolTitre">Évolution des intentions de vote (secondes voix)</h3>
+          <div class="lv-groupe vi-periodes" id="viPeriodes" role="group" aria-label="Période affichée">
+            <button type="button" data-per="3" aria-pressed="true">3 mois</button><button type="button" data-per="6" aria-pressed="false">6 mois</button><button type="button" data-per="12" aria-pressed="false">1 an</button><button type="button" data-per="0" aria-pressed="false">Depuis 2025</button>
+          </div>
+        </div>
+        <div class="vi-evol-zone"><div id="viEvol"></div><div class="vi-evol-tip" id="viEvolTip" hidden></div></div>
+        <p class="lv-muted lv-source" id="viEvolNote"></p>
+      </section>
+      </div>
+      <div class="vi-grid">
+        <div class="vi-cartebloc">
+          <div class="vi-outils">
+            <div class="lv-groupe" id="viModes" role="group" aria-label="Mode de la carte">
+              <button type="button" data-m="lead" aria-pressed="true">Parti en tête</button><button type="button" data-m="second" aria-pressed="false">Meilleur deuxième</button><button type="button" data-m="vote" aria-pressed="false">Vote</button>
+            </div>
+            <div class="vi-chips" id="viChips" aria-label="Parti affiché"></div>
+            <button type="button" class="vi-chip vi-pct" id="viPct" aria-pressed="true" title="Afficher ou masquer le pourcentage dans chaque circonscription (mode Vote)">% Pourcentage</button>
+          </div>
+          <div class="vi-carte lv-cartecard">
+            <div class="lv-zoom" id="viZoom">
+              <button type="button" data-z="tout">Allemagne</button><button type="button" data-z="ber">Berlin</button><button type="button" data-z="ruhr">Rhin-Ruhr</button><button type="button" data-z="ham">Hambourg</button><button type="button" data-z="mun">Munich</button><button type="button" data-z="fra">Francfort</button><button type="button" data-z="est">Est</button>
+              <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
+            </div>
+            <div class="lv-zoom lv-zoom-bas"><button type="button" data-z="plein" id="viPlein" class="lv-plein-btn" aria-pressed="false">⛶ Plein écran</button></div>
+            <svg id="viCarte" role="img" aria-label="Carte des 299 circonscriptions du Bundestag"></svg>
+            <div class="lv-tip" id="viTip" hidden></div>
+          </div>
+          <div class="vi-echelle" id="viEchelle"></div>
+        </div>
+        <aside class="lv-panneau" id="viPanneau" aria-live="polite"></aside>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+  <script type="module" src="votes-allemagne/allemagne.js"></script>
+  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;font-family:system-ui,sans-serif;"></div>
+  <script src="version.js"></script>
+  <script src="theme-toggle.js"></script>
+  <script src="page-controls.js"></script>
+  <script>
+    (function () {
+      // l'interrupteur du site change la classe « light » : on suit avec data-theme pour la simulation
+      const sync = () => { document.documentElement.dataset.theme = document.documentElement.classList.contains('light') ? 'light' : 'dark'; };
+      sync(); new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+      // filet de sécurité : si la simulation ne se charge pas (réseau, erreur), on montre quand même la page
+      setTimeout(() => { const w = document.querySelector('.loi39 .wrap'); if (w) w.classList.add('ready'); }, 6000);
+    })();
+  </script>
+</body>
+</html>

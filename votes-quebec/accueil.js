@@ -44,12 +44,12 @@ function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donne
 }
 
 async function demarrer() {
-  const [V, QE, QS, CP, CS, UP, US, FA, FP, L39, UPR] = await Promise.all([
+  const [V, QE, QS, CP, CS, UP, US, FA, FP, L39, UPR, DEP] = await Promise.all([
     lireJ("votes-verif.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"),
     lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"),
     lireJ("votes-usa/projection.json"), lireJ("votes-usa/sondages.json"),
     lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json"),
-    lireJ("votes-usa/presidentielle.json")]);
+    lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json")]);
   const v = V || {}, cartes = [];
 
   // Loi 39 : simulation sur les votes du Québec, en petit dans la carte de Votes Québec
@@ -124,6 +124,18 @@ async function demarrer() {
       barreHtml: barre([...g.map(x => ({ lab: x.id, n: x.n, c: x.c })), { lab: "vacants", n: FA.vacants || 0, c: "var(--soft)" }], 577, 289),
       phrase: `Assemblée nationale actuelle (aucun sondage législatif depuis octobre 2025).${pres}`,
       donnees: `Assemblée au ${dateFr(FA.date)}${dPres}`, verif: v.france }));
+  }
+  // Votes Allemagne : projection des sièges calculée par le site à partir de la moyenne des sondages
+  if (DEP?.national) {
+    const N = DEP.national, U = DEP.union, M = DEP.moyenne?.v || {};
+    const CD = { AfD: "#1BA7E5", Union: "#454B57", SPD: "#E3000F", "Grüne": "#1AA037", Linke: "#BE3075", BSW: "#6D3A8E", FDP: "#D9B600", SSW: "#00337F" };
+    const sieges = { Union: U?.s || 0 }; Object.entries(N).forEach(([p, x]) => { if (p !== "CDU" && p !== "CSU" && x.s > 0) sieges[p] = x.s; });
+    const ordre = Object.keys(sieges).sort((a, b) => sieges[b] - sieges[a]), lead = ordre[0];
+    cartes.push(carte({ url: "votes-allemagne.html", eyebrow: "Projection · Allemagne", titre: "Votes Allemagne",
+      chiffre: `${esc(lead)} ${sieges[lead]}`, legende: `sièges projetés sur 630 · ${sieges[lead] >= 316 ? "majorité" : "aucune majorité (316)"}${N.CDU && N.CSU ? ` · Union : CDU ${N.CDU.s} + CSU ${N.CSU.s}` : ""}`,
+      barreHtml: barre(ordre.map(p => ({ lab: p, n: sieges[p], c: CD[p] || "#8D949A" })), 630, 316),
+      phrase: `Moyenne des sondages (secondes voix) : ${Object.entries(M).filter(([k]) => k !== "AUT").sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, x]) => `${esc(k)} ${nf(x, 0)} %`).join(" · ")}. Seuil de 5 % pour entrer au Bundestag.`,
+      donnees: `projection du ${dateFr(DEP.maj.date)} · dernier sondage le ${dateFr(DEP.maj.dernier)}`, verif: v.allemagne }));
   }
   $("acCartes").innerHTML = cartes.join("") || `<p class="lv-muted">Chargement impossible.</p>`;
 }

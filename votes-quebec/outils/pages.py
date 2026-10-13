@@ -16,7 +16,8 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
 FICHIER = {"live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
-           "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html"}
+           "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html",
+           "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html"}
 PAGES = ["live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
 SCRIPTS = {"live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
@@ -168,3 +169,16 @@ ru('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 435 dis
 assert 'src="votes-quebec/intentions.js"' not in us and 'data-z="ne"' in us
 open(os.path.join(RACINE, FICHIER["usa"]), "w", encoding="utf-8").write(us)
 print(f"{FICHIER['usa']:30} {len(us):7} octets")
+
+# Pages ajoutées ensuite (Allemagne, Suisse…) : même cadre que Votes Québec ; chaque page fournit ses propres remplacements
+# dans votes-<pays>/outils/page.py, fonction construire(html_de_votes_quebec, FICHIER) → html de la page
+import importlib.util
+for pays in ("allemagne", "suisse"):
+    chemin = os.path.join(RACINE, f"votes-{pays}", "outils", "page.py")
+    if not os.path.exists(chemin):
+        print(f"{FICHIER[pays]:30} (votes-{pays}/outils/page.py absent : page non générée)"); continue
+    spec = importlib.util.spec_from_file_location(f"page_{pays}", chemin); mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+    html = mod.construire(open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read(), FICHIER)
+    assert 'src="votes-quebec/intentions.js"' not in html, f"votes-{pays} : le module de Votes Québec est resté dans la page"
+    open(os.path.join(RACINE, FICHIER[pays]), "w", encoding="utf-8").write(html)
+    print(f"{FICHIER[pays]:30} {len(html):7} octets")
