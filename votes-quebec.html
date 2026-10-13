@@ -637,7 +637,9 @@
     .vi-systeme-btn:hover { border-color: var(--ink); }
     .vi-systeme-btn:focus-visible, .vi-dlg-fermer:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     .vi-dlg { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--bg, var(--surface)); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,0.45); }
-    .vi-dlg[open] { display: flex; flex-direction: column; }
+    /* hauteur fixe : la fenêtre (et ses onglets) ne bouge pas quand on change de partie ou de version ; le texte défile dedans */
+    .vi-dlg[open] { display: flex; flex-direction: column; height: min(900px, calc(100dvh - 48px)); }
+    .vi-dlg-corps { flex: 1 1 auto; min-height: 0; align-content: start; }
     .vi-dlg::backdrop { background: rgba(5, 8, 14, 0.62); backdrop-filter: blur(2px); }
     .vi-dlg-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 14px 16px; padding: 18px 24px 0; border-bottom: 1px solid var(--rule); }
     .vi-dlg-tete > div:first-child { padding-bottom: 2px; }
