@@ -675,7 +675,10 @@
     .vi-dlg-chiffres div { display: grid; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--rule); }
     .vi-dlg-chiffres b { font-family: "Literata", Georgia, serif; font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
     .vi-dlg-chiffres small { color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
-    .vi-dlg-chiffres b.vi-dlg-long { font-size: 1.15rem; line-height: 1.2; overflow-wrap: normal; hyphens: auto; }   /* expression de plusieurs mots (ex. « Monarchie constitutionnelle ») */
+    /* expression de plusieurs mots (ex. « Monarchie constitutionnelle ») : jamais coupée en plein mot ; la taille suit la
+       largeur de la case (« constitutionnelle » ≈ 10,5 fois la taille du texte) */
+    .vi-dlg-chiffres div { container-type: inline-size; }
+    .vi-dlg-chiffres b.vi-dlg-long { font-size: min(1.15rem, calc(100cqi / 11)); line-height: 1.2; overflow-wrap: normal; hyphens: none; }
     .vi-dlg-note { padding: 10px 14px; border-left: 4px solid var(--ink); border-radius: 0 8px 8px 0; background: var(--surface); font-size: 0.9rem; }
     .vi-dlg-vs { display: grid; gap: 10px; margin-top: 4px; }
     .vi-dlg-vs-ligne { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 10.5em; gap: 10px; align-items: center; font-size: 0.88rem; }
@@ -687,7 +690,7 @@
     .vi-dlg-legende { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 0.8rem; }
     .vi-dlg-legende span::before { content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 6px; border-radius: 3px; background: var(--ink); vertical-align: middle; }
     .vi-dlg-legende span + span::before { opacity: 0.45; }
-    @media (max-width: 700px) { .vi-dlg-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vi-dlg-chiffres b { font-size: 1.2rem; overflow-wrap: anywhere; } .vi-dlg-chiffres b.vi-dlg-long { font-size: 0.88rem; } .vi-dlg-onglets button { padding: 6px 10px 8px; font-size: 0.88rem; } .vi-dlg-tete, .vi-dlg-corps { padding-left: 16px; padding-right: 16px; } .vi-dlg-vs-ligne { grid-template-columns: 3.4em minmax(0, 1fr) 8.6em; } }
+    @media (max-width: 700px) { .vi-dlg-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vi-dlg-chiffres b { font-size: 1.2rem; overflow-wrap: anywhere; } .vi-dlg-onglets button { padding: 6px 10px 8px; font-size: 0.88rem; } .vi-dlg-tete, .vi-dlg-corps { padding-left: 16px; padding-right: 16px; } .vi-dlg-vs-ligne { grid-template-columns: 3.4em minmax(0, 1fr) 8.6em; } }
     /* zoom vertical (votes-quebec/zoom-y.js) : la molette reste dans le graphique ; zoomé, on le glisse pour monter ou descendre */
     #viEvol { overscroll-behavior: contain; }
     #viEvol.vi-zoome svg { cursor: grab; user-select: none; -webkit-user-select: none; }
