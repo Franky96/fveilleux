@@ -44,12 +44,12 @@ function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donne
 }
 
 async function demarrer() {
-  const [V, QE, QS, CP, CS, UP, US, FA, FP, L39, UPR, DEP] = await Promise.all([
+  const [V, QE, QS, CP, CS, UP, US, FA, FP, L39, UPR, DEP, CHP] = await Promise.all([
     lireJ("votes-verif.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"),
     lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"),
     lireJ("votes-usa/projection.json"), lireJ("votes-usa/sondages.json"),
     lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json"),
-    lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json")]);
+    lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json"), lireJ("votes-suisse/projection.json")]);
   const v = V || {}, cartes = [];
 
   // Loi 39 : simulation sur les votes du Québec, en petit dans la carte de Votes Québec
@@ -136,6 +136,18 @@ async function demarrer() {
       barreHtml: barre(ordre.map(p => ({ lab: p, n: sieges[p], c: CD[p] || "#8D949A" })), 630, 316),
       phrase: `Moyenne des sondages (secondes voix) : ${Object.entries(M).filter(([k]) => k !== "AUT").sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, x]) => `${esc(k)} ${nf(x, 0)} %`).join(" · ")}. Seuil de 5 % pour entrer au Bundestag.`,
       donnees: `projection du ${dateFr(DEP.maj.date)} · dernier sondage le ${dateFr(DEP.maj.dernier)}`, verif: v.allemagne }));
+  }
+  // Votes Suisse : projection du Conseil national calculée par le site, canton par canton
+  if (CHP?.national) {
+    const N = CHP.national, NOMS_CH = { C: "Centre", VERT: "Verts" };
+    const CH = { UDC: "#3A8F3A", PS: "#E2001A", C: "#F28C1E", PLR: "#1E5CB3", VERT: "#7CB342", PVL: "#B5C800", PEV: "#E3BB00", UDF: "#8E6BB5", MCG: "#F2C200", Lega: "#4A6FA5" };
+    const ordre = Object.keys(N).filter(p => N[p].s > 0).sort((a, b) => N[b].s - N[a].s), lead = ordre[0], lab = p => NOMS_CH[p] || p;
+    const nbJ = Math.round((Date.now() - new Date(CHP.maj + "T12:00:00")) / 864e5);
+    cartes.push(carte({ url: "votes-suisse.html", eyebrow: "Projection · Suisse", titre: "Votes Suisse",
+      chiffre: `${esc(lab(lead))} ${N[lead].s}`, legende: `sièges projetés sur 200 au Conseil national (${N[lead].smin}–${N[lead].smax}) · majorité 101`,
+      barreHtml: barre(ordre.map(p => ({ lab: lab(p), n: N[p].s, c: CH[p] || "#8D949A" })), 200, 101),
+      phrase: `Moyenne des sondages : ${ordre.slice(0, 6).map(p => `${esc(lab(p))} ${nf(N[p].v, 0)} %`).join(" · ")}. Prochaines élections fédérales en octobre 2027.${nbJ > 120 ? ` Les sondages sont rares : le dernier date de ${Math.round(nbJ / 30)} mois.` : ""}`,
+      donnees: `dernier sondage le ${dateFr(CHP.maj)}`, verif: v.suisse }));
   }
   $("acCartes").innerHTML = cartes.join("") || `<p class="lv-muted">Chargement impossible.</p>`;
 }

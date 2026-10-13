@@ -24,3 +24,6 @@ votes-usa/outils/brut/
 
 # Votes Allemagne : téléchargements bruts (retéléchargés par outils/allemagne_geo.py)
 votes-allemagne/outils/brut/
+
+# Votes Suisse : téléchargements bruts (retéléchargés par outils/suisse_fixe.py)
+votes-suisse/outils/brut/
