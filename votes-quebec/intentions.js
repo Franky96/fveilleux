@@ -480,7 +480,7 @@ function systemeElectoral() {
       <small>${nf(V[p], 1)} % des voix<br>${S[p] || 0} siège${(S[p] || 0) > 1 ? "s" : ""} (${nf(pctS(p), 0)} %)</small></div>`).join("");
   const politique = `
     <section class="vi-dlg-chiffres" aria-label="En bref : système politique">
-      <div><b>Monarchie</b><small>constitutionnelle ; le roi est représenté par le lieutenant-gouverneur</small></div>
+      <div><b class="vi-dlg-long">Monarchie constitutionnelle</b><small>le roi règne sans gouverner ; il est représenté par le lieutenant-gouverneur</small></div>
       <div><b>1 chambre</b><small>l'Assemblée nationale (${N} députés)</small></div>
       <div><b>${MAJ}</b><small>députés pour qu'un gouvernement soit majoritaire</small></div>
       <div><b>Fédération</b><small>le Québec est une des 10 provinces du Canada</small></div>
