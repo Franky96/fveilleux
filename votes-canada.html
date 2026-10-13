@@ -693,6 +693,21 @@
        largeur de la case (« constitutionnelle » ≈ 10,5 fois la taille du texte) */
     .vi-dlg-chiffres div { container-type: inline-size; }
     .vi-dlg-chiffres b.vi-dlg-long { font-size: min(1.15rem, calc(100cqi / 11)); line-height: 1.2; overflow-wrap: normal; hyphens: none; }
+    /* tableau Loi 39 (mode actuel / loi 39) dans l'explication du Québec */
+    .vi-dlg-l39 { display: grid; gap: 8px; max-width: 74ch; }
+    .vi-dlg-l39 p { margin: 0; font-size: 0.9rem; color: var(--muted); }
+    .vi-dlg-l39 a { color: var(--ink); font-weight: 700; }
+    .vi-dlg-tab { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .vi-dlg-tab caption { text-align: left; padding-bottom: 6px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .vi-dlg-tab th, .vi-dlg-tab td { padding: 7px 10px; border-bottom: 1px solid var(--rule); text-align: right; }
+    .vi-dlg-tab thead th { vertical-align: bottom; font-size: 0.82rem; }
+    .vi-dlg-tab thead th small { display: block; font-weight: 400; font-size: 0.72rem; color: var(--muted); }
+    .vi-dlg-tab th:first-child { text-align: left; }
+    .vi-dlg-tab tbody th { font-weight: 700; color: var(--c); white-space: nowrap; }
+    @media (max-width: 700px) { .vi-dlg-tab th, .vi-dlg-tab td { padding: 6px 6px; } .vi-dlg-tab tbody th i { margin-right: 5px; } }
+    .vi-dlg-tab tbody th i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 3px; background: var(--c); }
+    .vi-dlg-tab td.plus { color: var(--sys-elec); font-weight: 700; }
+    .vi-dlg-tab td.moins { color: var(--muted); }
     .vi-dlg-note { padding: 10px 14px; border-left: 4px solid var(--ink); border-radius: 0 8px 8px 0; background: var(--surface); font-size: 0.9rem; }
     .vi-dlg-vs { display: grid; gap: 10px; margin-top: 4px; }
     .vi-dlg-vs-ligne { display: grid; grid-template-columns: 4.2em minmax(0, 1fr) 10.5em; gap: 10px; align-items: center; font-size: 0.88rem; }

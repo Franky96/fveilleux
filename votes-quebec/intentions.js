@@ -580,7 +580,12 @@ function systemeElectoral() {
       fetch("votes-quebec/loi39-resume.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(L => {
         if (!L?.loi39) return;
         const ordre = Object.keys(L.loi39).sort((a, b) => L.loi39[b] - L.loi39[a]), m39 = Math.floor(L.sieges_loi39 / 2) + 1, t = ordre[0];
-        $("viSystemeL39").innerHTML = `Avec le ${esc(L.texte)}, la loi 39 aurait donné : ${ordre.map(p => `${p} ${L.actuel[p]} → <b>${L.loi39[p]}</b>`).join(" · ")} (sur ${L.sieges_loi39} sièges, majorité ${m39}) : le ${esc(NOMS[t] || t)} serait ${L.loi39[t] >= m39 ? "majoritaire" : "minoritaire"}. Voir la simulation complète sur la page <a href="loi39.html">Loi 39</a>.`;
+        const mA = Math.floor(L.sieges_actuel / 2) + 1, ecart = p => L.loi39[p] - L.actuel[p];
+        const el = $("viSystemeL39"); el.className = "vi-dlg-l39";
+        el.innerHTML = `<table class="vi-dlg-tab"><caption>Sièges selon le mode de scrutin, avec le ${esc(L.texte)}</caption>
+          <thead><tr><th scope="col">Parti</th><th scope="col">Mode actuel<small>${L.sieges_actuel} sièges · majorité ${mA}</small></th><th scope="col">Loi 39<small>${L.sieges_loi39} sièges · majorité ${m39}</small></th><th scope="col">Écart</th></tr></thead>
+          <tbody>${ordre.map(p => `<tr style="--c:${COUL[p]}"><th scope="row"><i></i>${p}</th><td>${L.actuel[p]}</td><td><b>${L.loi39[p]}</b></td><td class="${ecart(p) > 0 ? "plus" : ecart(p) < 0 ? "moins" : ""}">${ecart(p) > 0 ? "+" : ecart(p) < 0 ? "−" : "±"}${Math.abs(ecart(p))}</td></tr>`).join("")}</tbody></table>
+          <p>Avec la loi 39, le ${esc(NOMS[t] || t)} resterait en tête mais ${L.loi39[t] >= m39 ? "serait majoritaire" : `serait minoritaire (${L.loi39[t]} sièges sur ${m39} nécessaires)`}. <a href="loi39.html">Voir la simulation complète →</a></p>`;
       }).catch(() => {});
     } });
 }
