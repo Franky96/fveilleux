@@ -8,6 +8,7 @@
    résultats de 2024 et 2020 par État (presidentielles.json, outils/resultats_pres.py).
    Contours : data.json (outils/usa_geo.py, carte de 270toWin). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
+import { preparerSysteme } from "../votes-quebec/systeme.js";
 
 const SIEGES = 435, MAJ = 218;
 const P = ["D", "R"];
@@ -864,6 +865,201 @@ function dessinerEvolutionPres() {
   $("viEvolNote").textContent = S.note(sond.length) + (per !== periode ? ` Trop peu de sondages sur la période choisie : tout est affiché ${depuis}.` : "");
 }
 
+/* ---------- « Comprendre le système politique et électoral » : grande fenêtre en deux parties (votes-quebec/systeme.js) ----------
+   Une seule fenêtre pour les trois vues (Chambre, Sénat, présidentielle). Partie 1, système politique : régime présidentiel,
+   président, Congrès, Cour suprême, fédéralisme, qui contrôle quoi aujourd'hui. Partie 2, système électoral : Chambre, Sénat,
+   présidentielle et collège électoral, calendrier, électeurs. Les chiffres viennent des données de la page : Chambre actuelle et
+   Sénat (projection.json), élection de 2024 à la Chambre (resultats-2024.json), présidentielles de 2024 et 2020
+   (presidentielles.json), districts redécoupés (data.json). */
+// jour du scrutin fédéral : le mardi qui suit le premier lundi de novembre
+const jourElection = an => { const j = new Date(Date.UTC(an, 10, 1)).getUTCDay(); return `${an}-11-${String(2 + (8 - j) % 7).padStart(2, "0")}`; };
+function systemeElectoral() {
+  if (!R24 || !RP || !PROJ) return;
+  const P24 = RP["2024"], P20 = RP["2020"], pct = (n, t) => 100 * n / t;
+  const vainq = r => r.ve.R > r.ve.D ? "R" : "D", perd = r => vainq(r) === "R" ? "D" : "R";
+  const g24 = vainq(P24), g20 = vainq(P20), court = (r, k) => r.noms[k].split(" ").slice(-1)[0];
+  const veTot = P24.ve.R + P24.ve.D, veMaj = Math.floor(veTot / 2) + 1;
+  const totVoix = (P24.voix.R + P24.voix.D) / ((P24.national.R + P24.national.D) / 100);   // avec les autres candidats
+  // États : écart entre les deux premiers en 2024
+  const E = P24.etats, abs = Object.keys(E), marge = ab => Math.abs(E[ab].D - E[ab].R);
+  const serres = abs.filter(ab => marge(ab) < 5).sort((a, b) => marge(a) - marge(b)), veSerres = d3.sum(serres, ab => E[ab].ve);
+  const largues = abs.filter(ab => marge(ab) >= 15).length, plusSerre = serres[0];
+  const basculesSerres = serres.filter(ab => P20.etats[ab] && P20.etats[ab].g !== E[ab].g).length;
+  const voixPlusSerre = plusSerre && Math.round(marge(plusSerre) / 100 * E[plusSerre].voix / 1000) * 1000;
+  const veChange = abs.filter(ab => P20.etats[ab] && P20.etats[ab].ve !== E[ab].ve).length;
+  // Chambre : élection de 2024
+  const H = R24.circ, nH = Object.keys(H).length, majH = Math.floor(nH / 2) + 1;
+  const ecartH = c => { const v = Object.values(c.s).sort((a, b) => b - a); return v[0] - (v[1] || 0); };
+  const sansDuel = Object.values(H).filter(c => !(c.s.D != null && c.s.R != null)).length;
+  const serresH = Object.values(H).filter(c => Object.keys(c.s).length > 1 && ecartH(c) < 5).length, surs = Object.values(H).filter(c => ecartH(c) >= 20).length;
+  const parEtat = {}; Object.keys(H).forEach(k => { const ab = k.split("-")[0]; parEtat[ab] = (parEtat[ab] || 0) + 1; });
+  const grosAb = Object.keys(parEtat).sort((a, b) => parEtat[b] - parEtat[a])[0], unSeul = Object.keys(parEtat).filter(ab => parEtat[ab] === 1).length;
+  const tH = R24.sieges.R >= R24.sieges.D ? "R" : "D";
+  // Congrès aujourd'hui : Chambre (Clerk) et Sénat (indépendants comptés avec les démocrates)
+  const nA = { R: 0, D: 0, I: 0, VAC: 0 }; Object.values(PROJ.actuel).forEach(a => nA[a ? a.p : "VAC"] = (nA[a ? a.p : "VAC"] || 0) + 1);
+  const nS = { R: 0, D: 0, I: 0, VAC: 0 }; Object.values(SEN().etats).forEach(e => e.senateurs.forEach(x => nS[x.p || "VAC"] = (nS[x.p || "VAC"] || 0) + 1));
+  const presParti = g24, majCh = nA.R >= majH ? "R" : nA.D + nA.I >= majH ? "D" : null;
+  const majSen = nS.R >= 51 ? "R" : nS.D + nS.I >= 51 ? "D" : nS.R === nS.D + nS.I ? presParti : null;   // à 50-50, le vice-président départage
+  const unifie = majCh === presParti && majSen === presParti;
+  const PARTI = { R: "républicain", D: "démocrate" }, PARTIS = { R: "républicains", D: "démocrates" };
+  const etatCongres = unifie
+    ? `Aujourd'hui, le gouvernement est <b>unifié</b>&nbsp;: la Maison-Blanche (${esc(P24.noms[presParti])}, élu en ${P24.date.slice(0, 4)}), la Chambre et le Sénat sont tous ${PARTIS[presParti]}.`
+    : `Aujourd'hui, le gouvernement est <b>divisé</b>&nbsp;: la Maison-Blanche est ${PARTI[presParti]} (${esc(P24.noms[presParti])}, élu en ${P24.date.slice(0, 4)}), la Chambre ${majCh ? `est ${PARTI[majCh]}` : "n'a pas de majorité claire"} et le Sénat ${majSen ? `est ${PARTI[majSen]}` : "n'a pas de majorité claire"}.`;
+  const courses = Object.values(SEN().etats).flatMap(e => e.courses), partielles = courses.filter(c => c.special).length;
+  // prochaine élection fédérale
+  const auj = new Date().toISOString().slice(0, 10);
+  let anP = +auj.slice(0, 4); if (anP % 2 || auj > jourElection(anP)) anP += anP % 2 ? 1 : 2;
+  const prochaine = `le ${dateFr(jourElection(anP))} (${anP % 4 ? "élections de mi-mandat" : "présidentielle"})`;
+  // graphique part des voix / part des sièges : même échelle pour la Chambre et la présidentielle
+  const lignesH = [tH, tH === "R" ? "D" : "R"].map(k => ({ lab: k, c: COUL[k], v: R24.national[k], s: pct(R24.sieges[k], nH), n: `${R24.sieges[k]} sièges (${nf(pct(R24.sieges[k], nH), 0)} %)` }));
+  const lignesP = [g24, perd(P24)].map(k => ({ lab: esc(court(P24, k)), c: COUL[k], v: P24.national[k], s: pct(P24.ve[k], veTot), n: `${P24.ve[k]} sur ${veTot} (${nf(pct(P24.ve[k], veTot), 0)} %)` }));
+  const echelle = 100 / (Math.ceil(Math.max(...[...lignesH, ...lignesP].flatMap(l => [l.v, l.s])) / 10) * 10);
+  const graphe = (L, unite) => `<div class="vi-dlg-vs">${L.map(l => `<div class="vi-dlg-vs-ligne" style="--c:${l.c}"><b>${l.lab}</b>
+      <span class="vi-dlg-vs-barres"><i style="width:${echelle * l.v}%"></i><i style="width:${Math.max(0.6, echelle * l.s)}%"></i></span>
+      <small>${nf(l.v, 1)} % des voix<br>${l.n}</small></div>`).join("")}</div>
+    <div class="vi-dlg-legende"><span>part des voix</span><span>part des ${unite}</span></div>`;
+  const grapheH = graphe(lignesH, "sièges"), grapheP = graphe(lignesP, "grands électeurs");
+  const sGagnant = pct(P24.ve[g24], veTot);
+
+  const politique = `
+    <section class="vi-dlg-chiffres" aria-label="En bref : système politique">
+      <div><b class="vi-dlg-long">République fédérale</b><small>à régime présidentiel : le président ne dépend pas du Congrès</small></div>
+      <div><b>2 chambres</b><small>le Congrès : ${nH} représentants et 100 sénateurs</small></div>
+      <div><b>4 ans</b><small>mandat du président, deux mandats au plus</small></div>
+      <div><b>50 États</b><small>chacun avec sa constitution, son gouverneur et sa législature</small></div>
+    </section>
+    <section>
+      <h3>Le régime politique</h3>
+      <p>Les États-Unis sont une <b>république fédérale</b> dotée d'un <b>régime présidentiel</b>. La Constitution de 1787, toujours en vigueur, sépare nettement trois pouvoirs et donne à chacun des moyens de freiner les deux autres : c'est le principe des <b>freins et contrepoids</b> (« checks and balances »).</p>
+      <ul>
+        <li><b>Pouvoir exécutif</b> : le <b>président</b>, à la fois chef de l'État et chef du gouvernement, et commandant en chef des forces armées.</li>
+        <li><b>Pouvoir législatif</b> : le <b>Congrès</b>, formé de deux chambres, la Chambre des représentants et le Sénat. Il adopte les lois et le budget.</li>
+        <li><b>Pouvoir judiciaire</b> : les tribunaux fédéraux, avec au sommet la <b>Cour suprême</b>, qui peut invalider une loi ou une décision contraire à la Constitution.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Le président</h3>
+      <p>Le président est élu pour <b>quatre ans</b> (voir la partie <a href="#" data-aller="electoral">Système électoral</a>). Depuis le 22<sup>e</sup> amendement (1951), personne ne peut être élu plus de <b>deux fois</b>. Il faut avoir au moins 35 ans, être citoyen de naissance et résider aux États-Unis depuis au moins 14 ans.</p>
+      <ul>
+        <li><b>Gouvernement</b> : le président choisit les secrétaires (l'équivalent des ministres), qui dirigent les départements fédéraux. Ils ne sont pas membres du Congrès, et le Sénat doit confirmer leur nomination.</li>
+        <li><b>Veto</b> : le président peut refuser de signer une loi adoptée par le Congrès. Le Congrès peut passer outre si les <b>deux tiers</b> des membres de chaque chambre votent de nouveau la loi.</li>
+        <li><b>Vice-président</b> : élu en même temps que le président, il le remplace en cas de décès, de démission ou de destitution. Il préside le Sénat, mais n'y vote que pour <b>départager une égalité</b> (50 contre 50).</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Le Congrès : deux chambres égales</h3>
+      <p>Une loi doit être adoptée dans les mêmes termes par les deux chambres, puis signée par le président (ou adoptée malgré son veto).</p>
+      <ul>
+        <li><b>Chambre des représentants</b> : ${nH} membres élus pour <b>deux ans</b>, répartis entre les États selon leur population après chaque recensement (tous les dix ans) ; chaque État en a au moins un. Les projets de loi sur les impôts doivent commencer à la Chambre. Les représentants élisent leur président (le « speaker »), chef de la majorité, qui vient tout de suite après le vice-président dans l'ordre de succession. Il faut ${majH} sièges pour la majorité.</li>
+        <li><b>Sénat</b> : 100 sénateurs, <b>deux par État</b> quelle que soit sa population, élus pour <b>six ans</b> ; un tiers des sièges est renouvelé tous les deux ans. Le Sénat <b>confirme les nominations</b> du président (secrétaires, juges, ambassadeurs) à la majorité, et <b>ratifie les traités</b> aux deux tiers. Selon ses règles, il faut en général 60 voix sur 100 pour mettre fin au débat sur un projet de loi (l'obstruction, ou « filibuster »).</li>
+        <li><b>Destitution</b> : la Chambre peut <b>mettre en accusation</b> le président ou un juge, à la majorité ; le Sénat le <b>juge</b>, et il faut les deux tiers des sénateurs pour le démettre.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Pas de vote de confiance</h3>
+      <p>Contrairement au Québec et au Canada (voir les pages <a href="votes-quebec.html">Votes Québec</a> et <a href="votes-canada.html">Votes Canada</a>), il n'y a pas de premier ministre ni de gouvernement responsable devant les élus. Le président ne dépend pas de la confiance du Congrès : le Congrès ne peut pas le renverser, sauf par une destitution pour une faute grave, et le président ne peut pas dissoudre le Congrès ni déclencher d'élection. Les élections ont toujours lieu aux dates prévues.</p>
+      <p>La Maison-Blanche et le Congrès sont donc parfois contrôlés par des partis différents : on parle de <b>gouvernement divisé</b>. Le président doit alors négocier avec l'autre parti pour faire adopter ses lois et son budget.</p>
+      <table class="vi-dlg-tab"><caption>Le Congrès aujourd'hui</caption>
+        <thead><tr><th scope="col">Parti</th><th scope="col">Chambre<small>${nH} sièges · majorité ${majH}</small><small>au ${dateFr(PROJ.clerk)}</small></th><th scope="col">Sénat<small>100 sièges · majorité 51</small></th></tr></thead>
+        <tbody>${["R", "D", "I", "VAC"].filter(k => nA[k] || nS[k]).map(k => `<tr style="--c:${k === "VAC" ? "var(--muted)" : COUL[k]}"><th scope="row"><i></i>${k === "VAC" ? "Sièges vacants" : NOMS[k] + (k === "I" ? "s" : "")}</th><td>${nA[k] || 0}</td><td>${nS[k] || 0}</td></tr>`).join("")}</tbody></table>
+      <p>${etatCongres}${nS.I ? ` Les ${nS.I} sénateurs indépendants votent avec les démocrates.` : ""}</p>
+    </section>
+    <section>
+      <h3>La Cour suprême</h3>
+      <p>La Cour suprême compte <b>neuf juges</b> (un nombre fixé par une loi, inchangé depuis 1869). Le président les nomme, le Sénat confirme leur nomination, et ils restent en poste <b>à vie</b>, sauf démission ou destitution. Comme leurs décisions s'imposent au Congrès, au président et aux États, chaque nomination est un enjeu politique majeur.</p>
+    </section>
+    <section>
+      <h3>Le fédéralisme : Washington et les 50 États</h3>
+      <p>Les <b>50 États</b> ont chacun leur constitution, leur <b>gouverneur</b> élu et leur <b>législature</b> (à deux chambres partout, sauf au Nebraska). Ils gardent tous les pouvoirs que la Constitution ne confie pas au gouvernement fédéral : droit criminel et civil, écoles, routes, organisation des élections. Le District de Columbia, où se trouve la capitale, Washington, n'est pas un État : il n'a pas de sénateur et n'est représenté à la Chambre que par un délégué sans droit de vote.</p>
+      <p>Pour modifier la Constitution, il faut l'appui des deux tiers de chaque chambre du Congrès, puis la ratification par les trois quarts des États (38 sur 50).</p>
+    </section>`;
+
+  const electoral = `
+    <section class="vi-dlg-chiffres" aria-label="En bref : système électoral">
+      <div><b>${veTot}</b><small>grands électeurs élisent le président ; il en faut ${veMaj}</small></div>
+      <div><b>${nH}</b><small>districts, un représentant chacun, élu pour deux ans</small></div>
+      <div><b>2 ans</b><small>entre deux élections ; prochaine le ${dateFr(jourElection(anP))}</small></div>
+      <div><b>${nf(sGagnant, 0)} %</b><small>des grands électeurs pour ${esc(P24.noms[g24])} en ${P24.date.slice(0, 4)}, avec ${nf(P24.national[g24], 1)} % des voix</small></div>
+    </section>
+    <section>
+      <h3>Quand vote-t-on ?</h3>
+      <p>Les élections fédérales ont lieu à <b>date fixe</b> : le mardi qui suit le premier lundi de novembre, les années paires. Tous les deux ans, on élit toute la Chambre des représentants et un tiers du Sénat. Une fois sur deux, on élit aussi le président ; l'autre fois, à mi-chemin du mandat présidentiel, ce sont les <b>élections de mi-mandat</b>, souvent défavorables au parti du président. Prochaine élection : <b>${prochaine}</b>.</p>
+    </section>
+    <section>
+      <h3>La Chambre : un district, un représentant</h3>
+      <p>Chaque État est découpé en autant de districts qu'il reçoit de sièges après le recensement : de 1 (dans ${unSeul} États) à ${parEtat[grosAb]} (${esc(ETAT_NOM[grosAb] || grosAb)}). Dans chaque district, en général, le candidat qui a le plus de voix est élu, même sans majorité : c'est le <b>scrutin majoritaire à un tour</b>, comme au Québec et au Canada. L'Alaska et le Maine utilisent le <b>vote préférentiel</b> : les électeurs classent les candidats, et on redistribue les voix des derniers jusqu'à ce qu'un candidat ait la majorité.</p>
+      <p>Avant l'élection, chaque parti choisit son candidat lors d'une <b>primaire</b> organisée par l'État. En Californie et dans l'État de Washington, les deux premiers de la primaire, tous partis confondus, passent à l'élection : deux candidats du même parti peuvent s'y affronter. Un siège qui se libère en cours de mandat est comblé par une élection partielle.</p>
+    </section>
+    <section>
+      <h3>Des voix aux sièges : la Chambre en 2024</h3>
+      <p>${Math.abs(pct(R24.sieges[tH], nH) - R24.national[tH]) < 3 ? "Au niveau national, la Chambre a reflété d'assez près le vote populaire en 2024, mais" : "Les sièges ne suivent pas forcément le vote populaire, et"} la plupart des districts ne sont pas disputés : en 2024, <b>${surs} districts sur ${nH}</b> ont été gagnés par 20 points ou plus, et seulement ${serresH} par moins de 5 points. Dans ${sansDuel} districts, un des deux grands partis n'avait même pas de candidat à l'élection.</p>
+      ${grapheH}
+      <p>En 2024, le ${NOMS[tH]} a obtenu ${nf(R24.national[tH], 1)} % des voix et ${R24.sieges[tH]} sièges sur ${nH}, soit ${nf(pct(R24.sieges[tH], nH), 1)} % de la Chambre${R24.sieges[tH] >= majH ? (R24.sieges[tH] - majH <= 5 ? `, juste assez pour la majorité (${majH})` : `, la majorité (${majH})`) : ""}. Le reste des voix est allé à de petits partis et à des indépendants.</p>
+    </section>
+    <section>
+      <h3>Le découpage des districts</h3>
+      <p>Après chaque recensement, les États redessinent leurs districts, qui doivent avoir à peu près la même population. Dans la plupart des États, c'est la législature qui trace la carte ; quelques-uns, comme la Californie, confient cette tâche à une commission indépendante. Le parti au pouvoir peut dessiner les districts à son avantage : c'est le <b>découpage partisan</b> (« gerrymandering »), qui consiste à concentrer les électeurs adverses dans quelques districts ou à les disperser dans plusieurs. Depuis 2019, la Cour suprême considère que les tribunaux fédéraux ne peuvent pas juger ce découpage partisan.${DATA.redecoupes?.length ? ` Depuis 2024, ${DATA.redecoupes.length} États ont redessiné leurs districts sans attendre le prochain recensement (voir la carte de la Chambre).` : ""}</p>
+    </section>
+    <section>
+      <h3>Le Sénat : tout l'État vote</h3>
+      <p>Les sénateurs sont élus directement par les électeurs de tout l'État (depuis le 17<sup>e</sup> amendement, en 1913), en général au scrutin majoritaire à un tour. Les deux sièges d'un État ne sont jamais en jeu à la même élection ordinaire. Quelques États, comme la Géorgie, tiennent un second tour si personne n'obtient la majorité. Quand un siège se libère, le gouverneur nomme en général un remplaçant jusqu'à une élection partielle.${courses.length ? ` À la prochaine élection, ${courses.length} sièges sont en jeu${partielles ? `, dont ${partielles} élection${partielles > 1 ? "s" : ""} partielle${partielles > 1 ? "s" : ""}` : ""}.` : ""}</p>
+    </section>
+    <section>
+      <h3>La présidentielle : primaires, puis collège électoral</h3>
+      <p>L'élection se déroule en plusieurs étapes.</p>
+      <ul>
+        <li><b>Les primaires</b> : de janvier à juin, chaque parti désigne son candidat, État par État, lors de primaires (un vote) ou de caucus (des assemblées de membres). Les délégués ainsi gagnés votent ensuite pour le candidat lors de la convention nationale du parti, l'été.</li>
+        <li><b>Le collège électoral</b> : en novembre, les électeurs de chaque État votent pour un candidat, mais ce sont des <b>grands électeurs</b> qui élisent le président. Chaque État en a autant que de représentants et de sénateurs (au moins trois), et le District de Columbia en a trois : ${veTot} au total. Il faut <b>${veMaj}</b> grands électeurs pour être élu.</li>
+        <li><b>Le gagnant prend tout</b> : dans 48 États et dans le District de Columbia, le candidat en tête remporte tous les grands électeurs de l'État, même par quelques voix. Le Maine et le Nebraska en donnent deux au gagnant de l'État et un au gagnant de chaque district.</li>
+        <li><b>Après le vote</b> : les grands électeurs votent en décembre, le Congrès compte leurs voix le 6 janvier, et le président entre en fonction le 20 janvier. Si personne n'atteint ${veMaj}, c'est la Chambre qui élit le président, à raison d'une voix par État.</li>
+      </ul>
+      ${grapheP}
+      <p>En ${P24.date.slice(0, 4)}, ${esc(P24.noms[g24])} a obtenu ${nf(P24.national[g24], 1)} % des voix, mais ${P24.ve[g24]} grands électeurs, soit ${nf(sGagnant, 0)} % du collège. En ${P20.date.slice(0, 4)}, ${esc(P20.noms[g20])} avait obtenu ${nf(P20.national[g20], 1)} % des voix et ${P20.ve[g20]} grands électeurs (${nf(pct(P20.ve[g20], P20.ve.R + P20.ve.D), 0)} %). Le collège électoral amplifie donc la victoire, et il peut même la renverser : en 2000 et en 2016, le candidat élu avait obtenu moins de voix que son adversaire à l'échelle du pays.${veChange ? ` La répartition des grands électeurs suit le recensement : entre 2020 et 2024, ${veChange} États en ont gagné ou perdu.` : ""}</p>
+    </section>
+    <section>
+      <h3>Une élection décidée dans quelques États</h3>
+      <p>La plupart des États votent toujours pour le même parti : en ${P24.date.slice(0, 4)}, ${largues} des ${abs.length} États (en comptant le District de Columbia) ont été gagnés par 15 points ou plus. Les candidats font donc campagne surtout dans les <b>États serrés</b> (« swing states »), qui décident de l'élection.${plusSerre ? ` L'État le plus serré (${esc(ETAT_NOM[plusSerre] || plusSerre)}) a été gagné par environ ${nf(voixPlusSerre)} voix, et ses ${E[plusSerre].ve} grands électeurs sont tous allés au gagnant.` : ""}</p>
+      ${serres.length ? `<table class="vi-dlg-tab"><caption>Les ${serres.length} États gagnés par moins de 5 points en ${P24.date.slice(0, 4)} (${veSerres} grands électeurs)</caption>
+        <thead><tr><th scope="col">État</th><th scope="col">Écart<small>en ${P24.date.slice(0, 4)}</small></th><th scope="col">Grands<small>électeurs</small></th></tr></thead>
+        <tbody>${serres.map(ab => `<tr style="--c:${COUL[E[ab].g]}"><th scope="row"><i></i>${esc(ETAT_NOM[ab] || ab)}</th><td><b>${ecartTxt(E[ab]).replace(" ", "&nbsp;")}</b></td><td>${E[ab].ve}</td></tr>`).join("")}</tbody></table>
+      <p>${basculesSerres ? `${basculesSerres} de ces ${serres.length} États avaient voté pour l'autre parti en ${P20.date.slice(0, 4)}.` : `Ces ${serres.length} États avaient tous voté pour le même parti en ${P20.date.slice(0, 4)}.`}</p>` : ""}
+    </section>
+    <section>
+      <h3>Qui vote, et comment</h3>
+      <p>Pour voter, il faut être citoyen américain et avoir 18 ans (depuis le 26<sup>e</sup> amendement, en 1971). Il n'y a pas d'organisme électoral national comme Élections Québec : chaque État, avec ses comtés, organise le vote et fixe ses propres règles. Les listes électorales relèvent aussi des États : il faut être inscrit sur celle de son État (le Dakota du Nord est le seul à ne pas exiger d'inscription). Les règles sur la pièce d'identité, le vote anticipé et le vote par la poste varient beaucoup d'un État à l'autre. En ${P24.date.slice(0, 4)}, environ ${nf(Math.round(totVoix / 1e6))} millions d'électeurs ont voté à la présidentielle.</p>
+    </section>`;
+
+  // versions courtes : l'essentiel en quelques points, mêmes chiffres clés et mêmes graphiques des voix et des sièges
+  const tuilesPol = politique.slice(0, politique.indexOf("</section>") + 10), tuilesElec = electoral.slice(0, electoral.indexOf("</section>") + 10);
+  const point = (n, html) => `<li><b>${n}</b><span>${html}</span></li>`;
+  const politiqueCourt = `${tuilesPol}
+    <ol class="vi-dlg-court">
+      ${point(1, `Les États-Unis sont une <b>république fédérale</b> à <b>régime présidentiel</b> : trois pouvoirs séparés, qui se freinent les uns les autres.`)}
+      ${point(2, `Le <b>président</b> est chef de l'État et du gouvernement, élu pour quatre ans, deux fois au plus. Il ne dépend pas de la confiance du Congrès et ne peut pas le dissoudre.`)}
+      ${point(3, `Le <b>Congrès</b> a deux chambres : la Chambre des représentants (${nH} membres, deux ans) et le Sénat (100 membres, deux par État, six ans). Une loi doit passer dans les deux, puis être signée par le président, dont le veto peut être renversé aux deux tiers.`)}
+      ${point(4, `La <b>Cour suprême</b> (neuf juges nommés à vie par le président et confirmés par le Sénat) peut invalider une loi contraire à la Constitution.`)}
+      ${point(5, `Les <b>50 États</b> ont leur gouverneur et leur législature. ${etatCongres}`)}
+    </ol>`;
+  const electoralCourt = `${tuilesElec}
+    <ol class="vi-dlg-court">
+      ${point(1, `<b>Tous les deux ans</b>, en novembre : toute la Chambre et un tiers du Sénat ; le président, une fois sur deux. Prochaine élection : ${prochaine}.`)}
+      ${point(2, `<b>Chambre</b> : dans chacun des ${nH} districts, le candidat qui a le plus de voix est élu (vote préférentiel en Alaska et au Maine). Les États redessinent les districts après chaque recensement, parfois à l'avantage d'un parti.`)}
+    </ol>
+    ${grapheH}
+    <ol class="vi-dlg-court" start="3">
+      ${point(3, `<b>Sénat</b> : les électeurs de tout l'État élisent leurs deux sénateurs, à des élections différentes.`)}
+      ${point(4, `<b>Président</b> : chaque parti choisit son candidat lors de primaires, puis ${veTot} grands électeurs élisent le président ; il en faut ${veMaj}. Dans presque tous les États, le gagnant prend tous les grands électeurs de l'État.`)}
+    </ol>
+    ${grapheP}
+    <ol class="vi-dlg-court" start="5">
+      ${point(5, `On peut donc être élu <b>sans avoir le plus de voix</b> : c'est arrivé en 2000 et en 2016. Chaque État organise le vote et fixe ses règles (inscription, vote anticipé, vote par la poste).`)}
+    </ol>`;
+  preparerSysteme({ sur: "États-Unis · Congrès et présidence", titre: "Le système politique et électoral des États-Unis",
+    parties: [
+      { id: "politique", onglet: "Système politique", chapeau: "Qui gouverne et comment : le président, le Congrès, la Cour suprême et le partage des pouvoirs avec les États.", html: politique, court: politiqueCourt },
+      { id: "electoral", onglet: "Système électoral", chapeau: "Comment on choisit les élus : la Chambre, le Sénat, la présidentielle et le collège électoral, le calendrier et les électeurs.", html: electoral, court: electoralCourt }] });
+}
+
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
@@ -875,7 +1071,7 @@ async function demarrer() {
     AB_DE["11"] = "DC"; ETAT_NOM.DC = "District de Columbia";             // présidentielle seulement (pas de district ni de sénateur)
     couleursPrimaires();
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
-    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
+    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vuPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
