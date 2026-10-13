@@ -5,6 +5,7 @@
    Évolution : tous les sondages nationaux depuis l'élection de 2025 (sondages.json, outils/sondages_ca.py).
    Contours des 343 circonscriptions (découpage de 2023) : data.json (outils/canada_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
+import { preparerSysteme } from "../votes-quebec/systeme.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -515,6 +516,154 @@ function dessinerEvolution() {
   $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultat de l'élection.`;
 }
 
+/* ---------- « Comprendre le système politique et électoral » : grande fenêtre en deux parties (votes-quebec/systeme.js) ----------
+   Même structure que Votes Québec (systemeElectoral() dans votes-quebec/intentions.js). Partie 1, système politique :
+   régime, Parlement, formation du gouvernement, fédération. Partie 2, système électoral : mode de scrutin, des voix aux
+   sièges, calendrier, électeurs, carte, réforme. Les chiffres viennent du résultat de l'élection du 28 avril 2025 (CE,
+   E25NAT, SIEGES_DE.e25), de la Chambre actuelle (CA, SIEGES_DE.act) et des circonscriptions (DATA.ridings). */
+const SENAT = { NL: 6, PE: 4, NS: 10, NB: 10, QC: 24, ON: 24, MB: 6, SK: 6, AB: 6, BC: 6, YT: 1, NT: 1, NU: 1 };   // 105 sénateurs
+function systemeElectoral() {
+  if (!CE || !SIEGES_DE) return;
+  const N = DATA.ridings.length, nomP = p => NOMS[p] || p;
+  const gagnes = CE.map((c, i) => [i, c]).filter(([, c]) => c), score = c => c.parts[c.g];
+  const sousMoitie = gagnes.filter(([, c]) => score(c) < 50).length, sous40 = gagnes.filter(([, c]) => score(c) < 40).length;
+  const [iBas, cBas] = gagnes.slice().sort((a, b) => score(a[1]) - score(b[1]))[0];
+  const S = SIEGES_DE.e25, V = E25NAT, A = SIEGES_DE.act;
+  const partis = P.filter(p => V[p] != null).sort((a, b) => (S[b] || 0) - (S[a] || 0) || V[b] - V[a]);
+  const lead = partis[0], deux = partis[1], pctS = p => 100 * (S[p] || 0) / N, sg = (n, mot = "siège") => `${n} ${mot}${n > 1 ? "s" : ""}`;
+  const minorit = S[lead] < MAJ, sousSeuil = partis.filter(p => (S[p] || 0) > 0 && S[p] < 12);
+  const e25 = SOND.sondages.find(s => s.e && s.d === DATE_ELECTION), votes = e25?.n ? +String(e25.n).replace(/\D/g, "") : 0;
+  // Chambre actuelle (carte de Qc125) : changements de parti et sièges vacants depuis 2025
+  const leadA = Object.keys(A).filter(p => p !== "VAC").sort((a, b) => A[b] - A[a])[0];
+  const nChang = CA.filter(a => a && a.note).length, nVac = A.VAC || 0;
+  const changeStatut = leadA === lead && (A[leadA] >= MAJ) !== (S[lead] >= MAJ);
+  const actuel = (nChang || nVac) ? ` Depuis, la Chambre a changé${nChang ? ` : ${nChang} député${nChang > 1 ? "s ont" : " a"} changé de parti` : ""}${nVac ? `${nChang ? " et" : " :"} ${nVac} siège${nVac > 1 ? "s sont vacants" : " est vacant"}` : ""}. Le ${nomP(leadA)} compte aujourd'hui ${A[leadA]} députés${changeStatut ? `, ce qui le rend ${A[leadA] >= MAJ ? "majoritaire" : "minoritaire"}` : ""}.` : "";
+  const lignes = partis.map(p => `<div class="vi-dlg-vs-ligne" style="--c:${COUL[p]}"><b>${p}</b>
+      <span class="vi-dlg-vs-barres"><i style="width:${2 * V[p]}%"></i><i style="width:${Math.max(0.6, 2 * pctS(p))}%"></i></span>
+      <small>${nf(V[p], 1)} % des voix<br>${sg(S[p] || 0)} (${nf(pctS(p), pctS(p) < 1 ? 1 : 0)} %)</small></div>`).join("");
+  const graphique = `<div class="vi-dlg-vs">${lignes}</div>
+      <div class="vi-dlg-legende"><span>part des voix</span><span>part des sièges</span></div>`;
+  // composition de la Chambre : élus en 2025 et aujourd'hui
+  const ordreA = [...SEAT_ORDER].filter(p => S[p] || A[p]);
+  const tabChambre = `<table class="vi-dlg-tab"><caption>Sièges à la Chambre des communes</caption>
+      <thead><tr><th scope="col">Parti</th><th scope="col">Élection ${AN(2025)}<small>${N} sièges · majorité ${MAJ}</small></th><th scope="col">Aujourd'hui<small>selon Qc125</small></th><th scope="col">Écart</th></tr></thead>
+      <tbody>${ordreA.map(p => { const d = (A[p] || 0) - (S[p] || 0);
+        return `<tr style="--c:${p === "VAC" ? "var(--muted)" : COUL[p]}"><th scope="row"><i></i>${p === "VAC" ? "Vacants" : p}</th><td>${S[p] || 0}</td><td><b>${A[p] || 0}</b></td><td class="${p === "VAC" ? "" : d > 0 ? "plus" : d < 0 ? "moins" : ""}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${Math.abs(d)}</td></tr>`; }).join("")}</tbody></table>`;
+  // députés et sénateurs par province
+  const nbProv = DATA.ridings.reduce((o, r) => { o[r.r] = (o[r.r] || 0) + 1; return o; }, {});
+  const tabProv = `<table class="vi-dlg-tab"><caption>Députés et sénateurs par province et territoire</caption>
+      <thead><tr><th scope="col">Province ou territoire</th><th scope="col">Députés<small>${N} au total</small></th><th scope="col">Sénateurs<small>${Object.values(SENAT).reduce((a, b) => a + b, 0)} au total</small></th></tr></thead>
+      <tbody>${DATA.regions.map(r => `<tr style="--c:var(--ink)"><th scope="row">${esc(r.name)}</th><td><b>${nbProv[r.code] || 0}</b></td><td>${SENAT[r.code] ?? "–"}</td></tr>`).join("")}</tbody></table>`;
+  const politique = `
+    <section class="vi-dlg-chiffres" aria-label="En bref : système politique">
+      <div><b class="vi-dlg-long">Monarchie constitutionnelle</b><small>le roi règne sans gouverner ; il est représenté par le gouverneur général</small></div>
+      <div><b>2 chambres</b><small>${N} députés élus et 105 sénateurs nommés</small></div>
+      <div><b>${MAJ}</b><small>députés pour qu'un gouvernement soit majoritaire</small></div>
+      <div><b>Fédération</b><small>10 provinces et 3 territoires</small></div>
+    </section>
+    <section>
+      <h3>Le régime politique</h3>
+      <p>Le Canada est une <b>fédération</b>, une <b>monarchie constitutionnelle</b> dotée d'un <b>régime parlementaire</b> de tradition britannique (dit « de Westminster ») : le chef de l'État est un monarque au rôle surtout symbolique, et le pouvoir réel appartient à un gouvernement issu de la Chambre des communes élue. Les règles de base sont dans la Constitution, surtout la Loi constitutionnelle de 1867, qui a créé la fédération, et la Loi constitutionnelle de 1982, qui y a ajouté la Charte canadienne des droits et libertés et que le Québec n'a jamais signée.</p>
+      <ul>
+        <li><b>Chef de l'État</b> : le roi du Canada (Charles III depuis 2022), représenté par le <b>gouverneur général</b>, que le roi nomme sur recommandation du premier ministre. Le gouverneur général sanctionne les lois, nomme le premier ministre et dissout le Parlement, toujours selon les règles et les conventions du régime, sur l'avis du gouvernement.</li>
+        <li><b>Pouvoir législatif</b> : le Parlement du Canada, formé du roi, du <b>Sénat</b> et de la <b>Chambre des communes</b>. Il adopte les lois fédérales et le budget, et contrôle le gouvernement (période des questions, comités).</li>
+        <li><b>Pouvoir exécutif</b> : le <b>premier ministre</b> et le Cabinet (les ministres), choisis presque toujours parmi les députés.</li>
+        <li><b>Pouvoir judiciaire</b> : des tribunaux indépendants du gouvernement. La Cour suprême du Canada, le tribunal de dernier recours, compte neuf juges, dont au moins trois viennent du Québec, la seule province de droit civil.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Le Parlement : deux chambres</h3>
+      <ul>
+        <li><b>La Chambre des communes</b> : ${N} députés élus, un par circonscription (voir la partie <a href="#" data-aller="electoral">Système électoral</a>). C'est la chambre principale : le gouvernement dépend de sa confiance, et les projets de loi sur les impôts et les dépenses doivent y être présentés.</li>
+        <li><b>Le Sénat</b> : 105 sénateurs, qui ne sont pas élus. Le gouverneur général les nomme sur recommandation du premier ministre, et ils siègent jusqu'à 75 ans. Les sièges sont répartis par région : 24 pour l'Ontario, 24 pour le Québec, 24 pour les Maritimes, 24 pour l'Ouest, 6 pour Terre-Neuve-et-Labrador et 1 par territoire. Depuis 2016, un comité consultatif indépendant propose des candidats au premier ministre.</li>
+        <li><b>Une loi</b> doit être adoptée dans les mêmes termes par les deux chambres, puis recevoir la sanction royale. Le Sénat peut étudier, modifier ou rejeter un projet de loi, mais en pratique il cède presque toujours devant la Chambre élue.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Qui gouverne : le gouvernement responsable</h3>
+      <p>Le premier ministre n'est pas élu directement. Les électeurs élisent des députés, puis le gouvernement doit garder la <b>confiance de la majorité de la Chambre des communes</b> pour rester en place.</p>
+      <ul>
+        <li><b>Premier ministre</b> : le gouverneur général nomme la personne la plus susceptible d'obtenir la confiance de la Chambre, en pratique le chef du parti qui a le plus de sièges.</li>
+        <li><b>Gouvernement majoritaire</b> : un parti qui a au moins ${MAJ} députés sur ${N} contrôle la Chambre et peut faire adopter ses projets de loi seul.</li>
+        <li><b>Gouvernement minoritaire</b> : si aucun parti n'atteint ${MAJ} sièges, le parti qui gouverne a besoin de l'appui (ou de l'abstention) d'au moins un autre parti pour les votes importants, comme le budget. Une défaite sur une question de confiance peut faire tomber le gouvernement et mener à une élection anticipée.</li>
+        <li><b>En ${AN(2025)}</b> : le ${nomP(lead)} a fait élire ${S[lead]} députés, ${minorit ? `${MAJ - S[lead]} de moins que la majorité : il a formé un gouvernement minoritaire.` : `assez pour former un gouvernement majoritaire.`}${actuel}</li>
+        <li><b>Opposition officielle</b> : le deuxième parti en nombre de sièges${deux ? ` (en ${AN(2025)}, le ${nomP(deux)}, ${S[deux]} sièges)` : ""} ; son chef est le chef de l'opposition officielle.</li>
+        <li><b>Parti reconnu</b> : un parti doit avoir au moins 12 députés pour être reconnu à la Chambre (temps de parole, budget de recherche, places en comité).${sousSeuil.length ? ` En ${AN(2025)}, ${sousSeuil.map(p => `le ${nomP(p)} (${sg(S[p])})`).join(" et ")} ${sousSeuil.length > 1 ? "sont restés" : "est resté"} sous ce seuil.` : ""}</li>
+        <li><b>Présidence</b> : les députés élisent l'un d'entre eux, au scrutin secret, président de la Chambre. Il dirige les débats en toute neutralité et ne vote qu'en cas d'égalité.</li>
+      </ul>
+      ${tabChambre}
+    </section>
+    <section>
+      <h3>Ottawa et les provinces : le partage des pouvoirs</h3>
+      <p>La Constitution partage les compétences entre le Parlement fédéral et les provinces. Ottawa s'occupe notamment de la défense, de la monnaie, du droit criminel, de la citoyenneté et des affaires étrangères ; les provinces, de la santé, de l'éducation, des municipalités, du droit civil et des ressources naturelles. Certains domaines sont partagés, comme l'agriculture et l'immigration. Les trois territoires exercent des pouvoirs que le Parlement fédéral leur délègue. Chaque province élit aussi sa propre assemblée : pour le Québec, voir la page <a href="votes-quebec.html">Votes Québec</a>.</p>
+    </section>`;
+  const bqNpd = V.BQ != null && V.NPD != null && (S.BQ || 0) > (S.NPD || 0) && V.BQ <= V.NPD + 1;
+  const electoral = `
+    <section class="vi-dlg-chiffres" aria-label="En bref : système électoral">
+      <div><b>${N}</b><small>circonscriptions, un député chacune</small></div>
+      <div><b>1 tour</b><small>le candidat qui a le plus de voix est élu</small></div>
+      <div><b>4 ans</b><small>élection à date fixe ; prochaine prévue le 15 octobre ${AN(2029)}</small></div>
+      <div><b>${sousMoitie}</b><small>députés sur ${N} élus en ${AN(2025)} avec moins de 50 % des voix</small></div>
+    </section>
+    <section>
+      <h3>Le mode de scrutin : majoritaire à un tour</h3>
+      <p>Les députés fédéraux sont élus au <b>scrutin majoritaire uninominal à un tour</b>, le même mode que pour l'Assemblée nationale du Québec. Le pays est découpé en ${N} circonscriptions. Dans chacune, les électeurs votent une seule fois, pour un candidat ; celui qui obtient le plus de voix devient le député, même s'il n'a pas la majorité. Il n'y a ni deuxième tour ni vote pour une liste de parti : une élection générale, ce sont ${N} courses en même temps.</p>
+      <p>Comme les votes se partagent entre plusieurs partis, on peut gagner avec bien moins de la moitié des voix. En ${AN(2025)}, <b>${sousMoitie} des ${N} députés</b> ont été élus avec moins de 50 % des voix, et ${sous40} avec moins de 40 %. Le score le plus bas : ${nf(score(cBas), 1)} % dans ${esc(DATA.ridings[iBas].n)} (${cBas.g}).</p>
+    </section>
+    <section>
+      <h3>Des voix aux sièges</h3>
+      <p>Les sièges ne sont pas répartis selon le pourcentage de voix de chaque parti à l'échelle du Canada : seul compte le nombre de circonscriptions gagnées. Un parti dont l'appui est concentré dans une région peut obtenir plus de sièges qu'un parti dont l'appui est réparti partout, même avec autant de voix.</p>
+      ${graphique}
+      <p>En ${AN(2025)}, le ${nomP(lead)} a obtenu ${nf(V[lead], 1)} % des voix et ${S[lead]} sièges, soit ${nf(pctS(lead), 0)} % de la Chambre.${bqNpd ? ` Le Bloc québécois, qui ne présente des candidats qu'au Québec, a fait élire ${sg(S.BQ, "député")} avec ${nf(V.BQ, 1)} % des voix au Canada ; le Nouveau Parti démocratique, avec ${nf(V.NPD, 1)} % des voix réparties dans tout le pays, n'en a fait élire que ${S.NPD || 0}.` : ""} Ce sont ces sièges qui déterminent ensuite qui gouverne (voir la partie <a href="#" data-aller="politique">Système politique</a>).</p>
+    </section>
+    <section>
+      <h3>Quand vote-t-on ?</h3>
+      <p>Depuis 2007, la loi fixe la date des élections générales : le troisième lundi d'octobre de la quatrième année civile qui suit la dernière élection. Après celle du 28 avril ${AN(2025)}, la prochaine est prévue le <b>15 octobre ${AN(2029)}</b>. Le gouverneur général peut toutefois dissoudre la Chambre plus tôt, sur l'avis du premier ministre, par exemple quand un gouvernement minoritaire perd la confiance des députés ; l'élection de 2025 était d'ailleurs anticipée. La Charte limite la durée d'une législature à cinq ans. Quand un siège se libère entre deux élections (démission, décès), une élection partielle a lieu dans cette circonscription seulement.</p>
+    </section>
+    <section>
+      <h3>Qui vote, et comment</h3>
+      <p>Pour voter, il faut être citoyen canadien et avoir 18 ans le jour du vote. On vote dans sa circonscription : le jour de l'élection, par anticipation les jours précédents, ou par bulletin spécial (par la poste ou dans un bureau d'Élections Canada), ce qui permet aussi aux Canadiens qui vivent à l'étranger de voter. On peut s'inscrire jusqu'au jour du vote, au bureau de scrutin, avec une preuve d'identité et d'adresse. Les élections sont organisées par <b>Élections Canada</b>, un organisme indépendant dirigé par le directeur général des élections, qui rend des comptes au Parlement.${votes ? ` En ${AN(2025)}, ${nf(votes / 1e6, 1)} millions de votes ont été comptés.` : ""}</p>
+    </section>
+    <section>
+      <h3>La carte électorale</h3>
+      <p>Après chaque recensement (tous les dix ans), le nombre de sièges de chaque province est recalculé selon une formule inscrite dans la Constitution, puis une commission indépendante par province redessine les circonscriptions ; chaque territoire forme une seule circonscription. Dans une province, chaque circonscription doit compter à peu près le même nombre d'habitants (au plus 25 % de plus ou de moins que la moyenne, sauf circonstances extraordinaires). Des règles protègent les petites provinces : aucune ne peut avoir moins de députés que de sénateurs. La Chambre comptait 338 sièges de 2015 à 2021 ; elle en compte ${N} depuis l'élection de 2025, avec la carte de 2023.</p>
+      ${tabProv}
+    </section>
+    <section>
+      <h3>Et si le mode de scrutin changeait ?</h3>
+      <p>Le débat sur une réforme revient régulièrement, justement à cause de l'écart entre les voix et les sièges. Pendant la campagne de 2015, le Parti libéral avait promis que ce serait la dernière élection fédérale au scrutin majoritaire à un tour. Un comité spécial de la Chambre a étudié la question en 2016, mais le gouvernement a abandonné la réforme en février 2017.</p>
+      <p class="vi-dlg-note">Au Québec, un débat semblable a mené au projet de loi n<sup>o</sup> 39 (mode mixte compensatoire), jamais adopté : la page <a href="loi39.html">Loi 39</a> le simule.</p>
+    </section>`;
+  // versions courtes : l'essentiel en quelques points, mêmes chiffres clés et même graphique des voix et des sièges
+  const tuilesPol = politique.slice(0, politique.indexOf("</section>") + 10), tuilesElec = electoral.slice(0, electoral.indexOf("</section>") + 10);
+  const point = (n, html) => `<li><b>${n}</b><span>${html}</span></li>`;
+  const politiqueCourt = `${tuilesPol}
+    <ol class="vi-dlg-court">
+      ${point(1, `Le Canada est une <b>fédération</b> et une <b>monarchie constitutionnelle</b> : le roi est le chef de l'État, représenté par le gouverneur général, mais il ne gouverne pas.`)}
+      ${point(2, `Le Parlement a <b>deux chambres</b> : les ${N} députés de la Chambre des communes sont élus ; les 105 sénateurs sont nommés et siègent jusqu'à 75 ans.`)}
+      ${point(3, `Le chef du parti qui a le plus de sièges devient <b>premier ministre</b> et forme le gouvernement, qui doit garder la confiance des députés.`)}
+      ${point(4, `Avec <b>${MAJ} sièges</b> ou plus, le gouvernement est <b>majoritaire</b> ; sinon, il est <b>minoritaire</b> et a besoin de l'appui d'un autre parti. En ${AN(2025)}, le ${nomP(lead)} a obtenu ${S[lead]} sièges${minorit ? ` : gouvernement minoritaire` : ` : gouvernement majoritaire`}.${changeStatut ? ` Avec les changements de parti, il en compte aujourd'hui ${A[leadA]} et il est ${A[leadA] >= MAJ ? "majoritaire" : "minoritaire"}.` : ""}`)}
+      ${point(5, `Ottawa gère notamment la défense, la monnaie, le droit criminel et les affaires étrangères ; les provinces, la santé, l'éducation et le droit civil.`)}
+    </ol>`;
+  const electoralCourt = `${tuilesElec}
+    <ol class="vi-dlg-court">
+      ${point(1, `<b>Un vote, un tour</b> : dans chacune des ${N} circonscriptions, le candidat qui a le plus de voix est élu, même sans majorité. En ${AN(2025)}, ${sousMoitie} députés sur ${N} ont gagné avec moins de 50 % des voix.`)}
+      ${point(2, `<b>Les sièges ne suivent pas les voix</b> : seul compte le nombre de circonscriptions gagnées.${bqNpd ? ` En ${AN(2025)}, le Bloc a obtenu ${S.BQ} sièges et le NPD ${S.NPD || 0}, avec ${nf(V.BQ, 1) === nf(V.NPD, 1) ? `le même score : ${nf(V.BQ, 1)} % des voix` : `${nf(V.BQ, 1)} % et ${nf(V.NPD, 1)} % des voix`}.` : ""}`)}
+    </ol>
+    ${graphique}
+    <ol class="vi-dlg-court" start="3">
+      ${point(3, `<b>Tous les quatre ans</b>, le troisième lundi d'octobre (prochaine élection prévue le 15 octobre ${AN(2029)}), sauf élection anticipée.`)}
+      ${point(4, `<b>Pour voter</b> : être citoyen canadien et avoir 18 ans le jour du vote. Élections Canada, un organisme indépendant, organise le scrutin.`)}
+      ${point(5, `Une réforme du mode de scrutin, promise en 2015, a été <b>abandonnée en 2017</b>.`)}
+    </ol>`;
+  // espace insécable avant « : ; % ? » et après « (pas de signe seul en début de ligne)
+  const insec = t => t.replace(/ ([:;%?!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+  preparerSysteme({ sur: "Canada · Parlement fédéral", titre: "Le système politique et électoral du Canada",
+    parties: [
+      { id: "politique", onglet: "Système politique", chapeau: insec("Qui gouverne et comment : le régime, le Parlement, la formation du gouvernement et le partage des pouvoirs avec les provinces."), html: insec(politique), court: insec(politiqueCourt) },
+      { id: "electoral", onglet: "Système électoral", chapeau: insec("Comment on choisit les députés : le mode de scrutin, des voix aux sièges, le calendrier, les électeurs et la carte."), html: insec(electoral), court: insec(electoralCourt) }] });
+}
+
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
@@ -522,7 +671,7 @@ async function demarrer() {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"), lireVerif("canada")]);
     preparer();
-    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
+    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vcPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
