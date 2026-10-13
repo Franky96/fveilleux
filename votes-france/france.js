@@ -5,6 +5,7 @@
    Intentions de vote : législatives (sondages.json, rares depuis la fin de 2025) et présidentielle 2027 (sondages-pres.json),
    tableaux Wikipédia qui citent chaque sondeur. Aucune projection en sièges (2 tours : trop incertain par circonscription). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
+import { preparerSysteme } from "../votes-quebec/systeme.js";
 
 const SIEGES = 577, MAJ = 289;
 const NOMS = { EXG: "Extrême gauche", NFP: "Gauche (NFP)", DVG: "Divers gauche", REG: "Régionalistes", ENS: "Ensemble (centre)", DVC: "Divers centre",
@@ -525,6 +526,189 @@ function changerType(t) {
   sel = null; outilsCarte(); dessinerTete(); peindre(); dessinerPanneau(); dessinerEvolution();
 }
 
+/* ---------- « Comprendre le système politique et électoral » : grande fenêtre en deux parties (votes-quebec/systeme.js) ----------
+   Même cadre que Votes Québec (intentions.js, systemeElectoral()), commune aux deux vues (présidentielle et législatives).
+   Partie 1, système politique : Ve République, président, gouvernement, Parlement, Assemblée actuelle, État unitaire.
+   Partie 2, système électoral : législatives à deux tours, des voix aux sièges (2024), dissolution, présidentielle, électeurs.
+   Les chiffres viennent des données de la page : data.json (législatives 2024), assemblee.json (Assemblée actuelle),
+   pres2022.json (présidentielle 2022) et sondages-pres.json (sondages 2027). */
+function systemeElectoral() {
+  const A = DATA.assemblee, S = DATA.sieges, V = DATA.national, N = SIEGES, circ = DATA.circ;
+  const HORS = ["Outre-mer", "Français de l'étranger"];
+  const nOM = circ.filter(c => c.r === HORS[0]).length, nEtr = circ.filter(c => c.r === HORS[1]).length;
+  const nRegMetro = DATA.regions.filter(r => !HORS.includes(r)).length;
+  const inscrits = d3.sum(circ, c => c.e), part = d3.sum(circ, c => c.e * c.part) / inscrits;   // participation au 1er tour, pondérée par les inscrits
+  const auPremier = circ.filter(c => c.t === 1).length;
+  // Assemblée actuelle : groupes regroupés par grandes familles (les groupes inconnus vont dans « Autres groupes »)
+  const nGr = A.groupes.filter(g => g.id !== "NI").length, gros = A.groupes.slice().sort((a, b) => b.n - a.n)[0];
+  const FAM = [["Gauche (NFP)", ["LFI-NFP", "SOC", "ECOS", "GDR"], COUL.NFP], ["Bloc central", ["EPR", "DEM", "HOR"], COUL.ENS],
+    ["Droite (DR)", ["DR"], FAMILLE.DR], ["RN et UDR", ["RN", "UDDPLR"], FAMILLE.RN], ["LIOT", ["LIOT"], FAMILLE.LIOT], ["Non-inscrits", ["NI"], FAMILLE.NI]];
+  const connus = new Set(FAM.flatMap(f => f[1])), autres = A.groupes.filter(g => !connus.has(g.id)).map(g => g.id);
+  const fams = [...FAM, ...(autres.length ? [["Autres groupes", autres, "#8D949A"]] : [])]
+    .map(([nom, ids, c]) => ({ nom, c, ids: ids.filter(id => A.groupes.some(g => g.id === id)), n: d3.sum(A.groupes.filter(g => ids.includes(g.id)), g => g.n) }))
+    .filter(f => f.n > 0).sort((a, b) => b.n - a.n);
+  const famMax = fams[0];
+  const tabAssemblee = `<table class="vi-dlg-tab"><caption>Assemblée nationale au ${dateFr(A.date)} · majorité absolue ${MAJ}</caption>
+      <thead><tr><th scope="col">Famille<small>groupes parlementaires</small></th><th scope="col">Députés</th><th scope="col">Manque<small>pour ${MAJ}</small></th></tr></thead>
+      <tbody>${fams.map(f => `<tr style="--c:${f.c}"><th scope="row"><i></i>${esc(f.nom)}<small style="display:block;margin-left:18px;font-weight:400;color:var(--muted)">${f.ids.map(id => `<abbr title="${esc(A.groupes.find(g => g.id === id)?.nom || id)}">${esc(id)}</abbr>`).join(", ")}</small></th><td><b>${f.n}</b></td><td class="moins">${f.n >= MAJ ? "—" : `−${MAJ - f.n}`}</td></tr>`).join("")}
+      ${A.vacants ? `<tr style="--c:var(--muted)"><th scope="row"><i></i>Sièges vacants</th><td>${A.vacants}</td><td></td></tr>` : ""}</tbody></table>`;
+  // législatives 2024 : part des voix au 1er tour (par bloc) et part des sièges
+  const pctS = b => 100 * (S[b] || 0) / N;
+  const grands = BLOCS.filter(b => (S[b] || 0) >= 20).sort((a, b) => S[b] - S[a] || V[b] - V[a]);
+  const reste = BLOCS.filter(b => !grands.includes(b)), vReste = d3.sum(reste, b => V[b] || 0), sReste = d3.sum(reste, b => S[b] || 0);
+  const ligneVs = (lab, c, v, s) => `<div class="vi-dlg-vs-ligne" style="--c:${c}"><b>${lab}</b>
+      <span class="vi-dlg-vs-barres"><i style="width:${2 * v}%"></i><i style="width:${Math.max(0.6, 200 * s / N)}%"></i></span>
+      <small>${nf(v, 1)} % des voix<br>${s} siège${s > 1 ? "s" : ""} (${nf(100 * s / N, 0)} %)</small></div>`;
+  const lignes = grands.map(b => ligneVs(b === "RN" ? "RN" : COURT[b], COUL[b], V[b], S[b])).join("") + (sReste || vReste ? ligneVs("Autres", "#8D949A", vReste, sReste) : "");
+  const graphique = `<div class="vi-dlg-vs">${lignes}</div>
+      <div class="vi-dlg-legende"><span>part des voix (1er tour)</span><span>part des sièges</span></div>`;
+  const DIT = { NFP: "le Nouveau Front populaire", ENS: "Ensemble, la coalition du centre", RN: "le bloc du RN et de ses alliés (UDR)", LR: "Les Républicains", DVD: "les divers droite" };
+  const dit = b => DIT[b] || NOMS[b], Dit = b => dit(b)[0].toUpperCase() + dit(b).slice(1);
+  const premierV = grands.slice().sort((a, b) => V[b] - V[a])[0], premierS = grands[0];
+  const ecarts = grands.map(b => [b, pctS(b) - V[b]]).sort((a, b) => b[1] - a[1]), [gagne, plus] = ecarts[0];
+  const devant = grands.filter(b => S[b] > S[premierV]), rang = ["deuxième", "troisième", "quatrième", "cinquième"][devant.length - 1];
+  const phraseVs = (devant.length
+    ? `En 2024, ${dit(premierV)} est arrivé en tête des voix au 1er tour (${nf(V[premierV], 1)} %), mais n'a obtenu que ${S[premierV]} sièges (${nf(pctS(premierV), 0)} %)${rang ? ` : il n'est que ${rang} en sièges` : ""}, derrière ${devant.map(b => `${dit(b)} (${S[b]} sièges, soit ${nf(pctS(b), 0)} %, avec ${nf(V[b], 1)} % des voix)`).join(" et ")}.`
+    : `En 2024, ${dit(premierS)} est arrivé en tête des voix (${nf(V[premierS], 1)} %) et des sièges (${S[premierS]}).`)
+    + (plus > 2 && !devant.includes(gagne) ? ` ${Dit(gagne)} a obtenu ${nf(pctS(gagne), 0)} % des sièges avec ${nf(V[gagne], 1)} % des voix.` : "");
+  // présidentielle : 2022 (données) et moyenne des sondages 2027
+  const p22 = Object.entries(P22.national), pr = presRecente(), haut = pr.moy[0]?.[1] || 0;
+  const politique = `
+    <section class="vi-dlg-chiffres" aria-label="En bref : système politique">
+      <div><b class="vi-dlg-long">République <span style="white-space:nowrap">semi-présidentielle</span></b><small>la Ve République, fondée par la Constitution de 1958</small></div>
+      <div><b>2 chambres</b><small>l'Assemblée nationale (${N} députés) et le Sénat (348 sénateurs)</small></div>
+      <div><b>${MAJ}</b><small>députés pour renverser le gouvernement (motion de censure)</small></div>
+      <div><b class="vi-dlg-long">État unitaire</b><small>les lois sont votées à Paris pour tout le pays ; ce n'est pas une fédération</small></div>
+    </section>
+    <section>
+      <h3>Le régime : la Ve République</h3>
+      <p>La France vit sous la <b>Ve République</b>, fondée par la Constitution du 4 octobre 1958. C'est un régime <b>semi-présidentiel</b> : le pouvoir exécutif a deux têtes. Le <b>président de la République</b>, élu directement par les électeurs, a des pouvoirs propres ; le <b>Premier ministre</b> et son gouvernement dirigent la politique du pays au quotidien et doivent garder l'appui de l'Assemblée nationale, comme dans un régime parlementaire.</p>
+      <ul>
+        <li><b>Pouvoir exécutif</b> : le président de la République, le Premier ministre et les ministres.</li>
+        <li><b>Pouvoir législatif</b> : le Parlement, formé de l'Assemblée nationale et du Sénat. Il vote les lois et le budget, et contrôle le gouvernement.</li>
+        <li><b>Pouvoir judiciaire</b> : des tribunaux indépendants ; le <b>Conseil constitutionnel</b> vérifie que les lois respectent la Constitution.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Le président de la République</h3>
+      <p>Le président est élu au <b>suffrage universel direct</b> pour <b>5 ans</b> et ne peut pas faire plus de <b>deux mandats de suite</b> (voir la partie <a href="#" data-aller="electoral">Système électoral</a>). Il n'est pas responsable devant le Parlement : les députés ne peuvent pas le renverser. Certains de ses pouvoirs n'ont besoin de la signature d'aucun ministre :</p>
+      <ul>
+        <li><b>nommer le Premier ministre</b> ;</li>
+        <li><b>dissoudre l'Assemblée nationale</b> et provoquer des élections anticipées (au plus une fois par an) ;</li>
+        <li><b>soumettre un projet de loi au référendum</b> ;</li>
+        <li>prendre des <b>pouvoirs exceptionnels</b> en cas de crise grave (article 16, utilisé une seule fois, en 1961) ;</li>
+        <li>nommer trois des neuf membres du Conseil constitutionnel et le saisir.</li>
+      </ul>
+      <p>Il est aussi le <b>chef des armées</b>, préside le Conseil des ministres, promulgue les lois et négocie les traités. Si la présidence devient vacante, le président du Sénat assure l'intérim jusqu'à une nouvelle élection.</p>
+    </section>
+    <section>
+      <h3>Le Premier ministre et le gouvernement</h3>
+      <p>Le président nomme le Premier ministre, puis les ministres sur sa proposition. Le gouvernement « détermine et conduit la politique de la nation » et répond de ses actes devant l'<b>Assemblée nationale</b>. Le président choisit donc en pratique une personne que l'Assemblée ne renversera pas.</p>
+      <ul>
+        <li><b>Motion de censure</b> : déposée par au moins un dixième des députés, elle renverse le gouvernement si elle est votée par la <b>majorité absolue des membres de l'Assemblée, soit ${MAJ} députés</b>. Seuls les votes pour comptent : s'abstenir revient à soutenir le gouvernement. Avant décembre 2024, une seule motion de censure avait abouti, en 1962.</li>
+        <li><b>Article 49.3</b> : le Premier ministre peut faire adopter un texte sans vote, en engageant la responsabilité du gouvernement. Le texte est adopté, sauf si une motion de censure est votée. Depuis 2008, cette arme est limitée aux budgets de l'État et de la Sécurité sociale, plus un autre texte par session.</li>
+        <li><b>Cohabitation</b> : quand l'Assemblée a une majorité opposée au président, celui-ci doit nommer un Premier ministre issu de cette majorité, qui gouverne alors à sa place pour l'essentiel. C'est arrivé trois fois : 1986-1988, 1993-1995 et 1997-2002.</li>
+        <li>Un ministre ne peut pas être député ou sénateur en même temps : son suppléant prend son siège.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Le Parlement : deux chambres</h3>
+      <ul>
+        <li><b>L'Assemblée nationale</b> : ${N} députés élus directement pour 5 ans, un par circonscription. Elle seule peut renverser le gouvernement, et elle a le <b>dernier mot</b> sur les lois si les deux chambres ne s'entendent pas, à la demande du gouvernement.</li>
+        <li><b>Le Sénat</b> : 348 sénateurs élus au <b>suffrage indirect</b> pour 6 ans, par des élus locaux, et renouvelé par moitié tous les 3 ans. Il représente les collectivités territoriales. Il examine toutes les lois, mais ne peut pas renverser le gouvernement ; il ne peut pas non plus être dissous. Une révision de la Constitution exige l'accord des deux chambres.</li>
+        <li>Un projet de loi fait la <b>navette</b> entre les deux chambres jusqu'à ce qu'elles adoptent le même texte ; en cas de désaccord, une commission mixte paritaire (7 députés et 7 sénateurs) cherche un compromis.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>L'Assemblée aujourd'hui : aucune majorité</h3>
+      <p>Depuis les élections anticipées de 2024, l'Assemblée est divisée en <b>${nGr} groupes</b> parlementaires (au moins 15 députés chacun), plus des non-inscrits. Aucun groupe, ni aucune grande famille politique, n'approche les ${MAJ} sièges de la majorité absolue : le plus grand groupe, ${esc(gros.nom)} (${esc(gros.id)}), a ${gros.n} députés, et la plus grande famille, ${esc(famMax.nom)}, ${famMax.n}. Chaque gouvernement doit donc chercher des appuis ou, au moins, éviter qu'une majorité de députés vote contre lui.</p>
+      ${tabAssemblee}
+    </section>
+    <section>
+      <h3>Le Conseil constitutionnel</h3>
+      <p>Ses neuf membres sont nommés pour 9 ans : trois par le président de la République, trois par le président de l'Assemblée nationale et trois par le président du Sénat. Quand il est saisi, il vérifie, avant leur promulgation, que les lois respectent la Constitution, et depuis 2010, tout justiciable peut contester une loi déjà en vigueur devant lui (question prioritaire de constitutionnalité). Il veille aussi à la régularité des élections présidentielles et législatives, et proclame le résultat de la présidentielle.</p>
+    </section>
+    <section>
+      <h3>Un État unitaire décentralisé</h3>
+      <p>Contrairement au Canada ou aux États-Unis, la France n'est pas une fédération : il n'y a qu'un Parlement, et les lois sont les mêmes partout. Depuis les lois de décentralisation de 1982, des <b>collectivités territoriales</b> élues gèrent toutefois de nombreux services : les <b>régions</b> (${nRegMetro} en métropole, plus celles d'outre-mer) s'occupent des transports régionaux, des lycées et du développement économique ; les <b>départements</b>, de l'aide sociale, des collèges et des routes ; les <b>communes</b>, près de 35 000, des écoles, de l'urbanisme et de l'état civil. Elles n'ont pas de pouvoir législatif, sauf quelques collectivités d'outre-mer dotées d'une large autonomie, comme la Nouvelle-Calédonie.</p>
+    </section>`;
+  const electoral = `
+    <section class="vi-dlg-chiffres" aria-label="En bref : système électoral">
+      <div><b>${N}</b><small>circonscriptions, un député chacune</small></div>
+      <div><b>2 tours</b><small>aux législatives comme à la présidentielle</small></div>
+      <div><b>5 ans</b><small>mandat des députés, sauf dissolution (comme en 2024)</small></div>
+      <div><b>${nf(part, 1)} %</b><small>de participation au 1er tour des législatives de 2024</small></div>
+    </section>
+    <section>
+      <h3>Les législatives : majoritaire à deux tours</h3>
+      <p>Les ${N} députés sont élus au <b>scrutin uninominal majoritaire à deux tours</b> : ${N - nOM - nEtr} circonscriptions en métropole, ${nOM} en outre-mer et ${nEtr} pour les Français de l'étranger. Dans chacune, on vote pour un candidat (accompagné d'un suppléant), pas pour une liste.</p>
+      <ul>
+        <li><b>1er tour</b> : un candidat est élu tout de suite s'il obtient <b>plus de 50 % des voix</b> et au moins <b>25 % des inscrits</b>. C'est rare : en 2024, seuls ${auPremier} députés sur ${N} ont été élus dès le 1er tour.</li>
+        <li><b>2e tour</b>, une semaine plus tard : peuvent rester les candidats qui ont obtenu au moins <b>12,5 % des inscrits</b> (si un seul ou aucun n'y arrive, les deux premiers). Celui qui a le plus de voix l'emporte, même sans majorité.</li>
+        <li>Quand trois candidats ou plus se qualifient, on parle de <b>triangulaire</b> (ou de quadrangulaire). Un candidat peut se <b>désister</b> pour ne pas diviser son camp et favoriser un candidat proche, ou faire barrage à un adversaire.</li>
+      </ul>
+      <p>Le seuil de 12,5 % se calcule sur les <b>inscrits</b>, pas sur les votants : plus la participation est forte, plus il est facile de l'atteindre, et plus les triangulaires sont nombreuses.</p>
+    </section>
+    <section>
+      <h3>Des voix aux sièges</h3>
+      <p>Les sièges ne sont pas répartis selon les voix obtenues à l'échelle du pays : seul compte le nombre de circonscriptions gagnées, souvent au 2e tour, grâce aux reports de voix et aux désistements.</p>
+      ${graphique}
+      <p>${phraseVs} Entre les deux tours de 2024, de nombreux candidats de gauche et du centre arrivés troisièmes se sont désistés pour faire barrage au RN. Ce sont ces sièges qui décident ensuite qui peut gouverner (voir la partie <a href="#" data-aller="politique">Système politique</a>).</p>
+    </section>
+    <section>
+      <h3>Quand vote-t-on ?</h3>
+      <p>Les députés sont élus pour <b>5 ans</b>. Depuis 2002, les législatives suivaient la présidentielle de quelques semaines, ce qui donnait en général une majorité au président élu. Mais le président peut <b>dissoudre</b> l'Assemblée : le 9 juin 2024, au soir des élections européennes, il l'a fait, et des législatives anticipées ont eu lieu les 30 juin et 7 juillet. Une nouvelle dissolution est impossible dans l'année qui suit ; depuis l'été 2025, elle est de nouveau possible. Sans dissolution, les prochaines législatives auront lieu au plus tard en 2029. Quand un siège se libère et que le suppléant ne peut pas le prendre, une <b>élection partielle</b> a lieu dans la circonscription.</p>
+    </section>
+    <section>
+      <h3>La présidentielle</h3>
+      <p>Le président est élu au <b>suffrage universel direct</b>, lui aussi en <b>deux tours</b>. Un candidat qui obtient plus de 50 % des voix au 1er tour est élu ; sinon, deux semaines plus tard, seuls les <b>deux premiers</b> s'affrontent au 2e tour. Aucun président de la Ve République n'a été élu dès le 1er tour.</p>
+      <ul>
+        <li><b>Pour être candidat</b>, il faut recueillir au moins <b>500 parrainages</b> d'élus (maires, parlementaires, conseillers départementaux et régionaux…), venant d'au moins 30 départements ou collectivités d'outre-mer, sans plus d'un dixième dans un même département. Les noms des parrains sont publiés.</li>
+        <li>En 2022, ${p22.length} candidats se sont présentés ; au 1er tour, ${esc(p22[0][0])} (${nf(p22[0][1], 1)} %) et ${esc(p22[1][0])} (${nf(p22[1][1], 1)} %) se sont qualifiés pour le 2e tour.</li>
+        <li>La prochaine présidentielle aura lieu en <b>avril 2027</b>. Emmanuel Macron, élu en 2017 et réélu en 2022, ne peut pas se représenter.${haut && haut < 50 ? ` Dans la moyenne des ${pr.n} sondages les plus récents, le candidat en tête recueille ${nf(haut, 1)} % au 1er tour : un 2e tour est presque certain.` : ""}</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Le Sénat et les autres élections</h3>
+      <p>Les sénateurs sont élus au <b>suffrage indirect</b>, dans chaque département, par des « grands électeurs » : députés, sénateurs, conseillers régionaux et départementaux, et surtout des délégués des conseils municipaux. Les départements qui élisent trois sénateurs ou plus votent à la proportionnelle, les autres au scrutin majoritaire à deux tours. Les Français votent aussi aux <b>municipales</b>, aux <b>départementales</b> et aux <b>régionales</b> (tous les 6 ans), et aux <b>européennes</b> (tous les 5 ans, à la proportionnelle).</p>
+    </section>
+    <section>
+      <h3>Qui vote, et comment</h3>
+      <p>Pour voter, il faut avoir la <b>nationalité française</b>, avoir <b>18 ans</b>, jouir de ses droits civiques et être <b>inscrit sur les listes électorales</b> ; l'inscription est automatique à 18 ans pour les jeunes recensés. Les citoyens des autres pays de l'Union européenne qui habitent en France peuvent voter aux municipales et aux européennes, mais pas aux législatives ni à la présidentielle. On vote en général le dimanche, en personne, au bureau de vote de sa commune ; un électeur absent peut donner une <b>procuration</b> à un autre électeur, qui vote à sa place. Le vote par correspondance n'existe pas, sauf pour les Français de l'étranger aux législatives.</p>
+    </section>
+    <section>
+      <h3>Outre-mer et Français de l'étranger</h3>
+      <p>Les départements, régions et collectivités d'outre-mer élisent <b>${nOM} députés</b>, de la Guadeloupe à la Polynésie française. Depuis 2012, les Français établis hors de France ont aussi leurs <b>${nEtr} députés</b>, chacun pour une grande zone du monde (l'Amérique du Nord forme une circonscription, par exemple) ; ils peuvent voter à l'ambassade ou au consulat, et aux législatives, aussi par internet. Le Sénat compte également 12 sénateurs des Français de l'étranger.</p>
+    </section>`;
+  // versions courtes : l'essentiel en quelques points, mêmes chiffres clés et même graphique des voix et des sièges
+  const tuilesPol = politique.slice(0, politique.indexOf("</section>") + 10), tuilesElec = electoral.slice(0, electoral.indexOf("</section>") + 10);
+  const point = (n, html) => `<li><b>${n}</b><span>${html}</span></li>`;
+  const politiqueCourt = `${tuilesPol}
+    <ol class="vi-dlg-court">
+      ${point(1, `La France est une <b>république semi-présidentielle</b> (la Ve République, depuis 1958) : le pouvoir exécutif est partagé entre le président de la République et le Premier ministre.`)}
+      ${point(2, `Le <b>président</b> est élu directement pour 5 ans, deux mandats de suite au plus. Il nomme le Premier ministre, peut dissoudre l'Assemblée et est le chef des armées.`)}
+      ${point(3, `Le <b>gouvernement</b> doit survivre aux votes de l'Assemblée nationale : une motion de censure votée par <b>${MAJ} députés</b> le renverse.`)}
+      ${point(4, `Le Parlement a <b>deux chambres</b> : ${N} députés élus directement, qui ont le dernier mot, et 348 sénateurs élus par des élus locaux. Aujourd'hui, aucun groupe n'a la majorité : le plus grand, ${esc(gros.id)}, a ${gros.n} sièges.`)}
+      ${point(5, `La France est un <b>État unitaire</b> : un seul Parlement fait les lois pour tout le pays ; régions, départements et communes gèrent des services locaux.`)}
+    </ol>`;
+  const electoralCourt = `${tuilesElec}
+    <ol class="vi-dlg-court">
+      ${point(1, `<b>Deux tours</b> dans chacune des ${N} circonscriptions : on est élu au 1er tour avec plus de 50 % des voix (et 25 % des inscrits) ; sinon, les candidats qui ont au moins 12,5 % des inscrits passent au 2e tour, et le premier l'emporte. En 2024, ${auPremier} députés seulement ont été élus dès le 1er tour.`)}
+      ${point(2, `<b>Les sièges ne suivent pas les voix</b> : seul compte le nombre de circonscriptions gagnées, et les désistements entre les deux tours pèsent lourd.`)}
+    </ol>
+    ${graphique}
+    <ol class="vi-dlg-court" start="3">
+      ${point(3, `<b>Tous les 5 ans</b>, sauf dissolution : le président a dissous l'Assemblée en juin 2024 ; les prochaines législatives auront lieu au plus tard en 2029.`)}
+      ${point(4, `<b>La présidentielle</b> se joue aussi en deux tours, à deux semaines d'écart ; il faut 500 parrainages d'élus pour être candidat. Prochaine élection : avril 2027.`)}
+      ${point(5, `<b>Pour voter</b> : être Français, avoir 18 ans et être inscrit sur les listes électorales ; procuration possible. L'outre-mer élit ${nOM} députés et les Français de l'étranger, ${nEtr}.`)}
+    </ol>`;
+  const insec = h => h.replace(/ ([%:;])/g, "\u00a0$1");   // espace insécable avant « % », « : » et « ; » (pas de « 33,2 » seul en fin de ligne)
+  preparerSysteme({ sur: "France · Ve République", titre: "Le système politique et électoral de la France",
+    parties: [
+      { id: "politique", onglet: "Système politique", chapeau: insec("Qui gouverne et comment : le président, le gouvernement, le Parlement et le partage des pouvoirs."), html: insec(politique), court: insec(politiqueCourt) },
+      { id: "electoral", onglet: "Système électoral", chapeau: insec("Comment on choisit les élus : les législatives à deux tours, des voix aux sièges, la présidentielle et les électeurs."), html: insec(electoral), court: insec(electoralCourt) }] });
+}
+
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
@@ -537,7 +721,7 @@ async function demarrer() {
     DATA.assemblee = ASS;
     // couleurs officielles des groupes ; les trop foncées sont éclaircies pour rester lisibles sur fond sombre
     DATA.assemblee.groupes.forEach(g => { g.c = FAMILLE[g.id] || g.c; GP[g.id] = g; });   // même palette que les partis
-    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution();
+    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return; periode = +b.dataset.per; ecrireLS("vfPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
   } catch (e) { $("viSource").textContent = "Chargement impossible : " + e.message; console.error(e); }
