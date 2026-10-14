@@ -5,7 +5,8 @@
      dico  : dictionnaire d'un pays (PARTIS.quebec, PARTIS.canada…) : { clé: { nom, info } }
      items : [{ cle, etiquette, couleur, detail }] dans l'ordre d'affichage (clé du dictionnaire, sigle affiché,
              couleur du parti sur la page, phrase de chiffres tirés des données de la page)
-     La section est ajoutée (une fois, puis mise à jour) à la fin de la page, sous la carte.
+     La section est placée (une fois, puis mise à jour) en haut de la page, à côté du graphique d'évolution ; le rectangle
+     de l'assemblée (plan ou hémicycle) passe juste en dessous, sur toute la largeur.
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent. */
 
 const P = (nom, info) => ({ nom, info });
@@ -92,7 +93,12 @@ export function sectionPartis(dico, items, { titre = "Les partis", note = "" } =
   let sec = document.getElementById("viPartis");
   if (!sec) {
     sec = document.createElement("section"); sec.id = "viPartis"; sec.className = "lv-sieges vi-partis"; sec.setAttribute("aria-labelledby", "viPartisTitre");
-    wrap.append(sec);
+    // en haut de la page, à côté du graphique, à la place du rectangle de l'assemblée ; celui-ci passe juste en dessous
+    const haut = wrap.querySelector(".vi-haut"), sieges = document.getElementById("viPlan")?.closest("section");
+    if (haut) {
+      haut.prepend(sec);
+      if (sieges && sieges.parentElement === haut) { haut.after(sieges); sieges.classList.add("vi-sieges-bas"); }
+    } else wrap.append(sec);
     sec.addEventListener("click", e => {
       const b = e.target.closest("[data-partie-parti]"); if (!b) return;
       const ouvert = b.getAttribute("aria-expanded") === "true";
