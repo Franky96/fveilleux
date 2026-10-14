@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
 <title>Simulateur O-320 — Outils de Frank</title>
 <script>
   const _pP = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
@@ -21,6 +22,11 @@
   --text:#dde4e9; --muted:#8797a3; --dim:#5d6c77;
   --accent:#7cc4e4; --accent-d:#2d5c73;
   --green:#3fcf74; --amber:#f0b13a; --red:#ef4b4b; --flame:#ff8a3d;
+  /* couleurs lues par le JS (cadrans, graphiques, scène 3D) */
+  --g-face:#0c1114; --g-ring:#26323b; --g-needle:#f4f7f9; --g-hub:#2a363f;
+  --cv-grid:#1e2931; --cv-cursor:#ffffff; --cv-spark:#ffffff; --cv-band:.55; --tr-cht:#ff6a4a;
+  --scene-grid:#24313b; --scene-grid2:#172026; --scene-grid-op:.5; --oil-air:#dbe9f0;
+  --dimtxt:var(--dim);
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -261,6 +267,78 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
   .vmenu{width:min(430px,100%)}
   .hud{grid-template-columns:repeat(4,auto)}
 }
+/* ---------- interrupteur clair / sombre (règles reprises de style.css) ---------- */
+#theme-toggle{width:68px;height:26px;border-radius:13px;background:#2a3a2a;border:1.5px solid #3a5a3a;cursor:pointer;transition:background .35s ease,border-color .35s ease;display:inline-flex;align-items:center;justify-content:space-between;padding:0 5px;position:relative;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+#theme-toggle.theme-toggle--fixed{position:fixed;top:.75rem;right:.75rem;z-index:9999}
+.tg-icon{font-size:.62rem;line-height:1;pointer-events:none;flex-shrink:0;position:relative;z-index:2}
+#theme-toggle-knob{position:absolute;width:20px;height:20px;border-radius:50%;top:50%;transform:translateY(-50%);left:3px;background:#7ab880;box-shadow:0 1px 4px rgba(0,0,0,.55);transition:left .35s cubic-bezier(.4,0,.2,1),background .35s ease;pointer-events:none;z-index:3}
+html.light #theme-toggle{background:#34c759;border-color:#28a045}
+html.light #theme-toggle-knob{left:45px;background:#fff}
+/* sur cette page : en haut à droite de la page, à la hauteur du lien « Moteurs », et il défile avec elle */
+#theme-toggle.theme-toggle--fixed{position:absolute;top:16px;right:max(16px,calc((100% - 1560px) / 2));z-index:20}
+@media (max-width:700px){#theme-toggle.theme-toggle--fixed{top:max(12px,calc(env(safe-area-inset-top) + 2px));right:max(10px,env(safe-area-inset-right))}}
+@media (max-height:500px) and (orientation:landscape) and (pointer:coarse){#theme-toggle.theme-toggle--fixed{top:10px}}
+html.pseudo-fs-on #theme-toggle{display:none}
+
+/* =====================================================================
+   MODE CLAIR (html.light) — palette partagée avec PT6A-21
+   ===================================================================== */
+html.light{
+  color-scheme:light;
+  --bg:#eef2f5; --bg2:#e5ebef; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
+  --text:#15202a; --muted:#52626f; --dim:#7a8893;
+  --accent:#1a6a8e; --accent-d:#dcedf5;
+  --green:#178a45; --amber:#b06f00; --red:#cc2f2f; --flame:#d0581a;
+  --g-face:#ffffff; --g-ring:#c3ced6; --g-needle:#15202a; --g-hub:#52626f;
+  --cv-grid:#dfe6eb; --cv-cursor:#15202a; --cv-spark:#0d4f6e; --cv-band:.72; --tr-cht:#d43f1f;
+  --scene-grid:#8fa1ae; --scene-grid2:#b3c1cb; --scene-grid-op:.85; --oil-air:#4f7186;
+  --dimtxt:#5f6d78; /* texte secondaire : --dim (#7a8893) n'atteint pas 4,5:1 sur fond clair */
+  --glass:rgba(255,255,255,.88); --glass2:rgba(255,255,255,.93); --shadow:0 1px 3px rgba(21,32,42,.08),0 4px 14px rgba(21,32,42,.06);
+}
+/* vue 3D et ses panneaux flottants */
+html.light .viewport{background:radial-gradient(120% 90% at 50% 40%,#f4f7f9 0%,#e9eef2 45%,#dfe6eb 75%);box-shadow:var(--shadow)}
+html.light .menu-btn,html.light .seg,html.light .chipr,html.light .vfoot span,html.light .oilkey,html.light .flowkey,html.light .flowkey2,html.light .cyclekey{background:var(--glass);box-shadow:0 1px 2px rgba(21,32,42,.06)}
+html.light .vmenu{background:var(--glass2);box-shadow:0 6px 24px rgba(21,32,42,.12)}
+html.light .vmenu .seg{background:rgba(244,247,249,.95)}
+html.light .vfoot{color:var(--muted)}
+html.light .menu-btn[aria-expanded="true"],html.light .seg button[aria-pressed="true"],html.light .calpanel button[aria-pressed="true"]{background:var(--accent-d);border-color:#8cbcd3;color:#0f4a66}
+html.light .btn.pri{background:var(--accent);border-color:#145673;color:#fff}
+html.light .btn.pri:hover{background:#155a79}
+html.light .tip{background:#fffffff2;box-shadow:0 4px 16px rgba(21,32,42,.14)}
+html.light .hud div{background:var(--glass2)}
+html.light .frozen{background:#fff7e6;color:#7a4c00;border-color:#d79a2b;box-shadow:0 2px 10px rgba(176,111,0,.15)}
+html.light .calpanel{background:var(--glass2);border-top-color:var(--accent)}
+html.light .calhead{color:var(--accent)}
+html.light .st,html.light .ctag{background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(21,32,42,.12)}
+html.light .st.brg{color:#7a4c00}
+html.light .ctag b{color:color-mix(in srgb,var(--c,#4aa3ff) 62%,#000)}
+html.light .ctag.fire{box-shadow:0 0 10px #ff7a2a66,0 1px 4px rgba(21,32,42,.12)}
+html.light .cyclekey .fo b{color:#b5490f}
+html.light .flowkey2 i.bar{outline-color:#9aabb8}
+/* panneau latéral et cartes */
+html.light .card{box-shadow:var(--shadow)}
+html.light .tog::before{background:#d9e1e7;box-shadow:inset 0 0 0 1px #c0ccd5}
+html.light .tog[aria-pressed="true"]{border-color:#8fa3b1}
+html.light .tog[aria-pressed="true"]::before{background:var(--green);box-shadow:0 0 6px #178a4566}
+html.light .tog.warn[aria-pressed="true"]::before{background:var(--amber);box-shadow:0 0 6px #b06f0066}
+html.light .btn{color:var(--text)}
+html.light #mag-start[aria-pressed="true"]{background:#fdeccc;color:#7a4c00}
+/* tableau d'instruments */
+html.light .panel{background:linear-gradient(#f9fbfc,#eef2f5);box-shadow:var(--shadow)}
+html.light .lamp{background:#e8edf1;color:#6b7883;border-color:#d3dce3}
+html.light .lamp.on.g{background:#d6f3e0;color:#11612f;border-color:#8fd3a8;box-shadow:0 0 8px #178a4533}
+html.light .lamp.on.a{background:#fdeccc;color:#7a4c00;border-color:#e3b45c;box-shadow:0 0 8px #b06f0033}
+html.light .lamp.on.r{background:#fbdcdc;color:#a11f1f;border-color:#e69a9a;box-shadow:0 0 8px #cc2f2f33}
+html.light .lamp.on.b{background:#d9eef8;color:#155a78;border-color:#8cc5df}
+html.light .ro{background:var(--panel)}
+/* bas de page */
+html.light .info p{color:#2c3a45}
+html.light .log li{border-bottom-color:var(--line)}
+html.light .log time,html.light .vmenu .mnote,html.light .vmenu h4,html.light .vmenu h4 .hint,html.light .card h2 em,html.light .fine,html.light .ticks{color:var(--dimtxt)}
+html.light .log li.a span{color:#7a4c00}
+html.light .log li.r span{color:#a11f1f}
+html.light .log li.g span{color:#11612f}
+html.light .back{background:var(--panel)}
 </style>
 </head>
 <body>
@@ -349,7 +427,7 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
     <div class="tip" id="tip" hidden></div>
     <div class="hud" id="hud" hidden></div>
     <div class="frozen" id="frozen" hidden>Simulation figée</div>
-    <div class="flowkey2" id="flowkey" hidden><span><i class="bar"></i>mélange frais → compression → combustion → gaz brûlés (noir)</span><span><i style="background:#ff9a29"></i>huile chaude (vers radiateur)</span><span><i style="background:#ffd64d"></i>huile sous pression</span><span><i style="background:#b8611f"></i>retour d'huile</span><span><i style="background:#dbe9f0"></i>reniflard</span></div>
+    <div class="flowkey2" id="flowkey" hidden><span><i class="bar"></i>mélange frais → compression → combustion → gaz brûlés (noir)</span><span><i style="background:#ff9a29"></i>huile chaude (vers radiateur)</span><span><i style="background:#ffd64d"></i>huile sous pression</span><span><i style="background:#b8611f"></i>retour d'huile</span><span><i style="background:var(--oil-air)"></i>reniflard</span></div>
   </div>
 
   <aside class="side">
@@ -459,10 +537,10 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
       <h2>Tendances <em>60 dernières secondes</em></h2>
       <canvas id="trend"></canvas>
       <div class="legend">
-        <span><i style="background:#7cc4e4"></i>Régime ÷ 30</span>
-        <span><i style="background:#f0b13a"></i>Pression admission (po Hg × 3)</span>
-        <span><i style="background:#ff6a4a"></i>CHT ÷ 5 °F</span>
-        <span><i style="background:#3fcf74"></i>Pression d'huile</span>
+        <span><i style="background:var(--accent)"></i>Régime ÷ 30</span>
+        <span><i style="background:var(--amber)"></i>Pression admission (po Hg × 3)</span>
+        <span><i style="background:var(--tr-cht)"></i>CHT ÷ 5 °F</span>
+        <span><i style="background:var(--green)"></i>Pression d'huile</span>
       </div>
     </div>
     <div class="card">
@@ -581,7 +659,7 @@ $('loading').remove();
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
-scene.add(new THREE.HemisphereLight(0xcfe6f5, 0x1a1410, 0.5));
+const hemi = new THREE.HemisphereLight(0xcfe6f5, 0x1a1410, 0.5); scene.add(hemi);
 const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(-3, 5, 4); scene.add(key);
 const rim = new THREE.DirectionalLight(0x88bbdd, 0.7); rim.position.set(4, 1, -4); scene.add(rim);
 const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 200);
@@ -589,7 +667,9 @@ camera.position.set(-3.3, 2.1, 4.1);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 0.8; controls.maxDistance = 14;
 controls.target.set(0, -0.05, 0);
-const grid = new THREE.GridHelper(12, 24, 0x24313b, 0x172026); grid.position.y = -2.55; grid.material.transparent = true; grid.material.opacity = 0.5; scene.add(grid);
+let grid = null;
+function mkGrid(c1, c2, op) { if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); } grid = new THREE.GridHelper(12, 24, c1, c2); grid.position.y = -2.55; grid.material.transparent = true; grid.material.opacity = op; scene.add(grid); }
+mkGrid(0x24313b, 0x172026, 0.5);
 
 const eng = new THREE.Group(); scene.add(eng);
 const modCase = new THREE.Group(), modSump = new THREE.Group(), modAcc = new THREE.Group(), modFront = new THREE.Group(), modInst = new THREE.Group();
@@ -1619,16 +1699,16 @@ renderer.domElement.addEventListener('pointerleave', () => { tipEl.hidden = true
 /* =====================================================================
    INSTRUMENTS
    ===================================================================== */
-const C = { g: '#3fcf74', a: '#f0b13a', r: '#ef4b4b', t: '#dde4e9', m: '#8797a3', face: '#0c1114', ring: '#26323b' };
+const C = { g: '#3fcf74', a: '#f0b13a', r: '#ef4b4b', t: '#dde4e9', m: '#8797a3', face: '#0c1114', ring: '#26323b', needle: '#f4f7f9', hub: '#2a363f', dim: '#5d6c77', grid: '#1e2931', cursor: '#fff', spark: '#fff', band: 0.55, acc: '#7cc4e4', cht: '#ff6a4a' };
 const GAUGES = [
-  { id: 'g-rpm', label: 'TACHYMÈTRE', unit: 'tr/min', min: 0, max: 3500, arcs: [[2200, 2700, C.g]], red: [2700], ticks: 7, val: () => st.rpm, fmt: v => Math.round(v / 10) * 10, sub: v => (v / 27).toFixed(0) + ' % régime' },
+  { id: 'g-rpm', label: 'TACHYMÈTRE', unit: 'tr/min', min: 0, max: 3500, arcs: [[2200, 2700, 'g']], red: [2700], ticks: 7, val: () => st.rpm, fmt: v => Math.round(v / 10) * 10, sub: v => (v / 27).toFixed(0) + ' % régime' },
   { id: 'g-map', label: 'PRESS. ADMISSION', unit: 'po Hg', min: 10, max: 35, arcs: [], red: [], ticks: 5, val: () => st.map, fmt: v => v.toFixed(1), sub: () => 'ambiante ' + amb().pamb.toFixed(1) },
-  { id: 'g-op', label: 'PRESS. HUILE', unit: 'psi', min: 0, max: 120, arcs: [[0, 25, C.r], [25, 60, C.a], [60, 90, C.g], [90, 100, C.a]], red: [25, 100], ticks: 6, val: () => st.oilP, fmt: v => Math.round(v), sub: () => '60–90 psi' },
-  { id: 'g-ot', label: 'TEMP. HUILE', unit: '°F', min: 50, max: 260, arcs: [[100, 245, C.g]], red: [245], ticks: 7, val: () => st.oilT, fmt: v => Math.round(v), sub: v => Math.round((v - 32) * 5 / 9) + ' °C' },
-  { id: 'g-cht', label: 'CHT', unit: '°F', min: 100, max: 550, arcs: [[150, 435, C.g], [435, 500, C.a]], red: [500], ticks: 9, val: () => st.cht, fmt: v => Math.round(v), sub: v => Math.round((v - 32) * 5 / 9) + ' °C' },
+  { id: 'g-op', label: 'PRESS. HUILE', unit: 'psi', min: 0, max: 120, arcs: [[0, 25, 'r'], [25, 60, 'a'], [60, 90, 'g'], [90, 100, 'a']], red: [25, 100], ticks: 6, val: () => st.oilP, fmt: v => Math.round(v), sub: () => '60–90 psi' },
+  { id: 'g-ot', label: 'TEMP. HUILE', unit: '°F', min: 50, max: 260, arcs: [[100, 245, 'g']], red: [245], ticks: 7, val: () => st.oilT, fmt: v => Math.round(v), sub: v => Math.round((v - 32) * 5 / 9) + ' °C' },
+  { id: 'g-cht', label: 'CHT', unit: '°F', min: 100, max: 550, arcs: [[150, 435, 'g'], [435, 500, 'a']], red: [500], ticks: 9, val: () => st.cht, fmt: v => Math.round(v), sub: v => Math.round((v - 32) * 5 / 9) + ' °C' },
   { id: 'g-egt', label: 'EGT', unit: '°F', min: 800, max: 1700, arcs: [], red: [], ticks: 9, val: () => st.egt, fmt: v => Math.round(v), sub: () => st.running ? (st.lam > 1.02 ? 'côté riche du pic' : st.lam < 0.98 ? 'côté pauvre du pic' : 'au pic') : '—' },
   { id: 'g-ff', label: 'DÉBIT CARBU.', unit: 'gal/h', min: 0, max: 16, arcs: [], red: [], ticks: 8, val: () => st.ff, fmt: v => v.toFixed(1), sub: v => (v * 3.785).toFixed(1) + ' L/h' },
-  { id: 'g-fp', label: 'PRESS. ESSENCE', unit: 'psi', min: 0, max: 10, arcs: [[0, 0.5, C.r], [0.5, 8, C.g]], red: [0.5, 8], ticks: 5, val: () => st.fp, fmt: v => v.toFixed(1), sub: () => '0,5–8 psi' },
+  { id: 'g-fp', label: 'PRESS. ESSENCE', unit: 'psi', min: 0, max: 10, arcs: [[0, 0.5, 'r'], [0.5, 8, 'g']], red: [0.5, 8], ticks: 5, val: () => st.fp, fmt: v => v.toFixed(1), sub: () => '0,5–8 psi' },
 ];
 for (const g of GAUGES) { g.cv = $(g.id); g.ctx = g.cv.getContext('2d'); g.disp = g.min; }
 function sizeGauges() { const dpr = Math.min(2, devicePixelRatio); for (const g of GAUGES) { const w = g.cv.clientWidth; g.cv.width = w * dpr; g.cv.height = w * 1.08 * dpr; } }
@@ -1638,15 +1718,15 @@ function drawGauge(g, dt) {
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W2, H); c.setTransform(s, 0, 0, s, 0, 0);
   const cx = 70, cy = 68, R = 58, a0 = Math.PI * 0.75, sw = Math.PI * 1.5, ang = x => a0 + clamp((x - g.min) / (g.max - g.min), -0.02, 1.03) * sw;
   c.fillStyle = C.face; c.beginPath(); c.arc(cx, cy, R + 6, 0, TAU); c.fill(); c.strokeStyle = C.ring; c.lineWidth = 2; c.stroke();
-  for (const [x0, x1, col] of g.arcs) { c.strokeStyle = col; c.lineWidth = 5; c.beginPath(); c.arc(cx, cy, R - 3, ang(x0), ang(x1)); c.stroke(); }
+  for (const [x0, x1, col] of g.arcs) { c.strokeStyle = C[col] || col; c.lineWidth = 5; c.beginPath(); c.arc(cx, cy, R - 3, ang(x0), ang(x1)); c.stroke(); }
   c.strokeStyle = C.m; c.lineWidth = 1.2; for (let i = 0; i <= g.ticks; i++) { const a = a0 + i / g.ticks * sw; c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 8), cy + Math.sin(a) * (R - 8)); c.lineTo(cx + Math.cos(a) * (R - 14), cy + Math.sin(a) * (R - 14)); c.stroke(); }
   for (const rv of g.red) { const a = ang(rv); c.strokeStyle = C.r; c.lineWidth = 3; c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 16), cy + Math.sin(a) * (R - 16)); c.lineTo(cx + Math.cos(a) * (R + 2), cy + Math.sin(a) * (R + 2)); c.stroke(); }
   const over = (g.id === 'g-rpm' && v > 2727) || (g.id === 'g-cht' && v > 500) || (g.id === 'g-ot' && v > 245);
   c.fillStyle = C.m; c.font = '600 11px "Barlow Condensed",sans-serif'; c.textAlign = 'center'; c.fillText(g.label, cx, cy - 20);
   c.font = '500 17px "IBM Plex Mono",monospace'; c.fillStyle = over ? C.r : C.t; c.fillText(g.fmt(v), cx, cy + 26);
   c.font = '9.5px "IBM Plex Mono",monospace'; c.fillStyle = C.m; c.fillText(g.unit, cx, cy + 38);
-  const a = ang(g.disp); c.strokeStyle = '#f4f7f9'; c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx - Math.cos(a) * 8, cy - Math.sin(a) * 8); c.lineTo(cx + Math.cos(a) * (R - 10), cy + Math.sin(a) * (R - 10)); c.stroke();
-  c.fillStyle = '#2a363f'; c.beginPath(); c.arc(cx, cy, 5, 0, TAU); c.fill();
+  const a = ang(g.disp); c.strokeStyle = C.needle; c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx - Math.cos(a) * 8, cy - Math.sin(a) * 8); c.lineTo(cx + Math.cos(a) * (R - 10), cy + Math.sin(a) * (R - 10)); c.stroke();
+  c.fillStyle = C.hub; c.beginPath(); c.arc(cx, cy, 5, 0, TAU); c.fill();
   c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = C.m; c.fillText(g.sub(v), cx, 146);
 }
 /* ---------- diagramme du cycle à 4 temps ---------- */
@@ -1658,23 +1738,23 @@ function drawCycle(thetaDeg) {
   const dpr = cycCv.width / cycCv.clientWidth, w = cycCv.clientWidth, h = cycCv.clientHeight, c = cyc;
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cycCv.width, cycCv.height); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   const L0 = 34, R0 = w - 8, rowH = (h - 20) / 4, x = deg => L0 + (deg / 720) * (R0 - L0);
-  c.font = '10px "IBM Plex Mono",monospace'; c.textAlign = 'center'; c.fillStyle = '#5d6c77';
-  for (let d = 0; d <= 720; d += 180) { c.fillText(d + '°', x(d), h - 4); c.strokeStyle = '#1e2931'; c.beginPath(); c.moveTo(x(d), 0); c.lineTo(x(d), h - 14); c.stroke(); }
+  c.font = '10px "IBM Plex Mono",monospace'; c.textAlign = 'center'; c.fillStyle = C.dim;
+  for (let d = 0; d <= 720; d += 180) { c.fillText(d + '°', x(d), h - 4); c.strokeStyle = C.grid; c.beginPath(); c.moveTo(x(d), 0); c.lineTo(x(d), h - 14); c.stroke(); }
   CYL.forEach((cy, i) => {
     const y0 = i * rowH + 3, hh = rowH - 6;
-    c.textAlign = 'right'; c.fillStyle = '#dde4e9'; c.font = '600 12px "Barlow Condensed",sans-serif'; c.fillText('Cyl ' + cy.n, L0 - 5, y0 + hh / 2 + 4);
+    c.textAlign = 'right'; c.fillStyle = C.t; c.font = '600 12px "Barlow Condensed",sans-serif'; c.fillText('Cyl ' + cy.n, L0 - 5, y0 + hh / 2 + 4);
     for (let k = 0; k < 4; k++) {  // les temps sont exprimés en angle vilebrequin absolu
       const a0 = ((k * 180 + cy.off) % 720);
-      c.fillStyle = STROKE_COL[k]; c.globalAlpha = 0.55;
+      c.fillStyle = STROKE_COL[k]; c.globalAlpha = C.band;
       const segs = a0 + 180 <= 720 ? [[a0, a0 + 180]] : [[a0, 720], [0, a0 + 180 - 720]];
       for (const [p, q] of segs) c.fillRect(x(p), y0, x(q) - x(p), hh);
       c.globalAlpha = 1;
     }
     // étincelle
-    const sp = (VT.spark + cy.off) % 720; c.fillStyle = '#fff'; c.fillRect(x(sp) - 1, y0 - 1, 2, hh + 2);
+    const sp = (VT.spark + cy.off) % 720; c.fillStyle = C.spark; c.fillRect(x(sp) - 1, y0 - 1, 2, hh + 2);
     // curseur
     const t = ((thetaDeg % 720) + 720) % 720, psi = ((t - cy.off) % 720 + 720) % 720, k = Math.floor(psi / 180);
-    c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.moveTo(x(t), y0 - 2); c.lineTo(x(t), y0 + hh + 2); c.stroke();
+    c.strokeStyle = C.cursor; c.lineWidth = 2; c.beginPath(); c.moveTo(x(t), y0 - 2); c.lineTo(x(t), y0 + hh + 2); c.stroke();
     c.textAlign = 'left'; c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = '#0a0e11'; c.fillText(STROKE_NAME[k], Math.min(x(t) + 4, R0 - 70), y0 + hh / 2 + 4);
   });
 }
@@ -1684,10 +1764,10 @@ function sizeTrend() { const dpr = Math.min(2, devicePixelRatio); trendCv.width 
 function drawTrend() {
   const W2 = trendCv.width, dpr = W2 / trendCv.clientWidth, c = tctx; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W2, trendCv.height); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   const w = trendCv.clientWidth, h = trendCv.clientHeight, L = 30, B = 16, T = 6, y = v => T + (1 - v / 120) * (h - T - B);
-  c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = '#5d6c77'; c.strokeStyle = '#1e2931'; c.lineWidth = 1; c.textAlign = 'right';
+  c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = C.dim; c.strokeStyle = C.grid; c.lineWidth = 1; c.textAlign = 'right';
   for (const v of [0, 40, 80, 120]) { c.beginPath(); c.moveTo(L, y(v)); c.lineTo(w, y(v)); c.stroke(); c.fillText(v, L - 5, y(v) + 3); }
   c.textAlign = 'center'; for (const s of [60, 40, 20, 0]) c.fillText(s ? `-${s} s` : '0', L + (1 - s / 60) * (w - L - 8), h - 3);
-  for (const [col, f] of [['#7cc4e4', o => o.rpm / 30], ['#f0b13a', o => o.map * 3], ['#ff6a4a', o => o.cht / 5], ['#3fcf74', o => o.op]]) {
+  for (const [col, f] of [[C.acc, o => o.rpm / 30], [C.a, o => o.map * 3], [C.cht, o => o.cht / 5], [C.g, o => o.op]]) {
     c.strokeStyle = col; c.lineWidth = 1.6; c.beginPath(); hist.forEach((o, i) => { const xx = L + (1 - (hist.length - 1 - i) / 240) * (w - L - 8), yy = y(clamp(f(o), 0, 120)); i ? c.lineTo(xx, yy) : c.moveTo(xx, yy); }); c.stroke();
   }
 }
@@ -1702,6 +1782,17 @@ const RAMP = [[0, [0.2, 0.5, 1]], [0.16, [0.38, 0.62, 1]], [0.33, [0.62, 0.72, 1
 const puffTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(0.4, 'rgba(255,255,255,0.5)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
 function ramp(t, out) { for (let i = 1; i < RAMP.length; i++) if (t <= RAMP[i][0]) { const [a0, c0] = RAMP[i - 1], [a1, c1] = RAMP[i], k = clamp((t - a0) / (a1 - a0), 0, 1); out[0] = lerp(c0[0], c1[0], k); out[1] = lerp(c0[1], c1[1], k); out[2] = lerp(c0[2], c1[2], k); return out; } const c = RAMP[RAMP.length - 1][1]; out[0] = c[0]; out[1] = c[1]; out[2] = c[2]; return out; }
 const OILCOL = { h: [1, 0.6, 0.16], p: [1, 0.84, 0.3], s: [0.72, 0.38, 0.12], a: [0.86, 0.92, 0.95] };
+/* ---------- thème clair / sombre : couleurs reprises des variables CSS (html.light) ---------- */
+function applyTheme() {
+  const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim(), light = document.documentElement.classList.contains('light');
+  Object.assign(C, { g: v('--green'), a: v('--amber'), r: v('--red'), t: v('--text'), m: v('--muted'), dim: v('--dimtxt'), acc: v('--accent'), face: v('--g-face'), ring: v('--g-ring'), needle: v('--g-needle'), hub: v('--g-hub'), grid: v('--cv-grid'), cursor: v('--cv-cursor'), spark: v('--cv-spark'), band: parseFloat(v('--cv-band')) || 0.55, cht: v('--tr-cht') });
+  mkGrid(new THREE.Color(v('--scene-grid')), new THREE.Color(v('--scene-grid2')), parseFloat(v('--scene-grid-op')) || 0.5);
+  const air = new THREE.Color(v('--oil-air')); OILCOL.a[0] = air.r; OILCOL.a[1] = air.g; OILCOL.a[2] = air.b;
+  hemi.intensity = light ? 0.65 : 0.5;
+  drawTrend();
+}
+applyTheme();
+addEventListener('themechange', applyTheme);
 let showPts = false, showArr = false;
 const coneGeo = new THREE.ConeGeometry(0.3 * S, 0.75 * S, 10); coneGeo.translate(0, 0.45 * S, 0);
 function mkFlow(pts, n, opts) {
@@ -2008,5 +2099,6 @@ requestAnimationFrame(frame);
 })();
 
 </script>
+<script src="theme-toggle.js"></script>
 </body>
 </html>
