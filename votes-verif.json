@@ -1,32 +1,32 @@
 {
  "allemagne": {
   "date": "2026-10-14",
-  "heure": "01:00",
-  "texte": "14 octobre 2026 à 1 h 00"
+  "heure": "08:00",
+  "texte": "14 octobre 2026 à 8 h 00"
  },
  "canada": {
   "date": "2026-10-14",
-  "heure": "00:59",
-  "texte": "14 octobre 2026 à 0 h 59"
+  "heure": "08:00",
+  "texte": "14 octobre 2026 à 8 h 00"
  },
  "france": {
   "date": "2026-10-14",
-  "heure": "00:59",
-  "texte": "14 octobre 2026 à 0 h 59"
+  "heure": "08:00",
+  "texte": "14 octobre 2026 à 8 h 00"
  },
  "quebec": {
   "date": "2026-10-14",
-  "heure": "00:59",
-  "texte": "14 octobre 2026 à 0 h 59"
+  "heure": "08:00",
+  "texte": "14 octobre 2026 à 8 h 00"
  },
  "suisse": {
   "date": "2026-10-14",
-  "heure": "01:00",
-  "texte": "14 octobre 2026 à 1 h 00"
+  "heure": "08:00",
+  "texte": "14 octobre 2026 à 8 h 00"
  },
  "usa": {
   "date": "2026-10-14",
-  "heure": "01:00",
-  "texte": "14 octobre 2026 à 1 h 00"
+  "heure": "08:00",
+  "texte": "14 octobre 2026 à 8 h 00"
  }
 }
