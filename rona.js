@@ -526,6 +526,69 @@ function sauvegarderLocation() {
   fermerModalLocation();
 }
 
+// ── Page(s) « Dates d'expiration » ajoutée(s) à la fin du PDF ──────────
+// Par emplacement : les articles qui ont une date d'expiration saisie, du plus proche au plus lointain,
+// avec leur statut (expiré, expire dans moins de 2 mois). Plusieurs pages si la liste est longue.
+async function ajouterPagesDates(pdfDoc, locs, dateGen) {
+  const { rgb, StandardFonts } = window.PDFLib;
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const fontNorm = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const noir = rgb(0, 0, 0), gris = rgb(0.4, 0.4, 0.4), filet = rgb(0.75, 0.75, 0.75);
+  const rouge = rgb(0.7, 0, 0), orange = rgb(0.8, 0.45, 0);
+  // Helvetica (WinAnsi) ne connaît pas tous les caractères (émojis…) : on retire ceux qu'elle ne peut pas écrire
+  const sur = (t, font) => [...String(t ?? '')].filter(c => { try { font.widthOfTextAtSize(c, 10); return true; } catch { return false; } }).join('');
+  const [L, H] = [612, 792], marge = 50;
+  const colArticle = marge + 10, colDate = 370, colStatut = 455;
+  let page = null, y = 0;
+
+  const nouvellePage = (suite) => {
+    page = pdfDoc.addPage([L, H]);
+    y = H - marge;
+    page.drawText(suite ? "Dates d'expiration des articles (suite)" : "Dates d'expiration des articles", { x: marge, y, size: 16, font: fontBold, color: noir });
+    y -= 18;
+    page.drawText(`Générée le ${dateGen} · par emplacement · rouge : expiré · orange : expire dans moins de 2 mois`, { x: marge, y, size: 9, font: fontNorm, color: gris });
+    y -= 24;
+    page.drawText('Article', { x: colArticle, y, size: 8, font: fontBold, color: gris });
+    page.drawText("Date d'expiration", { x: colDate, y, size: 8, font: fontBold, color: gris });
+    page.drawText('Statut', { x: colStatut, y, size: 8, font: fontBold, color: gris });
+    y -= 20;
+  };
+  const enTete = (nom) => {
+    page.drawText(sur(nom, fontBold), { x: marge, y, size: 12, font: fontBold, color: noir });
+    y -= 6;
+    page.drawLine({ start: { x: marge, y }, end: { x: L - marge, y }, thickness: 0.6, color: filet });
+    y -= 14;
+  };
+
+  nouvellePage(false);
+  for (const loc of locs) {
+    const exp = loc.expirations || {};
+    const lignes = ITEMS.filter(it => ITEMS_AVEC_EXPIRY.has(it.id) && exp[it.id])
+      .map(it => ({ it, d: exp[it.id], st: getExpirationStatus(exp[it.id]) }))
+      .sort((a, b) => a.d.localeCompare(b.d));
+    // chaque emplacement reste entier sur une page (s'il est plus long qu'une page, il continue avec « (suite) »)
+    const hauteur = 20 + 16 * Math.max(1, lignes.length);
+    if (y - hauteur < marge) nouvellePage(true);
+    enTete(loc.nom);
+    if (!lignes.length) {
+      page.drawText("Aucune date d'expiration saisie.", { x: colArticle, y, size: 10, font: fontNorm, color: gris });
+      y -= 22;
+      continue;
+    }
+    for (const { it, d, st } of lignes) {
+      if (y - 16 < marge) { nouvellePage(true); enTete(`${loc.nom} (suite)`); }
+      const couleur = st === 'expired' ? rouge : st === 'soon' ? orange : noir;
+      const police = st === 'ok' ? fontNorm : fontBold;
+      page.drawText(sur(it.court, fontNorm), { x: colArticle, y, size: 10, font: fontNorm, color: noir });
+      page.drawText(d, { x: colDate, y, size: 10, font: police, color: couleur });
+      const statut = st === 'expired' ? 'Expiré' : st === 'soon' ? 'Expire bientôt' : '';
+      if (statut) page.drawText(statut, { x: colStatut, y, size: 10, font: fontBold, color: couleur });
+      y -= 16;
+    }
+    y -= 10;
+  }
+}
+
 // ── Génération PDF (overlay sur liste_trousse.pdf) ───
 
 window.genererPDF = async function() {
@@ -633,6 +696,9 @@ window.genererPDF = async function() {
       color: green,
     });
   }
+
+  // ── Page des dates d'expiration de cet emplacement ───
+  await ajouterPagesDates(pdfDoc, [loc], date);
 
   // ── Téléchargement ────────────────────────────────────
 
@@ -812,6 +878,9 @@ window.genererToutPDF = async function() {
     alert('Aucune étiquette complète à exporter.');
     return;
   }
+
+  // Page(s) des dates d'expiration des emplacements exportés
+  await ajouterPagesDates(mergedPdf, locationsCompletes, date);
 
   // Télécharger le PDF fusionné
   const pdfBytes = await mergedPdf.save();
