@@ -78,7 +78,11 @@
   /* ═══════════════ Scène ═══════════════ */
   const viewport = $('engine-viewport'), canvas = $('engine-canvas'), labelLayer = $('label-layer');
   const scene = new THREE.Scene();
-  scene.background = col(0x05080a);
+  // Thème clair / sombre (classe light sur <html>, posée par version.js et basculée par theme-toggle.js)
+  const isLight = () => document.documentElement.classList.contains('light');
+  let LIGHT = isLight();
+  const BG_DARK = col(0x05080a), BG_LIGHT = col(0xe6ece4);
+  scene.background = BG_DARK;
   const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 250);
   const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
   const VIEWS = {
@@ -102,21 +106,41 @@
   controls.minDistance = 1.5; controls.maxDistance = 45; controls.autoRotateSpeed = 0.9;
   controls.target.copy(VIEWS[34][1]);
 
-  (function environment() {
+  // Environnement de réflexion : studio sombre (thème sombre) ou atelier clair (thème clair), créé à la demande
+  const ENV = {};
+  function environment(light) {
     const pmrem = new THREE.PMREMGenerator(renderer), env = new THREE.Scene();
     const sky = new THREE.SphereGeometry(50, 32, 16), p = sky.attributes.position, c = [];
-    for (let i = 0; i < p.count; i++) { const v = 0.04 + 0.32 * Math.max(0, p.getY(i) / 50); c.push(v * 0.85, v * 0.95, v); }
+    for (let i = 0; i < p.count; i++) {
+      const y = Math.max(0, p.getY(i) / 50), v = light ? 0.12 + 0.36 * y : 0.04 + 0.32 * y;
+      if (light) c.push(v * 0.93, v, v * 0.94); else c.push(v * 0.85, v * 0.95, v);
+    }
     sky.setAttribute('color', new THREE.Float32BufferAttribute(c, 3));
     env.add(new THREE.Mesh(sky, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
     const panel = (w, h, pos, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k), side: THREE.DoubleSide })); m.position.copy(pos); m.lookAt(0, 0, 0); env.add(m); };
     panel(40, 10, V3(0, 35, 8), 4); panel(20, 20, V3(30, 10, 25), 1.6); panel(20, 12, V3(-30, 6, -20), 1.0);
-    scene.environment = pmrem.fromScene(env, 0.04).texture; pmrem.dispose();
-  })();
-  scene.add(new THREE.HemisphereLight(col(0x9ab4c4), col(0x0a0f0a), 0.35));
+    const tex = pmrem.fromScene(env, 0.04).texture; pmrem.dispose();
+    return tex;
+  }
+  const envFor = (light) => ENV[light ? 'light' : 'dark'] || (ENV[light ? 'light' : 'dark'] = environment(light));
+  scene.environment = envFor(false);
+  const hemi = new THREE.HemisphereLight(col(0x9ab4c4), col(0x0a0f0a), 0.35); scene.add(hemi);
   const key = new THREE.DirectionalLight(0xffffff, 1.3); key.position.set(6, 10, 8); scene.add(key);
   const rim = new THREE.DirectionalLight(col(0x8fb8d0), 0.5); rim.position.set(-10, 4, -8); scene.add(rim);
   const grid = new THREE.GridHelper(90, 90, 0x1f3a24, 0x101a14); grid.position.y = R(-1.4);
   grid.material.transparent = true; grid.material.opacity = 0.55; scene.add(grid);
+  // sol du thème clair : lignes gris-vert plus foncées que le fond (couleurs sRGB converties, la grille n'est pas tonemappée)
+  const gridLight = new THREE.GridHelper(90, 90, col(0x7f9a79), col(0xb3c3ae)); gridLight.position.y = R(-1.4);
+  gridLight.material.transparent = true; gridLight.material.opacity = 0.9; gridLight.visible = false; scene.add(gridLight);
+  // fond dégradé du thème clair (#eef2ee en haut → #dfe7dd en bas) : quad plein écran hors tonemapping, couleurs sRGB écrites telles quelles
+  const skyLight = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+    uniforms: { top: { value: new THREE.Color(0xeef2ee) }, bottom: { value: new THREE.Color(0xdfe7dd) } },
+    vertexShader: 'varying float vY; void main() { vY = position.y * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.9999, 1.0); }',
+    fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying float vY; void main() { gl_FragColor = vec4(mix(bottom, top, smoothstep(0.0, 1.0, vY)), 1.0); }',
+    depthTest: false, depthWrite: false, fog: false, toneMapped: false,
+  }));
+  skyLight.frustumCulled = false; skyLight.renderOrder = -10; skyLight.visible = false; scene.add(skyLight);
+  const FOG_LIGHT = new THREE.Fog(col(0xe2e9e0), 30, 72);
 
   /* ═══════════════ Coupe : plans fixes dans la scène ═══════════════
      Coupe ¼ : retire y > 0 et z > 0 (intersection des deux plans). Moitié : retire z > 0 (deux plans identiques). */
@@ -414,10 +438,12 @@
     if (x > 2.7) out.multiplyScalar(0.25 + 0.75 * heat);
     return out.multiplyScalar(edgeFade(x, 0.3, 5.0));
   }
+  const flowMats = [];
   function flow(n, inner, outer, x0, x1, xRef, colorFn, hotBoost) {
     const geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), clr = new Float32Array(n * 3);
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(clr, 3));
     const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.065, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending }));
+    flowMats.push(pts.material);
     pts.frustumCulled = false; engine.add(pts);
     const parts = [];
     for (let i = 0; i < n; i++) parts.push({ x: lerp(x0, x1, Math.random()), f: 0.06 + 0.88 * Math.random(), u: Math.random(), j: 0.8 + 0.4 * Math.random(), a: 0 });
@@ -431,6 +457,7 @@
   const bypassFlow = flow(900, bypInAt, bypOutAt, -0.15, 4.2, 1.0, (x, o) => o.copy(COLD).multiplyScalar(edgeFade(x, -0.15, 4.2)), 0);
   const coreFlow = flow(650, hubAt, coreOutAt, 0.3, 5.0, 1.0, null, 1.4);
   const tmpC = new THREE.Color();
+  const mulF = (lin, k) => Math.pow(1 - (1 - Math.pow(lin, 1 / 2.2)) * k, 2.2);
   function stepFlow(F, dt, speed, heat) {
     for (let i = 0; i < F.parts.length; i++) {
       const p = F.parts[i], ri = F.inner(p.x), ro = F.outer(p.x);
@@ -441,7 +468,12 @@
       const r = R(lerp(ri, ro, p.f));
       F.pos[i * 3] = X(p.x); F.pos[i * 3 + 1] = Math.cos(p.a) * r; F.pos[i * 3 + 2] = Math.sin(p.a) * r;
       const c = F.colorFn ? F.colorFn(p.x, tmpC) : coreColor(p.x, tmpC, heat);
-      F.clr[i * 3] = c.r * speed; F.clr[i * 3 + 1] = c.g * speed; F.clr[i * 3 + 2] = c.b * speed;
+      if (LIGHT) {
+        // fond clair : mélange multiplicatif. Teinte foncée et saturée de la même couleur, intensité perçue k ; blanc = invisible.
+        // Le facteur est calculé en sRGB (le shader encode la sortie) puis repassé en linéaire.
+        const m = Math.max(c.r, c.g, c.b, 1e-4), k = Math.pow(clamp(m * speed, 0, 1), 0.35), f = 0.22 / m;
+        F.clr[i * 3] = mulF(c.r * f, k); F.clr[i * 3 + 1] = mulF(c.g * f, k); F.clr[i * 3 + 2] = mulF(c.b * f, k);
+      } else { F.clr[i * 3] = c.r * speed; F.clr[i * 3 + 1] = c.g * speed; F.clr[i * 3 + 2] = c.b * speed; }
     }
     F.geo.attributes.position.needsUpdate = true; F.geo.attributes.color.needsUpdate = true;
   }
@@ -607,15 +639,18 @@
     $('L-n1').classList.toggle('on', st.n1 > ENG.n1Max);
   }
   const trendCv = $('trend'), tctx = trendCv.getContext('2d'), trend = [];
+  // mêmes couleurs que les cartes N1 / N2 / ITT / Poussée de la page (variables --pw-* du thème)
+  const TREND_DARK = { grid: '#14201a', text: '#556655', series: [['n1', '#4fc3c7'], ['n2', '#d0d0d0'], ['itt', '#f59e0b'], ['thr', '#80cc80']] };
+  const TREND_LIGHT = { grid: '#dfe8db', text: '#5a7254', series: [['n1', '#0b7a99'], ['n2', '#55605a'], ['itt', '#a86400'], ['thr', '#22803a']] };
   function sizeTrend() { const dpr = Math.min(2, devicePixelRatio || 1); trendCv.width = trendCv.clientWidth * dpr; trendCv.height = trendCv.clientHeight * dpr; }
   function drawTrend() {
     const W = trendCv.width, H = trendCv.height, dpr = W / Math.max(1, trendCv.clientWidth), c = tctx;
     c.clearRect(0, 0, W, H); c.save(); c.scale(dpr, dpr);
     const w = trendCv.clientWidth, h = trendCv.clientHeight, L = 28, B = 14, T = 6, y = (v) => T + (h - T - B) * (1 - v / 110);
-    c.strokeStyle = '#14201a'; c.fillStyle = '#556655'; c.font = '10px Courier New'; c.lineWidth = 1;
+    const TC = LIGHT ? TREND_LIGHT : TREND_DARK;
+    c.strokeStyle = TC.grid; c.fillStyle = TC.text; c.font = '10px Courier New'; c.lineWidth = 1;
     for (const v of [0, 50, 100]) { c.beginPath(); c.moveTo(L, y(v)); c.lineTo(w, y(v)); c.stroke(); c.fillText(String(v), 2, y(v) + 3); }
-    const series = [['n1', '#4fc3c7'], ['n2', '#d0d0d0'], ['itt', '#f59e0b'], ['thr', '#80cc80']];
-    for (const [k, color] of series) {
+    for (const [k, color] of TC.series) {
       c.strokeStyle = color; c.lineWidth = 1.5; c.beginPath();
       trend.forEach((p, i) => { const px = L + (w - L) * (i / 119), py = y(p[k]); i ? c.lineTo(px, py) : c.moveTo(px, py); });
       c.stroke();
@@ -795,6 +830,32 @@
   log('Moteur stabilisé au ralenti sol (N2 13 264 tr/min). Utilisez « Arrêt auto » puis « Démarrage auto », ou la manette.', '');
   if (loadingEl) loadingEl.style.display = 'none';
 
+  /* ═══════════════ Thème clair / sombre (redessin immédiat, sans recharger) ═══════════════ */
+  const flowHeat = () => (st.lit ? clamp((st.itt - 380) / 620, 0, 1) : 0);
+  function flowTick(dt) {
+    const sp = clamp(st.n1 / ENG.n1Max, 0.02, 1) * 1.1 + 0.05, heat = flowHeat();
+    stepFlow(bypassFlow, dt, sp, heat); stepFlow(coreFlow, dt, sp, heat);
+  }
+  function applyTheme() {
+    LIGHT = isLight();
+    scene.background = LIGHT ? BG_LIGHT : BG_DARK;
+    skyLight.visible = LIGHT; gridLight.visible = LIGHT; grid.visible = !LIGHT;
+    scene.environment = envFor(LIGHT);
+    hemi.groundColor.copy(col(LIGHT ? 0x6f7a6c : 0x0a0f0a)); hemi.intensity = LIGHT ? 0.5 : 0.35;
+    const fogChanged = scene.fog !== (LIGHT ? FOG_LIGHT : null);
+    scene.fog = LIGHT ? FOG_LIGHT : null;
+    // particules : additives sur fond sombre, multiplicatives (hors tonemapping) sur fond clair
+    for (const m of flowMats) {
+      m.blending = LIGHT ? THREE.MultiplyBlending : THREE.AdditiveBlending; m.toneMapped = !LIGHT;
+      m.size = LIGHT ? 0.085 : 0.065; m.needsUpdate = true;
+    }
+    if (fogChanged) scene.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.needsUpdate = true; }); });
+    flowTick(0); // recolore les particules même si la simulation est figée
+    drawTrend();
+  }
+  applyTheme();
+  addEventListener('themechange', applyTheme);
+
   /* ═══════════════ Boucle ═══════════════ */
   const clock = new THREE.Clock();
   let angLP = 0, angHP = 0, infoT = 0, trendT = 0;
@@ -810,6 +871,7 @@
   function animate() {
     requestAnimationFrame(animate);
     const rdt = Math.min(clock.getDelta(), 0.1), dt = paused ? 0 : rdt;
+    if (isLight() !== LIGHT) applyTheme(); // version.js pose la classe light après ce script (et filet si elle change sans événement)
     if (dt > 0) { updateEngine(dt); monitor(); }
     const d = vdata();
     OUT.n1.textContent = dec(st.n1 / ENG.n1Max * 100) + ' %';
@@ -834,10 +896,7 @@
     flameMat.opacity = st.lit ? 0.16 + 0.5 * heat : 0;
     flameMat.color.copy(col(0xff5a10)).lerp(col(0xffd070), heat * 0.6);
     flameLight.intensity = st.lit ? 0.4 + 2.4 * heat : 0;
-    if (bypassFlow.pts.visible && dt > 0) {
-      const sp = clamp(st.n1 / ENG.n1Max, 0.02, 1) * 1.1 + 0.05;
-      stepFlow(bypassFlow, dt, sp, heat); stepFlow(coreFlow, dt, sp, heat);
-    }
+    if (bypassFlow.pts.visible && dt > 0) flowTick(dt);
     trendT += dt;
     if (trendT > 0.5) {
       trendT = 0;
