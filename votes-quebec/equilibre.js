@@ -8,7 +8,9 @@
    des candidats d'une présidentielle), ou si l'égalité est impossible (plan du Québec plus haut que le graphique au
    maximum), on garde les largeurs par défaut ou la meilleure approche.
 
-   equilibrerHaut(redessinerGraphique)   // à appeler une fois, après le premier dessin
+   await equilibrerHaut(redessinerGraphique)   // une fois, après le premier dessin et AVANT d'afficher la page :
+   la promesse attend les polices (les titres changent de hauteur quand la police arrive) puis fait le calcul final,
+   pour que rien ne bouge une fois la page visible
 */
 const SEUIL = 1000, MIN_A = 300, MIN_C = 380, PAS = 4;
 
@@ -18,8 +20,8 @@ export function equilibrerHaut(redessiner) {
   if (!haut || !carteA || !carteC || carteA.parentElement !== haut || carteC.parentElement !== haut) return;
   let occupe = false;
   const calculer = () => {
-    if (occupe) return;
-    if (innerWidth < SEUIL) { if (haut.style.gridTemplateColumns) { haut.style.gridTemplateColumns = ""; redessiner?.(); } return; }
+    if (occupe) return false;
+    if (innerWidth < SEUIL) { if (haut.style.gridTemplateColumns) { haut.style.gridTemplateColumns = ""; redessiner?.(); return true; } return false; }
     occupe = true;
     // hauteurs naturelles (sans l'étirement de la grille)
     carteA.style.alignSelf = carteC.style.alignSelf = "start";
@@ -32,7 +34,7 @@ export function equilibrerHaut(redessiner) {
     const vb = plan.viewBox?.baseVal, ratio = rP && vb?.width ? vb.height / vb.width : 0;
     const maxP = parseFloat(getComputedStyle(plan).maxWidth) || Infinity;
     // pas de dessin à agrandir (ex. liste des candidats à la présidentielle) : largeurs par défaut, la liste ne se tasse pas
-    if (!ratio) { occupe = false; if (haut.style.gridTemplateColumns) { haut.style.gridTemplateColumns = ""; redessiner?.(); } return; }
+    if (!ratio) { occupe = false; if (haut.style.gridTemplateColumns) { haut.style.gridTemplateColumns = ""; redessiner?.(); return true; } return false; }
     const fixeA = rA.height - (rP ? rP.height : 0), fixeC = rC.height - (svgC ? svgC.height : 0), margeC = rC.width - evol.clientWidth;
     const A = a => fixeA + (ratio ? Math.min(a - padA, maxP) * ratio : 0);
     const C = c => fixeC + Math.max(260, Math.min(560, (c - margeC) * 0.6));
@@ -46,13 +48,18 @@ export function equilibrerHaut(redessiner) {
     if (Math.abs(meilleur - rA.width) > 6) {
       haut.style.gridTemplateColumns = `${Math.round(meilleur)}px minmax(0, 1fr)`;
       redessiner?.();                                // le graphique se redessine à sa nouvelle largeur
+      return true;
     }
+    return false;
   };
+  // jusqu'à ce que ça ne bouge plus (la légende peut changer de nombre de lignes avec la largeur)
+  const converger = () => { for (let i = 0; i < 4 && calculer(); i++); };
   let attente;
-  const plusTard = (ms = 260) => { clearTimeout(attente); attente = setTimeout(calculer, ms); };
+  const plusTard = (ms = 260) => { clearTimeout(attente); attente = setTimeout(converger, ms); };
   addEventListener("resize", () => plusTard());      // après le redessin du graphique par le module (200 ms)
   // contenu du rectangle de l'assemblée changé (autre chambre, plan caché ou montré) ; pas nos propres réglages de alignSelf
   new MutationObserver(ms => { if (!occupe && ms.some(m => m.target !== carteA)) plusTard(120); }).observe(carteA, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "style"] });
-  calculer();
-  setTimeout(calculer, 400);                          // deuxième passe : la légende a pu changer de nombre de lignes
+  converger();
+  // polices prêtes (au plus 1,5 s d'attente), puis calcul final : la page s'affiche ensuite, déjà équilibrée
+  return Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise(ok => setTimeout(ok, 1500))]).then(converger);
 }
