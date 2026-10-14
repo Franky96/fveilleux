@@ -667,7 +667,7 @@ function systemeElectoral() {
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.canada, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
+  activerSigles(PARTIS.canada, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"), lireVerif("canada")]);

@@ -1,11 +1,14 @@
-/* Sigles des partis : au survol (ou au toucher) d'un sigle, une bulle donne le nom complet du parti et une brève
-   description. Commun à toutes les pages d'intentions de vote et à l'accueil.
+/* Sigles des partis : au survol (ou au toucher) d'un sigle, d'un nom de parti ou d'un siège, une bulle donne le nom
+   complet du parti et une brève description. Commun à toutes les pages d'intentions de vote, dans le rectangle de
+   l'assemblée (plan ou hémicycle, titre, légende, liste des candidats).
 
    activerSigles(dico, racine)
-     dico   : { sigle: { nom, info } } d'un pays (PARTIS.quebec, PARTIS.canada…)
+     dico   : { sigle: { nom, info } } d'un pays (PARTIS.quebec, PARTIS.canada…) ; dico._alias : { « nom affiché » : sigle }
+              pour les noms complets ou courts affichés à la place du sigle (légendes, titres : « Parti québécois »…)
      racine : élément surveillé ; tout texte qui y apparaît (même redessiné plus tard) est traité : chaque sigle connu
               devient <abbr class="parti-sigle" data-parti="…">. Les étiquettes SVG (<text>) qui commencent par un sigle
-              reçoivent data-parti. Les bulles qui suivent la souris (carte, graphique) sont ignorées.
+              reçoivent data-parti, de même que les sièges dessinés dont l'infobulle (<title>) nomme un parti (l'infobulle
+              du navigateur est alors retirée, la bulle la remplace). Les bulles qui suivent la souris sont ignorées.
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de sondages, qui changent souvent. */
 
 const P = (nom, info) => ({ nom, info });
@@ -16,6 +19,11 @@ export const PARTIS = {
     CAQ: P("Coalition avenir Québec", "Parti nationaliste de centre droit fondé en 2011 ; il a gouverné de 2018 à 2026."),
     PCQ: P("Parti conservateur du Québec", "Parti de droite, relancé en 2009."),
     QS: P("Québec solidaire", "Parti de gauche, souverainiste et écologiste, fondé en 2006."),
+    _alias: { "Parti québécois": "PQ",
+    "Parti libéral": "PLQ",
+    "Coalition avenir Québec": "CAQ",
+    "Parti conservateur": "PCQ",
+    "Québec solidaire": "QS" },
   },
   canada: {
     PLC: P("Parti libéral du Canada", "Parti de centre, présent depuis la Confédération ; il gouverne depuis 2015."),
@@ -24,11 +32,23 @@ export const PARTIS = {
     NPD: P("Nouveau Parti démocratique", "Parti de gauche social-démocrate fondé en 1961."),
     PVC: P("Parti vert du Canada", "Parti écologiste fondé en 1983."),
     PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018."),
+    _alias: { "Parti libéral": "PLC",
+    "Parti conservateur": "PCC",
+    "Bloc québécois": "BQ",
+    "Nouveau Parti démocratique": "NPD",
+    "Parti vert": "PVC",
+    "Parti populaire": "PPC" },
   },
   usa: {
     D: P("Parti démocrate", "Parti de centre gauche, le plus ancien des deux grands partis (fondé en 1828)."),
     R: P("Parti républicain", "Parti de droite conservatrice fondé en 1854, surnommé le « Grand Old Party » (GOP)."),
     I: P("Indépendant", "Élu sans étiquette ; au Sénat, les deux indépendants votent avec les démocrates."),
+    _alias: { "Parti démocrate": "D",
+    "Parti républicain": "R",
+    "Démocrates": "D",
+    "Républicains": "R",
+    "démocrates": "D",
+    "républicains": "R" },
   },
   france: {
     RN: P("Rassemblement national", "Parti de droite nationaliste, issu du Front national (1972), renommé en 2018."),
@@ -55,6 +75,30 @@ export const PARTIS = {
     HOR: P("Horizons et indépendants", "Groupe d'Horizons, parti de centre droit allié d'Emmanuel Macron."),
     DR: P("Droite républicaine", "Groupe des députés Les Républicains."),
     NI: P("Non-inscrits", "Députés qui ne font partie d'aucun groupe."),
+    _alias: { "Rassemblement national": "RN",
+    "Rassemblement National": "RN",
+    "RN et alliés (UDR)": "RN-UDR",
+    "Gauche (NFP)": "NFP",
+    "Nouveau Front populaire": "NFP",
+    "Ensemble (centre)": "ENS",
+    "Les Républicains": "LR",
+    "Extrême gauche": "EXG",
+    "Extrême droite": "EXD",
+    "Divers gauche": "DVG",
+    "Divers centre": "DVC",
+    "Divers droite": "DVD",
+    "Régionalistes": "REG",
+    "La France insoumise - Nouveau Front Populaire": "LFI-NFP",
+    "Gauche Démocrate et Républicaine": "GDR",
+    "Écologiste et Social": "ECOS",
+    "Socialistes et apparentés": "SOC",
+    "Libertés, Indépendants, Outre-mer et Territoires": "LIOT",
+    "Les Démocrates": "DEM",
+    "Ensemble pour la République": "EPR",
+    "Horizons & Indépendants": "HOR",
+    "Droite Républicaine": "DR",
+    "Union des droites pour la République": "UDR",
+    "Non inscrit": "NI" },
   },
   allemagne: {
     Union: P("Union CDU/CSU", "Alliance de la CDU et de la CSU, qui forment un groupe commun au Bundestag."),
@@ -68,6 +112,16 @@ export const PARTIS = {
     FDP: P("Parti libéral-démocrate", "Parti libéral de centre droit ; resté sous 5 % en 2025, il n'a plus de députés."),
     FW: P("Électeurs libres (Freie Wähler)", "Parti de centre droit surtout implanté en Bavière."),
     SSW: P("Association des électeurs du Schleswig du Sud", "Parti de la minorité danoise et frisonne, exempté du seuil de 5 %."),
+    _alias: { "Union chrétienne-démocrate": "CDU",
+    "Union chrétienne-sociale": "CSU",
+    "Parti social-démocrate": "SPD",
+    "Alternative pour l'Allemagne": "AfD",
+    "Alliance 90 / Les Verts": "Gr\u00fcne",
+    "Die Linke": "Linke",
+    "La Gauche": "Linke",
+    "Alliance Sahra Wagenknecht": "BSW",
+    "Parti libéral-démocrate": "FDP",
+    "Électeurs libres": "FW" },
   },
   suisse: {
     UDC: P("Union démocratique du centre", "Parti de droite conservatrice, premier parti du pays depuis 1999."),
@@ -81,6 +135,15 @@ export const PARTIS = {
     MCG: P("Mouvement citoyens genevois", "Parti populiste présent seulement dans le canton de Genève."),
     Lega: P("Lega dei Ticinesi", "Parti populiste présent seulement au Tessin."),
     "PST-Sol": P("Parti suisse du Travail – solidaritéS", "Petits partis de gauche radicale."),
+    _alias: { "Union démocratique du centre": "UDC",
+    "Parti socialiste": "PS",
+    "PLR.Les Libéraux-Radicaux": "PLR",
+    "Les Vert-e-s": "Verts",
+    "Vert'libéraux": "PVL",
+    "Parti évangélique": "PEV",
+    "Union démocratique fédérale": "UDF",
+    "Mouvement citoyens genevois": "MCG",
+    "Lega dei Ticinesi": "Lega" },
   },
 };
 
@@ -92,22 +155,29 @@ let bulle = null;
 export function activerSigles(dico, racine) {
   if (!racine || !dico || racine.dataset.sigles) return;
   racine.dataset.sigles = "1";
-  const cles = Object.keys(dico).sort((a, b) => b.length - a.length).map(echapper);
+  // textes reconnus : les sigles, et les noms affichés à leur place (_alias) ; le plus long d'abord
+  const vers = { ...Object.fromEntries(Object.keys(dico).filter(k => k !== "_alias").map(k => [k, k])), ...(dico._alias || {}) };
+  const cles = Object.keys(vers).sort((a, b) => b.length - a.length).map(echapper);
   // sigle entier seulement : pas au milieu d'un mot ni collé à un trait d'union suivi d'une lettre
   const re = new RegExp(`(?<![\\p{L}\\p{N}]|\\p{L}-)(${cles.join("|")})(?![\\p{L}\\p{N}]|-\\p{L})`, "gu");
   const debut = new RegExp(`^\\s*(${cles.join("|")})(?![\\p{L}\\p{N}]|-\\p{L})`, "u");
   const traiter = noeud => {
     if (noeud.nodeType === 1 && noeud.closest?.(IGNORER)) return;
     // étiquettes SVG (ex. « PLC 48 » au bout d'une courbe) : l'élément <text> entier
-    const svgText = n => { const m = debut.exec(n.textContent); if (m && !n.dataset.parti) n.dataset.parti = m[1]; };
+    const svgText = n => { const m = debut.exec(n.textContent); if (m && !n.dataset.parti) n.dataset.parti = vers[m[1]]; };
+    // sièges (cercles, carrés) : l'infobulle <title> du dessin nomme le parti
+    // (le parti peut venir après une cote : « Sûr D », « Penché R »)
+    // le fauteuil de la présidence garde son infobulle propre (rôle du président)
+    const siege = t => { if (/^Présidence/.test(t.textContent)) return; re.lastIndex = 0; const m = re.exec(t.textContent), forme = t.parentNode; if (m && forme && !forme.dataset.parti) { forme.dataset.parti = vers[m[1]]; t.remove(); } };
     if (noeud.nodeType === 1 && noeud.namespaceURI === "http://www.w3.org/2000/svg") {
-      (noeud.tagName === "text" ? [noeud] : noeud.querySelectorAll("text")).forEach(svgText); return;
+      (noeud.tagName === "text" ? [noeud] : noeud.querySelectorAll("text")).forEach(svgText);
+      (noeud.tagName === "title" ? [noeud] : [...noeud.querySelectorAll("title")]).forEach(siege); return;
     }
     const textes = [];
     if (noeud.nodeType === 3) textes.push(noeud);
     else {
       const w = document.createTreeWalker(noeud, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
-        acceptNode: n => n.nodeType === 1 ? (n.matches(IGNORER) ? NodeFilter.FILTER_REJECT : n.namespaceURI === "http://www.w3.org/2000/svg" ? (n.tagName === "text" && svgText(n), NodeFilter.FILTER_REJECT) : NodeFilter.FILTER_SKIP)
+        acceptNode: n => n.nodeType === 1 ? (n.matches(IGNORER) ? NodeFilter.FILTER_REJECT : n.namespaceURI === "http://www.w3.org/2000/svg" ? (n.querySelectorAll("text").forEach(svgText), [...n.querySelectorAll("title")].forEach(siege), NodeFilter.FILTER_REJECT) : NodeFilter.FILTER_SKIP)
           : NodeFilter.FILTER_ACCEPT });
       for (let n = w.nextNode(); n; n = w.nextNode()) textes.push(n);
     }
@@ -118,7 +188,7 @@ export function activerSigles(dico, racine) {
       const frag = document.createDocumentFragment(); let i = 0, m;
       while ((m = re.exec(s))) {
         if (m.index > i) frag.append(s.slice(i, m.index));
-        const a = document.createElement("abbr"); a.className = "parti-sigle"; a.dataset.parti = m[1]; a.textContent = m[1];
+        const a = document.createElement("abbr"); a.className = "parti-sigle"; a.dataset.parti = vers[m[1]]; a.textContent = m[1];
         frag.append(a); i = m.index + m[1].length;
       }
       if (i < s.length) frag.append(s.slice(i));

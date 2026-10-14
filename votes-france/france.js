@@ -712,7 +712,7 @@ function systemeElectoral() {
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.france, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
+  activerSigles(PARTIS.france, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     let ASS;

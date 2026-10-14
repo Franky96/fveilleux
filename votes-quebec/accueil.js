@@ -3,7 +3,6 @@
    date des données et dernière vérification (votes-verif.json). Les résultats en direct (live.js) reviendront le soir
    d'une élection. */
 
-import { activerSigles, PARTIS } from "./partis.js";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -156,9 +155,5 @@ async function demarrer() {
       <h3 class="ac-continent-titre" id="ac-${k}">${nom}<small>${cartes[k].length} page${cartes[k].length > 1 ? "s" : ""}</small></h3>
       <div class="ac-cartes">${cartes[k].join("")}</div></section>`).join("");
   $("acCartes").innerHTML = html || `<p class="lv-muted">Chargement impossible.</p>`;
-  // sigles des partis : nom complet et brève description au survol, avec le dictionnaire du pays de chaque carte
-  const PAYS = { "votes-quebec.html": "quebec", "loi39.html": "quebec", "votes-canada.html": "canada", "votes-usa.html": "usa",
-    "votes-france.html": "france", "votes-allemagne.html": "allemagne", "votes-suisse.html": "suisse" };
-  document.querySelectorAll("#acCartes .ac-carte").forEach(c => { const a = c.matches("a") ? c : c.querySelector("a[href]"); const p = PAYS[a?.getAttribute("href")]; if (p) activerSigles(PARTIS[p], c); });
 }
 demarrer();

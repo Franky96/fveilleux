@@ -592,7 +592,7 @@ function systemeElectoral() {
 }
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.quebec, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
+  activerSigles(PARTIS.quebec, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec")]);

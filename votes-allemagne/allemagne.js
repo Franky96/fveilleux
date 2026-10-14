@@ -649,7 +649,7 @@ function systemeElectoral() {
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.allemagne, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
+  activerSigles(PARTIS.allemagne, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     const facultatif = u => lireJ(u).catch(e => { console.warn(e); return null; });

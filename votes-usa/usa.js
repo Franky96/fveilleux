@@ -1064,7 +1064,7 @@ function systemeElectoral() {
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.usa, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
+  activerSigles(PARTIS.usa, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, PROJ, R24, SOND, PRES, RP] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"),
