@@ -651,11 +651,11 @@
     .vi-partis-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     /* rectangle de l'assemblée (dans la grille du haut, après les partis et le graphique) :
        écran moyen : dessous, sur toute la largeur, plan centré et limité ;
-       grand écran (16:9, ultralarge) : trois colonnes sur une ligne, partis · assemblée · graphique */
+       grand écran (1800 px et plus : 16:9 plein écran, ultralarge) : trois colonnes sur une ligne, partis · assemblée · graphique */
     @media (min-width: 1000px) { #vue-votes .vi-haut > .vi-sieges-bas { grid-column: 1 / -1; } }
     #vue-votes .vi-sieges-bas .vi-plan { max-width: 820px; margin: 0 auto; }
     #vue-votes .vi-sieges-bas .vi-plan:not(.vf-hemi):not(.vc-plan) { max-width: 380px; }   /* plan du Québec, en hauteur */
-    @media (min-width: 1500px) {
+    @media (min-width: 1800px) {
       #vue-votes .vi-haut { grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.25fr) minmax(0, 1.35fr); }
       #vue-votes .vi-haut > .vi-partis { order: 1; }
       #vue-votes .vi-haut > .vi-sieges-bas { order: 2; grid-column: auto; align-content: start; }
