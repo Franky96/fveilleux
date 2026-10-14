@@ -1,5 +1,5 @@
 /* Accueil de la section « Intentions de vote et simulations » (intentions-simulations.html).
-   Une carte par endroit (ses simulations en petit dans sa carte), courte : on clique pour le détail. Chiffre clé, barre des
+   Une carte par endroit (ses simulations sur une ligne compacte au bas de sa carte), courte : on clique pour le détail. Chiffre clé, barre des
    sièges, au plus une ou deux lignes de contexte et la date des données (fichiers légers seulement). Les résultats en direct (live.js) reviendront le soir
    d'une élection. */
 
@@ -31,7 +31,7 @@ function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donne
     ${phrase ? `<p class="ac-phrase">${phrase}</p>` : ""}
     <p class="ac-dates">${donnees}</p>
     <span class="ac-lien">Ouvrir la page →</span></a>
-    <div class="ac-sims"><span class="lv-eyebrow">Simulations</span>${sous}</div></div>`;
+    <div class="ac-sims">${sous}</div></div>`;
   return `<a class="ac-carte" href="${url}">
     <span class="lv-eyebrow">${eyebrow}</span>
     <h3>${titre}</h3>
@@ -56,11 +56,10 @@ async function demarrer() {
   let sousQc = "";
   if (L39) {
     const ordre = Object.keys(L39.loi39).sort((a, b) => L39.loi39[b] - L39.loi39[a]), lead = ordre[0], maj = Math.floor(L39.sieges_loi39 / 2) + 1;
-    sousQc = `<a class="ac-sous" href="loi39.html">
-      <b>Loi 39</b><small>Mixte compensatoire régional</small>
-      <div class="ac-sous-chiffre">${lead} ${L39.loi39[lead]} <small>sur ${L39.sieges_loi39} · ${L39.loi39[lead] >= maj ? "majoritaire" : "minoritaire"}</small></div>
-      ${barre(ordre.map(p => ({ lab: p, n: L39.loi39[p], c: CQ[p] })), L39.sieges_loi39, maj)}
-      <span class="ac-lien">Ouvrir la simulation →</span></a>`;
+    sousQc = `<a class="ac-sous ac-sous-ligne" href="loi39.html" title="Simulation : mode de scrutin mixte compensatoire régional">
+      <span class="lv-eyebrow">Simulation</span><b>Loi 39</b>
+      <span><span class="ac-sous-chiffre">${lead} ${L39.loi39[lead]}</span> <small>sur ${L39.sieges_loi39} · ${L39.loi39[lead] >= maj ? "majoritaire" : "minoritaire"}</small></span>
+      <span class="ac-lien">→</span></a>`;
   }
   // Votes Québec : dernier résultat (aucun sondage depuis l'élection)
   if (QE) {
