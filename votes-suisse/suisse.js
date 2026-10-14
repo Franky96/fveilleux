@@ -84,17 +84,21 @@ const premier = s => trie(s)[0];
 
 /* ---------- hémicycle (comme Votes France) : rangées en demi-cercle, de la gauche à la droite ---------- */
 function hemicycle(svgEl, seats, n, sous) {
-  const R = n > 100 ? 8 : 4, r0 = n > 100 ? 0.4 : 0.45, W = 1000, H = 520, cx = W / 2, cy = H - 20, Rmax = 470;
+  // Conseil national : 8 rangées ; Conseil des États (46) : 4 rangées plus ouvertes, pour que la ligne du centre ne touche
+  // pas les sièges ; points et marges calculés pour que rien ne soit coupé en haut, en bas ni sur les côtés
+  const R = n > 100 ? 8 : 4, r0 = n > 100 ? 0.4 : 0.5, W = 1000, cx = W / 2, Rmax = 470;
   const rayons = d3.range(R).map(i => r0 + i * (1 - r0) / (R - 1)), tot = d3.sum(rayons);
   const parRangee = rayons.map(r => Math.round(n * r / tot)); parRangee[R - 1] += n - d3.sum(parRangee);
+  const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * (n > 100 ? 0.42 : 0.38), 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
+  const cy = Rmax + rayon + 4, H = Math.ceil(cy + rayon + 4);
   let places = [];
   rayons.forEach((r, i) => { const k = parRangee[i];
     for (let j = 0; j < k; j++) { const a = Math.PI - j * Math.PI / (k - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
   const ordre = Object.keys(seats).sort((a, b) => (ORDRE.indexOf(a) + 1 || 99) - (ORDRE.indexOf(b) + 1 || 99));
   const sieges = ordre.flatMap(p => d3.range(seats[p]).map(() => p));
   places = regrouper(places, ordre.map(p => seats[p]));   // chaque parti groupé (votes-quebec/hemicycle.js)
-  const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * 0.42, 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
-  const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
+  const marge = Math.max(0, rayon + 4 - (cx - Rmax));     // points des bouts de rangée entiers à gauche et à droite
+  const g = d3.select(svgEl).attr("viewBox", `${-marge} 0 ${W + 2 * marge} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
     .attr("data-p", (p, i) => sieges[i] || null)   // parti du siège (bande des partis)
     .style("fill", (p, i) => sieges[i] ? COUL[sieges[i]] || COUL.AUT : "var(--soft)")
