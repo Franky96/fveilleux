@@ -59,7 +59,8 @@ async function demarrer() {
     sousQc = `<a class="ac-sous ac-sous-ligne" href="loi39.html" title="Simulation : mode de scrutin mixte compensatoire régional">
       <span class="lv-eyebrow">Simulation</span><b>Loi 39</b>
       <span><span class="ac-sous-chiffre">${lead} ${L39.loi39[lead]}</span> <small>sur ${L39.sieges_loi39} · ${L39.loi39[lead] >= maj ? "majoritaire" : "minoritaire"}</small></span>
-      <span class="ac-lien">→</span></a>`;
+      <span class="ac-lien">→</span>
+      ${barre(ordre.map(p => ({ lab: p, n: L39.loi39[p], c: CQ[p] })), L39.sieges_loi39, maj).replace('class="ac-barre"', 'class="ac-barre ac-barre-mini"')}</a>`;
   }
   // Votes Québec : dernier résultat (aucun sondage depuis l'élection)
   if (QE) {
