@@ -6,7 +6,7 @@
    Contours des 343 circonscriptions (découpage de 2023) : data.json (outils/canada_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -665,14 +665,20 @@ function systemeElectoral() {
 }
 
 /* ---------- démarrage ---------- */
+/* ---------- section « Les partis » (votes-quebec/partis.js) : liste cliquable, fiche de chaque parti ---------- */
+function partisEnLice() {
+  const N = PROJ.national, e25 = SIEGES_DE.e25 || {};
+  sectionPartis(PARTIS.canada, Object.keys(PARTIS.canada).filter(p => N[p] || e25[p]).sort((a, b) => (N[b]?.s || 0) - (N[a]?.s || 0) || (N[b]?.v || 0) - (N[a]?.v || 0)).map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
+    detail: [N[p] ? `Projection Qc125 : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })));
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.canada, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"), lireVerif("canada")]);
     preparer();
-    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
+    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vcPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

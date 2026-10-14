@@ -7,7 +7,7 @@
    Bundeswahlleiterin (resultats-2025.json) ; contours des 299 circonscriptions (data.json, outils/allemagne_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -652,9 +652,16 @@ function systemeElectoral() {
 }
 
 /* ---------- démarrage ---------- */
+/* ---------- section « Les partis » (votes-quebec/partis.js) : liste cliquable, fiche de chaque parti ---------- */
+function partisEnLice() {
+  const N = PROJ?.national || {}, e25 = SIEGES_DE.e25 || {};
+  const ordre = Object.keys(PARTIS.allemagne).filter(p => p !== "Union" && (N[p] || e25[p])).sort((a, b) => (N[b]?.s || 0) - (N[a]?.s || 0) || (N[b]?.v || 0) - (N[a]?.v || 0));
+  sectionPartis(PARTIS.allemagne, ordre.map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
+    detail: [N[p] ? `Projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> · ${nf(N[p].v, 1)} % des secondes voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })));
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.allemagne, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     const facultatif = u => lireJ(u).catch(e => { console.warn(e); return null; });
@@ -662,7 +669,7 @@ async function demarrer() {
       facultatif("votes-allemagne/projection.json"), facultatif("votes-allemagne/bundestag.json"), lireVerif("allemagne")]);
     if (!PROJ) { etat.mode = "e25"; etat.chambre = "e25"; }
     preparer();
-    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
+    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vaPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

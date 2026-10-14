@@ -9,7 +9,7 @@
    Contours : data.json (outils/usa_geo.py, carte de 270toWin). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 
 const SIEGES = 435, MAJ = 218;
 const P = ["D", "R"];
@@ -1062,9 +1062,18 @@ function systemeElectoral() {
 }
 
 /* ---------- démarrage ---------- */
+/* ---------- section « Les partis » (votes-quebec/partis.js) : liste cliquable, fiche de chaque parti ---------- */
+function partisEnLice() {
+  const ch = {}, sen = {};
+  Object.values(PROJ.actuel).forEach(a => { if (a) ch[a.p] = (ch[a.p] || 0) + 1; });
+  Object.values(SEN().etats).forEach(e => e.senateurs.forEach(x => { if (x.p) sen[x.p] = (sen[x.p] || 0) + 1; }));
+  sectionPartis(PARTIS.usa, ["R", "D", "I"].map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
+    detail: `Aujourd'hui : <b>${ch[p] || 0}</b> à la Chambre des représentants · <b>${sen[p] || 0}</b> au Sénat` })),
+    { note: "Les deux grands partis occupent presque tous les sièges du Congrès." });
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.usa, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, PROJ, R24, SOND, PRES, RP] = await Promise.all([lireJ("votes-usa/data.json"), lireJ("votes-usa/projection.json"), lireJ("votes-usa/resultats-2024.json"),
@@ -1073,7 +1082,7 @@ async function demarrer() {
     AB_DE["11"] = "DC"; ETAT_NOM.DC = "District de Columbia";             // présidentielle seulement (pas de district ni de sénateur)
     couleursPrimaires();
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
-    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
+    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vuPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

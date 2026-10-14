@@ -7,7 +7,7 @@
    (sondages.json). Contours des 26 cantons : data.json (limites généralisées de l'OFS, état 2026). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -695,9 +695,16 @@ function systemeElectoral() {
 }
 
 /* ---------- démarrage ---------- */
+/* ---------- section « Les partis » (votes-quebec/partis.js) : liste cliquable, fiche de chaque parti ---------- */
+function partisEnLice() {
+  const N = PROJ?.national || {};
+  const ordre = Object.keys(PARTIS.suisse).filter(p => N[p]).sort((a, b) => (N[b].s || 0) - (N[a].s || 0) || (N[b].v || 0) - (N[a].v || 0));
+  sectionPartis(PARTIS.suisse, ordre.map(p => ({ cle: p, etiquette: COURT[p] || p, couleur: COUL[p],
+    detail: `Conseil national, projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` })));
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.suisse, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     const facultatif = u => lireJ(u).catch(e => { console.warn(e); return null; });   // un groupe sans données n'apparaît pas
@@ -706,7 +713,7 @@ async function demarrer() {
     preparer();
     etat.mode = MODE0(); etat.chambre = groupe();
     ajouterChoixType();
-    construireCarte(); dessinerTete(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
+    construireCarte(); dessinerTete(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vsPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

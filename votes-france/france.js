@@ -6,7 +6,7 @@
    tableaux Wikipédia qui citent chaque sondeur. Aucune projection en sièges (2 tours : trop incertain par circonscription). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 
 const SIEGES = 577, MAJ = 289;
 const NOMS = { EXG: "Extrême gauche", NFP: "Gauche (NFP)", DVG: "Divers gauche", REG: "Régionalistes", ENS: "Ensemble (centre)", DVC: "Divers centre",
@@ -710,9 +710,16 @@ function systemeElectoral() {
 }
 
 /* ---------- démarrage ---------- */
+/* ---------- section « Les partis » (votes-quebec/partis.js) : liste cliquable, fiche de chaque parti ---------- */
+function partisEnLice() {
+  const A = DATA.assemblee;
+  sectionPartis(PARTIS.france, A.groupes.slice().sort((a, b) => b.n - a.n).map(g => ({ cle: g.id, etiquette: g.id, couleur: g.c,
+    detail: `Assemblée nationale aujourd'hui : <b>${g.n} député${g.n > 1 ? "s" : ""}</b> sur 577` })),
+    { titre: "Les groupes de l'Assemblée", note: "À l'Assemblée nationale, les députés siègent par groupe : un groupe réunit un parti et ses alliés." });
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
-  activerSigles(PARTIS.france, $("viPlan").closest("section"));   // rectangle de l\'assemblée : nom complet et brève description des partis au survol
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     let ASS;
@@ -722,7 +729,7 @@ async function demarrer() {
     DATA.assemblee = ASS;
     // couleurs officielles des groupes ; les trop foncées sont éclaircies pour rester lisibles sur fond sombre
     DATA.assemblee.groupes.forEach(g => { g.c = FAMILLE[g.id] || g.c; GP[g.id] = g; });   // même palette que les partis
-    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral();
+    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return; periode = +b.dataset.per; ecrireLS("vfPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
   } catch (e) { $("viSource").textContent = "Chargement impossible : " + e.message; console.error(e); }
