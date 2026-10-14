@@ -7,6 +7,7 @@
    (sondages.json). Contours des 26 cantons : data.json (limites généralisées de l'OFS, état 2026). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
+import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -696,6 +697,7 @@ function systemeElectoral() {
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
+  activerSigles(PARTIS.suisse, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     const facultatif = u => lireJ(u).catch(e => { console.warn(e); return null; });   // un groupe sans données n'apparaît pas

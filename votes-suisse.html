@@ -635,6 +635,15 @@
     .vi-evol { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
     .vi-evol h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
     .vi-evol-zone { position: relative; }
+    /* sigles des partis (votes-quebec/partis.js) : soulignés en pointillé, bulle avec le nom complet et une brève description */
+    abbr.parti-sigle, [data-parti] { cursor: help; }
+    abbr.parti-sigle { text-decoration: underline dotted; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+    .parti-bulle { position: fixed; z-index: 1000; display: grid; gap: 2px; max-width: min(320px, calc(100vw - 16px)); padding: 9px 12px; border: 1px solid var(--rule, #273045); border-radius: 10px;
+      background: var(--surface, #141A27); color: var(--ink, #E6E9F1); box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-size: 0.85rem; line-height: 1.4; pointer-events: none; }
+    .parti-bulle[hidden] { display: none; }
+    .parti-bulle b { font-size: 0.72rem; letter-spacing: 0.06em; color: var(--muted, #98A1B4); }
+    .parti-bulle span { font-weight: 700; }
+    .parti-bulle small { font-size: 0.8rem; color: var(--muted, #98A1B4); }
     /* « Comprendre le système électoral » : bouton sous la source, grande fenêtre d'explication (élément <dialog>) */
     .vi-systeme-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 7px 14px 7px 8px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
     .vi-systeme-btn[hidden] { display: none; }

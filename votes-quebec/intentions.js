@@ -6,6 +6,7 @@
    meilleur deuxième, vote par parti avec le % de chaque circonscription ; plan de l'Assemblée au lieu de la barre. */
 import { domaineY, decouper, placerBulle } from "./zoom-y.js";
 import { preparerSysteme } from "./systeme.js";
+import { activerSigles, PARTIS } from "./partis.js";
 
 const SIEGES = 127, MAJ = 64;
 const P5 = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];                // ordre de data.json (ridings[].s)
@@ -591,6 +592,7 @@ function systemeElectoral() {
 }
 async function demarrer() {
   if (demarre) return; demarre = true;
+  activerSigles(PARTIS.quebec, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec")]);

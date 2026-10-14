@@ -7,6 +7,7 @@
    Bundeswahlleiterin (resultats-2025.json) ; contours des 299 circonscriptions (data.json, outils/allemagne_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
+import { activerSigles, PARTIS } from "../votes-quebec/partis.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -648,6 +649,7 @@ function systemeElectoral() {
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
+  activerSigles(PARTIS.allemagne, $("vue-votes"));   // nom complet et brève description des partis au survol des sigles
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     const facultatif = u => lireJ(u).catch(e => { console.warn(e); return null; });
