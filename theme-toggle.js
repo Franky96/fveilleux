@@ -24,6 +24,8 @@
     const nowLight = document.documentElement.classList.toggle('light');
     localStorage.setItem('theme', nowLight ? 'light' : 'dark');
     toggle.setAttribute('aria-checked', nowLight ? 'true' : 'false');
+    // les pages qui dessinent elles-mêmes (canvas, scène 3D) écoutent cet événement pour reprendre leurs couleurs
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { light: nowLight } }));
   };
 
   toggle.classList.add('theme-toggle--fixed');
