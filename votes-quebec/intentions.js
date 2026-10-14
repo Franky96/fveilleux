@@ -7,6 +7,7 @@
 import { domaineY, decouper, placerBulle } from "./zoom-y.js";
 import { preparerSysteme } from "./systeme.js";
 import { sectionPartis, PARTIS } from "./partis.js";
+import { equilibrerHaut } from "./equilibre.js";
 
 const SIEGES = 127, MAJ = 64;
 const P5 = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];                // ordre de data.json (ridings[].s)
@@ -603,7 +604,7 @@ async function demarrer() {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec")]);
     ETAT = construireEtat();
-    dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice(); equilibrerHaut(dessinerEvolution);
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; try { localStorage.setItem("viPeriode", periode); } catch {} dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

@@ -8,6 +8,7 @@
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -669,7 +670,7 @@ async function demarrer() {
       facultatif("votes-allemagne/projection.json"), facultatif("votes-allemagne/bundestag.json"), lireVerif("allemagne")]);
     if (!PROJ) { etat.mode = "e25"; etat.chambre = "e25"; }
     preparer();
-    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice(); equilibrerHaut(dessinerEvolution);
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vaPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

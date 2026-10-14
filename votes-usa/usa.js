@@ -10,6 +10,7 @@
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 
 const SIEGES = 435, MAJ = 218;
 const P = ["D", "R"];
@@ -1082,7 +1083,7 @@ async function demarrer() {
     AB_DE["11"] = "DC"; ETAT_NOM.DC = "District de Columbia";             // présidentielle seulement (pas de district ni de sénateur)
     couleursPrimaires();
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
-    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice(); equilibrerHaut(dessinerEvolution);
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vuPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

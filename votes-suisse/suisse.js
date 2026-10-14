@@ -8,6 +8,7 @@
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -713,7 +714,7 @@ async function demarrer() {
     preparer();
     etat.mode = MODE0(); etat.chambre = groupe();
     ajouterChoixType();
-    construireCarte(); dessinerTete(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    construireCarte(); dessinerTete(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice(); equilibrerHaut(dessinerEvolution);
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vsPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

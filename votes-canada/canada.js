@@ -7,6 +7,7 @@
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -678,7 +679,7 @@ async function demarrer() {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
     [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"), lireVerif("canada")]);
     preparer();
-    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice(); equilibrerHaut(dessinerEvolution);
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vcPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });
