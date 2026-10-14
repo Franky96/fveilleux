@@ -57,8 +57,9 @@ export function equilibrerHaut(redessiner) {
   let attente;
   const plusTard = (ms = 260) => { clearTimeout(attente); attente = setTimeout(converger, ms); };
   addEventListener("resize", () => plusTard());      // après le redessin du graphique par le module (200 ms)
-  // contenu du rectangle de l'assemblée changé (autre chambre, plan caché ou montré) ; pas nos propres réglages de alignSelf
-  new MutationObserver(ms => { if (!occupe && ms.some(m => m.target !== carteA)) plusTard(120); }).observe(carteA, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "style"] });
+  // contenu du rectangle de l'assemblée changé (autre chambre, plan caché ou montré) ; pas nos propres réglages de alignSelf.
+  // Recalcul tout de suite (l'observateur passe avant l'affichage de l'image suivante) : aucun saut visible au changement
+  new MutationObserver(ms => { if (!occupe && ms.some(m => m.target !== carteA)) { clearTimeout(attente); converger(); } }).observe(carteA, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "style"] });
   converger();
   // polices prêtes (au plus 1,5 s d'attente), puis calcul final : la page s'affiche ensuite, déjà équilibrée
   return Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise(ok => setTimeout(ok, 1500))]).then(converger);
