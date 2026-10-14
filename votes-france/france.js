@@ -715,7 +715,7 @@ function partisEnLice() {
   const A = DATA.assemblee;
   sectionPartis(PARTIS.france, A.groupes.slice().sort((a, b) => b.n - a.n).map(g => ({ cle: g.id, etiquette: g.id, couleur: g.c,
     detail: `Assemblée nationale aujourd'hui : <b>${g.n} député${g.n > 1 ? "s" : ""}</b> sur 577` })),
-    { titre: "Les groupes de l'Assemblée", note: "À l'Assemblée nationale, les députés siègent par groupe : un groupe réunit un parti et ses alliés." });
+    { titre: "Groupes de l'Assemblée", note: "Les députés siègent par groupe : un groupe réunit un parti et ses alliés." });
 }
 
 async function demarrer() {

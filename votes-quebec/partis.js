@@ -1,13 +1,13 @@
-/* Section « Les partis » des pages d'intentions de vote : la liste des partis en lice (bouton par parti, couleur, sigle,
-   nom complet et un chiffre de la page) ; un clic ouvre sa fiche (nom complet, brève description, chiffres de la page).
+/* Bande « Partis en lice » des pages d'intentions de vote : une ligne de boutons (couleur, sigle, nom complet) en pleine
+   largeur au-dessus des rectangles du haut ; au survol (ou au toucher, ou au clavier) d'un parti, une bulle sombre
+   montre sa fiche : nom complet, brève description et chiffres de la page. La bande ne prend que la hauteur de ses
+   boutons et la bulle flotte par-dessus la page : rien ne s'agrandit.
 
    sectionPartis(dico, items, { titre, note })
      dico  : dictionnaire d'un pays (PARTIS.quebec, PARTIS.canada…) : { clé: { nom, info } }
      items : [{ cle, etiquette, couleur, detail }] dans l'ordre d'affichage (clé du dictionnaire, sigle affiché,
              couleur du parti sur la page, phrase de chiffres tirés des données de la page)
-     La section est placée (une fois, puis mise à jour) en haut de la page, à côté du graphique d'évolution ; le rectangle
-     de l'assemblée (plan ou hémicycle) passe juste en dessous sur toute la largeur, ou, sur grand écran (16:9, ultralarge),
-     au milieu de la ligne : partis · assemblée · graphique.
+     titre : libellé de la bande (« Partis en lice » par défaut) ; note : courte précision affichée au bout de la bande
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent. */
 
 const P = (nom, info) => ({ nom, info });
@@ -88,37 +88,43 @@ export const PARTIS = {
 
 const ESC = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-export function sectionPartis(dico, items, { titre = "Les partis", note = "" } = {}) {
+export function sectionPartis(dico, items, { titre = "Partis en lice", note = "" } = {}) {
   const wrap = document.querySelector("#vue-votes .lv-wrap"); if (!wrap || !dico) return;
   const liste = items.filter(x => dico[x.cle]);
-  let sec = document.getElementById("viPartis");
+  let sec = document.getElementById("viPartis"), bulle = document.getElementById("viPartisBulle");
   if (!sec) {
-    sec = document.createElement("section"); sec.id = "viPartis"; sec.className = "lv-sieges vi-partis"; sec.setAttribute("aria-labelledby", "viPartisTitre");
-    // en haut de la page, à côté du graphique, à la place du rectangle de l'assemblée ; celui-ci passe juste en dessous
-    const haut = wrap.querySelector(".vi-haut"), sieges = document.getElementById("viPlan")?.closest("section");
-    if (haut) {
-      haut.prepend(sec);
-      // dans la même grille : dessous sur toute la largeur, ou entre les partis et le graphique sur grand écran (CSS)
-      if (sieges && sieges.parentElement === haut) { haut.append(sieges); sieges.classList.add("vi-sieges-bas"); }
-    } else wrap.append(sec);
-    sec.addEventListener("click", e => {
-      const b = e.target.closest("[data-partie-parti]"); if (!b) return;
-      const ouvert = b.getAttribute("aria-expanded") === "true";
-      sec.querySelectorAll("[data-partie-parti]").forEach(x => x.setAttribute("aria-expanded", "false"));
-      const fiche = sec.querySelector(".vi-partis-fiche");
-      if (ouvert) { fiche.hidden = true; return; }
-      b.setAttribute("aria-expanded", "true");
-      const it = sec._items.find(x => x.cle === b.dataset.partieParti), d = dico[it.cle];
-      fiche.style.setProperty("--c", it.couleur || "var(--muted)");
-      fiche.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><h4>${ESC(d.nom)}</h4><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`;
-      fiche.hidden = false;
-      fiche.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });   // sur téléphone, la fiche est sous la liste
-    });
+    sec = document.createElement("section"); sec.id = "viPartis"; sec.className = "vi-partis-bande"; sec.setAttribute("aria-label", titre);
+    const haut = wrap.querySelector(".vi-haut");
+    haut ? haut.before(sec) : wrap.append(sec);
+    bulle = document.createElement("div"); bulle.id = "viPartisBulle"; bulle.className = "vi-partis-bulle"; bulle.setAttribute("role", "tooltip"); bulle.hidden = true;
+    (sec.closest(".vue-live") || document.body).append(bulle);
+    let actif = null, ouvertA = 0;
+    const montrer = b => {
+      const it = sec._items.find(x => x.cle === b.dataset.partieParti), d = dico[it?.cle]; if (!d) return;
+      actif = b; ouvertA = performance.now();
+      bulle.style.setProperty("--c", it.couleur || "#8D949A");
+      bulle.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><b>${ESC(d.nom)}</b><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`;
+      bulle.hidden = false;
+      b.setAttribute("aria-describedby", "viPartisBulle");
+      // sous le bouton (au-dessus s'il n'y a pas la place), sans sortir de l'écran
+      const r = b.getBoundingClientRect(), w = bulle.offsetWidth, h = bulle.offsetHeight;
+      bulle.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + "px";
+      bulle.style.top = (r.bottom + 8 + h < innerHeight ? r.bottom + 8 : Math.max(8, r.top - h - 8)) + "px";
+    };
+    const cacher = () => { if (actif) actif.removeAttribute("aria-describedby"); actif = null; bulle.hidden = true; };
+    sec.addEventListener("mouseover", e => { const b = e.target.closest("[data-partie-parti]"); if (b && b !== actif) montrer(b); });
+    sec.addEventListener("mouseleave", cacher);
+    sec.addEventListener("focusin", e => { const b = e.target.closest("[data-partie-parti]"); if (b) montrer(b); });
+    sec.addEventListener("focusout", cacher);
+    // toucher : le navigateur envoie un survol puis un clic ; le clic ne referme que si la bulle était déjà ouverte avant
+    sec.addEventListener("click", e => { const b = e.target.closest("[data-partie-parti]"); if (!b) return;
+      if (b === actif && !bulle.hidden) { if (performance.now() - ouvertA > 400) cacher(); } else montrer(b); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") cacher(); });
+    addEventListener("scroll", cacher, { passive: true });
   }
   sec._items = liste;
-  sec.innerHTML = `<span class="lv-eyebrow">Partis en lice</span><h3 id="viPartisTitre">${ESC(titre)}</h3>
-    <p class="lv-muted">${note ? ESC(note) + " " : ""}Clique sur un parti pour sa fiche.</p>
-    <div class="vi-partis-liste">${liste.map(x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}" aria-expanded="false" aria-controls="viPartisFiche">`
-      + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`).join("")}</div>
-    <div class="vi-partis-fiche" id="viPartisFiche" aria-live="polite" hidden></div>`;
+  sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>`
+    + liste.map(x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
+      + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`).join("")
+    + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
 }
