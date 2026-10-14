@@ -101,6 +101,7 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     let actif = null, ouvertA = 0;
     const montrer = b => {
       const it = sec._items.find(x => x.cle === b.dataset.partieParti), d = dico[it?.cle]; if (!d) return;
+      if (actif && actif !== b) actif.removeAttribute("aria-describedby");   // un seul parti en surbrillance à la fois
       actif = b; ouvertA = performance.now();
       bulle.style.setProperty("--c", it.couleur || "#8D949A");
       bulle.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><b>${ESC(d.nom)}</b><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`;
