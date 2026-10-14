@@ -2,10 +2,10 @@
    largeur au-dessus des rectangles du haut ; au survol (ou au toucher, ou au clavier) d'un parti, une bulle sombre
    montre sa fiche : nom complet, brève description et chiffres de la page. La bande ne prend que la hauteur de ses
    boutons et la bulle flotte par-dessus la page : rien ne s'agrandit.
-   Clic sur un parti : il reste sélectionné, et dans le plan ou l'hémicycle (#viPlan) ses sièges gardent leur couleur
-   pendant que tous les autres passent au gris (sièges marqués data-p="clé" par chaque module ; « Union CDU CSU »
-   pour un siège commun à plusieurs clés). Nouveau clic : sélection retirée. Si la vue affichée n'a aucun siège de ce
-   parti (ex. blocs de 2024 quand un groupe est choisi), le plan reste en couleur.
+   Pendant le survol, dans le plan ou l'hémicycle (#viPlan), les sièges du parti gardent leur couleur et tous les autres
+   passent au gris (sièges marqués data-p="clé" par chaque module ; « Union CDU CSU » pour un siège commun à
+   plusieurs clés) ; tout redevient en couleur quand la souris quitte la bande. Si la vue affichée n'a aucun siège de
+   ce parti (ex. blocs de 2024 quand un groupe est survolé), le plan reste en couleur.
 
    sectionPartis(dico, items, { titre, note })
      dico  : dictionnaire d'un pays (PARTIS.quebec, PARTIS.canada…) : { clé: { nom, info } }
@@ -107,6 +107,7 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
       const it = sec._items.find(x => x.cle === b.dataset.partieParti), d = dico[it?.cle]; if (!d) return;
       if (actif && actif !== b) actif.removeAttribute("aria-describedby");   // un seul parti en surbrillance à la fois
       actif = b; ouvertA = performance.now();
+      sec._choisi = b.dataset.partieParti; appliquerSelection();   // sièges du parti en évidence
       bulle.style.setProperty("--c", it.couleur || "#8D949A");
       bulle.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><b>${ESC(d.nom)}</b><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`;
       bulle.hidden = false;
@@ -116,16 +117,16 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
       bulle.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left)) + "px";
       bulle.style.top = (r.bottom + 8 + h < innerHeight ? r.bottom + 8 : Math.max(8, r.top - h - 8)) + "px";
     };
-    const cacher = () => { if (actif) actif.removeAttribute("aria-describedby"); actif = null; bulle.hidden = true; };
+    const cacher = () => { if (actif) actif.removeAttribute("aria-describedby"); actif = null; bulle.hidden = true; sec._choisi = null; appliquerSelection(); };
     sec.addEventListener("mouseover", e => { const b = e.target.closest("[data-partie-parti]"); if (b && b !== actif) montrer(b); });
     sec.addEventListener("mouseleave", cacher);
     sec.addEventListener("focusin", e => { const b = e.target.closest("[data-partie-parti]"); if (b) montrer(b); });
     sec.addEventListener("focusout", cacher);
-    // clic (ou toucher) : sélection du parti, mise en évidence de ses sièges ; la bulle s'ouvre aussi au toucher
-    sec.addEventListener("click", e => { const b = e.target.closest("[data-partie-parti]"); if (!b) return;
-      sec._choisi = sec._choisi === b.dataset.partieParti ? null : b.dataset.partieParti;
-      appliquerSelection();
-      if (!(b === actif && !bulle.hidden)) montrer(b); });
+    // toucher (pas de survol) : un toucher montre le parti, un deuxième le cache
+    let tactile = false;
+    sec.addEventListener("pointerdown", e => { tactile = e.pointerType === "touch"; });
+    sec.addEventListener("click", e => { const b = e.target.closest("[data-partie-parti]"); if (!b || !tactile) return;   // souris : le survol suffit
+      if (b === actif && !bulle.hidden) { if (performance.now() - ouvertA > 400) cacher(); } else montrer(b); });
     // le plan est redessiné (autre chambre, autre vue) : on remet la mise en évidence
     const plan = document.getElementById("viPlan");
     if (plan) { let prevu = false; new MutationObserver(() => { if (prevu) return; prevu = true; requestAnimationFrame(() => { prevu = false; appliquerSelection(); }); }).observe(plan, { childList: true }); }
@@ -133,18 +134,16 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     addEventListener("scroll", cacher, { passive: true });
   }
   sec._items = liste;
-  if (sec._choisi && !liste.some(x => x.cle === sec._choisi)) sec._choisi = null;
   sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>`
-    + liste.map(x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}" aria-pressed="${x.cle === sec._choisi}">`
+    + liste.map(x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
       + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`).join("")
     + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
 }
 
-// mise en évidence du parti sélectionné dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris
+// mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris
 function appliquerSelection() {
   const sec = document.getElementById("viPartis"), plan = document.getElementById("viPlan"); if (!sec) return;
   const k = sec._choisi;
-  sec.querySelectorAll("[data-partie-parti]").forEach(b => b.setAttribute("aria-pressed", b.dataset.partieParti === k));
   if (!plan) return;
   const sieges = [...plan.querySelectorAll("[data-p]")], siens = k ? sieges.filter(e => e.dataset.p.split(" ").includes(k)) : [];
   sieges.forEach(e => e.toggleAttribute("data-sel", siens.includes(e)));
