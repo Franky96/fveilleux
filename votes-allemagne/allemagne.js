@@ -74,15 +74,20 @@ const parGroupe = (sg, parl = false) => { const o = {}; for (const [k, n] of Obj
 
 /* ---------- hémicycle (comme Votes États-Unis et Votes France) ---------- */
 function hemicycle(svgEl, parts, sous) {
-  const R = 12, r0 = 0.42, W = 1000, H = 520, cx = W / 2, cy = H - 20, Rmax = 470;
-  const rayons = d3.range(R).map(i => r0 + i * (1 - r0) / (R - 1)), somme = d3.sum(rayons);
-  const parRangee = rayons.map(r => Math.round(SIEGES * r / somme)); parRangee[R - 1] += SIEGES - d3.sum(parRangee);
+  // 630 sièges : le nombre de rangées est choisi pour que les sièges soient aussi espacés le long des rangées
+  // qu'entre les rangées (avec 12 rangées comme ailleurs, ils se touchaient presque) ; rayon du point = 40 % de cet écart
+  const r0 = 0.34, W = 1000, H = 520, cx = W / 2, cy = H - 20, Rmax = 470;
+  const repartir = R => { const rayons = d3.range(R).map(i => r0 + i * (1 - r0) / (R - 1)), somme = d3.sum(rayons);
+    const parRangee = rayons.map(r => Math.round(SIEGES * r / somme)); parRangee[R - 1] += SIEGES - d3.sum(parRangee);
+    const ecart = Math.min(Rmax * (1 - r0) / (R - 1), ...rayons.map((r, i) => Math.PI * r * Rmax / (parRangee[i] - 1)));
+    return { R, rayons, parRangee, ecart }; };
+  const { R, rayons, parRangee, ecart } = d3.range(10, 21).map(repartir).reduce((a, b) => b.ecart > a.ecart ? b : a);
   const places = [];
   rayons.forEach((r, i) => { const n = parRangee[i];
     for (let k = 0; k < n; k++) { const a = Math.PI - k * Math.PI / (n - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
   places.sort((p, q) => q.a - p.a || p.r - q.r);
   const sieges = parts.flatMap(p => d3.range(p.n).map(() => p));
-  const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * 0.42, 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
+  const rayon = ecart * 0.4;
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
     .style("fill", (p, i) => sieges[i] ? (sieges[i].k === "VAC" ? "none" : sieges[i].c) : "var(--soft)")
