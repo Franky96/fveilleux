@@ -612,6 +612,10 @@
     .vi-table td.has { font-weight: 800; color: var(--c); }
     .vi-table td:not(.has) { color: var(--muted); }
     .vi-carte:fullscreen, .vi-carte.lv-plein { border: 0; border-radius: 0; }
+    /* « Info » en plein écran (votes-quebec/plein.js) : panneau par-dessus la carte, à droite ; l'année de la carte se décale à sa gauche */
+    .vi-carte .lv-panneau-plein { top: 64px; max-height: calc(100% - 128px); }
+    .vi-carte:has(> .lv-panneau-plein) .vf-an-carte { right: calc(min(380px, 100% - 20px) + 22px); }
+    @media (max-width: 600px) { .vi-carte .lv-panneau-plein { top: auto; bottom: 58px; max-height: 45%; } .vi-carte:has(> .lv-panneau-plein) .vf-an-carte { display: none; } }
     .vi-carte:fullscreen #viCarte, .vi-carte.lv-plein #viCarte { height: 100%; }
     #viCarte { display: block; width: 100%; height: clamp(420px, 70vh, 860px); background: var(--bg); touch-action: none; }
     .vi-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }

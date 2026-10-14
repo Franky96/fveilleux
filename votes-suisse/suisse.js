@@ -9,6 +9,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
@@ -281,7 +282,7 @@ function construireCarte() {
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
-  $("viPlein").addEventListener("click", pleinEcran);
+  preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("viPct", etat.pct); peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").innerHTML = PUCES.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${nomP(p)}</button>`).join("");
@@ -347,22 +348,9 @@ function infobulle(e, f) {
     + (PROJ ? `<small>Projection : ${listeSieges(PROJ.cantons[ab].s)}</small><br>` : "")
     + `<small>2023 : ${o23}</small><br><small>Élus 2023 : ${listeSieges(R23.cantons[ab].s)}</small>`;
 }
-function pleinEcran() {
-  const carte = $("viCarte").parentElement, ecran = document.fullscreenElement || document.webkitFullscreenElement;
-  if (ecran) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); majPlein(); }
-  else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
-  else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); majPlein(); }
-}
-function majPlein() {
-  const carte = $("viCarte").parentElement, on = !!(document.fullscreenElement || document.webkitFullscreenElement) || carte.classList.contains("lv-plein");
-  $("viPlein").setAttribute("aria-pressed", on); $("viPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
-}
-document.addEventListener("fullscreenchange", majPlein);
-document.addEventListener("webkitfullscreenchange", majPlein);
 
 /* ---------- panneau : toute la Suisse, ou un canton ---------- */
-function choisir(ab) { sel = ab; peindre(); dessinerPanneau(); }
+function choisir(ab) { sel = ab; peindre(); dessinerPanneau(); if (ab != null) infoPlein(); }
 const jauge = (lab, coul, v, droite = "", max = 40, cls = "") => `<div class="vi-vrow ${cls}"><b style="color:${coul}">${lab}</b><span class="vi-jauge"><i style="width:${Math.min(100, 100 * v / max)}%;background:${coul}"></i></span>`
   + `<span class="vi-num">${nf(v, 1)} %</span><span class="vi-num">${droite}</span></div>`;
 const barreSieges = (lab, coul, n, tot, droite = "") => `<div class="vi-vrow vf-gp"><b style="color:${coul}">${lab}</b><span class="vi-jauge"><i style="width:${100 * n / tot}%;background:${coul}"></i></span><span class="vi-num"><b>${n}</b></span><span class="vi-num"><small>${droite}</small></span></div>`;

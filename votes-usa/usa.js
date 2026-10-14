@@ -11,6 +11,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 435, MAJ = 218;
@@ -421,7 +422,7 @@ function construireCarte() {
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
-  $("viPlein").addEventListener("click", pleinEcran);
+  preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("viPct", etat.pct); peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
@@ -524,27 +525,14 @@ function infobulle(e, f) {
       + (c ? `<small>2024 : ${Object.entries(c.s).slice(0, 2).map(([k, v]) => `${k} ${nf(v, 1)} %`).join(" · ")}</small>` : "");
   }
 }
-function pleinEcran() {
-  const carte = $("viCarte").parentElement, ecran = document.fullscreenElement || document.webkitFullscreenElement;
-  if (ecran) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); majPlein(); }
-  else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
-  else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); majPlein(); }
-}
-function majPlein() {
-  const carte = $("viCarte").parentElement, on = !!(document.fullscreenElement || document.webkitFullscreenElement) || carte.classList.contains("lv-plein");
-  $("viPlein").setAttribute("aria-pressed", on); $("viPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
-}
-document.addEventListener("fullscreenchange", majPlein);
-document.addEventListener("webkitfullscreenchange", majPlein);
 
 /* ---------- panneau : tous les États-Unis, un État ou un district ---------- */
-function choisir(id) { sel = id; peindre(); dessinerPanneau(); }
+function choisir(id) { sel = id; peindre(); dessinerPanneau(); if (id != null) infoPlein(); }
 function choisirEtat(ab) {
   etat.st = ab; sel = null;
   const f = ab ? DATA.geoEtats.features.find(x => x.properties.fips === DATA.etats.find(e => e.ab === ab).fips) : null;
   if (f) zoomVers(f, 0.9); else svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity);
-  peindre(); dessinerPanneau();
+  peindre(); dessinerPanneau(); if (ab) infoPlein();
 }
 const menuEtats = () => `<details class="vc-menu"><summary>État : <b>${etat.st ? esc(ETAT_NOM[etat.st]) : "Tous les États-Unis"}</b></summary>
   <div class="vc-menu-liste">${[[null, "Tous les États-Unis"], ...DATA.etats.map(e => [e.ab, e.nom])]

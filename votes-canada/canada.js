@@ -8,6 +8,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -255,7 +256,7 @@ function construireCarte() {
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
-  $("viPlein").addEventListener("click", pleinEcran);   // bouton en bas de la carte, hors de la barre de zoom
+  preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("viPct", etat.pct); peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").innerHTML = P.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${p}</button>`).join("");
@@ -313,22 +314,9 @@ function infobulle(e, f) {
   t.innerHTML = `<b>${esc(r.n)}</b><small>${esc(reg)}</small><br>${a ? `Député : ${esc(a.nom)} (${a.p})` : "Siège vacant"}<br>`
     + (cp ? `<small>Projection : ${top3(cp)}</small><br>` : "") + (ce ? `<small>Élu en ${AN(2025)} : ${ce.g} (${nf(ce.parts[ce.g], 1)} %)</small>` : "");
 }
-function pleinEcran() {
-  const carte = $("viCarte").parentElement, ecran = document.fullscreenElement || document.webkitFullscreenElement;
-  if (ecran) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); majPlein(); }
-  else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
-  else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); majPlein(); }
-}
-function majPlein() {
-  const carte = $("viCarte").parentElement, on = !!(document.fullscreenElement || document.webkitFullscreenElement) || carte.classList.contains("lv-plein");
-  $("viPlein").setAttribute("aria-pressed", on); $("viPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
-}
-document.addEventListener("fullscreenchange", majPlein);
-document.addEventListener("webkitfullscreenchange", majPlein);
 
 /* ---------- panneau : tout le Canada, ou une circonscription ---------- */
-function choisir(i) { sel = i; peindre(); dessinerPanneau(); }
+function choisir(i) { sel = i; peindre(); dessinerPanneau(); if (i != null) infoPlein(); }
 const jauge = (lab, coul, v, droite = "", max = 60, cls = "") => `<div class="vi-vrow ${cls}"><b style="color:${coul}">${lab}</b><span class="vi-jauge"><i style="width:${Math.min(100, 100 * v / max)}%;background:${coul}"></i></span>`
   + `<span class="vi-num">${nf(v, 1)} %</span><span class="vi-num">${droite}</span></div>`;
 /* ---------- provinces : menu « Province » ; projection de Qc125 quand sa région est la province elle-même

@@ -8,6 +8,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 577, MAJ = 289;
@@ -246,7 +247,7 @@ function construireCarte() {
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
-  $("viPlein").addEventListener("click", pleinEcran);   // bouton en bas de la carte, hors de la barre de zoom
+  preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
     if (TYPE === "pres") etat.cand = b.dataset.p;
@@ -316,22 +317,9 @@ function infobulle(e, f) {
       : etat.mode === "actuel" ? `<small>${c.act ? esc(GP[c.act.gp]?.nom || c.act.gp) : ""}</small>`
     : `<small>Élu en ${AN(2024)} : ${esc(c.elu)} (${esc(c.gnu)})</small><br><small>1er tour : ${Object.entries(c.s).slice(0, 3).map(([b, v]) => `${COURT[b]} ${nf(v, 1)} %`).join(" · ")}</small>`) : f.properties.id;
 }
-function pleinEcran() {
-  const carte = $("viCarte").parentElement, ecran = document.fullscreenElement || document.webkitFullscreenElement;
-  if (ecran) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); majPlein(); }
-  else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
-  else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); majPlein(); }
-}
-function majPlein() {
-  const carte = $("viCarte").parentElement, on = !!(document.fullscreenElement || document.webkitFullscreenElement) || carte.classList.contains("lv-plein");
-  $("viPlein").setAttribute("aria-pressed", on); $("viPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
-}
-document.addEventListener("fullscreenchange", majPlein);
-document.addEventListener("webkitfullscreenchange", majPlein);
 
 /* ---------- panneau ---------- */
-function choisir(id) { sel = id; peindre(); dessinerPanneau(); }
+function choisir(id) { sel = id; peindre(); dessinerPanneau(); if (id != null) infoPlein(); }
 const jauge = (lab, coul, v, droite = "", max = 50, cls = "") => `<div class="vi-vrow ${cls}"><b style="color:${coul}">${lab}</b><span class="vi-jauge"><i style="width:${Math.min(100, 100 * v / max)}%;background:${coul}"></i></span>`
   + `<span class="vi-num">${nf(v, 1)} %</span><span class="vi-num">${droite}</span></div>`;
 const ligneVote = (b, v, droite = "") => jauge(COURT[b], COUL[b], v, droite);

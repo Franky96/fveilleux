@@ -8,6 +8,7 @@ import { domaineY, decouper, placerBulle } from "./zoom-y.js";
 import { preparerSysteme } from "./systeme.js";
 import { sectionPartis, PARTIS } from "./partis.js";
 import { equilibrerHaut } from "./equilibre.js";
+import { preparerPleinEcran, infoPlein } from "./plein.js";
 
 const SIEGES = 127, MAJ = 64;
 const P5 = ["PQ", "PLQ", "CAQ", "PCQ", "QS"];                // ordre de data.json (ridings[].s)
@@ -272,7 +273,7 @@ function construireCarte() {
     else if (z === "moins") svg.transition().duration(reduit ? 0 : 250).call(ZOOM.scaleBy, 1 / 1.8);
     else if (PRESETS[z]) zoomVers(PRESETS[z], 0.95);
   });
-  $("viPlein").addEventListener("click", pleinEcran);   // bouton en bas de la carte, hors de la barre de zoom
+  preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   // modes de la carte : parti en tête, meilleur deuxième, vote d'un parti
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; try { localStorage.setItem("viPct", etat.pct ? "1" : "0"); } catch {} peindre(); });
   // ordre commun aux pages d'intentions : futur (projection) · présent · passé ; juste après l'élection, seule l'élection existe
@@ -325,23 +326,9 @@ function infobulle(e, f) {
     + (c ? Object.entries(c.parts).filter(([p]) => p !== "AUT").slice(0, 3).map(([p, v]) => `${p} ${nf(v, MODE === "election" ? 1 : 0)} %`).join(" · ") : "Aucune donnée")
     + (MODE === "election" && deputeDe(c) ? `<br><small>${c.final ? "Député" : "En avance"} : ${esc(deputeDe(c).nom)} (${deputeDe(c).p})</small>` : "");
 }
-// plein écran de la carte (API du navigateur, sinon couche fixe sur iPhone)
-function pleinEcran() {
-  const carte = $("viCarte").parentElement, ecran = document.fullscreenElement || document.webkitFullscreenElement;
-  if (ecran) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); majPlein(); }
-  else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
-  else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); majPlein(); }
-}
-function majPlein() {
-  const carte = $("viCarte").parentElement, on = !!(document.fullscreenElement || document.webkitFullscreenElement) || carte.classList.contains("lv-plein");
-  $("viPlein").setAttribute("aria-pressed", on); $("viPlein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
-}
-document.addEventListener("fullscreenchange", majPlein);
-document.addEventListener("webkitfullscreenchange", majPlein);
 
 /* ---------- panneau : tout le Québec, ou une circonscription ---------- */
-function choisir(i) { sel = i; peindre(); dessinerPanneau(); }
+function choisir(i) { sel = i; peindre(); dessinerPanneau(); if (i != null) infoPlein(); }
 function dessinerPanneau() {
   const z = $("viPanneau"), s = ETAT.sieges, nat = ETAT.national;
   if (sel == null) {
