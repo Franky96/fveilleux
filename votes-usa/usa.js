@@ -95,6 +95,8 @@ function hemicycle(svgEl, parts, sous, SIEGES = 435) {
   const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * 0.42, 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
+    // data-p : parti du siège (bande des partis) ; cotes « D2 », « R1 », sièges non renouvelés « nD », « nI »…
+    .attr("data-p", (p, i) => { const k = sieges[i]?.k || ""; return k === "I" || k === "nI" ? "I" : k[0] === "n" ? k[1] : k[0] === "D" || k[0] === "R" ? k[0] : null; })
     .style("fill", (p, i) => sieges[i] ? (sieges[i].k === "VAC" ? "none" : sieges[i].c) : "var(--soft)")
     .style("stroke", (p, i) => sieges[i]?.k === "VAC" ? "var(--muted)" : null).style("stroke-width", 2)
     .append("title").text((p, i) => sieges[i] ? sieges[i].nom : "");

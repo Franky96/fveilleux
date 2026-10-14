@@ -91,6 +91,7 @@ function hemicycle(svgEl, parts, sous) {
   const rayon = ecart * 0.4;
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
+    .attr("data-p", (p, i) => sieges[i] ? (sieges[i].k === "Union" ? "Union CDU CSU" : sieges[i].k) : null)   // parti du siège (bande des partis)
     .style("fill", (p, i) => sieges[i] ? (sieges[i].k === "VAC" ? "none" : sieges[i].c) : "var(--soft)")
     .style("stroke", (p, i) => sieges[i]?.k === "VAC" ? "var(--muted)" : null).style("stroke-width", 2)
     .append("title").text((p, i) => sieges[i] ? sieges[i].nom : "");

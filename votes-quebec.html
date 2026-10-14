@@ -644,6 +644,11 @@
     .vi-partis-btn span { color: var(--muted); font-size: 0.8rem; }
     .vi-partis-btn:hover, .vi-partis-btn[aria-describedby] { border-color: var(--c); }
     .vi-partis-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .vi-partis-btn[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 20%, var(--surface)); box-shadow: inset 0 0 0 1px var(--c); }
+    /* parti sélectionné : ses sièges gardent leur couleur, les autres passent au gris (l'attribut de style des sièges est battu par !important) */
+    #viPlan.vi-plan-filtre [data-p]:not([data-sel]) { fill: color-mix(in srgb, var(--muted) 35%, var(--surface)) !important; stroke: none !important; }
+    #viPlan [data-p] { transition: fill 0.2s; }
+    @media (prefers-reduced-motion: reduce) { #viPlan [data-p] { transition: none; } }
     .vi-partis-note { flex-basis: 100%; color: var(--muted); font-size: 0.78rem; }
     @media (max-width: 700px) { .vi-partis-btn span { display: none; } }   /* téléphone : sigles seulement, le nom est dans la bulle */
     .vi-partis-bulle { position: fixed; z-index: 1000; display: grid; gap: 4px; width: max-content; max-width: min(340px, calc(100vw - 16px)); padding: 10px 13px;

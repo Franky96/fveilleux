@@ -143,13 +143,13 @@ function chamber(svgEl, seatsBy, n) {
     .style("font", `${o.w || 600} ${o.size || 7.5}px "Public Sans", system-ui, sans-serif`).style("letter-spacing", o.ls || ".04em").text(t);
   rect(x0 - 4, cy - MID + 6, colX(C - 1) + S - x0 + 8, 2 * MID - 12).attr("rx", 4).style("fill", "var(--soft)");
   const chair = rect(22, cy - 9, 18, 18).attr("rx", 3);
-  if (pres) chair.style("fill", COUL[pres.p]); else chair.style("fill", "none").style("stroke", "var(--muted)").attr("stroke-width", 1.4);
+  if (pres) chair.style("fill", COUL[pres.p]).attr("data-p", pres.p); else chair.style("fill", "none").style("stroke", "var(--muted)").attr("stroke-width", 1.4);   // data-p : parti du siège (bande des partis)
   chair.append("title").text(pres ? `Présidence : député du ${pres.p}, compté dans ses ${seatsBy[pres.p]} sièges. Il ne vote qu'en cas d'égalité.` : "Présidence");
   txt(31, cy - 13, "Présidence", { size: 6.5 });
   txt(x0, cy + MID + ROWS * STEP + 9, "Gouvernement", { size: 7, anchor: "start" });
   txt(x0, cy - MID - ROWS * STEP - 3, "Opposition", { size: 7, anchor: "start" });
   txt((x0 + colX(C - 1) + S) / 2, cy + 2.6, `majorité : ${maj} sièges`, { size: 7.5 });
-  for (const s of placed) { const r = rect(s.x, s.y, S, S).attr("rx", 2.2).style("fill", COUL[s.p]); r.append("title").text(NOMS[s.p]); }
+  for (const s of placed) { const r = rect(s.x, s.y, S, S).attr("rx", 2.2).attr("data-p", s.p).style("fill", COUL[s.p]); r.append("title").text(NOMS[s.p]); }
   const front = (p, cote) => placed.filter(s => s.p === p && s.r === 0 && s.j < C && (cote === "gov" ? s.y > cy : s.y < cy))
     .sort((a, b) => Math.abs(a.j - 7) - Math.abs(b.j - 7))[0];
   const mark = (s, t) => { if (s) txt(s.x + S / 2, s.y + S / 2 + 2.3, t, { size: t.length > 1 ? 5.2 : 6.5, w: 800, fill: "var(--surface)", ls: "0" }); };

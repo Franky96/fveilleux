@@ -95,6 +95,7 @@ function hemicycle(svgEl, seats, n, sous) {
   const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * 0.42, 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
+    .attr("data-p", (p, i) => sieges[i] || null)   // parti du siège (bande des partis)
     .style("fill", (p, i) => sieges[i] ? COUL[sieges[i]] || COUL.AUT : "var(--soft)")
     .append("title").text((p, i) => sieges[i] ? `${NOMS[sieges[i]] || sieges[i]} (${seats[sieges[i]]})` : "");
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(n);
