@@ -118,8 +118,12 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
       bulle.style.top = (r.bottom + 8 + h < innerHeight ? r.bottom + 8 : Math.max(8, r.top - h - 8)) + "px";
     };
     const cacher = () => { if (actif) actif.removeAttribute("aria-describedby"); actif = null; bulle.hidden = true; sec._choisi = null; appliquerSelection(); };
-    sec.addEventListener("mouseover", e => { const b = e.target.closest("[data-partie-parti]"); if (b && b !== actif) montrer(b); });
-    sec.addEventListener("mouseleave", cacher);
+    // effet seulement sur un parti : hors des boutons (même dans la bande), tout redevient normal ; court délai pour
+    // ne pas clignoter en passant d'un bouton à l'autre par l'espace entre eux
+    let delai;
+    sec.addEventListener("mouseover", e => { const b = e.target.closest("[data-partie-parti]"); clearTimeout(delai);
+      if (b) { if (b !== actif) montrer(b); } else if (actif) delai = setTimeout(cacher, 90); });
+    sec.addEventListener("mouseleave", () => { clearTimeout(delai); cacher(); });
     sec.addEventListener("focusin", e => { const b = e.target.closest("[data-partie-parti]"); if (b) montrer(b); });
     sec.addEventListener("focusout", cacher);
     // toucher (pas de survol) : un toucher montre le parti, un deuxième le cache
