@@ -137,6 +137,29 @@
   const scene = new THREE.Scene();
   scene.background = col(0x05080a);
 
+  // ── Thème clair / sombre (classe .light sur <html>, posée par version.js et basculée par theme-toggle.js) ──
+  function isLightTheme() {
+    if (document.documentElement.classList.contains('light')) return true;
+    // version.js est chargé après ce script : au tout premier passage, on lit la préférence enregistrée
+    try { return !document.documentElement.dataset.themeSeen && localStorage.getItem('theme') === 'light'; } catch (e) { return false; }
+  }
+  // Fond de la vue en clair : dégradé vertical gris-vert très pâle (haut → bas)
+  const lightBackground = (function () {
+    const c = document.createElement('canvas');
+    c.width = 4; c.height = 256;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#eef2ee');
+    grad.addColorStop(1, '#dfe7dd');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 4, 256);
+    const t = new THREE.CanvasTexture(c);
+    t.encoding = THREE.sRGBEncoding;
+    return t;
+  })();
+  const darkBackground = scene.background;
+  const lightFog = new THREE.Fog(col(0xe4ebe2), 28, 70);
+
   const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 200);
   const CAM_START = new THREE.Vector3(3.0, 6.0, 15.5);
   camera.position.copy(CAM_START);
@@ -193,6 +216,13 @@
   grid.material.transparent = true;
   grid.material.opacity = 0.55;
   scene.add(grid);
+  // Sol en mode clair : lignes plus foncées que le fond, estompées au loin par le brouillard
+  const gridLight = new THREE.GridHelper(80, 80, col(0x8aa384), col(0xb4c4ae));
+  gridLight.position.y = grid.position.y;
+  gridLight.material.transparent = true;
+  gridLight.material.opacity = 0.75;
+  gridLight.visible = false;
+  scene.add(gridLight);
 
   // ── Vue en coupe : quart retiré (y > 0 et z > 0) ──
   const clipA = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
@@ -453,27 +483,44 @@
   ST.add(flameLight);
 
   // ════════════════ Écoulement ════════════════
-  const COLD = col(0x7ec8e3);
-  const CORE_STOPS = [
-    [0.0, 0x7ec8e3], [1.0, 0x9fd6e8], [1.6, 0xcfe6ee], [2.2, 0xffe9c8], [2.33, 0xffc640], [2.45, 0xff6a10],
-    [2.6, 0xff4a10], [2.8, 0xff8a30], [3.1, 0xffb060], [3.6, 0xc8a890], [4.8, 0x2a2624],
-  ].map(([x, h]) => [x, col(h)]);
+  const FLOW_DARK = {
+    cold: col(0x7ec8e3),
+    stops: [
+      [0.0, 0x7ec8e3], [1.0, 0x9fd6e8], [1.6, 0xcfe6ee], [2.2, 0xffe9c8], [2.33, 0xffc640], [2.45, 0xff6a10],
+      [2.6, 0xff4a10], [2.8, 0xff8a30], [3.1, 0xffb060], [3.6, 0xc8a890], [4.8, 0x2a2624],
+    ].map(([x, h]) => [x, col(h)]),
+    fadeTo: null, // fondu vers le noir (mélange additif)
+  };
+  // Mode clair : teintes plus soutenues (mélange normal), fondu vers la couleur du fond
+  const FLOW_LIGHT = {
+    cold: col(0x1f86c4),
+    stops: [
+      [0.0, 0x1f86c4], [1.0, 0x2a7fc0], [1.6, 0x4a78b0], [2.2, 0xb07a20], [2.33, 0xe09000], [2.45, 0xf05a00],
+      [2.6, 0xe03a08], [2.8, 0xe86a10], [3.1, 0xd88a28], [3.6, 0x9a7f6a], [4.8, 0xb8b4ae],
+    ].map(([x, h]) => [x, col(h)]),
+    fadeTo: col(0xe4ebe2),
+  };
+  let FLOW = FLOW_DARK;
 
   function coreColor(x, out, heat) {
-    let a = CORE_STOPS[0], b = CORE_STOPS[CORE_STOPS.length - 1];
-    for (let i = 0; i < CORE_STOPS.length - 1; i++) {
-      if (x <= CORE_STOPS[i + 1][0]) { a = CORE_STOPS[i]; b = CORE_STOPS[i + 1]; break; }
+    const stops = FLOW.stops;
+    let a = stops[0], b = stops[stops.length - 1];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (x <= stops[i + 1][0]) { a = stops[i]; b = stops[i + 1]; break; }
     }
     const t = Math.min(1, Math.max(0, (x - a[0]) / (b[0] - a[0] || 1)));
     out.copy(a[1]).lerp(b[1], t);
     if (x > 2.3) out.multiplyScalar(0.45 + 0.55 * heat);
-    return out.multiplyScalar(edgeFade(x, 0.3, 4.6));
+    return fade(out, edgeFade(x, 0.3, 4.6));
   }
   function edgeFade(x, x0, x1) {
     return Math.max(0, Math.min(1, (x - x0) / 0.25, (x1 - x) / 0.9));
   }
+  function fade(out, f) {
+    return FLOW.fadeTo ? out.lerp(FLOW.fadeTo, 1 - f) : out.multiplyScalar(f);
+  }
   function bypassColor(x, out) {
-    return out.copy(COLD).multiplyScalar(edgeFade(x, -0.15, 3.8));
+    return fade(out.copy(FLOW.cold), edgeFade(x, -0.15, 3.8));
   }
 
   function flow(n, inner, outer, x0, x1, xRef, colorFn, hotBoost) {
@@ -498,6 +545,28 @@
 
   const bypassFlow = flow(700, bypInAt, bypOutAt, -0.15, 3.8, 1.0, (x, o) => bypassColor(x, o), 0);
   const coreFlow = flow(600, hubAt, coreOutAt, 0.3, 4.6, 0.9, null, 1.4);
+
+  // ── Application du thème à la scène (au démarrage et à chaque bascule, sans recharger) ──
+  let lightTheme = null;
+  function applyTheme() {
+    const light = isLightTheme();
+    if (light === lightTheme) return;
+    lightTheme = light;
+    scene.background = light ? lightBackground : darkBackground;
+    scene.fog = light ? lightFog : null;
+    grid.visible = !light;
+    gridLight.visible = light;
+    FLOW = light ? FLOW_LIGHT : FLOW_DARK;
+    [bypassFlow, coreFlow].forEach((F) => {
+      // sur fond clair, le mélange additif rendrait les particules invisibles
+      F.pts.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+      F.pts.material.size = light ? 0.06 : 0.065;
+      F.pts.material.needsUpdate = true;
+      stepFlow(F, 0, 0, 0); // recolore tout de suite, même à l'arrêt
+    });
+    MATS.forEach((m) => { m.needsUpdate = true; }); // brouillard ajouté / retiré : recompilation des nuanciers
+    flameMat.needsUpdate = true;
+  }
 
   const tmpC = new THREE.Color();
   function stepFlow(F, dt, speed, heat) {
@@ -647,6 +716,12 @@
   window.addEventListener('resize', resize);
   if (window.ResizeObserver) new ResizeObserver(resize).observe(viewport);
   resize();
+
+  applyTheme();
+  const onThemeChange = () => { document.documentElement.dataset.themeSeen = '1'; applyTheme(); };
+  window.addEventListener('themechange', onThemeChange);
+  // filet de sécurité : toute modification de la classe de <html> (version.js, autre script)
+  new MutationObserver(onThemeChange).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   if (loadingEl) loadingEl.style.display = 'none';
 
   // ════════════════ Modèle de fonctionnement ════════════════
