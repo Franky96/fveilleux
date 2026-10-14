@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Simulateur PT6A-21 — Outils de Frank</title>
 <script>
@@ -21,6 +22,11 @@
   --text:#dde4e9; --muted:#8797a3; --dim:#5d6c77;
   --accent:#7cc4e4; --accent-d:#2d5c73;
   --green:#3fcf74; --amber:#f0b13a; --red:#ef4b4b; --flame:#ff8a3d;
+  /* couleurs dessinées en JS (jauges, tendances, scène 3D) : lues par getComputedStyle */
+  --gauge-face:#0c1114; --gauge-ring:#26323b; --gauge-tick:#8797a3; --gauge-text:#dde4e9; --gauge-needle:#f4f7f9; --gauge-hub:#2a363f;
+  --gauge-g:#3fcf74; --gauge-a:#f0b13a; --gauge-r:#ef4b4b;
+  --trend-grid:#1e2931; --trend-text:#5d6c77; --s-ng:#7cc4e4; --s-np:#3fcf74; --s-trq:#f0b13a; --s-itt:#ff6a4a;
+  --scene-grid1:#24313b; --scene-grid2:#172026; --scene-grid-op:0.5;
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -245,7 +251,7 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
   body{padding-inline:24px}
   .wrap{max-width:none;display:grid;grid-template-columns:minmax(0,1fr) 360px clamp(440px,21vw,600px);
     grid-template-areas:"back back back" "top top top" "vp side panel" "lower lower lower" "docs docs docs";column-gap:14px;align-items:start}
-  .wrap>.back{grid-area:back;justify-self:start}
+  .wrap>.toprow{grid-area:back}
   .wrap>.top{grid-area:top}
   .app{display:contents}
   .app>.viewport{grid-area:vp;margin-top:14px;height:calc(100vh - 190px);max-height:none;min-height:560px}
@@ -257,12 +263,82 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
   .lower{grid-area:lower}
   .docs{grid-area:docs}
 }
+
+/* ---------- interrupteur clair / sombre (repris de style.css) ---------- */
+.toprow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+#theme-toggle{width:68px;height:26px;border-radius:13px;background:#2a3a2a;border:1.5px solid #3a5a3a;cursor:pointer;transition:background .35s ease,border-color .35s ease;display:inline-flex;align-items:center;justify-content:space-between;padding:0 5px;position:relative;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+#theme-toggle.theme-toggle--fixed{position:fixed;top:.75rem;right:.75rem;z-index:9999}
+.toprow #theme-toggle{margin-bottom:2px}
+.tg-icon{font-size:.62rem;line-height:1;pointer-events:none;flex-shrink:0;position:relative;z-index:2}
+#theme-toggle-knob{position:absolute;width:20px;height:20px;border-radius:50%;top:50%;transform:translateY(-50%);left:3px;background:#7ab880;box-shadow:0 1px 4px rgba(0,0,0,.55);transition:left .35s cubic-bezier(.4,0,.2,1),background .35s ease;pointer-events:none;z-index:3}
+html.light #theme-toggle{background:#34c759;border-color:#28a045}
+html.light #theme-toggle-knob{left:45px;background:#ffffff}
+
+/* ---------- mode clair ---------- */
+html.light{
+  color-scheme: light;
+  --bg:#eef2f5; --bg2:#e5ebef; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
+  --text:#15202a; --muted:#52626f; --dim:#7a8893;
+  --accent:#1d6f99; --accent-d:#d4e8f3;
+  --green:#178a45; --amber:#b06f00; --red:#cc2f2f; --flame:#d0581a;
+  --gauge-face:#fbfcfd; --gauge-ring:#b9c6d0; --gauge-tick:#52626f; --gauge-text:#15202a; --gauge-needle:#15202a; --gauge-hub:#52626f;
+  --gauge-g:#1f9a50; --gauge-a:#c98200; --gauge-r:#cc2f2f;
+  --trend-grid:#dde4ea; --trend-text:#52626f; --s-ng:#1d6f99; --s-np:#178a45; --s-trq:#b06f00; --s-itt:#d0402a;
+  --scene-grid1:#9fb0bd; --scene-grid2:#c3cfd8; --scene-grid-op:0.85;
+  --on-accent:#0f4a6a; --accent-b:#7fb3cf;
+  --glass:rgba(255,255,255,.86); --glass-hi:rgba(255,255,255,.94);
+  --shadow:0 4px 14px rgba(21,32,42,.10);
+}
+/* le gris « dim » de la palette (3,6:1 sur blanc) sert aux traits ; les petits textes passent en « muted » */
+html.light .vmenu .mnote,html.light .vmenu h4,html.light .vmenu h4 .hint,html.light .vfoot,html.light .card h2 em,
+html.light .ticks,html.light .log time,html.light .fine,html.light .mref.off{color:var(--muted)}
+/* vue 3D */
+html.light .viewport{background:radial-gradient(120% 90% at 50% 40%,#f4f7f9 0%,#dfe6eb 70%)}
+html.light .menu-btn,html.light .seg,html.light .chipr,html.light .hud div,html.light .oilkey,html.light .flowkey{background:var(--glass)}
+html.light .menu-btn,html.light .vbar-main .seg,html.light .chipr{box-shadow:0 1px 4px rgba(21,32,42,.08)}
+html.light .vmenu{background:var(--glass-hi);box-shadow:var(--shadow)}
+html.light .vmenu .seg{background:rgba(244,247,249,.95);box-shadow:none}
+html.light .vmenu .chipr{background:none;box-shadow:none}
+html.light .menu-btn[aria-expanded="true"],html.light .seg button[aria-pressed="true"]{background:var(--accent-d);border-color:var(--accent-b);color:var(--on-accent)}
+html.light .vfoot span{background:rgba(255,255,255,.8)}
+html.light .tip{background:rgba(255,255,255,.97);box-shadow:var(--shadow)}
+html.light .frozen{background:var(--glass-hi);color:#7a4d00;box-shadow:var(--shadow)}
+html.light .calpanel{background:var(--glass-hi);border-top-color:#1d8fbf;box-shadow:var(--shadow)}
+html.light .calhead{color:#0f5f84}
+html.light .calpanel button[aria-pressed="true"]{border-color:var(--accent-b);color:var(--on-accent)}
+html.light .oilkey i{box-shadow:inset 0 0 0 1px rgba(21,32,42,.28)}
+html.light .st{background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(21,32,42,.12)}
+html.light .st.brg{color:#6e4500}
+/* poste de pilotage */
+html.light .tog::before{background:#dfe6eb;box-shadow:inset 0 0 0 1px #b9c6d0}
+html.light .tog[aria-pressed="true"]{border-color:#8fa6b6}
+html.light .tog[aria-pressed="true"]::before{background:var(--green);box-shadow:0 0 8px rgba(23,138,69,.45)}
+html.light .tog.warn[aria-pressed="true"]::before{background:var(--amber);box-shadow:0 0 8px rgba(176,111,0,.45)}
+html.light .btn.pri{background:var(--accent);border-color:#155a7d;color:#ffffff}
+html.light .btn.pri:hover{background:#185f84}
+/* panneau d'instruments */
+html.light .panel{background:linear-gradient(#ffffff,#f1f5f8)}
+html.light .lamp{background:#eaeff3;color:#5a6975;border-color:#d3dce3}
+html.light .lamp.on.g{background:#d3f1de;color:#0d5c2c;border-color:#4fb57a;box-shadow:0 0 10px rgba(23,138,69,.28)}
+html.light .lamp.on.a{background:#fde9bf;color:#6e4500;border-color:#d39a2c;box-shadow:0 0 10px rgba(201,130,0,.3)}
+html.light .lamp.on.r{background:#fbd8d8;color:#9c1c1c;border-color:#df7272;box-shadow:0 0 10px rgba(204,47,47,.3)}
+html.light .lamp.on.b{background:#d4e8f3;color:#0f4a6a;border-color:#7fb3cf}
+html.light .ro{background:#ffffff}
+/* bas de page */
+html.light .info p{color:#2a3743}
+html.light .log li{border-bottom-color:var(--line)}
+html.light .log li.a span{color:#7a4d00}
+html.light .log li.r span{color:#b02525}
+html.light .log li.g span{color:#12703a}
+html.light .mref{border-color:var(--accent-b);color:var(--on-accent)}
+html.light .mref.off{background:var(--panel2);border-color:var(--line2)}
+html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<a href="moteurs.html" class="back">&#8592; Moteurs</a>
+<div class="toprow"><a href="moteurs.html" class="back">&#8592; Moteurs</a><span id="tg-slot"></span></div>
 
 <header class="top">
   <div class="brand">
@@ -462,10 +538,10 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
       <h2>Tendances <em>60 dernières secondes</em></h2>
       <canvas id="trend"></canvas>
       <div class="legend">
-        <span><i style="background:#7cc4e4"></i>Ng %</span>
-        <span><i style="background:#3fcf74"></i>Np % (2200)</span>
-        <span><i style="background:#f0b13a"></i>Couple % (1315)</span>
-        <span><i style="background:#ff6a4a"></i>ITT ÷ 10 °C</span>
+        <span><i style="background:var(--s-ng)"></i>Ng %</span>
+        <span><i style="background:var(--s-np)"></i>Np % (2200)</span>
+        <span><i style="background:var(--s-trq)"></i>Couple % (1315)</span>
+        <span><i style="background:var(--s-itt)"></i>ITT ÷ 10 °C</span>
       </div>
     </div>
     <div class="card">
@@ -599,9 +675,17 @@ controls.enableDamping = true; controls.dampingFactor = 0.08;
 controls.minDistance = 1.2; controls.maxDistance = 16;
 controls.target.set(-0.15, 0, 0);
 
-const grid = new THREE.GridHelper(14, 28, 0x24313b, 0x172026);
-grid.position.y = -2.4; grid.material.transparent = true; grid.material.opacity = 0.5;
-scene.add(grid);
+/* ---------- thème clair / sombre : couleurs lues dans les variables CSS de la page ---------- */
+let LIGHT = document.documentElement.classList.contains('light');
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let grid = null;
+function buildGrid() {
+  if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+  grid = new THREE.GridHelper(14, 28, new THREE.Color(cssVar('--scene-grid1') || '#24313b'), new THREE.Color(cssVar('--scene-grid2') || '#172026'));
+  grid.position.y = -2.4; grid.material.transparent = true; grid.material.opacity = parseFloat(cssVar('--scene-grid-op')) || 0.5;
+  scene.add(grid);
+}
+buildGrid();
 
 const eng = new THREE.Group(); eng.rotation.z = Math.PI / 2; scene.add(eng);
 const modFront = new THREE.Group(), modPower = new THREE.Group(), modGG = new THREE.Group(), modAGB = new THREE.Group();
@@ -2082,15 +2166,23 @@ renderer.domElement.addEventListener('pointerleave', () => { tipEl.hidden = true
 /* =====================================================================
    INSTRUMENTS
    ===================================================================== */
-const C = { g: '#3fcf74', a: '#f0b13a', r: '#ef4b4b', t: '#dde4e9', m: '#8797a3', face: '#0c1114', ring: '#26323b' };
+const C = { g: '#3fcf74', a: '#f0b13a', r: '#ef4b4b', t: '#dde4e9', m: '#8797a3', face: '#0c1114', ring: '#26323b', needle: '#f4f7f9', hub: '#2a363f' };
+const TR = { grid: '#1e2931', text: '#5d6c77', ng: '#7cc4e4', np: '#3fcf74', trq: '#f0b13a', itt: '#ff6a4a' };
+function readPalette() {
+  const v = (n, d) => cssVar(n) || d;
+  Object.assign(C, { g: v('--gauge-g', C.g), a: v('--gauge-a', C.a), r: v('--gauge-r', C.r), t: v('--gauge-text', C.t), m: v('--gauge-tick', C.m),
+    face: v('--gauge-face', C.face), ring: v('--gauge-ring', C.ring), needle: v('--gauge-needle', C.needle), hub: v('--gauge-hub', C.hub) });
+  Object.assign(TR, { grid: v('--trend-grid', TR.grid), text: v('--trend-text', TR.text), ng: v('--s-ng', TR.ng), np: v('--s-np', TR.np), trq: v('--s-trq', TR.trq), itt: v('--s-itt', TR.itt) });
+}
+readPalette();
 const GAUGES = [
-  { id: 'g-trq', label: 'COUPLE', unit: 'lb·pi', min: 0, max: 1600, arcs: [[0, 1315, C.g], [1315, 1500, C.a]], red: [1315], ticks: 8, val: () => st.trq, fmt: v => Math.round(v), sub: v => (v / 30.87).toFixed(1) + ' psi' },
-  { id: 'g-itt', label: 'ITT', unit: '°C', min: 0, max: 1200, arcs: [[300, 695, C.g], [695, 825, C.a]], red: [695, 1090], ticks: 6, val: () => st.itt, fmt: v => Math.round(v), sub: () => 'démarr. 1090' },
-  { id: 'g-ng', label: 'Ng', unit: '%', min: 0, max: 110, arcs: [[52, 101.5, C.g]], red: [101.5], ticks: 11, val: () => st.Ng, fmt: v => v.toFixed(1), sub: v => Math.round(v * NG100 / 100).toLocaleString('fr-CA') + ' tr/min' },
-  { id: 'g-np', label: 'Np', unit: 'tr/min', min: 0, max: 2600, arcs: [[1600, 2200, C.g]], red: [2200], ticks: 13, val: () => st.Np, fmt: v => Math.round(v), sub: v => (v / 22).toFixed(0) + ' %' },
+  { id: 'g-trq', label: 'COUPLE', unit: 'lb·pi', min: 0, max: 1600, arcs: [[0, 1315, 'g'], [1315, 1500, 'a']], red: [1315], ticks: 8, val: () => st.trq, fmt: v => Math.round(v), sub: v => (v / 30.87).toFixed(1) + ' psi' },
+  { id: 'g-itt', label: 'ITT', unit: '°C', min: 0, max: 1200, arcs: [[300, 695, 'g'], [695, 825, 'a']], red: [695, 1090], ticks: 6, val: () => st.itt, fmt: v => Math.round(v), sub: () => 'démarr. 1090' },
+  { id: 'g-ng', label: 'Ng', unit: '%', min: 0, max: 110, arcs: [[52, 101.5, 'g']], red: [101.5], ticks: 11, val: () => st.Ng, fmt: v => v.toFixed(1), sub: v => Math.round(v * NG100 / 100).toLocaleString('fr-CA') + ' tr/min' },
+  { id: 'g-np', label: 'Np', unit: 'tr/min', min: 0, max: 2600, arcs: [[1600, 2200, 'g']], red: [2200], ticks: 13, val: () => st.Np, fmt: v => Math.round(v), sub: v => (v / 22).toFixed(0) + ' %' },
   { id: 'g-ff', label: 'DÉBIT CARB.', unit: 'lb/h', min: 0, max: 500, arcs: [], red: [], ticks: 5, val: () => st.wf, fmt: v => Math.round(v), sub: v => (v * 0.4536).toFixed(0) + ' kg/h' },
-  { id: 'g-op', label: 'PRESS. HUILE', unit: 'psi', min: 0, max: 150, arcs: [[0, 40, C.r], [40, 80, C.a], [80, 100, C.g]], red: [40, 100], ticks: 6, val: () => st.oilP, fmt: v => Math.round(v), sub: () => '80–100 psi' },
-  { id: 'g-ot', label: 'TEMP. HUILE', unit: '°C', min: -40, max: 140, arcs: [[-40, 10, C.a], [10, 99, C.g]], red: [99], ticks: 9, val: () => st.oilT, fmt: v => Math.round(v), sub: () => '10–99 °C' },
+  { id: 'g-op', label: 'PRESS. HUILE', unit: 'psi', min: 0, max: 150, arcs: [[0, 40, 'r'], [40, 80, 'a'], [80, 100, 'g']], red: [40, 100], ticks: 6, val: () => st.oilP, fmt: v => Math.round(v), sub: () => '80–100 psi' },
+  { id: 'g-ot', label: 'TEMP. HUILE', unit: '°C', min: -40, max: 140, arcs: [[-40, 10, 'a'], [10, 99, 'g']], red: [99], ticks: 9, val: () => st.oilT, fmt: v => Math.round(v), sub: () => '10–99 °C' },
 ];
 for (const g of GAUGES) { g.cv = $(g.id); g.ctx = g.cv.getContext('2d'); g.disp = g.min; }
 function sizeGauges() { const dpr = Math.min(2, devicePixelRatio); for (const g of GAUGES) { const w = g.cv.clientWidth; g.cv.width = w * dpr; g.cv.height = w * 1.08 * dpr; g.s = dpr; } }
@@ -2103,7 +2195,7 @@ function drawGauge(g, dt) {
   const ang = x => a0 + clamp((x - g.min) / (g.max - g.min), -0.02, 1.03) * sw;
   c.fillStyle = C.face; c.beginPath(); c.arc(cx, cy, R + 6, 0, TAU); c.fill();
   c.strokeStyle = C.ring; c.lineWidth = 2; c.stroke();
-  for (const [a, b, col] of g.arcs) { c.strokeStyle = col; c.lineWidth = 5; c.beginPath(); c.arc(cx, cy, R - 3, ang(a), ang(b)); c.stroke(); }
+  for (const [a, b, col] of g.arcs) { c.strokeStyle = C[col]; c.lineWidth = 5; c.beginPath(); c.arc(cx, cy, R - 3, ang(a), ang(b)); c.stroke(); }
   c.strokeStyle = C.m; c.lineWidth = 1.2;
   for (let i = 0; i <= g.ticks; i++) { const a = a0 + i / g.ticks * sw; c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 8), cy + Math.sin(a) * (R - 8)); c.lineTo(cx + Math.cos(a) * (R - 14), cy + Math.sin(a) * (R - 14)); c.stroke(); }
   for (const rv of g.red) { const a = ang(rv); c.strokeStyle = C.r; c.lineWidth = 3; c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 16), cy + Math.sin(a) * (R - 16)); c.lineTo(cx + Math.cos(a) * (R + 2), cy + Math.sin(a) * (R + 2)); c.stroke(); }
@@ -2112,9 +2204,9 @@ function drawGauge(g, dt) {
   c.font = '500 17px "IBM Plex Mono",monospace'; c.fillStyle = over ? C.r : C.t; c.fillText(g.fmt(v), cx, cy + 26);
   c.font = '9.5px "IBM Plex Mono",monospace'; c.fillStyle = C.m; c.fillText(g.unit, cx, cy + 38);
   const a = ang(g.disp);
-  c.strokeStyle = '#f4f7f9'; c.lineWidth = 2.6; c.lineCap = 'round';
+  c.strokeStyle = C.needle; c.lineWidth = 2.6; c.lineCap = 'round';
   c.beginPath(); c.moveTo(cx - Math.cos(a) * 8, cy - Math.sin(a) * 8); c.lineTo(cx + Math.cos(a) * (R - 10), cy + Math.sin(a) * (R - 10)); c.stroke();
-  c.fillStyle = '#2a363f'; c.beginPath(); c.arc(cx, cy, 5, 0, TAU); c.fill();
+  c.fillStyle = C.hub; c.beginPath(); c.arc(cx, cy, 5, 0, TAU); c.fill();
   c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = C.m; c.fillText(g.sub(v), cx, 146);
 }
 /* ---------- tendances ---------- */
@@ -2125,10 +2217,10 @@ function drawTrend() {
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   const w = trendCv.clientWidth, h = trendCv.clientHeight, L = 30, B = 16, T = 6;
   const y = v => T + (1 - v / 120) * (h - T - B);
-  c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = '#5d6c77'; c.strokeStyle = '#1e2931'; c.lineWidth = 1; c.textAlign = 'right';
+  c.font = '10px "IBM Plex Mono",monospace'; c.fillStyle = TR.text; c.strokeStyle = TR.grid; c.lineWidth = 1; c.textAlign = 'right';
   for (const v of [0, 40, 80, 120]) { c.beginPath(); c.moveTo(L, y(v)); c.lineTo(w, y(v)); c.stroke(); c.fillText(v, L - 5, y(v) + 3); }
   c.textAlign = 'center'; for (const s of [60, 40, 20, 0]) c.fillText(s ? `-${s} s` : '0', L + (1 - s / 60) * (w - L - 8), h - 3);
-  const series = [['#7cc4e4', o => o.ng], ['#3fcf74', o => o.np / 22], ['#f0b13a', o => o.trq / 13.15], ['#ff6a4a', o => o.itt / 10]];
+  const series = [[TR.ng, o => o.ng], [TR.np, o => o.np / 22], [TR.trq, o => o.trq / 13.15], [TR.itt, o => o.itt / 10]];
   for (const [col, f] of series) {
     c.strokeStyle = col; c.lineWidth = 1.6; c.beginPath();
     hist.forEach((o, i) => { const x = L + (1 - (hist.length - 1 - i) / 240) * (w - L - 8); const yy = y(clamp(f(o), 0, 120)); i ? c.lineTo(x, yy) : c.moveTo(x, yy); });
@@ -2258,7 +2350,7 @@ function updFlow(F, dt, speed, opacity, T, portBlend) {
   if (!F.pts.visible) return;
   F.pts.material.opacity = opacity;
   const { nodes, cum, L } = F.path;
-  const nc = nodes.map(n => tcol(T[n[3]]));
+  const nc = nodes.map(n => (LIGHT ? acol : tcol)(T[n[3]]));
   for (let i = 0; i < F.n; i++) {
     let d = F.d[i] + speed * dt;
     if (d >= L) { d -= L; F.seg[i] = 0; F.j[i] = Math.random() * 2 - 1; if (!portBlend) F.th[i] = F === bleedFlow ? bleedPhi + (Math.random() - 0.5) * 0.22 : Math.random() * TAU; else F.th[i] = Math.random() * TAU; }
@@ -2529,8 +2621,25 @@ function frame(now) {
   updAudio(dt);
   requestAnimationFrame(frame);
 }
+function applyTheme() {
+  LIGHT = document.documentElement.classList.contains('light');
+  readPalette(); buildGrid();
+  for (const F of [flow, bleedFlow]) { F.pts.material.blending = LIGHT ? THREE.NormalBlending : THREE.AdditiveBlending; F.pts.material.needsUpdate = true; }
+  for (const g of GAUGES) drawGauge(g, 0);
+  drawTrend();
+}
+window.addEventListener('themechange', applyTheme);
+if (LIGHT) applyTheme();
 resize();
 requestAnimationFrame(frame);
+})();
+</script>
+<script src="theme-toggle.js"></script>
+<script>
+// l'interrupteur va dans l'en-tête (à droite de « Moteurs ») plutôt qu'en position fixe sur la vue 3D
+(function () {
+  const t = document.getElementById('theme-toggle'), slot = document.getElementById('tg-slot');
+  if (t && slot) { t.classList.remove('theme-toggle--fixed'); slot.replaceWith(t); }
 })();
 </script>
 </body>
