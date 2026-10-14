@@ -463,6 +463,11 @@
     .vue-votes[aria-busy="true"] .lv-wrap { visibility: hidden; height: 0; overflow: hidden; }
     .vue-votes[aria-busy="true"]::before { content: "Chargement…"; display: block; max-width: 1680px; margin: 0 auto; padding: 40px clamp(16px, 3vw, 56px); color: var(--muted); font-size: 0.95rem; }
     /* Accueil de la section : une carte par page */
+    /* accueil : une ligne de cartes par continent, avec son titre */
+    .ac-groupes { display: grid; gap: 34px; }
+    .ac-continent { display: grid; gap: 14px; }
+    .ac-continent-titre { display: flex; align-items: baseline; gap: 12px; margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule); font-family: "Literata", Georgia, serif; font-size: clamp(1.15rem, 2vw, 1.45rem); }
+    .ac-continent-titre small { font-family: inherit; font-size: 0.8rem; font-weight: 400; color: var(--muted); font-family: system-ui, sans-serif; }
     .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); grid-auto-rows: minmax(min-content, 1fr); gap: 18px; }
     .ac-carte { min-height: 460px; }
     .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }

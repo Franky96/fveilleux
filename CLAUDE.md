@@ -25,7 +25,7 @@ Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN po
 Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils/pages.src.html`, transformé par
 `votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, `votes-quebec/accueil.js`), `votes-quebec.html`,
 `loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html` et `votes-usa.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
-(ou pages.py) puis relancer le script.** Onglets : Accueil, puis une page par endroit (Votes Québec, Canada, États-Unis, France) ; les simulations d'un endroit vont dans
+(ou pages.py) puis relancer le script.** Onglets : Accueil, puis une page par endroit (Votes Québec, Canada, États-Unis, France, Allemagne, Suisse) ; sur l'accueil, les cartes sont groupées par continent (`CONTINENTS` dans accueil.js) ; les simulations d'un endroit vont dans
 son sous-menu (ligne sous les onglets, ex. Votes Québec : Intentions de vote · Simulations : Loi 39) ; permission `votes-quebec`.
 
 Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/intentions.js`) :

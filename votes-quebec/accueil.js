@@ -50,7 +50,9 @@ async function demarrer() {
     lireJ("votes-usa/projection.json"), lireJ("votes-usa/sondages.json"),
     lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json"),
     lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json"), lireJ("votes-suisse/projection.json")]);
-  const v = V || {}, cartes = [];
+  // cartes groupées par continent (une ligne de cartes par continent, dans cet ordre)
+  const v = V || {}, cartes = { amn: [], eur: [] };
+  const CONTINENTS = [["amn", "Amérique du Nord"], ["eur", "Europe"]];
 
   // Loi 39 : simulation sur les votes du Québec, en petit dans la carte de Votes Québec
   let sousQc = "";
@@ -67,7 +69,7 @@ async function demarrer() {
   if (QE) {
     const s = QE.sieges, ordre = Object.keys(s).sort((a, b) => s[b] - s[a]), lead = ordre[0];
     const dernier = (QS?.sondages || []).filter(x => !x.e).pop();
-    cartes.push(carte({ url: "votes-quebec.html", eyebrow: "Intentions de vote · Québec", titre: "Votes Québec",
+    cartes.amn.push(carte({ url: "votes-quebec.html", eyebrow: "Intentions de vote · Québec", titre: "Votes Québec",
       chiffre: `${lead} ${s[lead]}`, legende: `sièges sur 127 · gouvernement ${s[lead] >= 64 ? "majoritaire" : "minoritaire"}`,
       barreHtml: barre(ordre.map(p => ({ lab: p, n: s[p], c: CQ[p] || "var(--aut)" })), 127, 64),
       phrase: `Résultat de l'élection du 5 octobre 2026 : ${ordre.map(p => `${p} ${nf(QE.national[p], 1)} %`).join(" · ")}. Les intentions de vote remplaceront ce résultat au premier sondage.`,
@@ -77,7 +79,7 @@ async function demarrer() {
   if (CP) {
     const N = CP.national, ordre = Object.keys(N).filter(p => N[p].s > 0).sort((a, b) => N[b].s - N[a].s), lead = ordre[0];
     const dernier = (CS?.sondages || []).filter(x => !x.e).pop();
-    cartes.push(carte({ url: "votes-canada.html", eyebrow: "Projection · Canada", titre: "Votes Canada",
+    cartes.amn.push(carte({ url: "votes-canada.html", eyebrow: "Projection · Canada", titre: "Votes Canada",
       chiffre: `${lead} ${N[lead].s}`, legende: `sièges sur 343 (${N[lead].smin}–${N[lead].smax}) · ${N[lead].s >= 172 ? "majoritaire" : "minoritaire"}`,
       barreHtml: barre(ordre.map(p => ({ lab: p, n: N[p].s, c: CC[p] || "#8D949A" })), 343, 172),
       phrase: `Vote projeté : ${ordre.map(p => `${p} ${nf(N[p].v, 1)} %`).join(" · ")}.`,
@@ -104,7 +106,7 @@ async function demarrer() {
     const pres = meneur("D") && meneur("R") ? ` Présidentielle 2028, en tête des primaires : ${meneur("D")} chez les démocrates, ${meneur("R")} chez les républicains.` : "";
     const mp = UPR?.marches?.parti, chD = mp ? (mp.polymarket.D + mp.kalshi.D) / 2 : null;
     const marche = chD != null ? ` Marchés de prédiction : ${chD >= 50 ? `démocrates favoris (${nf(chD, 0)} %)` : `républicains favoris (${nf((mp.polymarket.R + mp.kalshi.R) / 2, 0)} %)`}.` : "";
-    cartes.push(carte({ url: "votes-usa.html", eyebrow: "Projection · États-Unis", titre: "Votes États-Unis",
+    cartes.amn.push(carte({ url: "votes-usa.html", eyebrow: "Projection · États-Unis", titre: "Votes États-Unis",
       chiffre: `D ${d} · R ${r}`, legende: `sièges favoris à la Chambre (sur 435, majorité 218) · ${t} à égalité`,
       barreHtml: barre(["D3", "D2", "D1", "T", "R1", "R2", "R3"].map(k => ({ lab: k[0] === "T" ? "Égalité" : k[0], n: n[k] || 0, c: CU[k] })), 435, 218),
       phrase: `Chambre des représentants, consensus de sept prévisionnistes.${sen}${m ? ` Vote générique : D ${nf(m.D, 1)} %, R ${nf(m.R, 1)} %.` : ""}${pres}${marche}`,
@@ -119,7 +121,7 @@ async function demarrer() {
       pres = ` Présidentielle 2027, dernier sondage (${esc(sp.f)}) : ${top.map(([k, x]) => `${esc(k.split(" ").slice(1).join(" ") || k)} ${nf(x, 0)} %`).join(" · ")}.`;
       dPres = ` · dernier sondage le ${dateFr(sp.d)}`;
     }
-    cartes.push(carte({ url: "votes-france.html", eyebrow: "Intentions de vote · France", titre: "Votes France",
+    cartes.eur.push(carte({ url: "votes-france.html", eyebrow: "Intentions de vote · France", titre: "Votes France",
       chiffre: `${esc(lead.id)} ${lead.n}`, legende: `députés sur 577 · premier groupe, aucune majorité absolue (289)`,
       barreHtml: barre([...g.map(x => ({ lab: x.id, n: x.n, c: x.c })), { lab: "vacants", n: FA.vacants || 0, c: "var(--soft)" }], 577, 289),
       phrase: `Assemblée nationale actuelle (aucun sondage législatif depuis octobre 2025).${pres}`,
@@ -131,7 +133,7 @@ async function demarrer() {
     const CD = { AfD: "#1BA7E5", Union: "#454B57", SPD: "#E3000F", "Grüne": "#1AA037", Linke: "#BE3075", BSW: "#6D3A8E", FDP: "#D9B600", SSW: "#00337F" };
     const sieges = { Union: U?.s || 0 }; Object.entries(N).forEach(([p, x]) => { if (p !== "CDU" && p !== "CSU" && x.s > 0) sieges[p] = x.s; });
     const ordre = Object.keys(sieges).sort((a, b) => sieges[b] - sieges[a]), lead = ordre[0];
-    cartes.push(carte({ url: "votes-allemagne.html", eyebrow: "Projection · Allemagne", titre: "Votes Allemagne",
+    cartes.eur.push(carte({ url: "votes-allemagne.html", eyebrow: "Projection · Allemagne", titre: "Votes Allemagne",
       chiffre: `${esc(lead)} ${sieges[lead]}`, legende: `sièges projetés sur 630 · ${sieges[lead] >= 316 ? "majorité" : "aucune majorité (316)"}${N.CDU && N.CSU ? ` · Union : CDU ${N.CDU.s} + CSU ${N.CSU.s}` : ""}`,
       barreHtml: barre(ordre.map(p => ({ lab: p, n: sieges[p], c: CD[p] || "#8D949A" })), 630, 316),
       phrase: `Moyenne des sondages (secondes voix) : ${Object.entries(M).filter(([k]) => k !== "AUT").sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, x]) => `${esc(k)} ${nf(x, 0)} %`).join(" · ")}. Seuil de 5 % pour entrer au Bundestag.`,
@@ -143,12 +145,15 @@ async function demarrer() {
     const CH = { UDC: "#3A8F3A", PS: "#E2001A", C: "#F28C1E", PLR: "#1E5CB3", VERT: "#7CB342", PVL: "#B5C800", PEV: "#E3BB00", UDF: "#8E6BB5", MCG: "#F2C200", Lega: "#4A6FA5" };
     const ordre = Object.keys(N).filter(p => N[p].s > 0).sort((a, b) => N[b].s - N[a].s), lead = ordre[0], lab = p => NOMS_CH[p] || p;
     const nbJ = Math.round((Date.now() - new Date(CHP.maj + "T12:00:00")) / 864e5);
-    cartes.push(carte({ url: "votes-suisse.html", eyebrow: "Projection · Suisse", titre: "Votes Suisse",
+    cartes.eur.push(carte({ url: "votes-suisse.html", eyebrow: "Projection · Suisse", titre: "Votes Suisse",
       chiffre: `${esc(lab(lead))} ${N[lead].s}`, legende: `sièges projetés sur 200 au Conseil national (${N[lead].smin}–${N[lead].smax}) · majorité 101`,
       barreHtml: barre(ordre.map(p => ({ lab: lab(p), n: N[p].s, c: CH[p] || "#8D949A" })), 200, 101),
       phrase: `Moyenne des sondages : ${ordre.slice(0, 6).map(p => `${esc(lab(p))} ${nf(N[p].v, 0)} %`).join(" · ")}. Prochaines élections fédérales en octobre 2027.${nbJ > 120 ? ` Les sondages sont rares : le dernier date de ${Math.round(nbJ / 30)} mois.` : ""}`,
       donnees: `dernier sondage le ${dateFr(CHP.maj)}`, verif: v.suisse }));
   }
-  $("acCartes").innerHTML = cartes.join("") || `<p class="lv-muted">Chargement impossible.</p>`;
+  const html = CONTINENTS.filter(([k]) => cartes[k].length).map(([k, nom]) => `<section class="ac-continent" aria-labelledby="ac-${k}">
+      <h3 class="ac-continent-titre" id="ac-${k}">${nom}<small>${cartes[k].length} page${cartes[k].length > 1 ? "s" : ""}</small></h3>
+      <div class="ac-cartes">${cartes[k].join("")}</div></section>`).join("");
+  $("acCartes").innerHTML = html || `<p class="lv-muted">Chargement impossible.</p>`;
 }
 demarrer();
