@@ -590,7 +590,7 @@
     .vi-haut { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch; }
     @media (min-width: 1000px) { .vi-haut { grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); } }
     .vi-sieges { align-content: start; }
-    .vi-plan { display: block; width: 100%; max-width: 380px; height: auto; margin: 0 auto; }
+    .vi-plan { display: block; width: 100%; height: auto; margin: 0 auto; }   /* plans à l'horizontale : toute la largeur du rectangle */
     .vi-evol-tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .vi-periodes button { font: inherit; font-size: 0.78rem; font-weight: 600; padding: 5px 10px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
     .vi-periodes button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }

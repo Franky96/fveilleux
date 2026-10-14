@@ -109,8 +109,8 @@ function chamber(svgEl, seatsBy, n) {
   const xR = colX(C - 1) + S + 16, rightX = k => xR + k * STEP;
   const H = 2 * (MID + RH * STEP) + 8, cy = H / 2, W = rightX(K - 1) + S + 8;
   const yTop = r => cy - MID - S - r * STEP, yBot = r => cy + MID + r * STEP;
-  svgEl.setAttribute("viewBox", `0 0 ${H} ${W}`);
-  const RX = (x, y) => H - y, RY = (x, y) => x;
+  // plan à l'horizontale (comme la Chambre des communes) : présidence à gauche, opposition en haut, gouvernement en bas
+  svgEl.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const bench = y => { const out = []; for (let j = 0; j < C; j++) for (let r = 0; r < ROWS; r++) out.push({ x: colX(j), y: y(r), j, r }); return out; };
   const end = y => { const out = []; for (let k = 0; k < K; k++) for (let r = 0; r < RH; r++) out.push({ x: rightX(k), y: y(r), j: C + k, r }); return out; };
   const side = (y, cap) => { const all = [...bench(y), ...end(y)].slice(0, cap), nb = C * ROWS;
@@ -137,7 +137,7 @@ function chamber(svgEl, seatsBy, n) {
   [...toOpp, ...(cut[0] || [])].forEach((s, i) => { if (oppFree[i]) placed.push({ ...s, ...oppFree[i] }); });
   [...toGov, ...(cut[1] || [])].forEach((s, i) => { if (spare[i]) placed.push({ ...s, ...spare[i] }); });
   const g = d3.select(svgEl); g.selectAll("*").remove();
-  const rect = (x, y, w, h) => g.append("rect").attr("x", RX(x, y) - h).attr("y", RY(x, y)).attr("width", h).attr("height", w);
+  const rect = (x, y, w, h) => g.append("rect").attr("x", x).attr("y", y).attr("width", w).attr("height", h);
   const txt = (x, y, t, o = {}) => g.append("text").attr("x", x).attr("y", y).attr("text-anchor", o.anchor || "middle")
     .attr("transform", o.rot ? `rotate(-90 ${x} ${y})` : null).style("fill", o.fill || "var(--muted)")
     .style("font", `${o.w || 600} ${o.size || 7.5}px "Public Sans", system-ui, sans-serif`).style("letter-spacing", o.ls || ".04em").text(t);
@@ -145,14 +145,14 @@ function chamber(svgEl, seatsBy, n) {
   const chair = rect(22, cy - 9, 18, 18).attr("rx", 3);
   if (pres) chair.style("fill", COUL[pres.p]); else chair.style("fill", "none").style("stroke", "var(--muted)").attr("stroke-width", 1.4);
   chair.append("title").text(pres ? `Présidence : député du ${pres.p}, compté dans ses ${seatsBy[pres.p]} sièges. Il ne vote qu'en cas d'égalité.` : "Présidence");
-  txt(RX(0, cy), RY(22, cy) - 4, "Présidence", { size: 6.5 });
-  txt(RX(0, cy + MID + ROWS * STEP / 2), RY(x0, 0) - 6, "Gouvernement", { size: 7 });
-  txt(RX(0, cy - MID - ROWS * STEP / 2), RY(x0, 0) - 6, "Opposition", { size: 7 });
-  txt(RX(0, cy) + 2.6, RY((x0 + colX(C - 1) + S) / 2, 0), `majorité : ${maj} sièges`, { size: 7.5, rot: true });
+  txt(31, cy - 13, "Présidence", { size: 6.5 });
+  txt(x0, cy + MID + ROWS * STEP + 9, "Gouvernement", { size: 7, anchor: "start" });
+  txt(x0, cy - MID - ROWS * STEP - 3, "Opposition", { size: 7, anchor: "start" });
+  txt((x0 + colX(C - 1) + S) / 2, cy + 2.6, `majorité : ${maj} sièges`, { size: 7.5 });
   for (const s of placed) { const r = rect(s.x, s.y, S, S).attr("rx", 2.2).style("fill", COUL[s.p]); r.append("title").text(NOMS[s.p]); }
   const front = (p, cote) => placed.filter(s => s.p === p && s.r === 0 && s.j < C && (cote === "gov" ? s.y > cy : s.y < cy))
     .sort((a, b) => Math.abs(a.j - 7) - Math.abs(b.j - 7))[0];
-  const mark = (s, t) => { if (s) txt(RX(s.x, s.y + S / 2), RY(s.x + S / 2, 0) + 2.6, t, { size: t.length > 1 ? 5.2 : 6.5, w: 800, fill: "var(--surface)", ls: "0" }); };
+  const mark = (s, t) => { if (s) txt(s.x + S / 2, s.y + S / 2 + 2.3, t, { size: t.length > 1 ? 5.2 : 6.5, w: 800, fill: "var(--surface)", ls: "0" }); };
   mark(front(gov, "gov"), "PM");
   if (opp[0]) mark(front(opp[0], "opp"), "C");
 }
