@@ -9,6 +9,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -83,10 +84,10 @@ function hemicycle(svgEl, parts, sous) {
     const ecart = Math.min(Rmax * (1 - r0) / (R - 1), ...rayons.map((r, i) => Math.PI * r * Rmax / (parRangee[i] - 1)));
     return { R, rayons, parRangee, ecart }; };
   const { R, rayons, parRangee, ecart } = d3.range(10, 21).map(repartir).reduce((a, b) => b.ecart > a.ecart ? b : a);
-  const places = [];
+  let places = [];
   rayons.forEach((r, i) => { const n = parRangee[i];
     for (let k = 0; k < n; k++) { const a = Math.PI - k * Math.PI / (n - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
-  places.sort((p, q) => q.a - p.a || p.r - q.r);
+  places = regrouper(places, parts.map(p => p.n));   // chaque parti groupé (votes-quebec/hemicycle.js)
   const sieges = parts.flatMap(p => d3.range(p.n).map(() => p));
   const rayon = ecart * 0.4;
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();

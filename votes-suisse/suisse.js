@@ -9,6 +9,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -86,12 +87,12 @@ function hemicycle(svgEl, seats, n, sous) {
   const R = n > 100 ? 8 : 4, r0 = n > 100 ? 0.4 : 0.45, W = 1000, H = 520, cx = W / 2, cy = H - 20, Rmax = 470;
   const rayons = d3.range(R).map(i => r0 + i * (1 - r0) / (R - 1)), tot = d3.sum(rayons);
   const parRangee = rayons.map(r => Math.round(n * r / tot)); parRangee[R - 1] += n - d3.sum(parRangee);
-  const places = [];
+  let places = [];
   rayons.forEach((r, i) => { const k = parRangee[i];
     for (let j = 0; j < k; j++) { const a = Math.PI - j * Math.PI / (k - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
-  places.sort((p, q) => q.a - p.a || p.r - q.r);
   const ordre = Object.keys(seats).sort((a, b) => (ORDRE.indexOf(a) + 1 || 99) - (ORDRE.indexOf(b) + 1 || 99));
   const sieges = ordre.flatMap(p => d3.range(seats[p]).map(() => p));
+  places = regrouper(places, ordre.map(p => seats[p]));   // chaque parti groupé (votes-quebec/hemicycle.js)
   const pas = Rmax * (1 - r0) / (R - 1), rayon = Math.min(pas * 0.42, 0.8 * Math.PI * r0 * Rmax / parRangee[0]);
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
   g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
