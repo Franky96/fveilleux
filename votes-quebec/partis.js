@@ -6,7 +6,8 @@
      items : [{ cle, etiquette, couleur, detail }] dans l'ordre d'affichage (clé du dictionnaire, sigle affiché,
              couleur du parti sur la page, phrase de chiffres tirés des données de la page)
      La section est placée (une fois, puis mise à jour) en haut de la page, à côté du graphique d'évolution ; le rectangle
-     de l'assemblée (plan ou hémicycle) passe juste en dessous, sur toute la largeur.
+     de l'assemblée (plan ou hémicycle) passe juste en dessous sur toute la largeur, ou, sur grand écran (16:9, ultralarge),
+     au milieu de la ligne : partis · assemblée · graphique.
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent. */
 
 const P = (nom, info) => ({ nom, info });
@@ -97,7 +98,8 @@ export function sectionPartis(dico, items, { titre = "Les partis", note = "" } =
     const haut = wrap.querySelector(".vi-haut"), sieges = document.getElementById("viPlan")?.closest("section");
     if (haut) {
       haut.prepend(sec);
-      if (sieges && sieges.parentElement === haut) { haut.after(sieges); sieges.classList.add("vi-sieges-bas"); }
+      // dans la même grille : dessous sur toute la largeur, ou entre les partis et le graphique sur grand écran (CSS)
+      if (sieges && sieges.parentElement === haut) { haut.append(sieges); sieges.classList.add("vi-sieges-bas"); }
     } else wrap.append(sec);
     sec.addEventListener("click", e => {
       const b = e.target.closest("[data-partie-parti]"); if (!b) return;
