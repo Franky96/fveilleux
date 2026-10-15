@@ -2273,13 +2273,20 @@ function demPrepare() {
     list.forEach((q, i) => {
       const off = new THREE.Vector3(0, (i - (n - 1) / 2) * GAP + (q.c.y - cy) * 0.5, 0);
       if (Math.hypot(q.c.x, q.c.z) > 0.3) { off.x = q.c.x * 0.9; off.z = q.c.z * 0.9; }      // à plus de 6 po de l'axe
-      const w1 = eng.localToWorld(off.clone());
+      q.w = eng.localToWorld(off.clone()).sub(w0);                                          // déplacement, repère de la scène
+      q.box = q.box.clone().translate(q.w); q.dir = q.w.clone();
+      q.axOnly = q.objs.some(o => { for (let r = o.parent; r; r = r.parent) if (r === ngRot || r === nfRot || r === propRot) return true; return false; });
+    });
+    // aucune pièce ne doit en croiser une autre : écartées de préférence le long de l'axe du moteur (x de la scène)
+    RGB.separer(list, 'x', 1.6, 0.3 * S);
+    for (const q of list) {
+      const w1 = w0.clone().add(q.w).add(q.corr);
       for (const o of q.objs) {
         if (o.matrixAutoUpdate) o.userData.basePos ||= o.position.clone(); else o.userData.baseMat ||= o.matrix.clone();
         a.copy(w0); b.copy(w1); o.parent.worldToLocal(a); o.parent.worldToLocal(b);
         o.userData.demOff = b.sub(a).clone(); demObjs.push(o);
       }
-    });
+    }
   }
   demUI();
 }
@@ -2798,6 +2805,7 @@ window.addEventListener('themechange', applyTheme);
 if (LIGHT) applyTheme();
 resize();
 requestAnimationFrame(frame);
+window.__pt6 = { RGB, pickables, secOf, setIso, eng };   // inspection depuis la console
 })();
 </script>
 <script src="theme-toggle.js"></script>

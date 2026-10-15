@@ -706,13 +706,18 @@ const PART_STEPS = {};
 STEPS.forEach((st, k) => st.m.forEach(([ids, v]) => ids.forEach(id => (PART_STEPS[id] ||= []).push([k, v]))));
 const RDIR = { acc_gov: 0, acc_nf: 3, acc_ovs: 9, drv_gov: 0, drv_nf: 3, drv_ovs: 9, tube_oil: 1.2, tube_prop: 5.35, tqconn: 11, chip: 6, bracket: 1.15 };
 // t = étape (0 = assemblé, 13 = tout démonté, valeurs fractionnaires = entre deux étapes)
+// CORR : écart supplémentaire de chaque pièce pour qu'aucune ne croise une autre une fois tout démonté
+// (calculé plus bas) ; il s'ajoute au fil des étapes de la pièce (sans étape : au fil du démontage)
+const CORR = {};
 function demonter(exT) {
   for (const id of ORDER) {
-    let dz = 0, up = 0, dr = 0;
-    for (const [k, v] of (PART_STEPS[id] || [])) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; }
+    let dz = 0, up = 0, dr = 0, fs = 0;
+    const st = PART_STEPS[id] || [];
+    for (const [k, v] of st) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; fs += f; }
     const p = PART[id]; p.ex.dr = dr;
     p.g.position.set(up * S, -dz * S, 0);
     if (RDIR[id] !== undefined && dr) p.g.position.addScaledVector(RD(RDIR[id]), dr * S);
+    if (CORR[id]) p.g.position.addScaledVector(CORR[id], st.length ? fs / st.length : ease(clamp(exT / STEPS.length, 0, 1)));
   }
 }
 
@@ -744,5 +749,61 @@ function couple(tqLbft) {
   PART.torquemeter.valve.position.y = d * 0.6;
 }
 
-return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter };
+/* ---------- vue éclatée sans pièces qui se croisent ----------
+   separer(items, axe, poids, marge) : items = [{ box (Box3 à la position finale), corr (Vector3), axOnly }].
+   Tant que deux boîtes se chevauchent (marge comprise), la plus petite est poussée hors de l'autre selon
+   l'axe où le chevauchement est le plus court (les autres axes que « axe » comptent « poids » fois plus). */
+function separer(items, axe, poids, marge) {
+  const AX = ['x', 'y', 'z'];
+  for (const it of items) { const sz = it.box.getSize(new THREE.Vector3()); it.vol = (sz.x + marge) * (sz.y + marge) * (sz.z + marge); it.corr ||= new THREE.Vector3(); }
+  for (let pass = 0; pass < 3000; pass++) {
+    let moved = false;
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const a = items[i].box, b = items[j].box;
+      if (!AX.every(k => a.max[k] + marge > b.min[k] && b.max[k] + marge > a.min[k])) continue;
+      // la plus petite bouge ; une pièce montée sur un rotor (axOnly) ne bouge que le long de l'axe
+      const [m, o] = items[i].vol <= items[j].vol ? [items[i], items[j]] : [items[j], items[i]];
+      let best = null;
+      for (const k of (m.axOnly && axe ? [axe] : AX)) {
+        const d = Math.min(a.max[k] - b.min[k], b.max[k] - a.min[k]) + marge, w = d * (axe && k !== axe ? poids : 1);
+        if (!best || w < best.w) best = { k, d, w };
+      }
+      const k = best.k, cm = (m.box.min[k] + m.box.max[k]) / 2, co = (o.box.min[k] + o.box.max[k]) / 2;
+      // une pièce déjà poussée sur cet axe continue dans le même sens (pas d'aller-retour entre deux voisines)
+      const sg = Math.sign(m.corr[k]) || (Math.abs(cm - co) > 1e-6 ? Math.sign(cm - co) : (Math.sign((m.dir && m.dir[k]) || 0) || 1));
+      // sortir par le côté le plus proche : distance à parcourir selon le signe choisi
+      const d = sg > 0 ? o.box.max[k] - m.box.min[k] + marge : m.box.max[k] - o.box.min[k] + marge;
+      m.box.min[k] += sg * d; m.box.max[k] += sg * d; m.corr[k] += sg * d; moved = true;
+    }
+    if (!moved) return pass;
+  }
+  return -1;
+}
+{ // boîtes des pièces assemblées (repère du réducteur), puis positions finales et séparation
+  update(0); root.updateMatrixWorld(true);
+  const SPIN = new Set(['sun1', 'input', 'carrier1', 'flexcpl', 'sun2', 'carrier2', 'propshaft', 'runner', 'bevel', 'planets1', 'planets2']);
+  const c = new THREE.Vector3(), m = new THREE.Matrix4(), mi = new THREE.Matrix4(), items = [];
+  demonter(STEPS.length); root.updateMatrixWorld(true);
+  const fin = {}; for (const id of ORDER) fin[id] = { pos: PART[id].g.position.clone(), dr: PART[id].ex.dr };
+  demonter(0); update(0); root.updateMatrixWorld(true);
+  for (const id of ORDER) {
+    const box = new THREE.Box3(); let R = 0;
+    PART[id].g.traverse(o => {
+      if (!o.isMesh) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const bb = g.boundingBox;
+      for (let i = 0; i < (o.isInstancedMesh ? o.count : 1); i++) {
+        m.copy(o.matrixWorld); if (o.isInstancedMesh) { o.getMatrixAt(i, mi); m.multiply(mi); }
+        for (let q = 0; q < 8; q++) { c.set(q & 1 ? bb.max.x : bb.min.x, q & 2 ? bb.max.y : bb.min.y, q & 4 ? bb.max.z : bb.min.z).applyMatrix4(m); box.expandByPoint(c); R = Math.max(R, Math.hypot(c.x, c.z)); }
+      }
+    });
+    if (box.isEmpty()) continue;
+    const f = fin[id];
+    if (SPIN.has(id)) { R += (id.startsWith('planets') ? f.dr * S : 0); box.min.x = box.min.z = -R; box.max.x = box.max.z = R; }   // tourne : tout le cercle
+    box.translate(f.pos);
+    items.push({ id, box, dir: f.pos.clone() });
+  }
+  separer(items, null, 1, 0.25 * S);
+  for (const it of items) if (it.corr.lengthSq() > 1e-12) CORR[it.id] = it.corr;
+}
+
+return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter, separer };
 };
