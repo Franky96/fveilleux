@@ -2257,30 +2257,20 @@ function demPrepare() {
   $('dem-lbl').textContent = rgb ? 'Démontage' : 'Vue éclatée';
   $('dem-t').max = demMax; $('dem-t').value = 0;
   if (isoPart && !rgb) {
-    // centre de chaque pièce de la section, dans le repère du moteur
+    // vue éclatée sur l'axe (même règle que le réducteur, pt6a21-rgb.js) : pièces de l'axe en ligne dans leur ordre,
+    // la plus grosse reste en place ; ce qui est monté autour suit sa pièce d'attache et s'écarte vers l'extérieur
     scene.updateMatrixWorld(true);
     const parts = new Map();
     for (const o of pickables) {
       if (!o.isMesh || !o.geometry || o.userData.rgb || secOf(o) !== isoPart) continue;
-      const k = o.userData.part; if (!parts.has(k)) parts.set(k, { box: new THREE.Box3(), objs: [] });
-      parts.get(k).objs.push(o); addBox(o, parts.get(k).box);
+      const k = o.userData.part; if (!parts.has(k)) parts.set(k, []); parts.get(k).push(o);
     }
-    const list = [...parts.values()].filter(q => !q.box.isEmpty());
-    for (const q of list) q.c = eng.worldToLocal(q.box.getCenter(new THREE.Vector3()));
-    // chaque pièce reste au plus près de sa place : les pièces centrées sur l'axe (et celles des rotors) ne glissent
-    // que le long de l'axe ; les équipements montés sur le carter s'écartent d'abord un peu vers l'extérieur
+    const inv = eng.matrixWorld.clone().invert(), list = [];
+    for (const [id, objs] of parts) { const f = RGB.mesurer(objs, inv); if (!f.box.isEmpty()) list.push({ id, objs, box: f.box, R: f.R }); }
+    const res = RGB.eclater(list, { gap: 0.3 * S });
     const w0 = eng.localToWorld(new THREE.Vector3()), a = new THREE.Vector3(), b = new THREE.Vector3();
     for (const q of list) {
-      const rr = Math.hypot(q.c.x, q.c.z), off = new THREE.Vector3();
-      if (rr > 0.3) { off.x = q.c.x * 0.5; off.z = q.c.z * 0.5; }                            // à plus de 6 po de l'axe
-      q.w = eng.localToWorld(off).sub(w0);                                                   // déplacement, repère de la scène
-      q.box = q.box.clone().translate(q.w);
-      q.axOnly = rr < 0.05 || q.objs.some(o => { for (let r = o.parent; r; r = r.parent) if (r === ngRot || r === nfRot || r === propRot) return true; return false; });
-    }
-    // aucune pièce ne doit en croiser une autre (axe du moteur = x de la scène)
-    RGB.placer(list, 'x', 1.3, 0.3 * S);
-    for (const q of list) {
-      const w1 = w0.clone().add(q.w).add(q.corr);
+      const w1 = eng.localToWorld(res[q.id].v.clone());                                    // position déplacée de l'origine, repère de la scène
       for (const o of q.objs) {
         if (o.matrixAutoUpdate) o.userData.basePos ||= o.position.clone(); else o.userData.baseMat ||= o.matrix.clone();
         a.copy(w0); b.copy(w1); o.parent.worldToLocal(a); o.parent.worldToLocal(b);

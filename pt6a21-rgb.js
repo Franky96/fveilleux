@@ -706,17 +706,13 @@ const PART_STEPS = {};
 STEPS.forEach((st, k) => st.m.forEach(([ids, v]) => ids.forEach(id => (PART_STEPS[id] ||= []).push([k, v]))));
 const RDIR = { acc_gov: 0, acc_nf: 3, acc_ovs: 9, drv_gov: 0, drv_nf: 3, drv_ovs: 9, tube_oil: 1.2, tube_prop: 5.35, tqconn: 11, chip: 6, bracket: 1.15 };
 // t = étape (0 = assemblé, 13 = tout démonté, valeurs fractionnaires = entre deux étapes)
-// CORR[id] = [[k, écart]] : écart ajouté au mouvement de la pièce pendant l'étape k, pour qu'à la fin de
-// chaque étape la pièce posée ne croise aucune autre (calculé plus bas)
-const CORR = {};
+// MOUV[id] = [[k, déplacement, dr]] : mouvement de la pièce pendant l'étape k (calculé plus bas, vue éclatée sur l'axe)
+const MOUV = {};
+let ESSAIS = 0;          // nombre d'essais du placement (contrôle)
 function demonter(exT) {
   for (const id of ORDER) {
-    let dz = 0, up = 0, dr = 0;
-    for (const [k, v] of (PART_STEPS[id] || [])) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; }
-    const p = PART[id]; p.ex.dr = dr;
-    p.g.position.set(up * S, -dz * S, 0);
-    if (RDIR[id] !== undefined && dr) p.g.position.addScaledVector(RD(RDIR[id]), dr * S);
-    for (const [k, c] of (CORR[id] || [])) p.g.position.addScaledVector(c, ease(clamp(exT - k, 0, 1)));
+    const p = PART[id]; p.g.position.set(0, 0, 0); p.ex.dr = 0;
+    for (const [k, v, dr] of (MOUV[id] || [])) { const f = ease(clamp(exT - k, 0, 1)); p.g.position.addScaledVector(v, f); p.ex.dr += dr * f; }
   }
 }
 
@@ -748,83 +744,163 @@ function couple(tqLbft) {
   PART.torquemeter.valve.position.y = d * 0.6;
 }
 
-/* ---------- vue éclatée sans pièces qui se croisent ----------
-   placer(items, axe, poids, marge) : items = [{ box (Box3 à la position prévue), axOnly, fixe }] ; remplit item.corr.
-   Les pièces fixes restent où elles sont. Les autres sont posées une à une, des plus grosses aux plus petites,
-   à l'endroit libre le plus proche de leur position prévue : décalage selon un seul axe, le plus court possible
-   (les axes autres que « axe » comptent « poids » fois plus) ; une pièce axOnly (coaxiale au moteur) ne glisse
-   que le long de « axe ». Deux pièces fixes peuvent se chevaucher (encore assemblées). */
-function placer(items, axe, poids, marge) {
-  const AX = ['x', 'y', 'z'], eps = marge * 0.02;
-  const vol = it => { const z = it.box.getSize(new THREE.Vector3()); return (z.x + marge) * (z.y + marge) * (z.z + marge); };
-  const touche = (a, b) => AX.every(k => a.max[k] + marge > b.min[k] + eps && b.max[k] + marge > a.min[k] + eps);
-  const poses = items.filter(it => it.fixe);
-  for (const it of items) it.corr = new THREE.Vector3();
-  for (const it of items.filter(it => !it.fixe).sort((a, b) => vol(b) - vol(a))) {
-    let best = null;
-    for (const k of (it.axOnly ? [axe] : AX)) {
-      const vals = [0];
-      for (const o of poses) vals.push(o.box.max[k] - it.box.min[k] + marge, o.box.min[k] - it.box.max[k] - marge);
-      for (const d of vals) {
-        const cost = Math.abs(d) * (k === axe ? 1 : poids);
-        if (best && cost >= best.cost) continue;
-        const bx = it.box.clone(); bx.min[k] += d; bx.max[k] += d;
-        if (!poses.some(o => touche(bx, o.box))) best = { k, d, cost };
-      }
+/* ---------- vue éclatée sur l'axe ----------
+   Repère : y = axe du moteur (avant = +y). Une pièce « de l'axe » (sa boîte entoure l'axe) ne bouge que le long de
+   l'axe : ces pièces se rangent en ligne dans leur ordre réel, de part et d'autre d'une pièce fixe, chacune juste
+   au-delà de la précédente. Une pièce « autour » (accessoire, prise, tube…) suit sa pièce d'attache sur l'axe et
+   s'écarte vers l'extérieur juste assez pour tout dégager. Des satellites (orbit) restent en étoile autour de l'axe,
+   à la hauteur de leur porte-satellites, leur orbite élargie juste assez.
+
+   mesurer(objets, inv)   boîte et rayon maximal depuis l'axe de ces objets (inv : passage au repère de l'axe)
+   eclater(pièces, o)     pièces = [{ id, box, R, orbit: { rc, rpo }, host }],
+                          o = { gap, anchor, extra: { id: écart axial en plus }, extraR: { id: écart radial en plus } }
+                          -> { id: { v (déplacement), dr (élargissement d'orbite) } } */
+const V3 = THREE.Vector3;
+function mesurer(objs, inv) {
+  const box = new THREE.Box3(), b2 = new THREE.Box3(), c = new V3(), m = new THREE.Matrix4(), mi = new THREE.Matrix4();
+  let R = 0;
+  for (const o of objs) {
+    if (!o.isMesh || !o.geometry) continue;
+    const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const bb = g.boundingBox;
+    for (let i = 0; i < (o.isInstancedMesh ? o.count : 1); i++) {
+      m.multiplyMatrices(inv, o.matrixWorld); if (o.isInstancedMesh) { o.getMatrixAt(i, mi); m.multiply(mi); }
+      b2.makeEmpty();
+      for (let q = 0; q < 8; q++) { c.set(q & 1 ? bb.max.x : bb.min.x, q & 2 ? bb.max.y : bb.min.y, q & 4 ? bb.max.z : bb.min.z).applyMatrix4(m); b2.expandByPoint(c); }
+      box.union(b2);
+      // pièce de révolution centrée : rayon = demi-largeur de sa boîte ; sinon, coin le plus éloigné de l'axe
+      R = Math.max(R, b2.min.x < 0 && b2.max.x > 0 && b2.min.z < 0 && b2.max.z > 0 ? Math.max(-b2.min.x, b2.max.x, -b2.min.z, b2.max.z) : rayons(b2)[1]);
     }
-    it.box.min[best.k] += best.d; it.box.max[best.k] += best.d; it.corr[best.k] += best.d;
-    poses.push(it);
   }
+  return { box, R };
 }
-{ /* démontage sans pièce qui en croise une autre au repos : étape par étape, ce qui part à l'étape (en blocs :
-     les pièces qui partent ensemble restent assemblées entre elles) doit, en fin d'étape, dégager toutes les autres
-     pièces, déjà posées ou encore assemblées, qui ne bougent pas, en restant au plus près de la position prévue par
-     l'OM. Pendant le mouvement, les pièces peuvent se traverser. */
-  update(0); root.updateMatrixWorld(true);
-  const SPIN = new Set(['sun1', 'input', 'carrier1', 'flexcpl', 'sun2', 'carrier2', 'propshaft', 'runner', 'bevel', 'planets1', 'planets2']);
-  // pièces centrées sur l'axe du moteur : engrenages, satellites (en couronne autour de l'axe), arbres, carters, roulements
-  const COAX = new Set([...SPIN, 'ring1', 'ring2', 'tqpiston', 'torquemeter', 'rollerbrg', 'thrustbrg', 'oilxfer', 'cover', 'rearhsg', 'fronthsg', 'flangeA']);
-  const c = new THREE.Vector3(), m = new THREE.Matrix4(), mi = new THREE.Matrix4(), base = {}, pos = {}, drc = {};
-  for (const id of ORDER) {
-    const box = new THREE.Box3(); let R = 0;
-    PART[id].g.traverse(o => {
-      if (!o.isMesh) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const bb = g.boundingBox;
-      for (let i = 0; i < (o.isInstancedMesh ? o.count : 1); i++) {
-        m.copy(o.matrixWorld); if (o.isInstancedMesh) { o.getMatrixAt(i, mi); m.multiply(mi); }
-        for (let q = 0; q < 8; q++) { c.set(q & 1 ? bb.max.x : bb.min.x, q & 2 ? bb.max.y : bb.min.y, q & 4 ? bb.max.z : bb.min.z).applyMatrix4(m); box.expandByPoint(c); R = Math.max(R, Math.hypot(c.x, c.z)); }
-      }
-    });
-    if (!box.isEmpty()) base[id] = { box, R, spin: SPIN.has(id) };
-    pos[id] = new THREE.Vector3(); drc[id] = 0;
-  }
-  // boîte d'une pièce à sa position courante ; une pièce qui tourne occupe tout son cercle (satellites : rayon d'orbite compris)
-  const boxAt = id => {
-    const b = base[id], bx = b.box.clone();
-    if (b.spin) { const R = b.R + (id.startsWith('planets') ? drc[id] * S : 0); bx.min.x = bx.min.z = -R; bx.max.x = bx.max.z = R; }
-    return bx.translate(pos[id]);
+function rayons(b) {        // distances minimale et maximale d'une boîte à l'axe
+  const dx = Math.max(0, b.min.x, -b.max.x), dz = Math.max(0, b.min.z, -b.max.z);
+  let r1 = 0; for (const x of [b.min.x, b.max.x]) for (const z of [b.min.z, b.max.z]) r1 = Math.max(r1, Math.hypot(x, z));
+  return [Math.hypot(dx, dz), r1];
+}
+const surAxe = p => !p.orbit && p.box.min.x < 0 && p.box.max.x > 0 && p.box.min.z < 0 && p.box.max.z > 0;
+const volume = b => { const z = b.getSize(new V3()); return z.x * z.y * z.z; };
+function eclater(parts, o) {
+  const gap = o.gap, ex = o.extra || {}, exR = o.extraR || {}, res = {};
+  const coax = parts.filter(surAxe), orb = parts.filter(p => p.orbit), per = parts.filter(p => !p.orbit && !surAxe(p));
+  const cy = p => (p.box.min.y + p.box.max.y) / 2;
+  coax.sort((a, b) => cy(b) - cy(a));                                  // de l'avant vers l'arrière
+  let ai = coax.findIndex(p => p.id === o.anchor);
+  if (ai < 0) ai = coax.indexOf(coax.reduce((a, b) => volume(b.box) > volume(a.box) ? b : a));
+  const s = { [coax[ai].id]: 0 };
+  let top = coax[ai].box.max.y, bot = coax[ai].box.min.y;
+  for (let i = ai - 1; i >= 0; i--) { const p = coax[i]; s[p.id] = Math.max(0, top + gap + (ex[p.id] || 0) - p.box.min.y); top = Math.max(top, p.box.max.y + s[p.id]); }
+  for (let i = ai + 1; i < coax.length; i++) { const p = coax[i]; s[p.id] = Math.min(0, bot - gap - (ex[p.id] || 0) - p.box.max.y); bot = Math.min(bot, p.box.min.y + s[p.id]); }
+  for (const p of coax) res[p.id] = { v: new V3(0, s[p.id], 0), dr: 0 };
+  const yr = p => [p.box.min.y + s[p.id], p.box.max.y + s[p.id]];
+  // pièce d'attache : pièce de l'axe qui la contient, la plus large puis la plus courte
+  const hote = p => {
+    if (p.host && s[p.host] !== undefined) return p.host;
+    const y = cy(p); let h = null;
+    for (const q of coax) if (q.box.min.y <= y && y <= q.box.max.y && (!h || q.R > h.R + 1e-9 || (Math.abs(q.R - h.R) <= 1e-9 && q.box.max.y - q.box.min.y < h.box.max.y - h.box.min.y))) h = q;
+    return (h || coax[ai]).id;
   };
-  STEPS.forEach((st, k) => {
-    const mv = new Map();
-    for (const [ids, v] of st.m) for (const id of ids) {
-      const e = mv.get(id) || { v: new THREE.Vector3(), dr: 0 };
-      e.v.x += (v.up || 0) * S; e.v.y -= (v.dz || 0) * S;
-      if (v.dr) { if (RDIR[id] !== undefined) e.v.addScaledVector(RD(RDIR[id]), v.dr * S); else e.dr += v.dr; }
-      mv.set(id, e);
+  for (const p of orb) {
+    const dy = s[hote(p)], y0 = p.box.min.y + dy, y1 = p.box.max.y + dy;
+    let Rm = 0; for (const q of coax) { const [a, b] = yr(q); if (a < y1 + gap && b > y0 - gap) Rm = Math.max(Rm, q.R); }
+    res[p.id] = { v: new V3(0, dy, 0), dr: Math.max(0, Rm + gap - (p.orbit.rc - p.orbit.rpo)) + (exR[p.id] || 0), host: hote(p) };
+  }
+  const poses = [];
+  per.sort((a, b) => rayons(a.box)[0] - rayons(b.box)[0]);           // de la plus proche de l'axe à la plus éloignée
+  for (const p of per) {
+    const dy = s[hote(p)], c = p.box.getCenter(new V3()), u = new V3(c.x, 0, c.z);
+    if (u.lengthSq() < 1e-12) u.set(1, 0, 0); u.normalize();
+    let t = exR[p.id] || 0, bx;
+    for (let it = 0; it < 600; it++, t += gap) {
+      bx = p.box.clone().translate(new V3(u.x * t, dy, u.z * t));
+      const [r0, r1] = rayons(bx);
+      const gene = coax.some(q => { const [a, b] = yr(q); return a < bx.max.y + gap && b > bx.min.y - gap && r0 < q.R + gap; })
+        || orb.some(q => { const r = res[q.id], y0 = q.box.min.y + r.v.y, y1 = q.box.max.y + r.v.y; return y0 < bx.max.y + gap && y1 > bx.min.y - gap && r1 > q.orbit.rc + r.dr - q.orbit.rpo - gap && r0 < q.orbit.rc + r.dr + q.orbit.rpo + gap; })
+        || poses.some(b => b.intersectsBox(bx));
+      if (!gene) break;
     }
-    for (const [id, e] of mv) { pos[id].add(e.v); drc[id] += e.dr; }
-    const groups = [];
-    for (const [id, e] of mv) {
-      if (!base[id]) continue;
-      let g = groups.find(q => q.v.distanceTo(e.v) < 1e-6 && q.dr === e.dr);
-      if (!g) groups.push(g = { v: e.v, dr: e.dr, ids: [] });
-      g.ids.push(id);
-    }
-    const items = groups.map(g => { const box = new THREE.Box3(); for (const id of g.ids) box.union(boxAt(id)); return { box, g, axOnly: g.ids.every(id => COAX.has(id)) }; });
-    for (const id of ORDER) if (base[id] && !mv.has(id)) items.push({ box: boxAt(id), fixe: true });
-    placer(items, 'y', 1.3, 0.25 * S);
-    for (const it of items) if (!it.fixe && it.corr.lengthSq() > 1e-12) for (const id of it.g.ids) { pos[id].add(it.corr); (CORR[id] ||= []).push([k, it.corr.clone()]); }
-  });
+    poses.push(bx.clone().expandByScalar(gap / 2));
+    res[p.id] = { v: new V3(u.x * t, dy, u.z * t), dr: 0, host: hote(p) };
+  }
+  return res;
 }
 
-return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter, placer };
+{ /* démontage du réducteur : les étapes de l'OM amènent chaque pièce à sa place dans la vue éclatée sur l'axe
+     (porte-satellites du 1er étage fixe, comme dans le gabarit). À une étape où une pièce part avec d'autres sans être
+     à sa dernière étape (ex. tout le carter avant à l'étape 2), le bloc glisse sur l'axe comme sa plus grosse pièce.
+     Si une pièce posée croise une pièce encore en place, la ligne s'allonge à cet endroit (ou la pièce s'écarte un peu
+     plus de l'axe) et on recommence. Pendant le mouvement, les pièces peuvent se traverser. */
+  update(0); root.updateMatrixWorld(true);
+  const I = new THREE.Matrix4(), SH = {};
+  for (const id of ORDER) { const objs = []; PART[id].g.traverse(o => { if (o.isMesh) objs.push(o); }); const f = mesurer(objs, I); if (!f.box.isEmpty()) SH[id] = f; }
+  const ORB = { planets1: { rc: G1.rc * S, rpo: (G1.rp + G1.m) * S }, planets2: { rc: G2.rc * S, rpo: (G2.rp + G2.m) * S } };
+  const HOST = { planets1: 'carrier1', planets2: 'carrier2' };
+  const pieces = ORDER.filter(id => SH[id]).map(id => ({ id, box: SH[id].box, R: SH[id].R, orbit: ORB[id], host: HOST[id] }));
+  const kind = {}; for (const p of pieces) kind[p.id] = p.orbit ? 'orb' : surAxe(p) ? 'axe' : 'per';
+  const LAST = {}; for (const id of ORDER) if (PART_STEPS[id]) LAST[id] = Math.max(...PART_STEPS[id].map(x => x[0]));
+  const GAP = 0.3 * S, EPS = 0.04 * S, extra = {}, extraR = {};
+  // blocs OM de chaque étape : pièces qui ont le même déplacement dans le manuel
+  const BLOCS = STEPS.map(st => {
+    const tot = new Map();
+    for (const [ids, v] of st.m) for (const id of ids) { const e = tot.get(id) || [0, 0, 0]; e[0] += v.dz || 0; e[1] += v.up || 0; e[2] += v.dr || 0; tot.set(id, e); }
+    const g = new Map(); for (const [id, e] of tot) { const k = e.join('|'); if (!g.has(k)) g.set(k, []); g.get(k).push(id); }
+    return [...g.values()].map(ids => ({ ids, main: ids.filter(id => SH[id]).sort((a, b) => (kind[b] === 'axe') - (kind[a] === 'axe') || volume(SH[b].box) - volume(SH[a].box))[0] }));
+  });
+  const forme = (id, c) => {
+    const f = SH[id], y0 = f.box.min.y + c.v.y, y1 = f.box.max.y + c.v.y;
+    if (kind[id] === 'axe') return { y0, y1, r0: 0, r1: f.R };
+    if (kind[id] === 'orb') { const o = ORB[id]; return { y0, y1, r0: o.rc + c.dr - o.rpo, r1: o.rc + c.dr + o.rpo }; }
+    const bx = f.box.clone().translate(c.v), [r0, r1] = rayons(bx); return { y0, y1, r0, r1, bx };
+  };
+  const croise = (a, b) => {
+    if (!(a.y0 < b.y1 - EPS && b.y0 < a.y1 - EPS)) return 0;
+    if (a.bx && b.bx) return a.bx.clone().expandByScalar(-EPS).intersectsBox(b.bx) ? 1 : 0;
+    return a.r0 < b.r1 - EPS && b.r0 < a.r1 - EPS ? 1 : 0;
+  };
+  let F, T;
+  for (let essai = 0; essai < 400; essai++) {
+    ESSAIS = essai;
+    F = eclater(pieces, { gap: GAP, anchor: 'carrier1', extra, extraR });
+    // cible de chaque pièce à chaque étape : sa place finale si c'est sa dernière étape, ou si (pièce montée autour)
+    // elle quitte sa pièce d'attache ; sinon elle glisse avec son bloc. Une pièce à sa place n'en bouge plus.
+    const pose = {};
+    T = BLOCS.map((blocs, k) => {
+      const t = {};
+      for (const b of blocs) for (const id of b.ids) {
+        if (!SH[id] || pose[id]) continue;
+        if (LAST[id] === k || (kind[id] !== 'axe' && !b.ids.includes(F[id].host))) { t[id] = F[id]; pose[id] = true; b.fin = true; }
+        else t[id] = { v: new V3(0, F[b.main].v.y, 0), dr: 0 };
+      }
+      return t;
+    });
+    const cur = {}; for (const id in SH) cur[id] = { v: new V3(), dr: 0 };
+    let conflit = null;
+    for (let k = 0; k < T.length && !conflit; k++) {
+      Object.assign(cur, T[k]);
+      for (const x in T[k]) { for (const u in SH) {
+        if (u === x) continue;
+        const cx = cur[x], cu = cur[u];
+        if (cx.v.distanceTo(cu.v) < 1e-9 && Math.abs(cx.dr - cu.dr) < 1e-9) continue;          // encore assemblées entre elles
+        const fx = forme(x, cx), fu = forme(u, cu);
+        if (croise(fx, fu)) { conflit = { k, x, u, fx, fu }; break; }
+      } if (conflit) break; }
+    }
+    if (!conflit) break;
+    // on pousse la pièce qui vient de bouger (si les deux ont bougé : la plus petite)
+    const { k, fx, fu } = conflit; let { x, u } = conflit;
+    if (T[k][u] && volume(SH[u].box) < volume(SH[x].box)) [x, u] = [u, x];
+    const bloc = BLOCS[k].find(b => b.ids.includes(x)), fin = T[k][x] === F[x];
+    const cible = fin ? x : bloc.main;
+    if (kind[cible] === 'axe') {
+      const fa = forme(x, cur[x]), fb = forme(u, cur[u]);
+      extra[cible] = (extra[cible] || 0) + Math.max(GAP, Math.min(fa.y1 - fb.y0, fb.y1 - fa.y0) + GAP / 2);
+    } else extraR[cible] = (extraR[cible] || 0) + 2 * GAP;
+    void fx; void fu;
+  }
+  // mouvements étape par étape
+  const prev = {};
+  T.forEach((t, k) => { for (const id in t) { const p = prev[id] || { v: new V3(), dr: 0 }; (MOUV[id] ||= []).push([k, t[id].v.clone().sub(p.v), (t[id].dr - p.dr) / S]); prev[id] = t[id]; } });
+}
+
+return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter, mesurer, eclater, essais: () => ESSAIS };
 };
