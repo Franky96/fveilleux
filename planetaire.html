@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Engrenages planétaires — Outils de Frank</title>
+<script>
+  const _pE = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pE.includes('planetaire') && !_pE.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* palette des pages moteurs (pt6a21, pt6a-rgb) */
+:root{
+  color-scheme: dark;
+  --bg:#0a0e11; --panel:#131a1f; --panel2:#18222a; --line:#24313b; --line2:#2f3f4b;
+  --text:#dde4e9; --muted:#8797a3;
+  --accent:#7cc4e4; --accent-d:#2d5c73; --on-accent:#e8f6fd;
+  /* pièces du train (mêmes teintes que l'animation d'origine) */
+  --c-sun:#EF9F27; --c-carrier:#1D9E75; --c-ring:#D85A30;
+  --gear-stroke:#5F5E5A; --planet-stroke:#444441;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+html.light{
+  color-scheme: light;
+  --bg:#eef2f5; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
+  --text:#15202a; --muted:#52626f;
+  --accent:#1d6f99; --accent-d:#d4e8f3; --on-accent:#0f4a6a;
+  --c-sun:#b86e00; --c-carrier:#127a5a; --c-ring:#b8461f;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 40px;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* en-tête */
+.toprow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
+.back:hover{border-color:var(--accent)}
+.top{padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.top h1{font-size:40px;line-height:1;font-weight:700}
+.top p{margin:8px 0 0;color:var(--muted);max-width:70ch}
+
+/* animation */
+.panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.modes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.btn{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;cursor:pointer;color:var(--text)}
+.btn:hover{border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent-d);border-color:var(--accent);color:var(--on-accent)}
+.ctrl{display:flex;align-items:center;gap:10px;margin-bottom:8px;color:var(--muted);font-size:13px}
+.ctrl .btn{min-width:40px;text-align:center}
+.ctrl input[type=range]{flex:1;accent-color:var(--accent)}
+.ctrl output{min-width:38px;text-align:right;font-family:var(--f-mono);color:var(--text)}
+svg.train{display:block;width:100%;height:auto;max-height:62vh}
+#status{text-align:center;margin:8px 0 14px;font-size:14px}
+.vals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.val{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:10px 14px}
+.val span{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.val span i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.val b{display:block;font-family:var(--f-mono);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+@media (max-width:520px){.vals{grid-template-columns:1fr}.val b{font-size:20px}}
+
+/* explications */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;margin-top:16px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.note h2{font-size:18px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.note p{margin:0 0 8px;color:var(--text)}
+.note p:last-child{margin-bottom:0}
+.formule{font-family:var(--f-mono);font-size:13px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:6px 10px;display:inline-block}
+
+/* interrupteur de thème (règles de style.css, la page ne la charge pas) */
+#theme-toggle{width:68px;height:26px;border-radius:13px;background:#2a3a2a;border:1.5px solid #3a5a3a;cursor:pointer;transition:background .35s ease,border-color .35s ease;display:inline-flex;align-items:center;justify-content:space-between;padding:0 5px;position:relative;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+#theme-toggle.theme-toggle--fixed{position:fixed;top:.75rem;right:.75rem;z-index:9999}
+.toprow #theme-toggle{margin-bottom:2px}
+.tg-icon{font-size:.62rem;line-height:1;pointer-events:none;flex-shrink:0;position:relative;z-index:2}
+#theme-toggle-knob{position:absolute;width:20px;height:20px;border-radius:50%;top:50%;transform:translateY(-50%);left:3px;background:#7ab880;box-shadow:0 1px 4px rgba(0,0,0,.55);transition:left .35s cubic-bezier(.4,0,.2,1),background .35s ease;pointer-events:none;z-index:3}
+html.light #theme-toggle{background:#34c759;border-color:#28a045}
+html.light #theme-toggle-knob{left:45px;background:#ffffff}
+@media (prefers-reduced-motion: reduce){#theme-toggle,#theme-toggle-knob{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="toprow"><a href="moteurs.html" class="back">&#8592; Moteurs</a><span id="tg-slot"></span></div>
+<header class="top">
+  <h1>Engrenages planétaires</h1>
+  <p>Un vrai train planétaire dont les dents engrènent : soleil de 27 dents, trois satellites de 45 dents, couronne de 117 dents. On le fait tourner en trois étapes pour comprendre d'où vient le rapport de réduction, comme dans le <a href="pt6a-rgb.html">réducteur du PT6A-21</a>.</p>
+</header>
+
+<section class="panel" aria-labelledby="t-anim">
+  <h2 id="t-anim" class="sr-only">Animation du train planétaire</h2>
+  <div class="modes" role="group" aria-label="Étape">
+    <button class="btn" id="b-e1" type="button" aria-pressed="false">Étape 1 : tout bloqué</button>
+    <button class="btn" id="b-e2" type="button" aria-pressed="false">Étape 2 : porte-satellites fixe</button>
+    <button class="btn" id="b-c" type="button" aria-pressed="true">Résultat : couronne fixe</button>
+  </div>
+  <div class="ctrl">
+    <button class="btn" id="pp" type="button" aria-label="Pause">❚❚</button>
+    <button class="btn" id="rs" type="button" aria-label="Recommencer">↺</button>
+    <label for="spd">Vitesse</label>
+    <input type="range" id="spd" min="0.25" max="2" step="0.25" value="1">
+    <output id="spdl" for="spd">1×</output>
+  </div>
+  <svg class="train" viewBox="0 0 680 412" role="img" aria-labelledby="svg-t svg-d">
+    <title id="svg-t">Train planétaire à engrenages</title>
+    <desc id="svg-d">Soleil jaune au centre, trois satellites gris montés sur un porte-satellites vert, couronne à denture intérieure avec un repère rouge.</desc>
+    <g transform="translate(340,206)">
+      <g id="ring"><path id="ringp" fill="#D3D1C7" stroke="var(--gear-stroke)" stroke-width="0.8" fill-rule="evenodd"></path><g id="ringm"><rect x="180" y="-6" width="13" height="12" rx="2" fill="#D85A30"></rect></g></g>
+      <polygon id="plate" fill="#1D9E75" fill-opacity="0.3" stroke="#1D9E75" stroke-opacity="0.3" stroke-width="30" stroke-linejoin="round"></polygon>
+      <g id="sun"><path id="sunp" fill="#FAC775" stroke="#854F0B" stroke-width="0.8"></path><circle r="8" fill="#854F0B"></circle><line x1="0" y1="-13" x2="0" y2="-31" stroke="#854F0B" stroke-width="5" stroke-linecap="round"></line></g>
+      <g id="pls"></g>
+    </g>
+  </svg>
+  <p id="status" aria-live="polite"></p>
+  <div class="vals">
+    <div class="val" style="--c:var(--c-sun)"><span><i></i>Soleil (27 dents) · tours</span><b id="n-s">0,00</b></div>
+    <div class="val" style="--c:var(--c-carrier)"><span><i></i>Porte-satellites · tours</span><b id="n-c">0,00</b></div>
+    <div class="val" style="--c:var(--c-ring)"><span><i></i>Couronne (117 dents) · tours</span><b id="n-r">0,00</b></div>
+  </div>
+</section>
+
+<div class="notes">
+  <section class="note">
+    <h2>Étape 1 : tout bloqué</h2>
+    <p>Si tout le train tourne d'un bloc, aucune dent ne glisse sur une autre : soleil, porte-satellites et couronne font chacun +1 tour.</p>
+  </section>
+  <section class="note">
+    <h2>Étape 2 : porte-satellites fixe</h2>
+    <p>On retient le porte-satellites et on ramène la couronne d'un tour en arrière. Les satellites tournent sur place comme de simples pignons intermédiaires : le soleil fait 117 ÷ 27 = +4,33 tours.</p>
+  </section>
+  <section class="note">
+    <h2>Résultat : couronne fixe</h2>
+    <p>En additionnant les deux étapes, la couronne ne bouge plus (+1 − 1 = 0), le porte-satellites a fait +1 tour et le soleil 1 + 4,33 = 5,33 tours.</p>
+    <p><span class="formule">rapport = 1 + Z<sub>couronne</sub> ÷ Z<sub>soleil</sub> = 1 + 117 ÷ 27 ≈ 5,33</span></p>
+  </section>
+  <section class="note">
+    <h2>Dans un réducteur</h2>
+    <p>Le soleil est l'entrée, rapide ; le porte-satellites est la sortie, lente et puissante ; la couronne est retenue par le carter. Deux étages à la suite multiplient leurs rapports, et les dents vérifient toujours Z<sub>couronne</sub> = Z<sub>soleil</sub> + 2 × Z<sub>satellite</sub> (27 + 2 × 45 = 117).</p>
+  </section>
+</div>
+</div>
+
+<script>
+// Animation d'origine (fichier fourni) : géométrie des dents et cinématique inchangées
+const NS='http://www.w3.org/2000/svg',m=3,Zs=27,Zp=45,Zr=117,k=Zr/Zs,RC=(Zs+Zp)*m/2,TAU=Math.PI*2;
+const deg=r=>r*180/Math.PI;
+function pt(a,r){return (r*Math.cos(a)).toFixed(2)+' '+(r*Math.sin(a)).toFixed(2)+' ';}
+function teeth(Z,inner){const r=m*Z/2,hw=Math.PI/(2*Z),rt=inner?r-m:r+m,rb=inner?r+1.25*m:r-1.25*m;let d='';for(let i=0;i<Z;i++){const c=TAU*i/Z;[[c-1.25*hw,rb],[c-0.55*hw,rt],[c+0.55*hw,rt],[c+1.25*hw,rb]].forEach((p,j)=>{d+=(i||j?'L':'M')+pt(p[0],p[1]);});}return d+'Z';}
+const RO=193;
+document.getElementById('ringp').setAttribute('d','M'+RO+' 0 A'+RO+' '+RO+' 0 1 0 -'+RO+' 0 A'+RO+' '+RO+' 0 1 0 '+RO+' 0 Z '+teeth(Zr,true));
+document.getElementById('sunp').setAttribute('d',teeth(Zs,false));
+const pls=[],pd=teeth(Zp,false);
+for(let i=0;i<3;i++){const g=document.createElementNS(NS,'g');g.innerHTML='<path d="'+pd+'" fill="#B4B2A9" stroke="var(--planet-stroke)" stroke-width="0.8"/><circle cx="0" cy="-44" r="6" fill="#444441"/><circle r="11" fill="#1D9E75"/>';document.getElementById('pls').appendChild(g);pls.push(g);}
+const ring=document.getElementById('ring'),sun=document.getElementById('sun'),plate=document.getElementById('plate');
+let mode='c';
+function pose(a){if(mode==='e1')return{s:a,c:a,r:a};if(mode==='e2')return{s:k*a,c:0,r:-a};return{s:(1+k)*a,c:a,r:0};}
+function draw(a){
+  const P=pose(a),ths=P.s*TAU,thc=P.c*TAU;let thr=0;const pts=[];
+  for(let i=0;i<3;i++){
+    const phi=thc+TAU*i/3-Math.PI/2,ps=Zs*(phi-ths)/TAU,thp=phi+Math.PI-(TAU/Zp)*(0.5-ps);
+    const x=RC*Math.cos(phi),y=RC*Math.sin(phi);pts.push(x.toFixed(2)+','+y.toFixed(2));
+    pls[i].setAttribute('transform','translate('+x.toFixed(2)+','+y.toFixed(2)+') rotate('+deg(thp).toFixed(3)+')');
+    if(i===0){const pp=Zp*(phi-thp)/TAU;thr=phi-(TAU/Zr)*(pp-0.5);}
+  }
+  ring.setAttribute('transform','rotate('+deg(thr).toFixed(3)+')');
+  sun.setAttribute('transform','rotate('+deg(ths).toFixed(3)+')');
+  plate.setAttribute('points',pts.join(' '));
+  return {P,thr};
+}
+const thr0=draw(0).thr;
+document.getElementById('ringm').setAttribute('transform','rotate('+deg(-Math.PI/2-thr0).toFixed(3)+')');
+function fmt(v){const r=Math.round(v*100)/100;if(Math.abs(r)<0.005)return '0,00';return (r>0?'+':'−')+Math.abs(r).toFixed(2).replace('.',',');}
+const msgs={e1:'Tout est soudé ensemble : les dents ne glissent pas, chaque pièce fait +1 tour',e2:'Porte-satellites tenu fixe : la couronne recule d\'un tour, le soleil fait +4,33 tours',c:'Couronne fixe : 1 tour du porte-satellites = 5,33 tours du soleil'};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let a=0,playing=!reduce,hold=0,last=null,speed=1;const DUR=9000;
+function update(){const P=draw(a).P;document.getElementById('n-s').textContent=fmt(P.s);document.getElementById('n-c').textContent=fmt(P.c);document.getElementById('n-r').textContent=fmt(P.r);}
+function loop(ts){
+  if(last===null)last=ts;const dt=Math.min(ts-last,50);last=ts;
+  if(playing){if(a>=1){hold+=dt;if(hold>1600){a=0;hold=0;}}else{a=Math.min(1,a+dt*speed/DUR);}}
+  update();requestAnimationFrame(loop);
+}
+function setMode(md){
+  mode=md;a=0;hold=0;
+  document.getElementById('status').textContent=msgs[md];
+  ['e1','e2','c'].forEach(x=>document.getElementById('b-'+x).setAttribute('aria-pressed',x===md));
+}
+const pp=document.getElementById('pp');
+function majPlay(){pp.textContent=playing?'❚❚':'▶';pp.setAttribute('aria-label',playing?'Pause':'Lecture');}
+function togglePlay(){playing=!playing;majPlay();}
+function restart(){a=0;hold=0;}
+function setSpeed(v){speed=parseFloat(v);document.getElementById('spdl').textContent=String(speed).replace('.',',')+'×';}
+document.getElementById('b-e1').onclick=()=>setMode('e1');
+document.getElementById('b-e2').onclick=()=>setMode('e2');
+document.getElementById('b-c').onclick=()=>setMode('c');
+pp.onclick=togglePlay;
+document.getElementById('rs').onclick=restart;
+document.getElementById('spd').oninput=e=>setSpeed(e.target.value);
+majPlay();
+setMode('c');
+requestAnimationFrame(loop);
+</script>
+<script src="theme-toggle.js"></script>
+<script>
+(function () {
+  const t = document.getElementById('theme-toggle'), slot = document.getElementById('tg-slot');
+  if (t && slot) { t.classList.remove('theme-toggle--fixed'); slot.replaceWith(t); }
+})();
+</script>
+</body>
+</html>
