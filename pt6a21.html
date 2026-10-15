@@ -657,6 +657,7 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js" integrity="sha384-NG9Vjao8FDKsRPhzsQGvMRSCrkgzJlysZlYZ69P52mH1tEpkurCHq0M8jbSP7/gl" crossorigin="anonymous"></script>
 <script src="pt6a21-eclate.js"></script>
 <script src="pt6a21-rgb.js"></script>
+<script src="pt6a21-turbines.js"></script>
 <script>
 window.addEventListener('error', e => {
   const v = document.getElementById('view');
@@ -830,9 +831,7 @@ const holeTex = canvasTex(256, 256, (g, w, h) => {
 /* =====================================================================
    MATÉRIAUX
    ===================================================================== */
-const mExh = M('exhaust', { color: 0xa5957f, metalness: 0.85, roughness: 0.38 });
 const perfTex = canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.fillStyle = '#000'; for (let y = 8; y < h; y += 16) for (let x = (y % 32 === 8 ? 4 : 12); x < w; x += 16) { g.beginPath(); g.arc(x, y, 3.4, 0, TAU); g.fill(); } }, 70, 10);
-const mExhPerf = M('exhaust', { color: 0xa89883, metalness: 0.85, roughness: 0.4, alphaMap: perfTex, alphaTest: 0.5 });
 const mGG = M('ggcase', { color: 0x9aa3a9, metalness: 0.8, roughness: 0.34 });
 const mComp = M('compcase', { color: 0x8f989f, metalness: 0.75, roughness: 0.38 });
 const mInlet = M('inlet', { color: 0x6b767d, metalness: 0.4, roughness: 0.5 });
@@ -841,19 +840,12 @@ const mScreen = M('screen', { color: 0xb3bcc2, metalness: 0.9, roughness: 0.35, 
 const mScreenFrame = M('screen', { color: 0x9aa3a9, metalness: 0.85, roughness: 0.35 });
 const mLiner = M('liner', { color: 0xb09c86, metalness: 0.8, roughness: 0.45, alphaMap: holeTex, alphaTest: 0.5 });
 const mLinerBand = M('liner', { color: 0xa38d76, metalness: 0.8, roughness: 0.42 });
-const mExit = M('exitduct', { color: 0xa39076, metalness: 0.8, roughness: 0.42 });
-const mCTS = M('ctvane', { color: 0x8a7e72, metalness: 0.8, roughness: 0.4 });
-const mShroud = M('ctshroud', { color: 0x8f8579, metalness: 0.8, roughness: 0.42 });
-const mCT = M('ct', { color: 0x9e958c, metalness: 0.9, roughness: 0.3 });
-const mPTS = M('ptstator', { color: 0x857a70, metalness: 0.8, roughness: 0.42 });
-const mPT = M('pt', { color: 0xa39a90, metalness: 0.9, roughness: 0.3 });
 const mImp = M('impeller', { color: 0xc3c8cc, metalness: 0.95, roughness: 0.22 });
 const mAx = M('axial', { color: 0xbfc5ca, metalness: 0.95, roughness: 0.25 });
 const mAxTi = M('axial', { color: 0xa9aeb8, metalness: 0.95, roughness: 0.28 });
 const mStat = M('stators', { color: 0x9aa1a6, metalness: 0.85, roughness: 0.35 });
 const mDiff = M('diffuser', { color: 0xb5b9bc, metalness: 0.9, roughness: 0.3 });
 const mShaftCT = M('ngshaft', { color: 0x8d949a, metalness: 0.9, roughness: 0.3 });
-const mShaftPT = M('ptshaft', { color: 0x8d949a, metalness: 0.9, roughness: 0.3 });
 const mBlade = M('propeller', { color: 0x23272a, metalness: 0.2, roughness: 0.55 });
 const mSpin = M('propeller', { color: 0xd6d9db, metalness: 0.6, roughness: 0.3 });
 const mFuel = M('fuelmanifold', { color: 0xbfae7f, metalness: 0.85, roughness: 0.35 });
@@ -883,7 +875,6 @@ const mCable = M('exciter', { color: 0x9aa0a3, metalness: 0.6, roughness: 0.55 }
 const mDrain = M('drains', { color: 0xb8bcbf, metalness: 0.85, roughness: 0.3 });
 const mFiller = M('oilfiller', { color: 0x66727a, metalness: 0.4, roughness: 0.5 });
 const mFillerCap = M('oilfiller', { color: 0xb6843a, metalness: 0.6, roughness: 0.4 });
-const mDark = M('exhaust', { color: 0x050505, roughness: 1, metalness: 0 });
 const boltMats = {};
 const boltMat = part => boltMats[part] ||= M(part, { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
 
@@ -1033,65 +1024,37 @@ brgLabels.push({ n: 'Arbre d\'hélice · rouleaux', pos: RGB.P(2.9, 6.6, -0.6), 
 }
 
 /* =====================================================================
-   SECTION DE PUISSANCE : conduit d'échappement, turbine de puissance
+   TURBINES ET ÉCHAPPEMENT (chapitre 72-50) : modèle détaillé pt6a21-turbines.js
+   Mêmes repères que le modèle complet (pouces, z depuis la bride d'hélice), dessiné à 1 unité = 10 po : mis à
+   l'échelle ½, son z = Z0 à l'origine du groupe. La section de puissance (échappement, distributeur et turbine de
+   puissance, arbre et paliers n° 3 et n° 4) va avec le module de puissance ; l'étage de la turbine compresseur et
+   les conduits de sortie restent avec le générateur de gaz (séparation à la bride C).
    ===================================================================== */
-shell([[6.6, 8.42], [6.6, 8.62], [6.78, 8.8], [7.05, 10.2], [7.25, 11.8], [7.35, 13.0], [8.0, 15.5], [9.0, 21.5], [9.5, 23.6], [9.95, 23.7], [9.95, 24.25], [9.5, 24.25]], mExh, 'exhaust', modPower, 120, { casing: true });
-boltRing(9.72, 24.45, 36, 0.22, 'exhaust', modPower, { casing: true });
-// conduit intérieur perforé en « trompette » (IPC 72-50-05) et logement d'arbre TP
-shell([[1.9, 12.8], [2.3, 14.5], [2.7, 18.0], [3.2, 20.6], [3.7, 22.0]], mExhPerf, 'exhaust', modPower, 72);
-shell([[5.7, 20.4], [5.1, 20.7], [4.4, 21.4], [4.0, 22.6], [3.9, 24.5], [4.0, 27.0], [4.15, 29.2]], mExhPerf, 'exhaust', modPower, 96);
-shell([[2.8, 12.9], [2.8, 13.8], [2.2, 13.8], [2.2, 28.75], [2.5, 29.0]], mShaftPT, 'ptshaft', modPower, 64, { cutWithAll: true }); // grand tube extérieur : coupé en mode « Toutes les pièces »
-shell([[6.75, 31.9], [6.8, 29.7], [6.85, 28.3], [7.3, 27.3], [8.3, 26.4], [9.3, 25.0]], mPTS, 'ptstator', modPower, 96);
-boltRing(8.75, 25.9, 24, 0.16, 'ptstator', modPower);
-// orifices d'échappement jumelés opposés (3 h et 9 h) avec brides boulonnées
-for (const h of [3, 9]) {
-  const phi = clockPhi(h), z = 18.3, r = lerp(8.0, 9.0, (z - 15.5) / 6) + 0.05;
-  const n = new THREE.Vector3(Math.sin(phi), 0.19, Math.cos(phi)).normalize();
-  const hold = new THREE.Group(); hold.position.copy(P(r, z, phi));
-  hold.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-  const fl = new THREE.Mesh(new THREE.TorusGeometry(3.25 * S, 0.38 * S, 10, 48), mExh); hold.add(fl); reg('exhaust', fl);
-  const plate = new THREE.Mesh(new THREE.RingGeometry(3.35 * S, 4.1 * S, 48), mExh); plate.position.z = 0.25 * S; hold.add(plate); reg('exhaust', plate);
-  const lip = new THREE.Mesh(new THREE.CylinderGeometry(3.3 * S, 3.4 * S, 1.2 * S, 48, 1, true), mExh); lip.rotation.x = Math.PI / 2; lip.position.z = 0.3 * S; hold.add(lip); reg('exhaust', lip);
-  const hole = new THREE.Mesh(new THREE.CircleGeometry(3.15 * S, 40), mDark); hole.position.z = -0.1 * S; hold.add(hole);
-  const bg = new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 0.3 * S, 6); bg.rotateX(Math.PI / 2);
-  const bolts = new THREE.InstancedMesh(bg, boltMat('exhaust'), 20);
-  for (let i = 0; i < 20; i++) { const a = i * TAU / 20; bolts.setMatrixAt(i, new THREE.Matrix4().makeTranslation(3.75 * S * Math.cos(a), 3.75 * S * Math.sin(a), 0.4 * S)); }
-  hold.add(bolts); reg('exhaust', bolts);
-  modPower.add(hold); if (Math.cos(phi) > 0.5) cutHide.push(hold);
+const TB = window.construireTurbines(THREE);
+TB.update(0, 0); TB.root.updateMatrixWorld(true);
+const ECL = window.Eclate(THREE);
+// démontage pas à pas (OM / AMM 72-50), calculé l'ensemble assemblé, avant le montage dans le moteur
+const TB_MOUV = ECL.preparer({ PART: TB.PART, ORDER: TB.ORDER, STEPS: TB.STEPS, ORB: TB.ORB, HOST: TB.HOST, ORDRE: TB.ORDRE, ANCRE: TB.ANCRE, S: TB.S }).MOUV;
+const TB_GG = new Set(['ctshroud', 'ctvane', 'lockplate', 'cover2', 'ctdisk', 'ctbolt', 'smallduct', 'largeduct']);
+const tbP = new THREE.Group(), tbG = new THREE.Group();
+for (const g of [tbP, tbG]) { g.scale.setScalar(0.5); g.position.y = AY(TB.Z0); }
+modPower.add(tbP); modGG.add(tbG);
+for (const id of TB.ORDER) (TB_GG.has(id) ? tbG : tbP).add(TB.PART[id].g);
+while (TB.root.children.length) tbP.add(TB.root.children[0]);
+for (const id of TB.ORDER) {
+  const p = TB.PART[id];
+  for (const m of p.mats) (partMats[id] ||= []).push(m);
+  p.g.traverse(o => {
+    if (!o.isMesh) return;
+    reg(id, o); o.userData.rgb = true;
+    for (const m of [].concat(o.material)) { if (m.userData.kind === undefined) m.userData.kind = p.kind; if (m.userData.part === undefined) m.userData.part = id; rgbMats.add(m); }
+  });
 }
-// distributeur TP (19 aubes) + déflecteur inter-étages + viroles à léchettes
-// distributeur TP : gaz reçu presque axial, rejeté vers l'horaire (sens de la turbine de puissance) ; creux vers l'horaire
-const ptStatorGeo = bladeGeo({ r0: 4.25, r1: 6.5, chord: 1.0, st0: 0.72, st1: 0.66, camber: -0.22, thick: 0.16 });
-bladeRow(ptStatorGeo, 19, mPTS, 'ptstator', modPower, 31.35);
-shell([[4.2, 30.95], [4.2, 31.8]], mPTS, 'ptstator', modPower, 72);
-shell([[6.5, 30.9], [6.75, 31.9]], mPTS, 'ptstator', modPower, 72);
-shell([[0.7, 32.05], [4.2, 32.05], [4.2, 31.95], [0.7, 31.9]], mPTS, 'ptstator', modPower, 64);
-shell([[0.7, 31.75], [0.95, 31.75], [0.95, 32.2], [0.7, 32.2]], mPTS, 'ptstator', modPower, 48);
-for (const z of [29.95, 30.45]) shell([[6.75, z - 0.08], [6.55, z], [6.75, z + 0.08]], mPTS, 'ptstator', modPower, 96);
-shell([[6.75, 29.7], [6.75, 30.7]], mPTS, 'ptstator', modPower, 96);
-// sondes T5 (8) : 1,2,3,4,8,9,10,11 h + busbar + bornier
-for (const h of [1, 2, 3, 4, 8, 9, 10, 11]) { radialCyl(5.0, 6.8, 31.75, clockPhi(h), 0.16, mT5, 't5', modPower, 8); radialCyl(6.6, 6.82, 31.75, clockPhi(h), 0.3, mT5, 't5', modPower, 6); }
-ringShell(6.88, 0.09, 31.75, mT5, 't5', modPower);
-// rotor Nf : turbine de puissance 41 aubes à talon cranté
+// pièces des modules détaillés (réducteur, turbines) : carter fixe ('case') ou pièce interne
+const MODPART = Object.assign({}, RGB.PART, TB.PART);
+brgLabels.push({ n: 'N° 3 · rouleaux', pos: TB.P(2.4, 27.55, -0.6), mod: tbP }, { n: 'N° 4 · billes', pos: TB.P(2.4, 15.4, -0.6), mod: tbP });
+// rotor de la turbine de puissance : ses pièces sont dans le module détaillé (groupe gardé pour les tests de rotor)
 const nfRot = new THREE.Group(); modPower.add(nfRot);
-shell(diskProfile(0.9, 30.2, 1.9, 1.8, 3.2, 0.5, 3.85, 0.9), mPT, 'pt', nfRot, 72);
-shell([[2.35, 29.25], [2.55, 29.25], [2.55, 29.55], [2.35, 29.55]], mPT, 'pt', nfRot, 48);
-// rotor TP (horaire) : renvoie le gaz vers l'antihoraire ; creux et bord de fuite vers l'antihoraire
-bladeRow(bladeGeo({ r0: 3.8, r1: 6.35, chord: 0.8, st0: -0.3, st1: -0.45, camber: 0.32, thick: 0.16 }), 41, mPT, 'pt', nfRot, 30.2);
-platformRow(3.9, 0.95, 41, 0.14, mPT, 'pt', nfRot, 30.2);
-{ // talons crantés : 41 segments séparés par une encoche
-  const g = new THREE.LatheGeometry([[6.35, 29.9], [6.48, 29.9], [6.48, 30.5], [6.35, 30.5], [6.35, 29.9]].map(([r, z]) => new THREE.Vector2(r * S, AY(z) - AY(30.2))), 3, 0, TAU / 41 * 0.9);
-  bladeRow(g, 41, mPT, 'pt', nfRot, 30.2);
-}
-cyl(1.0, 14.5, 29.8, mShaftPT, 'ptshaft', nfRot, 24);
-// turbine libre : l'arbre Nf s'arrête avant l'arbre Ng, les deux arbres ne se touchent pas
-cyl(0.62, 31.1, 31.2, mShaftPT, 'ptshaft', nfRot, 24);
-// arbre à travers l'alésage du disque de turbine de puissance (visible dans la coupe)
-cyl(0.88, 29.8, 31.1, mShaftPT, 'ptshaft', nfRot, 24);
-bearing(1.02, 1.95, 28.3, 0.7, 14, modPower, true, 'N° 3 · rouleaux');
-bearing(1.02, 1.95, 15.3, 0.75, 10, modPower, false, 'N° 4 · billes');
-shell([[2.2, 27.8], [2.2, 28.75], [2.5, 29.0]], mHousing, 'bearings', modPower, 64);
-shell([[2.2, 14.8], [2.2, 15.75], [2.8, 15.9]], mHousing, 'bearings', modPower, 64);
 
 /* =====================================================================
    GÉNÉRATEUR DE GAZ
@@ -1117,10 +1080,6 @@ radialSet(new THREE.BoxGeometry(2.0 * S, 0.9 * S, 1.4 * S).translate(0, 0.45 * S
   }
   radialSet(new THREE.CylinderGeometry(0.42 * S, 0.5 * S, 0.35 * S, 16), nozPhi.map(p => [8.45, 28.1, p]), mLinerBand, 'liner', modGG);
 }
-// grand et petit conduit de sortie (virage de 180°) + bouclier thermique
-shell([[8.7, 36.4], [8.9, 37.3], [8.35, 38.2], [7.2, 38.6], [6.0, 38.5], [5.0, 38.0], [4.5, 37.2], [4.4, 35.8], [4.45, 34.8]], mExit, 'exitduct', modGG, 120);
-shell([[8.1, 38.78], [7.0, 38.85], [5.8, 38.75]], mExit, 'exitduct', modGG, 96);
-shell([[7.05, 35.5], [6.5, 35.0], [6.25, 33.4], [6.25, 32.2], [6.45, 31.95]], mExit, 'exitduct', modGG, 120);
 // flamme (visible en coupe / rayons X)
 const flameMat = new THREE.MeshBasicMaterial({ color: 0xff7a2a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 const flameMat2 = flameMat.clone(); flameMat2.color.set(0xffc36a);
@@ -1128,20 +1087,6 @@ shell([[7.8, 28.0], [8.35, 28.9], [8.45, 31.5], [8.35, 35.5], [8.0, 36.3]], flam
 shell([[7.9, 28.3], [7.6, 29.5], [7.4, 33.0], [7.5, 36.0]], flameMat2, null, modGG, 90);
 const flameLights = [];
 for (const h of [2, 6, 10]) { const l = new THREE.PointLight(0xff7a30, 0, 1.4, 2); l.position.copy(P(7.85, 31.5, clockPhi(h))); modGG.add(l); flameLights.push(l); }
-// distributeur TC (29 aubes classifiées) + plaque-frein et 16 boulons
-// distributeur TC : bord d'attaque parallèle à l'axe (OM 72-50-01), gaz rejeté vers l'antihoraire ; creux vers l'antihoraire
-bladeRow(bladeGeo({ r0: 4.45, r1: 6.2, chord: 1.05, st0: -0.62, st1: -0.66, camber: 0.3, thick: 0.2 }), 29, mCTS, 'ctvane', modGG, 34.3);
-shell([[4.45, 33.8], [4.45, 34.85]], mCTS, 'ctvane', modGG, 72);
-shell([[6.2, 33.8], [6.2, 34.85]], mCTS, 'ctvane', modGG, 72);
-shell([[4.45, 34.85], [4.45, 35.3], [3.4, 35.4], [3.4, 35.7]], mCTS, 'ctvane', modGG, 72);
-boltRing(3.9, 35.55, 16, 0.17, 'ctvane', modGG);
-// viroles de la turbine compresseur : 16 segments classifiés dans le carter de virole
-{
-  const g = new THREE.LatheGeometry([[6.12, 32.3], [6.42, 32.3], [6.42, 33.3], [6.12, 33.3], [6.12, 32.3]].map(([r, z]) => new THREE.Vector2(r * S, AY(z))), 4, 0, TAU / 16 - 0.025);
-  const ms = [], ph = []; for (let i = 0; i < 16; i++) { const a = i * TAU / 16; ms.push(new THREE.Matrix4().makeRotationY(a)); ph.push(a + TAU / 32); }
-  instPair(g, ms, ph, mShroud, 'ctshroud', modGG);
-  shell([[6.42, 32.1], [6.6, 32.1], [6.6, 33.5], [6.42, 33.5]], mShroud, 'ctshroud', modGG, 96);
-}
 // collecteur carburant : 14 adaptateurs reliés par des tubes de transfert appariés ; diviseur de débit à 6 h
 radialSet(new THREE.CylinderGeometry(0.42 * S, 0.42 * S, 1.4 * S, 12).translate(0, 0.7 * S, 0), nozPhi.map(p => [9.9, 27.7, p]), mFuel, 'fuelmanifold', modGG, false);
 radialSet(new THREE.CylinderGeometry(0.58 * S, 0.58 * S, 0.4 * S, 6).translate(0, 1.5 * S, 0), nozPhi.map(p => [9.9, 27.7, p]), mFuel, 'fuelmanifold', modGG, false);
@@ -1270,25 +1215,16 @@ shell(diskProfile(0.95, 41.85, 1.4, 0.9, 2.1, 0.35, 2.7, 0.55), mAx, 'axial', ng
   const nut = new THREE.CylinderGeometry(0.28 * S, 0.28 * S, 0.3 * S, 6); nut.translate(1.9 * S, 0, 0);
   bladeRow(nut, 6, mShaftCT, 'impeller', ngRot, 38.85);
 }
-// turbine compresseur : disque équilibré en deux plans, 58 aubes, plateformes, boulon central
-shell(diskProfile(0.55, 32.8, 2.0, 1.9, 3.4, 0.5, 4.3, 0.9), mCT, 'ct', ngRot, 72);
-shell([[2.5, 31.95], [2.7, 31.95], [2.7, 32.3], [2.5, 32.3]], mCT, 'ct', ngRot, 48);
-shell([[2.5, 33.3], [2.7, 33.3], [2.7, 33.65], [2.5, 33.65]], mCT, 'ct', ngRot, 48);
-// rotor TC (antihoraire) : renvoie le gaz vers l'horaire ; creux et bord de fuite vers l'horaire
-bladeRow(bladeGeo({ r0: 4.25, r1: 6.05, chord: 0.85, st0: 0.38, st1: 0.48, camber: -0.33, thick: 0.18 }), 58, mCT, 'ct', ngRot, 32.8);
-platformRow(4.35, 0.95, 58, 0.12, mCT, 'ct', ngRot, 32.8);
-cyl(0.55, 31.55, 31.85, mShaftCT, 'ngshaft', ngRot, 24);
-// arbre à travers l'alésage du disque de turbine compresseur, puis du rouet et des disques axiaux (visible dans la coupe)
-cyl(0.53, 31.85, 33.3, mShaftCT, 'ngshaft', ngRot, 24);
+// la turbine compresseur et son bout d'arbre (jusqu'à z 35,7) sont dans le module des turbines
 cyl(0.88, 39.0, 45.6, mShaftCT, 'ngshaft', ngRot, 24);
-cyl(0.95, 33.3, 39.0, mShaftCT, 'ngshaft', ngRot, 24);
+cyl(0.95, 35.7, 39.0, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(1.15, 37.3, 39.0, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(1.3, 45.6, 47.3, mShaftCT, 'ngshaft', ngRot, 24);
 cyl(0.45, 47.3, 56.6, mShaftCT, 'ngshaft', ngRot, 16);
 for (const z of [48.0, 55.9]) cyl(0.58, z - 0.35, z + 0.35, mShaftCT, 'ngshaft', ngRot, 18);
 bearing(1.17, 2.05, 38.2, 0.8, 16, modGG, true, 'N° 2 · rouleaux');
 bearing(1.32, 2.1, 46.9, 0.75, 11, modGG, false, 'N° 1 · billes');
-shell([[2.3, 37.8], [2.6, 37.6], [3.6, 36.9], [4.4, 36.4]], mHousing, 'bearings', modGG, 96);   // support du palier n° 2
+shell([[2.3, 37.8], [2.6, 37.6], [3.0, 36.6], [3.25, 35.85]], mHousing, 'bearings', modGG, 96);   // support du palier n° 2, jusqu'à la bride serrée par la plaque-frein
 shell([[2.35, 47.35], [2.5, 47.4], [2.75, 47.1]], mHousing, 'bearings', modGG, 64);             // logement du palier n° 1
 
 /* =====================================================================
@@ -1371,8 +1307,8 @@ const PATH = [
   [4.4, 40.0, 0.28, 't3'], [5.7, 39.4, 0.16, 't3'], [7.0, 39.15, 0.2, 't3'], [8.3, 38.5, 0.2, 't3'], [9.1, 37.3, 0.28, 't3'],
   [9.1, 33.0, 0.28, 't3'], [9.1, 29.0, 0.28, 't3'], [9.0, 27.6, 0.2, 't3'], [8.3, 27.35, 0.2, 'fl'], [7.85, 28.4, 0.45, 'fl'],
   [7.85, 30.5, 0.6, 'fl'], [7.85, 33.5, 0.6, 't4'], [7.85, 36.4, 0.5, 't4'], [7.4, 37.75, 0.35, 't4'], [6.2, 38.05, 0.3, 't4'],
-  [5.3, 37.3, 0.3, 't4'], [5.3, 35.5, 0.35, 't4'], [5.3, 34.3, 0.5, 't4'], [5.3, 32.8, 0.55, 't45'], [5.35, 31.6, 0.6, 't5'],
-  [5.4, 30.2, 0.65, 't6'], [5.6, 28.8, 0.7, 't6'], [6.3, 26.5, 0.8, 't6'], [7.2, 23.5, 1.0, 't6'], [8.1, 20.5, 0.9, 't7'],
+  [4.6, 36.9, 0.3, 't4'], [3.95, 35.0, 0.3, 't4'], [3.77, 33.9, 0.4, 't4'], [3.7, 32.85, 0.45, 't45'], [3.75, 31.8, 0.55, 't5'],
+  [3.8, 30.7, 0.8, 't6'], [3.8, 29.96, 0.9, 't6'], [5.0, 27.6, 0.9, 't6'], [7.2, 23.5, 1.0, 't6'], [8.1, 20.5, 0.9, 't7'],
   [9.7, 18.5, 0.5, 't7'], [12.5, 17.6, 0.9, 't7'], [17.5, 16.0, 1.8, 't7']
 ];
 const PORT_FROM = 32;
@@ -1789,9 +1725,9 @@ function setPaused(v) {
 }
 $('t-pause').onclick = () => setPaused(!paused);
 addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); setPaused(!paused); } });
-const FOCUS_PARTS = ['axial', 'impeller', 'ct', 'pt', 'ngshaft', 'ptshaft', 'propshaft', 'input', 'sun1', 'planets1', 'carrier1', 'flexcpl', 'sun2', 'planets2', 'carrier2', 'ring1', 'ring2', 'torquemeter', 'tqpiston', 'bevel', 'runner', 'oilxfer', 'fronthsg', 'rearhsg', 'cover', 'stators', 'ctvane', 'ptstator', 'diffuser', 'compcase', 'exitduct', 'liner', 'ctshroud', 'agbgears', 'exhaust', 'inlet', 'oiltank'];
+const FOCUS_PARTS = ['axial', 'impeller', 'ctdisk', 'ctbolt', 'ptdisk', 'ptbolt', 'ngshaft', 'ptshaft', 'housing', 'airseal', 'cover3', 'cover2', 'exh', 'blanket', 'ptsh', 'ptvane', 'baffle', 'ptshroud', 'smallduct', 'largeduct', 'lockplate', 'propshaft', 'input', 'sun1', 'planets1', 'carrier1', 'flexcpl', 'sun2', 'planets2', 'carrier2', 'ring1', 'ring2', 'torquemeter', 'tqpiston', 'bevel', 'runner', 'oilxfer', 'fronthsg', 'rearhsg', 'cover', 'stators', 'ctvane', 'diffuser', 'compcase', 'liner', 'ctshroud', 'agbgears', 'inlet', 'oiltank'];
 let oilMode = 'show', showOilFlow = false;
-const OIL_PARTS = new Set(['oiltank', 'oilfiller', 'chip', 'oilfilter', 'oilpump', 'scavpump', 'oiltubes', 'oilheater', 'oilnozzles', 'breather', 'bearings']);
+const OIL_PARTS = new Set(['oiltank', 'oilfiller', 'chip', 'brg3', 'brg3o', 'brg4', 'oilfilter', 'oilpump', 'scavpump', 'oiltubes', 'oilheater', 'oilnozzles', 'breather', 'bearings']);
 function applyGhost() {
   for (const [k, mats] of Object.entries(partMats)) for (const m of mats) {
     let op = m.userData.baseOpacity, tr = m.userData.baseTransparent, dw = m.userData.baseDepthWrite !== false;
@@ -1931,23 +1867,15 @@ for (const [k, id] of [['34', 'v-34'], ['side', 'v-side'], ['front', 'v-front'],
   $(id).onclick = () => isoPart ? frameIso(views[k][0].clone().sub(views[k][1])) : goView(k);
 
 /* ---------- stations moteur (étiquettes) ---------- */
-const STATIONS = [['1', 12.2, 49.0, 0.2], ['2', 3.2, 46.2, 0.2], ['2.5', 3.3, 42.6, 0.2], ['3', 9.1, 37.8, 0.2], ['4', 5.3, 34.8, 0.2], ['5', 5.4, 31.8, 0.2], ['6', 7.0, 25.0, 0.2], ['7', 12.5, 17.6, 0.2]];
+const STATIONS = [['1', 12.2, 49.0, 0.2], ['2', 3.2, 46.2, 0.2], ['2.5', 3.3, 42.6, 0.2], ['3', 9.1, 37.8, 0.2], ['4', 3.9, 34.3, 0.2], ['5', 4.1, 31.84, 0.2], ['6', 7.0, 25.0, 0.2], ['7', 12.5, 17.6, 0.2]];
 const brgEls = brgLabels.map(b => { const el = document.createElement('div'); el.className = 'st brg'; el.hidden = true; el.textContent = b.n; $('vp').appendChild(el); return { ...b, el }; });
 const stEls = STATIONS.map(([n, r, z, a]) => { const el = document.createElement('div'); el.className = 'st'; el.hidden = true; $('vp').appendChild(el); return { n, pos: P(r, z, clockPhi(-0.6)), el }; });
 
 /* ---------- informations pièces ---------- */
 const PARTS = {
   propeller: ['Hélice et cône', 'Installation avion (ex. King Air C90)', 'Hélice hydraulique à simple effet, à pas variable, réversible et mise en drapeau. Le pas est commandé par le régulateur d\'hélice, qui réunit les fonctions de régulateur à vitesse constante (CSU), de valve d\'inversion et de régulateur de turbine libre (Nf). Tripale de 90 po figurée ; la couleur du pas suit la simulation.', [['Rotation', 'horaire, vu de l\'arrière'], ['Régime décollage', '2200 tr/min (ESHP à 2205)']]],
-  exhaust: ['Conduit d\'échappement', 'AMM 72-50 · Brides A–C', 'Les gaz de la turbine de puissance sont dirigés vers l\'avant dans un plénum annulaire, puis rejetés à l\'atmosphère par deux sorties opposées. Le carénage intérieur entoure le logement d\'arbre de turbine de puissance.', [['Sorties', '2, opposées (3 h et 9 h)']]],
-  ptstator: ['Distributeur de turbine de puissance', 'AMM 72-50-03', 'Dix-neuf aubes coulées en alliage de cobalt ou de nickel entre deux anneaux dirigent les gaz sortant de la turbine compresseur vers la turbine de puissance. Le déflecteur inter-étages protège les disques de la chaleur et règle l\'air de refroidissement.', [['Aubes', '19'], ['Sondes T5', '8 bossages']]],
-  pt: ['Turbine de puissance', 'AMM 72-50-04', 'Disque de 41 aubes à talon cranté, montées en sapin et rivetées. Tourne dans un joint à double léchette. L\'ensemble tourne en sens inverse de la turbine compresseur.', [['Aubes', '41'], ['100 % Nf', '33 235 tr/min (prises avant)']]],
-  ptshaft: ['Arbre de turbine de puissance', 'AMM 72-50', 'Porté par les paliers n° 3 (rouleaux) et n° 4 (billes) dans le logement d\'arbre, il transmet le couple au planétaire du 1ᵉʳ étage. Un tube de transfert à quatre gicleurs lubrifie les paliers.', [['Paliers', 'n° 3 et n° 4']]],
-  t5: ['Système T5 (ITT)', 'AMM 77-20', 'Thermocouples à jonction froide : busbar, sondes et faisceau entre les turbines, sondes dans la veine de gaz. Un thermocouple de compensation externe, dans la zone d\'entrée d\'air, ajuste l\'indication.', [['Sondes', '8 (1, 2, 3, 4, 8, 9, 10, 11 h)'], ['Limite', '695 °C max continu']]],
   ggcase: ['Carter du générateur de gaz', 'AMM 72-30', 'Contient la chambre de combustion, les diffuseurs et le compresseur. Porte les 14 adaptateurs d\'injecteurs, 2 bougies, le bornier T5, la vanne de décharge à 7 h et deux vannes de vidange tenues fermées par P3.', [['Diamètre', '19,0 po (483 mm)'], ['Bride', 'C (vers échappement)']]],
   liner: ['Chambre de combustion annulaire', 'AMM 72-40', 'Mécano-soudure annulaire percée de trous de tailles variées. L\'air change de direction de 180° en entrant et se mélange au carburant. Placée autour des turbines, elle évite un long arbre entre compresseur et turbine compresseur.', [['Injecteurs', '14 simplex'], ['Allumage', '2 bougies']]],
-  exitduct: ['Conduits de sortie (grand et petit)', 'AMM 72-50-01', 'Le grand conduit de sortie forme l\'extérieur d\'une enveloppe qui retourne les gaz de 180° vers le distributeur de la turbine compresseur. Refroidi par l\'air P3 sous son bouclier thermique.', []],
-  ctvane: ['Distributeur de turbine compresseur', 'AMM 72-50-01', 'Anneau classifié de 29 aubes coulées d\'une pièce entre anneaux intérieur et extérieur. Oriente les gaz sous l\'angle optimal vers les aubes de la turbine compresseur. Sa teinte rougit ici avec l\'ITT.', [['Aubes', '29']]],
-  ct: ['Turbine compresseur', 'AMM 72-50-02 · IPC 72-50', 'Disque équilibré en deux plans avec arbre intégré cannelé dans le moyeu du compresseur. Aubes en alliage réfractaire à bouts « squealer », tenues en sapin et rivetées. Entraîne le compresseur dans le sens antihoraire.', [['Aubes', '58'], ['Segments de virole', '16'], ['100 % Ng', '37 468 tr/min']]],
   diffuser: ['Tubes diffuseurs', 'AMM 72-30', 'L\'air sortant du rouet est collecté par 21 tubes qui le tournent de 90° et convertissent la vitesse en pression statique, puis des aubes redresseuses l\'envoient autour de la chambre.', [['Tubes', '21']]],
   compcase: ['Carénage compresseur / carter du rouet', 'AMM 72-30', 'Virole des aubes axiales et couvercle du rouet. La pression inter-étages P2.5 est évacuée vers la chambre de la vanne de décharge par des fentes du stator de 3ᵉ étage.', []],
   impeller: ['Rouet centrifuge', 'AMM 72-30', 'Unique étage centrifuge, boulonné aux trois étages axiaux et aux entretoises par six tirants numérotés. Nombre d\'aubes figuré.', [['Rapport de compression', '7,0:1 (total)']]],
@@ -1967,7 +1895,6 @@ const PARTS = {
   fcu: ['Pompe carburant et FCU (prise 2)', 'AMM 73-20', 'La pompe entraînée par le moteur met le carburant sous pression ; le régulateur carburant (FCU) dose le débit selon la manette de puissance, avec ralenti sol (52 %) et ralenti vol (69–71 %). Butée de trim à 97,1 % Ng.', [['Sens / rapport', 'AH · 0,1670:1'], ['Régime max', '6 257 tr/min']]],
   ngtach: ['Génératrice tachymétrique Ng (prise 3)', 'AMM 77-00', 'Indication de vitesse du générateur de gaz.', [['Sens / rapport', 'AH · 0,1121:1']]],
   accessories: ['Prises 4, 5 et 6', 'AMM 72-00 · Tableau 7', 'Pompe à vide optionnelle (4), entraînement optionnel (5), pompe hydraulique optionnelle (6).', [['Rapports', '0,1019 · 0,3208 · 0,2041']]],
-  ctshroud: ['Viroles de la turbine compresseur', 'AMM 72-50-01', 'Seize segments de virole classifiés, retenus par un anneau riveté dans le carter de virole. Ils assurent l\'étanchéité et le jeu de fonctionnement en bout d\'aube ; ce jeu se vérifie en inspection de section chaude.', [['Segments', '16']]],
   bearings: ['Paliers principaux', 'AMM 72-30 · 72-50 · 72-10', 'N° 1 (billes) dans le carter d\'entrée, au moyeu arrière du compresseur ; n° 2 (rouleaux) sur l\'arbre avant du compresseur, dans le centre du carter générateur de gaz ; n° 3 (rouleaux) et n° 4 (billes) à bagues extérieures bridées dans le logement d\'arbre de turbine de puissance ; un roulement à rouleaux bridé porte l\'arrière de l\'arbre d\'hélice. Le bouton « Paliers » les met en évidence. Dimensions figurées.', [['Générateur de gaz', 'n° 1 billes · n° 2 rouleaux'], ['Turbine libre', 'n° 3 rouleaux · n° 4 billes']]],
   fireseal: ['Pare-feu central et arrière', 'AMM 72-30-01 · 72-30-02', 'Anneaux-cloisons en tôle inox, en deux moitiés boulonnées, avec une bande isolante collée sur le diamètre intérieur. Le pare-feu central sépare la zone d\'entrée d\'air de l\'avant du moteur ; l\'arrière la sépare du boîtier d\'accessoires. Le contour extérieur suit la nacelle de l\'avion (figuré circulaire ici).', [['Construction', '2 moitiés, inox'], ['Position', 'de part et d\'autre de la grille']]],
   washring: ['Rampe de lavage du compresseur', 'AMM 72-30-02', 'Anneau de pulvérisation monté sur le pare-feu arrière, autour de la grille d\'entrée, tenu par des agrafes prises sous le bord arrière de la grille. Sert au lavage du compresseur.', []],
@@ -1985,14 +1912,17 @@ const PARTS = {
   tubes: ['Tuyauteries carburant et pneumatiques', 'AMM 73-10', 'Ligne pneumatique Py entre le FCU et le régulateur d\'hélice en partie haute, conduite de carburant du FCU vers le diviseur de débit en partie basse. Tracés figurés.', []],
 };
 for (const id of RGB.ORDER) { const I = RGB.INFO[id]; PARTS[id] = [I.n, I.ref, I.d, I.k]; }
+for (const id of TB.ORDER) { const I = TB.INFO[id]; if (I) PARTS[id] = [I.n, I.ref, I.d, I.k]; }
+PARTS.turb = ['Turbines et échappement', 'AMM 72-50-00 · IPC 72-50 · OM 72-50', 'Deux turbines : la turbine compresseur, cannelée sur le bout d\'arbre avant du compresseur, et la turbine de puissance, cannelée sur l\'arbre qui entraîne le réducteur. Chacune est précédée d\'un distributeur qui oriente les gaz. Les gaz sortent de la chambre entre le petit et le grand conduit de sortie, qui les retournent de 180° vers l\'avant, traversent les deux turbines puis le conduit d\'échappement et ses deux sorties. Cliquez une pièce pour sa fiche ; « Coupe ¼ » ou « Rayons X » montrent l\'intérieur.',
+  [['Turbine compresseur', '58 aubes · antihoraire vue de l\'arrière'], ['Turbine de puissance', '41 aubes à talon · horaire'], ['Distributeurs', '29 aubes (TC) · 19 aubes (TP)'], ['Paliers', 'n° 3 rouleaux · n° 4 billes']]];
 PARTS.rgb = ['Réducteur d\'hélice (RGB)', 'AMM 72-10-00 · IPC 72-11 · OM 72-11', 'Train épicycloïdal à deux étages dans deux carters en alliage de magnésium boulonnés à la bride A avec le conduit d\'échappement : le 1ᵉʳ étage (3 satellites) et le couplemètre dans le carter arrière ; le 2ᵉ étage (5 satellites), l\'arbre d\'hélice et les trois prises avant dans le carter avant. Cliquez une pièce pour sa fiche ; « Coupe ¼ » ou « Rayons X » montrent les engrenages.',
   [['Hélice', `${RGB.NP_RPM.toLocaleString('fr-CA')} tr/min nominal au décollage (AMM 72-10)`], ['Rapports par étage', `à confirmer (modèle : ${RGB.G1.i.toFixed(2).replace('.', ',')} × ${RGB.G2.i.toFixed(2).replace('.', ',')})`], ['Satellites', '3 (1ᵉʳ étage) + 5 (2ᵉ étage)'], ['Prises avant', 'régulateur d\'hélice, génératrice Nf, régulateur de survitesse']]];
 // familles de pièces : menu « Pièce » de la vue 3D et liste du cadre « Composant »
 const PIECE_GROUPS = [
   ['Hélice et commandes', ['propeller', 'reversing']],
   ...RGB.GROUPS.map(([g, n]) => ['Réducteur · ' + n, RGB.ORDER.filter(id => RGB.INFO[id].g === g)]),
-  ['Section de puissance', ['exhaust', 'pt', 'ptstator', 'ptshaft', 't5']],
-  ['Générateur de gaz', ['ct', 'ctshroud', 'ctvane', 'exitduct', 'liner', 'fuelmanifold', 'igniters', 'exciter', 'drains', 'ggcase', 'fireseal', 'diffuser', 'impeller', 'axial', 'stators', 'compcase', 'ngshaft', 'bleed', 'screen', 'inlet', 'washring']],
+  ...TB.GROUPS.map(([g, n]) => ['Turbines · ' + n, TB.ORDER.filter(id => TB.INFO[id] && TB.INFO[id].g === g)]),
+  ['Générateur de gaz', ['liner', 'fuelmanifold', 'igniters', 'exciter', 'drains', 'ggcase', 'fireseal', 'diffuser', 'impeller', 'axial', 'stators', 'compcase', 'ngshaft', 'bleed', 'screen', 'inlet', 'washring']],
   ['Huile', ['oiltank', 'oilfiller', 'oilfilter', 'oilpump', 'oiltubes', 'oilheater', 'scavpump', 'oilnozzles', 'breather']],
   ['Paliers principaux', ['bearings']],
   ['Boîtier d\'accessoires', ['agb', 'agbgears', 'starter', 'fcu', 'ngtach', 'accessories', 'tubes']],
@@ -2133,7 +2063,7 @@ function pick(ev) {
     let o = h.object, vis = true;
     while (o) { if (!o.visible) { vis = false; break; } o = o.parent; }
     if (!vis) continue;
-    if (mode === 'xray' && ((h.object.userData.shell && h.object.userData.shell.casing) || (h.object.userData.rgb && RGB.PART[h.object.userData.part].kind === 'case'))) continue;
+    if (mode === 'xray' && ((h.object.userData.shell && h.object.userData.shell.casing) || (h.object.userData.rgb && MODPART[h.object.userData.part].kind === 'case'))) continue;
     const mm = [].concat(h.object.material)[0], pl = mm && mm.clippingPlanes;
     if (pl && pl.length && (mm.clipIntersection ? pl.every(q => q.distanceToPoint(h.point) < 0) : pl.some(q => q.distanceToPoint(h.point) < 0))) continue;
     return h.object.userData.part;
@@ -2166,7 +2096,7 @@ const ISO = 1;
 const SECTIONS = [
   ['rgb', 'Réducteur d\'hélice (RGB)', 'rgb'],
   ['prop', 'Hélice et tringlerie avant', 'propeller'],
-  ['power', 'Section de puissance', 'pt'],
+  ['turb', 'Turbines et échappement', 'turb'],
   ['gg', 'Générateur de gaz', 'ggcase'],
   ['oil', 'Circuit d\'huile', 'oiltubes'],
   ['agb', 'Boîtier d\'accessoires et accessoires', 'agb'],
@@ -2176,7 +2106,7 @@ $('piece').insertAdjacentHTML('beforeend', SECTIONS.map(([k, n]) => `<option val
 scene.traverse(o => { if (o.isLight) o.layers.enable(ISO); });
 calMesh.layers.enable(ISO);
 // section d'un objet : le groupe englobant le plus proche
-const SEC_OF = new Map([[RGB.root, 'rgb'], [oilGrp, 'oil'], [propRot, 'prop'], [modFront, 'prop'], [modPower, 'power'], [modGG, 'gg'], [modAGB, 'agb']]);
+const SEC_OF = new Map([[RGB.root, 'rgb'], [tbP, 'turb'], [tbG, 'turb'], [oilGrp, 'oil'], [propRot, 'prop'], [modFront, 'prop'], [modPower, 'turb'], [modGG, 'gg'], [modAGB, 'agb']]);
 // le câble d'inversion et les conduites qui longent tout le moteur n'appartiennent à aucune section
 const SANS_SECTION = new Set(['reversing', 'tubes']);
 function secOf(o) {
@@ -2244,16 +2174,21 @@ function demPose(o, e) {
   if (o.matrixAutoUpdate) o.position.copy(o.userData.basePos).addScaledVector(d, e);
   else { o.matrix.copy(o.userData.baseMat); o.matrix.elements[12] += d.x * e; o.matrix.elements[13] += d.y * e; o.matrix.elements[14] += d.z * e; o.matrixWorldNeedsUpdate = true; }
 }
+// sections démontées pas à pas selon le manuel (modules détaillés) ; les autres ont une vue éclatée simple
+const PAS = {
+  rgb: { steps: RGB.STEPS, demonter: RGB.demonter, vide: 'Réducteur assemblé. Avancez le curseur ou suivez les étapes du manuel de révision (OM 72-11) avec « Pas à pas ».' },
+  turb: { steps: TB.STEPS, demonter: t => ECL.demonter(TB.PART, TB.ORDER, TB_MOUV, t), vide: 'Turbines et échappement assemblés. Avancez le curseur ou suivez les étapes de dépose et de démontage (AMM et OM 72-50) avec « Pas à pas ».' },
+};
 function demApply() {
-  if (isoPart === 'rgb') RGB.demonter(demT);
+  if (PAS[isoPart]) PAS[isoPart].demonter(demT);
   else { const e = ease3(clamp(demT, 0, 1)); for (const o of demObjs) demPose(o, e); }
 }
 function demPrepare() {
   for (const o of demObjs) demPose(o, 0);
-  demObjs = []; RGB.demonter(0); stopDem(); stepGlow = null;
+  demObjs = []; for (const k in PAS) PAS[k].demonter(0); stopDem(); stepGlow = null;
   demT = demTarget = 0; demShown = -1;
-  const rgb = isoPart === 'rgb';
-  demMax = rgb ? RGB.STEPS.length : 1;
+  const rgb = !!PAS[isoPart];
+  demMax = rgb ? PAS[isoPart].steps.length : 1;
   $('dem').hidden = !isoPart; $('dem-btns').hidden = !rgb; $('dem-name').hidden = !rgb;
   $('dem-lbl').textContent = rgb ? 'Démontage' : 'Vue éclatée';
   $('dem-t').max = demMax; $('dem-t').value = 0;
@@ -2282,18 +2217,18 @@ function demPrepare() {
   demUI();
 }
 function demUI() {
-  const rgb = isoPart === 'rgb';
+  const rgb = !!PAS[isoPart];
   $('o-dem').textContent = rgb ? `${(Math.round(demT * 10) / 10).toLocaleString('fr-CA')}/${demMax}` : `${Math.round(demT * 100)} %`;
   if (!rgb) return;
   const cur = Math.ceil(demT - 0.001); if (cur === demShown) return; demShown = cur;
-  const e = RGB.STEPS[cur - 1];
-  $('dem-name').innerHTML = cur <= 0 ? '<span>Réducteur assemblé. Avancez le curseur ou suivez les étapes du manuel de révision (OM 72-11) avec « Pas à pas ».</span>'
+  const e = PAS[isoPart].steps[cur - 1];
+  $('dem-name').innerHTML = cur <= 0 ? `<span>${PAS[isoPart].vide}</span>`
     : `<b>${cur}/${demMax}</b>${e.t}<small>${e.r}</small><span>${e.d}</span>`;
   $('dem-play').textContent = demTimer ? '❚❚ Pause' : '▶ Pas à pas';
 }
 function goDem(k, glow) {
   demTarget = clamp(k, 0, demMax); $('dem-t').value = demTarget; demFit = true;
-  if (glow && isoPart === 'rgb' && k >= 1 && k <= demMax) { stepGlow = new Set(RGB.STEPS[k - 1].m.flatMap(x => x[0])); stepGlowT = 1; }
+  if (glow && PAS[isoPart] && k >= 1 && k <= demMax) { stepGlow = new Set(PAS[isoPart].steps[k - 1].m.flatMap(x => x[0])); stepGlowT = 1; }
 }
 function stopDem() { clearInterval(demTimer); demTimer = null; demShown = -1; }
 $('dem-t').addEventListener('input', e => { stopDem(); demT = demTarget = +e.target.value; demApply(); demUI(); });
@@ -2309,7 +2244,7 @@ $('dem-play').onclick = () => {
 };
 function demTick(rdt) {
   if (Math.abs(demTarget - demT) > 1e-4) {
-    const sp = reduceMotion ? 100 : Math.max(isoPart === 'rgb' ? 1.8 : 0.9, Math.abs(demTarget - demT) * 1.2);
+    const sp = reduceMotion ? 100 : Math.max(PAS[isoPart] ? 1.8 : 0.9, Math.abs(demTarget - demT) * 1.2);
     demT += clamp(demTarget - demT, -sp * rdt, sp * rdt);
     if (Math.abs(demTarget - demT) <= 1e-4) { demT = demTarget; if (demFit) { demFit = false; requestAnimationFrame(() => frameIso()); } }
     demApply(); demUI();
@@ -2539,8 +2474,8 @@ function emissives() {
     const sel = k === selected ? 0.45 : k === hovered ? 0.22 : 0;
     for (const m of mats) {
       m.emissive.setRGB(0, 0, 0);
-      if (k === 'ctvane' || k === 'ct' || k === 'exitduct' || k === 'liner') { const g = glow * (k === 'ctvane' ? 0.9 : k === 'liner' ? 0.55 : 0.5); m.emissive.setRGB(g * 1.0, g * 0.28, g * 0.05); }
-      if ((k === 'bearings' || k === 'rollerbrg' || k === 'thrustbrg') && showBrg) { const pz = 0.45 + 0.25 * Math.sin(simClock * 0.004); m.emissive.setRGB(pz, pz * 0.62, pz * 0.1); }
+      if (k === 'ctvane' || k === 'ctdisk' || k === 'smallduct' || k === 'largeduct' || k === 'liner' || k === 'ptvane') { const g = glow * (k === 'ctvane' ? 0.9 : k === 'liner' ? 0.55 : k === 'ptvane' ? 0.4 : 0.5); m.emissive.setRGB(g * 1.0, g * 0.28, g * 0.05); }
+      if ((k === 'bearings' || k === 'rollerbrg' || k === 'thrustbrg' || k === 'brg3' || k === 'brg3o' || k === 'brg4') && showBrg) { const pz = 0.45 + 0.25 * Math.sin(simClock * 0.004); m.emissive.setRGB(pz, pz * 0.62, pz * 0.1); }
       if (sel) m.emissive.lerp(hl, sel);
       if (stepGlow && stepGlow.has(k)) m.emissive.lerp(GLOW_C, 0.5 * stepGlowT);
     }
@@ -2606,7 +2541,7 @@ new ResizeObserver(() => { sizeGauges(); sizeTrend(); }).observe(document.queryS
 let cutAll = false;
 // Pièces pouvant rester entières dans la coupe (comme sur un moteur écorché de musée) :
 // les arbres toujours, les roulements et les engrenages selon les boutons du menu
-const KEEP_GROUP = { propshaft: 'shaft', input: 'shaft', ptshaft: 'shaft', ngshaft: 'shaft', bearings: 'brg', rollerbrg: 'brg', thrustbrg: 'brg', agbgears: 'gear' };
+const KEEP_GROUP = { propshaft: 'shaft', input: 'shaft', ptshaft: 'shaft', ngshaft: 'shaft', bearings: 'brg', rollerbrg: 'brg', thrustbrg: 'brg', brg3: 'brg', brg3o: 'brg', brg4: 'brg', agbgears: 'gear' };
 for (const k of ['sun1', 'planets1', 'carrier1', 'flexcpl', 'ring1', 'sun2', 'planets2', 'carrier2', 'ring2', 'bevel', 'drv_gov', 'drv_nf', 'drv_ovs']) KEEP_GROUP[k] = 'gear';
 const keepOn = { shaft: true, brg: true, gear: true };
 const keepGroup = part => KEEP_GROUP[part] || null;
@@ -2751,7 +2686,7 @@ function frame(now) {
   ngRot.rotation.y = angNg; agbIn.rotation.y = angNg; agbGears.forEach(g => g.m.rotation.y = -angNg * g.k);
   // réducteur : planétaire du 1er étage sur la turbine de puissance, hélice sur le porte-satellites du 2e étage
   demTick(rdt);
-  nfRot.rotation.y = angNf; RGB.update(angNf); propRot.rotation.y = angNf / RGB.I_TOT;
+  nfRot.rotation.y = angNf; RGB.update(angNf); TB.update(angNg, angNf); propRot.rotation.y = angNf / RGB.I_TOT;
   propBlades.forEach(b => b.rotation.x = -st.beta * Math.PI / 180);
   // couplemètre : la couronne du 1er étage et le piston se déplacent avec le couple (exagéré)
   RGB.couple(st.trq);

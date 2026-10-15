@@ -261,7 +261,7 @@ const INFO = {
   brg3o: { g: 'pt', n: 'Palier n° 3 : bague extérieure à bride', ref: 'AMM 72-50-04 · OM 72-50-04 5.C(10), tabl. 601 réf. 233',
     d: 'Bague extérieure à bride boulonnée dans l\'alésage arrière du logement ; les rouleaux y coulissent, ce qui laisse l\'arbre se dilater.',
     k: [['Ø ext. / logement', '2,6769–2,6772 / 2,6774–2,6783 po'], ['Boulons de bride', '4']] },
-  runner: { g: 'pt', n: 'Joint d\'air tournant', ref: 'IPC 72-50-04 fig. 2 (rep. 80) · OM 72-50-04 tabl. 601 réf. 381, 383, 384',
+  airseal: { g: 'pt', n: 'Joint d\'air tournant', ref: 'IPC 72-50-04 fig. 2 (rep. 80) · OM 72-50-04 tabl. 601 réf. 381, 383, 384',
     d: 'Bague à léchettes sur l\'arbre, entre la bague intérieure n° 3 et le disque : avec le joint fixe du logement, elle forme le labyrinthe qui empêche l\'huile de passer vers la zone des turbines.',
     k: [['Jeu radial (post-SB1474)', '0,0045–0,0075 po'], ['Ø sur l\'arbre', '1,5758–1,5767 po']] },
   cover3: { g: 'pt', n: 'Couvercle du palier n° 3', ref: 'AMM 72-50-04 fig. 204, 72-50-05 · IPC 72-50-04 fig. 1 (rep. 100 à 130) · OM tabl. 601 réf. 486, 496',
@@ -471,8 +471,8 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   bearing('brg3o', null, PART.brg3o.g, 0.79, 1.339, 27.2, 27.9, 16, true, { flange: 1.45, fz0: 27.05, fz1: 27.2, gEl: null });
 }
 { // joint d'air tournant (3 léchettes)
-  const s = spinner('runner'), mR = M('runner', { color: 0xc3c7ca, metalness: 0.9, roughness: 0.25 });
-  lathe('runner', [[0.79, 27.92], [0.93, 27.92], [0.93, 28.12], [0.973, 28.16], [0.93, 28.2], [0.93, 28.28], [0.973, 28.32], [0.93, 28.36], [0.93, 28.44], [0.973, 28.48], [0.93, 28.52], [0.93, 28.64], [0.79, 28.64]], mR, s, 64);
+  const s = spinner('airseal'), mR = M('airseal', { color: 0xc3c7ca, metalness: 0.9, roughness: 0.25 });
+  lathe('airseal', [[0.79, 27.92], [0.93, 27.92], [0.93, 28.12], [0.973, 28.16], [0.93, 28.2], [0.93, 28.28], [0.973, 28.32], [0.93, 28.36], [0.93, 28.44], [0.973, 28.48], [0.93, 28.52], [0.93, 28.64], [0.79, 28.64]], mR, s, 64);
 }
 { // couvercle du palier n° 3 (pré-SB1430)
   const mC = M('cover3', { color: 0x8a9196, metalness: 0.7, roughness: 0.4 });
@@ -557,7 +557,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
    ROTATION
    ===================================================================== */
 const rotNg = [spin.ctdisk, spin.ctbolt];
-const rotNf = [spin.ptdisk, spin.ptbolt, spin.ptshaft, spin.brg4, spin.brg3, spin.runner];
+const rotNf = [spin.ptdisk, spin.ptbolt, spin.ptshaft, spin.brg4, spin.brg3, spin.airseal];
 function update(aNg, aNf) {
   for (const s of rotNg) s.rotation.y = aNg;
   for (const s of rotNf) s.rotation.y = aNf;
@@ -566,7 +566,7 @@ function update(aNg, aNf) {
 /* =====================================================================
    DÉMONTAGE : AMM 72-50-01 à -05, OM 72-50 (section de puissance séparée à la bride C)
    ===================================================================== */
-const POWER = ['exh', 'blanket', 'cring', 'flangeD', 'ptsh', 'sealrings', 'ptvane', 'baffle', 't5', 'ptshroud', 'ptdisk', 'ptbolt', 'ptshaft', 'housing', 'brg4', 'brg3', 'brg3o', 'runner', 'cover3'];
+const POWER = ['exh', 'blanket', 'cring', 'flangeD', 'ptsh', 'sealrings', 'ptvane', 'baffle', 't5', 'ptshroud', 'ptdisk', 'ptbolt', 'ptshaft', 'housing', 'brg4', 'brg3', 'brg3o', 'airseal', 'cover3'];
 const STEPS = [
   { t: 'Séparer la section de puissance du générateur de gaz à la bride C', r: 'AMM 72-00-00 · AMM 72-50-03 5.A(1)', m: [[['boltsC'], { dz: 3, dr: 1.5 }], [POWER, { dz: 9 }]],
     d: 'Boulons de la bride C déposés ; la section de puissance (avec le réducteur) est posée sur son support, turbine de puissance vers le haut (embase PWC32179).' },
@@ -588,9 +588,9 @@ const STEPS = [
     d: 'Pré-SB1430 seulement ; après le SB1430 le couvercle fait partie du conduit d\'échappement.' },
   { t: 'Déposer le conduit d\'échappement (avec la virole TP), puis en retirer la couverture isolante', r: 'AMM 72-50-05 5.A(6)–(9)', m: [[['exh', 'ptshroud'], { dz: -6 }], [['blanket'], { dz: -3 }]],
     d: 'Écrous, boulons et ferrure de levage de la bride A déposés, sans séparer les carters du réducteur. Virole déposée seulement si le conduit est rebuté (glace carbonique).' },
-  { t: 'Séparer le logement d\'arbre de la turbine de puissance du réducteur (bride B)', r: 'OM 72-01 · OM 72-50-04 5.C(1)', m: [[['housing', 'ptshaft', 'brg4', 'brg3', 'brg3o', 'runner'], { dz: -4 }]],
+  { t: 'Séparer le logement d\'arbre de la turbine de puissance du réducteur (bride B)', r: 'OM 72-01 · OM 72-50-04 5.C(1)', m: [[['housing', 'ptshaft', 'brg4', 'brg3', 'brg3o', 'airseal'], { dz: -4 }]],
     d: '12 écrous. Ensemble monté sur le support PWC30560 ; planétaire, écrou, rondelle à godet et accouplement déposés de l\'avant de l\'arbre.' },
-  { t: 'Retirer l\'arbre avec le palier n° 4, la bague intérieure du n° 3 et le joint tournant, puis la bague extérieure du n° 3', r: 'OM 72-50-04 5.C(5)–(10)', m: [[['ptshaft', 'brg4', 'brg3', 'runner'], { dz: 4 }], [['brg3o'], { dz: -2 }]],
+  { t: 'Retirer l\'arbre avec le palier n° 4, la bague intérieure du n° 3 et le joint tournant, puis la bague extérieure du n° 3', r: 'OM 72-50-04 5.C(5)–(10)', m: [[['ptshaft', 'brg4', 'brg3', 'airseal'], { dz: 4 }], [['brg3o'], { dz: -2 }]],
     d: 'Quatre boulons et rondelles-freins de la bride du palier n° 4 ; extracteurs PWC30473 (n° 4) et PWC30489 (n° 3). Le joint d\'air fixe reste dans le logement.' },
   { t: 'Déposer le boulon central et extraire la turbine compresseur', r: 'AMM 72-50-02 5.A(5)–(13)', m: [[['ctbolt'], { dz: 3 }], [['ctdisk'], { dz: 4.5 }]],
     d: 'Clé PWC30331 sur le carter GG, protecteur PWC30336, écarteur PWC30335 ; desserrage 50–100 lb·pi, jamais plus de 150 lb·pi. Extracteur PWC30403.' },
@@ -603,7 +603,7 @@ const STEPS = [
 ];
 // vue éclatée sur l'axe (pt6a21-eclate.js) : grand conduit de sortie fixe ; section de puissance vers l'avant
 const ANCRE = 'largeduct';
-const ORDRE = ['brg4', 'ptshaft', 'brg3', 'runner', 'housing', 'brg3o', 'blanket', 'exh', 'ptshroud', 'cover3', 'ptdisk', 'ptbolt', 'ptvane', 'baffle', 'ptsh',
+const ORDRE = ['brg4', 'ptshaft', 'brg3', 'airseal', 'housing', 'brg3o', 'blanket', 'exh', 'ptshroud', 'cover3', 'ptdisk', 'ptbolt', 'ptvane', 'baffle', 'ptsh',
   'flangeD', 'sealrings', 'cring', 't5', 'boltsC', 'ctbolt', 'ctdisk', 'ctshroud', 'ctvane', 'smallduct', 'lockplate', 'cover2', 'largeduct'];
 const ORB = {}, HOST = {};
 
