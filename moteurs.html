@@ -20,6 +20,7 @@
     .mot-card-detail { border-width: 2px; }
     .mot-card-detail h2 { font-size: 1.5rem; }
     .mot-group:empty, .mot-group.vide { display: none; }
+    .mot-grid-connexe { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }   /* une carte seule garde la largeur des Aperçus */
   </style>
 </head>
 <body>
@@ -87,16 +88,24 @@
               <p>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d'air</p>
             </a>
 
-            <a href="planetaire.html" class="menu-card" data-section="planetaire">
-              <span class="icon">🔆</span>
-              <h2>Engrenages planétaires</h2>
-              <p>Un vrai train planétaire animé, en trois étapes, pour comprendre le rapport de réduction</p>
-            </a>
-
             <a href="pw1500g.html" class="menu-card" data-section="pw1500g">
               <span class="icon">⚙️</span>
               <h2>PW1500G</h2>
               <p>Turbofan à réducteur de l'Airbus A220 — réducteur de soufflante, coupe 3D, données certifiées</p>
+            </a>
+
+          </nav>
+        </section>
+
+        <section class="mot-group">
+          <h2 class="mot-group-title">Connexe</h2>
+          <p class="mot-group-desc">Notions liées aux moteurs, expliquées à part.</p>
+          <nav class="menu-grid mot-grid-connexe">
+
+            <a href="planetaire.html" class="menu-card" data-section="planetaire">
+              <span class="icon">🔆</span>
+              <h2>Engrenages planétaires</h2>
+              <p>Un vrai train planétaire animé, en trois étapes, pour comprendre le rapport de réduction</p>
             </a>
 
           </nav>
