@@ -73,6 +73,15 @@ button,input,select{font:inherit;color:inherit}
 .vmenu .chipr input[type=range]{flex:1;width:auto;min-width:80px}
 .vmenu select{background:var(--panel2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--f-mono);font-size:11px;padding:2px 4px}
 .vmenu #piece{width:100%;font-family:var(--f-body);font-size:12.5px;padding:5px 6px}
+.vmenu .dem{display:grid;gap:6px;width:100%}
+.vmenu .dem .chipr{display:flex}
+.vmenu .dem .chipr input{flex:1;min-width:0}
+.vmenu .dem .chipr output{min-width:5.5ch;text-align:right;font-family:var(--f-mono);color:var(--text)}
+.vmenu .dem .seg{justify-self:start}
+.vmenu .dem-name{margin:0;font-size:12px;line-height:1.4;color:var(--text)}
+.vmenu .dem-name b{font-family:var(--f-mono);color:var(--accent);margin-right:6px}
+.vmenu .dem-name small{display:block;color:var(--dim);font-family:var(--f-mono);font-size:10.5px}
+.vmenu .dem-name span{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
 .hint-touch{display:none}
 @media (pointer:coarse){.hint-mouse{display:none}.hint-touch{display:inline}}
 .seg{display:inline-flex;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;overflow:hidden;backdrop-filter:blur(4px)}
@@ -371,6 +380,16 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
         <section>
           <h4>Section <em class="hint">(la section choisie reste seule dans la vue et continue de tourner)</em></h4>
           <select id="piece" aria-label="Section affichée dans la vue 3D"><option value="">Moteur complet</option></select>
+          <div class="dem" id="dem" hidden>
+            <label class="chipr" for="dem-t"><span id="dem-lbl">Démontage</span> <input id="dem-t" type="range" min="0" max="1" step="0.01" value="0"><output id="o-dem">0 %</output></label>
+            <div class="seg" id="dem-btns" role="group" aria-label="Étapes de démontage">
+              <button id="dem-prev" title="Étape précédente">◀</button>
+              <button id="dem-play" title="Démonter étape par étape">▶ Pas à pas</button>
+              <button id="dem-next" title="Étape suivante">▶▶</button>
+              <button id="dem-reset" title="Remonter">↺</button>
+            </div>
+            <p class="dem-name" id="dem-name"></p>
+          </div>
         </section>
         <section>
           <h4>Coupe <em class="hint">(modes Coupe ¼ et Moitié)</em></h4>
@@ -2163,15 +2182,19 @@ function secOf(o) {
   for (let q = o; q; q = q.parent) if (SEC_OF.has(q)) { const k = SEC_OF.get(q); return k === 'gg' && SANS_SECTION.has(o.userData.part) ? null : k; }
   return null;
 }
+const _bt = new THREE.Box3(), _bm = new THREE.Matrix4();
+function addBox(o, box) {
+  const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
+  if (o.isInstancedMesh) for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, _bm); _bm.premultiply(o.matrixWorld); box.union(_bt.copy(g.boundingBox).applyMatrix4(_bm)); }
+  else box.union(_bt.copy(g.boundingBox).applyMatrix4(o.matrixWorld));
+}
 function isoBox(sec, visibleOnly) {
-  const box = new THREE.Box3(), tmp = new THREE.Box3(), m4 = new THREE.Matrix4();
+  const box = new THREE.Box3();
   scene.updateMatrixWorld(true);
   for (const o of pickables) {
     if (!o.isMesh || !o.geometry || secOf(o) !== sec) continue;
     if (visibleOnly) { let vis = true; for (let q = o; q; q = q.parent) if (!q.visible) { vis = false; break; } if (!vis) continue; }
-    const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
-    if (o.isInstancedMesh) for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); box.union(tmp.copy(g.boundingBox).applyMatrix4(m4)); }
-    else box.union(tmp.copy(g.boundingBox).applyMatrix4(o.matrixWorld));
+    addBox(o, box);
   }
   return box;
 }
@@ -2203,8 +2226,97 @@ function setIso(k) {
   if (isoPart && explode > 0) { explode = 0; $('explode').value = 0; }
   if (isoPart && ortho) setOrtho(false);
   controls.minDistance = isoPart ? 0.3 : 1.2; camera.updateProjectionMatrix();
+  demPrepare();
   // fiche de la section dans le cadre « Composant », sans surligner une pièce dans la vue
   if (isoPart) { showPart(sec[2]); selected = null; document.querySelectorAll('#parts button').forEach(b => b.setAttribute('aria-pressed', 'false')); requestAnimationFrame(() => frameIso()); } else { placeIso(); goView('34'); }
+}
+
+/* ---------- démontage de la section isolée ----------
+   Réducteur : les 13 étapes de l'OM 72-11 (pt6a21-rgb.js), pièces de l'étape surlignées en ambre.
+   Autres sections : vue éclatée. Chaque pièce s'écarte le long de l'axe selon sa position, les pièces
+   concentriques (carter, chambre, conduits…) l'une après l'autre ; les équipements montés sur le carter
+   s'écartent aussi vers l'extérieur. Les rotors continuent de tourner pendant le démontage. */
+const ease3 = t => t * t * (3 - 2 * t), GLOW_C = new THREE.Color(0xf0a020);
+let demT = 0, demTarget = 0, demMax = 1, demObjs = [], demTimer = null, demFit = false, demShown = -1, stepGlow = null, stepGlowT = 0;
+function demPose(o, e) {
+  const d = o.userData.demOff;
+  if (o.matrixAutoUpdate) o.position.copy(o.userData.basePos).addScaledVector(d, e);
+  else { o.matrix.copy(o.userData.baseMat); o.matrix.elements[12] += d.x * e; o.matrix.elements[13] += d.y * e; o.matrix.elements[14] += d.z * e; o.matrixWorldNeedsUpdate = true; }
+}
+function demApply() {
+  if (isoPart === 'rgb') RGB.demonter(demT);
+  else { const e = ease3(clamp(demT, 0, 1)); for (const o of demObjs) demPose(o, e); }
+}
+function demPrepare() {
+  for (const o of demObjs) demPose(o, 0);
+  demObjs = []; RGB.demonter(0); stopDem(); stepGlow = null;
+  demT = demTarget = 0; demShown = -1;
+  const rgb = isoPart === 'rgb';
+  demMax = rgb ? RGB.STEPS.length : 1;
+  $('dem').hidden = !isoPart; $('dem-btns').hidden = !rgb; $('dem-name').hidden = !rgb;
+  $('dem-lbl').textContent = rgb ? 'Démontage' : 'Vue éclatée';
+  $('dem-t').max = demMax; $('dem-t').value = 0;
+  if (isoPart && !rgb) {
+    // centre de chaque pièce de la section, dans le repère du moteur
+    scene.updateMatrixWorld(true);
+    const parts = new Map();
+    for (const o of pickables) {
+      if (!o.isMesh || !o.geometry || o.userData.rgb || secOf(o) !== isoPart) continue;
+      const k = o.userData.part; if (!parts.has(k)) parts.set(k, { box: new THREE.Box3(), objs: [] });
+      parts.get(k).objs.push(o); addBox(o, parts.get(k).box);
+    }
+    const list = [...parts.values()].filter(q => !q.box.isEmpty());
+    for (const q of list) q.c = eng.worldToLocal(q.box.getCenter(new THREE.Vector3()));
+    list.sort((a, b) => a.c.y - b.c.y);
+    const n = list.length, cy = list.reduce((t, q) => t + q.c.y, 0) / Math.max(1, n), GAP = 0.07;
+    const w0 = eng.localToWorld(new THREE.Vector3()), a = new THREE.Vector3(), b = new THREE.Vector3();
+    list.forEach((q, i) => {
+      const off = new THREE.Vector3(0, (i - (n - 1) / 2) * GAP + (q.c.y - cy) * 0.5, 0);
+      if (Math.hypot(q.c.x, q.c.z) > 0.3) { off.x = q.c.x * 0.9; off.z = q.c.z * 0.9; }      // à plus de 6 po de l'axe
+      const w1 = eng.localToWorld(off.clone());
+      for (const o of q.objs) {
+        if (o.matrixAutoUpdate) o.userData.basePos ||= o.position.clone(); else o.userData.baseMat ||= o.matrix.clone();
+        a.copy(w0); b.copy(w1); o.parent.worldToLocal(a); o.parent.worldToLocal(b);
+        o.userData.demOff = b.sub(a).clone(); demObjs.push(o);
+      }
+    });
+  }
+  demUI();
+}
+function demUI() {
+  const rgb = isoPart === 'rgb';
+  $('o-dem').textContent = rgb ? `${(Math.round(demT * 10) / 10).toLocaleString('fr-CA')}/${demMax}` : `${Math.round(demT * 100)} %`;
+  if (!rgb) return;
+  const cur = Math.ceil(demT - 0.001); if (cur === demShown) return; demShown = cur;
+  const e = RGB.STEPS[cur - 1];
+  $('dem-name').innerHTML = cur <= 0 ? '<span>Réducteur assemblé. Avancez le curseur ou suivez les étapes du manuel de révision (OM 72-11) avec « Pas à pas ».</span>'
+    : `<b>${cur}/${demMax}</b>${e.t}<small>${e.r}</small><span>${e.d}</span>`;
+  $('dem-play').textContent = demTimer ? '❚❚ Pause' : '▶ Pas à pas';
+}
+function goDem(k, glow) {
+  demTarget = clamp(k, 0, demMax); $('dem-t').value = demTarget; demFit = true;
+  if (glow && isoPart === 'rgb' && k >= 1 && k <= demMax) { stepGlow = new Set(RGB.STEPS[k - 1].m.flatMap(x => x[0])); stepGlowT = 1; }
+}
+function stopDem() { clearInterval(demTimer); demTimer = null; demShown = -1; }
+$('dem-t').addEventListener('input', e => { stopDem(); demT = demTarget = +e.target.value; demApply(); demUI(); });
+$('dem-t').addEventListener('change', () => frameIso());
+$('dem-prev').onclick = () => { stopDem(); goDem(Math.ceil(demTarget - 0.001) - 1, true); };
+$('dem-next').onclick = () => { stopDem(); goDem(Math.floor(demTarget + 0.001) + 1, true); };
+$('dem-reset').onclick = () => { stopDem(); goDem(0); };
+$('dem-play').onclick = () => {
+  if (demTimer) { stopDem(); demUI(); return; }
+  if (demTarget >= demMax) goDem(0);
+  const next = () => { if (demTarget >= demMax) { stopDem(); demUI(); return; } goDem(Math.floor(demTarget + 0.001) + 1, true); };
+  next(); demTimer = setInterval(next, reduceMotion ? 1800 : 2600); demShown = -1; demUI();
+};
+function demTick(rdt) {
+  if (Math.abs(demTarget - demT) > 1e-4) {
+    const sp = reduceMotion ? 100 : Math.max(isoPart === 'rgb' ? 1.8 : 0.9, Math.abs(demTarget - demT) * 1.2);
+    demT += clamp(demTarget - demT, -sp * rdt, sp * rdt);
+    if (Math.abs(demTarget - demT) <= 1e-4) { demT = demTarget; if (demFit) { demFit = false; requestAnimationFrame(() => frameIso()); } }
+    demApply(); demUI();
+  }
+  if (stepGlow) { stepGlowT -= rdt * 0.45; if (stepGlowT <= 0) stepGlow = null; }
 }
 $('piece').onchange = e => { setIso(e.target.value); e.target.blur(); };
 $('iso-exit').onclick = () => setIso(null);
@@ -2432,6 +2544,7 @@ function emissives() {
       if (k === 'ctvane' || k === 'ct' || k === 'exitduct' || k === 'liner') { const g = glow * (k === 'ctvane' ? 0.9 : k === 'liner' ? 0.55 : 0.5); m.emissive.setRGB(g * 1.0, g * 0.28, g * 0.05); }
       if ((k === 'bearings' || k === 'rollerbrg' || k === 'thrustbrg') && showBrg) { const pz = 0.45 + 0.25 * Math.sin(simClock * 0.004); m.emissive.setRGB(pz, pz * 0.62, pz * 0.1); }
       if (sel) m.emissive.lerp(hl, sel);
+      if (stepGlow && stepGlow.has(k)) m.emissive.lerp(GLOW_C, 0.5 * stepGlowT);
     }
   }
 }
@@ -2639,6 +2752,7 @@ function frame(now) {
   const nf = st.Np / GEAR; angNf += nf / 60 * TAU * dt * vs;
   ngRot.rotation.y = angNg; agbIn.rotation.y = angNg; agbGears.forEach(g => g.m.rotation.y = -angNg * g.k);
   // réducteur : planétaire du 1er étage sur la turbine de puissance, hélice sur le porte-satellites du 2e étage
+  demTick(rdt);
   nfRot.rotation.y = angNf; RGB.update(angNf); propRot.rotation.y = angNf / RGB.I_TOT;
   propBlades.forEach(b => b.rotation.x = -st.beta * Math.PI / 180);
   // couplemètre : la couronne du 1er étage et le piston se déplacent avec le couple (exagéré)

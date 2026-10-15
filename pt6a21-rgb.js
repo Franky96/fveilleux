@@ -12,6 +12,7 @@
    RGB.INFO[id], GROUPS     fiches des pièces et leurs familles
    RGB.update(aNf)          angle de la turbine de puissance (rad) -> engrenages, arbre d'hélice, prises avant
    RGB.couple(lbft)         déplacement (exagéré) de la couronne du 1er étage et du piston du couplemètre
+   RGB.STEPS, demonter(t)   démontage selon l'OM 72-11 : 13 étapes, t de 0 (assemblé) à 13
    ===================================================================== */
 window.construireRGB = function (THREE) {
 'use strict';
@@ -669,6 +670,53 @@ for (const [id, h, rTop] of [['drv_gov', 0, 3.95], ['drv_nf', 3, 3.8], ['drv_ovs
   radialCyl(g, mF, 11, 4.5, 4.95, 6.15, 0.17, 12);
 }
 /* =====================================================================
+   VUE ÉCLATÉE : ordre de démontage OM 72-11
+   ===================================================================== */
+const FRONT_ALL = ['fronthsg', 'flangeA', 'bracket', 'ring2', 'rollerbrg', 'carrier2', 'planets2', 'propshaft', 'runner', 'thrustbrg', 'cover', 'oilxfer', 'bevel', 'drv_gov', 'drv_nf', 'drv_ovs', 'acc_gov', 'acc_nf', 'acc_ovs', 'chip', 'strainer', 'tube_oil', 'tube_prop', 'tqconn'];
+const HOUSING_F = ['fronthsg', 'flangeA', 'bracket', 'ring2', 'rollerbrg', 'drv_gov', 'drv_nf', 'drv_ovs', 'acc_gov', 'acc_nf', 'acc_ovs', 'chip', 'strainer', 'tube_oil', 'tube_prop', 'tqconn'];
+const STEPS = [
+  { t: 'Déposer le réducteur de la section de puissance', r: 'OM 72-11 1.B → 72-01', m: [[['input', 'sun1'], { dz: 5.5, up: -7 }]],
+    d: 'Le planétaire du 1er étage reste dans l\'accouplement de la turbine de puissance (deux joncs).' },
+  { t: 'Séparer le carter avant du carter arrière à la bride A', r: 'OM 72-11 5.A(1)', m: [[FRONT_ALL, { dz: -6.5 }], [['flangeA'], { dz: -1.8 }]],
+    d: 'Carter arrière posé bride A en bas sur des cales, avec un dégagement pour le planétaire du 2e étage.' },
+  { t: 'Retirer la rondelle de butée et le jonc, puis soulever le carter arrière du porte-satellites du 1er étage', r: 'OM 72-11 5.A(2)–(3)', m: [[['rearhsg', 'ring1', 'tqpiston', 'torquemeter'], { dz: 4.6 }]],
+    d: 'Extracteur PWC30353 pour la rondelle ; le carter arrière est posé sur la plaque PWC30225.' },
+  { t: 'Débloquer l\'écrou, déposer d\'un bloc l\'adaptateur cannelé, l\'accouplement flexible et le planétaire du 2e étage', r: 'OM 72-11 5.A(4)–(7)', m: [[['flexcpl', 'sun2'], { dz: -2.0 }]],
+    d: 'Porte-satellites dans le gabarit PWC30057 ; les deux grands joncs sont mis au rebut.' },
+  { t: 'Retirer restricteurs, vis d\'axes, axes, puis les trois satellites du 1er étage', r: 'OM 72-11 5.A(8)–(12)', m: [[['planets1'], { dr: 3.2 }]],
+    d: 'Les crépines (post-SB1397) sont extraites des axes ; garnitures et joints jetés.' },
+  { t: 'Déposer les plaques et la couronne du 1er étage, le piston, le cylindre et le tiroir du couplemètre', r: 'OM 72-11 5.B', m: [[['ring1'], { dz: -1.6, up: 8.5 }], [['tqpiston'], { dz: 0.2, up: 8.5 }], [['torquemeter'], { dz: 1.6, up: 8.5 }]],
+    d: 'Les paliers et le fourreau du tiroir, montés serrés, restent dans le carter arrière.' },
+  { t: 'Retirer le tube de transfert et la buse du palier n° 4, l\'écrou, puis extraire le porte-satellites du 2e étage', r: 'OM 72-11 5.C(1)–(6)', m: [[['carrier2', 'planets2'], { dz: 2.4 }]],
+    d: 'Le tube est repoussé dans l\'alésage de l\'arbre ; extracteur PWC30127, retenue PWC30062 pour les rouleaux.' },
+  { t: 'Déposer les cinq satellites du 2e étage et les cinq buses d\'huile', r: 'OM 72-11 5.C(7)–(10)', m: [[['planets2'], { dr: 2.6 }]],
+    d: 'Arbres et satellites gardés par paires et repérés 1 à 5 selon leur position.' },
+  { t: 'Déposer les équipements extérieurs du carter avant', r: 'OM 72-11 5.D', m: [[['acc_gov', 'acc_nf', 'acc_ovs'], { dr: 3 }], [['tube_oil', 'tube_prop', 'tqconn', 'chip', 'bracket'], { dr: 2.6 }], [['strainer'], { dz: -4 }]],
+    d: 'Couvercles et accessoires, porte-joint de la plage Nf, tubes de transfert, crépine, raccord du transmetteur de couple, détecteur de limaille.' },
+  { t: 'Déposer le couvercle du roulement de butée', r: 'OM 72-11 5.E(2), 5.F', m: [[['cover'], { dz: -2.6 }]],
+    d: 'Ne pas faire tourner le carter sur l\'arbre : les arbres-pignons toucheraient le manchon de transfert.' },
+  { t: 'Soulever le carter avant pour le dégager de l\'arbre d\'hélice', r: 'OM 72-11 5.E(3)', m: [[HOUSING_F, { up: -12 }]],
+    d: 'Au besoin, frapper autour du logement de butée avec un chasse-fibre.' },
+  { t: 'Sur l\'arbre : manchon de transfert, écrou, pignon conique et cale, roulement de butée, bague de joint, tube de transfert', r: 'OM 72-11 5.E(4)–(14)', m: [[['oilxfer'], { up: 5.5 }], [['bevel'], { up: 4.6 }], [['thrustbrg'], { up: 4.6 }], [['runner'], { up: 4.6 }]],
+    d: 'Vérifier le sens du filet de l\'écrou (à gauche après le SB1426) ; garder la même cale au remontage.' },
+  { t: 'Internes du carter avant : couronne du 2e étage, roulement à rouleaux, galerie, arbres-pignons des prises', r: 'OM 72-11 5.G', m: [[['ring2'], { dz: 3.2 }], [['rollerbrg'], { dz: 1.7 }], [['drv_gov', 'drv_nf', 'drv_ovs'], { dr: 2.2 }]],
+    d: 'Cales et accouplements étiquetés avec leur arbre-pignon pour le remontage.' }
+];
+const PART_STEPS = {};
+STEPS.forEach((st, k) => st.m.forEach(([ids, v]) => ids.forEach(id => (PART_STEPS[id] ||= []).push([k, v]))));
+const RDIR = { acc_gov: 0, acc_nf: 3, acc_ovs: 9, drv_gov: 0, drv_nf: 3, drv_ovs: 9, tube_oil: 1.2, tube_prop: 5.35, tqconn: 11, chip: 6, bracket: 1.15 };
+// t = étape (0 = assemblé, 13 = tout démonté, valeurs fractionnaires = entre deux étapes)
+function demonter(exT) {
+  for (const id of ORDER) {
+    let dz = 0, up = 0, dr = 0;
+    for (const [k, v] of (PART_STEPS[id] || [])) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; }
+    const p = PART[id]; p.ex.dr = dr;
+    p.g.position.set(up * S, -dz * S, 0);
+    if (RDIR[id] !== undefined && dr) p.g.position.addScaledVector(RD(RDIR[id]), dr * S);
+  }
+}
+
+/* =====================================================================
    ANIMATION DES ENGRENAGES
    ===================================================================== */
 function planetPsi(theta, aSun, G) { return theta + Math.PI + ((theta - aSun) * G.S - Math.PI) / G.P; }
@@ -696,5 +744,5 @@ function couple(tqLbft) {
   PART.torquemeter.valve.position.y = d * 0.6;
 }
 
-return { root, PART, ORDER, INFO, GROUPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple };
+return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter };
 };
