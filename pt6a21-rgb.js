@@ -166,7 +166,7 @@ function inst(geo, mats4, mat, parent, flag) {
 }
 function boltRing(id, parent, r, z, n, size, o = {}) {      // têtes hexagonales axiales
   const g = new THREE.CylinderGeometry(size * S, size * S, (o.h || size * 0.9) * S, 6);
-  const ms = []; for (let i = 0; i < n; i++) { const phi = (o.phi0 || 0) + i * TAU / n; if (o.skip && o.skip(i, phi)) continue; ms.push(axM(r, z, phi)); }
+  const ms = []; for (let i = 0; i < n; i++) { const phi = (o.phi0 || 0) + i * (o.pas ?? TAU / n); if (o.skip && o.skip(i, phi)) continue; ms.push(axM(r, z, phi)); }
   return inst(g, ms, o.mat || boltMat(id), parent || PART[id].g, 'bolt');
 }
 function studRing(id, parent, list, rad, len, o = {}) {       // goujons radiaux [r, z, phi]
@@ -382,7 +382,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   const ey = new THREE.Vector3(Math.sin(phi), 0, Math.cos(phi)), ez = new THREE.Vector3(0, 1, 0), ex = new THREE.Vector3().crossVectors(ey, ez);
   m.applyMatrix4(new THREE.Matrix4().makeBasis(ex, ey, ez).setPosition(P(5.9, 7.56, 1.15)));
   g.add(m);
-  boltRing('bracket', g, 6.4, 7.5, 3, 0.2, { phi0: phi - 0.17, mat: boltMat('bracket'), skip: (i) => false });
+  boltRing('bracket', g, 6.4, 7.5, 3, 0.2, { phi0: phi - 0.17, pas: 0.17, mat: boltMat('bracket') });   // 3 boulons groupés sur la ferrure
 }
 
 /* ---------- carter arrière ---------- */
@@ -753,7 +753,8 @@ function couple(tqLbft) {
 
    mesurer(objets, inv)   boîte et rayon maximal depuis l'axe de ces objets (inv : passage au repère de l'axe)
    eclater(pièces, o)     pièces = [{ id, box, R, orbit: { rc, rpo }, host }],
-                          o = { gap, anchor, extra: { id: écart axial en plus }, extraR: { id: écart radial en plus } }
+                          o = { gap, anchor, ordre: [ids de l'avant vers l'arrière], extra: { id: écart axial en plus },
+                                extraR: { id: écart radial en plus } }
                           -> { id: { v (déplacement), dr (élargissement d'orbite) } } */
 const V3 = THREE.Vector3;
 function mesurer(objs, inv) {
@@ -784,7 +785,9 @@ function eclater(parts, o) {
   const gap = o.gap, ex = o.extra || {}, exR = o.extraR || {}, res = {};
   const coax = parts.filter(surAxe), orb = parts.filter(p => p.orbit), per = parts.filter(p => !p.orbit && !surAxe(p));
   const cy = p => (p.box.min.y + p.box.max.y) / 2;
-  coax.sort((a, b) => cy(b) - cy(a));                                  // de l'avant vers l'arrière
+  // de l'avant vers l'arrière : ordre donné (o.ordre, un carter avant ce qu'il contient du côté du centre), sinon par centre
+  const rang = id => { const i = (o.ordre || []).indexOf(id); return i < 0 ? Infinity : i; };
+  coax.sort((a, b) => (rang(a.id) - rang(b.id)) || (cy(b) - cy(a)));
   let ai = coax.findIndex(p => p.id === o.anchor);
   if (ai < 0) ai = coax.indexOf(coax.reduce((a, b) => volume(b.box) > volume(a.box) ? b : a));
   const s = { [coax[ai].id]: 0 };
@@ -835,6 +838,10 @@ function eclater(parts, o) {
   for (const id of ORDER) { const objs = []; PART[id].g.traverse(o => { if (o.isMesh) objs.push(o); }); const f = mesurer(objs, I); if (!f.box.isEmpty()) SH[id] = f; }
   const ORB = { planets1: { rc: G1.rc * S, rpo: (G1.rp + G1.m) * S }, planets2: { rc: G2.rc * S, rpo: (G2.rp + G2.m) * S } };
   const HOST = { planets1: 'carrier1', planets2: 'carrier2' };
+  // ordre sur l'axe, de l'avant vers l'arrière : chaque carter va vers l'extérieur de son côté, ce qu'il contient
+  // reste entre lui et le porte-satellites du 1er étage (fixe)
+  const ORDRE = ['propshaft', 'runner', 'thrustbrg', 'bevel', 'oilxfer', 'cover', 'fronthsg', 'flangeA', 'rollerbrg', 'carrier2', 'ring2', 'sun2', 'flexcpl',
+    'carrier1', 'ring1', 'tqpiston', 'torquemeter', 'rearhsg', 'sun1', 'input'];
   const pieces = ORDER.filter(id => SH[id]).map(id => ({ id, box: SH[id].box, R: SH[id].R, orbit: ORB[id], host: HOST[id] }));
   const kind = {}; for (const p of pieces) kind[p.id] = p.orbit ? 'orb' : surAxe(p) ? 'axe' : 'per';
   const LAST = {}; for (const id of ORDER) if (PART_STEPS[id]) LAST[id] = Math.max(...PART_STEPS[id].map(x => x[0]));
@@ -860,7 +867,7 @@ function eclater(parts, o) {
   let F, T;
   for (let essai = 0; essai < 400; essai++) {
     ESSAIS = essai;
-    F = eclater(pieces, { gap: GAP, anchor: 'carrier1', extra, extraR });
+    F = eclater(pieces, { gap: GAP, anchor: 'carrier1', ordre: ORDRE, extra, extraR });
     // cible de chaque pièce à chaque étape : sa place finale si c'est sa dernière étape, ou si (pièce montée autour)
     // elle quitte sa pièce d'attache ; sinon elle glisse avec son bloc. Une pièce à sa place n'en bouge plus.
     const pose = {};
