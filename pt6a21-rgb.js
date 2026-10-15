@@ -706,18 +706,17 @@ const PART_STEPS = {};
 STEPS.forEach((st, k) => st.m.forEach(([ids, v]) => ids.forEach(id => (PART_STEPS[id] ||= []).push([k, v]))));
 const RDIR = { acc_gov: 0, acc_nf: 3, acc_ovs: 9, drv_gov: 0, drv_nf: 3, drv_ovs: 9, tube_oil: 1.2, tube_prop: 5.35, tqconn: 11, chip: 6, bracket: 1.15 };
 // t = étape (0 = assemblé, 13 = tout démonté, valeurs fractionnaires = entre deux étapes)
-// CORR : écart supplémentaire de chaque pièce pour qu'aucune ne croise une autre une fois tout démonté
-// (calculé plus bas) ; il s'ajoute au fil des étapes de la pièce (sans étape : au fil du démontage)
+// CORR[id] = [[k, écart]] : écart ajouté au mouvement de la pièce pendant l'étape k, pour qu'à la fin de
+// chaque étape la pièce posée ne croise aucune autre (calculé plus bas)
 const CORR = {};
 function demonter(exT) {
   for (const id of ORDER) {
-    let dz = 0, up = 0, dr = 0, fs = 0;
-    const st = PART_STEPS[id] || [];
-    for (const [k, v] of st) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; fs += f; }
+    let dz = 0, up = 0, dr = 0;
+    for (const [k, v] of (PART_STEPS[id] || [])) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; }
     const p = PART[id]; p.ex.dr = dr;
     p.g.position.set(up * S, -dz * S, 0);
     if (RDIR[id] !== undefined && dr) p.g.position.addScaledVector(RD(RDIR[id]), dr * S);
-    if (CORR[id]) p.g.position.addScaledVector(CORR[id], st.length ? fs / st.length : ease(clamp(exT / STEPS.length, 0, 1)));
+    for (const [k, c] of (CORR[id] || [])) p.g.position.addScaledVector(c, ease(clamp(exT - k, 0, 1)));
   }
 }
 
@@ -750,9 +749,10 @@ function couple(tqLbft) {
 }
 
 /* ---------- vue éclatée sans pièces qui se croisent ----------
-   separer(items, axe, poids, marge) : items = [{ box (Box3 à la position finale), corr (Vector3), axOnly }].
-   Tant que deux boîtes se chevauchent (marge comprise), la plus petite est poussée hors de l'autre selon
-   l'axe où le chevauchement est le plus court (les autres axes que « axe » comptent « poids » fois plus). */
+   separer(items, axe, poids, marge) : items = [{ box (Box3 à la position voulue), corr (Vector3), axOnly, fixe }].
+   Tant que deux boîtes se chevauchent (marge comprise), la plus petite des deux qui peuvent bouger (fixe = jamais)
+   est poussée hors de l'autre selon l'axe où le chevauchement est le plus court (les autres axes que « axe »
+   comptent « poids » fois plus). Deux pièces fixes peuvent se chevaucher (encore assemblées). */
 function separer(items, axe, poids, marge) {
   const AX = ['x', 'y', 'z'];
   for (const it of items) { const sz = it.box.getSize(new THREE.Vector3()); it.vol = (sz.x + marge) * (sz.y + marge) * (sz.z + marge); it.corr ||= new THREE.Vector3(); }
@@ -760,9 +760,10 @@ function separer(items, axe, poids, marge) {
     let moved = false;
     for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
       const a = items[i].box, b = items[j].box;
+      if (items[i].fixe && items[j].fixe) continue;
       if (!AX.every(k => a.max[k] + marge > b.min[k] && b.max[k] + marge > a.min[k])) continue;
       // la plus petite bouge ; une pièce montée sur un rotor (axOnly) ne bouge que le long de l'axe
-      const [m, o] = items[i].vol <= items[j].vol ? [items[i], items[j]] : [items[j], items[i]];
+      const [m, o] = items[i].fixe ? [items[j], items[i]] : items[j].fixe ? [items[i], items[j]] : items[i].vol <= items[j].vol ? [items[i], items[j]] : [items[j], items[i]];
       let best = null;
       for (const k of (m.axOnly && axe ? [axe] : AX)) {
         const d = Math.min(a.max[k] - b.min[k], b.max[k] - a.min[k]) + marge, w = d * (axe && k !== axe ? poids : 1);
@@ -779,13 +780,12 @@ function separer(items, axe, poids, marge) {
   }
   return -1;
 }
-{ // boîtes des pièces assemblées (repère du réducteur), puis positions finales et séparation
+{ /* démontage sans pièce qui en croise une autre au repos : étape par étape, ce qui part à l'étape (en blocs :
+     les pièces qui partent ensemble restent assemblées entre elles) doit, en fin d'étape, dégager toutes les autres
+     pièces, déjà posées ou encore assemblées, qui ne bougent pas. Pendant le mouvement, les pièces peuvent se traverser. */
   update(0); root.updateMatrixWorld(true);
   const SPIN = new Set(['sun1', 'input', 'carrier1', 'flexcpl', 'sun2', 'carrier2', 'propshaft', 'runner', 'bevel', 'planets1', 'planets2']);
-  const c = new THREE.Vector3(), m = new THREE.Matrix4(), mi = new THREE.Matrix4(), items = [];
-  demonter(STEPS.length); root.updateMatrixWorld(true);
-  const fin = {}; for (const id of ORDER) fin[id] = { pos: PART[id].g.position.clone(), dr: PART[id].ex.dr };
-  demonter(0); update(0); root.updateMatrixWorld(true);
+  const c = new THREE.Vector3(), m = new THREE.Matrix4(), mi = new THREE.Matrix4(), base = {}, pos = {}, drc = {};
   for (const id of ORDER) {
     const box = new THREE.Box3(); let R = 0;
     PART[id].g.traverse(o => {
@@ -795,14 +795,36 @@ function separer(items, axe, poids, marge) {
         for (let q = 0; q < 8; q++) { c.set(q & 1 ? bb.max.x : bb.min.x, q & 2 ? bb.max.y : bb.min.y, q & 4 ? bb.max.z : bb.min.z).applyMatrix4(m); box.expandByPoint(c); R = Math.max(R, Math.hypot(c.x, c.z)); }
       }
     });
-    if (box.isEmpty()) continue;
-    const f = fin[id];
-    if (SPIN.has(id)) { R += (id.startsWith('planets') ? f.dr * S : 0); box.min.x = box.min.z = -R; box.max.x = box.max.z = R; }   // tourne : tout le cercle
-    box.translate(f.pos);
-    items.push({ id, box, dir: f.pos.clone() });
+    if (!box.isEmpty()) base[id] = { box, R, spin: SPIN.has(id) };
+    pos[id] = new THREE.Vector3(); drc[id] = 0;
   }
-  separer(items, null, 1, 0.25 * S);
-  for (const it of items) if (it.corr.lengthSq() > 1e-12) CORR[it.id] = it.corr;
+  // boîte d'une pièce à sa position courante ; une pièce qui tourne occupe tout son cercle (satellites : rayon d'orbite compris)
+  const boxAt = id => {
+    const b = base[id], bx = b.box.clone();
+    if (b.spin) { const R = b.R + (id.startsWith('planets') ? drc[id] * S : 0); bx.min.x = bx.min.z = -R; bx.max.x = bx.max.z = R; }
+    return bx.translate(pos[id]);
+  };
+  STEPS.forEach((st, k) => {
+    const mv = new Map();
+    for (const [ids, v] of st.m) for (const id of ids) {
+      const e = mv.get(id) || { v: new THREE.Vector3(), dr: 0 };
+      e.v.x += (v.up || 0) * S; e.v.y -= (v.dz || 0) * S;
+      if (v.dr) { if (RDIR[id] !== undefined) e.v.addScaledVector(RD(RDIR[id]), v.dr * S); else e.dr += v.dr; }
+      mv.set(id, e);
+    }
+    for (const [id, e] of mv) { pos[id].add(e.v); drc[id] += e.dr; }
+    const groups = [];
+    for (const [id, e] of mv) {
+      if (!base[id]) continue;
+      let g = groups.find(q => q.v.distanceTo(e.v) < 1e-6 && q.dr === e.dr);
+      if (!g) groups.push(g = { v: e.v, dr: e.dr, ids: [] });
+      g.ids.push(id);
+    }
+    const items = groups.map(g => { const box = new THREE.Box3(); for (const id of g.ids) box.union(boxAt(id)); return { box, g, dir: g.v.clone() }; });
+    for (const id of ORDER) if (base[id] && !mv.has(id)) items.push({ box: boxAt(id), fixe: true });
+    separer(items, null, 1, 0.25 * S);
+    for (const it of items) if (!it.fixe && it.corr.lengthSq() > 1e-12) for (const id of it.g.ids) { pos[id].add(it.corr); (CORR[id] ||= []).push([k, it.corr.clone()]); }
+  });
 }
 
 return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter, separer };
