@@ -34,7 +34,6 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
     { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
     { key: 'pt6a21',        icon: '🛩️', label: 'PT6A-21'  },
-    { key: 'pt6a-rgb',      icon: '⚙️', label: 'Réducteur PT6A-21' },
     { key: 'planetaire',    icon: '🔆', label: 'Engrenages planétaires' },
     { key: 'pw1500g',       icon: '⚙️', label: 'PW1500G'  },
     { key: 'o320',          icon: '✈️', label: 'O-320'    },
@@ -376,7 +375,6 @@ const PERMS_STRUCTURE = [
   { key: 'moteurs', label: 'Moteurs', children: [
     { key: 'turboreacteur', label: 'CFM56-7B' },
     { key: 'pt6a21',        label: 'PT6A-21' },
-    { key: 'pt6a-rgb',      label: 'Réducteur PT6A-21' },
     { key: 'planetaire',    label: 'Engrenages planétaires' },
     { key: 'pw1500g',       label: 'PW1500G' },
     { key: 'o320',          label: 'O-320' },

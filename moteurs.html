@@ -8,7 +8,7 @@
   <script>
     const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!['moteurs', 'turboreacteur', 'pt6a21', 'pt6a-rgb', 'planetaire', 'pw1500g', 'o320'].some(k => _permsMot.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!['moteurs', 'turboreacteur', 'pt6a21', 'planetaire', 'pw1500g', 'o320'].some(k => _permsMot.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>
@@ -60,12 +60,6 @@
               <span class="icon">🛩️</span>
               <h2>PT6A-21</h2>
               <p>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</p>
-            </a>
-
-            <a href="pt6a-rgb.html" class="menu-card mot-card-detail" data-section="pt6a-rgb">
-              <span class="icon">⚙️</span>
-              <h2>Réducteur PT6A-21</h2>
-              <p>Boîte de réduction d’hélice à deux étages planétaires — modèle 3D détaillé, coupes, vue éclatée selon l’ordre de démontage</p>
             </a>
 
             <a href="o320.html" class="menu-card mot-card-detail" data-section="o320">

@@ -1,19 +1,20 @@
 /* =====================================================================
-   Réducteur d'hélice PT6A-21 — modèle 3D détaillé
+   Réducteur d'hélice PT6A-21 — modèle 3D détaillé, monté dans le modèle complet (pt6a21.html)
    Sources : AMM 72-10-00 (description, fig. 1 et 2), IPC 72-11 (fig. 1 à 7),
    OM 72-11 (démontage 5.A à 5.G, tableaux 601 à 605, fig. 601).
    Unités : pouces. z = distance vers l'arrière depuis la face de la bride d'hélice,
-   r = rayon, h = position horaire vue de l'arrière (12 h en haut).
+   r = rayon, h = position horaire vue de l'arrière (12 h en haut). 1 unité = 10 po :
+   pt6a21.html met le groupe à l'échelle ½ (1 unité = 20 po) et le place sur l'axe du moteur.
+
+   const RGB = construireRGB(THREE)
+   RGB.root                 groupe à ajouter (axe local Y = axe moteur, avant = +Y)
+   RGB.PART[id], RGB.ORDER  pièces (groupe, matériaux, kind 'case' = carter fixe coupé en mode coupe)
+   RGB.INFO[id], GROUPS     fiches des pièces et leurs familles
+   RGB.update(aNf)          angle de la turbine de puissance (rad) -> engrenages, arbre d'hélice, prises avant
+   RGB.couple(lbft)         déplacement (exagéré) de la couronne du 1er étage et du piston du couplemètre
    ===================================================================== */
-(function () {
+window.construireRGB = function (THREE) {
 'use strict';
-window.addEventListener('error', e => {
-  const v = document.getElementById('view');
-  if (v && !v.querySelector('.err')) { const d = document.createElement('div'); d.className = 'loading err'; d.textContent = 'Erreur de chargement : ' + (e.message || 'script bloqué'); v.appendChild(d); }
-});
-if (typeof THREE === 'undefined') { document.getElementById('loading').textContent = 'Three.js n\'a pas pu être chargé (connexion internet requise).'; return; }
-const { OrbitControls, RoomEnvironment } = THREE;
-THREE.ColorManagement.legacyMode = false;
 
 const S = 0.1, TAU = Math.PI * 2, Z0 = 7.4;
 const AY = z => (Z0 - z) * S;                          // axe local Y : avant = +Y
@@ -23,8 +24,6 @@ const RD = h => { const f = clockPhi(h); return new THREE.Vector3(Math.sin(f), 0
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const ease = t => t * t * (3 - 2 * t);
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const $ = id => document.getElementById(id);
 const fmt = (v, d = 0) => v.toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
 
 /* =====================================================================
@@ -61,43 +60,7 @@ BEV.F = 0.5; BEV.k = (BEV.L - BEV.F) / BEV.L;
 const NP_RPM = HELICE_TR_MIN, NF_RPM = NP_RPM * I_TOT, ACC_RPM = NP_RPM * BEV.Ng / BEV.Np;
 const PROV = ' (provisoire)';
 
-/* ---------- rendu ---------- */
-const view = $('view');
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: false });
-renderer.localClippingEnabled = true;
-renderer.setPixelRatio(Math.min(2, devicePixelRatio));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9;
-renderer.outputEncoding = THREE.sRGBEncoding;
-view.appendChild(renderer.domElement);
-$('loading').remove();
-
-const scene = new THREE.Scene();
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
-scene.add(new THREE.HemisphereLight(0xcfe6f5, 0x1a1410, 0.55));
-const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(-3, 5, 4); scene.add(key);
-const rim = new THREE.DirectionalLight(0x88bbdd, 0.8); rim.position.set(4, 1, -4); scene.add(rim);
-const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(0, -4, 2); scene.add(fill);
-
-const camera = new THREE.PerspectiveCamera(34, 1, 0.02, 200);
-camera.position.set(-1.55, 0.95, 1.75);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; controls.dampingFactor = 0.08;
-controls.minDistance = 0.4; controls.maxDistance = 14;
-controls.target.set(0, 0, 0);
-
-const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-let grid = null, gridY = -0.95;
-function buildGrid() {
-  if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
-  grid = new THREE.GridHelper(12, 48, new THREE.Color(cssVar('--scene-grid1') || '#24313b'), new THREE.Color(cssVar('--scene-grid2') || '#172026'));
-  grid.position.y = gridY; grid.material.transparent = true; grid.material.opacity = parseFloat(cssVar('--scene-grid-op')) || 0.5;
-  scene.add(grid);
-}
-buildGrid();
-
-const root = new THREE.Group(); root.rotation.z = Math.PI / 2; scene.add(root);   // axe local Y -> monde -X (avant à gauche)
+const root = new THREE.Group();
 
 /* =====================================================================
    REGISTRE DES PIÈCES
@@ -252,7 +215,6 @@ function bearing(id, parent, rIn, rOut, z0, z1, n, roller, o = {}) {
   const ms = []; for (let i = 0; i < n; i++) ms.push(axM(rm, zm, i * TAU / n)); inst(g, ms, mE, parent);
   for (const dz of [-0.36, 0.36]) lathe(id, ringPts(rm - re * 0.5, rm + re * 0.5, zm + dz * w - 0.02, zm + dz * w + 0.02), mC, parent, 48);
 }
-
 /* =====================================================================
    FICHES DES PIÈCES (textes rédigés d'après les manuels)
    ===================================================================== */
@@ -362,7 +324,6 @@ const INFO = {
   tqconn: { g: 'mon', n: 'Raccord du transmetteur de couple', ref: 'AMM 72-10-00 · IPC 72-11 fig. 1 (rep. 70 à 90)',
     d: 'Bossages en haut du carter avant où sortent la pression du couplemètre et la pression interne du réducteur ; leur différence donne le couple.', k: [['Boulons', '2']] }
 };
-
 /* =====================================================================
    MATÉRIAUX COMMUNS PAR PIÈCE + CONSTRUCTION
    ===================================================================== */
@@ -707,112 +668,9 @@ for (const [id, h, rTop] of [['drv_gov', 0, 3.95], ['drv_nf', 3, 3.8], ['drv_ovs
   radialCyl(g, mF, 11, 4.5, 4.95, 5.75, 0.17, 12);
   radialCyl(g, mF, 11, 4.5, 4.95, 6.15, 0.17, 12);
 }
-
-/* =====================================================================
-   CIRCUIT D'HUILE (schéma animé)
-   ===================================================================== */
-const oilGroup = new THREE.Group(); root.add(oilGroup); oilGroup.visible = false;
-const oilTex = canvasTex(64, 8, (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(40, 0, 24, h); }, 1, 1);
-const oilMats = {};
-function oilPath(kind, pts, rad = 0.09) {
-  const curve = new THREE.CatmullRomCurve3(pts.map(([r, z, h]) => P(r, z, h)));
-  const tex = oilTex.clone(); tex.needsUpdate = true; tex.repeat.set(Math.max(2, Math.round(curve.getLength() / (0.18))), 1);
-  const m = new THREE.MeshBasicMaterial({ color: 0xffffff, map: tex, depthTest: true });
-  (oilMats[kind] ||= []).push(m);
-  oilGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 140, rad * S, 8), m));
-}
-oilPath('p', [[7.4, 9.0, 1.5], [6.85, 7.75, 1.45], [5.9, 7.45, 1.4], [4.3, 6.2, 1.1], [3.3, 5.8, 0.8], [2.0, 5.65, 0.35], [1.4, 5.65, 0.05], [0.95, 5.7, 0], [0.86, 6.6, 0], [0.86, 8.0, 0], [0.7, 9.4, 0], [0.45, 10.1, 0]]);
-oilPath('p', [[0.86, 7.6, 0], [1.2, 8.3, 1.2], [1.78, 8.8, 1.2], [1.95, 8.5, 1.2]], 0.07);
-oilPath('p', [[3.3, 5.8, 0.8], [3.25, 4.4, 10.8], [3.25, 3.0, 10.6], [2.95, 2.5, 10.5], [2.4, 2.25, 10.5]], 0.07);
-oilPath('g', [[4.4, BEV.za - 0.6, 11.7], [3.6, BEV.za - 0.55, 11.8], [2.9, 5.0, 11.9], [1.7, 5.15, 0], [1.1, 5.0, 0], [0.9, 3.5, 0], [0.9, 1.5, 0], [0.6, 0.5, 0], [0.45, -1.4, 0]]);
-oilPath('t', [[3.86, 12.4, 0], [3.86, 11.6, 0], [3.4, 11.12, 0.2], [3.3, 11.1, 11.0]], 0.07);
-oilPath('t', [[3.3, 11.1, 11.0], [4.4, 10.1, 11.1], [5.9, 8.4, 11.1], [5.3, 7.2, 11.0], [4.3, 6.0, 11.0]], 0.07);
-oilPath('s', [[4.2, 7.6, 6], [4.75, 6.6, 6], [4.4, 5.65, 6.4], [4.3, 4.4, 6.25], [4.3, 3.6, 6.25], [4.8, 3.9, 6.3], [5.25, 6.0, 6.2], [5.9, 7.6, 6.15], [7.2, 9.4, 6.1]]);
-function oilColors() { const c = { p: cssVar('--oil-p'), g: cssVar('--oil-g'), t: cssVar('--oil-t'), s: cssVar('--oil-s') }; for (const k in oilMats) for (const m of oilMats[k]) m.color.set(c[k] || '#ffb81f'); }
-oilColors();
-
-/* =====================================================================
-   VUE ÉCLATÉE : ordre de démontage OM 72-11
-   ===================================================================== */
-const FRONT_ALL = ['fronthsg', 'flangeA', 'bracket', 'ring2', 'rollerbrg', 'carrier2', 'planets2', 'propshaft', 'runner', 'thrustbrg', 'cover', 'oilxfer', 'bevel', 'drv_gov', 'drv_nf', 'drv_ovs', 'acc_gov', 'acc_nf', 'acc_ovs', 'chip', 'strainer', 'tube_oil', 'tube_prop', 'tqconn'];
-const HOUSING_F = ['fronthsg', 'flangeA', 'bracket', 'ring2', 'rollerbrg', 'drv_gov', 'drv_nf', 'drv_ovs', 'acc_gov', 'acc_nf', 'acc_ovs', 'chip', 'strainer', 'tube_oil', 'tube_prop', 'tqconn'];
-const STEPS = [
-  { t: 'Déposer le réducteur de la section de puissance', r: 'OM 72-11 1.B → 72-01', m: [[['input', 'sun1'], { dz: 5.5, up: -7 }]],
-    d: 'Le planétaire du 1er étage reste dans l\'accouplement de la turbine de puissance (deux joncs).' },
-  { t: 'Séparer le carter avant du carter arrière à la bride A', r: 'OM 72-11 5.A(1)', m: [[FRONT_ALL, { dz: -6.5 }], [['flangeA'], { dz: -1.8 }]],
-    d: 'Carter arrière posé bride A en bas sur des cales, avec un dégagement pour le planétaire du 2e étage.' },
-  { t: 'Retirer la rondelle de butée et le jonc, puis soulever le carter arrière du porte-satellites du 1er étage', r: 'OM 72-11 5.A(2)–(3)', m: [[['rearhsg', 'ring1', 'tqpiston', 'torquemeter'], { dz: 4.6 }]],
-    d: 'Extracteur PWC30353 pour la rondelle ; le carter arrière est posé sur la plaque PWC30225.' },
-  { t: 'Débloquer l\'écrou, déposer d\'un bloc l\'adaptateur cannelé, l\'accouplement flexible et le planétaire du 2e étage', r: 'OM 72-11 5.A(4)–(7)', m: [[['flexcpl', 'sun2'], { dz: -2.0 }]],
-    d: 'Porte-satellites dans le gabarit PWC30057 ; les deux grands joncs sont mis au rebut.' },
-  { t: 'Retirer restricteurs, vis d\'axes, axes, puis les trois satellites du 1er étage', r: 'OM 72-11 5.A(8)–(12)', m: [[['planets1'], { dr: 3.2 }]],
-    d: 'Les crépines (post-SB1397) sont extraites des axes ; garnitures et joints jetés.' },
-  { t: 'Déposer les plaques et la couronne du 1er étage, le piston, le cylindre et le tiroir du couplemètre', r: 'OM 72-11 5.B', m: [[['ring1'], { dz: -1.6, up: 8.5 }], [['tqpiston'], { dz: 0.2, up: 8.5 }], [['torquemeter'], { dz: 1.6, up: 8.5 }]],
-    d: 'Les paliers et le fourreau du tiroir, montés serrés, restent dans le carter arrière.' },
-  { t: 'Retirer le tube de transfert et la buse du palier n° 4, l\'écrou, puis extraire le porte-satellites du 2e étage', r: 'OM 72-11 5.C(1)–(6)', m: [[['carrier2', 'planets2'], { dz: 2.4 }]],
-    d: 'Le tube est repoussé dans l\'alésage de l\'arbre ; extracteur PWC30127, retenue PWC30062 pour les rouleaux.' },
-  { t: 'Déposer les cinq satellites du 2e étage et les cinq buses d\'huile', r: 'OM 72-11 5.C(7)–(10)', m: [[['planets2'], { dr: 2.6 }]],
-    d: 'Arbres et satellites gardés par paires et repérés 1 à 5 selon leur position.' },
-  { t: 'Déposer les équipements extérieurs du carter avant', r: 'OM 72-11 5.D', m: [[['acc_gov', 'acc_nf', 'acc_ovs'], { dr: 3 }], [['tube_oil', 'tube_prop', 'tqconn', 'chip', 'bracket'], { dr: 2.6 }], [['strainer'], { dz: -4 }]],
-    d: 'Couvercles et accessoires, porte-joint de la plage Nf, tubes de transfert, crépine, raccord du transmetteur de couple, détecteur de limaille.' },
-  { t: 'Déposer le couvercle du roulement de butée', r: 'OM 72-11 5.E(2), 5.F', m: [[['cover'], { dz: -2.6 }]],
-    d: 'Ne pas faire tourner le carter sur l\'arbre : les arbres-pignons toucheraient le manchon de transfert.' },
-  { t: 'Soulever le carter avant pour le dégager de l\'arbre d\'hélice', r: 'OM 72-11 5.E(3)', m: [[HOUSING_F, { up: -12 }]],
-    d: 'Au besoin, frapper autour du logement de butée avec un chasse-fibre.' },
-  { t: 'Sur l\'arbre : manchon de transfert, écrou, pignon conique et cale, roulement de butée, bague de joint, tube de transfert', r: 'OM 72-11 5.E(4)–(14)', m: [[['oilxfer'], { up: 5.5 }], [['bevel'], { up: 4.6 }], [['thrustbrg'], { up: 4.6 }], [['runner'], { up: 4.6 }]],
-    d: 'Vérifier le sens du filet de l\'écrou (à gauche après le SB1426) ; garder la même cale au remontage.' },
-  { t: 'Internes du carter avant : couronne du 2e étage, roulement à rouleaux, galerie, arbres-pignons des prises', r: 'OM 72-11 5.G', m: [[['ring2'], { dz: 3.2 }], [['rollerbrg'], { dz: 1.7 }], [['drv_gov', 'drv_nf', 'drv_ovs'], { dr: 2.2 }]],
-    d: 'Cales et accouplements étiquetés avec leur arbre-pignon pour le remontage.' }
-];
-const PART_STEPS = {};
-STEPS.forEach((st, k) => st.m.forEach(([ids, v]) => ids.forEach(id => (PART_STEPS[id] ||= []).push([k, v]))));
-const RDIR = { acc_gov: 0, acc_nf: 3, acc_ovs: 9, drv_gov: 0, drv_nf: 3, drv_ovs: 9, tube_oil: 1.2, tube_prop: 5.35, tqconn: 11, chip: 6, bracket: 1.15 };
-let exT = 0, exTarget = 0;
-function applyExplode() {
-  for (const id of ORDER) {
-    let dz = 0, up = 0, dr = 0;
-    for (const [k, v] of (PART_STEPS[id] || [])) { const f = ease(clamp(exT - k, 0, 1)); dz += (v.dz || 0) * f; up += (v.up || 0) * f; dr += (v.dr || 0) * f; }
-    const p = PART[id]; p.ex.dr = dr;
-    p.g.position.set(up * S, -dz * S, 0);
-    if (RDIR[id] !== undefined && dr) p.g.position.addScaledVector(RD(RDIR[id]), dr * S);
-  }
-}
-
-/* =====================================================================
-   ÉTAT D'AFFICHAGE : coupe, rayons X, isolement, sélection
-   ===================================================================== */
-let mode = 'ext', cutAll = false, selected = null, isolate = false, ghost = false, showAcc = true, showBolts = true, stepGlow = null, stepGlowT = 0;
-const planeH = [new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)];
-const planeQ = [new THREE.Plane(new THREE.Vector3(0, -1, 0), 0), new THREE.Plane(new THREE.Vector3(0, 0, -1), 0)];
-let selColor = new THREE.Color(cssVar('--sel') || '#7cc4e4');
-function refreshMats() {
-  for (const id of ORDER) {
-    const p = PART[id];
-    const hiddenAcc = !showAcc && id.startsWith('acc_');
-    p.g.visible = !hiddenAcc && !(isolate && selected && id !== selected);
-    for (const m of p.mats) {
-      const cutting = (mode === 'cut' || mode === 'half') && (m.userData.kind === 'case' || cutAll);
-      const planes = cutting ? (mode === 'cut' ? planeQ : planeH) : null;
-      const prevN = m.clippingPlanes ? m.clippingPlanes.length : 0;
-      m.clippingPlanes = planes; m.clipIntersection = mode === 'cut';
-      let op = m.userData.baseOpacity;
-      if (mode === 'xray' && m.userData.kind === 'case' && id !== selected) op = Math.min(op, 0.14);
-      if (ghost && selected && id !== selected) op = Math.min(op, 0.12);
-      const tr = op < 0.999 || m.userData.baseTransparent;
-      if (m.transparent !== tr || prevN !== (planes ? planes.length : 0)) m.needsUpdate = true;
-      m.transparent = tr; m.opacity = op; m.depthWrite = op > 0.5;
-      const glow = id === selected ? 0.2 : (stepGlow && stepGlow.has(id) ? 0.5 * stepGlowT : 0);
-      if (glow > 0) m.emissive.copy(id === selected ? selColor : new THREE.Color(0xf0a020)).multiplyScalar(glow); else m.emissive.copy(m.userData.baseEmissive);
-    }
-  }
-  root.traverse(o => { if (o.userData.bolt) o.visible = showBolts; });
-}
-
 /* =====================================================================
    ANIMATION DES ENGRENAGES
    ===================================================================== */
-let paused = reduceMotion, slow = 0.0025, aNf = 0;
-const W_NF = NF_RPM * TAU / 60;
 function planetPsi(theta, aSun, G) { return theta + Math.PI + ((theta - aSun) * G.S - Math.PI) / G.P; }
 function placePlanets(arr, G, aSun, aCar, dr) {
   for (const h of arr) {
@@ -821,7 +679,7 @@ function placePlanets(arr, G, aSun, aCar, dr) {
     h.rotation.y = planetPsi(th, aSun, G);
   }
 }
-function updateGears() {
+function update(aNf) {
   const aC1 = aNf / G1.i, aC2 = aC1 / G2.i, aAcc = aC2 * BEV.Ng / BEV.Np;
   spin.sun1.rotation.y = aNf; spin.input.rotation.y = aNf;
   spin.carrier1.rotation.y = aC1; spin.flexcpl.rotation.y = aC1; spin.sun2.rotation.y = aC1;
@@ -831,304 +689,12 @@ function updateGears() {
   for (const p of pinions) p.sp.rotation.y = -aAcc;
 }
 // couplemètre : déplacement axial (exagéré) de la couronne et du piston
-let tqLbft = 900;
-function updateTorque() {
+function couple(tqLbft) {
   const d = (0.04 + 0.14 * tqLbft / 1315) * S;
   PART.ring1.g.children.forEach(c => { if (c.userData.baseY === undefined) c.userData.baseY = c.position.y; c.position.y = c.userData.baseY + d; });
   PART.tqpiston.inner.position.y = d;
   PART.torquemeter.valve.position.y = d * 0.6;
 }
 
-/* =====================================================================
-   ÉTIQUETTES 3D
-   ===================================================================== */
-const LBL = [
-  ['fronthsg', 'Carter avant', 6.75, 7.3, 1.9], ['rearhsg', 'Carter arrière', 5.0, 9.75, 1.6], ['propshaft', 'Arbre d\'hélice', 2.6, 0.2, 0.9],
-  ['cover', 'Couvercle de butée', 3.3, 1.9, 10.6], ['acc_gov', 'Régulateur d\'hélice', 7.0, BEV.za - 0.2, 0], ['acc_nf', 'Génératrice Nf', 7.4, BEV.za, 3],
-  ['acc_ovs', 'Régulateur de survitesse', 6.9, BEV.za, 9], ['chip', 'Détecteur de limaille', 6.6, 6.9, 6], ['strainer', 'Crépine', 4.6, 3.2, 6.8],
-  ['ring1', 'Couronne 1er étage', 3.95, 10.2, 1.2], ['torquemeter', 'Couplemètre', 3.95, 11.4, 0.4], ['ring2', 'Couronne 2e étage', 3.85, 8.05, 10.8],
-  ['carrier2', 'Porte-satellites 2e étage', 3.1, 7.25, 2.8], ['bevel', 'Pignon conique', 2.2, 3.7, 8.2], ['oilxfer', 'Transfert d\'huile', 1.6, 5.4, 4.8],
-  ['planets1', 'Satellites 1er étage', 0, 0, 0], ['planets2', 'Satellites 2e étage', 0, 0, 0], ['sun1', 'Planétaire 1er étage', 1.1, 9.6, 7.5], ['tqconn', 'Raccord de couple', 4.95, 5.95, 11]
-];
-const lblLayer = $('labels'), lblEls = [];
-for (const [id, txt, r, z, h] of LBL) {
-  const el = document.createElement('div'); el.className = 'lbl'; el.textContent = txt; lblLayer.appendChild(el);
-  lblEls.push({ el, id, local: P(r, z, h) });
-}
-const _v = new THREE.Vector3();
-function updateLabels() {
-  if (lblLayer.hidden) return;
-  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
-  for (const L of lblEls) {
-    const p = PART[L.id];
-    if (!p.g.visible) { L.el.style.display = 'none'; continue; }
-    if (L.id === 'planets1' || L.id === 'planets2') { const hh = (L.id === 'planets1' ? planets1 : planets2)[0]; _v.set(0, 0, 0); hh.localToWorld(_v); }
-    else { _v.copy(L.local); p.g.localToWorld(_v); }
-    _v.project(camera);
-    if (_v.z > 1 || Math.abs(_v.x) > 1.1 || Math.abs(_v.y) > 1.1) { L.el.style.display = 'none'; continue; }
-    L.el.style.display = '';
-    L.x = (_v.x * 0.5 + 0.5) * w; L.y = (-_v.y * 0.5 + 0.5) * h - 10; L.z = _v.z;
-    L.el.classList.toggle('sel', L.id === selected);
-  }
-  // évite les chevauchements : les étiquettes les plus proches sont placées d'abord, les autres montent
-  const shown = lblEls.filter(L => L.el.style.display !== 'none').sort((a, b) => a.z - b.z), placed = [];
-  for (const L of shown) {
-    const bw = L.el.offsetWidth || 90, bh = (L.el.offsetHeight || 18) + 2;
-    let y = L.y;
-    for (let k = 0; k < 12; k++) {
-      const hit = placed.find(q => Math.abs(q.x - L.x) < (q.w + bw) / 2 && Math.abs(q.y - y) < bh);
-      if (!hit) break; y = hit.y - bh;
-    }
-    placed.push({ x: L.x, y, w: bw });
-    L.el.style.transform = `translate(${L.x}px, ${y}px) translate(-50%,-100%)`;
-    L.el.classList.toggle('moved', Math.abs(y - L.y) > 1);
-  }
-}
-
-/* =====================================================================
-   CAMÉRA, CADRAGE
-   ===================================================================== */
-const VIEWS = { '34': new THREE.Vector3(-0.68, 0.42, 0.76), side: new THREE.Vector3(0, 0.08, 1), front: new THREE.Vector3(-1, 0.1, 0.02), rear: new THREE.Vector3(1, 0.12, 0.02) };
-let camAnim = null;
-function boundsVisible() {
-  const box = new THREE.Box3(), tmp = new THREE.Box3();
-  root.updateMatrixWorld(true);
-  root.traverseVisible(o => { if (o.isMesh && !o.isInstancedMesh && o.geometry && o.parent !== oilGroup) { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tmp.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); box.union(tmp); } });
-  return box;
-}
-function frame(dir, instant) {
-  const box = boundsVisible(); if (box.isEmpty()) return;
-  const c = box.getCenter(new THREE.Vector3()), sph = box.getBoundingSphere(new THREE.Sphere());
-  gridY = Math.min(-0.95, box.min.y - 0.08);
-  const asp = Math.max(0.5, camera.aspect), fov = camera.fov * Math.PI / 180;
-  const fit = Math.max(sph.radius / Math.sin(fov / 2), sph.radius / Math.sin(Math.atan(Math.tan(fov / 2) * asp))) * 0.82;
-  const d = (dir || camera.position.clone().sub(controls.target)).clone().normalize();
-  const toPos = c.clone().addScaledVector(d, fit);
-  if (instant || reduceMotion) { camera.position.copy(toPos); controls.target.copy(c); controls.update(); return; }
-  camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: toPos, t1: c, k: 0 };
-}
-
-/* =====================================================================
-   SÉLECTION, PANNEAU, LISTE
-   ===================================================================== */
-const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
-function clippedAt(pt, m) {
-  if (!m || !m.clippingPlanes || !m.clippingPlanes.length) return false;
-  return m.clipIntersection ? m.clippingPlanes.every(pl => pl.distanceToPoint(pt) < 0) : m.clippingPlanes.some(pl => pl.distanceToPoint(pt) < 0);
-}
-function pick(ev) {
-  const r = renderer.domElement.getBoundingClientRect();
-  ptr.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
-  ray.setFromCamera(ptr, camera);
-  const hits = ray.intersectObjects(root.children, true);
-  for (const h of hits) {
-    let o = h.object, vis = true; for (let q = o; q; q = q.parent) if (!q.visible) { vis = false; break; } if (!vis) continue;
-    if (o.parent === oilGroup || o.parent?.parent === oilGroup) continue;
-    const m = Array.isArray(o.material) ? o.material[0] : o.material;
-    if (clippedAt(h.point, m)) continue;
-    if (m && m.transparent && m.opacity < 0.3) continue;
-    while (o && !o.userData.part) o = o.parent;
-    if (o) return o.userData.part;
-  }
-  return null;
-}
-function select(id) {
-  selected = id || null;
-  if (!selected) { isolate = false; ghost = false; }
-  $('b-iso').disabled = $('b-ghost').disabled = !selected;
-  $('b-iso').setAttribute('aria-pressed', isolate); $('b-ghost').setAttribute('aria-pressed', ghost);
-  document.querySelectorAll('#plist button').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === selected));
-  const body = $('info-body');
-  if (!selected) {
-    body.innerHTML = '<h3>Réducteur d\'hélice</h3><span class="ref">AMM 72-10-00 · IPC 72-11 · OM 72-11</span><p>Train épicycloïdal à deux étages dans deux carters en magnésium boulonnés à la bride A : le 1er étage et le couplemètre dans le carter arrière, le 2e étage, les prises avant et l\'arbre d\'hélice dans le carter avant. Cliquez une pièce dans la vue ou dans la liste pour afficher sa fiche.</p>' +
-      `<dl class="kv"><dt>Hélice</dt><dd>${fmt(NP_RPM)} tr/min nominal au décollage (AMM 72-10), horaire vue de l'arrière</dd><dt>Rapports par étage</dt><dd>à confirmer (modèle : ${fmt(G1.i, 2)} × ${fmt(G2.i, 2)})</dd><dt>Satellites</dt><dd>3 (1er étage) + 5 (2e étage)</dd><dt>Prises avant</dt><dd>3 : régulateur d'hélice, génératrice Nf, régulateur de survitesse</dd></dl>`;
-  } else {
-    const I = INFO[selected];
-    body.innerHTML = `<h3>${I.n}</h3><span class="ref">${I.ref}</span><p>${I.d}</p><dl class="kv">${I.k.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`;
-  }
-  refreshMats();
-}
-{ // liste des pièces
-  const list = $('plist');
-  for (const [gk, gname] of GROUPS) {
-    const sec = document.createElement('div'); sec.innerHTML = `<h4>${gname}</h4>`; const ul = document.createElement('ul');
-    for (const id of ORDER) if (INFO[id].g === gk) {
-      const li = document.createElement('li'), b = document.createElement('button');
-      b.type = 'button'; b.dataset.id = id; b.setAttribute('aria-pressed', 'false');
-      b.innerHTML = `<i style="background:${PART[id].swatch}"></i>${INFO[id].n}`;
-      b.addEventListener('click', () => { select(selected === id ? null : id); if (selected && !PART[id].g.visible && id.startsWith('acc_')) { showAcc = true; $('t-acc').setAttribute('aria-pressed', 'true'); refreshMats(); } });
-      li.appendChild(b); ul.appendChild(li);
-    }
-    sec.appendChild(ul); list.appendChild(sec);
-  }
-  $('pcount').textContent = `${ORDER.length} entrées`;
-}
-$('b-iso').addEventListener('click', () => { if (!selected) return; isolate = !isolate; if (isolate) ghost = false; select(selected); if (isolate) frame(null); });
-$('b-ghost').addEventListener('click', () => { if (!selected) return; ghost = !ghost; if (ghost) isolate = false; select(selected); });
-$('b-clear').addEventListener('click', () => { const wasIso = isolate; select(null); if (wasIso) frame(null); });
-
-/* ---------- survol / clic dans la vue ---------- */
-const tip = $('tip'); let downAt = null, lastHover = 0;
-renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
-renderer.domElement.addEventListener('pointerup', e => {
-  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) { downAt = null; return; }
-  downAt = null; const id = pick(e); select(id === selected ? null : id);
-});
-renderer.domElement.addEventListener('pointermove', e => {
-  if (e.pointerType !== 'mouse' || e.buttons) { tip.hidden = true; return; }
-  const now = performance.now(); if (now - lastHover < 90) return; lastHover = now;
-  const id = pick(e); if (!id) { tip.hidden = true; renderer.domElement.style.cursor = ''; return; }
-  const r = $('vp').getBoundingClientRect();
-  tip.innerHTML = `${INFO[id].n}<small>${INFO[id].ref.split(' · ')[0]}</small>`; tip.hidden = false;
-  tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px';
-  renderer.domElement.style.cursor = 'pointer';
-});
-renderer.domElement.addEventListener('pointerleave', () => { tip.hidden = true; });
-
-/* =====================================================================
-   COMMANDES
-   ===================================================================== */
-const setPressed = (ids, on) => ids.forEach(i => $(i).setAttribute('aria-pressed', i === on));
-function setMode(m) { mode = m; setPressed(['m-ext', 'm-cut', 'm-half', 'm-xray'], { ext: 'm-ext', cut: 'm-cut', half: 'm-half', xray: 'm-xray' }[m]); refreshMats(); }
-$('m-ext').onclick = () => setMode('ext'); $('m-cut').onclick = () => setMode('cut'); $('m-half').onclick = () => setMode('half'); $('m-xray').onclick = () => setMode('xray');
-$('cut-case').onclick = () => { cutAll = false; setPressed(['cut-case', 'cut-all'], 'cut-case'); refreshMats(); };
-$('cut-all').onclick = () => { cutAll = true; setPressed(['cut-case', 'cut-all'], 'cut-all'); refreshMats(); };
-function setPause(p) { paused = p; $('t-pause').setAttribute('aria-pressed', p); $('t-pause').textContent = p ? '▶ Reprendre' : '⏸ Figer'; $('frozen').hidden = !p; }
-$('t-pause').onclick = () => setPause(!paused);
-$('slow').onchange = e => { slow = parseFloat(e.target.value); $('rot-note').textContent = 'Rotation affichée ' + e.target.selectedOptions[0].textContent; };
-$('t-lbl').onclick = () => { const on = lblLayer.hidden; lblLayer.hidden = !on; $('t-lbl').setAttribute('aria-pressed', on); };
-$('t-acc').onclick = () => { showAcc = !showAcc; $('t-acc').setAttribute('aria-pressed', showAcc); if (!showAcc && selected && selected.startsWith('acc_')) select(null); else refreshMats(); };
-$('t-bolt').onclick = () => { showBolts = !showBolts; $('t-bolt').setAttribute('aria-pressed', showBolts); refreshMats(); };
-function setOil(on) { oilGroup.visible = on; $('t-oil').setAttribute('aria-pressed', on); $('oilkey').hidden = !on; if (on && mode === 'ext') setMode('xray'); }
-$('t-oil').onclick = () => setOil(!oilGroup.visible);
-$('b-oil').onclick = () => { setOil(true); $('vp').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' }); };
-for (const [id, v] of [['v-34', '34'], ['v-side', 'side'], ['v-front', 'front'], ['v-rear', 'rear']]) $(id).onclick = () => frame(VIEWS[v]);
-$('v-fit').onclick = () => frame(null);
-const menuBtn = $('menu-toggle'), vmenu = $('vmenu');
-function setMenu(open) { vmenu.hidden = !open; menuBtn.setAttribute('aria-expanded', open); }
-menuBtn.onclick = () => setMenu(vmenu.hidden);
-setMenu(false);
-
-/* ---------- vue éclatée : curseur et étapes ---------- */
-const exIn = $('explode'), stepsOl = $('steps');
-STEPS.forEach((st, k) => {
-  const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
-  b.innerHTML = `<b>${k + 1}</b><span>${st.t}<small>${st.r}</small></span>`;
-  b.title = st.d; b.addEventListener('click', () => goStep(k + 1, true));
-  li.appendChild(b); stepsOl.appendChild(li);
-});
-let lastStepShown = -1;
-function stepUI() {
-  const s = Math.round(exTarget);
-  $('o-explode').textContent = `${fmt(exT, exT % 1 ? 1 : 0)}/13`;
-  const cur = Math.ceil(exT - 0.001);
-  if (cur !== lastStepShown) {
-    lastStepShown = cur;
-    $('exname').innerHTML = cur <= 0 ? 'Réducteur assemblé' : `<b>${cur}/13</b>${STEPS[cur - 1].t}`;
-  }
-  stepsOl.querySelectorAll('button').forEach((b, k) => { b.toggleAttribute('aria-current', false); b.classList.toggle('done', k + 1 < s); if (k + 1 === s) b.setAttribute('aria-current', 'step'); });
-}
-let fitAfterEx = false;
-function goStep(s, glow) {
-  exTarget = clamp(s, 0, 13); exIn.value = exTarget; fitAfterEx = true;
-  if (glow && s >= 1) { stepGlow = new Set(STEPS[s - 1].m.flatMap(x => x[0])); stepGlowT = 1; }
-  stepUI();
-}
-exIn.addEventListener('input', () => { exTarget = exT = parseFloat(exIn.value); applyExplode(); stepUI(); });
-exIn.addEventListener('change', () => frame(null));
-$('ex-prev').onclick = () => goStep(Math.ceil(exTarget - 0.001) - 1, true);
-$('ex-next').onclick = () => goStep(Math.floor(exTarget + 0.001) + 1, true);
-$('ex-all').onclick = () => goStep(13);
-$('ex-none').onclick = () => goStep(0);
-let playTimer = null;
-function stopPlay() { clearInterval(playTimer); playTimer = null; $('st-play').textContent = '▶ Démonter pas à pas'; }
-$('st-play').onclick = () => {
-  if (playTimer) { stopPlay(); return; }
-  if (exTarget >= 13) goStep(0);
-  $('st-play').textContent = '⏸ Pause';
-  const next = () => { if (exTarget >= 13) { stopPlay(); return; } goStep(Math.floor(exTarget + 0.001) + 1, true); };
-  next(); playTimer = setInterval(next, reduceMotion ? 1800 : 2600);
+return { root, PART, ORDER, INFO, GROUPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple };
 };
-$('st-reset').onclick = () => { stopPlay(); goStep(0); };
-
-/* ---------- couplemètre ---------- */
-function tqUI() {
-  tqLbft = parseFloat($('tq').value);
-  $('o-tq').textContent = `${fmt(tqLbft)} lb·pi`;
-  $('tq-psi').textContent = `${fmt(tqLbft / 30.87, 1)} psi`;
-  $('tq-shp').textContent = `${fmt(tqLbft * NP_RPM / 5252)} SHP`;
-  $('tq-mv').textContent = `${fmt(tqLbft / 1315 * 100)} %`;
-  updateTorque();
-}
-$('tq').addEventListener('input', tqUI);
-
-/* ---------- plein écran ---------- */
-const vp = $('vp');
-function isFs() { return document.fullscreenElement === vp || document.webkitFullscreenElement === vp || vp.classList.contains('pseudo-fs'); }
-function toggleFs() {
-  if (isFs()) {
-    if (vp.classList.contains('pseudo-fs')) { vp.classList.remove('pseudo-fs'); document.documentElement.classList.remove('pseudo-fs-on'); }
-    else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-  } else if (vp.requestFullscreen) vp.requestFullscreen().catch(() => { vp.classList.add('pseudo-fs'); document.documentElement.classList.add('pseudo-fs-on'); fsUI(); });
-  else if (vp.webkitRequestFullscreen) vp.webkitRequestFullscreen();
-  else { vp.classList.add('pseudo-fs'); document.documentElement.classList.add('pseudo-fs-on'); }
-  setTimeout(fsUI, 60);
-}
-function fsUI() { const on = isFs(); $('t-fs').setAttribute('aria-pressed', on); $('t-fs').textContent = on ? '✕ Quitter' : '⛶ Plein écran'; }
-$('t-fs').onclick = toggleFs;
-document.addEventListener('fullscreenchange', fsUI); document.addEventListener('webkitfullscreenchange', fsUI);
-document.addEventListener('keydown', e => {
-  if (e.target.closest('input,select,textarea')) return;
-  if (e.key === ' ') { e.preventDefault(); setPause(!paused); }
-  else if (e.key === 'f' || e.key === 'F') toggleFs();
-  else if (e.key === 'm' || e.key === 'M') setMenu(vmenu.hidden);
-  else if (e.key === 'Escape' && vp.classList.contains('pseudo-fs')) toggleFs();
-  else if (e.key === 'ArrowRight' && e.altKey) goStep(Math.floor(exTarget + 0.001) + 1, true);
-  else if (e.key === 'ArrowLeft' && e.altKey) goStep(Math.ceil(exTarget - 0.001) - 1, true);
-});
-
-/* ---------- thème ---------- */
-window.addEventListener('themechange', () => { buildGrid(); selColor = new THREE.Color(cssVar('--sel') || '#7cc4e4'); oilColors(); refreshMats(); });
-
-/* ---------- HUD ---------- */
-$('h-nf').textContent = fmt(NF_RPM); $('h-c1').textContent = fmt(NF_RPM / G1.i); $('h-pr').textContent = fmt(NP_RPM); $('h-acc').textContent = fmt(ACC_RPM);
-{ const e = $('ratio-model'); if (e) e.textContent = `${fmt(G1.i, 2)} × ${fmt(G2.i, 2)}`; }
-for (const [id, v] of [['f-nf', `≈ ${fmt(NF_RPM, 0)}*`], ['f-i1', `÷ ${fmt(G1.i, 2)}*`], ['f-c1', `≈ ${fmt(NF_RPM / G1.i, 0)}*`], ['f-i2', `÷ ${fmt(G2.i, 2)}*`]]) { const e = $(id); if (e) e.textContent = v; }
-{ const tb = $('teeth'); if (tb) tb.innerHTML = [[ '1<sup>er</sup>', G1], ['2<sup>e</sup>', G2]].map(([n, g]) => `<tr><td>${n}</td><td class="n">${g.S} d.</td><td class="n">${g.N} × ${g.P} d.</td><td class="n">${g.R} d.</td><td class="n">1 + ${g.R}/${g.S} = ${fmt(g.i, 3)}</td></tr>`).join(''); }
-
-/* =====================================================================
-   BOUCLE
-   ===================================================================== */
-function resize() {
-  const w = view.clientWidth, h = view.clientHeight; if (!w || !h) return;
-  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
-}
-new ResizeObserver(resize).observe(view); resize();
-applyExplode(); updateGears(); tqUI(); select(null); setPause(paused); stepUI();
-frame(VIEWS['34'], true);
-let last = performance.now();
-function loop(now) {
-  const rdt = Math.min(0.25, (now - last) / 1000), dt = Math.min(0.05, rdt); last = now;
-  if (!paused) aNf += W_NF * slow * dt;
-  updateGears();
-  if (Math.abs(exTarget - exT) > 1e-4) {
-    const sp = reduceMotion ? 100 : Math.max(1.8, Math.abs(exTarget - exT) * 1.2);
-    exT += clamp(exTarget - exT, -sp * rdt, sp * rdt); applyExplode(); stepUI();
-    if (Math.abs(exTarget - exT) <= 1e-4) { exT = exTarget; applyExplode(); stepUI(); if (fitAfterEx) { fitAfterEx = false; frame(null); } }
-  }
-  if (stepGlow) { stepGlowT -= rdt * 0.45; if (stepGlowT <= 0) { stepGlow = null; } refreshMats(); }
-  if (camAnim) {
-    camAnim.k = Math.min(1, camAnim.k + rdt * 1.6); const e = ease(camAnim.k);
-    camera.position.lerpVectors(camAnim.p0, camAnim.p1, e); controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
-    if (camAnim.k >= 1) camAnim = null;
-  }
-  if (oilGroup.visible) for (const k in oilMats) for (const m of oilMats[k]) m.map.offset.x -= dt * (paused ? 0 : 0.9);
-  if (grid && Math.abs(grid.position.y - gridY) > 1e-4) grid.position.y += (gridY - grid.position.y) * Math.min(1, rdt * 4);
-  controls.update();
-  renderer.render(scene, camera);
-  updateLabels();
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-window.__rgb = { PART, STEPS, goStep, select, setMode, setOil, frame, VIEWS, G1, G2, I_TOT };
-})();
