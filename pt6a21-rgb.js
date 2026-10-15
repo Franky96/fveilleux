@@ -749,42 +749,41 @@ function couple(tqLbft) {
 }
 
 /* ---------- vue éclatée sans pièces qui se croisent ----------
-   separer(items, axe, poids, marge) : items = [{ box (Box3 à la position voulue), corr (Vector3), axOnly, fixe }].
-   Tant que deux boîtes se chevauchent (marge comprise), la plus petite des deux qui peuvent bouger (fixe = jamais)
-   est poussée hors de l'autre selon l'axe où le chevauchement est le plus court (les autres axes que « axe »
-   comptent « poids » fois plus). Deux pièces fixes peuvent se chevaucher (encore assemblées). */
-function separer(items, axe, poids, marge) {
-  const AX = ['x', 'y', 'z'];
-  for (const it of items) { const sz = it.box.getSize(new THREE.Vector3()); it.vol = (sz.x + marge) * (sz.y + marge) * (sz.z + marge); it.corr ||= new THREE.Vector3(); }
-  for (let pass = 0; pass < 3000; pass++) {
-    let moved = false;
-    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
-      const a = items[i].box, b = items[j].box;
-      if (items[i].fixe && items[j].fixe) continue;
-      if (!AX.every(k => a.max[k] + marge > b.min[k] && b.max[k] + marge > a.min[k])) continue;
-      // la plus petite bouge ; une pièce montée sur un rotor (axOnly) ne bouge que le long de l'axe
-      const [m, o] = items[i].fixe ? [items[j], items[i]] : items[j].fixe ? [items[i], items[j]] : items[i].vol <= items[j].vol ? [items[i], items[j]] : [items[j], items[i]];
-      let best = null;
-      for (const k of (m.axOnly && axe ? [axe] : AX)) {
-        const d = Math.min(a.max[k] - b.min[k], b.max[k] - a.min[k]) + marge, w = d * (axe && k !== axe ? poids : 1);
-        if (!best || w < best.w) best = { k, d, w };
+   placer(items, axe, poids, marge) : items = [{ box (Box3 à la position prévue), axOnly, fixe }] ; remplit item.corr.
+   Les pièces fixes restent où elles sont. Les autres sont posées une à une, des plus grosses aux plus petites,
+   à l'endroit libre le plus proche de leur position prévue : décalage selon un seul axe, le plus court possible
+   (les axes autres que « axe » comptent « poids » fois plus) ; une pièce axOnly (coaxiale au moteur) ne glisse
+   que le long de « axe ». Deux pièces fixes peuvent se chevaucher (encore assemblées). */
+function placer(items, axe, poids, marge) {
+  const AX = ['x', 'y', 'z'], eps = marge * 0.02;
+  const vol = it => { const z = it.box.getSize(new THREE.Vector3()); return (z.x + marge) * (z.y + marge) * (z.z + marge); };
+  const touche = (a, b) => AX.every(k => a.max[k] + marge > b.min[k] + eps && b.max[k] + marge > a.min[k] + eps);
+  const poses = items.filter(it => it.fixe);
+  for (const it of items) it.corr = new THREE.Vector3();
+  for (const it of items.filter(it => !it.fixe).sort((a, b) => vol(b) - vol(a))) {
+    let best = null;
+    for (const k of (it.axOnly ? [axe] : AX)) {
+      const vals = [0];
+      for (const o of poses) vals.push(o.box.max[k] - it.box.min[k] + marge, o.box.min[k] - it.box.max[k] - marge);
+      for (const d of vals) {
+        const cost = Math.abs(d) * (k === axe ? 1 : poids);
+        if (best && cost >= best.cost) continue;
+        const bx = it.box.clone(); bx.min[k] += d; bx.max[k] += d;
+        if (!poses.some(o => touche(bx, o.box))) best = { k, d, cost };
       }
-      const k = best.k, cm = (m.box.min[k] + m.box.max[k]) / 2, co = (o.box.min[k] + o.box.max[k]) / 2;
-      // une pièce déjà poussée sur cet axe continue dans le même sens (pas d'aller-retour entre deux voisines)
-      const sg = Math.sign(m.corr[k]) || (Math.abs(cm - co) > 1e-6 ? Math.sign(cm - co) : (Math.sign((m.dir && m.dir[k]) || 0) || 1));
-      // sortir par le côté le plus proche : distance à parcourir selon le signe choisi
-      const d = sg > 0 ? o.box.max[k] - m.box.min[k] + marge : m.box.max[k] - o.box.min[k] + marge;
-      m.box.min[k] += sg * d; m.box.max[k] += sg * d; m.corr[k] += sg * d; moved = true;
     }
-    if (!moved) return pass;
+    it.box.min[best.k] += best.d; it.box.max[best.k] += best.d; it.corr[best.k] += best.d;
+    poses.push(it);
   }
-  return -1;
 }
 { /* démontage sans pièce qui en croise une autre au repos : étape par étape, ce qui part à l'étape (en blocs :
      les pièces qui partent ensemble restent assemblées entre elles) doit, en fin d'étape, dégager toutes les autres
-     pièces, déjà posées ou encore assemblées, qui ne bougent pas. Pendant le mouvement, les pièces peuvent se traverser. */
+     pièces, déjà posées ou encore assemblées, qui ne bougent pas, en restant au plus près de la position prévue par
+     l'OM. Pendant le mouvement, les pièces peuvent se traverser. */
   update(0); root.updateMatrixWorld(true);
   const SPIN = new Set(['sun1', 'input', 'carrier1', 'flexcpl', 'sun2', 'carrier2', 'propshaft', 'runner', 'bevel', 'planets1', 'planets2']);
+  // pièces centrées sur l'axe du moteur : engrenages, satellites (en couronne autour de l'axe), arbres, carters, roulements
+  const COAX = new Set([...SPIN, 'ring1', 'ring2', 'tqpiston', 'torquemeter', 'rollerbrg', 'thrustbrg', 'oilxfer', 'cover', 'rearhsg', 'fronthsg', 'flangeA']);
   const c = new THREE.Vector3(), m = new THREE.Matrix4(), mi = new THREE.Matrix4(), base = {}, pos = {}, drc = {};
   for (const id of ORDER) {
     const box = new THREE.Box3(); let R = 0;
@@ -820,12 +819,12 @@ function separer(items, axe, poids, marge) {
       if (!g) groups.push(g = { v: e.v, dr: e.dr, ids: [] });
       g.ids.push(id);
     }
-    const items = groups.map(g => { const box = new THREE.Box3(); for (const id of g.ids) box.union(boxAt(id)); return { box, g, dir: g.v.clone() }; });
+    const items = groups.map(g => { const box = new THREE.Box3(); for (const id of g.ids) box.union(boxAt(id)); return { box, g, axOnly: g.ids.every(id => COAX.has(id)) }; });
     for (const id of ORDER) if (base[id] && !mv.has(id)) items.push({ box: boxAt(id), fixe: true });
-    separer(items, null, 1, 0.25 * S);
+    placer(items, 'y', 1.3, 0.25 * S);
     for (const it of items) if (!it.fixe && it.corr.lengthSq() > 1e-12) for (const id of it.g.ids) { pos[id].add(it.corr); (CORR[id] ||= []).push([k, it.corr.clone()]); }
   });
 }
 
-return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter, separer };
+return { root, PART, ORDER, INFO, GROUPS, STEPS, G1, G2, BEV, I_TOT, NF_RPM, NP_RPM, P, update, couple, demonter, placer };
 };
