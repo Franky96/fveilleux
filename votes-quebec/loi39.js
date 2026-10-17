@@ -312,12 +312,21 @@ const panelBtn = document.getElementById("l39-panelBtn"), scenBtn = document.get
 function placeFloats(){
   if (!isFs()) return;
   const zb = mapGrid.querySelector(".zoombar"), tb = mapGrid.querySelector(".toolbar");
+  // encadré des outils ajusté à sa ligne la plus longue (sinon, dès qu'il passe sur deux lignes, il prend toute la largeur)
+  tb.style.width = ""; tb.style.boxSizing = "border-box";
+  const r0 = tb.getBoundingClientRect(), cs = getComputedStyle(tb);
+  let droite = r0.left;
+  for (const b of tb.querySelectorAll("button")) if (b.offsetParent) droite = Math.max(droite, b.getBoundingClientRect().right);
+  if (droite > r0.left) tb.style.width = Math.ceil(droite - r0.left + parseFloat(cs.paddingRight) + parseFloat(cs.borderRightWidth) + 1) + "px";
   mapGrid.style.setProperty("--zbh", zb.offsetHeight + "px");
   mapGrid.style.setProperty("--tbh", tb.offsetHeight + "px");
   const sc = mapGrid.querySelector(".scale");
   mapGrid.style.setProperty("--sch", (sc.offsetHeight || 0) + "px");
 }
 window.addEventListener("resize", placeFloats);
+// contenu des outils changé (boutons des partis, découpage) : on réajuste l'encadré en plein écran
+new MutationObserver(() => { if (isFs()) requestAnimationFrame(placeFloats); })
+  .observe(mapGrid.querySelector(".toolbar"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "disabled", "class", "aria-pressed"] });
 function showFloat(cls, on){
   mapGrid.classList.toggle(cls, on);
   requestAnimationFrame(placeFloats);
@@ -332,6 +341,7 @@ function syncFsButton(){
   const on = isFs();
   if (on && scenEl.parentNode !== mapGrid) mapGrid.appendChild(scenEl);
   if (!on && scenEl.parentNode === mapGrid) scenHome.insertBefore(scenEl, scenNext);
+  if (!on) { const tb = mapGrid.querySelector(".toolbar"); tb.style.width = ""; tb.style.boxSizing = ""; }
   if (on && !wasFs) { showFloat("show-panel", window.innerWidth > 900); showFloat("show-scen", false); }
   wasFs = on;
   requestAnimationFrame(placeFloats);

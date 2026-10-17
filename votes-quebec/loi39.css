@@ -401,11 +401,9 @@
 .loi39 .seg.modeseg button:last-child{grid-column:1/-1}
 .loi39 .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}
 }
-@media (min-width:2000px){
-.loi39 .wrap{max-width:2600px}
-}
-@media (min-width:3000px){
-.loi39 .wrap{max-width:3200px}
+/* écran très large : même largeur que les autres pages des votes (.lv-wrap), contenu aligné sur les onglets */
+@media (min-width:1800px){
+.loi39 .wrap{max-width:3360px}
 }
 @media (prefers-reduced-motion:reduce){
 .loi39, .loi39 *{transition:none!important}
