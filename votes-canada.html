@@ -601,13 +601,11 @@
     .ac-continent { display: grid; gap: 14px; }
     .ac-continent-titre { display: flex; align-items: baseline; gap: 12px; margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule); font-family: "Literata", Georgia, serif; font-size: clamp(1.15rem, 2vw, 1.45rem); }
     .ac-continent-titre small { font-family: inherit; font-size: 0.8rem; font-weight: 400; color: var(--muted); font-family: system-ui, sans-serif; }
-    /* même largeur de carte dans tous les continents (auto-fill) ; en Amérique du Nord, provinces puis pays dans la même grille,
-       un petit titre au-dessus de la première carte de chaque sous-groupe */
-    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 30px 18px; }
-    .ac-continent:has(.ac-debut) .ac-cartes { margin-top: 14px; }
-    .ac-carte.ac-debut { position: relative; }
-    .ac-carte.ac-debut::before { content: attr(data-groupe); position: absolute; left: 2px; bottom: calc(100% + 6px); font-size: 0.7rem; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    /* même largeur de carte dans tous les continents (auto-fill) ; en Amérique du Nord, une barre verticale avant la première
+       carte du second sous-groupe (Canada), comme la barre de la bande d'onglets */
+    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 18px 36px; }
+    .ac-carte.ac-debut { position: relative; overflow: visible; }
+    .ac-carte.ac-debut::before { content: ""; position: absolute; left: -19px; top: 6px; bottom: 6px; width: 2px; border-radius: 1px; background: var(--muted); opacity: 0.6; }
     .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
     .ac-carte:hover, .ac-carte:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
     .ac-carte h3 { margin: 0; font-size: 1.25rem; }
@@ -985,7 +983,7 @@
           <a class="sc-tab" href="votes-alberta.html">
             <b>Alberta</b><small>Assemblée législative</small>
           </a>
-          <span class="sc-sep" aria-hidden="true"></span>   <!-- provinces, puis pays -->
+          <span class="sc-sep" aria-hidden="true"></span>
           <a class="sc-tab" href="votes-canada.html" aria-current="page">
             <b>Canada</b><small>Projection fédérale Qc125</small>
           </a>
