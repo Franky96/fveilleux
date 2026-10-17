@@ -128,8 +128,9 @@ function dessinerTete() {
   $("viSource").innerHTML = `Source : Qc125 · ${sond.length} sondages depuis l'élection du 28 avril ${AN(2025)}`
     + (dernier ? ` · dernier sondage : ${esc(dernier.f)}` : "");
   $("viNote").textContent = ""; $("viNote").hidden = true;
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
+  // (élément gardé hors de la page pour ne pas toucher au reste du code)
+  const ex = document.createElement("div");
   ex.innerHTML = `<p>Les 343 députés de la Chambre des communes sont élus au scrutin majoritaire à un tour, un par circonscription : le candidat qui a le plus de voix l'emporte, même sans majorité. Le parti qui obtient la confiance de la Chambre forme le gouvernement ; avec 172 sièges ou plus, il est majoritaire. La prochaine élection est prévue au plus tard le 15 octobre ${AN(2029)}, sauf dissolution.</p>`;
   // choix de la chambre affichée : projection, chambre actuelle ou élection de 2025
   let choix = $("vcChambre");

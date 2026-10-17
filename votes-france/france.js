@@ -86,8 +86,9 @@ function dessinerTete() {
   $("viPlan").style.display = $("viLegende").style.display = TYPE === "leg" ? "" : "none";
   bloc.hidden = TYPE === "leg";
   // court texte d'explication du système politique, selon le mode
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
+  // (élément gardé hors de la page pour ne pas toucher au reste du code)
+  const ex = document.createElement("div");
   ex.innerHTML = TYPE === "pres"
     ? `<p>Le président de la République est élu directement par les électeurs pour 5 ans, et ne peut pas faire plus de deux mandats de suite (Emmanuel Macron ne peut donc pas se représenter en 2027). Si personne n'obtient plus de 50 % des voix au 1er tour, les deux premiers s'affrontent au 2e tour, deux semaines plus tard. Le président nomme le Premier ministre, qui dirige le gouvernement, mais ce gouvernement doit pouvoir survivre aux votes de l'Assemblée nationale.</p>`
     : `<p>Les 577 députés de l'Assemblée nationale sont élus pour 5 ans, un par circonscription, en deux tours : on est élu dès le 1er tour avec plus de 50 % des voix (et au moins 25 % des inscrits) ; sinon, les candidats qui ont au moins 12,5 % des inscrits passent au 2e tour, et le premier l'emporte. Les députés se regroupent en groupes parlementaires (15 membres au moins). Le Premier ministre est nommé par le président, mais son gouvernement peut être renversé par une motion de censure votée à la majorité absolue (289 députés) ; le président peut, lui, dissoudre l'Assemblée et provoquer des élections anticipées, comme en juin 2024.</p>`;

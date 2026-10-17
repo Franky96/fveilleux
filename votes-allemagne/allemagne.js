@@ -111,8 +111,9 @@ function dessinerTete() {
   $("viSource").innerHTML = `Sources : wahlrecht.de (${sond.length} sondages de ${inst} instituts depuis l'élection du 23 février ${AN(2025)}) · Bundeswahlleiterin · bundestag.de`
     + (dernier ? ` · dernier sondage : ${esc(dernier.f)}` : "");
   $("viNote").textContent = ""; $("viNote").hidden = true;
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
+  // (élément gardé hors de la page pour ne pas toucher au reste du code)
+  const ex = document.createElement("div");
   ex.innerHTML = `<p>Les 630 députés du Bundestag sont élus à la proportionnelle : chaque électeur a deux voix, la première pour un candidat de sa circonscription, la seconde pour la liste d'un parti. Ce sont les secondes voix qui fixent le nombre de sièges de chaque parti, s'il obtient au moins 5 % (ou trois circonscriptions). Aucun parti n'a la majorité seul : le chancelier est élu par une coalition d'au moins 316 députés. La prochaine élection est prévue au début de ${AN(2029)}, sauf dissolution.</p>`;
   let choix = $("vcChambre");
   if (!choix) {

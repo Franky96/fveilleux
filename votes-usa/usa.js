@@ -125,8 +125,9 @@ function changerType(t) {
 }
 function dessinerTete() {
   document.querySelectorAll("#vfType button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === TYPE));
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
+  // (élément gardé hors de la page pour ne pas toucher au reste du code)
+  const ex = document.createElement("div");
   creerChoix();
   if (TYPE === "pres") return dessinerTetePres(ex);
   const mg = SOND.moyenne[SOND.moyenne.length - 1];

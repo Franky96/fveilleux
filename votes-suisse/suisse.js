@@ -137,8 +137,9 @@ function dessinerTete() {
     ? `Sources : sondages compilés par Wikipédia (${[...new Set(SOND.sondages.filter(s => !s.e).map(s => s.f))].map(esc).join(", ")}) · résultats de ${AN(2023)} : Office fédéral de la statistique · élus actuels : Services du Parlement${PROJ ? " · projection : simulation du site" : ""}`
     : `Sources : Services du Parlement (élus actuels et élus de ${AN(2023)}) · contours des cantons : Office fédéral de la statistique`;
   $("viNote").textContent = ""; $("viNote").hidden = true;
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
+  // (élément gardé hors de la page pour ne pas toucher au reste du code)
+  const ex = document.createElement("div");
   ex.innerHTML = TYPE === "cn"
     ? `<p>Les 200 membres du Conseil national sont élus pour quatre ans à la proportionnelle, canton par canton : chaque canton forme une circonscription et reçoit des sièges selon sa population. Dans les six cantons qui n'ont qu'un siège, le candidat qui a le plus de voix est élu. Il n'y a pas de gouvernement issu d'une majorité : les sept membres du Conseil fédéral sont élus par les deux chambres réunies. Prochaine élection : le ${dateFr(PROCHAINE).replace(/\d{4}$/, "")}${AN(2027)}.</p>`
     : `<p>Le Conseil des États compte 46 membres : deux par canton et un pour chacun des six anciens demi-cantons (Obwald, Nidwald, Bâle-Ville, Bâle-Campagne, Appenzell Rhodes-Extérieures et Appenzell Rhodes-Intérieures). Chaque canton fixe son mode d'élection : majoritaire presque partout, souvent en deux tours, et proportionnel au Jura et à Neuchâtel. Ce sont des élections de personnes plus que de partis : le site n'en fait pas de projection.</p>`;

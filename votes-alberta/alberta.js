@@ -126,8 +126,9 @@ function dessinerTete() {
   $("viSource").innerHTML = `Sources : ${sond.length} sondages provinciaux depuis l'élection du 29 mai ${AN(2023)}${dernier ? ` (dernier : ${esc(dernier.f)})` : ""}`
     + ` · résultats et carte : Elections Alberta · députés : Assemblée législative · projection : simulation du site`;
   $("viNote").innerHTML = `Carte des 87 circonscriptions de ${AN(2017)}, utilisée en ${AN(2019)} et en ${AN(2023)}. La prochaine élection se fera sans doute sur une nouvelle carte de 91 sièges : un comité de députés doit la proposer au plus tard le 2 novembre 2026. Tant qu'elle n'est pas publiée, la projection reste sur la carte actuelle. Contours : Open Government Licence – Alberta.`;
-  let ex = $("vfExplic");
-  if (!ex) { ex = document.createElement("div"); ex.id = "vfExplic"; ex.className = "vf-explic"; $("viNote").before(ex); }
+  // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
+  // (élément gardé hors de la page pour ne pas toucher au reste du code)
+  const ex = document.createElement("div");
   ex.innerHTML = `<p>Les 87 députés de l'Assemblée législative de l'Alberta sont élus au scrutin majoritaire à un tour, un par circonscription : le candidat qui a le plus de voix l'emporte, même sans majorité. Le parti qui a la confiance de l'Assemblée forme le gouvernement ; avec 44 sièges ou plus, il est majoritaire. Prochaine élection : à date fixe le 18 octobre ${AN(2027)} (elle peut être devancée).</p>`;
   let choix = $("vcChambre");
   if (!choix) {
