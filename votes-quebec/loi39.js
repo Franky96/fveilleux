@@ -293,7 +293,7 @@ function drawBase(){
   gReg.selectAll("path").data(GGEO.features).join("path").attr("class","regline").attr("d",path);
   gRegCur.selectAll("path").data(CREG ? CREG.features : []).join("path").attr("class","regline").attr("d",path);
 
-  ROOT.querySelector(".zoombar").addEventListener("click", e => {
+  for (const barre of ROOT.querySelectorAll(".zoombar")) barre.addEventListener("click", e => {
     const z = e.target.closest("button[data-z]")?.dataset.z; if (!z) return;
     if (z==="fs") toggleFullscreen();
     else if (z==="panel") showFloat("show-panel", !mapGrid.classList.contains("show-panel"));

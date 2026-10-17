@@ -168,6 +168,7 @@
 .loi39 .zoombar button{font:inherit;font-size:.76rem;font-weight:600;padding:5px 9px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer}
 .loi39 .zoombar button:hover{border-color:var(--ink)}
 .loi39 .zoombar .sq{width:30px;padding:5px 0;font-size:.95rem;line-height:1}
+.loi39 .zoombar-bas{top:auto;bottom:10px}
 .loi39 .hint{font-size:.75rem;color:var(--muted)}
 .loi39 .mapgrid.fs{position:fixed;inset:0;z-index:50}
 .loi39 .mapgrid.fs,.loi39 .mapgrid:fullscreen{display:block;background:var(--water);padding:0;margin:0;width:100%;height:100%;overflow:hidden}
@@ -179,34 +180,32 @@
 .loi39 .fsonly{display:none}
 .loi39 .mapgrid.fs .fsonly,.loi39 .mapgrid:fullscreen .fsonly{display:inline-block}
 .loi39 .zoombar button.fsonly[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* plein écran, comme les autres cartes des votes (votes-quebec/plein.js) : outils tout en haut, zooms juste dessous,
+   panneau « Info » à droite sous les outils, boutons Plein écran / Info / Scénario en bas à gauche, échelle juste au-dessus */
 .loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar,.loi39 .mapgrid.fs .scale,.loi39 .mapgrid:fullscreen .scale,.loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel,.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{position:absolute;z-index:5;background:color-mix(in srgb,var(--surface) 92%,transparent);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 28px rgb(0 0 0 / .28)}
-.loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar{left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);padding:8px;max-width:calc(100% - 24px)}
-.loi39 .mapgrid.fs .scale,.loi39 .mapgrid:fullscreen .scale{left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);padding:6px 10px;max-width:calc(100% - 24px);flex-wrap:wrap}
-.loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel{display:none;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:min(390px,calc(100% - 24px));max-height:none;overflow-y:auto;align-content:start}
-.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{display:none;top:calc(env(safe-area-inset-top,0px) + 60px);left:calc(env(safe-area-inset-left,0px) + 12px);width:min(300px,calc(100% - 24px));max-height:calc(100% - 200px);overflow-y:auto}
+.loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar{top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);bottom:auto;padding:8px;width:max-content;max-width:calc(100% - 20px)}
+.loi39 .mapgrid.fs .zoombar,.loi39 .mapgrid:fullscreen .zoombar{top:calc(env(safe-area-inset-top,0px) + 18px + var(--tbh,50px));left:calc(env(safe-area-inset-left,0px) + 10px)}
+.loi39 .mapgrid.fs .zoombar-bas,.loi39 .mapgrid:fullscreen .zoombar-bas{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+.loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel{display:none;top:calc(env(safe-area-inset-top,0px) + 18px + var(--tbh,50px));right:calc(env(safe-area-inset-right,0px) + 10px);bottom:auto;width:min(380px,calc(100% - 20px));max-height:calc(100% - 84px - var(--tbh,50px));overflow-y:auto;align-content:start}
+.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{display:none;top:calc(env(safe-area-inset-top,0px) + 26px + var(--tbh,50px) + var(--zbh,36px));left:calc(env(safe-area-inset-left,0px) + 10px);width:min(300px,calc(100% - 20px));max-height:calc(100% - 100px - var(--tbh,50px) - var(--zbh,36px) - var(--sch,40px));overflow-y:auto}
+.loi39 .mapgrid.fs .scale,.loi39 .mapgrid:fullscreen .scale{left:calc(env(safe-area-inset-left,0px) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);padding:6px 10px;max-width:min(520px,calc(100% - 20px));flex-wrap:wrap}
 .loi39 .mapgrid.fs.show-panel .panel,.loi39 .mapgrid:fullscreen.show-panel .panel{display:grid}
 .loi39 .mapgrid.fs.show-scen .scen,.loi39 .mapgrid:fullscreen.show-scen .scen{display:grid}
 .loi39 .mapgrid.fs .scen .sliders,.loi39 .mapgrid:fullscreen .scen .sliders{grid-template-columns:1fr}
 .loi39 .mapgrid.fs .scen .row,.loi39 .mapgrid:fullscreen .scen .row{flex-direction:column;align-items:stretch}
 @media (min-width:701px){
-.loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 20px + var(--zbh,36px));width:max-content;max-width:min(760px,calc(100% - 24px))}
-.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{top:calc(env(safe-area-inset-top,0px) + 28px + var(--zbh,36px) + var(--tbh,50px));max-height:calc(100% - 52px - var(--zbh,36px) - var(--tbh,50px) - var(--sch,40px))}
-.loi39 .mapgrid.fs.show-panel .zoombar,.loi39 .mapgrid:fullscreen.show-panel .zoombar{max-width:calc(100% - 436px)}
-.loi39 .mapgrid.fs.show-panel .toolbar,.loi39 .mapgrid:fullscreen.show-panel .toolbar{max-width:min(760px,calc(100% - 436px))}
-.loi39 .mapgrid.fs .scale,.loi39 .mapgrid:fullscreen .scale{max-width:min(520px,calc(100% - 430px))}
-
+.loi39 .mapgrid.fs.show-panel .zoombar:not(.zoombar-bas),.loi39 .mapgrid:fullscreen.show-panel .zoombar:not(.zoombar-bas){max-width:calc(100% - 416px)}
+.loi39 .mapgrid.fs.show-panel .scale,.loi39 .mapgrid:fullscreen.show-panel .scale{max-width:min(520px,calc(100% - 420px))}
 }
 @media (max-width:700px){
 .loi39 .mapgrid.fs .zoombar button,.loi39 .mapgrid:fullscreen .zoombar button{padding:4px 7px;font-size:.72rem}
 .loi39 .mapgrid.fs .zoombar .sq,.loi39 .mapgrid:fullscreen .zoombar .sq{width:26px;padding:4px 0}
 .loi39 .mapgrid.fs .scale,.loi39 .mapgrid:fullscreen .scale{display:none}
-.loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar{left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);padding:6px;gap:6px}
+.loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar{left:8px;right:8px;width:auto;padding:6px;gap:6px}
 .loi39 .mapgrid.fs .toolbar .seg button,.loi39 .mapgrid:fullscreen .toolbar .seg button{padding:5px 8px;font-size:.74rem}
-.loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel{top:auto;left:calc(env(safe-area-inset-left,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:auto;max-height:55%}
-.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{top:calc(env(safe-area-inset-top,0px) + 20px + var(--zbh,90px));left:8px;right:8px;width:auto;max-height:calc(100% - 36px - var(--zbh,90px) - var(--tbh,90px))}
-.loi39 .mapgrid.fs.show-panel .toolbar,.loi39 .mapgrid.fs.show-panel .scale,.loi39 .mapgrid:fullscreen.show-panel .toolbar,.loi39 .mapgrid:fullscreen.show-panel .scale{display:none}
-
+.loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel{top:auto;left:calc(env(safe-area-inset-left,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);width:auto;max-height:45%}
+.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{left:8px;right:8px;width:auto}
 }
 .loi39 #l39-fsBtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .loi39 .linkbtn{font:inherit;font-size:.82rem;font-weight:600;background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
@@ -332,8 +331,8 @@
 .loi39 .mapbadge{position:absolute;top:12px;right:12px;z-index:4;background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:4px 9px;font-size:.66rem}
 .loi39 .mapbadge[hidden]{display:none}
 .loi39 .mapstage:has(.mapbadge:not([hidden])) .zoombar{max-width:calc(100% - 150px)}
-.loi39 .mapgrid.fs .mapbadge,.loi39 .mapgrid:fullscreen .mapbadge{top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:6}
-.loi39 .mapgrid.fs.show-panel .mapbadge,.loi39 .mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 424px)}
+.loi39 .mapgrid.fs .mapbadge,.loi39 .mapgrid:fullscreen .mapbadge{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:6}
+.loi39 .mapgrid.fs.show-panel .mapbadge,.loi39 .mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 12px)}
 @media (max-width:700px){
 .loi39 .mapgrid.fs.show-panel .mapbadge,.loi39 .mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 12px)}
 }
