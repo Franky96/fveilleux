@@ -753,6 +753,12 @@
     .vi-carte .lv-panneau-plein { top: 64px; max-height: calc(100% - 128px); }
     .vi-carte:has(> .lv-panneau-plein) .vf-an-carte { right: calc(min(380px, 100% - 20px) + 22px); }
     @media (max-width: 600px) { .vi-carte .lv-panneau-plein { top: auto; bottom: 58px; max-height: 45%; } .vi-carte:has(> .lv-panneau-plein) .vf-an-carte { display: none; } }
+    /* plein écran : outils de la carte par-dessus, en bas à gauche (au-dessus du bouton Plein écran) ; boutons des partis seulement en mode Vote */
+    .vi-carte .vi-outils-plein { position: absolute; z-index: 3; left: 10px; right: 10px; bottom: 56px; padding: 8px; border-radius: 12px;
+      background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--rule); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); width: fit-content; max-width: calc(100% - 20px); }
+    .vi-carte .vi-outils-plein .vi-chips[aria-disabled="true"], .vi-carte .vi-outils-plein:has(.vi-chips[aria-disabled="true"]) .vi-pct { display: none; }
+    .vi-carte:has(> .lv-panneau-plein) .vi-outils-plein { max-width: calc(100% - min(380px, 100% - 20px) - 42px); }
+    @media (max-width: 600px) { .vi-carte .vi-outils-plein { bottom: auto; top: 96px; } .vi-carte:has(> .lv-panneau-plein) .vi-outils-plein { max-width: calc(100% - 20px); } }
     .vi-carte:fullscreen #viCarte, .vi-carte.lv-plein #viCarte { height: 100%; }
     #viCarte { display: block; width: 100%; height: clamp(420px, 70vh, 860px); background: var(--bg); touch-action: none; }
     .vi-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }

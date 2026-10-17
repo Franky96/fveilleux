@@ -4,6 +4,9 @@
    circonscription cliquée) par-dessus la carte ; il reprend sa place en sortant. Le panneau s'ouvre de lui-même en
    entrant en plein écran sur grand écran, et quand on clique une circonscription.
 
+   Les outils de la carte (modes Parti en tête / Meilleur deuxième / Vote, boutons des partis, « % Pourcentage ») entrent
+   aussi dans la carte en plein écran (en bas à gauche) ; les boutons des partis n'y paraissent qu'en mode Vote.
+
    preparerPleinEcran()   // une fois, quand la carte est montée
    infoPlein()            // après le choix d'une circonscription : ouvre le panneau si la carte est en plein écran */
 const $ = id => document.getElementById(id);
@@ -20,6 +23,12 @@ export function preparerPleinEcran() {
   const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
   const plein = () => ecran() === carte || carte.classList.contains("lv-plein");
   const repere = document.createComment("place du panneau");
+  const outils = carte.parentElement?.querySelector(".vi-outils"), repereOutils = document.createComment("place des outils de la carte");
+  const placerOutils = dedans => {
+    if (!outils) return;
+    if (dedans && outils.parentElement !== carte) { outils.before(repereOutils); carte.appendChild(outils); outils.classList.add("vi-outils-plein"); }
+    if (!dedans && outils.parentElement === carte) { repereOutils.replaceWith(outils); outils.classList.remove("vi-outils-plein"); }
+  };
   const panneau = ouvrir => {
     const pan = $("viPanneau"); if (!pan) return;
     if (ouvrir && pan.parentElement !== carte) { pan.before(repere); carte.appendChild(pan); pan.classList.add("lv-panneau-plein"); }
@@ -30,8 +39,8 @@ export function preparerPleinEcran() {
   const etat = () => {
     const on = plein();
     btn.setAttribute("aria-pressed", on); btn.textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
-    if (on && !avant) panneau(innerWidth > 900);
-    if (!on) panneau(false);
+    if (on && !avant) { panneau(innerWidth > 900); placerOutils(true); }
+    if (!on) { panneau(false); placerOutils(false); }
     avant = on;
   };
   btn.addEventListener("click", () => {
