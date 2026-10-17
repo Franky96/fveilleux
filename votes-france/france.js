@@ -49,7 +49,7 @@ const etat = { mode: TYPE === "leg" ? "actuel" : "lead", parti: null, cand: null
 const MODES = { leg: { actuel: [["actuel", "Députés"]], titre: "Élection", an: 2024, election: [["lead", "Élu"], ["second", "Meilleur 2e"], ["vote", "Vote"]] },
   pres: { actuel: [], titre: "Présidentielle", an: 2022, election: [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]] } };
 // année d'un résultat, en évidence (pastille contrastée)
-const AN = a => `<span class="vf-an">${a}</span>`;
+const AN = a => String(a);   // années en texte normal (comme Canada et États-Unis) : plus de pastilles blanches partout
 // date avec l'année en pastille ; période sur une même année : « 1 septembre – 29 septembre 2026 »
 const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" }).replace(/^1 /, "1er ");
 const dateAn = iso => `${jourMois(iso)} ${AN(iso.slice(0, 4))}`;
@@ -101,10 +101,10 @@ function dessinerTete() {
     // les dates (dernier sondage, vérification) sont dans la barre du haut : ici, seulement ce qu'elle ne dit pas
     $("viSource").innerHTML = `Premier tour en avril 2027 · moyenne des sondages publiés depuis le ${dateFr(p.de)}`;
     $("viNote").textContent = "Les candidats testés varient d'un sondage à l'autre (plusieurs scénarios) : la moyenne garde le premier scénario de chaque sondage.";
-    eyebrow.textContent = `1er tour · moyenne de ${p.n} sondages`;
+    eyebrow.textContent = `Présidentielle 2027 · 1er tour · moyenne de ${p.n} sondages`;
     $("viSiegesTitre").textContent = `${nomCourt(top[0])} en tête : ${nf(top[1], 1)} %`;
     const max = Math.max(40, top[1]);
-    bloc.innerHTML = p.moy.filter(([, v]) => v >= 1).map(([k, v]) => `<div class="vf-cand" style="--c:${coulC(k)}"><span><b>${esc(k)}</b><small>${esc(parti22(k))}${P22.national[k] != null ? ` · ${AN(2022)} ${nf(P22.national[k], 1)} %` : ""}</small></span>`
+    bloc.innerHTML = p.moy.filter(([, v]) => v >= 1).map(([k, v]) => `<div class="vf-cand" style="--c:${coulC(k)}"><span><b>${esc(k)}</b><small>${esc(parti22(k))}${P22.national[k] != null ? ` · <span class="vf-avant">${nf(P22.national[k], 1)} % en 2022</span>` : ""}</small></span>`
       + `<span class="vf-cand-barre"><i style="width:${100 * v / max}%"></i></span><b class="vf-cand-v">${nf(v, 1)} %</b></div>`).join("")
       + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour.</p>`;
     return;
