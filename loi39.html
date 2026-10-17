@@ -83,7 +83,14 @@
     .sc-groupe-btns { display: flex; gap: 0.5rem; width: max-content; }
     .sc-tab, .sc-sous-tab { width: max-content; flex-shrink: 0; }
     /* écran assez large : les onglets passent à la ligne, tous visibles et cliquables sans défiler ; sur téléphone, la bande défile */
-    @media (min-width: 701px) { .sc-tabs, .sc-groupe-btns { flex-wrap: wrap; } .sc-tabs { align-items: flex-start; } .sc-groupe-btns { width: auto; } .sc-tabs .sc-groupe { min-width: 0; max-width: 100%; } }
+    @media (min-width: 701px) {
+      .sc-tabs, .sc-groupe-btns { flex-wrap: wrap; } .sc-groupe-btns { width: auto; } .sc-tabs .sc-groupe { min-width: 0; max-width: 100%; }
+      /* une ligne compacte : nom seul (le sous-titre passe en infobulle), groupes séparés par l'espace et leur titre, boutons alignés en bas */
+      .sc-tabs { align-items: flex-end; column-gap: 1.75rem; row-gap: 0.6rem; }
+      .sc-tabs .sc-groupe + .sc-groupe { border-left: 0; padding-left: 0; }
+      .sc-tabs .sc-tab small { display: none; }
+      .sc-tabs .sc-tab { padding: 0.45rem 0.85rem; }
+    }
     @media (max-width: 600px) { .sc-tabs { gap: 0.5rem; } .sc-groupe + .sc-groupe { padding-left: 0.5rem; } .sc-tab b, .sc-tab small { white-space: nowrap; }
       .sc-sous-tab small { display: none; } .sc-sous-titre { margin-left: 0.25rem; padding-left: 0.6rem; } }
     /* sous-menu d'un endroit (Votes Québec : intentions de vote, simulations) */
@@ -976,6 +983,8 @@
     // bandes d'onglets : quand les onglets dépassent, défilement à la molette et en glissant à la souris (au doigt, c'est natif),
     // fondu sur le bord qui cache encore des onglets, et l'onglet de la page courante amené au centre à l'ouverture
     (function () {
+      // sous-titre d'un onglet en infobulle (il est caché sur grand écran)
+      for (const t of document.querySelectorAll('.sc-tabs .sc-tab')) { const sm = t.querySelector('small'); if (sm && !t.title) t.title = sm.textContent.trim(); }
       for (const bande of document.querySelectorAll('.sc-tabs, .sc-sous')) {
         const maj = () => {
           const max = bande.scrollWidth - bande.clientWidth;
