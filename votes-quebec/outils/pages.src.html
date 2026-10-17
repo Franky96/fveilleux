@@ -84,7 +84,7 @@
     .sc-groupe-btns { display: flex; gap: 0.5rem; width: max-content; }
     .sc-tab, .sc-sous-tab { width: max-content; flex-shrink: 0; }
     /* écran assez large : les onglets passent à la ligne, tous visibles et cliquables sans défiler ; sur téléphone, la bande défile */
-    @media (min-width: 701px) { .sc-tabs, .sc-groupe-btns { flex-wrap: wrap; } .sc-tabs { align-items: flex-start; } .sc-groupe-btns { width: auto; } .sc-tabs .sc-groupe:last-child { flex: 1 1 0; min-width: 0; } }
+    @media (min-width: 701px) { .sc-tabs, .sc-groupe-btns { flex-wrap: wrap; } .sc-tabs { align-items: flex-start; } .sc-groupe-btns { width: auto; } .sc-tabs .sc-groupe { min-width: 0; max-width: 100%; } }
     @media (max-width: 600px) { .sc-tabs { gap: 0.5rem; } .sc-groupe + .sc-groupe { padding-left: 0.5rem; } .sc-tab b, .sc-tab small { white-space: nowrap; }
       .sc-sous-tab small { display: none; } .sc-sous-titre { margin-left: 0.25rem; padding-left: 0.6rem; } }
     /* sous-menu d'un endroit (Votes Québec : intentions de vote, simulations) */
@@ -932,28 +932,36 @@
           </button>
         </div>
       </div>
+      <!-- endroits groupés par continent, comme les cartes de l'accueil (CONTINENTS dans accueil.js) : tout nouvel endroit
+           va dans le groupe de son continent (nouveau groupe titré si le continent n'existe pas encore) -->
       <div class="sc-groupe" role="presentation">
+        <span class="sc-groupe-titre">Amérique du Nord</span>
         <div class="sc-groupe-btns">
           <button type="button" role="tab" class="sc-tab" id="tab-votes" aria-selected="false" aria-controls="vue-votes" data-vue="votes">
-            <b>Votes Québec</b><small>Intentions de vote et simulations</small>
+            <b>Québec</b><small>Intentions de vote et simulations</small>
           </button>
           <button type="button" role="tab" class="sc-tab" id="tab-canada" aria-selected="false" data-vue="canada">
-            <b>Votes Canada</b><small>Projection fédérale Qc125</small>
+            <b>Canada</b><small>Projection fédérale Qc125</small>
           </button>
           <button type="button" role="tab" class="sc-tab" id="tab-alberta" aria-selected="false" data-vue="alberta">
-            <b>Votes Alberta</b><small>Assemblée législative</small>
+            <b>Alberta</b><small>Assemblée législative</small>
           </button>
           <button type="button" role="tab" class="sc-tab" id="tab-usa" aria-selected="false" data-vue="usa">
-            <b>Votes États-Unis</b><small>Congrès et présidentielle</small>
+            <b>États-Unis</b><small>Congrès et présidentielle</small>
           </button>
+        </div>
+      </div>
+      <div class="sc-groupe" role="presentation">
+        <span class="sc-groupe-titre">Europe</span>
+        <div class="sc-groupe-btns">
           <button type="button" role="tab" class="sc-tab" id="tab-france" aria-selected="false" data-vue="france">
-            <b>Votes France</b><small>Présidentielle et législatives</small>
+            <b>France</b><small>Présidentielle et législatives</small>
           </button>
           <button type="button" role="tab" class="sc-tab" id="tab-allemagne" aria-selected="false" data-vue="allemagne">
-            <b>Votes Allemagne</b><small>Bundestag</small>
+            <b>Allemagne</b><small>Bundestag</small>
           </button>
           <button type="button" role="tab" class="sc-tab" id="tab-suisse" aria-selected="false" data-vue="suisse">
-            <b>Votes Suisse</b><small>Conseil national et Conseil des États</small>
+            <b>Suisse</b><small>Conseil national et Conseil des États</small>
           </button>
         </div>
       </div>
