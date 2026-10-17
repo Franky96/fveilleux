@@ -471,30 +471,18 @@ function infobulle(e, f) {
 
 function construireCarte() {
   const el = $("lvCarte"), box = el.getBoundingClientRect();
-  const large = box.width / Math.max(1, box.height) > 0.8;            // carte assez large : encarts Calgary et Edmonton à droite
-  if (svg && large === LARGE) return;
-  LARGE = large; ancrages = null;
-  MW = large ? 1000 : 500; MH = 820;
+  // une seule carte de l'Alberta, pas d'encarts : Calgary et Edmonton se voient en zoomant (boutons de zoom)
+  void box;
+  if (svg) return;
+  LARGE = false; ancrages = null;
+  MW = 500; MH = 820;
   const projDe = () => d3.geoConicConformal().rotate([115, 0]).parallels([50, 58]);
   const proj = projDe().fitExtent([[12, 12], [500 - 12, MH - 12]], GEO);
   VUES = [{ id: "ab", proj, path: d3.geoPath(proj), feats: GEO.features }];
-  const sous = (a, b) => ({ type: "FeatureCollection", features: GEO.features.filter(f => f.properties.n >= a && f.properties.n <= b) });
-  const ENC = [{ id: "edm", nom: "Edmonton", fc: sous(27, 46), r: [[540, 16], [984, 400]] }, { id: "cal", nom: "Calgary", fc: sous(1, 26), r: [[540, 424], [984, 808]] }];
-  if (large) for (const E of ENC) {
-    const p = projDe().fitExtent([[E.r[0][0] + 14, E.r[0][1] + 30], [E.r[1][0] - 14, E.r[1][1] - 14]], E.fc);
-    VUES.push({ id: E.id, proj: p, path: d3.geoPath(p), feats: E.fc.features, E });
-  }
   svg = d3.select(el).attr("viewBox", `0 0 ${MW} ${MH}`);
   svg.selectAll("*").remove(); svg.on(".zoom", null);
   gZ = svg.append("g");
   for (const v of VUES) {
-    if (v.E) {
-      gZ.append("rect").attr("class", "ed-encart").attr("x", v.E.r[0][0]).attr("y", v.E.r[0][1]).attr("width", v.E.r[1][0] - v.E.r[0][0]).attr("height", v.E.r[1][1] - v.E.r[0][1]).attr("rx", 8);
-      gZ.append("text").attr("class", "ed-encart-txt").attr("x", v.E.r[0][0] + 12).attr("y", v.E.r[0][1] + 20).text(v.E.nom);
-      const [[x0, y0], [x1, y1]] = VUES[0].path.bounds(v.E.fc);           // repère de l'encart sur la carte de l'Alberta
-      gZ.append("rect").attr("class", "ed-encart").attr("x", x0 - 3).attr("y", y0 - 3).attr("width", x1 - x0 + 6).attr("height", y1 - y0 + 6);
-      gZ.append("path").attr("class", "ed-lien-encart").attr("d", `M${x1 + 3},${(y0 + y1) / 2}L${v.E.r[0][0]},${(v.E.r[0][1] + v.E.r[1][1]) / 2}`);
-    }
     gZ.append("g").selectAll("path").data(v.feats).join("path").attr("class", "lv-rid").attr("d", v.path)
       .attr("tabindex", v.id === "ab" ? 0 : -1).attr("role", "button").attr("aria-label", f => f.properties.nom)
       .on("click", (e, f) => choisir(f.properties.n))
@@ -519,7 +507,7 @@ function zoomer(z) {
   };
   const fc = (a, b) => ({ type: "FeatureCollection", features: GEO.features.filter(f => f.properties.n >= a && f.properties.n <= b) });
   if (z === "tout") svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity);
-  else if (z === "cal" || z === "edm") { const E = VUES.find(v => v.id === z); E ? vers(E.E.r) : vers(VUES[0].path.bounds(z === "cal" ? fc(1, 26) : fc(27, 46))); }
+  else if (z === "cal" || z === "edm") vers(VUES[0].path.bounds(z === "cal" ? fc(1, 26) : fc(27, 46)));
   else if (z === "rd") vers(VUES[0].path.bounds(fc(78, 79)));
   else if (z === "leth") vers(VUES[0].path.bounds(fc(71, 72)));
   else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);

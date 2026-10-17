@@ -32,7 +32,7 @@ Onglet « En direct » (`en-direct.html`, vue `direct` du gabarit, module `en-di
 du 19 octobre 2026 (10 questions : la 10, séparation, puis 1 à 9 ; libellés officiels anglais, traduction française non officielle), sur le modèle de
 l'ancien direct de l'élection québécoise (`votes-quebec/live.js`, mêmes classes `lv-*`) : avant la fermeture, compte à rebours, heures (Alberta et Québec),
 questions, sondages, comment voter ; ensuite résultat de l'Alberta par question, carte des 87 circonscriptions (`en-direct/circonscriptions.json`, carte
-de 2017 d'Elections Alberta, Licence du gouvernement ouvert – Alberta, `en-direct/outils/geo.sh` ; encarts Calgary et Edmonton quand la carte est large),
+de 2017 d'Elections Alberta, Licence du gouvernement ouvert – Alberta, `en-direct/outils/geo.sh` ; pas d'encarts : Calgary et Edmonton par les zooms),
 fiche, participation, circonscriptions suivies (alertes, `api/suivis.php?ens=alberta`), lecture chaque minute. Résultats : relais `api/alberta.php`
 (pages `orEDResultsReferendum2026.cfm?EventId=202601…202610` d'officialresults.elections.ab.ca, sans CORS, cache 45 s, rendues brutes : texte et
 tableaux), sinon copie du pipeline `en-direct/resultats.json` (`en-direct/outils/alberta.py`, `.github/workflows/alberta-referendum.yml`, toutes les
