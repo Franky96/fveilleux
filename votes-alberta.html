@@ -605,7 +605,7 @@
        carte du second sous-groupe (Canada), comme la barre de la bande d'onglets */
     .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 18px 36px; }
     .ac-carte.ac-debut { position: relative; overflow: visible; }
-    .ac-carte.ac-debut::before { content: ""; position: absolute; left: -19px; top: 6px; bottom: 6px; width: 2px; border-radius: 1px; background: var(--muted); opacity: 0.6; }
+    .ac-carte.ac-debut::before { content: ""; position: absolute; left: -19px; top: -10px; bottom: -10px; width: 2px; border-radius: 1px; background: var(--muted); opacity: 0.6; }
     .ac-carte { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.2s, transform 0.2s; }
     .ac-carte:hover, .ac-carte:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
     .ac-carte h3 { margin: 0; font-size: 1.25rem; }
