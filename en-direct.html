@@ -450,17 +450,18 @@
       background: linear-gradient(90deg, #17305C 0%, #121B33 35%, #1A1A30 65%, #4A1A2A 100%); background-attachment: fixed; }
     html[data-theme="light"] body:has(.vue-direct:not([hidden])) {
       background: linear-gradient(90deg, #C9D9F2 0%, #E6EDF8 35%, #F1E8EF 65%, #F2CCD5 100%); background-attachment: fixed; }
-    /* page Accueil : dégradé en diagonale (sarcelle → indigo → violet), propre à l'accueil */
-    body:has(#vue-live:not([hidden])) {
+    /* toutes les pages des votes sauf le direct : dégradé en diagonale (sarcelle → indigo → violet) ; le direct garde le sien
+       (règles « body:has(.vue-direct…) » ci-dessus, plus précises) */
+    body:not(:has(.vue-direct:not([hidden]))) {
       background: linear-gradient(135deg, #0E3A3A 0%, #10223A 40%, #171C38 65%, #34204F 100%); background-attachment: fixed; }
-    html[data-theme="light"] body:has(#vue-live:not([hidden])) {
+    html[data-theme="light"] body:not(:has(.vue-direct:not([hidden]))) {
       background: linear-gradient(135deg, #CBEDE6 0%, #E4EEF6 40%, #ECEAF7 65%, #DCCDF2 100%); background-attachment: fixed; }
-    body:has(.vue-direct:not([hidden])) .scrutins, body:has(#vue-live:not([hidden])) .scrutins, .vue-direct.vue-live, #vue-live.vue-live { background: transparent; }
+    .scrutins, .vue-live, .loi39 { background: transparent; }
     /* lignes des menus bien visibles par-dessus le dégradé : traits plus contrastés, boutons sur un fond translucide */
-    body:has(.vue-direct:not([hidden])) .scrutins, body:has(#vue-live:not([hidden])) .scrutins { --st-rule: rgba(230, 233, 241, 0.30); }
-    html[data-theme="light"] body:has(.vue-direct:not([hidden])) .scrutins, html[data-theme="light"] body:has(#vue-live:not([hidden])) .scrutins { --st-rule: rgba(18, 25, 41, 0.24); }
-    body:has(.vue-direct:not([hidden])) .sc-tab:not([aria-current="page"]):not([aria-selected="true"]), body:has(#vue-live:not([hidden])) .sc-tab:not([aria-current="page"]):not([aria-selected="true"]) { background: rgba(12, 16, 25, 0.38); }
-    html[data-theme="light"] body:has(.vue-direct:not([hidden])) .sc-tab:not([aria-current="page"]):not([aria-selected="true"]), html[data-theme="light"] body:has(#vue-live:not([hidden])) .sc-tab:not([aria-current="page"]):not([aria-selected="true"]) { background: rgba(255, 255, 255, 0.55); }
+    .scrutins { --st-rule: rgba(230, 233, 241, 0.30); }
+    html[data-theme="light"] .scrutins { --st-rule: rgba(18, 25, 41, 0.24); }
+    .sc-tab:not([aria-current="page"]):not([aria-selected="true"]) { background: rgba(12, 16, 25, 0.38); }
+    html[data-theme="light"] .sc-tab:not([aria-current="page"]):not([aria-selected="true"]) { background: rgba(255, 255, 255, 0.55); }
     .lv-grid > .ed-cartebloc { grid-area: carte; display: grid; gap: 10px; min-width: 0; align-content: start; }
     .ed-avant { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch; }
     .ed-avant[hidden] { display: none; }
