@@ -44,10 +44,11 @@ function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donne
 }
 
 async function demarrer() {
-  const [QE, CP, UP, FA, FP, L39, UPR, DEP, CHP] = await Promise.all([
+  const [QE, CP, UP, FA, FP, L39, UPR, DEP, CHP, ABP] = await Promise.all([
     lireJ("votes-quebec/election-2026.json"), lireJ("votes-canada/projection.json"), lireJ("votes-usa/projection.json"),
     lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json"),
-    lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json"), lireJ("votes-suisse/projection.json")]);
+    lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json"), lireJ("votes-suisse/projection.json"),
+    lireJ("votes-alberta/projection.json")]);
   // cartes groupées par continent (une ligne de cartes par continent, dans cet ordre)
   const cartes = { amn: [], eur: [] };
   const CONTINENTS = [["amn", "Amérique du Nord"], ["eur", "Europe"]];
@@ -77,6 +78,16 @@ async function demarrer() {
       chiffre: `${lead} ${N[lead].s}`, legende: `sièges sur 343 · ${N[lead].s >= 172 ? "majoritaire" : "minoritaire"}`,
       barreHtml: barre(ordre.map(p => ({ lab: p, n: N[p].s, c: CC[p] || "#8D949A" })), 343, 172),
       donnees: `projection Qc125 du ${dateFr(CP.maj.date)}` }));
+  }
+  // Votes Alberta : projection des 87 sièges calculée par le site (report proportionnel régional des résultats de 2023)
+  if (ABP?.national) {
+    const N = ABP.national, CA = { UCP: "#1F5FB4", NPD: "#F28A1D", PT: "#1E9E95", LIB: "#D7262E", VERT: "#3D9B35" };
+    const ordre = Object.keys(N).filter(p => N[p].s > 0).sort((a, b) => N[b].s - N[a].s), lead = ordre[0];
+    cartes.amn.push(carte({ url: "votes-alberta.html", eyebrow: "Projection · Alberta", titre: "Votes Alberta",
+      chiffre: `${lead} ${N[lead].s}`, legende: `sièges projetés sur 87 · ${N[lead].s >= 44 ? "majoritaire" : "minoritaire"}`,
+      barreHtml: barre(ordre.map(p => ({ lab: p, n: N[p].s, c: CA[p] || "#8D949A" })), 87, 44),
+      phrase: `UCP ${nf(N.UCP.v, 0)} %, NPD ${nf(N.NPD.v, 0)} % dans les sondages ; élection à date fixe le 18 octobre 2027.`,
+      donnees: `projection du site du ${dateFr(ABP.maj)}` }));
   }
   // Votes États-Unis : consensus des prévisionnistes (Chambre et Sénat)
   if (UP) {

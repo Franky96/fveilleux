@@ -30,3 +30,6 @@ votes-suisse/outils/brut/
 
 # En direct (référendum en Alberta) : téléchargements bruts (retéléchargés par en-direct/outils/geo.sh)
 en-direct/outils/brut/
+
+# Votes Alberta : téléchargements bruts (retéléchargés par outils/alberta_fixe.py)
+votes-alberta/outils/brut/

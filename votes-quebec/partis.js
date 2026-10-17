@@ -31,6 +31,14 @@ export const PARTIS = {
     PVC: P("Parti vert du Canada", "Parti écologiste fondé en 1983."),
     PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018."),
   },
+  alberta: {
+    UCP: P("Parti conservateur uni (United Conservative Party)", "Parti de droite né en 2017 de la fusion des progressistes-conservateurs et du Wildrose ; il gouverne depuis 2019."),
+    NPD: P("Nouveau Parti démocratique de l'Alberta", "Parti de centre gauche, au pouvoir de 2015 à 2019 ; il domine à Edmonton."),
+    PT: P("Progressive Tory Party of Alberta", "Parti de centre droit, nouveau nom du Parti albertain depuis décembre 2025 ; un député, exclu de l'UCP."),
+    LIB: P("Parti libéral de l'Alberta", "Parti de centre, au pouvoir de 1905 à 1921 ; sans député depuis 2019."),
+    VERT: P("Parti vert de l'Alberta", "Parti écologiste."),
+    RPA: P("Parti républicain de l'Alberta", "Parti indépendantiste de droite, l'ancien Buffalo Party, renommé en 2025."),
+  },
   usa: {
     D: P("Parti démocrate", "Parti de centre gauche, le plus ancien des deux grands partis (fondé en 1828)."),
     R: P("Parti républicain", "Parti de droite conservatrice fondé en 1854, surnommé le « Grand Old Party » (GOP)."),

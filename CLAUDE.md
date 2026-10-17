@@ -24,8 +24,8 @@ Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN po
 
 Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils/pages.src.html`, transformé par
 `votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, `votes-quebec/accueil.js`), `votes-quebec.html`,
-`loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html` et `votes-usa.html`, ainsi que `en-direct.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
-(ou pages.py) puis relancer le script.** Onglets : En direct (à gauche, pastille rouge), Accueil, puis une page par endroit (Votes Québec, Canada, États-Unis, France, Allemagne, Suisse) ; sur l'accueil, les cartes sont groupées par continent (`CONTINENTS` dans accueil.js) ; les simulations d'un endroit vont dans
+`loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html`, `votes-usa.html` (et les pages ajoutées par pays : Allemagne, Suisse, Alberta), ainsi que `en-direct.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
+(ou pages.py) puis relancer le script.** Onglets : En direct (à gauche, pastille rouge), Accueil, puis une page par endroit (Votes Québec, Canada, Alberta, États-Unis, France, Allemagne, Suisse) ; sur l'accueil, les cartes sont groupées par continent (`CONTINENTS` dans accueil.js) ; les simulations d'un endroit vont dans
 son sous-menu (ligne sous les onglets, ex. Votes Québec : Intentions de vote · Simulations : Loi 39) ; permission `votes-quebec`.
 
 Onglet « En direct » (`en-direct.html`, vue `direct` du gabarit, module `en-direct/direct.js`) : soirée d'un vote, en ce moment le référendum en Alberta
@@ -59,4 +59,5 @@ Bande « Partis en lice » en pleine largeur au-dessus des rectangles du haut (a
 Pages ajoutées par pays après coup (Votes Allemagne…) : `votes-<pays>/outils/page.py`, fonction `construire(html, FICHIER)` appelée à la fin de pages.py ;
 Votes Allemagne : `votes-allemagne/allemagne.js`, sondages wahlrecht.de et projection des 630 sièges calculée par le site (loi de 2023, vérifiée sur 2025) dans `outils/sondages_de.py` (pipeline).
 Votes Suisse : `votes-suisse/suisse.js`, choix Conseil national · Conseil des États, projection du site par canton (Hagenbach-Bischoff avec apparentements de 2023, vérifiée sur 2023) dans `outils/suisse.py` (pipeline).
+Votes Alberta : `votes-alberta/alberta.js` (plan de l'Assemblée législative de 87 sièges, comme Canada), résultats officiels 2023 et carte de 87 circonscriptions (`outils/alberta_fixe.py`, fichiers fixes), sondages (base vérifiée `outils/sondages_base.json` + nouveaux sondages du tableau Wikipédia), projection du site par report proportionnel régional Calgary/Edmonton/reste avec 2000 simulations et députés actuels (assembly.ab.ca) dans `outils/sondages_ab.py` (pipeline) ; carte de 91 sièges pour 2027 pas encore publiée.
 Boutons de la carte, de gauche à droite : futur (projection/intentions), présent (assemblée actuelle), passé (élections) ; un groupe sans données n'apparaît pas. Les années des résultats passés sont en pastille (`AN()`, classe `vf-an`).

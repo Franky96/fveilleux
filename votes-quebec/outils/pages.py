@@ -27,7 +27,7 @@ RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
 FICHIER = {"direct": "en-direct.html", "live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
            "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html",
-           "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html"}
+           "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html", "alberta": "votes-alberta.html"}
 PAGES = ["direct", "live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"direct": "En direct · référendum en Alberta", "live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
 SCRIPTS = {"direct": "en-direct/direct.js", "live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
@@ -188,10 +188,10 @@ assert 'src="votes-quebec/intentions.js"' not in us and 'data-z="ne"' in us
 open(os.path.join(RACINE, FICHIER["usa"]), "w", encoding="utf-8").write(us)
 print(f"{FICHIER['usa']:30} {len(us):7} octets")
 
-# Pages ajoutées ensuite (Allemagne, Suisse…) : même cadre que Votes Québec ; chaque page fournit ses propres remplacements
+# Pages ajoutées ensuite (Allemagne, Suisse, Alberta…) : même cadre que Votes Québec ; chaque page fournit ses propres remplacements
 # dans votes-<pays>/outils/page.py, fonction construire(html_de_votes_quebec, FICHIER) → html de la page
 import importlib.util
-for pays in ("allemagne", "suisse"):
+for pays in ("allemagne", "suisse", "alberta"):
     chemin = os.path.join(RACINE, f"votes-{pays}", "outils", "page.py")
     if not os.path.exists(chemin):
         print(f"{FICHIER[pays]:30} (votes-{pays}/outils/page.py absent : page non générée)"); continue

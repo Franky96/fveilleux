@@ -58,6 +58,8 @@ jobs:
           (cd ../../votes-allemagne/outils && python3 sondages_de.py) || echo "::warning::Votes Allemagne non mis à jour"
           # Votes Suisse : sondages (Wikipédia), projection du site par canton, élus actuels (Services du Parlement)
           (cd ../../votes-suisse/outils && python3 suisse.py) || echo "::warning::Votes Suisse non mis à jour"
+          # Votes Alberta : sondages (base vérifiée + nouveaux sondages du tableau Wikipédia), projection du site, députés actuels (assembly.ab.ca)
+          (cd ../../votes-alberta/outils && python3 sondages_ab.py) || echo "::warning::Votes Alberta non mis à jour"
 
       - name: data.json, simulation de référence et page
         working-directory: votes-quebec/outils
@@ -70,7 +72,7 @@ jobs:
 
       - name: Publier la vérification (et les données si elles ont changé)
         run: |
-          DONNEES="votes-quebec/loi39-resume.json votes-verif.json votes-usa/projection.json votes-usa/sondages.json votes-usa/presidentielle.json votes-allemagne/sondages.json votes-allemagne/projection.json votes-allemagne/bundestag.json votes-suisse/sondages.json votes-suisse/projection.json votes-suisse/actuel.json votes-canada/sondages.json votes-canada/projection.json votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
+          DONNEES="votes-quebec/loi39-resume.json votes-verif.json votes-usa/projection.json votes-usa/sondages.json votes-usa/presidentielle.json votes-allemagne/sondages.json votes-allemagne/projection.json votes-allemagne/bundestag.json votes-suisse/sondages.json votes-suisse/projection.json votes-suisse/actuel.json votes-alberta/sondages.json votes-alberta/projection.json votes-alberta/actuel.json votes-canada/sondages.json votes-canada/projection.json votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json votes-quebec/outils/result.json"
           # la page elle-même ne doit pas changer : seules les données sont publiées
           AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
           if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi
