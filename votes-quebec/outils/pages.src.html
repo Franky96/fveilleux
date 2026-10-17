@@ -446,17 +446,11 @@
        Couleurs des réponses hors des couleurs des partis : rester (rouge), processus de séparation (bleu), oui (vert), non (orange) */
     .vue-direct { --ed-rester:#C8102E; --ed-sep:#1D5FB4; --ed-oui:#0E8A5F; --ed-non:#C2470A; }
     :root[data-theme="dark"] .vue-direct { --ed-rester:#F0505F; --ed-sep:#5B95F0; --ed-oui:#2DBE8A; --ed-non:#F07A3A; }
-    /* page « En direct » : fond en dégradé (lueur bleue en haut à gauche, rouge en haut à droite), sous la bande d'onglets aussi */
+    /* page « En direct » : fond en dégradé de gauche à droite sur toute la page (bleu → rouge), sous la bande d'onglets aussi */
     body:has(.vue-direct:not([hidden])) {
-      background: radial-gradient(1400px 820px at 6% -10%, rgba(91, 149, 240, 0.56), transparent 66%),
-        radial-gradient(1100px 700px at 98% -6%, rgba(240, 80, 95, 0.40), transparent 64%),
-        linear-gradient(180deg, #0C1019 0%, #121E36 50%, #1A2A4A 100%);
-      background-attachment: fixed; }
+      background: linear-gradient(90deg, #17305C 0%, #121B33 35%, #1A1A30 65%, #4A1A2A 100%); background-attachment: fixed; }
     html[data-theme="light"] body:has(.vue-direct:not([hidden])) {
-      background: radial-gradient(1400px 820px at 6% -10%, rgba(29, 95, 180, 0.42), transparent 66%),
-        radial-gradient(1100px 700px at 98% -6%, rgba(200, 16, 46, 0.29), transparent 64%),
-        linear-gradient(180deg, #F2F5FB 0%, #E1E9F5 50%, #D2DDEF 100%);
-      background-attachment: fixed; }
+      background: linear-gradient(90deg, #C9D9F2 0%, #E6EDF8 35%, #F1E8EF 65%, #F2CCD5 100%); background-attachment: fixed; }
     body:has(.vue-direct:not([hidden])) .scrutins, .vue-direct.vue-live { background: transparent; }
     /* lignes des menus bien visibles par-dessus le dégradé : traits plus contrastés, boutons sur un fond translucide */
     body:has(.vue-direct:not([hidden])) .scrutins { --st-rule: rgba(230, 233, 241, 0.30); }
