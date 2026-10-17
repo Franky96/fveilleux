@@ -66,6 +66,7 @@
     .sc-tabs, .sc-sous { scrollbar-width: thin; scrollbar-color: var(--st-rule) transparent; padding-bottom: 4px; }
     .sc-tabs::-webkit-scrollbar, .sc-sous::-webkit-scrollbar { height: 5px; }
     .sc-tabs::-webkit-scrollbar-thumb, .sc-sous::-webkit-scrollbar-thumb { background: var(--st-rule); border-radius: 3px; }
+    .sc-sep { flex: none; align-self: stretch; width: 1px; margin: 0.15rem 0.25rem; background: var(--st-rule); }   /* barre entre provinces et pays */
     .sc-deborde { cursor: grab; }
     .sc-deborde.sc-d { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
     .sc-deborde.sc-g { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px); mask-image: linear-gradient(to right, transparent, #000 48px); }
@@ -965,11 +966,12 @@
           <a class="sc-tab" href="votes-quebec.html">
             <b>Québec</b><small>Intentions de vote et simulations</small>
           </a>
-          <a class="sc-tab" href="votes-canada.html">
-            <b>Canada</b><small>Projection fédérale Qc125</small>
-          </a>
           <a class="sc-tab" href="votes-alberta.html">
             <b>Alberta</b><small>Assemblée législative</small>
+          </a>
+          <span class="sc-sep" aria-hidden="true"></span>   <!-- provinces, puis pays -->
+          <a class="sc-tab" href="votes-canada.html">
+            <b>Canada</b><small>Projection fédérale Qc125</small>
           </a>
           <a class="sc-tab" href="votes-usa.html">
             <b>États-Unis</b><small>Congrès et présidentielle</small>
