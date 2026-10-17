@@ -5,7 +5,7 @@
    entrant en plein écran sur grand écran, et quand on clique une circonscription.
 
    Les outils de la carte (modes Parti en tête / Meilleur deuxième / Vote, boutons des partis, « % Pourcentage ») entrent
-   aussi dans la carte en plein écran (en bas à gauche) ; les boutons des partis n'y paraissent qu'en mode Vote.
+   aussi dans la carte en plein écran (tout en haut ; zooms et panneau passent dessous) ; les boutons des partis n'y paraissent qu'en mode Vote.
 
    preparerPleinEcran()   // une fois, quand la carte est montée
    infoPlein()            // après le choix d'une circonscription : ouvre le panneau si la carte est en plein écran */
@@ -26,9 +26,13 @@ export function preparerPleinEcran() {
   const outils = carte.parentElement?.querySelector(".vi-outils"), repereOutils = document.createComment("place des outils de la carte");
   const placerOutils = dedans => {
     if (!outils) return;
-    if (dedans && outils.parentElement !== carte) { outils.before(repereOutils); carte.appendChild(outils); outils.classList.add("vi-outils-plein"); }
-    if (!dedans && outils.parentElement === carte) { repereOutils.replaceWith(outils); outils.classList.remove("vi-outils-plein"); }
+    if (dedans && outils.parentElement !== carte) { outils.before(repereOutils); carte.appendChild(outils); outils.classList.add("vi-outils-plein"); hauteur(); }
+    if (!dedans && outils.parentElement === carte) { repereOutils.replaceWith(outils); outils.classList.remove("vi-outils-plein"); carte.style.removeProperty("--haut-outils"); }
   };
+  // hauteur de la barre d'outils en haut de la carte : les zooms et le panneau se placent juste dessous
+  const hauteur = () => { if (outils && outils.parentElement === carte) carte.style.setProperty("--haut-outils", outils.offsetHeight + "px"); };
+  addEventListener("resize", hauteur);
+  if (outils && window.ResizeObserver) new ResizeObserver(hauteur).observe(outils);
   const panneau = ouvrir => {
     const pan = $("viPanneau"); if (!pan) return;
     if (ouvrir && pan.parentElement !== carte) { pan.before(repere); carte.appendChild(pan); pan.classList.add("lv-panneau-plein"); }
