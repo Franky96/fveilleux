@@ -33,7 +33,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const dateFr = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }).replace(/^1 /, "1er ");
-const AN = a => `<span class="vf-an">${a}</span>`;                // années des résultats passés : en pastille
+const AN = a => String(a);   // années en texte normal (comme France, Canada et États-Unis)
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
 const ecart = (v, d = 0, u = "") => `${v > 0 ? "+" : v < 0 ? "−" : "±"}${nf(Math.abs(v), d)}${u}`;
@@ -287,7 +287,7 @@ function peindre() {
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
   const quoi = groupe() === "e25" ? `résultat de ${AN(2025)}` : "projection du site";
   const hach = `<span>· hachures : vainqueur de la 1<sup>re</sup> voix sans siège (pas assez de secondes voix pour son parti dans le Land)</span>`;
-  $("viEchelle").innerHTML = (groupe() === "e25" ? AN(2025) : "") + (voteMode()
+  $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque circonscription (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}, plus de circonscriptions en zoomant` : ""}</span>`
     : etat.mode === "e25z" ? `<span>Couleur : parti arrivé en tête des secondes voix (listes) dans chaque circonscription en ${AN(2025)}. Plus la couleur est foncée, plus son score est élevé.</span>`
     : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : etat.mode === "e25" ? "élu" : "en tête"} à la 1<sup>re</sup> voix (candidats) dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>${etat.mode === "second" ? "" : hach}`);

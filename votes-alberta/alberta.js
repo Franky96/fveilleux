@@ -35,7 +35,7 @@ function majBarre(nom, donnees) {
   const t = document.querySelector(".t-votes"); if (!t) return;
   t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
 }
-const AN = a => `<span class="vf-an">${a}</span>`;                // années des résultats passés : en pastille
+const AN = a => String(a);   // années en texte normal (comme France, Canada et États-Unis)
 const jourMois = iso => new Date(iso + "T12:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" }).replace(/^1 /, "1er ");
 const dateAn = iso => `${jourMois(iso)} ${AN(iso.slice(0, 4))}`;
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
@@ -296,7 +296,7 @@ function peindre() {
   an.innerHTML = groupe() === "act" ? "Députés actuels" : groupe() === "e23" ? `Élection ${AN(2023)}` : `Projection du site · ${dateFr(PROJ.maj)}`;
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${coul(p)} 6%, var(--surface)), ${coul(p)})"></span>` : "";
   const quoi = groupe() === "e23" ? `résultat de l'élection de ${AN(2023)}` : "projection du site";
-  $("viEchelle").innerHTML = (groupe() === "e23" ? AN(2023) : "") + (voteMode()
+  $("viEchelle").innerHTML = (groupe() === "e23" ? `<b>2023</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>70 % et +</span><span>· vote ${p} dans chaque circonscription (${quoi})${etat.pct ? ` · chiffre = % du ${p}, plus de circonscriptions en zoomant` : ""}</span>`
     : etat.mode === "act" ? `<span class="vf-legende">${[...SEAT_ORDER].filter(k => SIEGES_DE.act[k] && k !== "VAC").map(k => `<span style="--c:${coul(k)}"><i></i>${k}</span>`).join("")}</span><span>· caucus du député actuel (partielles et changements de caucus compris)</span>`
     : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : etat.mode === "e23" ? "élu" : "en tête"} dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>`);

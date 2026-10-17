@@ -41,7 +41,7 @@ function majBarre(nom, donnees) {
   t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
 }
 // années des résultats passés en pastille (comme Votes France)
-const AN = a => `<span class="vf-an">${a}</span>`;
+const AN = a => String(a);   // années en texte normal (comme France, Canada et États-Unis)
 const lireLS = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const ecrireLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* bloqué */ } };
 
@@ -322,12 +322,12 @@ function peindre() {
   const presents = arr => ORDRE.filter(p => arr.includes(p));
   if (TYPE === "ce") {
     const ps = presents(Object.values(g === "act" ? ACT.ce : R23.ce).flat().map(x => x.p));
-    $("viEchelle").innerHTML = (g === "e23" ? AN(2023) : "") + `${legende(ps)}<span>· parti des élus du canton ; deux couleurs : délégation partagée entre deux partis (couleur plus claire : un seul siège)</span>`;
+    $("viEchelle").innerHTML = (g === "e23" ? `<b>2023</b> · ` : "") + `${legende(ps)}<span>· parti des élus du canton ; deux couleurs : délégation partagée entre deux partis (couleur plus claire : un seul siège)</span>`;
     return;
   }
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
   const quoi = g === "e23" ? `résultat de ${AN(2023)}` : "projection du site";
-  $("viEchelle").innerHTML = (g === "e23" ? AN(2023) : "") + (voteMode()
+  $("viEchelle").innerHTML = (g === "e23" ? `<b>2023</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>45 % et +</span><span>· vote ${esc(nomP(p))} dans chaque canton (${quoi})${etat.pct ? " · chiffre = % du parti" : ""}</span>`
     : etat.mode === "act" ? `${legende(presents(Object.values(ACT.cn).flat().map(x => x.p)))}<span>· parti qui a le plus d'élus du canton au Conseil national aujourd'hui (plus foncé : plus de sièges pour lui)</span>`
     : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "arrivé premier"} en voix dans chaque canton (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>`);
