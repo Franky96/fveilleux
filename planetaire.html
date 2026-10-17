@@ -108,7 +108,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <button class="btn" id="b-c" type="button" aria-pressed="true">Résultat : couronne fixe</button>
   </div>
   <div class="ctrl">
-    <button class="btn" id="pp" type="button" aria-label="Pause">❚❚</button>
+    <button class="btn" id="pp" type="button" aria-label="Lecture">▶</button>
     <button class="btn" id="rs" type="button" aria-label="Recommencer">↺</button>
     <label for="spd">Vitesse</label>
     <input type="range" id="spd" min="0.25" max="2" step="0.25" value="1">
@@ -185,7 +185,7 @@ document.getElementById('ringm').setAttribute('transform','rotate('+deg(-Math.PI
 function fmt(v){const r=Math.round(v*100)/100;if(Math.abs(r)<0.005)return '0,00';return (r>0?'+':'−')+Math.abs(r).toFixed(2).replace('.',',');}
 const msgs={e1:'Tout est soudé ensemble : les dents ne glissent pas, chaque pièce fait +1 tour',e2:'Porte-satellites tenu fixe : la couronne recule d\'un tour, le soleil fait +4,33 tours',c:'Couronne fixe : 1 tour du porte-satellites = 5,33 tours du soleil'};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let a=0,playing=!reduce,hold=0,last=null,speed=1;const DUR=9000;
+let a=0,playing=false,hold=0,last=null,speed=1;const DUR=9000;
 function update(){const P=draw(a).P;document.getElementById('n-s').textContent=fmt(P.s);document.getElementById('n-c').textContent=fmt(P.c);document.getElementById('n-r').textContent=fmt(P.r);}
 function loop(ts){
   if(last===null)last=ts;const dt=Math.min(ts-last,50);last=ts;
