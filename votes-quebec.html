@@ -62,6 +62,14 @@
     .scrutins { background: var(--st-bg); border-bottom: 1px solid var(--st-rule); padding: 0.6rem clamp(16px, 3vw, 56px);
       font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
     .sc-tabs { max-width: 1680px; margin: 0 auto; display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
+    /* bandes d'onglets défilantes : fine barre, fondu sur le bord qui cache encore des onglets (classes posées par le script sous la barre) */
+    .sc-tabs, .sc-sous { scrollbar-width: thin; scrollbar-color: var(--st-rule) transparent; padding-bottom: 4px; }
+    .sc-tabs::-webkit-scrollbar, .sc-sous::-webkit-scrollbar { height: 5px; }
+    .sc-tabs::-webkit-scrollbar-thumb, .sc-sous::-webkit-scrollbar-thumb { background: var(--st-rule); border-radius: 3px; }
+    .sc-deborde { cursor: grab; }
+    .sc-deborde.sc-d { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
+    .sc-deborde.sc-g { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px); mask-image: linear-gradient(to right, transparent, #000 48px); }
+    .sc-deborde.sc-g.sc-d { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
     .sc-tab { flex: none; display: grid; gap: 1px; text-align: left; padding: 0.45rem 0.9rem; border-radius: 9px; cursor: pointer;
       background: transparent; border: 1px solid var(--st-rule); color: var(--st-muted); font: inherit; }
     .sc-tab b { font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem; }
@@ -76,6 +84,8 @@
     .sc-groupe-titre { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-muted); }
     .sc-groupe-btns { display: flex; gap: 0.5rem; width: max-content; }
     .sc-tab, .sc-sous-tab { width: max-content; flex-shrink: 0; }
+    /* écran assez large : les onglets passent à la ligne, tous visibles et cliquables sans défiler ; sur téléphone, la bande défile */
+    @media (min-width: 701px) { .sc-tabs, .sc-groupe-btns { flex-wrap: wrap; } .sc-tabs { align-items: flex-start; } .sc-groupe-btns { width: auto; } .sc-tabs .sc-groupe:last-child { flex: 1 1 0; min-width: 0; } }
     @media (max-width: 600px) { .sc-tabs { gap: 0.5rem; } .sc-groupe + .sc-groupe { padding-left: 0.5rem; } .sc-tab b, .sc-tab small { white-space: nowrap; }
       .sc-sous-tab small { display: none; } .sc-sous-titre { margin-left: 0.25rem; padding-left: 0.6rem; } }
     /* sous-menu d'un endroit (Votes Québec : intentions de vote, simulations) */
@@ -956,6 +966,31 @@
       <a class="sc-tab sc-sous-tab" href="loi39.html"><b>Loi 39</b><small>Mixte compensatoire régional</small></a>
     </div>
   </nav>
+  <script>
+    // bandes d'onglets : quand les onglets dépassent, défilement à la molette et en glissant à la souris (au doigt, c'est natif),
+    // fondu sur le bord qui cache encore des onglets, et l'onglet de la page courante amené au centre à l'ouverture
+    (function () {
+      for (const bande of document.querySelectorAll('.sc-tabs, .sc-sous')) {
+        const maj = () => {
+          const max = bande.scrollWidth - bande.clientWidth;
+          bande.classList.toggle('sc-deborde', max > 2); bande.classList.toggle('sc-g', bande.scrollLeft > 2); bande.classList.toggle('sc-d', bande.scrollLeft < max - 2);
+        };
+        bande.addEventListener('wheel', e => {
+          if (bande.scrollWidth <= bande.clientWidth + 2 || Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;
+          e.preventDefault(); bande.scrollLeft += e.deltaY;
+        }, { passive: false });
+        let x0 = null, s0 = 0, glisse = false;
+        bande.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) { x0 = e.clientX; s0 = bande.scrollLeft; glisse = false; } });
+        addEventListener('pointermove', e => { if (x0 === null) return; const dx = e.clientX - x0; if (Math.abs(dx) > 5) glisse = true; if (glisse) bande.scrollLeft = s0 - dx; });
+        addEventListener('pointerup', () => { x0 = null; });
+        bande.addEventListener('click', e => { if (glisse) { e.preventDefault(); e.stopPropagation(); glisse = false; } }, true);   // un glisser n'ouvre pas l'onglet
+        bande.addEventListener('scroll', maj, { passive: true }); addEventListener('resize', maj);
+        const cur = bande.querySelector('[aria-current="page"], [aria-selected="true"]');
+        if (cur) { const b = bande.getBoundingClientRect(), c = cur.getBoundingClientRect(); bande.scrollLeft += c.left - b.left - (b.width - c.width) / 2; }
+        maj();
+      }
+    })();
+  </script>
 
 
 
