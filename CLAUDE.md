@@ -29,7 +29,7 @@ Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils
 son sous-menu (ligne sous les onglets, ex. Votes Québec : Intentions de vote · Simulations : Loi 39) ; permission `votes-quebec`.
 
 Onglet « En direct » (`en-direct.html`, vue `direct` du gabarit, module `en-direct/direct.js`) : soirée d'un vote, en ce moment le référendum en Alberta
-du 19 octobre 2026 (10 questions : la 10, séparation, puis 1 à 9 ; libellés officiels anglais, traduction française non officielle), sur le modèle de
+du 19 octobre 2026 (10 questions affichées dans l'ordre 1 à 10, la 10 — séparation, dépouillée en premier — choisie à l'arrivée ; libellés officiels anglais, traduction française non officielle), sur le modèle de
 l'ancien direct de l'élection québécoise (`votes-quebec/live.js`, mêmes classes `lv-*`) : avant la fermeture, compte à rebours, heures (Alberta et Québec),
 questions, sondages, comment voter ; ensuite résultat de l'Alberta par question, carte des 87 circonscriptions (`en-direct/circonscriptions.json`, carte
 de 2017 d'Elections Alberta, Licence du gouvernement ouvert – Alberta, `en-direct/outils/geo.sh` ; pas d'encarts : Calgary et Edmonton par les zooms),

@@ -29,6 +29,7 @@ const region = n => n <= 26 ? "Calgary" : n <= 46 ? "Edmonton" : "Reste de l'Alb
    Libellés officiels en anglais (décrets 109/2026, 110/2026 et 160/2026, elections.ab.ca) ; aucune version française officielle
    n'a été publiée : la traduction est celle du site, fidèle mais non officielle. */
 const ORDRE = [10, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const AFFICHAGE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];            // ordre d'affichage : questions dans l'ordre, 1 à 10
 const OUI_NON = [{ court: "Oui", en: "Yes" }, { court: "Non", en: "No" }];
 const Q = {
   10: { court: "Séparation", titre: "Rester au Canada ou lancer le processus de séparation", decret: "décret 160/2026",
@@ -96,7 +97,7 @@ const SONDAGES = [
 
 /* ---------- état ---------- */
 let GEO = null, PAR_NUM = {}, PAR_NOM = {}, RES = null, brut = null;
-let q = ORDRE.includes(lireLS(localStorage, "edQuestion", 10)) ? lireLS(localStorage, "edQuestion", 10) : 10;
+let q = 10;                                                     // à l'arrivée : la question 10 (séparation), dépouillée en premier
 let sel = null, carteMarge = false, carteParticip = false, demarre = false, prochaine = 0;
 const PARAMS = new URLSearchParams(location.search);
 const DEMO = sessionStorage.getItem("userRole") === "admin" && PARAMS.has("demo") ? Math.max(0, Math.min(100, +PARAMS.get("demo") || 40)) : null;
@@ -319,7 +320,7 @@ function dessinerHeures() {
 
 /* ---------- choix de la question et résultat de l'Alberta ---------- */
 function dessinerChoix() {
-  $("edChoix").innerHTML = ORDRE.map(k => {
+  $("edChoix").innerHTML = AFFICHAGE.map(k => {
     const d = D(k), t = d?.tot, ok = t && aRes(t), i = ok ? tete(t) : 0;
     const etat = !RES?.questions?.[k] ? (auMoinsUn() ? "pas encore" : "en attente") : RES.questions[k].inconnu ? "format illisible"
       : ok ? `${k === 10 ? (i ? "Séparation" : "Rester") : nomRep(k, i)} ${nf(pct(t, i), 0)} %${fracT(t) != null ? ` · ${nf(100 * fracT(t), 0)} % sect.` : ""}` : "0 vote";
@@ -593,7 +594,7 @@ function dessinerPanneau() {
     p.innerHTML = `<span class="lv-eyebrow">Ensemble de l'Alberta · les 10 questions</span><h3>Clique sur une circonscription</h3>
       <p class="lv-muted">Couleur : réponse en tête à la question ${q}. Plus la couleur est pâle, moins il y a de sections dépouillées ; gris : aucun résultat.</p>
       <div class="lv-kv"><div><b>${n}</b><span>avec résultats</span></div><div><b>${fin}</b><span>dépouillement terminé</span></div><div><b>${NB - n}</b><span>sans résultat</span></div></div>
-      <ul class="ed-qliste">${ORDRE.map(k => ligneQuestion(k, D(k)?.tot, k === q)).join("")}</ul>`;
+      <ul class="ed-qliste">${AFFICHAGE.map(k => ligneQuestion(k, D(k)?.tot, k === q)).join("")}</ul>`;
     return;
   }
   const c = enCirc(q, sel), suiv = suivies.has(sel);
@@ -604,7 +605,7 @@ function dessinerPanneau() {
     + (aRes(c) ? `<p class="lv-tete" style="--c:${coul(q, tete(c))}"><b>${esc(nomRep(q, tete(c)))}</b> ${c.final ? "l'emporte" : "en tête"} à la question ${q}, par ${nf(Math.abs(c.a - c.b))} voix (${nf(Math.abs(marge(c)), 1)} pt)</p>`
       + `<table class="lv-cands"><tbody>${[0, 1].map(i => `<tr style="--c:${coul(q, i)}"><td><span class="lv-pt"></span></td><td><b>${esc(nomRep(q, i))}</b>${Q[q].rep[i].long ? `<small>${esc(Q[q].rep[i].long)}</small>` : ""}`
         + `<span class="lv-jauge"><i style="width:${pct(c, i)}%"></i></span></td><td class="lv-num"><b>${nf(pct(c, i), 1)} %</b><small>${nf(i ? c.b : c.a)}</small></td></tr>`).join("")}</tbody></table>` : "")
-    + `<span class="lv-eyebrow">Les 10 questions dans ${esc(PAR_NUM[sel])}</span><ul class="ed-qliste">${ORDRE.map(k => ligneQuestion(k, enCirc(k, sel), k === q)).join("")}</ul>`
+    + `<span class="lv-eyebrow">Les 10 questions dans ${esc(PAR_NUM[sel])}</span><ul class="ed-qliste">${AFFICHAGE.map(k => ligneQuestion(k, enCirc(k, sel), k === q)).join("")}</ul>`
     + (c ? `<div class="lv-kv"><div><b>${c.vot != null ? nf(c.vot) : "—"}</b><span>électeurs ayant voté</span></div><div><b>${c.ins != null ? nf(c.ins) : "—"}</b><span>inscrits</span></div><div><b>${nf(c.rej)}</b><span>bulletins rejetés (Q${q})</span></div></div>` : "");
 }
 
@@ -778,7 +779,7 @@ function replierPP(ouvert) { $("lvPPSection").toggleAttribute("data-ferme", !ouv
 function dessinerTextes() {
   $("edQuestions").innerHTML = `<h3 id="edQuestionsTitre">Les 10 questions</h3>
     <p>Une consultation : le décret précise que les résultats des questions 1 à 5 et 10 ne sont pas contraignants. Chaque question est sur son propre bulletin, numéroté et de couleur différente, remis dans cet ordre (la question 10 en premier) ; on peut ne répondre qu'à certaines. Les questions 1 à 9 se répondent par oui ou non, la question 10 par l'option 1 ou l'option 2. Les libellés officiels sont en anglais ; la traduction française ci-dessous est celle du site, non officielle.</p>
-    <ol class="ed-qs">${ORDRE.map(k => { const Qk = Q[k];
+    <ol class="ed-qs">${AFFICHAGE.map(k => { const Qk = Q[k];
       return `<li class="ed-q" style="--c:${Qk.c[0]}"><header><b>Question ${k} · ${esc(Qk.titre)}</b><span>${esc(Qk.decret)}</span></header><p>${esc(Qk.fr)}</p>`
         + (k === 10 ? `<ul>${Qk.rep.map(r => `<li>${esc(r.long)}</li>`).join("")}</ul>` : "")
         + `<details><summary>Libellé officiel (anglais)</summary><p>${esc(Qk.en)}${k === 10 ? "<br>" + Qk.rep.map(r => esc(r.en)).join("<br>") : ""}</p></details>`
