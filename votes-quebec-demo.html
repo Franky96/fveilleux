@@ -447,6 +447,18 @@
        Couleurs des réponses hors des couleurs des partis : rester (rouge), processus de séparation (bleu), oui (vert), non (orange) */
     .vue-direct { --ed-rester:#C8102E; --ed-sep:#1D5FB4; --ed-oui:#0E8A5F; --ed-non:#C2470A; }
     :root[data-theme="dark"] .vue-direct { --ed-rester:#F0505F; --ed-sep:#5B95F0; --ed-oui:#2DBE8A; --ed-non:#F07A3A; }
+    /* page « En direct » : fond en dégradé (lueur bleue en haut à gauche, rouge en haut à droite), sous la bande d'onglets aussi */
+    body:has(.vue-direct:not([hidden])) {
+      background: radial-gradient(1100px 620px at 8% -8%, rgba(91, 149, 240, 0.17), transparent 62%),
+        radial-gradient(900px 520px at 96% -4%, rgba(240, 80, 95, 0.11), transparent 60%),
+        linear-gradient(180deg, #0C1019 0%, #0F1726 55%, #121C2E 100%);
+      background-attachment: fixed; }
+    html[data-theme="light"] body:has(.vue-direct:not([hidden])) {
+      background: radial-gradient(1100px 620px at 8% -8%, rgba(29, 95, 180, 0.13), transparent 62%),
+        radial-gradient(900px 520px at 96% -4%, rgba(200, 16, 46, 0.08), transparent 60%),
+        linear-gradient(180deg, #F5F7FB 0%, #EDF1F7 55%, #E6ECF5 100%);
+      background-attachment: fixed; }
+    body:has(.vue-direct:not([hidden])) .scrutins, .vue-direct.vue-live { background: transparent; }
     .lv-grid > .ed-cartebloc { grid-area: carte; display: grid; gap: 10px; min-width: 0; align-content: start; }
     .ed-avant { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch; }
     .ed-avant[hidden] { display: none; }
