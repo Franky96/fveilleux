@@ -2168,7 +2168,7 @@ function setIso(k) {
    concentriques (carter, chambre, conduits…) l'une après l'autre ; les équipements montés sur le carter
    s'écartent aussi vers l'extérieur. Les rotors continuent de tourner pendant le démontage. */
 const ease3 = t => t * t * (3 - 2 * t), GLOW_C = new THREE.Color(0xf0a020);
-let demT = 0, demTarget = 0, demMax = 1, demObjs = [], demTimer = null, demFit = false, demShown = -1, stepGlow = null, stepGlowT = 0;
+let demT = 0, demTarget = 0, demMax = 1, demObjs = [], demTimer = null, demShown = -1, stepGlow = null, stepGlowT = 0;
 function demPose(o, e) {
   const d = o.userData.demOff;
   if (o.matrixAutoUpdate) o.position.copy(o.userData.basePos).addScaledVector(d, e);
@@ -2227,12 +2227,11 @@ function demUI() {
   $('dem-play').textContent = demTimer ? '❚❚ Pause' : '▶ Pas à pas';
 }
 function goDem(k, glow) {
-  demTarget = clamp(k, 0, demMax); $('dem-t').value = demTarget; demFit = true;
+  demTarget = clamp(k, 0, demMax); $('dem-t').value = demTarget;
   if (glow && PAS[isoPart] && k >= 1 && k <= demMax) { stepGlow = new Set(PAS[isoPart].steps[k - 1].m.flatMap(x => x[0])); stepGlowT = 1; }
 }
 function stopDem() { clearInterval(demTimer); demTimer = null; demShown = -1; }
 $('dem-t').addEventListener('input', e => { stopDem(); demT = demTarget = +e.target.value; demApply(); demUI(); });
-$('dem-t').addEventListener('change', () => frameIso());
 $('dem-prev').onclick = () => { stopDem(); goDem(Math.ceil(demTarget - 0.001) - 1, true); };
 $('dem-next').onclick = () => { stopDem(); goDem(Math.floor(demTarget + 0.001) + 1, true); };
 $('dem-reset').onclick = () => { stopDem(); goDem(0); };
@@ -2246,7 +2245,7 @@ function demTick(rdt) {
   if (Math.abs(demTarget - demT) > 1e-4) {
     const sp = reduceMotion ? 100 : Math.max(PAS[isoPart] ? 1.8 : 0.9, Math.abs(demTarget - demT) * 1.2);
     demT += clamp(demTarget - demT, -sp * rdt, sp * rdt);
-    if (Math.abs(demTarget - demT) <= 1e-4) { demT = demTarget; if (demFit) { demFit = false; requestAnimationFrame(() => frameIso()); } }
+    if (Math.abs(demTarget - demT) <= 1e-4) demT = demTarget;     // la caméra ne bouge pas : l'utilisateur garde sa vue
     demApply(); demUI();
   }
   if (stepGlow) { stepGlowT -= rdt * 0.45; if (stepGlowT <= 0) stepGlow = null; }
