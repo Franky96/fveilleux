@@ -447,14 +447,14 @@
     :root[data-theme="dark"] .vue-direct { --ed-rester:#F0505F; --ed-sep:#5B95F0; --ed-oui:#2DBE8A; --ed-non:#F07A3A; }
     /* page « En direct » : fond en dégradé (lueur bleue en haut à gauche, rouge en haut à droite), sous la bande d'onglets aussi */
     body:has(.vue-direct:not([hidden])) {
-      background: radial-gradient(1100px 620px at 8% -8%, rgba(91, 149, 240, 0.17), transparent 62%),
-        radial-gradient(900px 520px at 96% -4%, rgba(240, 80, 95, 0.11), transparent 60%),
-        linear-gradient(180deg, #0C1019 0%, #0F1726 55%, #121C2E 100%);
+      background: radial-gradient(1400px 820px at 6% -10%, rgba(91, 149, 240, 0.42), transparent 64%),
+        radial-gradient(1100px 700px at 98% -6%, rgba(240, 80, 95, 0.30), transparent 62%),
+        linear-gradient(180deg, #0C1019 0%, #111B30 50%, #172540 100%);
       background-attachment: fixed; }
     html[data-theme="light"] body:has(.vue-direct:not([hidden])) {
-      background: radial-gradient(1100px 620px at 8% -8%, rgba(29, 95, 180, 0.13), transparent 62%),
-        radial-gradient(900px 520px at 96% -4%, rgba(200, 16, 46, 0.08), transparent 60%),
-        linear-gradient(180deg, #F5F7FB 0%, #EDF1F7 55%, #E6ECF5 100%);
+      background: radial-gradient(1400px 820px at 6% -10%, rgba(29, 95, 180, 0.32), transparent 64%),
+        radial-gradient(1100px 700px at 98% -6%, rgba(200, 16, 46, 0.22), transparent 62%),
+        linear-gradient(180deg, #F3F6FB 0%, #E5ECF6 50%, #D8E2F1 100%);
       background-attachment: fixed; }
     body:has(.vue-direct:not([hidden])) .scrutins, .vue-direct.vue-live { background: transparent; }
     .lv-grid > .ed-cartebloc { grid-area: carte; display: grid; gap: 10px; min-width: 0; align-content: start; }
