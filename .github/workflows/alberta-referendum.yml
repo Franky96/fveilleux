@@ -1,0 +1,50 @@
+# Référendum en Alberta du 19 octobre 2026 (page « En direct ») : copie de secours des résultats d'Élections Alberta.
+# La page lit d'abord le relais du site (api/alberta.php, cache 45 s) ; si le relais ne répond pas, elle lit
+# en-direct/resultats.json, écrit ici par en-direct/outils/alberta.py et poussé sur master (Hostinger le déploie).
+# Toutes les 5 minutes de la fermeture des bureaux (20 h en Alberta = 2 h UTC le 20 octobre) jusqu'à la fin du
+# dépouillement non officiel (au plus tard 48 h après) ; le script ne fait rien en dehors de cette fenêtre de 2026.
+# Un commit seulement quand les résultats changent (un seul fichier). GitHub peut retarder les déclenchements programmés :
+# le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite.
+name: Référendum Alberta · résultats
+
+on:
+  schedule:
+    - cron: "*/5 2-23 20 10 *"
+    - cron: "*/5 * 21 10 *"
+    - cron: "*/5 0-7 22 10 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: alberta-referendum
+  cancel-in-progress: false
+
+jobs:
+  lire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Résultats d'Élections Alberta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/outils/alberta.py --force; else python3 en-direct/outils/alberta.py; fi
+
+      - name: Publier si les résultats ont changé
+        run: |
+          git add en-direct/resultats.json
+          if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
+          N=$(python3 -c "import json;d=json.load(open('en-direct/resultats.json'));print(sum(p.get('statut')==200 for p in d['pages'].values()))")
+          H=$(TZ=America/Edmonton date +"%H h %M")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Référendum Alberta : résultats non officiels de $H, heure de l'Alberta ($N/10 questions)"
+          for essai in 1 2 3 4; do
+            git push origin HEAD:master && exit 0
+            sleep $((2 ** essai)); git pull --rebase origin master
+          done
+          exit 1

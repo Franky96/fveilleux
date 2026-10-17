@@ -8,6 +8,8 @@
  *
  *   GET            → { exists, data: { suivis: { PQ: [noms…], … }, maj } }
  *   POST {suivis}  → remplace les suivis du compte
+ *   ?ens=alberta   → circonscriptions suivies sur la page En direct (référendum en Alberta) : { suivis: { AB: [numéros 1–87] } },
+ *                    document à part (doc_id = identifiant du compte + « :alberta »)
  */
 define('_FVEILLEUX', 1);
 require_once __DIR__ . '/db.php';
@@ -24,11 +26,13 @@ $perms = normaliserPermissions($s['permissions'] ?? []);
 if ($role !== 'admin' && !in_array('votes-quebec', $perms, true)) errOut('Accès refusé', 403);
 
 const PARTIS = ['PQ', 'PLQ', 'CAQ', 'PCQ', 'QS'];
+$alberta = ($_GET['ens'] ?? '') === 'alberta';
+$docId = $alberta ? $uid . ':alberta' : $uid;
 $pdo = getPDO();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $stmt = $pdo->prepare('SELECT data FROM documents WHERE collection_name=? AND doc_id=?');
-  $stmt->execute(['_suivis', $uid]);
+  $stmt->execute(['_suivis', $docId]);
   $row = $stmt->fetch();
   jsonOut($row ? ['exists' => true, 'data' => json_decode($row['data'], true)] : ['exists' => false, 'data' => null]);
 }
@@ -38,7 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!is_array($in) || !is_array($in['suivis'] ?? null)) errOut('Données invalides');
   // seulement les 5 partis, des noms de circonscription (texte court), au plus 127 par parti
   $propre = [];
-  foreach (PARTIS as $p) {
+  if ($alberta) {                                            // numéros de circonscription de l'Alberta seulement
+    $liste = is_array($in['suivis']['AB'] ?? null) ? $in['suivis']['AB'] : [];
+    $nums = array_values(array_unique(array_filter(array_map('intval', $liste), fn($n) => $n >= 1 && $n <= 87)));
+    if ($nums) $propre['AB'] = $nums;
+  }
+  else foreach (PARTIS as $p) {
     $liste = $in['suivis'][$p] ?? [];
     if (!is_array($liste)) continue;
     $noms = [];
@@ -48,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
   $data = ['suivis' => (object)$propre, 'maj' => date('c')];
   $pdo->prepare('INSERT INTO documents (collection_name,doc_id,data) VALUES(?,?,?) ON DUPLICATE KEY UPDATE data=VALUES(data),updated_at=NOW()')
-      ->execute(['_suivis', $uid, json_encode($data, JSON_UNESCAPED_UNICODE)]);
+      ->execute(['_suivis', $docId, json_encode($data, JSON_UNESCAPED_UNICODE)]);
   jsonOut(['ok' => true]);
 }
 

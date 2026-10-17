@@ -422,6 +422,105 @@
     @media (max-width: 900px) { #lvCarte { height: 62vh; } }
     @media (max-width: 600px) { .lv-partis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lv-parti b { font-size: 1.1rem; } .lv-parti small { font-size: 0.66rem; } }
     @media (prefers-reduced-motion: reduce) { .lv-seg, .lv-rid { transition: none; } }
+    /* Page « En direct » : référendum en Alberta (en-direct/direct.js), mêmes blocs lv-* que l'ancien direct du Québec.
+       Couleurs des réponses hors des couleurs des partis : rester (rouge), processus de séparation (bleu), oui (vert), non (orange) */
+    .vue-direct { --ed-rester:#C8102E; --ed-sep:#1D5FB4; --ed-oui:#0E8A5F; --ed-non:#C2470A; }
+    :root[data-theme="dark"] .vue-direct { --ed-rester:#F0505F; --ed-sep:#5B95F0; --ed-oui:#2DBE8A; --ed-non:#F07A3A; }
+    .lv-grid > .ed-cartebloc { grid-area: carte; display: grid; gap: 10px; min-width: 0; align-content: start; }
+    .ed-avant { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch; }
+    .ed-avant[hidden] { display: none; }
+    @media (min-width: 1000px) { .ed-avant { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); } }
+    .ed-compte { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; align-content: start; }
+    .ed-compte h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.2rem; }
+    .ed-compte p { margin: 0; font-size: 0.88rem; }
+    .ed-compte-n { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .ed-compte-n div { background: var(--bg); border-radius: 10px; padding: 10px 4px 8px; text-align: center; display: grid; gap: 4px; }
+    .ed-compte-n b { font: 800 clamp(1.6rem, 4vw, 2.5rem)/1 "Literata", Georgia, serif; font-variant-numeric: tabular-nums; }
+    .ed-compte-n span { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .ed-heures { list-style: none; margin: 0; padding: 16px 18px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; display: grid; gap: 9px; align-content: start; }
+    .ed-heures li { display: grid; grid-template-columns: minmax(0, 13em) minmax(0, 1fr); gap: 2px 14px; font-size: 0.88rem; padding-top: 9px; border-top: 1px solid var(--rule); }
+    .ed-heures li:first-child { border-top: 0; padding-top: 0; }
+    .ed-heures li small { display: block; color: var(--muted); font-size: 0.78rem; }
+    .ed-heures li.ed-passe { opacity: 0.55; }
+    @media (max-width: 600px) { .ed-heures li { grid-template-columns: minmax(0, 1fr); } }
+    .ed-choix { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .ed-choix button { font: inherit; font-size: 0.8rem; font-weight: 700; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
+      cursor: pointer; display: grid; gap: 1px; text-align: left; border-bottom: 3px solid var(--c, var(--rule)); }
+    .ed-choix button small { font-size: 0.68rem; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .ed-choix button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); border-bottom-color: var(--c, var(--ink)); }
+    .ed-choix button[aria-pressed="true"] small { color: inherit; opacity: 0.8; }
+    .ed-choix button:hover { border-color: var(--ink); }
+    .ed-choix button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+    @media (max-width: 600px) { .ed-choix { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .ed-choix button { flex: none; } }
+    .ed-qtexte { margin: 0; font-size: 0.9rem; color: var(--muted); max-width: 95ch; }
+    .ed-qtexte small { display: block; font-size: 0.75rem; margin-top: 2px; }
+    .ed-reps { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+    .ed-reps .lv-parti { grid-template-columns: 10px minmax(0, 1fr) auto; }
+    .ed-reps .lv-parti b { grid-column: 3; }
+    .ed-reps .lv-parti small { grid-column: 2 / 4; }
+    .ed-regions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .ed-regions:empty { display: none; }
+    .ed-regions div { background: var(--bg); border-radius: 8px; padding: 8px 10px; display: grid; gap: 5px; font-size: 0.8rem; min-width: 0; }
+    .ed-regions div > span { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+    .ed-regions small { color: var(--muted); font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) { .ed-regions { grid-template-columns: minmax(0, 1fr); } }
+    .ed-mini { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--soft); }
+    .ed-mini i { display: block; height: 100%; }
+    .ed-mini i + i { border-left: 1px solid var(--surface); }
+    /* fiche : les 10 questions d'une circonscription (ou de l'Alberta), la question affichée en évidence */
+    .ed-qliste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+    .ed-qliste button { width: 100%; font: inherit; color: inherit; text-align: left; display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; gap: 3px 8px; align-items: center;
+      padding: 6px 8px; border-radius: 8px; border: 1px solid transparent; background: var(--bg); cursor: pointer; font-size: 0.82rem; }
+    .ed-qliste button:hover, .ed-qliste button:focus-visible { border-color: var(--rule); outline: none; }
+    .ed-qliste button[aria-current="true"] { border-color: var(--ink); }
+    .ed-qliste .ed-qn { font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .ed-qliste .ed-qlab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .ed-qliste .ed-qv { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+    .ed-qliste .ed-qv small { color: var(--muted); font-weight: 500; }
+    .ed-qliste .ed-mini { grid-column: 2 / 4; }
+    /* infobulle de la carte : deux réponses */
+    .lv-tip .ed-tip-l { display: flex; gap: 8px; justify-content: space-between; }
+    .lv-tip .ed-tip-l i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--c); margin-right: 5px; }
+    /* encarts Calgary et Edmonton sur la carte (grand écran, carte plus large que haute) */
+    .ed-encart { fill: none; stroke: var(--rule); stroke-width: 1px; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .ed-encart-txt { fill: var(--muted); font: 700 13px "Public Sans", system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; pointer-events: none; }
+    .ed-lien-encart { stroke: var(--muted); stroke-width: 1px; stroke-dasharray: 3 3; fill: none; vector-effect: non-scaling-stroke; pointer-events: none; opacity: 0.7; }
+    @media (max-width: 600px) { .vue-direct .lv-zoom [data-z="rd"], .vue-direct .lv-zoom [data-z="leth"] { display: none; } }
+    /* blocs du bas : les 10 questions, sondages, comment voter */
+    .ed-bloc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; }
+    .ed-bloc:empty { display: none; }
+    .ed-bloc h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.25rem; }
+    .ed-bloc > p { margin: 0; font-size: 0.88rem; color: var(--muted); max-width: 100ch; }
+    .ed-qs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 10px; }
+    .ed-q { display: grid; gap: 6px; padding: 12px 14px; border-radius: 10px; background: var(--bg); border-left: 4px solid var(--c, var(--rule)); align-content: start; }
+    .ed-q header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+    .ed-q header b { font-size: 0.95rem; }
+    .ed-q header span { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .ed-q p { margin: 0; font-size: 0.88rem; line-height: 1.5; }
+    .ed-q ul { margin: 0; padding-left: 1.2em; font-size: 0.86rem; display: grid; gap: 3px; }
+    .ed-q details { font-size: 0.8rem; color: var(--muted); }
+    .ed-q details summary { cursor: pointer; font-weight: 600; }
+    .ed-q details p { margin-top: 4px; font-size: 0.8rem; color: var(--muted); font-style: italic; }
+    .ed-q .ed-q-sond { font-size: 0.78rem; color: var(--muted); }
+    .ed-q .ed-q-sond b { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .ed-q button.vi-lien { justify-self: start; font-size: 0.8rem; }
+    .ed-sond { overflow-x: auto; }
+    .ed-sond table { width: 100%; border-collapse: collapse; font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+    .ed-sond th, .ed-sond td { padding: 6px 8px; border-top: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+    .ed-sond th { font-size: 0.75rem; color: var(--muted); font-weight: 700; }
+    .ed-sond th:first-child, .ed-sond td:first-child, .ed-sond td.ed-sond-barre, .ed-sond th.ed-sond-barre { text-align: left; }
+    .ed-sond td.ed-sond-barre { width: 40%; min-width: 140px; }
+    .ed-sond td:first-child small { display: block; color: var(--muted); font-size: 0.72rem; }
+    .ed-sond .ed-mini { height: 12px; }
+    .ed-sond .ed-mini i:last-child { background: var(--soft); }
+    .ed-legende-k { display: inline-flex; align-items: center; gap: 6px; }
+    .ed-legende-k i { width: 12px; height: 12px; border-radius: 3px; background: var(--c); }
+    .ed-voter { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+    .ed-voter > div { padding: 12px 14px; border-radius: 10px; background: var(--bg); display: grid; gap: 6px; align-content: start; font-size: 0.88rem; line-height: 1.5; }
+    .ed-voter h4 { margin: 0; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .ed-voter p, .ed-voter ul { margin: 0; }
+    .ed-voter ul { padding-left: 1.2em; display: grid; gap: 3px; }
+    .ed-voter a, .lv-source a, .ed-bloc a { color: var(--ink); }
     .loi39[hidden], .site-top .titre > [hidden] { display: none; }
     /* Onglet « Votes Québec » : intentions de vote (intentions.js) — mêmes jetons de couleur que « En direct » */
     .vue-votes .vi-badge, .vue-accueil .vi-badge { display: inline-flex; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
@@ -821,15 +920,23 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes Suisse · Conseil national</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes Suisse · Conseil national</span><span class="t-direct" hidden>En direct · référendum en Alberta du 19 octobre 2026</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
+      <!-- « En direct » : soirée d'un vote (en ce moment : référendum en Alberta du 19 octobre 2026), à gauche de l'Accueil -->
       <div class="sc-groupe" role="presentation">
         <div class="sc-groupe-btns">
-          <a class="sc-tab" href="intentions-simulations.html">
+          <a class="sc-tab sc-live" href="en-direct.html">
+            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Référendum en Alberta · 19 octobre</small>
+          </a>
+        </div>
+      </div>
+      <div class="sc-groupe" role="presentation">
+        <div class="sc-groupe-btns">
+          <a class="sc-tab" href="intentions-simulations.html#accueil">
             <b>Accueil</b><small>Vue d'ensemble</small>
           </a>
         </div>
@@ -858,6 +965,7 @@
       </div>
     </div>
   </nav>
+
 
 
   <section class="vue-live vue-votes vs" id="vue-votes" aria-busy="true">

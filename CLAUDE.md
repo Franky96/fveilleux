@@ -24,10 +24,22 @@ Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN po
 
 Toutes les pages de la section sortent d'un même gabarit : `votes-quebec/outils/pages.src.html`, transformé par
 `votes-quebec/outils/pages.py --bascule` en `intentions-simulations.html` (accueil, `votes-quebec/accueil.js`), `votes-quebec.html`,
-`loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html` et `votes-usa.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
-(ou pages.py) puis relancer le script.** Onglets : Accueil, puis une page par endroit (Votes Québec, Canada, États-Unis, France, Allemagne, Suisse) ; sur l'accueil, les cartes sont groupées par continent (`CONTINENTS` dans accueil.js) ; les simulations d'un endroit vont dans
+`loi39.html`, `votes-quebec-demo.html`, `votes-france.html`, `votes-canada.html` et `votes-usa.html`, ainsi que `en-direct.html`. **Ne jamais modifier ces .html à la main : modifier le gabarit
+(ou pages.py) puis relancer le script.** Onglets : En direct (à gauche, pastille rouge), Accueil, puis une page par endroit (Votes Québec, Canada, États-Unis, France, Allemagne, Suisse) ; sur l'accueil, les cartes sont groupées par continent (`CONTINENTS` dans accueil.js) ; les simulations d'un endroit vont dans
 son sous-menu (ligne sous les onglets, ex. Votes Québec : Intentions de vote · Simulations : Loi 39) ; permission `votes-quebec`.
 
+Onglet « En direct » (`en-direct.html`, vue `direct` du gabarit, module `en-direct/direct.js`) : soirée d'un vote, en ce moment le référendum en Alberta
+du 19 octobre 2026 (10 questions : la 10, séparation, puis 1 à 9 ; libellés officiels anglais, traduction française non officielle), sur le modèle de
+l'ancien direct de l'élection québécoise (`votes-quebec/live.js`, mêmes classes `lv-*`) : avant la fermeture, compte à rebours, heures (Alberta et Québec),
+questions, sondages, comment voter ; ensuite résultat de l'Alberta par question, carte des 87 circonscriptions (`en-direct/circonscriptions.json`, carte
+de 2017 d'Elections Alberta, Licence du gouvernement ouvert – Alberta, `en-direct/outils/geo.sh` ; encarts Calgary et Edmonton quand la carte est large),
+fiche, participation, circonscriptions suivies (alertes, `api/suivis.php?ens=alberta`), lecture chaque minute. Résultats : relais `api/alberta.php`
+(pages `orEDResultsReferendum2026.cfm?EventId=202601…202610` d'officialresults.elections.ab.ca, sans CORS, cache 45 s, rendues brutes : texte et
+tableaux), sinon copie du pipeline `en-direct/resultats.json` (`en-direct/outils/alberta.py`, `.github/workflows/alberta-referendum.yml`, toutes les
+5 min du 20 oct. 2 h UTC au 22 oct. 8 h UTC) ; l'interprétation des tableaux se fait dans direct.js (format officiel inconnu avant le soir du vote).
+Démo (admin) : `en-direct.html?demo=40` (résultats FICTIFS `en-direct/demo.json`, `en-direct/outils/demo.py`).
+**Page d'arrivée temporaire** : `ARRIVEE_EN_DIRECT = True` en tête de `votes-quebec/outils/pages.py` → `intentions-simulations.html` (cible du menu du
+site) renvoie vers `en-direct.html`, sauf avec `#accueil` (adresse de l'onglet Accueil) ; remettre `False` et relancer pages.py pour revenir à l'Accueil.
 Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/intentions.js`) :
 1. en haut, côte à côte : l'Assemblée (plan ou hémicycle) dans son rectangle, et l'évolution des intentions de vote
    (graphique avec choix de période, tendance + points des sondages + losanges des élections) ;

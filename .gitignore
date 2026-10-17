@@ -27,3 +27,6 @@ votes-allemagne/outils/brut/
 
 # Votes Suisse : téléchargements bruts (retéléchargés par outils/suisse_fixe.py)
 votes-suisse/outils/brut/
+
+# En direct (référendum en Alberta) : téléchargements bruts (retéléchargés par en-direct/outils/geo.sh)
+en-direct/outils/brut/
