@@ -89,8 +89,11 @@
     @media (min-width: 701px) {
       .sc-tabs, .sc-groupe-btns { flex-wrap: wrap; } .sc-groupe-btns { width: auto; } .sc-tabs .sc-groupe { min-width: 0; max-width: 100%; }
       /* une ligne compacte : nom seul (le sous-titre passe en infobulle), groupes séparés par l'espace et leur titre, boutons alignés en bas */
-      .sc-tabs { align-items: flex-end; column-gap: 1.75rem; row-gap: 0.6rem; }
-      .sc-tabs .sc-groupe + .sc-groupe { border-left: 0; padding-left: 0; }
+      .sc-tabs { align-items: stretch; column-gap: 1.4rem; row-gap: 0.6rem; }
+      .sc-tabs .sc-groupe { align-content: end; }
+      /* grandes lignes verticales entre les sections (En direct · Accueil · continents), sur toute la hauteur de la bande */
+      .sc-tabs .sc-groupe + .sc-groupe { border-left: 1px solid var(--st-muted); padding-left: 1.4rem; }
+      .sc-tabs .sc-groupe.sc-debut-ligne { border-left: 0; padding-left: 0; }   /* section passée à la ligne : pas de ligne à gauche */
       .sc-tabs .sc-tab small { display: none; }
       .sc-tabs .sc-tab { padding: 0.45rem 0.85rem; }
     }
@@ -997,7 +1000,9 @@
         addEventListener('pointermove', e => { if (x0 === null) return; const dx = e.clientX - x0; if (Math.abs(dx) > 5) glisse = true; if (glisse) bande.scrollLeft = s0 - dx; });
         addEventListener('pointerup', () => { x0 = null; });
         bande.addEventListener('click', e => { if (glisse) { e.preventDefault(); e.stopPropagation(); glisse = false; } }, true);   // un glisser n'ouvre pas l'onglet
-        bande.addEventListener('scroll', maj, { passive: true }); addEventListener('resize', maj);
+        // section qui commence une nouvelle ligne (grand écran, bande trop étroite) : pas de ligne de séparation à sa gauche
+        const lignes = () => { let haut = null; for (const g of bande.querySelectorAll(':scope > .sc-groupe')) { g.classList.remove('sc-debut-ligne'); const y = g.offsetTop; if (haut !== null && y > haut + 4) g.classList.add('sc-debut-ligne'); haut = y; } };
+        bande.addEventListener('scroll', maj, { passive: true }); addEventListener('resize', () => { lignes(); maj(); }); lignes();
         const cur = bande.querySelector('[aria-current="page"], [aria-selected="true"]');
         if (cur) { const b = bande.getBoundingClientRect(), c = cur.getBoundingClientRect(); bande.scrollLeft += c.left - b.left - (b.width - c.width) / 2; }
         maj();
