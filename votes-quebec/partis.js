@@ -153,20 +153,10 @@ export const AXES = {
   // valeurs centrées (v = note − decal ; decal remet la note d'origine sur les crans) ; Alberta : camp au référendum
   canada: {
     noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    // les valeurs sociales suivent de près le gauche-droite : populisme (vertical) et nationalisme ou multilatéralisme (3D)
     y: {
-      titre: "Valeurs sociales", bas: "libérales", haut: "conservatrices", max: 5, decal: 5, bouts3: ["Libéral", "Conservateur"],
-      note: "Axe des valeurs : note de l'enquête d'experts Global Party Survey (Norris, 2019), de 0 (libéral) à 10 (conservateur) sur les valeurs sociales.",
-      valeurs: {
-        "PLC": { v: -2.4, pourquoi: "2,6 sur 10 (Global Party Survey 2019)" },
-        "PCC": { v: 2.5, pourquoi: "7,5 sur 10 (Global Party Survey 2019)" },
-        "BQ": { v: -2.42, pourquoi: "2,6 sur 10 (Global Party Survey 2019)" },
-        "NPD": { v: -3.5, pourquoi: "1,5 sur 10 (Global Party Survey 2019)" },
-        "PVC": { v: -2.86, pourquoi: "2,1 sur 10 (Global Party Survey 2019)" },
-      },
-    },
-    z: {
       titre: "Populisme", bas: "pluraliste", haut: "populiste", max: 5, decal: 5, bouts3: ["Pluraliste", "Populiste"],
-      note: "Axe du populisme : discours du parti dans la même enquête (Global Party Survey 2019), de 0 (pluraliste) à 10 (populiste).",
+      note: "Axe du populisme : discours du parti dans l'enquête d'experts Global Party Survey (Norris, 2019), de 0 (pluraliste) à 10 (populiste).",
       valeurs: {
         "PLC": { v: -3.0, pourquoi: "2,0 sur 10 (Global Party Survey 2019)" },
         "PCC": { v: 0.09, pourquoi: "5,1 sur 10 (Global Party Survey 2019)" },
@@ -175,41 +165,56 @@ export const AXES = {
         "PVC": { v: -3.08, pourquoi: "1,9 sur 10 (Global Party Survey 2019)" },
       },
     },
+    z: {
+      titre: "Nationalisme ou multilatéralisme", bas: "nationalisme", haut: "multilatéralisme", max: 5, decal: 5, bouts3: ["Nationaliste", "Multilatéraliste"],
+      note: "Axe international : dans la même enquête, de 0 (nationalisme : rejet des traités et des organisations internationales) à 10 (multilatéralisme).",
+      valeurs: {
+        "PLC": { v: 2.33, pourquoi: "7,3 sur 10 (Global Party Survey 2019)" },
+        "PCC": { v: -1.0, pourquoi: "4,0 sur 10 (Global Party Survey 2019)" },
+        "BQ": { v: 1.0, pourquoi: "6,0 sur 10 (Global Party Survey 2019)" },
+        "NPD": { v: 1.4, pourquoi: "6,4 sur 10 (Global Party Survey 2019)" },
+        "PVC": { v: 1.82, pourquoi: "6,8 sur 10 (Global Party Survey 2019)" },
+      },
+    },
   },
   usa: {
     noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    // les valeurs sociales suivent de près le gauche-droite : populisme (vertical) et nationalisme ou multilatéralisme (3D)
     y: {
-      titre: "Valeurs sociales", bas: "libérales", haut: "conservatrices", max: 5, decal: 5, bouts3: ["Libéral", "Conservateur"],
-      note: "Axe des valeurs : note de l'enquête d'experts Global Party Survey (Norris, 2019), de 0 (libéral) à 10 (conservateur) sur les valeurs sociales.",
-      valeurs: {
-        "D": { v: -2.59, pourquoi: "2,4 sur 10 (Global Party Survey 2019)" },
-        "R": { v: 3.3, pourquoi: "8,3 sur 10 (Global Party Survey 2019)" },
-      },
-    },
-    z: {
       titre: "Populisme", bas: "pluraliste", haut: "populiste", max: 5, decal: 5, bouts3: ["Pluraliste", "Populiste"],
-      note: "Axe du populisme : discours du parti dans la même enquête (Global Party Survey 2019), de 0 (pluraliste) à 10 (populiste).",
+      note: "Axe du populisme : discours du parti dans l'enquête d'experts Global Party Survey (Norris, 2019), de 0 (pluraliste) à 10 (populiste).",
       valeurs: {
         "D": { v: -1.29, pourquoi: "3,7 sur 10 (Global Party Survey 2019)" },
         "R": { v: 2.83, pourquoi: "7,8 sur 10 (Global Party Survey 2019)" },
       },
     },
+    z: {
+      titre: "Nationalisme ou multilatéralisme", bas: "nationalisme", haut: "multilatéralisme", max: 5, decal: 5, bouts3: ["Nationaliste", "Multilatéraliste"],
+      note: "Axe international : dans la même enquête, de 0 (nationalisme : rejet des traités et des organisations internationales) à 10 (multilatéralisme).",
+      valeurs: {
+        "D": { v: 3.26, pourquoi: "8,3 sur 10 (Global Party Survey 2019)" },
+        "R": { v: -3.07, pourquoi: "1,9 sur 10 (Global Party Survey 2019)" },
+      },
+    },
   },
   france: {
     noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    // en France, les valeurs (GAL-TAN) suivent presque le gauche-droite (corrélation 0,91 dans CHES 2024) : on prend plutôt
+    // le discours anti-élites, presque indépendant du gauche-droite (−0,17)
     y: {
-      titre: "Valeurs (GAL-TAN)", bas: "progressistes", haut: "traditionalistes", max: 5, decal: 5, bouts3: ["Progressiste", "Traditionaliste"],
-      note: "Axe des valeurs : note GAL-TAN de l'enquête d'experts Chapel Hill (CHES 2024), de 0 (progressiste-libertaire) à 10 (traditionaliste-autoritaire-nationaliste).",
+      titre: "Discours anti-élites", bas: "faible", haut: "fort", max: 5, decal: 5, bouts3: ["Peu anti-élites", "Anti-élites"],
+      note: "Axe anti-élites : importance du discours contre les élites et l'establishment dans l'enquête d'experts Chapel Hill (CHES 2024), "
+        + "de 0 (aucune) à 10 (très grande) ; en France, c'est avec l'Europe la note la moins liée au gauche-droite.",
       valeurs: {
-        "LFI-NFP": { v: -3.18, pourquoi: "1,8 sur 10 (CHES 2024)" },
-        "GDR": { v: -1.45, pourquoi: "3,5 sur 10 (CHES 2024)" },
-        "ECOS": { v: -3.3, pourquoi: "1,7 sur 10 (CHES 2024)" },
-        "SOC": { v: -2.27, pourquoi: "2,7 sur 10 (CHES 2024)" },
-        "EPR": { v: -0.91, pourquoi: "4,1 sur 10 (CHES 2024)" },
-        "DEM": { v: -0.5, pourquoi: "4,5 sur 10 (CHES 2024)" },
-        "HOR": { v: 0.3, pourquoi: "5,3 sur 10 (CHES 2024)" },
-        "DR": { v: 2.18, pourquoi: "7,2 sur 10 (CHES 2024)" },
-        "RN": { v: 3.36, pourquoi: "8,4 sur 10 (CHES 2024)" },
+        "LFI-NFP": { v: 3.75, pourquoi: "8,8 sur 10 (CHES 2024)" },
+        "GDR": { v: 1.0, pourquoi: "6,0 sur 10 (CHES 2024)" },
+        "ECOS": { v: 0.0, pourquoi: "5,0 sur 10 (CHES 2024)" },
+        "SOC": { v: -0.75, pourquoi: "4,2 sur 10 (CHES 2024)" },
+        "EPR": { v: -1.25, pourquoi: "3,8 sur 10 (CHES 2024)" },
+        "DEM": { v: -2.0, pourquoi: "3,0 sur 10 (CHES 2024)" },
+        "HOR": { v: -2.0, pourquoi: "3,0 sur 10 (CHES 2024)" },
+        "DR": { v: 0.0, pourquoi: "5,0 sur 10 (CHES 2024)" },
+        "RN": { v: 3.75, pourquoi: "8,8 sur 10 (CHES 2024)" },
       },
     },
     z: {
@@ -230,19 +235,20 @@ export const AXES = {
   },
   allemagne: {
     noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    // les valeurs (GAL-TAN) suivent de près le gauche-droite : on prend plutôt le discours anti-élites, bien moins lié
     y: {
-      titre: "Valeurs (GAL-TAN)", bas: "progressistes", haut: "traditionalistes", max: 5, decal: 5, bouts3: ["Progressiste", "Traditionaliste"],
-      note: "Axe des valeurs : note GAL-TAN de l'enquête d'experts Chapel Hill (CHES 2024), de 0 (progressiste-libertaire) à 10 (traditionaliste-autoritaire-nationaliste).",
+      titre: "Discours anti-élites", bas: "faible", haut: "fort", max: 5, decal: 5, bouts3: ["Peu anti-élites", "Anti-élites"],
+      note: "Axe anti-élites : importance du discours contre les élites et l'establishment dans l'enquête d'experts Chapel Hill (CHES 2024), de 0 (aucune) à 10 (très grande).",
       valeurs: {
-        "CDU": { v: 1.56, pourquoi: "6,6 sur 10 (CHES 2024)" },
-        "CSU": { v: 2.54, pourquoi: "7,5 sur 10 (CHES 2024)" },
-        "SPD": { v: -1.39, pourquoi: "3,6 sur 10 (CHES 2024)" },
-        "Grüne": { v: -3.39, pourquoi: "1,6 sur 10 (CHES 2024)" },
-        "Linke": { v: -2.71, pourquoi: "2,3 sur 10 (CHES 2024)" },
-        "AfD": { v: 4.39, pourquoi: "9,4 sur 10 (CHES 2024)" },
-        "BSW": { v: 2.06, pourquoi: "7,1 sur 10 (CHES 2024)" },
-        "FDP": { v: -1.78, pourquoi: "3,2 sur 10 (CHES 2024)" },
-        "FW": { v: 1.7, pourquoi: "6,7 sur 10 (CHES 2024)" },
+        "CDU": { v: -2.25, pourquoi: "2,8 sur 10 (CHES 2024)" },
+        "CSU": { v: -1.75, pourquoi: "3,2 sur 10 (CHES 2024)" },
+        "SPD": { v: -2.62, pourquoi: "2,4 sur 10 (CHES 2024)" },
+        "Grüne": { v: -2.5, pourquoi: "2,5 sur 10 (CHES 2024)" },
+        "Linke": { v: 1.88, pourquoi: "6,9 sur 10 (CHES 2024)" },
+        "AfD": { v: 4.0, pourquoi: "9,0 sur 10 (CHES 2024)" },
+        "BSW": { v: 3.86, pourquoi: "8,9 sur 10 (CHES 2024)" },
+        "FDP": { v: -2.62, pourquoi: "2,4 sur 10 (CHES 2024)" },
+        "FW": { v: 2.33, pourquoi: "7,3 sur 10 (CHES 2024)" },
       },
     },
     z: {
@@ -263,20 +269,21 @@ export const AXES = {
   },
   suisse: {
     noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    // les valeurs (GAL-TAN) suivent de près le gauche-droite : on prend plutôt le discours anti-élites, bien moins lié
     y: {
-      titre: "Valeurs (GAL-TAN)", bas: "progressistes", haut: "traditionalistes", max: 5, decal: 5, bouts3: ["Progressiste", "Traditionaliste"],
-      note: "Axe des valeurs : note GAL-TAN de l'enquête d'experts Chapel Hill (CHES 2024), de 0 (progressiste-libertaire) à 10 (traditionaliste-autoritaire-nationaliste).",
+      titre: "Discours anti-élites", bas: "faible", haut: "fort", max: 5, decal: 5, bouts3: ["Peu anti-élites", "Anti-élites"],
+      note: "Axe anti-élites : importance du discours contre les élites et l'establishment dans l'enquête d'experts Chapel Hill (CHES 2024), de 0 (aucune) à 10 (très grande).",
       valeurs: {
-        "UDC": { v: 4.07, pourquoi: "9,1 sur 10 (CHES 2024)" },
-        "PS": { v: -3.8, pourquoi: "1,2 sur 10 (CHES 2024)" },
-        "C": { v: 0.87, pourquoi: "5,9 sur 10 (CHES 2024)" },
-        "PLR": { v: 0.13, pourquoi: "5,1 sur 10 (CHES 2024)" },
-        "VERT": { v: -4.0, pourquoi: "1,0 sur 10 (CHES 2024)" },
-        "PVL": { v: -2.8, pourquoi: "2,2 sur 10 (CHES 2024)" },
-        "PEV": { v: 2.25, pourquoi: "7,2 sur 10 (CHES 2024)" },
-        "UDF": { v: 4.25, pourquoi: "9,2 sur 10 (CHES 2024)" },
-        "MCG": { v: 2.75, pourquoi: "7,8 sur 10 (CHES 2024)" },
-        "LEGA": { v: 3.6, pourquoi: "8,6 sur 10 (CHES 2024)" },
+        "UDC": { v: 3.71, pourquoi: "8,7 sur 10 (CHES 2024)" },
+        "PS": { v: -1.14, pourquoi: "3,9 sur 10 (CHES 2024)" },
+        "C": { v: -2.29, pourquoi: "2,7 sur 10 (CHES 2024)" },
+        "PLR": { v: -2.43, pourquoi: "2,6 sur 10 (CHES 2024)" },
+        "VERT": { v: -1.57, pourquoi: "3,4 sur 10 (CHES 2024)" },
+        "PVL": { v: -2.29, pourquoi: "2,7 sur 10 (CHES 2024)" },
+        "PEV": { v: -3.67, pourquoi: "1,3 sur 10 (CHES 2024)" },
+        "UDF": { v: -1.0, pourquoi: "4,0 sur 10 (CHES 2024)" },
+        "MCG": { v: 3.2, pourquoi: "8,2 sur 10 (CHES 2024)" },
+        "LEGA": { v: 3.2, pourquoi: "8,2 sur 10 (CHES 2024)" },
       },
     },
     z: {
