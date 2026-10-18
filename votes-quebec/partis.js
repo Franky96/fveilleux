@@ -15,8 +15,8 @@
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent.
    Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre, droite, droite
    radicale ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
-   (encyclopédies, politologues), forcément approximatif ; la bande les range dans cet ordre (sans titres de groupe),
-   l'ordre de la page étant gardé à l'intérieur d'un groupe ; les hémicycles aussi. */
+   (encyclopédies, politologues), forcément approximatif ; la bande montre une colonne par groupe, dans cet ordre,
+   l'ordre de la page étant gardé à l'intérieur d'un groupe ; les hémicycles suivent le même ordre. */
 
 const P = (nom, info, bord = "aut") => ({ nom, info, bord });
 export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite radicale"], ["aut", "Autres"]];
@@ -163,9 +163,12 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
   const bouton = x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
     + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span title="${ESC(dico[x.cle].nom)}">${ESC(dico[x.cle].nom)}</span></button>`;
   // une seule ligne de boutons, rangés de gauche à droite (BORDS), sans titres de groupe
-  // titre au-dessus, puis une grille régulière de boutons de même largeur (colonnes alignées d'une rangée à l'autre)
+  // titre au-dessus, puis une colonne par groupe de l'axe gauche-droite (BORDS), de gauche à droite : nom du groupe en
+  // tête de colonne, ses partis empilés dessous ; toutes les colonnes ont la même largeur
+  const groupes = BORDS.map(([k, nom]) => [nom, liste.filter(x => (dico[x.cle].bord || "aut") === k)]).filter(([, xs]) => xs.length);
   sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>`
-    + `<div class="vi-partis-grille">${trierAxe(dico, liste.map(x => x.cle)).map(k => bouton(liste.find(x => x.cle === k))).join("")}</div>`
+    + `<div class="vi-partis-axe" style="--n:${groupes.length}">${groupes.map(([nom, xs]) => `<div class="vi-partis-col" role="group" aria-label="${ESC(nom)}">`
+      + `<span class="vi-partis-glab">${ESC(nom)}</span>${xs.map(bouton).join("")}</div>`).join("")}</div>`
     + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
 }
 

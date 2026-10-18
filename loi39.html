@@ -800,14 +800,18 @@
     @media (prefers-reduced-motion: reduce) { #viPlan [data-p] { transition: none; } }
     .vi-partis-note { flex-basis: 100%; color: var(--muted); font-size: 0.78rem; }
     @media (max-width: 700px) { .vi-partis-btn span { display: none; } }   /* téléphone : sigles seulement, le nom est dans la bulle */
-    /* rangement : titre au-dessus, grille de boutons de même largeur ; nom coupé proprement s'il est trop long (complet dans la bulle) */
-    .vi-partis-bande { display: grid; gap: 8px; padding: 12px 14px; }
-    .vi-partis-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 8px; }   /* auto-fit : peu de partis = boutons étirés sur toute la ligne */
-    .vi-partis-grille .vi-partis-btn { width: 100%; min-width: 0; border-radius: 10px; padding: 7px 11px; text-align: left; }
-    .vi-partis-grille .vi-partis-btn b { flex: none; }
-    .vi-partis-grille .vi-partis-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* rangement : titre au-dessus, puis une colonne par groupe gauche-droite (même largeur), nom du groupe en tête,
+       partis empilés dessous ; nom trop long coupé proprement (complet dans la bulle) ; écran étroit : colonnes à la ligne */
+    .vi-partis-bande { display: grid; gap: 10px; padding: 12px 14px; }
     .vi-partis-bande > .vi-partis-titre { margin: 0; }
-    @media (max-width: 700px) { .vi-partis-grille { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } }
+    .vi-partis-axe { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 10px 14px; align-items: start; }
+    .vi-partis-col { display: grid; gap: 6px; align-content: start; min-width: 0; }
+    .vi-partis-glab { padding-bottom: 5px; border-bottom: 1px solid var(--rule); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vi-partis-col .vi-partis-btn { width: 100%; min-width: 0; border-radius: 10px; padding: 7px 10px; text-align: left; }
+    .vi-partis-col .vi-partis-btn b { flex: none; }
+    .vi-partis-col .vi-partis-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (max-width: 1100px) { .vi-partis-axe { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); } }
+    @media (max-width: 700px) { .vi-partis-axe { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); } }
     .vi-partis-bulle { position: fixed; z-index: 1000; display: grid; gap: 4px; width: max-content; max-width: min(340px, calc(100vw - 16px)); padding: 10px 13px;
       border-left: 4px solid var(--c); border-radius: 10px; background: #0E1117; color: #F2F4F8; box-shadow: 0 12px 32px rgba(0,0,0,0.45);
       font-size: 0.85rem; line-height: 1.45; pointer-events: none; }
