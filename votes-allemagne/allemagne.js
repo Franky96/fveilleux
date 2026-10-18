@@ -11,6 +11,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
+import { anneaux, DESSOUS } from "../votes-quebec/anneau.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -148,7 +149,7 @@ function dessinerChambre() {
 
 /* ---------- carte ---------- */
 const MW = 600, MH = 720;
-let svg, gZ, gRid, gLand, gHach, gReg, gSel, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity;
+let svg, gZ, gRid, gLand, gHach, gReg, gSel, gAnn, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity;
 const PRESETS = {};
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function tri(parts) { return Object.entries(parts || {}).filter(([p]) => p !== "AUT" && p !== "IND").sort((a, b) => b[1] - a[1]); }
@@ -204,11 +205,17 @@ function ancre(f) {
   return ANCRE[k] = best;
 }
 const LBL_MIN_CIRC = 14, LBL_NAME = 70, NAME_ZOOM = 6;
+// sièges d'un Land (vue Länder) : la seconde voix les répartit Land par Land
+const siegesLand = L => (groupe() === "e25" ? R25.lands[L]?.sieges : PROJ?.sieges_land[L]) || {};
 function placerEtiquettes() {
   const el = svg.node(), px = Math.min(el.clientWidth / MW, el.clientHeight / MH) * curK;
   const hx = el.clientWidth / 2 / (px / curK), hy = el.clientHeight / 2 / (px / curK);
+  // vue Länder : anneau des sièges de chaque Land (votes-quebec/anneau.js), étiquette du Land décalée sous l'anneau
+  const avecAnneau = anneaux(gAnn, enLander() ? DATA.curRegionGeo.features.map(f => { const [x, y, rad] = ancre(f); return { id: f.properties.REG, x, y, rad, sieges: siegesLand(f.properties.REG) }; }) : [],
+    { px, coul: p => COUL[p] || COUL.AUT });
   gLbl.selectAll("g.vi-lab").each(function (f) {
-    const [x, y, rad] = ancre(f), room = rad * px, sx = curT.applyX(x), sy = curT.applyY(y);
+    const [x, y0, rad] = ancre(f), y = y0 + (avecAnneau.has(f.properties.REG) && f.properties.RID == null ? DESSOUS / px : 0);
+    const room = rad * px, sx = curT.applyX(x), sy = curT.applyY(y);
     const show = Math.abs(sx - MW / 2) <= hx && Math.abs(sy - MH / 2) <= hy && room >= LBL_MIN_CIRC;
     const g = d3.select(this).style("display", show ? null : "none");
     if (!show) return;
@@ -234,7 +241,7 @@ function construireCarte() {
   // hachures : circonscriptions dont le vainqueur n'obtient pas de siège (couverture insuffisante par les secondes voix)
   svg.append("defs").html(`<pattern id="vaHach" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><rect width="2" height="5" style="fill:var(--surface)" opacity="0.75"></rect></pattern>`);
   gZ = svg.append("g");
-  gRid = gZ.append("g"); gLand = gZ.append("g"); gHach = gZ.append("g"); gReg = gZ.append("g"); gSel = gZ.append("g"); gLbl = gZ.append("g");
+  gRid = gZ.append("g"); gLand = gZ.append("g"); gHach = gZ.append("g"); gReg = gZ.append("g"); gSel = gZ.append("g"); gAnn = gZ.append("g"); gLbl = gZ.append("g");
   gRid.selectAll("path").data(DATA.ridingGeo.features).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => DATA.ridings[f.properties.RID].n)
     .on("click", (e, f) => choisir(f.properties.RID))

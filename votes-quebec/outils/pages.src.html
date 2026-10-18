@@ -587,6 +587,11 @@
     .vi-carte:fullscreen .vf-an-carte, .vi-carte.lv-plein .vf-an-carte { display: block; }
     .vf-mode-lab .vf-an { font-size: 0.82rem; margin-left: 2px; }
     #viEchelle > .vf-an { font-size: 0.78rem; margin-right: 2px; }
+    /* anneau des sièges d'une région (votes-quebec/anneau.js : Loi 39, Allemagne, Suisse) */
+    .vi-anneau { pointer-events: none; }
+    .vi-anneau-fond { fill: var(--surface); opacity: 0.9; }
+    .vi-anneau-n { fill: #fff; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: rgba(0, 0, 0, 0.6); stroke-linejoin: round; }
+    .vi-anneau-total { fill: var(--ink); font-weight: 800; text-anchor: middle; font-variant-numeric: tabular-nums; }
     .va-voix { flex-basis: 100%; margin-top: 2px; color: var(--muted); }   /* Votes Allemagne : rappel des deux voix sous la légende */
     .vf-mode-lab { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
     .vf-hors .vi-serres { margin-top: 8px; }
