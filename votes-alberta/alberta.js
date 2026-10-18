@@ -8,7 +8,7 @@
    Contours des 87 circonscriptions (carte de 2017, utilisée en 2019 et en 2023) : data.json. */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 
@@ -656,7 +656,7 @@ function partisEnLice() {
   const cles = ["UCP", "NPD", "PT", "LIB", "VERT", "RPA"].filter(p => PARTIS.alberta[p]);
   sectionPartis(PARTIS.alberta, cles.map(p => ({ cle: p, etiquette: p, couleur: coul(p),
     detail: [N[p] ? `Projection : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b>${N[p].smax ? ` (${N[p].smin}–${N[p].smax})` : ""} · ${nf(N[p].v, 1)} % des voix` : "",
-      `Assemblée actuelle : ${act[p] || 0} siège${(act[p] || 0) > 1 ? "s" : ""}`, `élection de 2023 : ${e23[p] || 0} siège${(e23[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })));
+      `Assemblée actuelle : ${act[p] || 0} siège${(act[p] || 0) > 1 ? "s" : ""}`, `élection de 2023 : ${e23[p] || 0} siège${(e23[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })), { multi: AXES.alberta });
 }
 
 /* ---------- démarrage ---------- */

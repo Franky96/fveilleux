@@ -9,7 +9,7 @@
    Contours : data.json (outils/usa_geo.py, carte de 270toWin). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
@@ -1062,7 +1062,7 @@ function partisEnLice() {
   Object.values(SEN().etats).forEach(e => e.senateurs.forEach(x => { if (x.p) sen[x.p] = (sen[x.p] || 0) + 1; }));
   sectionPartis(PARTIS.usa, ["R", "D", "I"].map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
     detail: `Aujourd'hui : <b>${ch[p] || 0}</b> à la Chambre des représentants · <b>${sen[p] || 0}</b> au Sénat` })),
-    { note: "Les deux grands partis occupent presque tous les sièges du Congrès." });
+    { note: "Les deux grands partis occupent presque tous les sièges du Congrès.", multi: AXES.usa });
 }
 
 async function demarrer() {

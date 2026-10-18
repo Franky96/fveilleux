@@ -6,7 +6,7 @@
    tableaux Wikipédia qui citent chaque sondeur. Aucune projection en sièges (2 tours : trop incertain par circonscription). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS, bordDe, trierAxe } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
@@ -710,7 +710,7 @@ function partisEnLice() {
   const A = DATA.assemblee;
   sectionPartis(PARTIS.france, A.groupes.slice().sort((a, b) => b.n - a.n).map(g => ({ cle: g.id, etiquette: g.id, couleur: g.c,
     detail: `Assemblée nationale aujourd'hui : <b>${g.n} député${g.n > 1 ? "s" : ""}</b> sur 577` })),
-    { titre: "Groupes de l'Assemblée", note: "Les députés siègent par groupe : un groupe réunit un parti et ses alliés." });
+    { titre: "Groupes de l'Assemblée", note: "Les députés siègent par groupe : un groupe réunit un parti et ses alliés.", multi: AXES.france });
 }
 
 async function demarrer() {

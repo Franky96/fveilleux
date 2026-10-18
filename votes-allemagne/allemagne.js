@@ -7,7 +7,7 @@
    Bundeswahlleiterin (resultats-2025.json) ; contours des 299 circonscriptions (data.json, outils/allemagne_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS, bordDe, trierAxe } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
@@ -650,7 +650,7 @@ function partisEnLice() {
   const N = PROJ?.national || {}, e25 = SIEGES_DE.e25 || {};
   const ordre = Object.keys(PARTIS.allemagne).filter(p => p !== "Union" && (N[p] || e25[p])).sort((a, b) => (N[b]?.s || 0) - (N[a]?.s || 0) || (N[b]?.v || 0) - (N[a]?.v || 0));
   sectionPartis(PARTIS.allemagne, ordre.map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
-    detail: [N[p] ? `Projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> · ${nf(N[p].v, 1)} % des secondes voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })));
+    detail: [N[p] ? `Projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> · ${nf(N[p].v, 1)} % des secondes voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })), { multi: AXES.allemagne });
 }
 
 async function demarrer() {

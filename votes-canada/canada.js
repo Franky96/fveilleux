@@ -6,7 +6,7 @@
    Contours des 343 circonscriptions (découpage de 2023) : data.json (outils/canada_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 
@@ -659,7 +659,7 @@ function systemeElectoral() {
 function partisEnLice() {
   const N = PROJ.national, e25 = SIEGES_DE.e25 || {};
   sectionPartis(PARTIS.canada, Object.keys(PARTIS.canada).filter(p => N[p] || e25[p]).sort((a, b) => (N[b]?.s || 0) - (N[a]?.s || 0) || (N[b]?.v || 0) - (N[a]?.v || 0)).map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
-    detail: [N[p] ? `Projection Qc125 : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })));
+    detail: [N[p] ? `Projection Qc125 : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })), { multi: AXES.canada });
 }
 
 async function demarrer() {

@@ -7,7 +7,7 @@
    (sondages.json). Contours des 26 cantons : data.json (limites généralisées de l'OFS, état 2026). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS, bordDe, trierAxe } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
@@ -698,7 +698,7 @@ function partisEnLice() {
   const N = PROJ?.national || {};
   const ordre = Object.keys(PARTIS.suisse).filter(p => N[p]).sort((a, b) => (N[b].s || 0) - (N[a].s || 0) || (N[b].v || 0) - (N[a].v || 0));
   sectionPartis(PARTIS.suisse, ordre.map(p => ({ cle: p, etiquette: COURT[p] || p, couleur: COUL[p],
-    detail: `Conseil national, projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` })));
+    detail: `Conseil national, projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` })), { multi: AXES.suisse });
 }
 
 async function demarrer() {

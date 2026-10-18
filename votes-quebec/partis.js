@@ -118,7 +118,8 @@ export const PARTIS = {
 
 // Axes multiples (essai sur Votes Québec) : axes supplémentaires d'un pays, avec une valeur (v) et sa justification
 // factuelle par parti ; axe horizontal = colonne gauche-droite de la bande (BORDS), centre au milieu ; y = axe vertical
-// (2 et 3 axes), z = axe de profondeur (3 axes, vue 3D) ; max = valeur extrême possible
+// (2 et 3 axes), z = axe de profondeur (3 axes, vue 3D, facultatif) ; max = valeur extrême possible ; decal (facultatif) :
+// les crans affichent la note d'origine (v + decal) au lieu d'une valeur signée
 export const AXES = {
   quebec: {
     noteX: "Axe gauche-droite : groupe de la bande des partis.",
@@ -145,6 +146,169 @@ export const AXES = {
         CAQ: { v: 0, pourquoi: "autonomiste : nationaliste dans le Canada, contre un référendum" },
         PCQ: { v: 0, pourquoi: "autonomiste depuis 2026 : constitution québécoise et rapatriement de pouvoirs dans le Canada, contre un référendum" },
         PLQ: { v: -2, pourquoi: "fédéraliste, contre un référendum" },
+      },
+    },
+  },
+  // autres pays : enquêtes d'experts (CHES 2024 pour l'Europe, Global Party Survey 2019 pour le Canada et les États-Unis),
+  // valeurs centrées (v = note − decal ; decal remet la note d'origine sur les crans) ; Alberta : camp au référendum
+  canada: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Valeurs sociales", bas: "libérales", haut: "conservatrices", max: 5, decal: 5, bouts3: ["Libéral", "Conservateur"],
+      note: "Axe des valeurs : note de l'enquête d'experts Global Party Survey (Norris, 2019), de 0 (libéral) à 10 (conservateur) sur les valeurs sociales.",
+      valeurs: {
+        "PLC": { v: -2.4, pourquoi: "2,6 sur 10 (Global Party Survey 2019)" },
+        "PCC": { v: 2.5, pourquoi: "7,5 sur 10 (Global Party Survey 2019)" },
+        "BQ": { v: -2.42, pourquoi: "2,6 sur 10 (Global Party Survey 2019)" },
+        "NPD": { v: -3.5, pourquoi: "1,5 sur 10 (Global Party Survey 2019)" },
+        "PVC": { v: -2.86, pourquoi: "2,1 sur 10 (Global Party Survey 2019)" },
+      },
+    },
+    z: {
+      titre: "Populisme", bas: "pluraliste", haut: "populiste", max: 5, decal: 5, bouts3: ["Pluraliste", "Populiste"],
+      note: "Axe du populisme : discours du parti dans la même enquête (Global Party Survey 2019), de 0 (pluraliste) à 10 (populiste).",
+      valeurs: {
+        "PLC": { v: -3.0, pourquoi: "2,0 sur 10 (Global Party Survey 2019)" },
+        "PCC": { v: 0.09, pourquoi: "5,1 sur 10 (Global Party Survey 2019)" },
+        "BQ": { v: -1.07, pourquoi: "3,9 sur 10 (Global Party Survey 2019)" },
+        "NPD": { v: -2.69, pourquoi: "2,3 sur 10 (Global Party Survey 2019)" },
+        "PVC": { v: -3.08, pourquoi: "1,9 sur 10 (Global Party Survey 2019)" },
+      },
+    },
+  },
+  usa: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Valeurs sociales", bas: "libérales", haut: "conservatrices", max: 5, decal: 5, bouts3: ["Libéral", "Conservateur"],
+      note: "Axe des valeurs : note de l'enquête d'experts Global Party Survey (Norris, 2019), de 0 (libéral) à 10 (conservateur) sur les valeurs sociales.",
+      valeurs: {
+        "D": { v: -2.59, pourquoi: "2,4 sur 10 (Global Party Survey 2019)" },
+        "R": { v: 3.3, pourquoi: "8,3 sur 10 (Global Party Survey 2019)" },
+      },
+    },
+    z: {
+      titre: "Populisme", bas: "pluraliste", haut: "populiste", max: 5, decal: 5, bouts3: ["Pluraliste", "Populiste"],
+      note: "Axe du populisme : discours du parti dans la même enquête (Global Party Survey 2019), de 0 (pluraliste) à 10 (populiste).",
+      valeurs: {
+        "D": { v: -1.29, pourquoi: "3,7 sur 10 (Global Party Survey 2019)" },
+        "R": { v: 2.83, pourquoi: "7,8 sur 10 (Global Party Survey 2019)" },
+      },
+    },
+  },
+  france: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Valeurs (GAL-TAN)", bas: "progressistes", haut: "traditionalistes", max: 5, decal: 5, bouts3: ["Progressiste", "Traditionaliste"],
+      note: "Axe des valeurs : note GAL-TAN de l'enquête d'experts Chapel Hill (CHES 2024), de 0 (progressiste-libertaire) à 10 (traditionaliste-autoritaire-nationaliste).",
+      valeurs: {
+        "LFI-NFP": { v: -3.18, pourquoi: "1,8 sur 10 (CHES 2024)" },
+        "GDR": { v: -1.45, pourquoi: "3,5 sur 10 (CHES 2024)" },
+        "ECOS": { v: -3.3, pourquoi: "1,7 sur 10 (CHES 2024)" },
+        "SOC": { v: -2.27, pourquoi: "2,7 sur 10 (CHES 2024)" },
+        "EPR": { v: -0.91, pourquoi: "4,1 sur 10 (CHES 2024)" },
+        "DEM": { v: -0.5, pourquoi: "4,5 sur 10 (CHES 2024)" },
+        "HOR": { v: 0.3, pourquoi: "5,3 sur 10 (CHES 2024)" },
+        "DR": { v: 2.18, pourquoi: "7,2 sur 10 (CHES 2024)" },
+        "RN": { v: 3.36, pourquoi: "8,4 sur 10 (CHES 2024)" },
+      },
+    },
+    z: {
+      titre: "Intégration européenne", bas: "contre", haut: "pour", max: 3, decal: 4, bouts3: ["Eurosceptique", "Pro-européen"],
+      note: "Axe européen : position sur l'intégration européenne dans la même enquête (CHES 2024), de 1 (très opposé) à 7 (très favorable).",
+      valeurs: {
+        "LFI-NFP": { v: -1.0, pourquoi: "3,0 sur 7 (CHES 2024)" },
+        "GDR": { v: -0.89, pourquoi: "3,1 sur 7 (CHES 2024)" },
+        "ECOS": { v: 2.2, pourquoi: "6,2 sur 7 (CHES 2024)" },
+        "SOC": { v: 2.27, pourquoi: "6,3 sur 7 (CHES 2024)" },
+        "EPR": { v: 2.27, pourquoi: "6,3 sur 7 (CHES 2024)" },
+        "DEM": { v: 2.82, pourquoi: "6,8 sur 7 (CHES 2024)" },
+        "HOR": { v: 2.44, pourquoi: "6,4 sur 7 (CHES 2024)" },
+        "DR": { v: 1.27, pourquoi: "5,3 sur 7 (CHES 2024)" },
+        "RN": { v: -1.82, pourquoi: "2,2 sur 7 (CHES 2024)" },
+      },
+    },
+  },
+  allemagne: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Valeurs (GAL-TAN)", bas: "progressistes", haut: "traditionalistes", max: 5, decal: 5, bouts3: ["Progressiste", "Traditionaliste"],
+      note: "Axe des valeurs : note GAL-TAN de l'enquête d'experts Chapel Hill (CHES 2024), de 0 (progressiste-libertaire) à 10 (traditionaliste-autoritaire-nationaliste).",
+      valeurs: {
+        "CDU": { v: 1.56, pourquoi: "6,6 sur 10 (CHES 2024)" },
+        "CSU": { v: 2.54, pourquoi: "7,5 sur 10 (CHES 2024)" },
+        "SPD": { v: -1.39, pourquoi: "3,6 sur 10 (CHES 2024)" },
+        "Grüne": { v: -3.39, pourquoi: "1,6 sur 10 (CHES 2024)" },
+        "Linke": { v: -2.71, pourquoi: "2,3 sur 10 (CHES 2024)" },
+        "AfD": { v: 4.39, pourquoi: "9,4 sur 10 (CHES 2024)" },
+        "BSW": { v: 2.06, pourquoi: "7,1 sur 10 (CHES 2024)" },
+        "FDP": { v: -1.78, pourquoi: "3,2 sur 10 (CHES 2024)" },
+        "FW": { v: 1.7, pourquoi: "6,7 sur 10 (CHES 2024)" },
+      },
+    },
+    z: {
+      titre: "Intégration européenne", bas: "contre", haut: "pour", max: 3, decal: 4, bouts3: ["Eurosceptique", "Pro-européen"],
+      note: "Axe européen : position sur l'intégration européenne dans la même enquête (CHES 2024), de 1 (très opposé) à 7 (très favorable).",
+      valeurs: {
+        "CDU": { v: 2.42, pourquoi: "6,4 sur 7 (CHES 2024)" },
+        "CSU": { v: 1.5, pourquoi: "5,5 sur 7 (CHES 2024)" },
+        "SPD": { v: 2.37, pourquoi: "6,4 sur 7 (CHES 2024)" },
+        "Grüne": { v: 2.79, pourquoi: "6,8 sur 7 (CHES 2024)" },
+        "Linke": { v: -0.28, pourquoi: "3,7 sur 7 (CHES 2024)" },
+        "AfD": { v: -2.11, pourquoi: "1,9 sur 7 (CHES 2024)" },
+        "BSW": { v: -1.58, pourquoi: "2,4 sur 7 (CHES 2024)" },
+        "FDP": { v: 1.84, pourquoi: "5,8 sur 7 (CHES 2024)" },
+        "FW": { v: 0.0, pourquoi: "4,0 sur 7 (CHES 2024)" },
+      },
+    },
+  },
+  suisse: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Valeurs (GAL-TAN)", bas: "progressistes", haut: "traditionalistes", max: 5, decal: 5, bouts3: ["Progressiste", "Traditionaliste"],
+      note: "Axe des valeurs : note GAL-TAN de l'enquête d'experts Chapel Hill (CHES 2024), de 0 (progressiste-libertaire) à 10 (traditionaliste-autoritaire-nationaliste).",
+      valeurs: {
+        "UDC": { v: 4.07, pourquoi: "9,1 sur 10 (CHES 2024)" },
+        "PS": { v: -3.8, pourquoi: "1,2 sur 10 (CHES 2024)" },
+        "C": { v: 0.87, pourquoi: "5,9 sur 10 (CHES 2024)" },
+        "PLR": { v: 0.13, pourquoi: "5,1 sur 10 (CHES 2024)" },
+        "VERT": { v: -4.0, pourquoi: "1,0 sur 10 (CHES 2024)" },
+        "PVL": { v: -2.8, pourquoi: "2,2 sur 10 (CHES 2024)" },
+        "PEV": { v: 2.25, pourquoi: "7,2 sur 10 (CHES 2024)" },
+        "UDF": { v: 4.25, pourquoi: "9,2 sur 10 (CHES 2024)" },
+        "MCG": { v: 2.75, pourquoi: "7,8 sur 10 (CHES 2024)" },
+        "LEGA": { v: 3.6, pourquoi: "8,6 sur 10 (CHES 2024)" },
+      },
+    },
+    z: {
+      titre: "Intégration européenne", bas: "contre", haut: "pour", max: 3, decal: 4, bouts3: ["Eurosceptique", "Pro-européen"],
+      note: "Axe européen : position sur l'intégration européenne dans la même enquête (CHES 2024), de 1 (très opposé) à 7 (très favorable).",
+      valeurs: {
+        "UDC": { v: -2.93, pourquoi: "1,1 sur 7 (CHES 2024)" },
+        "PS": { v: 1.6, pourquoi: "5,6 sur 7 (CHES 2024)" },
+        "C": { v: 0.07, pourquoi: "4,1 sur 7 (CHES 2024)" },
+        "PLR": { v: 0.13, pourquoi: "4,1 sur 7 (CHES 2024)" },
+        "VERT": { v: 0.87, pourquoi: "4,9 sur 7 (CHES 2024)" },
+        "PVL": { v: 2.0, pourquoi: "6,0 sur 7 (CHES 2024)" },
+        "PEV": { v: -0.1, pourquoi: "3,9 sur 7 (CHES 2024)" },
+        "UDF": { v: -2.17, pourquoi: "1,8 sur 7 (CHES 2024)" },
+        "MCG": { v: -2.73, pourquoi: "1,3 sur 7 (CHES 2024)" },
+        "LEGA": { v: -2.77, pourquoi: "1,2 sur 7 (CHES 2024)" },
+      },
+    },
+  },
+  alberta: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Séparation de l'Alberta", bas: "rester au Canada", haut: "séparation", max: 2,
+      note: "Axe de la séparation : camp du parti au référendum du 19 octobre 2026 (rester au Canada ou lancer le processus de séparation), "
+        + "d'après le relevé de Daveberta (17 octobre 2026), CP24 et CTV : séparation = +2, parti divisé dont le chef appuie Rester = −1, Rester = −2.",
+      valeurs: {
+        RPA: { v: 2, pourquoi: "pour un référendum exécutoire sur l'indépendance ; son chef, Cameron Davies, appuie l'option séparation" },
+        UCP: { v: -1, pourquoi: "parti divisé : la première ministre Danielle Smith et une quinzaine de députés votent Rester ; un député et des responsables du parti appuient la séparation ; son gouvernement a tenu le référendum" },
+        NPD: { v: -2, pourquoi: "campagne « For Alberta, For Canada » pour rester ; Naheed Nenshi a demandé d'annuler ou de reporter le vote" },
+        LIB: { v: -2, pourquoi: "campagne « Alberta in Canada » pour rester" },
+        VERT: { v: -2, pourquoi: "son chef, James Anderson, appuie l'option Rester" },
+        PT: { v: -2, pourquoi: "son chef, Peter Guthrie, appuie l'option Rester" },
       },
     },
   },
@@ -301,31 +465,51 @@ function cadreMulti(sec, box) {
   const g = { l: 56, r: 56, t: 30, b: 46 }, place = box.clientWidth - g.l - g.r;
   const S2 = Math.max(200, Math.min(440, place)), S3 = Math.max(S2, Math.min(640, place, innerHeight - 230));
   const S = Math.round(deux ? S2 + (S3 - S2) * (sec._grand ?? 1) : S2);
-  const note = [m.y.note, deux && m.z.note, m.noteX].filter(Boolean).join(" ");
+  const sans = sec._items.filter(it => !m.y.valeurs[it.cle] || (deux && !m.z.valeurs[it.cle])).map(it => it.etiquette || it.cle);
+  const note = [m.y.note, deux && m.z.note, m.noteX, sans.length && `Sans donnée : ${sans.join(", ")}.`].filter(Boolean).join(" ");
   return { m, pts, mx, my, mz, g, S, W: S + g.l + g.r, H: S + g.t + g.b, note };
 }
 function dessinerMulti(sec) {
   const box = sec.querySelector(".vi-partis-plan2"); if (!sec._multi || !box) return;
   if (sec._vue === 3 && sec._multi.z) return dessiner3D(sec, true);
-  const { m: M, pts, mx, my, g, S, W, H, note } = cadreMulti(sec, box), m = M.y;
+  const { m: M, pts, mx, my, g, S, W, note } = cadreMulti(sec, box), m = M.y;
+  // beaucoup de groupes (France, Allemagne : un cran étroit) : noms des groupes inclinés, et plus de place dessous
+  const incline = S / (2 * mx) < 78, H = S + g.t + (incline ? 92 : g.b);
   const X = x => g.l + (x + mx) / (2 * mx) * S, Y = y => g.t + (my - y) / (2 * my) * S;
   let fond = "";
   for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) {   // un repère par groupe gauche-droite (nom sur deux lignes au trait d'union)
     const b = BORDS[r + RANG.c]; if (!b || b[0] === "aut") continue;
     const [l1, l2] = b[1].includes("-") ? [b[1].slice(0, b[1].indexOf("-") + 1), b[1].slice(b[1].indexOf("-") + 1)] : [b[1], ""];
     fond += `<line class="vi-m-grille" x1="${X(r)}" x2="${X(r)}" y1="${g.t}" y2="${g.t + S}"/>`
-      + `<text class="vi-m-tick" x="${X(r)}" y="${g.t + S + 17}" text-anchor="middle">${ESC(l1)}${l2 ? `<tspan x="${X(r)}" dy="12">${ESC(l2)}</tspan>` : ""}</text>`;
+      + (incline ? `<text class="vi-m-tick" x="${X(r) + 4}" y="${g.t + S + 14}" text-anchor="end" transform="rotate(-38 ${X(r) + 4} ${g.t + S + 14})">${ESC(b[1])}</text>`
+        : `<text class="vi-m-tick" x="${X(r)}" y="${g.t + S + 17}" text-anchor="middle">${ESC(l1)}${l2 ? `<tspan x="${X(r)}" dy="12">${ESC(l2)}</tspan>` : ""}</text>`);
   }
   for (let v = -m.max; v <= m.max; v++) {   // quadrillage : une ligne par cran de l'axe vertical (0 = axe), valeur à gauche
     if (v) fond += `<line class="vi-m-grille" x1="${g.l}" x2="${g.l + S}" y1="${Y(v)}" y2="${Y(v)}"/>`;
-    fond += `<text class="vi-m-val" x="${g.l - 7}" y="${Y(v) + 3.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`;
+    fond += `<text class="vi-m-val" x="${g.l - 7}" y="${Y(v) + 3.5}" text-anchor="end">${m.decal != null ? v + m.decal : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}`}</text>`;
   }
   fond += `<rect class="vi-m-cadre" x="${g.l}" y="${g.t}" width="${S}" height="${S}"/>`
     + `<line class="vi-m-axe" x1="${g.l}" x2="${g.l + S}" y1="${Y(0)}" y2="${Y(0)}"/><line class="vi-m-axe" x1="${X(0)}" x2="${X(0)}" y1="${g.t}" y2="${g.t + S}"/>`
     + `<text class="vi-m-titre" x="${X(0)}" y="${g.t - 11}" text-anchor="middle">▲ ${ESC(m.titre)} : ${ESC(m.haut)}</text>`
     + `<text class="vi-m-titre" x="${X(0) + 8}" y="${g.t + S - 7}">▼ ${ESC(m.bas)}</text>`;
-  const points = pts.map(p => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
-    + `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9"/><text x="${X(p.x) + 14}" y="${Y(p.y) + 4.5}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
+  // deux points presque confondus dans une même colonne : écartés côte à côte
+  const pl = pts.map(p => ({ p, cx: X(p.x), cy: Y(p.y) })), parCol = {};
+  pl.forEach(q => (parCol[q.p.x] ||= []).push(q));
+  Object.values(parCol).forEach(col => { col.sort((a, b) => a.cy - b.cy);
+    col.forEach((q, i) => { if (i && q.cy - col[i - 1].cy < 10) { col[i - 1].cx -= 8; q.cx += 8; } }); });
+  // étiquettes : pour chaque parti (dans l'ordre de la bande), la première place libre parmi à droite, à gauche, puis
+  // un peu au-dessus ou au-dessous, sans toucher les points ni les étiquettes déjà placées
+  const occupe = pl.map(q => ({ x1: q.cx - 10, x2: q.cx + 10, y1: q.cy - 10, y2: q.cy + 10, q }));
+  const boite = (q, [dx, dy, gauche], w) => ({ x1: gauche ? q.cx + dx - w : q.cx + dx, x2: gauche ? q.cx + dx : q.cx + dx + w, y1: q.cy + dy - 8, y2: q.cy + dy + 8, q });
+  const libre = r => !occupe.some(b => b.q !== r.q && r.x1 < b.x2 && r.x2 > b.x1 && r.y1 < b.y2 && r.y2 > b.y1);
+  pl.forEach(q => {
+    const w = (q.p.it.etiquette || q.p.it.cle).length * 8.5 + 2;
+    const essais = [[14, 0, false], [-14, 0, true], [14, -13, false], [14, 13, false], [-14, -13, true], [-14, 13, true]];
+    const e = essais.find(e => libre(boite(q, e, w))) || essais[0];
+    q.lx = q.cx + e[0]; q.ly = q.cy + e[1] + 4.5; q.gauche = e[2]; occupe.push(boite(q, e, w));
+  });
+  const points = pl.map(({ p, cx, cy, lx, ly, gauche }) => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
+    + `<circle cx="${cx}" cy="${cy}" r="9"/><text x="${lx}" y="${ly}"${gauche ? ' text-anchor="end"' : ""}>${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
   box.innerHTML = `<svg class="vi-m-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon l'axe gauche-droite et l'axe ${m.titre.toLowerCase()}`)}">`
     + `<g class="vi-m-fond">${fond}</g>${points}</svg><small class="vi-partis-note">${ESC(note)}</small>`;
 }
