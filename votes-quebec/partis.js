@@ -13,13 +13,13 @@
              couleur du parti sur la page, phrase de chiffres tirés des données de la page)
      titre : libellé de la bande (« Partis en lice » par défaut) ; note : courte précision affichée au bout de la bande
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent.
-   Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre-gauche, centre, droite,
-   droite populiste, droite nationaliste ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
+   Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre-gauche, centre, centre-droit,
+   droite, droite populiste, droite nationaliste ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
    (encyclopédies, politologues), forcément approximatif ; la bande montre une colonne par groupe, dans cet ordre,
    l'ordre de la page étant gardé à l'intérieur d'un groupe ; les hémicycles suivent le même ordre. */
 
 const P = (nom, info, bord = "aut") => ({ nom, info, bord });
-export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["cg", "Centre-gauche"], ["c", "Centre"], ["d", "Droite"], ["dp", "Droite populiste"], ["dr", "Droite nationaliste"], ["aut", "Autres"]];
+export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["cg", "Centre-gauche"], ["c", "Centre"], ["cd", "Centre-droit"], ["d", "Droite"], ["dp", "Droite populiste"], ["dr", "Droite nationaliste"], ["aut", "Autres"]];
 const RANG = Object.fromEntries(BORDS.map(([k], i) => [k, i]));
 // place sur l'axe d'une clé de parti : dictionnaire du pays, sinon « extra » (clés absentes du dictionnaire), sinon « autres »
 export const bordDe = (dico, k, extra = {}) => dico?.[k]?.bord || extra[k] || "aut";
@@ -33,7 +33,7 @@ export const PARTIS = {
   quebec: {
     PQ: P("Parti québécois", "Parti souverainiste et social-démocrate fondé en 1968 par René Lévesque.", "cg"),
     PLQ: P("Parti libéral du Québec", "Parti fédéraliste de centre, le plus ancien parti du Québec (1867).", "c"),
-    CAQ: P("Coalition avenir Québec", "Parti nationaliste de centre droit fondé en 2011 ; il a gouverné de 2018 à 2026.", "d"),
+    CAQ: P("Coalition avenir Québec", "Parti nationaliste de centre droit fondé en 2011 ; il a gouverné de 2018 à 2026.", "cd"),
     PCQ: P("Parti conservateur du Québec", "Parti de droite, relancé en 2009.", "d"),
     QS: P("Québec solidaire", "Parti de gauche, souverainiste et écologiste, fondé en 2006.", "g"),
   },
