@@ -325,8 +325,8 @@ function dessinerMulti(sec) {
 }
 
 // vue 3D (3 axes) : projection orthogonale du cube x · y · z tourné (lacet a, tangage b), réduite pour tenir dans le
-// carré ; à l'angle 0 elle se confond avec la vue 2 axes, d'où le passage animé de l'une à l'autre ; ombres au sol et
-// traits de rappel pour lire la profondeur, partis peints du plus loin au plus proche
+// carré ; à l'angle 0 elle se confond avec la vue 2 axes, d'où le passage animé de l'une à l'autre ; quadrillage dans
+// tout le cube pour lire la profondeur, partis peints du plus loin au plus proche
 const VUE3 = [-0.62, 0.38];
 function dessiner3D(sec, complet) {
   const box = sec.querySelector(".vi-partis-plan2"); if (!sec._multi?.z || !box) return;
@@ -340,21 +340,19 @@ function dessiner3D(sec, complet) {
   const P = (x, y, z) => { const r = rot(x, y, z); return { x: cx + r[0] * k * S / 2, y: cy - r[1] * k * S / 2, d: r[2] }; };
   const f = n => n.toFixed(1);
   let fond = "";
-  // quadrillage des trois faces du fond (pour chaque axe, la face la plus éloignée : elle change quand le cube tourne) ;
-  // crans : groupes gauche-droite en x, valeurs entières en y et z, en coordonnées du cube (−1 à 1)
+  // quadrillage dans tout le cube : pour chaque axe, une ligne à chaque croisement des crans des deux autres (groupes
+  // gauche-droite en x, valeurs entières en y et z, en coordonnées du cube −1 à 1) ; les lignes proches un peu plus marquées
   const crans = [[], [], []];
   for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) crans[0].push(r / mx);
   for (let v = -m.y.max; v <= m.y.max; v++) crans[1].push(v / my);
   for (let v = -m.z.max; v <= m.z.max; v++) crans[2].push(v / mz);
   for (let i = 0; i < 3; i++) {
-    const face = s => { const c = [0, 0, 0]; c[i] = s; return P(...c).d; };
-    const s = face(1) > face(-1) ? 1 : -1, [j, l] = [0, 1, 2].filter(n => n !== i);
-    const pt = (vj, vl) => { const c = [0, 0, 0]; c[i] = s; c[j] = vj; c[l] = vl; return P(...c); };
-    for (const [a1, a2, liste] of [[j, l, crans[j]], [l, j, crans[l]]])
-      for (const v of liste) {
-        const p = a1 === j ? pt(v, -1) : pt(-1, v), q = a1 === j ? pt(v, 1) : pt(1, v);
-        fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}"/>`;
-      }
+    const [j, l] = [0, 1, 2].filter(n => n !== i);
+    for (const vj of crans[j]) for (const vl of crans[l]) {
+      const c = [0, 0, 0]; c[j] = vj; c[l] = vl;
+      c[i] = -1; const p = P(...c); c[i] = 1; const q = P(...c);
+      fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}" opacity="${Math.max(0.35, Math.min(1, 0.75 - 0.25 * (p.d + q.d) / 2)).toFixed(2)}"/>`;
+    }
   }
   coins.forEach((c, i) => coins.forEach((e, j) => {   // arêtes du cube (coins qui diffèrent d'une seule coordonnée), celles de derrière plus pâles
     if (j <= i || c.filter((v, n) => v !== e[n]).length !== 1) return;
@@ -373,12 +371,10 @@ function dessiner3D(sec, complet) {
       bouts += `<text class="vi-m-titre vi-m-bout" x="${f(t.x)}" y="${f(t.y + 4)}" text-anchor="middle" opacity="${vis.toFixed(2)}">${ESC(txt)}</text>`;
     }
   }
-  const ombres = pts.map(p => { const sol = P(p.x / mx, -1, p.z / mz), pt = P(p.x / mx, p.y / my, p.z / mz);
-    return `<line class="vi-m-rappel" x1="${f(sol.x)}" y1="${f(sol.y)}" x2="${f(pt.x)}" y2="${f(pt.y)}"/><ellipse class="vi-m-ombre" cx="${f(sol.x)}" cy="${f(sol.y)}" rx="7" ry="${f(2 + 3 * Math.abs(sb))}"/>`; }).join("");
   const points = pts.map(p => ({ p, q: P(p.x / mx, p.y / my, p.z / mz) })).sort((u, v) => v.q.d - u.q.d)
     .map(({ p, q }) => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
       + `<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(9 - 2 * q.d)}"/><text x="${f(q.x + 14)}" y="${f(q.y + 4.5)}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
-  const dedans = `<g class="vi-m-fond">${fond}${ombres}</g>${points}<g class="vi-m-fond">${bouts}</g>`;
+  const dedans = `<g class="vi-m-fond">${fond}</g>${points}<g class="vi-m-fond">${bouts}</g>`;
   const svg = box.querySelector(".vi-m-3d");
   if (!complet && svg && +svg.getAttribute("width") === W) { svg.innerHTML = dedans; return; }   // pendant une rotation : même svg (glisser continue)
   box.innerHTML = `<svg class="vi-m-svg vi-m-3d" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon trois axes : gauche-droite, ${m.y.titre.toLowerCase()}, ${m.z.titre.toLowerCase()} ; glisser pour tourner`)}">${dedans}</svg>`
