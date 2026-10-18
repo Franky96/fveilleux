@@ -116,7 +116,7 @@ function dessinerTete() {
   // encadré d'explication retiré de la page : le bouton « Comprendre le système politique et électoral » s'en charge
   // (élément gardé hors de la page pour ne pas toucher au reste du code)
   const ex = document.createElement("div");
-  ex.innerHTML = `<p>Les 630 députés du Bundestag sont élus à la proportionnelle : chaque électeur a deux voix, la première pour un candidat de sa circonscription, la seconde pour la liste d'un parti. Ce sont les secondes voix qui fixent le nombre de sièges de chaque parti, s'il obtient au moins 5 % (ou trois circonscriptions). Aucun parti n'a la majorité seul : le chancelier est élu par une coalition d'au moins 316 députés. La prochaine élection est prévue au début de ${AN(2029)}, sauf dissolution.</p>`;
+  ex.innerHTML = `<p>Les 630 députés du Bundestag sont élus à la proportionnelle : chaque électeur a deux voix, la première pour un candidat de son Wahlkreis, la seconde pour la liste d'un parti. Ce sont les secondes voix qui fixent le nombre de sièges de chaque parti, s'il obtient au moins 5 % (ou trois Wahlkreise). Aucun parti n'a la majorité seul : le chancelier est élu par une coalition d'au moins 316 députés. La prochaine élection est prévue au début de ${AN(2029)}, sauf dissolution.</p>`;
   let choix = $("vcChambre");
   if (!choix) {
     choix = document.createElement("div"); choix.id = "vcChambre"; choix.className = "lv-groupe vi-periodes vc-choix"; choix.setAttribute("role", "group"); choix.setAttribute("aria-label", "Bundestag affiché");
@@ -327,9 +327,9 @@ function peindre() {
     return;
   }
   $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
-    ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque circonscription (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}, plus de circonscriptions en zoomant` : ""}</span>`
-    : etat.mode === "e25z" ? `<span>Couleur : parti arrivé en tête des secondes voix (listes) dans chaque circonscription en ${AN(2025)}. Plus la couleur est foncée, plus son score est élevé.</span>`
-    : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : etat.mode === "e25" ? "élu" : "en tête"} à la 1<sup>re</sup> voix (candidats) dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>${etat.mode === "second" ? "" : hach}`);
+    ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Wahlkreis (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}, plus de Wahlkreise en zoomant` : ""}</span>`
+    : etat.mode === "e25z" ? `<span>Couleur : parti arrivé en tête des secondes voix (listes) dans chaque Wahlkreis en ${AN(2025)}. Plus la couleur est foncée, plus son score est élevé.</span>`
+    : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : etat.mode === "e25" ? "élu" : "en tête"} à la 1<sup>re</sup> voix (candidats) dans chaque Wahlkreis (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>${etat.mode === "second" ? "" : hach}`);
 }
 function infobulle(e, f) {
   const i = f.properties.RID, r = DATA.ridings[i], t = $("viTip"), cp = CP[i], ce = CE[i];
@@ -338,7 +338,7 @@ function infobulle(e, f) {
   t.hidden = false; t.style.left = px + "px"; t.style.top = (e.clientY - box.top + 14) + "px";
   const reg = DATA.regions.find(x => x.code === r.r)?.name || "";
   const top3 = parts => tri(parts).slice(0, 3).map(([p, v]) => `${lab(p)} ${nf(v, 0)} %`).join(" · ");
-  t.innerHTML = `<b>${esc(r.n)}</b><small>${esc(reg)} · circonscription ${+r.id}</small><br>`
+  t.innerHTML = `<b>${esc(r.n)}</b><small>${esc(reg)} · Wahlkreis ${+r.id}</small><br>`
     + (ce ? (ce.siege ? `Élu en 2025 : ${esc(ce.elu || "")} (${lab(ce.g)}, ${nf(ce.e[ce.g], 1)} %)` : `En tête en 2025 : ${lab(ce.g)} (${nf(ce.e[ce.g], 1)} %), sans siège`) + "<br>" : "")
     + (ce ? `<small>2e voix 2025 : ${top3(ce.z)}</small><br>` : "") + (cp ? `<small>Projection, 1re voix : ${top3(cp.e)}</small>` : "");
 }
@@ -350,7 +350,7 @@ function infobulleLand(e, f) {
   const top3 = parts => tri(parts || {}).slice(0, 3).map(([p, v]) => `${lab(p)} ${nf(v, 0)} %`).join(" · ");
   const sg = d => Object.entries(d || {}).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${lab(p)} ${n}`).join(" · ");
   const n = DATA.ridings.filter(r => r.r === L).length;
-  t.innerHTML = `<b>${esc(nomLand(L))}</b><small>Land · ${n} circonscription${n > 1 ? "s" : ""}</small><br>`
+  t.innerHTML = `<b>${esc(nomLand(L))}</b><small>Land · ${n} Wahlkreis${n > 1 ? "e" : ""}</small><br>`
     + (PROJ ? `<small>Projection, 2e voix : ${top3(PROJ.lands[L])}</small><br><small>Sièges (projection) : ${sg(PROJ.sieges_land[L])}</small><br>` : "")
     + `<small>2e voix 2025 : ${top3(R25.lands[L]?.z)}</small>`;
 }
@@ -384,7 +384,7 @@ const listeCirc = (items, droite) => `<ul class="vi-serres">${items.map(([i, c])
 function meilleures(arr, quoi) {
   if (!voteMode() || !etat.parti) return "";
   const p = etat.parti, top = arr.map((c, i) => [i, c]).filter(([i, c]) => c && partDe(c.z, p) && dans(i)).sort((a, b) => partDe(b[1].z, p) - partDe(a[1].z, p)).slice(0, 10);
-  return `<span class="lv-eyebrow">Meilleures circonscriptions de ${lab(p)} · secondes voix (${quoi})</span>${listeCirc(top.map(([i, c]) => [i, { ...c, g: p === "Union" ? (c.z.CSU ? "CSU" : "CDU") : p }]), c => `${nf(partDe(c.z, p), 1)} %`)}`;
+  return `<span class="lv-eyebrow">Meilleurs Wahlkreise de ${lab(p)} · secondes voix (${quoi})</span>${listeCirc(top.map(([i, c]) => [i, { ...c, g: p === "Union" ? (c.z.CSU ? "CSU" : "CDU") : p }]), c => `${nf(partDe(c.z, p), 1)} %`)}`;
 }
 // coalitions : simple arithmétique des sièges (la CDU/CSU exclut toute coalition avec l'AfD et avec Die Linke)
 const COALITIONS = [["Union", "SPD"], ["Union", "Grüne"], ["Union", "SPD", "Grüne"], ["Union", "SPD", "FDP"], ["Union", "Grüne", "FDP"], ["SPD", "Grüne", "Linke"], ["SPD", "Grüne", "FDP"], ["Union", "AfD"]];
@@ -401,7 +401,7 @@ function dessinerPanneau() {
     const L = etat.reg, nomR = L ? nomLand(L) : "Toute l'Allemagne", total = DATA.ridings.filter((x, i) => dans(i)).length;
     const tete = (eb, sg, n) => { const G = parGroupe(sg), lead = Object.keys(G).filter(p => p !== "VAC" && p !== "FL").sort((a, b) => G[b] - G[a])[0];
       return `${selecteurRegions()}<span class="lv-eyebrow">${eb}</span><h3>${esc(nomR)}</h3>
-      <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[lead]}"></i>${lab(lead)} : ${G[lead]} / ${n} sièges</span>${L ? `<span class="vi-pill">${total} circonscriptions</span>` : `<span class="vi-pill">Majorité : ${MAJ}</span>`}</div>`; };
+      <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[lead]}"></i>${lab(lead)} : ${G[lead]} / ${n} sièges</span>${L ? `<span class="vi-pill">${total} Wahlkreise</span>` : `<span class="vi-pill">Majorité : ${MAJ}</span>`}</div>`; };
     const lignesVS = (vote, sg, ref, cols) => cols.filter(p => vote[p] >= 0.5 || sg[p]).sort((a, b) => (sg[b] || 0) - (sg[a] || 0) || (vote[b] || 0) - (vote[a] || 0))
       .map(p => jauge(lab(p), COUL[p] || COUL.AUT, vote[p] || 0, `<b>${sg[p] || 0}</b>${ref ? ` <small>${ecart((sg[p] || 0) - (ref[p] || 0))}</small>` : ""}`, 50, "va-proj")).join("");
     const COLS = ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "BSW", "FDP", "FW", "SSW"];
@@ -414,16 +414,16 @@ function dessinerPanneau() {
       const bascules = CP.map((c, i) => [i, c]).filter(([i, c]) => c && CE[i] && c.g !== CE[i].g && dans(i));
       const m = PROJ.moyenne;
       z.innerHTML = `${tete("Projection du site · si l'élection avait lieu aujourd'hui", sg, n)}
-        <p class="lv-muted">Simulation faite par cette page, pas la projection d'un institut : moyenne du dernier sondage de chacun des ${m.sondages.length} instituts publiés entre le ${dateFr(PROJ.maj.debut)} et le ${dateFr(PROJ.maj.dernier)}, puis répartition des 630 sièges selon la loi de 2023 (Sainte-Laguë, seuil de 5 %${PROJ.clause.length ? `, clause des trois circonscriptions pour ${PROJ.clause.map(lab).join(", ")}` : ""}, SSW exempté). Clique sur une circonscription pour son détail.</p>
+        <p class="lv-muted">Simulation faite par cette page, pas la projection d'un institut : moyenne du dernier sondage de chacun des ${m.sondages.length} instituts publiés entre le ${dateFr(PROJ.maj.debut)} et le ${dateFr(PROJ.maj.dernier)}, puis répartition des 630 sièges selon la loi de 2023 (Sainte-Laguë, seuil de 5 %${PROJ.clause.length ? `, clause des trois Wahlkreise pour ${PROJ.clause.map(lab).join(", ")}` : ""}, SSW exempté). Clique sur un Wahlkreis pour son détail.</p>
         <span class="lv-eyebrow">Secondes voix et sièges${L ? ` · ${esc(nomR)} (écart uniforme sur ${AN(2025)})` : ""} <small>· écart avec ${AN(2025)}</small></span>
         <div class="vi-vrows">${lignesVS(vote, sg, ref, COLS)}</div>
-        ${L ? "" : `<p class="va-note">CDU et CSU : intentions de l'Union partagées selon leur rapport de ${AN(2025)} (la CSU ne se présente qu'en Bavière).${PROJ.clause.includes("CSU") ? " Sous 5 % des voix du pays, la CSU entrerait grâce à ses circonscriptions." : ""}</p>${coalitions(sg)}`}
+        ${L ? "" : `<p class="va-note">CDU et CSU : intentions de l'Union partagées selon leur rapport de ${AN(2025)} (la CSU ne se présente qu'en Bavière).${PROJ.clause.includes("CSU") ? " Sous 5 % des voix du pays, la CSU entrerait grâce à ses Wahlkreise." : ""}</p>${coalitions(sg)}`}
         ${meilleures(CP, "projection")}
         ${tableLands(PROJ.sieges_land, "Sièges par Land · projection", ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "BSW", "FDP", "SSW"].filter(p => SIEGES_DE.proj[p]))}
-        <details class="lv-sg vf-hors"><summary><span>Circonscriptions gagnées sans siège (projection)</span><small>${sans.length}</small></summary>
+        <details class="lv-sg vf-hors"><summary><span>Wahlkreise gagnés sans siège (projection)</span><small>${sans.length}</small></summary>
         ${listeCirc(sans, c => `${lab(c.g)} <small>sans siège</small>`)}</details>
-        <span class="lv-eyebrow">Les plus serrées à la première voix (moins de 3 points)</span>${listeCirc(serres.slice(0, 12), c => c.marge >= 0.05 ? `${lab(c.g)} +${nf(c.marge, 1)}` : `${lab(c.g)} <small>moins de 0,1 pt</small>`)}
-        <details class="lv-sg vf-hors"><summary><span>Circonscriptions qui changeraient de parti par rapport à ${AN(2025)}</span><small>${bascules.length}</small></summary>
+        <span class="lv-eyebrow">Les plus serrés à la première voix (moins de 3 points)</span>${listeCirc(serres.slice(0, 12), c => c.marge >= 0.05 ? `${lab(c.g)} +${nf(c.marge, 1)}` : `${lab(c.g)} <small>moins de 0,1 pt</small>`)}
+        <details class="lv-sg vf-hors"><summary><span>Wahlkreise qui changeraient de parti par rapport à ${AN(2025)}</span><small>${bascules.length}</small></summary>
         ${listeCirc(bascules, c => `${lab(c.g)} <small>(${lab(CE[bascules.find(([, x]) => x === c)[0]].g)} en ${AN(2025)})</small>`)}</details>`;
       return;
     }
@@ -449,14 +449,14 @@ function dessinerPanneau() {
       <p class="lv-muted">Résultat officiel (Bundeswahlleiterin). Participation : ${nf(100 * (L ? R25.lands[L].votants / R25.lands[L].inscrits : R25.votants / R25.inscrits), 1)} %. Barres : secondes voix ; à droite, sièges obtenus.</p>
       <span class="lv-eyebrow">Secondes voix et sièges${L ? ` · ${esc(nomR)}` : ""}</span>
       <div class="vi-vrows">${lignesVS(zv, sg, null, COLS)}</div>
-      <span class="lv-eyebrow">Premières voix et circonscriptions gagnées</span>
+      <span class="lv-eyebrow">Premières voix et Wahlkreise gagnés</span>
       <div class="vi-vrows">${COLS.filter(p => ev[p] >= 0.5).sort((a, b) => (gagnes[b] || 0) - (gagnes[a] || 0) || ev[b] - ev[a]).map(p => jauge(lab(p), COUL[p], ev[p], `<b>${gagnes[p] || 0}</b> <small>circ.</small>`, 50, "va-proj")).join("")}</div>
       ${meilleures(CE, "élection de " + AN(2025))}
       ${tableLands(Object.fromEntries(Object.entries(R25.lands).map(([k, x]) => [k, x.sieges])), `Sièges par Land · élus en ${AN(2025)}`, ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "SSW"])}
-      <details class="lv-sg vf-hors"${L ? " open" : ""}><summary><span>Circonscriptions gagnées sans siège (couverture insuffisante)</span><small>${sans.length}</small></summary>
-      <p class="va-note">Depuis la réforme de 2023, un parti n'a pas plus de sièges dans un Land que ses secondes voix ne lui en donnent : ses vainqueurs de circonscription au plus faible pourcentage restent alors sans siège.</p>
+      <details class="lv-sg vf-hors"${L ? " open" : ""}><summary><span>Wahlkreise gagnés sans siège (couverture insuffisante)</span><small>${sans.length}</small></summary>
+      <p class="va-note">Depuis la réforme de 2023, un parti n'a pas plus de sièges dans un Land que ses secondes voix ne lui en donnent : ses vainqueurs de Wahlkreis au plus faible pourcentage restent alors sans siège.</p>
       ${listeCirc(sans, c => `${lab(c.g)} ${nf(c.e[c.g], 1)} %`)}</details>
-      <span class="lv-eyebrow">Les plus serrées en ${AN(2025)} (moins de 3 points)</span>${listeCirc(serres.slice(0, 12), c => c.marge >= 0.05 ? `${lab(c.g)} +${nf(c.marge, 1)}` : `${lab(c.g)} <small>moins de 0,1 pt</small>`)}`;
+      <span class="lv-eyebrow">Les plus serrés en ${AN(2025)} (moins de 3 points)</span>${listeCirc(serres.slice(0, 12), c => c.marge >= 0.05 ? `${lab(c.g)} +${nf(c.marge, 1)}` : `${lab(c.g)} <small>moins de 0,1 pt</small>`)}`;
     return;
   }
   const r = DATA.ridings[sel], cp = CP[sel], ce = CE[sel], reg = nomLand(r.r);
@@ -468,17 +468,17 @@ function dessinerPanneau() {
   const e25 = ce ? bloc(`${AN(2025)} · première voix (candidats)`, lignes(ce.e, ce.g), g === "e25" && !secondes()) + bloc(`${AN(2025)} · seconde voix (listes)`, lignes(ce.z, ce.gz), g === "e25" && secondes()) : "";
   const pr = cp ? bloc("Projection · première voix", lignes(cp.e, cp.g), g === "proj" && !secondes()) + bloc("Projection · seconde voix", lignes(cp.z, cp.gz), true) : "";
   const elu = ce ? `<p class="vi-elu" style="--c:${COUL[ce.g] || COUL.AUT}">${ce.siege ? `<b>${esc(ce.elu || "")}</b> · ${NOMS[ce.g] || ce.g} <small>(élu en 2025 avec ${nf(ce.e[ce.g], 1)} % des premières voix)</small>`
-    : `<b>Aucun député de circonscription</b> <small>: le candidat ${lab(ce.g)} est arrivé en tête (${nf(ce.e[ce.g], 1)} %), mais son parti n'avait pas assez de sièges dans le Land pour tous ses vainqueurs (couverture par les secondes voix).</small>`}</p>` : "";
+    : `<b>Aucun député de Wahlkreis</b> <small>: le candidat ${lab(ce.g)} est arrivé en tête (${nf(ce.e[ce.g], 1)} %), mais son parti n'avait pas assez de sièges dans le Land pour tous ses vainqueurs (couverture par les secondes voix).</small>`}</p>` : "";
   const pills = g === "e25" ? (ce ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[ce.g]}"></i>En tête en 2025 : ${lab(ce.g)}</span><span class="vi-pill">Avance : ${nf(ce.marge, 1)} pts</span>${ce.siege ? "" : `<span class="va-sans-siege">sans siège</span>`}<span class="vi-pill">Participation : ${nf(ce.particip, 1)} %</span></div>` : "")
     : (cp ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[cp.g]}"></i>En tête (projection) : ${lab(cp.g)}</span><span class="vi-pill">Avance : ${nf(cp.marge, 1)} pts</span>${cp.siege ? "" : `<span class="va-sans-siege">sans siège</span>`}`
       + (ce && ce.g !== cp.g ? `<span class="vi-pill">Gain sur ${lab(ce.g)} (${AN(2025)})</span>` : "") + "</div>" : "");
-  z.innerHTML = `<span class="lv-eyebrow">Circonscription ${+r.id} · ${esc(reg)}</span><h3>${esc(r.n)}</h3>
+  z.innerHTML = `<span class="lv-eyebrow">Wahlkreis ${+r.id} · ${esc(reg)}</span><h3>${esc(r.n)}</h3>
     ${pills}
     <span class="lv-eyebrow">Député élu en ${AN(2025)}</span>${elu}
     <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← ${etat.reg ? esc(nomLand(etat.reg)) : "Toute l'Allemagne"}</button><button type="button" class="vi-lien" data-reg="${r.r}">${esc(reg)}</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
       <a class="vi-lien" href="https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse/bund-99/land-${NUM_LAND[r.r]}/wahlkreis-${+r.id}.html" target="_blank" rel="noopener">Résultat officiel ↗</a></div>
     ${g === "proj" ? pr + e25 : e25 + pr}
-    ${cp ? `<p class="va-note">Projection : écart uniforme (les points gagnés ou perdus par chaque parti dans la moyenne des sondages depuis ${AN(2025)}) appliqué au résultat de la circonscription ; estimation grossière, les sondages ne mesurant que les secondes voix au niveau national.</p>` : ""}`;
+    ${cp ? `<p class="va-note">Projection : écart uniforme (les points gagnés ou perdus par chaque parti dans la moyenne des sondages depuis ${AN(2025)}) appliqué au résultat du Wahlkreis ; estimation grossière, les sondages ne mesurant que les secondes voix au niveau national.</p>` : ""}`;
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#viPanneau")) return;
@@ -563,8 +563,8 @@ function dessinerEvolution() {
 }
 
 /* ---------- « Comprendre le système politique et électoral » : grande fenêtre en deux parties (votes-quebec/systeme.js) ----------
-   Les chiffres viennent du résultat officiel de 2025 (R25 : voix, sièges, circonscriptions sans siège), du Bundestag
-   actuel (BT) et des circonscriptions (DATA.ridings). */
+   Les chiffres viennent du résultat officiel de 2025 (R25 : voix, sièges, Wahlkreise sans siège), du Bundestag
+   actuel (BT) et des Wahlkreise (DATA.ridings). */
 const BUNDESRAT = { BW: 6, BY: 6, BE: 4, BB: 4, HB: 3, HH: 3, HE: 5, MV: 3, NI: 6, NW: 6, RP: 4, SL: 3, SN: 4, ST: 4, SH: 4, TH: 4 };   // 69 voix
 function systemeElectoral() {
   const N = DATA.ridings.length, S = R25.sieges, V = R25.z, G = parGroupe(S);
@@ -590,8 +590,8 @@ function systemeElectoral() {
       <tbody>${ORDRE.filter(p => GP[p] || (A && A[p])).sort((a, b) => (GP[b] || 0) - (GP[a] || 0) || (A ? (A[b] || 0) - (A[a] || 0) : 0)).map(p => { const d = A ? (A[p] || 0) - (GP[p] || 0) : 0;
         return `<tr style="--c:${COUL[p]}"><th scope="row"><i></i>${lab(p)}${p === "FL" ? " <small>(dont le SSW)</small>" : ""}</th><td>${GP[p] || 0}</td>${A ? `<td><b>${A[p] || 0}</b></td><td class="${d > 0 ? "plus" : d < 0 ? "moins" : ""}">${d > 0 ? "+" : d < 0 ? "−" : "±"}${Math.abs(d)}</td>` : ""}</tr>`; }).join("")}</tbody></table>`;
   const nbLand = DATA.ridings.reduce((o, r) => { o[r.r] = (o[r.r] || 0) + 1; return o; }, {});
-  const tabLands = `<table class="vi-dlg-tab"><caption>Les 16 Länder : circonscriptions, élus de 2025 et voix au Bundesrat</caption>
-      <thead><tr><th scope="col">Land</th><th scope="col">Circonscriptions<small>${N} au total</small></th><th scope="col">Députés élus en 2025<small>${SIEGES} au total</small></th><th scope="col">Voix au Bundesrat<small>69 au total</small></th></tr></thead>
+  const tabLands = `<table class="vi-dlg-tab"><caption>Les 16 Länder : Wahlkreise, élus de 2025 et voix au Bundesrat</caption>
+      <thead><tr><th scope="col">Land</th><th scope="col">Wahlkreise<small>${N} au total</small></th><th scope="col">Députés élus en 2025<small>${SIEGES} au total</small></th><th scope="col">Voix au Bundesrat<small>69 au total</small></th></tr></thead>
       <tbody>${DATA.regions.map(r => `<tr style="--c:var(--ink)"><th scope="row">${esc(r.name)}</th><td>${nbLand[r.code] || 0}</td><td><b>${Object.values(R25.lands[r.code].sieges).reduce((a, b) => a + b, 0)}</b></td><td>${BUNDESRAT[r.code]}</td></tr>`).join("")}</tbody></table>`;
   const politique = `
     <section class="vi-dlg-chiffres" aria-label="En bref : système politique">
@@ -635,30 +635,30 @@ function systemeElectoral() {
     </section>`;
   const electoral = `
     <section class="vi-dlg-chiffres" aria-label="En bref : système électoral">
-      <div><b>2 voix</b><small>une pour un candidat de la circonscription, une pour la liste d'un parti</small></div>
+      <div><b>2 voix</b><small>une pour un candidat du Wahlkreis, une pour la liste d'un parti</small></div>
       <div><b>${SIEGES}</b><small>sièges depuis ${AN(2025)}, répartis à la proportionnelle des secondes voix</small></div>
-      <div><b>5 %</b><small>des secondes voix du pays, ou trois circonscriptions, pour avoir des sièges</small></div>
+      <div><b>5 %</b><small>des secondes voix du pays, ou trois Wahlkreise, pour avoir des sièges</small></div>
       <div><b>4 ans</b><small>durée de la législature ; prochaine élection prévue au début de ${AN(2029)}</small></div>
     </section>
     <section>
       <h3>Deux voix sur le même bulletin</h3>
-      <p>Chaque électeur a <b>deux voix</b>. Avec la <b>première voix</b> (Erststimme), il choisit un candidat dans sa circonscription : il y en a ${N}, et le candidat arrivé en tête l'emporte, au scrutin majoritaire à un tour. Avec la <b>seconde voix</b> (Zweitstimme), il choisit la liste d'un parti dans son Land. On peut donner ses deux voix à des partis différents.</p>
+      <p>Chaque électeur a <b>deux voix</b>. Avec la <b>première voix</b> (Erststimme), il choisit un candidat dans son Wahlkreis (circonscription) : il y en a ${N}, et le candidat arrivé en tête l'emporte, au scrutin majoritaire à un tour. Avec la <b>seconde voix</b> (Zweitstimme), il choisit la liste d'un parti dans son Land. On peut donner ses deux voix à des partis différents.</p>
       <p>C'est la <b>seconde voix</b> qui compte le plus : elle fixe le nombre de sièges de chaque parti. La première voix sert à désigner une partie des personnes qui occuperont ces sièges.</p>
     </section>
     <section>
       <h3>Des voix aux sièges</h3>
-      <p>Les ${SIEGES} sièges sont répartis entre les partis à la proportionnelle de leurs secondes voix dans tout le pays, par la méthode de Sainte-Laguë, puis les sièges de chaque parti sont répartis entre ses listes des 16 Länder. Dans chaque Land, les sièges d'un parti vont d'abord à ses candidats qui ont gagné une circonscription, puis aux suivants de sa liste.</p>
+      <p>Les ${SIEGES} sièges sont répartis entre les partis à la proportionnelle de leurs secondes voix dans tout le pays, par la méthode de Sainte-Laguë, puis les sièges de chaque parti sont répartis entre ses listes des 16 Länder. Dans chaque Land, les sièges d'un parti vont d'abord à ses candidats qui ont gagné un Wahlkreis, puis aux suivants de sa liste.</p>
       <ul>
-        <li><b>Seuil de 5 %</b> : seuls les partis qui obtiennent au moins 5 % des secondes voix du pays ont des sièges. Exceptions : un parti qui gagne au moins <b>trois circonscriptions</b> participe quand même à la répartition, et les <b>partis des minorités nationales</b>, comme le SSW de la minorité danoise du Schleswig-Holstein, sont exemptés du seuil.</li>
+        <li><b>Seuil de 5 %</b> : seuls les partis qui obtiennent au moins 5 % des secondes voix du pays ont des sièges. Exceptions : un parti qui gagne au moins <b>trois Wahlkreise</b> participe quand même à la répartition, et les <b>partis des minorités nationales</b>, comme le SSW de la minorité danoise du Schleswig-Holstein, sont exemptés du seuil.</li>
         <li><b>En ${AN(2025)}</b> : ${nf(perdus, 1)} % des secondes voix sont allées à des partis sans siège. Le BSW (${nf(V.BSW, 2)} %) a manqué le seuil d'environ ${nf(Math.round(manqueBSW / 100) * 100)} voix, et le FDP (${nf(V.FDP, 1)} %) a quitté le Bundestag. Le SSW (${nf(V.SSW, 2)} %) a obtenu ${sg(S.SSW || 0)} grâce à l'exemption.</li>
       </ul>
       ${graphique}
     </section>
     <section>
-      <h3>La réforme de 2023 : 630 sièges, et des circonscriptions sans élu</h3>
-      <p>Avant, un parti qui gagnait plus de circonscriptions dans un Land que ses secondes voix ne lui donnaient de sièges les gardait toutes (mandats excédentaires), et les autres partis recevaient des sièges de compensation : le Bundestag élu en 2021 comptait ainsi 736 députés. La réforme adoptée en 2023 fixe le Bundestag à <b>${SIEGES} sièges</b> et supprime ces deux mécanismes.</p>
-      <p>En échange, gagner sa circonscription ne suffit plus : il faut que le parti ait assez de sièges dans le Land (<b>couverture par les secondes voix</b>, Zweitstimmendeckung). S'il en a moins que de vainqueurs, ceux qui ont le plus faible pourcentage de premières voix n'obtiennent pas de siège, et la circonscription n'a pas de député élu directement. En ${AN(2025)}, c'est arrivé dans <b>${sans.length} circonscriptions</b> sur ${N} : ${Object.entries(sansPar).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${n} ${lab(p)}`).join(", ")}.</p>
-      <p>La réforme supprimait aussi l'exception des trois circonscriptions ; la Cour constitutionnelle fédérale l'a maintenue en juillet 2024, en attendant de nouvelles règles.</p>
+      <h3>La réforme de 2023 : 630 sièges, et des Wahlkreise sans élu</h3>
+      <p>Avant, un parti qui gagnait plus de Wahlkreise dans un Land que ses secondes voix ne lui donnaient de sièges les gardait toutes (mandats excédentaires), et les autres partis recevaient des sièges de compensation : le Bundestag élu en 2021 comptait ainsi 736 députés. La réforme adoptée en 2023 fixe le Bundestag à <b>${SIEGES} sièges</b> et supprime ces deux mécanismes.</p>
+      <p>En échange, gagner son Wahlkreis ne suffit plus : il faut que le parti ait assez de sièges dans le Land (<b>couverture par les secondes voix</b>, Zweitstimmendeckung). S'il en a moins que de vainqueurs, ceux qui ont le plus faible pourcentage de premières voix n'obtiennent pas de siège, et le Wahlkreis n'a pas de député élu directement. En ${AN(2025)}, c'est arrivé dans <b>${sans.length} Wahlkreise</b> sur ${N} : ${Object.entries(sansPar).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${n} ${lab(p)}`).join(", ")}.</p>
+      <p>La réforme supprimait aussi l'exception des trois Wahlkreise ; la Cour constitutionnelle fédérale l'a maintenue en juillet 2024, en attendant de nouvelles règles.</p>
     </section>
     <section>
       <h3>Quand vote-t-on ?</h3>
@@ -680,9 +680,9 @@ function systemeElectoral() {
     </ol>`;
   const electoralCourt = `${tuilesElec}
     <ol class="vi-dlg-court">
-      ${point(1, `<b>Deux voix</b> : la 1<sup>re</sup> pour un candidat de la circonscription (${N} circonscriptions), la 2<sup>e</sup> pour la liste d'un parti.`)}
-      ${point(2, `<b>La 2<sup>e</sup> voix décide</b> : les ${SIEGES} sièges sont répartis à la proportionnelle des secondes voix, entre les partis qui ont au moins <b>5 %</b> (ou trois circonscriptions ; le SSW de la minorité danoise est exempté).`)}
-      ${point(3, `<b>Depuis la réforme de 2023</b>, le Bundestag a toujours ${SIEGES} sièges. Un vainqueur de circonscription peut rester sans siège si son parti n'a pas assez de secondes voix dans le Land : ${sans.length} circonscriptions en ${AN(2025)}.`)}
+      ${point(1, `<b>Deux voix</b> : la 1<sup>re</sup> pour un candidat du Wahlkreis (${N} Wahlkreise), la 2<sup>e</sup> pour la liste d'un parti.`)}
+      ${point(2, `<b>La 2<sup>e</sup> voix décide</b> : les ${SIEGES} sièges sont répartis à la proportionnelle des secondes voix, entre les partis qui ont au moins <b>5 %</b> (ou trois Wahlkreise ; le SSW de la minorité danoise est exempté).`)}
+      ${point(3, `<b>Depuis la réforme de 2023</b>, le Bundestag a toujours ${SIEGES} sièges. Un vainqueur de Wahlkreis peut rester sans siège si son parti n'a pas assez de secondes voix dans le Land : ${sans.length} Wahlkreise en ${AN(2025)}.`)}
     </ol>
     ${graphique}
     <ol class="vi-dlg-court" start="4">

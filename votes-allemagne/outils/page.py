@@ -59,7 +59,7 @@ def construire(html, FICHIER):
     assert n == 1, "Votes Allemagne : boutons de période introuvables"
     r('<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2022</span>', '<span class="lv-eyebrow" id="viEvolSur">Depuis l\'élection de 2025</span>')
     r('<h3 id="viEvolTitre">Évolution des intentions de vote</h3>', '<h3 id="viEvolTitre">Évolution des intentions de vote (secondes voix)</h3>')
-    r('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 299 circonscriptions du Bundestag"')
+    r('aria-label="Carte des 127 circonscriptions"', 'aria-label="Carte des 299 Wahlkreise (circonscriptions) du Bundestag"')
     r("</head>", STYLE + "</head>")
     assert 'src="votes-quebec/intentions.js"' not in va and '>Grand Montréal<' not in va and 'data-z="ber"' in va
     return va
