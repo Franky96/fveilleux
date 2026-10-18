@@ -6,10 +6,10 @@
    tableaux Wikipédia qui citent chaque sondeur. Aucune projection en sièges (2 tours : trop incertain par circonscription). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS, BORDS, bordDe, trierAxe } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
-import { regrouper, tracerBlocs } from "../votes-quebec/hemicycle.js";
+import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 577, MAJ = 289;
 const NOMS = { EXG: "Extrême gauche", NFP: "Gauche (NFP)", DVG: "Divers gauche", REG: "Régionalistes", ENS: "Ensemble (centre)", DVC: "Divers centre",
@@ -141,7 +141,6 @@ function hemicycle(svgEl, parts) {
     .style("fill", (p, i) => sieges[i] ? sieges[i].c : "var(--soft)").append("title").text((p, i) => sieges[i] ? sieges[i].nom : "");
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(SIEGES);
   g.append("text").attr("x", cx).attr("y", cy - 18).attr("text-anchor", "middle").attr("class", "vf-hemi-maj").text(`députés · majorité ${MAJ}`);
-  tracerBlocs(g, places, parts, { cx, cy, Rmax, noms: Object.fromEntries(BORDS) });
 }
 
 /* ---------- carte : France métropolitaine + outre-mer en encarts (projection composite) ---------- */

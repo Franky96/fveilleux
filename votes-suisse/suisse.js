@@ -7,10 +7,10 @@
    (sondages.json). Contours des 26 cantons : data.json (limites généralisées de l'OFS, état 2026). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS, BORDS, bordDe, trierAxe } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
-import { regrouper, tracerBlocs } from "../votes-quebec/hemicycle.js";
+import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -108,7 +108,6 @@ function hemicycle(svgEl, seats, n, sous) {
     .append("title").text((p, i) => sieges[i] ? `${NOMS[sieges[i]] || sieges[i]} (${seats[sieges[i]]})` : "");
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(n);
   g.append("text").attr("x", cx).attr("y", cy - 18).attr("text-anchor", "middle").attr("class", "vf-hemi-maj").text(sous);
-  tracerBlocs(g, places, ordre.map(p => ({ n: seats[p], bord: bordDe(PARTIS.suisse, p, HORS_DICO) })), { cx, cy, Rmax, noms: Object.fromEntries(BORDS) });
 }
 
 /* ---------- en-tête, choix du conseil, hémicycle ---------- */

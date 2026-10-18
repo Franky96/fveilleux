@@ -7,10 +7,10 @@
    Bundeswahlleiterin (resultats-2025.json) ; contours des 299 circonscriptions (data.json, outils/allemagne_geo.py). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS, BORDS, bordDe, trierAxe } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
-import { regrouper, tracerBlocs } from "../votes-quebec/hemicycle.js";
+import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -99,7 +99,6 @@ function hemicycle(svgEl, parts, sous) {
     .append("title").text((p, i) => sieges[i] ? sieges[i].nom : "");
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(SIEGES);
   g.append("text").attr("x", cx).attr("y", cy - 18).attr("text-anchor", "middle").attr("class", "vf-hemi-maj").text(sous);
-  tracerBlocs(g, places, parts, { cx, cy, Rmax, noms: Object.fromEntries(BORDS) });
 }
 
 /* ---------- en-tête, choix du Bundestag affiché ---------- */
