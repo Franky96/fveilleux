@@ -157,7 +157,7 @@
 .loi39 #l39-map path.rid:hover{stroke:var(--ink);stroke-opacity:1;stroke-width:1.2px}
 .loi39 #l39-map path.regline{fill:none;stroke:var(--surface);stroke-width:1.6px;vector-effect:non-scaling-stroke;pointer-events:none}
 .loi39 #l39-map.v-circ path.regline{stroke-width:1.1px}
-.loi39 #l39-map.vi-bandes path.regline{stroke-width:3px}   /* mode Sièges en bandes : frontières épaissies */
+.loi39 #l39-map.vi-bandes path.regline{stroke-width:3px}
 .loi39 #l39-map path:focus{outline:none}
 .loi39 #l39-map path:focus-visible{outline:none;stroke:var(--focus);stroke-width:2.5px;vector-effect:non-scaling-stroke}
 .loi39 #l39-map:focus{outline:none}
@@ -181,8 +181,6 @@
 .loi39 .fsonly{display:none}
 .loi39 .mapgrid.fs .fsonly,.loi39 .mapgrid:fullscreen .fsonly{display:inline-block}
 .loi39 .zoombar button.fsonly[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-/* plein écran, comme les autres cartes des votes (votes-quebec/plein.js) : outils tout en haut, zooms juste dessous,
-   panneau « Info » à droite sous les outils, boutons Plein écran / Info / Scénario en bas à gauche, échelle juste au-dessus */
 .loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar,.loi39 .mapgrid.fs .scale,.loi39 .mapgrid:fullscreen .scale,.loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel,.loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{position:absolute;z-index:5;background:color-mix(in srgb,var(--surface) 92%,transparent);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 28px rgb(0 0 0 / .28)}
 .loi39 .mapgrid.fs .toolbar,.loi39 .mapgrid:fullscreen .toolbar{top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);bottom:auto;padding:8px;width:max-content;max-width:calc(100% - 20px)}
@@ -198,6 +196,7 @@
 @media (min-width:701px){
 .loi39 .mapgrid.fs.show-panel .zoombar:not(.zoombar-bas),.loi39 .mapgrid:fullscreen.show-panel .zoombar:not(.zoombar-bas){max-width:calc(100% - 416px)}
 .loi39 .mapgrid.fs.show-panel .scale,.loi39 .mapgrid:fullscreen.show-panel .scale{max-width:min(520px,calc(100% - 420px))}
+
 }
 @media (max-width:700px){
 .loi39 .mapgrid.fs .zoombar button,.loi39 .mapgrid:fullscreen .zoombar button{padding:4px 7px;font-size:.72rem}
@@ -207,6 +206,7 @@
 .loi39 .mapgrid.fs .toolbar .seg button,.loi39 .mapgrid:fullscreen .toolbar .seg button{padding:5px 8px;font-size:.74rem}
 .loi39 .mapgrid.fs .panel,.loi39 .mapgrid:fullscreen .panel{top:auto;left:calc(env(safe-area-inset-left,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);width:auto;max-height:45%}
 .loi39 .mapgrid.fs .scen,.loi39 .mapgrid:fullscreen .scen{left:8px;right:8px;width:auto}
+
 }
 .loi39 #l39-fsBtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .loi39 .linkbtn{font:inherit;font-size:.82rem;font-weight:600;background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
@@ -402,7 +402,6 @@
 .loi39 .seg.modeseg button:last-child{grid-column:1/-1}
 .loi39 .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}
 }
-/* écran très large : même largeur que les autres pages des votes (.lv-wrap), contenu aligné sur les onglets */
 @media (min-width:1800px){
 .loi39 .wrap{max-width:3360px}
 }

@@ -162,6 +162,8 @@ h2 .tag,h3 .tag,.cap .tag{margin-left:6px;font-size:.62rem}
 #map path.rid:hover{stroke:var(--ink);stroke-opacity:1;stroke-width:1.2px}
 #map path.regline{fill:none;stroke:var(--surface);stroke-width:1.6px;vector-effect:non-scaling-stroke;pointer-events:none}
 #map.v-circ path.regline{stroke-width:1.1px}
+/* mode Sièges en bandes : frontières épaissies */
+#map.vi-bandes path.regline{stroke-width:3px}
 /* Pas de cadre de focus rectangulaire du navigateur sur les régions cliquées (Chrome, Safari iPad) ;
    au clavier, le contour suit la forme de la région */
 #map path:focus{outline:none}
@@ -175,6 +177,7 @@ h2 .tag,h3 .tag,.cap .tag{margin-left:6px;font-size:.62rem}
 .zoombar button{font:inherit;font-size:.76rem;font-weight:600;padding:5px 9px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer}
 .zoombar button:hover{border-color:var(--ink)}
 .zoombar .sq{width:30px;padding:5px 0;font-size:.95rem;line-height:1}
+.zoombar-bas{top:auto;bottom:10px}
 .hint{font-size:.75rem;color:var(--muted)}
 /* Plein écran : seule la carte remplit l'écran ; barres, légende, détail et scénario flottent par-dessus */
 .mapgrid.fs{position:fixed;inset:0;z-index:50}
@@ -192,33 +195,32 @@ h2 .tag,h3 .tag,.cap .tag{margin-left:6px;font-size:.62rem}
 .mapgrid.fs .panel,.mapgrid:fullscreen .panel,.mapgrid.fs .scen,.mapgrid:fullscreen .scen{
   position:absolute;z-index:5;background:color-mix(in srgb,var(--surface) 92%,transparent);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--rule);border-radius:10px;box-shadow:0 8px 28px rgb(0 0 0 / .28)}
-.mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);padding:8px;max-width:calc(100% - 24px)}
-.mapgrid.fs .scale,.mapgrid:fullscreen .scale{left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);padding:6px 10px;max-width:calc(100% - 24px);flex-wrap:wrap}
-.mapgrid.fs .panel,.mapgrid:fullscreen .panel{display:none;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:min(390px,calc(100% - 24px));max-height:none;overflow-y:auto;align-content:start}
-.mapgrid.fs .scen,.mapgrid:fullscreen .scen{display:none;top:calc(env(safe-area-inset-top,0px) + 60px);left:calc(env(safe-area-inset-left,0px) + 12px);width:min(300px,calc(100% - 24px));max-height:calc(100% - 200px);overflow-y:auto}
+/* plein écran, comme les autres cartes des votes (votes-quebec/plein.js) : outils tout en haut, zooms juste dessous,
+   panneau « Info » à droite sous les outils, boutons Plein écran / Info / Scénario en bas à gauche, échelle juste au-dessus */
+.mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);bottom:auto;padding:8px;width:max-content;max-width:calc(100% - 20px)}
+.mapgrid.fs .zoombar,.mapgrid:fullscreen .zoombar{top:calc(env(safe-area-inset-top,0px) + 18px + var(--tbh,50px));left:calc(env(safe-area-inset-left,0px) + 10px)}
+.mapgrid.fs .zoombar-bas,.mapgrid:fullscreen .zoombar-bas{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+.mapgrid.fs .panel,.mapgrid:fullscreen .panel{display:none;top:calc(env(safe-area-inset-top,0px) + 18px + var(--tbh,50px));right:calc(env(safe-area-inset-right,0px) + 10px);bottom:auto;width:min(380px,calc(100% - 20px));max-height:calc(100% - 84px - var(--tbh,50px));overflow-y:auto;align-content:start}
+.mapgrid.fs .scen,.mapgrid:fullscreen .scen{display:none;top:calc(env(safe-area-inset-top,0px) + 26px + var(--tbh,50px) + var(--zbh,36px));left:calc(env(safe-area-inset-left,0px) + 10px);width:min(300px,calc(100% - 20px));max-height:calc(100% - 100px - var(--tbh,50px) - var(--zbh,36px) - var(--sch,40px));overflow-y:auto}
+.mapgrid.fs .scale,.mapgrid:fullscreen .scale{left:calc(env(safe-area-inset-left,0px) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);padding:6px 10px;max-width:min(520px,calc(100% - 20px));flex-wrap:wrap}
 .mapgrid.fs.show-panel .panel,.mapgrid:fullscreen.show-panel .panel{display:grid}
 .mapgrid.fs.show-scen .scen,.mapgrid:fullscreen.show-scen .scen{display:grid}
 .mapgrid.fs .scen .sliders,.mapgrid:fullscreen .scen .sliders{grid-template-columns:1fr}
 .mapgrid.fs .scen .row,.mapgrid:fullscreen .scen .row{flex-direction:column;align-items:stretch}
 @media (min-width:701px){
-  /* grand écran : barres en haut à gauche (zone vide de la carte), le sud reste dégagé */
   /* --zbh / --tbh : hauteurs réelles de la barre de zoom et de la barre des modes (calculées en JS) */
-  .mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 20px + var(--zbh,36px));width:max-content;max-width:min(760px,calc(100% - 24px))}
-  .mapgrid.fs .scen,.mapgrid:fullscreen .scen{top:calc(env(safe-area-inset-top,0px) + 28px + var(--zbh,36px) + var(--tbh,50px));max-height:calc(100% - 52px - var(--zbh,36px) - var(--tbh,50px) - var(--sch,40px))}
-  .mapgrid.fs.show-panel .zoombar,.mapgrid:fullscreen.show-panel .zoombar{max-width:calc(100% - 436px)}
-  .mapgrid.fs.show-panel .toolbar,.mapgrid:fullscreen.show-panel .toolbar{max-width:min(760px,calc(100% - 436px))}
-  .mapgrid.fs .scale,.mapgrid:fullscreen .scale{max-width:min(520px,calc(100% - 430px))}
+  .mapgrid.fs.show-panel .zoombar:not(.zoombar-bas),.mapgrid:fullscreen.show-panel .zoombar:not(.zoombar-bas){max-width:calc(100% - 416px)}
+  .mapgrid.fs.show-panel .scale,.mapgrid:fullscreen.show-panel .scale{max-width:min(520px,calc(100% - 420px))}
 }
 @media (max-width:700px){
   /* téléphone : le détail devient un tiroir en bas, le scénario occupe le haut */
   .mapgrid.fs .zoombar button,.mapgrid:fullscreen .zoombar button{padding:4px 7px;font-size:.72rem}
   .mapgrid.fs .zoombar .sq,.mapgrid:fullscreen .zoombar .sq{width:26px;padding:4px 0}
   .mapgrid.fs .scale,.mapgrid:fullscreen .scale{display:none}
-  .mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);padding:6px;gap:6px}
+  .mapgrid.fs .toolbar,.mapgrid:fullscreen .toolbar{left:8px;right:8px;width:auto;padding:6px;gap:6px}
   .mapgrid.fs .toolbar .seg button,.mapgrid:fullscreen .toolbar .seg button{padding:5px 8px;font-size:.74rem}
-  .mapgrid.fs .panel,.mapgrid:fullscreen .panel{top:auto;left:calc(env(safe-area-inset-left,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:auto;max-height:55%}
-  .mapgrid.fs .scen,.mapgrid:fullscreen .scen{top:calc(env(safe-area-inset-top,0px) + 20px + var(--zbh,90px));left:8px;right:8px;width:auto;max-height:calc(100% - 36px - var(--zbh,90px) - var(--tbh,90px))}
-  .mapgrid.fs.show-panel .toolbar,.mapgrid.fs.show-panel .scale,.mapgrid:fullscreen.show-panel .toolbar,.mapgrid:fullscreen.show-panel .scale{display:none}
+  .mapgrid.fs .panel,.mapgrid:fullscreen .panel{top:auto;left:calc(env(safe-area-inset-left,0px) + 8px);right:calc(env(safe-area-inset-right,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);width:auto;max-height:45%}
+  .mapgrid.fs .scen,.mapgrid:fullscreen .scen{left:8px;right:8px;width:auto}
 }
 #fsBtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .linkbtn{font:inherit;font-size:.82rem;font-weight:600;background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
@@ -348,8 +350,8 @@ details[open] summary{margin-bottom:8px}
 .mapbadge{position:absolute;top:12px;right:12px;z-index:4;background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:4px 9px;font-size:.66rem}
 .mapbadge[hidden]{display:none}
 .mapstage:has(.mapbadge:not([hidden])) .zoombar{max-width:calc(100% - 150px)}
-.mapgrid.fs .mapbadge,.mapgrid:fullscreen .mapbadge{top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:6}
-.mapgrid.fs.show-panel .mapbadge,.mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 424px)}
+.mapgrid.fs .mapbadge,.mapgrid:fullscreen .mapbadge{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:6}
+.mapgrid.fs.show-panel .mapbadge,.mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 12px)}
 @media (max-width:700px){.mapgrid.fs.show-panel .mapbadge,.mapgrid:fullscreen.show-panel .mapbadge{right:calc(env(safe-area-inset-right,0px) + 12px)}}
 .panel .ctable th{white-space:normal;vertical-align:bottom}
 .panel .ctable td:first-child{white-space:normal}
@@ -405,9 +407,8 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
   .seg.modeseg button{border:0;text-wrap:balance}
   .seg.modeseg button:last-child{grid-column:1/-1}
   .seg.modeseg button:not([aria-pressed="true"]){background:var(--surface)}}
-/* Écrans ultra-larges (21:9, 32:9) : on utilise la largeur au lieu d'une colonne centrée */
-@media (min-width:2000px){.wrap{max-width:2600px}}
-@media (min-width:3000px){.wrap{max-width:3200px}}
+/* écran très large : même largeur que les autres pages des votes (.lv-wrap), contenu aligné sur les onglets */
+@media (min-width:1800px){.wrap{max-width:3360px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -505,7 +506,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
           </div>
           <div class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="m-lead" aria-pressed="true">Parti en tête</button>
-            <button type="button" id="m-second" aria-pressed="false" disabled title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
+            <button type="button" id="m-second" aria-pressed="false" hidden title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
             <button type="button" id="m-vote" aria-pressed="false">Vote</button>
             <button type="button" id="m-seat" aria-pressed="false">Sièges totaux</button>
             <button type="button" id="m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
@@ -595,6 +596,7 @@ section>*,.res-grid>*,.hemis>*,.hemi,.mapgrid>*,.method>*,.lower>*{min-width:0}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script type="module">
+import { anneaux, bandes, DESSOUS } from "./anneau.js";
 const DATA = await (await fetch("data.json", {cache: "no-cache"})).json();
 // base des votes : résultat officiel de l'élection du 5 octobre 2026 (build_data80.py), sinon projection Qc125
 const ELECTION = !!(DATA.source && DATA.source.type === "election");
@@ -843,7 +845,8 @@ const LBL_MIN = 19, LBL_MIN_CIRC = 14, LBL_NAME = 70, NAME_ZOOM = 5;   // circon
 
 const mapSvg = d3.select("#map");
 const gZoom = mapSvg.append("g");
-const gCur = gZoom.append("g"), gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gRegCur = gZoom.append("g"), gSel = gZoom.append("g"), gLbl = gZoom.append("g");
+const gCur = gZoom.append("g"), gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gRegCur = gZoom.append("g"), gSel = gZoom.append("g"), gAnn = gZoom.append("g"), gLbl = gZoom.append("g");
+const defsL = mapSvg.append("defs");
 let curK = 1, curT = d3.zoomIdentity;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40,-40],[MW+40,MH+40]])
@@ -888,7 +891,7 @@ function drawBase(){
   gReg.selectAll("path").data(GGEO.features).join("path").attr("class","regline").attr("d",path);
   gRegCur.selectAll("path").data(CREG ? CREG.features : []).join("path").attr("class","regline").attr("d",path);
 
-  document.querySelector(".zoombar").addEventListener("click", e => {
+  for (const barre of document.querySelectorAll(".zoombar")) barre.addEventListener("click", e => {
     const z = e.target.closest("button[data-z]")?.dataset.z; if (!z) return;
     if (z==="fs") toggleFullscreen();
     else if (z==="panel") showFloat("show-panel", !mapGrid.classList.contains("show-panel"));
@@ -907,12 +910,21 @@ const panelBtn = document.getElementById("panelBtn"), scenBtn = document.getElem
 function placeFloats(){
   if (!isFs()) return;
   const zb = mapGrid.querySelector(".zoombar"), tb = mapGrid.querySelector(".toolbar");
+  // encadré des outils ajusté à sa ligne la plus longue (sinon, dès qu'il passe sur deux lignes, il prend toute la largeur)
+  tb.style.width = ""; tb.style.boxSizing = "border-box";
+  const r0 = tb.getBoundingClientRect(), cs = getComputedStyle(tb);
+  let droite = r0.left;
+  for (const b of tb.querySelectorAll("button")) if (b.offsetParent) droite = Math.max(droite, b.getBoundingClientRect().right);
+  if (droite > r0.left) tb.style.width = Math.ceil(droite - r0.left + parseFloat(cs.paddingRight) + parseFloat(cs.borderRightWidth) + 1) + "px";
   mapGrid.style.setProperty("--zbh", zb.offsetHeight + "px");
   mapGrid.style.setProperty("--tbh", tb.offsetHeight + "px");
   const sc = mapGrid.querySelector(".scale");
   mapGrid.style.setProperty("--sch", (sc.offsetHeight || 0) + "px");
 }
 window.addEventListener("resize", placeFloats);
+// contenu des outils changé (boutons des partis, découpage) : on réajuste l'encadré en plein écran
+new MutationObserver(() => { if (isFs()) requestAnimationFrame(placeFloats); })
+  .observe(mapGrid.querySelector(".toolbar"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "disabled", "class", "aria-pressed"] });
 function showFloat(cls, on){
   mapGrid.classList.toggle(cls, on);
   requestAnimationFrame(placeFloats);
@@ -927,6 +939,7 @@ function syncFsButton(){
   const on = isFs();
   if (on && scenEl.parentNode !== mapGrid) mapGrid.appendChild(scenEl);
   if (!on && scenEl.parentNode === mapGrid) scenHome.insertBefore(scenEl, scenNext);
+  if (!on) { const tb = mapGrid.querySelector(".toolbar"); tb.style.width = ""; tb.style.boxSizing = ""; }
   if (on && !wasFs) { showFloat("show-panel", window.innerWidth > 900); showFloat("show-scen", false); }
   wasFs = on;
   requestAnimationFrame(placeFloats);
@@ -988,7 +1001,9 @@ const MAXSEATS = () => Math.max(...Object.keys(RES.regions).map(c => DIST[c]+LIS
 const MAXLIST = () => Math.max(...Object.keys(RES.regions).map(c => LIST[c]));
 function fillRegion(code){
   const R = RES.regions[code], seats = DIST[code]+LIST[code];
-  if (state.mode==="lead"){ const p = regionLead(R); return [PV[p], 0.35 + 0.65*(R.d[p]+R.l[p])/seats]; }
+  // sièges : bandes proportionnelles aux sièges de la région, circonscriptions et région (proportionnelle : pas de
+  // vainqueur de la région)
+  if (state.mode==="lead") return [bandes(defsL, "l39-" + code, Object.fromEntries(P.map(p => [p, R.d[p]+R.l[p]])), p => PV[p], SEAT_ORDER) || "var(--soft)", 0.6];
   const p = state.party;
   if (p==="ALL"){   // tous les partis : le nombre de sièges de la région, en teinte neutre
     if (state.mode==="seat") return [ALLC, 0.1 + 0.5*seats/MAXSEATS()];
@@ -1015,7 +1030,7 @@ function fillRiding(id){
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
 }
 function labelLines(code){
-  if (state.mode==="lead") return [`${LIST[code]} rég.`, `(${DIST[code]} circ.)`];
+  if (state.mode==="lead") return [];   // en tête : pas de texte sur la région (l'anneau donne ses sièges)
   return [labelFor(code)];
 }
 // Pôle d'inaccessibilité (d'après polylabel, Mapbox) d'un polygone en coordonnées de la carte : [x, y, rayon]
@@ -1066,9 +1081,14 @@ function placeLabels(){
   const px = Math.min(svgEl.clientWidth / MW, svgEl.clientHeight / MH) * k;
   // demi-largeur et demi-hauteur de la fenêtre en unités de viewBox (centrée, « meet » : peut dépasser 600 × 704)
   const hx = svgEl.clientWidth / 2 / (px / k), hy = svgEl.clientHeight / 2 / (px / k);
+  // vue par région : anneau des sièges de chaque région, circonscriptions et région (votes-quebec/anneau.js) ;
+  // l'étiquette de la région passe sous l'anneau
+  const avecAnneau = anneaux(gAnn, state.view==="reg" ? GGEO.features.map(f => { const [x, y, rad] = anchorOf(f), R = RES.regions[f.properties.REG];
+    return { id: f.properties.REG, x, y, rad, sieges: Object.fromEntries(P.map(p => [p, R.d[p]+R.l[p]])) }; }) : [], { px, coul: p => PV[p] });
   gLbl.selectAll("g.lab").each(function(f){
     // le chiffre reste au milieu de la région ; il disparaît simplement quand ce milieu sort de la fenêtre
-    const [x, y, rad] = anchorOf(f), room = rad * px;   // rayon libre autour de l'étiquette, en px écran
+    const [x, y0, rad] = anchorOf(f), room = rad * px;   // rayon libre autour de l'étiquette, en px écran
+    const y = y0 + (f.properties.REG != null && avecAnneau.has(f.properties.REG) ? DESSOUS / px : 0);
     const sx = t.applyX(x), sy = t.applyY(y);           // position dans la vue (unités de viewBox)
     const show = Math.abs(sx - MW/2) <= hx && Math.abs(sy - MH/2) <= hy && room >= (f.properties.REG != null ? LBL_MIN : LBL_MIN_CIRC);
     const g = d3.select(this).style("display", show ? null : "none");
@@ -1090,7 +1110,9 @@ function labelFor(code){
 }
 function paintMap(){
   const byReg = state.view==="reg", isCur = state.view==="cur";
-  mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
+  const bLead = document.getElementById("m-lead"); bLead.dataset.txt ||= bLead.textContent;   // vue Régions : « Sièges » (bandes)
+  bLead.textContent = byReg ? "Sièges" : bLead.dataset.txt;
+  mapSvg.attr("class", byReg ? "v-reg" : "v-circ").classed("vi-bandes", byReg && state.mode==="lead");   // bandes : frontières épaissies
   gCur.style("display", isCur ? null : "none");
   gReg.style("display", isCur && CREG ? "none" : null);
   gRegCur.style("display", isCur ? null : "none");
@@ -1144,7 +1166,7 @@ function paintMap(){
        : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? `actuelle (${SRC.nom})` : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (${SRC.nom}). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : ${SRC.w.toLowerCase()} de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
-    : state.mode==="lead" ? `Couleur : parti avec le plus de sièges dans la région. Plus la couleur est foncée, plus sa part des sièges est grande. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
+    : state.mode==="lead" ? `Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans la région (circonscriptions et sièges de région) : avec la compensation régionale, il n'y a pas de vainqueur de la région. Anneau : sièges de chaque parti, total au centre.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
     : p==="ALL" ? (state.mode==="seat"
         ? `Tous les partis · chiffre = nombre total de sièges de la région (circonscriptions + région). Plus la région ressort, plus elle a de sièges.`
@@ -1417,7 +1439,7 @@ function setView(v, {silent = false} = {}){
   document.getElementById("v-reg").setAttribute("aria-pressed", v==="reg");
   document.getElementById("v-circ").setAttribute("aria-pressed", v==="circ");
   for (const id of ["seat","comp"]) document.getElementById("m-"+id).disabled = v!=="reg";
-  document.getElementById("m-second").disabled = v==="reg";   // 2e place : seulement par circonscription
+  document.getElementById("m-second").hidden = v==="reg";   // 2e place : seulement par circonscription (pas de sens à la proportionnelle)
   if ((v!=="reg" && (state.mode==="seat" || state.mode==="comp")) || (v==="reg" && state.mode==="second")) setMode("lead", {silent:true});
   if (!silent){
     // garder une sélection cohérente avec l'affichage
