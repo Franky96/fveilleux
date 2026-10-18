@@ -200,12 +200,13 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     // bouton « Axes multiples » : la bande passe des colonnes au graphique à deux axes, et inversement
     sec.addEventListener("click", e => { if (!e.target.closest(".vi-partis-multi")) return; cacher(); transformer(sec); });
     sec.addEventListener("click", e => { const v = e.target.closest("[data-vue]"); if (v) { cacher(); choisirVue(sec, +v.dataset.vue); } });
-    // vue 3D : glisser pour tourner (au toucher, glisser de côté ; la page défile toujours de haut en bas)
+    // vue 3D : glisser pour tourner (au toucher, glisser de côté ; la page défile toujours de haut en bas) ; de gauche à
+    // droite, la rotation reste entre la face avant (lacet 0) et la face de gauche (lacet −90°)
     let glisse = null;
     sec.addEventListener("pointerdown", e => { const svg = e.target.closest(".vi-m-3d"); if (!svg || e.button) return;
       cancelAnimationFrame(sec._raf); glisse = { x: e.clientX, y: e.clientY, a: sec._angle }; svg.setPointerCapture(e.pointerId); svg.classList.add("vi-m-tient"); });
     sec.addEventListener("pointermove", e => { if (!glisse) return; const [a, b] = glisse.a;
-      sec._angle = [a - (e.clientX - glisse.x) * 0.008, Math.max(-0.15, Math.min(1.35, b + (e.clientY - glisse.y) * 0.008))]; dessiner3D(sec); });
+      sec._angle = [Math.max(-Math.PI / 2, Math.min(0, a - (e.clientX - glisse.x) * 0.008)), Math.max(-0.15, Math.min(1.35, b + (e.clientY - glisse.y) * 0.008))]; dessiner3D(sec); });
     const lacher = () => { glisse = null; sec.querySelector(".vi-m-tient")?.classList.remove("vi-m-tient"); };
     sec.addEventListener("pointerup", lacher); sec.addEventListener("pointercancel", lacher);
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(() => { if (sec._multiOn) dessinerMulti(sec); }, 120); });
