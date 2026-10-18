@@ -48,7 +48,9 @@ function majBarre(nom, donnees) {
 
 let DATA, R25, PROJ, SOND, BT, CE, CP, SIEGES_DE, NUM_LAND, sel = null, demarre = false;
 // mode de la carte : projection (lead, second, vote), élection de 2025 (e25 : élu de la 1re voix, e25z : 2e voix en tête, e25vote)
-const etat = { mode: "lead", parti: null, pct: lireLS("viPct", true), chambre: "proj", reg: null };
+// vue de la carte : circ (299 circonscriptions) ou lander (16 Länder, régions)
+const etat = { mode: "lead", parti: null, pct: lireLS("viPct", true), chambre: "proj", reg: null, vue: lireLS("vaVue", "circ") };
+const enLander = () => etat.vue === "lander";
 const groupe = () => etat.mode.startsWith("e25") ? "e25" : "proj";
 const voteMode = () => etat.mode === "vote" || etat.mode === "e25vote";
 const secondes = () => voteMode() || etat.mode === "e25z";      // la carte montre les secondes voix (sinon : premières voix)
@@ -146,7 +148,7 @@ function dessinerChambre() {
 
 /* ---------- carte ---------- */
 const MW = 600, MH = 720;
-let svg, gZ, gRid, gHach, gReg, gSel, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity;
+let svg, gZ, gRid, gLand, gHach, gReg, gSel, gLbl, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity;
 const PRESETS = {};
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function tri(parts) { return Object.entries(parts || {}).filter(([p]) => p !== "AUT" && p !== "IND").sort((a, b) => b[1] - a[1]); }
@@ -156,6 +158,15 @@ function remplir(i) {
   if (etat.mode === "second") { const [p, v] = tri(c.e)[1] || ["AUT", 0]; return [COUL[p] || COUL.AUT, Math.max(0.3, Math.min(1, (v - 8) / 27))]; }
   if (etat.mode === "e25z") return [COUL[c.gz] || COUL.AUT, Math.max(0.3, Math.min(1, (c.z[c.gz] - 15) / 30))];
   return [COUL[c.g] || COUL.AUT, Math.max(0.3, Math.min(1, (c.e[c.g] - 15) / 30))];
+}
+// vue Länder : voix de tout le Land selon le mode (projection : secondes voix projetées ; 2025 : premières voix pour
+// « Élu 1re voix », secondes voix sinon)
+const partsLand = L => groupe() === "e25" ? (etat.mode === "e25" ? R25.lands[L]?.e : R25.lands[L]?.z) : PROJ.lands[L];
+function remplirLand(L) {
+  const parts = partsLand(L); if (!parts) return ["var(--soft)", 1];
+  if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, partDe(parts, etat.parti) / 50))];
+  const deux = etat.mode === "second", [p, v] = tri(parts)[deux ? 1 : 0] || ["AUT", 0];
+  return [COUL[p] || COUL.AUT, Math.max(0.3, Math.min(1, deux ? (v - 8) / 27 : (v - 15) / 30))];
 }
 // pôle d'inaccessibilité (polylabel, Mapbox) : point le plus au cœur d'un polygone ; [x, y, rayon libre]
 function polylabel(rings, precision = 0.5) {
@@ -185,7 +196,7 @@ function polylabel(rings, precision = 0.5) {
 }
 const ANCRE = {};
 function ancre(f) {
-  const k = f.properties.RID;
+  const k = f.properties.RID ?? "L" + f.properties.REG;   // circonscription ou Land
   if (ANCRE[k]) return ANCRE[k];
   const polys = f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
   let best = [0, 0, -1];
@@ -201,7 +212,7 @@ function placerEtiquettes() {
     const show = Math.abs(sx - MW / 2) <= hx && Math.abs(sy - MH / 2) <= hy && room >= LBL_MIN_CIRC;
     const g = d3.select(this).style("display", show ? null : "none");
     if (!show) return;
-    g.select("text.vi-nom").style("display", curK >= NAME_ZOOM && room >= LBL_NAME ? null : "none");
+    g.select("text.vi-nom").style("display", (curK >= NAME_ZOOM || enLander()) && room >= LBL_NAME ? null : "none");
     g.selectAll("text").attr("transform", `translate(${x},${y})`).style("font-size", (10.5 / curK) + "px").style("stroke-width", (3 / curK) + "px");
   });
 }
@@ -223,13 +234,18 @@ function construireCarte() {
   // hachures : circonscriptions dont le vainqueur n'obtient pas de siège (couverture insuffisante par les secondes voix)
   svg.append("defs").html(`<pattern id="vaHach" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><rect width="2" height="5" style="fill:var(--surface)" opacity="0.75"></rect></pattern>`);
   gZ = svg.append("g");
-  gRid = gZ.append("g"); gHach = gZ.append("g"); gReg = gZ.append("g"); gSel = gZ.append("g"); gLbl = gZ.append("g");
+  gRid = gZ.append("g"); gLand = gZ.append("g"); gHach = gZ.append("g"); gReg = gZ.append("g"); gSel = gZ.append("g"); gLbl = gZ.append("g");
   gRid.selectAll("path").data(DATA.ridingGeo.features).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => DATA.ridings[f.properties.RID].n)
     .on("click", (e, f) => choisir(f.properties.RID))
     .on("keydown", (e, f) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choisir(f.properties.RID); } })
     .on("mousemove", infobulle).on("mouseleave", () => { $("viTip").hidden = true; });
   gReg.selectAll("path").data(DATA.curRegionGeo.features).join("path").attr("class", "lv-reg").attr("d", PATH);
+  gLand.selectAll("path").data(DATA.curRegionGeo.features).join("path").attr("class", "lv-rid va-land").attr("d", PATH)
+    .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => nomLand(f.properties.REG))
+    .on("click", (e, f) => choisirLand(f.properties.REG))
+    .on("keydown", (e, f) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choisirLand(f.properties.REG); } })
+    .on("mousemove", infobulleLand).on("mouseleave", () => { $("viTip").hidden = true; });
   ZOOM = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40, -40], [MW + 40, MH + 40]])
     .on("zoom", e => { gZ.attr("transform", e.transform); curK = e.transform.k; curT = e.transform;
       svg.select("#vaHach").attr("patternTransform", `rotate(45) scale(${1 / curK})`); placerEtiquettes(); });
@@ -246,7 +262,8 @@ function construireCarte() {
   });
   preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("viPct", etat.pct); peindre(); });
-  $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
+  $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m);
+    const v = e.target.closest("button[data-vue-carte]"); if (v) changerVue(v.dataset.vueCarte); });
   $("viChips").innerHTML = CHIPS.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${lab(p)}</button>`).join("");
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
     etat.parti = b.dataset.p; if (!voteMode()) etat.mode = groupe() === "e25" ? "e25vote" : "vote"; peindre(); if (sel == null) dessinerPanneau(); });
@@ -256,8 +273,16 @@ function construireCarte() {
 function outilsCarte() {
   const bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
-  $("viModes").innerHTML = (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
+  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Carte</span><span class="lv-groupe">${[["circ", "Circonscriptions"], ["lander", "Länder (régions)"]]
+      .map(([v, t]) => `<button type="button" data-vue-carte="${v}" aria-pressed="${v === etat.vue}">${t}</button>`).join("")}</span></span>`
+    + (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu 1re voix"], ["e25z", "2e voix en tête"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
+}
+// circonscriptions ⇄ Länder : la sélection d'une circonscription est levée, celle d'un Land gardée
+function changerVue(v) {
+  if (v === etat.vue) return;
+  etat.vue = v; ecrireLS("vaVue", v); sel = null; $("viTip").hidden = true;
+  peindre(); dessinerPanneau();
 }
 function changerMode(m) {
   etat.mode = m;
@@ -265,23 +290,28 @@ function changerMode(m) {
   if (etat.chambre !== groupe()) { etat.chambre = groupe(); dessinerChambre(); }
   peindre(); dessinerPanneau();
 }
-const sansSiege = i => { const c = srcCirc()[i]; return c && !c.siege && (etat.mode === "lead" || etat.mode === "e25"); };
+const sansSiege = i => { const c = srcCirc()[i]; return !enLander() && c && !c.siege && (etat.mode === "lead" || etat.mode === "e25"); };
 function peindre() {
   document.querySelectorAll("#viModes button[data-m]").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === etat.mode));
   document.querySelectorAll("#viChips button").forEach(b => b.setAttribute("aria-pressed", voteMode() && b.dataset.p === etat.parti));
   $("viChips").setAttribute("aria-disabled", !voteMode());
+  document.querySelectorAll("#viModes button[data-vue-carte]").forEach(b => b.setAttribute("aria-pressed", b.dataset.vueCarte === etat.vue));
+  gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });
+  gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = !etat.reg || etat.reg === L ? o : o * 0.3; });
   gHach.selectAll("path").data(DATA.ridingGeo.features.filter(f => sansSiege(f.properties.RID)), f => f.properties.RID)
     .join("path").attr("d", PATH).style("fill", "url(#vaHach)").style("pointer-events", "none");
-  const f = sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
+  const f = enLander() ? (etat.reg ? DATA.curRegionGeo.features.find(x => x.properties.REG === etat.reg) : null)
+    : sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
   $("viPct").hidden = !voteMode(); $("viPct").setAttribute("aria-pressed", etat.pct);
-  const labs = gLbl.selectAll("g.vi-lab").data(voteMode() && etat.pct ? DATA.ridingGeo.features : [], f => f.properties.RID)
+  const labs = gLbl.selectAll("g.vi-lab").data(voteMode() && etat.pct ? (enLander() ? DATA.curRegionGeo.features : DATA.ridingGeo.features) : [], f => f.properties.RID ?? "L" + f.properties.REG)
     .join(enter => { const g = enter.append("g").attr("class", "vi-lab");
       g.append("text").attr("class", "vi-lbl vi-nom").attr("text-anchor", "middle").attr("dy", "-0.85em");
       g.append("text").attr("class", "vi-lbl vi-val").attr("text-anchor", "middle").attr("dy", "0.35em"); return g; });
-  labs.select("text.vi-val").text(f => { const c = srcCirc()[f.properties.RID]; return c ? nf(partDe(c.z, etat.parti), 0) + " %" : ""; });
-  labs.select("text.vi-nom").text(f => DATA.ridings[f.properties.RID].n);
+  labs.select("text.vi-val").text(f => { const parts = f.properties.RID == null ? partsLand(f.properties.REG) : srcCirc()[f.properties.RID]?.z;
+    return parts ? nf(partDe(parts, etat.parti), 0) + " %" : ""; });
+  labs.select("text.vi-nom").text(f => f.properties.RID == null ? nomLand(f.properties.REG) : DATA.ridings[f.properties.RID].n);
   placerEtiquettes();
   let an = $("vfAnCarte");
   if (!an) { an = document.createElement("div"); an.id = "vfAnCarte"; an.className = "vf-an-carte"; $("viCarte").before(an); }
@@ -289,6 +319,13 @@ function peindre() {
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
   const quoi = groupe() === "e25" ? `résultat de ${AN(2025)}` : "projection du site";
   const hach = `<span>· hachures : vainqueur de la 1<sup>re</sup> voix sans siège (pas assez de secondes voix pour son parti dans le Land)</span>`;
+  if (enLander()) {   // vue Länder : voix de tout le Land
+    const voix = groupe() === "e25" && etat.mode === "e25" ? "premières voix (candidats)" : `secondes voix (listes)${groupe() === "proj" ? " projetées" : ""}`;
+    $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
+      ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Land (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}` : ""}</span>`
+      : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "en tête"} des ${voix} dans chaque Land (${quoi}). Plus la couleur est foncée, plus son score est élevé. Clique sur un Land pour son détail.</span>`);
+    return;
+  }
   $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque circonscription (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}, plus de circonscriptions en zoomant` : ""}</span>`
     : etat.mode === "e25z" ? `<span>Couleur : parti arrivé en tête des secondes voix (listes) dans chaque circonscription en ${AN(2025)}. Plus la couleur est foncée, plus son score est élevé.</span>`
@@ -306,6 +343,20 @@ function infobulle(e, f) {
     + (ce ? `<small>2e voix 2025 : ${top3(ce.z)}</small><br>` : "") + (cp ? `<small>Projection, 1re voix : ${top3(cp.e)}</small>` : "");
 }
 
+function infobulleLand(e, f) {
+  const L = f.properties.REG, t = $("viTip"), box = svg.node().parentNode.getBoundingClientRect();
+  let px = e.clientX - box.left + 14; if (px > box.width - 230) px -= 250;
+  t.hidden = false; t.style.left = px + "px"; t.style.top = (e.clientY - box.top + 14) + "px";
+  const top3 = parts => tri(parts || {}).slice(0, 3).map(([p, v]) => `${lab(p)} ${nf(v, 0)} %`).join(" · ");
+  const sg = d => Object.entries(d || {}).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${lab(p)} ${n}`).join(" · ");
+  const n = DATA.ridings.filter(r => r.r === L).length;
+  t.innerHTML = `<b>${esc(nomLand(L))}</b><small>Land · ${n} circonscription${n > 1 ? "s" : ""}</small><br>`
+    + (PROJ ? `<small>Projection, 2e voix : ${top3(PROJ.lands[L])}</small><br><small>Sièges (projection) : ${sg(PROJ.sieges_land[L])}</small><br>` : "")
+    + `<small>2e voix 2025 : ${top3(R25.lands[L]?.z)}</small>`;
+}
+// clic sur un Land (vue Länder) : son panneau, sans zoomer (les autres Länder restent visibles et cliquables)
+function choisirLand(L) { etat.reg = L; sel = null; peindre(); dessinerPanneau(); infoPlein(); }
+
 /* ---------- panneau : toute l'Allemagne, un Land ou une circonscription ---------- */
 function choisir(i) { sel = i; peindre(); dessinerPanneau(); if (i != null) infoPlein(); }
 const jauge = (labl, coul, v, droite = "", max = 50, cls = "") => `<div class="vi-vrow ${cls}"><b style="color:${coul}">${labl}</b><span class="vi-jauge"><i style="width:${Math.min(100, 100 * v / max)}%;background:${coul}"></i></span>`
@@ -314,8 +365,8 @@ const dans = i => !etat.reg || DATA.ridings[i].r === etat.reg;
 const nomLand = L => DATA.regions.find(r => r.code === L)?.name || L;
 function choisirRegion(L) {
   etat.reg = L; sel = null;
-  if (L) zoomVers({ type: "FeatureCollection", features: DATA.curRegionGeo.features.filter(f => f.properties.REG === L) }, 0.9);
-  else svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity);
+  if (L && !enLander()) zoomVers({ type: "FeatureCollection", features: DATA.curRegionGeo.features.filter(f => f.properties.REG === L) }, 0.9);
+  else if (!enLander() || curK !== 1) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity);
   peindre(); dessinerPanneau();
 }
 const selecteurRegions = () => `<details class="vc-menu"><summary>Land : <b>${etat.reg ? esc(nomLand(etat.reg)) : "Toute l'Allemagne"}</b></summary>
@@ -415,7 +466,7 @@ function dessinerPanneau() {
   const replie = (titre, corps) => `<details class="lv-sg vc-replie"><summary><span>${titre}</span></summary><div class="vi-vrows">${corps}</div></details>`;
   const bloc = (titre, corps, ouvert) => ouvert ? `<span class="lv-eyebrow">${titre}</span><div class="vi-vrows">${corps}</div>` : replie(titre, corps);
   const e25 = ce ? bloc(`${AN(2025)} · première voix (candidats)`, lignes(ce.e, ce.g), g === "e25" && !secondes()) + bloc(`${AN(2025)} · seconde voix (listes)`, lignes(ce.z, ce.gz), g === "e25" && secondes()) : "";
-  const pr = cp ? bloc("Projection · première voix", lignes(cp.e, cp.g), g === "proj" && !secondes()) + bloc("Projection · seconde voix", lignes(cp.z, cp.gz), g === "proj" && secondes()) : "";
+  const pr = cp ? bloc("Projection · première voix", lignes(cp.e, cp.g), g === "proj" && !secondes()) + bloc("Projection · seconde voix", lignes(cp.z, cp.gz), true) : "";
   const elu = ce ? `<p class="vi-elu" style="--c:${COUL[ce.g] || COUL.AUT}">${ce.siege ? `<b>${esc(ce.elu || "")}</b> · ${NOMS[ce.g] || ce.g} <small>(élu en 2025 avec ${nf(ce.e[ce.g], 1)} % des premières voix)</small>`
     : `<b>Aucun député de circonscription</b> <small>: le candidat ${lab(ce.g)} est arrivé en tête (${nf(ce.e[ce.g], 1)} %), mais son parti n'avait pas assez de sièges dans le Land pour tous ses vainqueurs (couverture par les secondes voix).</small>`}</p>` : "";
   const pills = g === "e25" ? (ce ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[ce.g]}"></i>En tête en 2025 : ${lab(ce.g)}</span><span class="vi-pill">Avance : ${nf(ce.marge, 1)} pts</span>${ce.siege ? "" : `<span class="va-sans-siege">sans siège</span>`}<span class="vi-pill">Participation : ${nf(ce.particip, 1)} %</span></div>` : "")
