@@ -823,13 +823,28 @@
     .vi-partis-centre { grid-row: 1; justify-self: center; width: 2px; height: 14px; border-radius: 1px; background: var(--ink); }
     .vi-partis-entre { justify-self: start; margin-left: -8px; }   /* pas de colonne Centre : au milieu de l'espace entre deux colonnes (14 px) */
     /* axes multiples (essai, Votes Québec) : bouton en haut à droite, graphique à deux axes à la place des colonnes */
-    .vi-partis-tete { display: flex; align-items: center; gap: 12px; }
+    .vi-partis-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+    .vi-partis-tete button { white-space: nowrap; }
+    .vi-m-bout { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
     .vi-partis-tete .vi-partis-titre { margin: 0; }
     .vi-partis-multi { margin-left: auto; padding: 4px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; }
     .vi-partis-multi:hover { border-color: var(--ink); }
     .vi-partis-multi[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
     .vi-partis-multi:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     .vi-multi .vi-partis-axe, .vi-multi .vi-partis-regle { display: none; }
+    .vi-partis-vues { display: inline-flex; margin-left: auto; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; }
+    .vi-partis-vues[hidden] { display: none; }
+    .vi-partis-vues button { padding: 4px 11px; border: 0; background: var(--surface); color: var(--muted); font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; }
+    .vi-partis-vues button + button { border-left: 1px solid var(--rule); }
+    .vi-partis-vues button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+    .vi-partis-vues button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+    .vi-partis-vues:not([hidden]) + .vi-partis-multi { margin-left: 0; }
+    .vi-m-3d { cursor: grab; touch-action: pan-y; user-select: none; }
+    .vi-m-3d.vi-m-tient { cursor: grabbing; }
+    .vi-m-arete { stroke: var(--muted); stroke-width: 1; opacity: 0.55; }
+    .vi-m-arete.vi-m-derriere { stroke-dasharray: 3 4; opacity: 0.35; }
+    .vi-m-rappel { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.6; }
+    .vi-m-ombre { fill: var(--muted); opacity: 0.22; }
     .vi-partis-plan2 { display: grid; gap: 6px; min-width: 0; }
     .vi-partis-plan2[hidden] { display: none; }
     .vi-m-svg { display: block; max-width: 100%; height: auto; margin: 0 auto; overflow: visible; }

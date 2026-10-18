@@ -116,20 +116,36 @@ export const PARTIS = {
   },
 };
 
-// Axes multiples (essai sur Votes Québec) : deuxième axe d'un pays, avec une valeur et sa justification factuelle par
-// parti ; axe horizontal = colonne gauche-droite de la bande (BORDS), centre au milieu
+// Axes multiples (essai sur Votes Québec) : axes supplémentaires d'un pays, avec une valeur (v) et sa justification
+// factuelle par parti ; axe horizontal = colonne gauche-droite de la bande (BORDS), centre au milieu ; y = axe vertical
+// (2 et 3 axes), z = axe de profondeur (3 axes, vue 3D) ; max = valeur extrême possible
 export const AXES = {
   quebec: {
-    titre: "Affirmation identitaire", bas: "moins", haut: "plus", max: 3,   // max : valeur extrême possible (3 sujets × 1)
-    note: "Axe vertical : somme de trois positions, de −1 à +1 chacune : immigration (seuil annuel promis en 2026), laïcité (loi 21 et interdiction "
-      + "des signes religieux), langue (loi 96). Sources : programmes de la campagne 2026 (La Presse, CTV, Le Délit), votes à l'Assemblée nationale "
-      + "(loi 21 en 2019, loi 96 en 2022). Axe horizontal : groupe gauche-droite de la bande des partis.",
-    valeurs: {
-      PQ: { y: 3, pourquoi: "immigration : baisse à 35 000 par an (+1) · laïcité : défend la loi 21, votée en 2019 (+1) · langue : contre la loi 96 en 2022 parce qu'elle n'allait pas assez loin (+1)" },
-      CAQ: { y: 2, pourquoi: "immigration : maintien à 45 000 par an et baisse des temporaires (+½) · laïcité : a fait adopter la loi 21 et renouvelé sa dérogation jusqu'en 2031 (+1) · langue : a fait adopter la loi 96 (+½)" },
-      PCQ: { y: 1, pourquoi: "immigration : seuils fixés par chaque région, sans chiffre (0) · laïcité : renouvellerait la dérogation de la loi 21 et appuie l'interdiction des signes religieux pour tout le personnel des écoles (+1) · langue : garderait la dérogation de la loi 96 mais en changerait des articles (0)" },
-      QS: { y: -1.5, pourquoi: "immigration : hausse à 70 000 par an (−1) · laïcité : contre la loi 21 en 2019, abrogerait l'interdiction des signes religieux (−1) · langue : pour la loi 96 en 2022 (+½)" },
-      PLQ: { y: -2.5, pourquoi: "immigration : 45 000 à 70 000 par an (−½) · laïcité : contre la loi 21 en 2019, ne renouvellerait pas sa dérogation (−1) · langue : contre la loi 96 en 2022 (−1)" },
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    y: {
+      titre: "Affirmation identitaire", bas: "moins", haut: "plus", max: 3, bouts3: ["Identitaire −", "Identitaire +"],
+      note: "Axe identitaire : somme de trois positions, de −1 à +1 chacune : immigration (seuil annuel promis en 2026), laïcité (loi 21 et "
+        + "interdiction des signes religieux), langue (loi 96). Sources : programmes de la campagne 2026 (La Presse, CTV, Le Délit), votes à "
+        + "l'Assemblée nationale (loi 21 en 2019, loi 96 en 2022).",
+      valeurs: {
+        PQ: { v: 3, pourquoi: "immigration : baisse à 35 000 par an (+1) · laïcité : défend la loi 21, votée en 2019 (+1) · langue : contre la loi 96 en 2022 parce qu'elle n'allait pas assez loin (+1)" },
+        CAQ: { v: 2, pourquoi: "immigration : maintien à 45 000 par an et baisse des temporaires (+½) · laïcité : a fait adopter la loi 21 et renouvelé sa dérogation jusqu'en 2031 (+1) · langue : a fait adopter la loi 96 (+½)" },
+        PCQ: { v: 1, pourquoi: "immigration : seuils fixés par chaque région, sans chiffre (0) · laïcité : renouvellerait la dérogation de la loi 21 et appuie l'interdiction des signes religieux pour tout le personnel des écoles (+1) · langue : garderait la dérogation de la loi 96 mais en changerait des articles (0)" },
+        QS: { v: -1.5, pourquoi: "immigration : hausse à 70 000 par an (−1) · laïcité : contre la loi 21 en 2019, abrogerait l'interdiction des signes religieux (−1) · langue : pour la loi 96 en 2022 (+½)" },
+        PLQ: { v: -2.5, pourquoi: "immigration : 45 000 à 70 000 par an (−½) · laïcité : contre la loi 21 en 2019, ne renouvellerait pas sa dérogation (−1) · langue : contre la loi 96 en 2022 (−1)" },
+      },
+    },
+    z: {
+      titre: "Question nationale", bas: "fédéralisme", haut: "souveraineté", max: 2, bouts3: ["Fédéralisme", "Souveraineté"],
+      note: "Axe de la question nationale : souverainiste = +2, autonomiste dans le Canada = 0, fédéraliste = −2 (programmes de la campagne 2026 : "
+        + "CBC, Le Devoir, La Presse).",
+      valeurs: {
+        PQ: { v: 2, pourquoi: "souverainiste : promet un référendum sur l'indépendance après janvier 2029 (130 M$ prévus)" },
+        QS: { v: 2, pourquoi: "souverainiste : assemblée constituante comme première étape vers un Québec souverain" },
+        CAQ: { v: 0, pourquoi: "autonomiste : nationaliste dans le Canada, contre un référendum" },
+        PCQ: { v: 0, pourquoi: "autonomiste depuis 2026 : constitution québécoise et rapatriement de pouvoirs dans le Canada, contre un référendum" },
+        PLQ: { v: -2, pourquoi: "fédéraliste, contre un référendum" },
+      },
     },
   },
 };
@@ -153,9 +169,9 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
       actif = b; ouvertA = performance.now();
       sec._choisi = b.dataset.partieParti; appliquerSelection();   // sièges du parti en évidence
       bulle.style.setProperty("--c", it.couleur || "#8D949A");
-      const ax = sec._multiOn && sec._multi?.valeurs[it.cle];
+      const axes = sec._multiOn ? [sec._multi.y, sec._vue === 3 && sec._multi.z].filter(a => a?.valeurs[it.cle]) : [];
       bulle.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><b>${ESC(d.nom)}</b><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`
-        + (ax ? `<p class="vi-partis-chiffres"><b>${ESC(sec._multi.titre)}</b> : ${ESC(ax.pourquoi)}</p>` : "");
+        + axes.map(a => `<p class="vi-partis-chiffres"><b>${ESC(a.titre)}</b> : ${ESC(a.valeurs[it.cle].pourquoi)}</p>`).join("");
       bulle.hidden = false;
       b.setAttribute("aria-describedby", "viPartisBulle");
       // sous le bouton (au-dessus s'il n'y a pas la place), sans sortir de l'écran
@@ -183,6 +199,15 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     document.addEventListener("keydown", e => { if (e.key === "Escape") cacher(); });
     // bouton « Axes multiples » : la bande passe des colonnes au graphique à deux axes, et inversement
     sec.addEventListener("click", e => { if (!e.target.closest(".vi-partis-multi")) return; cacher(); transformer(sec); });
+    sec.addEventListener("click", e => { const v = e.target.closest("[data-vue]"); if (v) { cacher(); choisirVue(sec, +v.dataset.vue); } });
+    // vue 3D : glisser pour tourner (au toucher, glisser de côté ; la page défile toujours de haut en bas)
+    let glisse = null;
+    sec.addEventListener("pointerdown", e => { const svg = e.target.closest(".vi-m-3d"); if (!svg || e.button) return;
+      cancelAnimationFrame(sec._raf); glisse = { x: e.clientX, y: e.clientY, a: sec._angle }; svg.setPointerCapture(e.pointerId); svg.classList.add("vi-m-tient"); });
+    sec.addEventListener("pointermove", e => { if (!glisse) return; const [a, b] = glisse.a;
+      sec._angle = [a + (e.clientX - glisse.x) * 0.008, Math.max(-0.15, Math.min(1.35, b + (e.clientY - glisse.y) * 0.008))]; dessiner3D(sec); });
+    const lacher = () => { glisse = null; sec.querySelector(".vi-m-tient")?.classList.remove("vi-m-tient"); };
+    sec.addEventListener("pointerup", lacher); sec.addEventListener("pointercancel", lacher);
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(() => { if (sec._multiOn) dessinerMulti(sec); }, 120); });
     addEventListener("scroll", cacher, { passive: true });
   }
@@ -202,6 +227,8 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
   const regle = axe && nAxe > 1 ? `<div class="vi-partis-regle" style="--n:${groupes.length}" aria-hidden="true"><div class="vi-partis-trait" style="grid-column:1 / span ${nAxe}">`
     + `<span class="vi-partis-bout">Gauche</span>${centre}<span class="vi-partis-bout" style="grid-column:${nAxe}">Droite</span></div></div>` : "";
   const tete = multi ? `<div class="vi-partis-tete"><span class="vi-partis-titre">${ESC(titre)}</span>`
+    + (multi.z ? `<div class="vi-partis-vues" role="group" aria-label="Nombre d'axes" hidden><button type="button" data-vue="2" aria-pressed="true">2 axes</button>`
+      + `<button type="button" data-vue="3" aria-pressed="false">3 axes · 3D</button></div>` : "")
     + `<button type="button" class="vi-partis-multi" aria-pressed="false">Axes multiples</button></div>` : `<span class="vi-partis-titre">${ESC(titre)}</span>`;
   sec.innerHTML = tete + regle
     + `<div class="vi-partis-axe" style="--n:${groupes.length}">${groupes.map(([nom, xs]) => `<div class="vi-partis-col" role="group" aria-label="${ESC(nom)}">`
@@ -215,6 +242,8 @@ function basculerMulti(sec) {
   const on = !!sec._multiOn, box = sec.querySelector(".vi-partis-plan2"); if (!box) return;
   sec.classList.toggle("vi-multi", on); box.hidden = !on;
   sec.querySelector(".vi-partis-multi")?.setAttribute("aria-pressed", String(on));
+  const vues = sec.querySelector(".vi-partis-vues");
+  if (vues) { vues.hidden = !on; vues.querySelectorAll("[data-vue]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.vue === (sec._vue || 2)))); }
   if (on) dessinerMulti(sec);
 }
 
@@ -259,13 +288,20 @@ function transformer(sec) {
 // graphique à deux axes, carré : x = groupe de la bande (centre = 0), y = valeur du deuxième axe ; les deux axes couvrent la
 // même longueur (de bout en bout), donc un carré de taille fixe au milieu du rectangle, plus petit si la page est étroite ;
 // points survolables comme les boutons
-function dessinerMulti(sec) {
-  const m = sec._multi, box = sec.querySelector(".vi-partis-plan2"); if (!m || !box) return;
-  const pts = sec._items.filter(it => m.valeurs[it.cle] && sec._dico[it.cle].bord !== "aut")
-    .map(it => ({ it, x: RANG[sec._dico[it.cle].bord] - RANG.c, y: m.valeurs[it.cle].y }));
-  const mx = Math.max(1, ...pts.map(p => Math.abs(p.x))) + 0.5, my = (m.max ?? Math.max(1, ...pts.map(p => Math.abs(p.y)))) + 0.4;
+// points et dimensions communs aux vues 2 et 3 axes (le carré de la vue 2 axes = la face avant du cube de la vue 3D)
+function cadreMulti(sec, box) {
+  const m = sec._multi, deux = sec._vue === 3 && m.z;
+  const pts = sec._items.filter(it => m.y.valeurs[it.cle] && (!deux || m.z.valeurs[it.cle]) && sec._dico[it.cle].bord !== "aut")
+    .map(it => ({ it, x: RANG[sec._dico[it.cle].bord] - RANG.c, y: m.y.valeurs[it.cle].v, z: deux ? m.z.valeurs[it.cle].v : 0 }));
+  const mx = Math.max(1, ...pts.map(p => Math.abs(p.x))) + 0.5, my = m.y.max + 0.4, mz = (m.z?.max ?? 1) + 0.4;
   const g = { l: 56, r: 56, t: 30, b: 46 }, S = Math.round(Math.max(200, Math.min(440, box.clientWidth - g.l - g.r)));
-  const W = S + g.l + g.r, H = S + g.t + g.b;
+  const note = [m.y.note, deux && m.z.note, m.noteX].filter(Boolean).join(" ");
+  return { m, pts, mx, my, mz, g, S, W: S + g.l + g.r, H: S + g.t + g.b, note };
+}
+function dessinerMulti(sec) {
+  const box = sec.querySelector(".vi-partis-plan2"); if (!sec._multi || !box) return;
+  if (sec._vue === 3 && sec._multi.z) return dessiner3D(sec, true);
+  const { m: M, pts, mx, my, g, S, W, H, note } = cadreMulti(sec, box), m = M.y;
   const X = x => g.l + (x + mx) / (2 * mx) * S, Y = y => g.t + (my - y) / (2 * my) * S;
   let fond = "";
   for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) {   // un repère par groupe gauche-droite (nom sur deux lignes au trait d'union)
@@ -281,7 +317,72 @@ function dessinerMulti(sec) {
   const points = pts.map(p => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
     + `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9"/><text x="${X(p.x) + 14}" y="${Y(p.y) + 4.5}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
   box.innerHTML = `<svg class="vi-m-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon l'axe gauche-droite et l'axe ${m.titre.toLowerCase()}`)}">`
-    + `<g class="vi-m-fond">${fond}</g>${points}</svg><small class="vi-partis-note">${ESC(m.note)}</small>`;
+    + `<g class="vi-m-fond">${fond}</g>${points}</svg><small class="vi-partis-note">${ESC(note)}</small>`;
+}
+
+// vue 3D (3 axes) : projection orthogonale du cube x · y · z tourné (lacet a, tangage b), réduite pour tenir dans le
+// carré ; à l'angle 0 elle se confond avec la vue 2 axes, d'où le passage animé de l'une à l'autre ; ombres au sol et
+// traits de rappel pour lire la profondeur, partis peints du plus loin au plus proche
+const VUE3 = [-0.62, 0.38];
+function dessiner3D(sec, complet) {
+  const box = sec.querySelector(".vi-partis-plan2"); if (!sec._multi?.z || !box) return;
+  const { m, pts, mx, my, mz, g, S, W, H, note } = cadreMulti(sec, box);
+  const [a, b] = sec._angle || [0, 0], ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+  const rot = (x, y, z) => { const x1 = x * ca + z * sa, z1 = -x * sa + z * ca; return [x1, y * cb + z1 * sb, z1 * cb - y * sb]; };
+  const coins = [];
+  for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) coins.push([x, y, z]);
+  const k = 1 / Math.max(1, ...coins.map(c => { const r = rot(...c); return Math.max(Math.abs(r[0]), Math.abs(r[1])); }));
+  const cx = g.l + S / 2, cy = g.t + S / 2;
+  const P = (x, y, z) => { const r = rot(x, y, z); return { x: cx + r[0] * k * S / 2, y: cy - r[1] * k * S / 2, d: r[2] }; };
+  const f = n => n.toFixed(1);
+  let fond = "";
+  coins.forEach((c, i) => coins.forEach((e, j) => {   // arêtes du cube (coins qui diffèrent d'une seule coordonnée), celles de derrière plus pâles
+    if (j <= i || c.filter((v, n) => v !== e[n]).length !== 1) return;
+    const p = P(...c), q = P(...e);
+    fond += `<line class="vi-m-arete${p.d + q.d > 0.05 ? " vi-m-derriere" : ""}" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}"/>`;
+  }));
+  // libellés courts au bout de chaque axe (bouts3 : [bout −, bout +])
+  const axes = [[[1, 0, 0], "Droite", "Gauche"], [[0, 1, 0], m.y.bouts3[1], m.y.bouts3[0]], [[0, 0, 1], m.z.bouts3[1], m.z.bouts3[0]]];
+  let bouts = "";   // libellés peints après les points, avec un halo, pour rester lisibles
+  for (const [[x, y, z], plus, moins] of axes) {
+    const p = P(x, y, z), q = P(-x, -y, -z), o = P(0, 0, 0);
+    const vis = Math.min(1, Math.hypot(p.x - o.x, p.y - o.y) / (S * 0.18));   // un axe vu de bout s'efface
+    fond += `<line class="vi-m-axe" x1="${f(q.x)}" y1="${f(q.y)}" x2="${f(p.x)}" y2="${f(p.y)}"/>`;
+    for (const [s, txt] of [[1.16, plus], [-1.16, moins]]) {
+      const t = P(x * s, y * s, z * s);
+      bouts += `<text class="vi-m-titre vi-m-bout" x="${f(t.x)}" y="${f(t.y + 4)}" text-anchor="middle" opacity="${vis.toFixed(2)}">${ESC(txt)}</text>`;
+    }
+  }
+  const ombres = pts.map(p => { const sol = P(p.x / mx, -1, p.z / mz), pt = P(p.x / mx, p.y / my, p.z / mz);
+    return `<line class="vi-m-rappel" x1="${f(sol.x)}" y1="${f(sol.y)}" x2="${f(pt.x)}" y2="${f(pt.y)}"/><ellipse class="vi-m-ombre" cx="${f(sol.x)}" cy="${f(sol.y)}" rx="7" ry="${f(2 + 3 * Math.abs(sb))}"/>`; }).join("");
+  const points = pts.map(p => ({ p, q: P(p.x / mx, p.y / my, p.z / mz) })).sort((u, v) => v.q.d - u.q.d)
+    .map(({ p, q }) => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
+      + `<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(9 - 2 * q.d)}"/><text x="${f(q.x + 14)}" y="${f(q.y + 4.5)}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
+  const dedans = `<g class="vi-m-fond">${fond}${ombres}</g>${points}<g class="vi-m-fond">${bouts}</g>`;
+  const svg = box.querySelector(".vi-m-3d");
+  if (!complet && svg && +svg.getAttribute("width") === W) { svg.innerHTML = dedans; return; }   // pendant une rotation : même svg (glisser continue)
+  box.innerHTML = `<svg class="vi-m-svg vi-m-3d" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon trois axes : gauche-droite, ${m.y.titre.toLowerCase()}, ${m.z.titre.toLowerCase()} ; glisser pour tourner`)}">${dedans}</svg>`
+    + `<small class="vi-partis-note">${ESC(note)} Glisser le cube pour le tourner.</small>`;
+}
+
+// angle de la vue 3D amené en douceur jusqu'à « vers », puis fin()
+function tourner(sec, vers, fin) {
+  cancelAnimationFrame(sec._raf);
+  const de = sec._angle || [0, 0], t0 = performance.now(), D = 900;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { sec._angle = vers; dessiner3D(sec); fin?.(); return; }
+  const pas = t => { const u = Math.min(1, (t - t0) / D), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    sec._angle = [de[0] + (vers[0] - de[0]) * e, de[1] + (vers[1] - de[1]) * e]; dessiner3D(sec);
+    if (u < 1) sec._raf = requestAnimationFrame(pas); else fin?.(); };
+  sec._raf = requestAnimationFrame(pas);
+}
+// 2 axes ⇄ 3 axes : le carré pivote pour devenir un cube (et revient de face avant de redevenir le graphique 2 axes)
+function choisirVue(sec, v) {
+  if (v === (sec._vue || 2) || !sec._multi?.z) return;
+  sec.querySelectorAll(".vi-partis-vues [data-vue]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.vue === v)));
+  if (v === 3) { sec._vue = 3; sec._angle = [0, 0]; dessiner3D(sec, true); tourner(sec, VUE3); return; }
+  const [a, b] = sec._angle || [0, 0]; sec._angle = [Math.atan2(Math.sin(a), Math.cos(a)), b];   // plus court chemin vers la face avant
+  tourner(sec, [0, 0], () => { sec._vue = 2; dessinerMulti(sec);
+    sec.querySelectorAll(".vi-m-tick, .vi-m-grille").forEach(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: "ease-out" })); });
 }
 
 // mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris
