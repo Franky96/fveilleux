@@ -564,6 +564,9 @@
     .vf .vi-plan.vf-hemi { max-width: none; }
     .vf-hemi-n { fill: var(--ink); font: 800 64px "Literata", Georgia, serif; }
     .vf-hemi-maj { fill: var(--muted); font: 600 20px "Public Sans", system-ui, sans-serif; }
+    /* hémicycles : ligne entre les blocs gauche-droite (votes-quebec/hemicycle.js, tracerBlocs) et nom des blocs au bord */
+    .vf-hemi-seps path { fill: none; stroke: var(--muted); stroke-width: 1.5px; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; vector-effect: non-scaling-stroke; pointer-events: none; }
+    .vf-hemi-blocs text { fill: var(--muted); font: 700 17px "Public Sans", system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; pointer-events: none; }
     .vf-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.8rem; color: var(--muted); }
     .vf-legende span { display: inline-flex; align-items: center; gap: 6px; }
     .vf-legende i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }

@@ -19,6 +19,15 @@
 
 const P = (nom, info, bord = "aut") => ({ nom, info, bord });
 export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite radicale"], ["aut", "Autres"]];
+const RANG = Object.fromEntries(BORDS.map(([k], i) => [k, i]));
+// place sur l'axe d'une clé de parti : dictionnaire du pays, sinon « extra » (clés absentes du dictionnaire), sinon « autres »
+export const bordDe = (dico, k, extra = {}) => dico?.[k]?.bord || extra[k] || "aut";
+// clés triées de gauche à droite (ordre d'origine gardé dans un même groupe) ; sièges vacants (VAC) à la toute fin
+export function trierAxe(dico, cles, extra = {}) {
+  return cles.map((k, i) => ({ k, i }))
+    .sort((a, b) => (a.k === "VAC") - (b.k === "VAC") || RANG[bordDe(dico, a.k, extra)] - RANG[bordDe(dico, b.k, extra)] || a.i - b.i)
+    .map(x => x.k);
+}
 export const PARTIS = {
   quebec: {
     PQ: P("Parti québécois", "Parti souverainiste et social-démocrate fondé en 1968 par René Lévesque.", "g"),
@@ -85,7 +94,7 @@ export const PARTIS = {
     BSW: P("Alliance Sahra Wagenknecht", "Parti fondé en 2024 par d'anciens membres de Die Linke ; resté sous 5 % en 2025."),
     FDP: P("Parti libéral-démocrate", "Parti libéral de centre droit ; resté sous 5 % en 2025, il n'a plus de députés.", "c"),
     FW: P("Électeurs libres (Freie Wähler)", "Parti de centre droit surtout implanté en Bavière.", "d"),
-    SSW: P("Association des électeurs du Schleswig du Sud", "Parti de la minorité danoise et frisonne, exempté du seuil de 5 %."),
+    SSW: P("Association des électeurs du Schleswig du Sud", "Parti de la minorité danoise et frisonne, exempté du seuil de 5 %.", "g"),
   },
   suisse: {
     UDC: P("Union démocratique du centre", "Parti de droite conservatrice, premier parti du pays depuis 1999.", "dr"),

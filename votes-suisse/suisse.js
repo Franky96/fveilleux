@@ -7,14 +7,15 @@
    (sondages.json). Contours des 26 cantons : data.json (limites généralisées de l'OFS, état 2026). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, BORDS, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
-import { regrouper } from "../votes-quebec/hemicycle.js";
+import { regrouper, tracerBlocs } from "../votes-quebec/hemicycle.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
 const PUCES = ["UDC", "PS", "C", "PLR", "VERT", "PVL", "PEV", "UDF", "MCG", "LEGA"];  // mode Vote de la carte
+const HORS_DICO = { AL: "gr", PCS: "g", DS: "dr", LEGA: "dr" };   // partis absents du dictionnaire de la bande
 const ORDRE = ["PST", "AL", "PS", "VERT", "PVL", "PEV", "PCS", "C", "PLR", "LEGA", "MCG", "UDC", "UDF", "DS", "IND", "AUT"];   // hémicycle, de gauche à droite
 const NOMS = { UDC: "Union démocratique du centre", PS: "Parti socialiste", C: "Le Centre", PLR: "PLR.Les Libéraux-Radicaux", VERT: "Les Vert-e-s",
   PVL: "Vert'libéraux", PEV: "Parti évangélique", UDF: "Union démocratique fédérale", MCG: "Mouvement citoyens genevois", LEGA: "Lega dei Ticinesi",
@@ -95,7 +96,8 @@ function hemicycle(svgEl, seats, n, sous) {
   let places = [];
   rayons.forEach((r, i) => { const k = parRangee[i];
     for (let j = 0; j < k; j++) { const a = Math.PI - j * Math.PI / (k - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
-  const ordre = Object.keys(seats).sort((a, b) => (ORDRE.indexOf(a) + 1 || 99) - (ORDRE.indexOf(b) + 1 || 99));
+  // de gauche à droite, même classement que la bande des partis (votes-quebec/partis.js) ; clés hors dictionnaire placées ici
+  const ordre = trierAxe(PARTIS.suisse, Object.keys(seats).sort((a, b) => (ORDRE.indexOf(a) + 1 || 99) - (ORDRE.indexOf(b) + 1 || 99)), HORS_DICO);
   const sieges = ordre.flatMap(p => d3.range(seats[p]).map(() => p));
   places = regrouper(places, ordre.map(p => seats[p]));   // chaque parti groupé (votes-quebec/hemicycle.js)
   const marge = Math.max(0, rayon + 4 - (cx - Rmax));     // points des bouts de rangée entiers à gauche et à droite
@@ -106,6 +108,7 @@ function hemicycle(svgEl, seats, n, sous) {
     .append("title").text((p, i) => sieges[i] ? `${NOMS[sieges[i]] || sieges[i]} (${seats[sieges[i]]})` : "");
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(n);
   g.append("text").attr("x", cx).attr("y", cy - 18).attr("text-anchor", "middle").attr("class", "vf-hemi-maj").text(sous);
+  tracerBlocs(g, places, ordre.map(p => ({ n: seats[p], bord: bordDe(PARTIS.suisse, p, HORS_DICO) })), { cx, cy, Rmax, noms: Object.fromEntries(BORDS) });
 }
 
 /* ---------- en-tête, choix du conseil, hémicycle ---------- */

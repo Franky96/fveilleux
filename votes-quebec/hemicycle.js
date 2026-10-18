@@ -7,7 +7,12 @@
 
    places = regrouper(places, parts.map(p => p.n))   // places : { a (angle, π = gauche), r (rayon de la rangée), x, y }
    renvoie les places réordonnées : les n0 premières au parti 0, les n1 suivantes au parti 1… ; les places en trop
-   (sièges non attribués) viennent à la fin, à droite. */
+   (sièges non attribués) viennent à la fin, à droite.
+
+   tracerBlocs(g, places, parts, { cx, cy, Rmax, noms })   // après le dessin des sièges
+   parts : [{ n, bord }] dans l'ordre des sièges (partis déjà triés de gauche à droite, trierAxe de partis.js) ;
+   une fine ligne sépare les blocs (gauche radicale, gauche, centre, droite, droite radicale) en passant entre les sièges,
+   et le nom de chaque bloc assez grand s'écrit au bord de l'arc ; la boîte du dessin s'agrandit pour les noms. */
 export function regrouper(places, tailles) {
   const rangees = [...new Set(places.map(p => p.r))].sort((a, b) => a - b)
     .map(r => places.filter(p => p.r === r).sort((p, q) => q.a - p.a));
@@ -49,4 +54,47 @@ function repartir(d, reste, n) {
     pris[i] += sens; k -= sens;
   }
   return pris;
+}
+
+export function tracerBlocs(g, places, parts, { cx, cy, Rmax, noms = {} }) {
+  // blocs : parties consécutives de même place sur l'axe
+  const blocs = [];
+  let i0 = 0;
+  for (const p of parts) {
+    const b = p.bord || "aut", der = blocs[blocs.length - 1];
+    if (der && der.bord === b) der.fin += p.n; else blocs.push({ bord: b, debut: i0, fin: i0 + p.n });
+    i0 += p.n;
+  }
+  const attribues = i0;
+  const rs = [...new Set(places.map(p => p.r))].sort((a, b) => a - b);
+  const rangees = rs.map(r => places.map((p, i) => ({ p, i })).filter(x => x.p.r === r).sort((x, y) => y.p.a - x.p.a));
+  const pasR = rs.length > 1 ? rs[1] - rs[0] : 0.1;
+  const pt = (a, r) => [cx + Math.cos(a) * r * Rmax, cy - Math.sin(a) * r * Rmax];
+  const sep = g.append("g").attr("class", "vf-hemi-seps");
+  blocs.slice(1).forEach(b => {
+    const coupe = b.debut; if (coupe <= 0 || coupe >= attribues) return;
+    const angles = rangees.map(l => {
+      const k = l.findIndex(x => x.i >= coupe), pas = l.length > 1 ? Math.abs(l[0].p.a - l[1].p.a) : 0.1;
+      return k < 0 ? l[l.length - 1].p.a - pas / 2 : k === 0 ? l[0].p.a + pas / 2 : (l[k - 1].p.a + l[k].p.a) / 2;
+    });
+    const pts = [pt(angles[0], rs[0] - pasR * 0.55), ...angles.map((a, j) => pt(a, rs[j])), pt(angles[angles.length - 1], rs[rs.length - 1] + pasR * 0.55)];
+    sep.append("path").attr("d", "M" + pts.map(q => q.map(v => v.toFixed(1)).join(",")).join("L"));
+  });
+  // noms des blocs au bord de l'arc (blocs d'au moins 4 % des sièges, hors « autres »)
+  const ext = rangees[rangees.length - 1], rOut = rs[rs.length - 1] + pasR * 0.6;
+  const lab = g.append("g").attr("class", "vf-hemi-blocs");
+  blocs.forEach(b => {
+    if (b.bord === "aut" || !noms[b.bord] || (b.fin - b.debut) / places.length < 0.04) return;
+    const dans = ext.filter(x => x.i >= b.debut && x.i < b.fin), src = dans.length ? dans : places.slice(b.debut, b.fin).map(p => ({ p }));
+    const a = src.reduce((s, x) => s + x.p.a, 0) / src.length, [x, y] = pt(a, rOut), c = Math.cos(a);
+    lab.append("text").attr("x", x).attr("y", y).attr("text-anchor", c > 0.3 ? "start" : c < -0.3 ? "end" : "middle")
+      .attr("dominant-baseline", Math.sin(a) > 0.5 ? "auto" : "middle").text(noms[b.bord]);
+  });
+  // boîte agrandie pour que les noms ne soient pas coupés
+  const svg = g.node().ownerSVGElement || g.node();
+  try {
+    const vb = svg.viewBox.baseVal, bb = svg.getBBox(), m = 6;
+    const x0 = Math.min(vb.x, bb.x - m), y0 = Math.min(vb.y, bb.y - m), x1 = Math.max(vb.x + vb.width, bb.x + bb.width + m), y1 = Math.max(vb.y + vb.height, bb.y + bb.height + m);
+    svg.setAttribute("viewBox", `${x0} ${y0} ${x1 - x0} ${y1 - y0}`);
+  } catch (e) { /* SVG pas encore affiché : boîte d'origine */ }
 }

@@ -6,10 +6,10 @@
    tableaux Wikipédia qui citent chaque sondeur. Aucune projection en sièges (2 tours : trop incertain par circonscription). */
 import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
-import { sectionPartis, PARTIS } from "../votes-quebec/partis.js";
+import { sectionPartis, PARTIS, BORDS, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
-import { regrouper } from "../votes-quebec/hemicycle.js";
+import { regrouper, tracerBlocs } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 577, MAJ = 289;
 const NOMS = { EXG: "Extrême gauche", NFP: "Gauche (NFP)", DVG: "Divers gauche", REG: "Régionalistes", ENS: "Ensemble (centre)", DVC: "Divers centre",
@@ -115,7 +115,10 @@ function dessinerTete() {
   $("viSource").innerHTML = "Députés en exercice · Assemblée élue en juillet 2024";
   $("viNote").textContent = "Aucun sondage d'intentions de vote aux législatives n'a été publié depuis octobre 2025 (registre de la Commission des sondages) : la page montre l'Assemblée telle qu'elle est aujourd'hui. Prochaines législatives au plus tard en 2029, sauf dissolution.";
   $("viSiegesTitre").textContent = lead.n >= MAJ ? `${lead.nom} : ${lead.n} sièges, majorité absolue` : `Aucune majorité absolue · premier groupe : ${lead.id} (${lead.n} sièges)`;
-  hemicycle($("viPlan"), [...A.groupes.map(g => ({ k: g.id, n: g.n, c: g.c, nom: g.nom })), ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant" }] : [])]);
+  // groupes de gauche à droite (même classement que la bande des partis)
+  const parG = Object.fromEntries(A.groupes.map(g => [g.id, g]));
+  hemicycle($("viPlan"), [...trierAxe(PARTIS.france, A.groupes.map(g => g.id)).map(k => { const g = parG[k]; return { k: g.id, n: g.n, c: g.c, nom: g.nom, bord: bordDe(PARTIS.france, g.id) }; }),
+    ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant", bord: "vac" }] : [])]);
   $("viLegende").innerHTML = A.groupes.map(g => `<span style="--c:${g.c}" title="${esc(g.nom)}"><i></i>${esc(g.id)} <b>${g.n}</b></span>`).join("")
     + (A.vacants ? `<span style="--c:var(--soft)"><i></i>Vacants <b>${A.vacants}</b></span>` : "");
 }
@@ -138,6 +141,7 @@ function hemicycle(svgEl, parts) {
     .style("fill", (p, i) => sieges[i] ? sieges[i].c : "var(--soft)").append("title").text((p, i) => sieges[i] ? sieges[i].nom : "");
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(SIEGES);
   g.append("text").attr("x", cx).attr("y", cy - 18).attr("text-anchor", "middle").attr("class", "vf-hemi-maj").text(`députés · majorité ${MAJ}`);
+  tracerBlocs(g, places, parts, { cx, cy, Rmax, noms: Object.fromEntries(BORDS) });
 }
 
 /* ---------- carte : France métropolitaine + outre-mer en encarts (projection composite) ---------- */
