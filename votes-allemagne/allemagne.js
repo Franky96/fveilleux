@@ -278,13 +278,11 @@ function outilsCarte() {
     + (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu 1re voix"], ["e25z", "2e voix en tête"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
 }
-// Wahlkreise ⇄ Länder : la sélection d'un Wahlkreis est levée, celle d'un Land gardée ; en vue Länder, toute
-// l'Allemagne (pas de zoom) ; de retour aux Wahlkreise avec un Land choisi, zoom sur ce Land (comme le choix « Land : »)
+// Wahlkreise ⇄ Länder : chaque vue repart de toute l'Allemagne (sélection d'un Wahlkreis ou d'un Land levée, zoom remis)
 function changerVue(v) {
   if (v === etat.vue) return;
-  etat.vue = v; ecrireLS("vaVue", v); sel = null; $("viTip").hidden = true;
-  if (enLander()) { if (curK !== 1) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); }
-  else if (etat.reg) zoomVers({ type: "FeatureCollection", features: DATA.curRegionGeo.features.filter(f => f.properties.REG === etat.reg) }, 0.9);
+  etat.vue = v; ecrireLS("vaVue", v); sel = null; etat.reg = null; $("viTip").hidden = true;
+  if (curK !== 1) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity);
   peindre(); dessinerPanneau();
 }
 function changerMode(m) {
