@@ -46,7 +46,7 @@ export const PARTIS = {
     PCC: P("Parti conservateur du Canada", "Parti de droite né en 2003 de la fusion de l'Alliance canadienne et du Parti progressiste-conservateur.", "d"),
     BQ: P("Bloc québécois", "Parti souverainiste et social-démocrate de centre gauche, qui ne présente des candidats qu'au Québec, fondé en 1991.", "cg"),
     NPD: P("Nouveau Parti démocratique", "Parti social-démocrate de centre gauche, le plus à gauche des grands partis fédéraux, fondé en 1961.", "cg"),
-    PVC: P("Parti vert du Canada", "Parti écologiste de centre gauche fondé en 1983.", "cg"),
+    PVC: P("Parti vert du Canada", "Parti écologiste de gauche fondé en 1983.", "g"),
     PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018.", "dp"),
   },
   alberta: {
@@ -54,8 +54,8 @@ export const PARTIS = {
     NPD: P("Nouveau Parti démocratique de l'Alberta", "Parti de centre gauche, au pouvoir de 2015 à 2019 ; il domine à Edmonton.", "cg"),
     PT: P("Progressive Tory Party of Alberta", "Parti de centre droit, nouveau nom du Parti albertain depuis décembre 2025 ; un député, exclu de l'UCP.", "cd"),
     LIB: P("Parti libéral de l'Alberta", "Parti de centre, au pouvoir de 1905 à 1921 ; sans député depuis 2019.", "c"),
-    VERT: P("Parti vert de l'Alberta", "Parti écologiste de centre gauche, comme le Parti vert du Canada.", "cg"),
-    RPA: P("Parti républicain de l'Alberta", "Parti indépendantiste de droite populiste, l'ancien Buffalo Party, renommé en 2025.", "dp"),
+    VERT: P("Parti vert de l'Alberta", "Parti écologiste de centre gauche.", "cg"),
+    RPA: P("Parti républicain de l'Alberta", "Parti indépendantiste de droite, l'ancien Buffalo Party, renommé en 2025.", "d"),
   },
   usa: {
     D: P("Parti démocrate", "Parti de centre gauche, le plus ancien des deux grands partis (fondé en 1828).", "cg"),
@@ -96,10 +96,10 @@ export const PARTIS = {
     AfD: P("Alternative pour l'Allemagne", "Parti de droite nationaliste fondé en 2013 ; les autres grands partis refusent de gouverner avec lui.", "dr"),
     "Grüne": P("Alliance 90 / Les Verts", "Parti écologiste de centre gauche, issu en 1993 de l'union des Verts de l'Ouest et d'Alliance 90, venue de l'Est.", "cg", "g"),
     Linke: P("Die Linke (La Gauche)", "Parti de gauche radicale fondé en 2007.", "gr"),
-    BSW: P("Alliance Sahra Wagenknecht", "Parti fondé en 2024 par d'anciens membres de Die Linke, difficile à classer : à gauche sur l'économie, conservateur sur l'immigration ; resté sous 5 % en 2025."),
+    BSW: P("Alliance Sahra Wagenknecht", "Parti de gauche radicale fondé en 2024 par d'anciens membres de Die Linke, conservateur sur l'immigration et les questions de société ; resté sous 5 % en 2025.", "gr", "aut"),
     FDP: P("Parti libéral-démocrate", "Parti libéral de centre droit ; resté sous 5 % en 2025, il n'a plus de députés.", "cd", "c"),
     FW: P("Électeurs libres (Freie Wähler)", "Parti de centre droit surtout implanté en Bavière.", "cd", "d"),
-    SSW: P("Association des électeurs du Schleswig du Sud", "Parti de centre gauche de la minorité danoise et frisonne, exempté du seuil de 5 %.", "cg", "g"),
+    SSW: P("Association des électeurs du Schleswig du Sud", "Parti régionaliste et social-libéral (centre gauche) de la minorité danoise et frisonne, exempté du seuil de 5 %.", "cg", "g"),
   },
   suisse: {
     UDC: P("Union démocratique du centre", "Parti national-conservateur et populiste de droite, premier parti du pays depuis 1999.", "dr"),
