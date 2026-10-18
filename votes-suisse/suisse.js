@@ -194,7 +194,7 @@ function remplir(ab) {
   if (TYPE === "ce") return remplirCE(ab);
   // sièges (projection, élus actuels, élus de 2023) : bandes proportionnelles aux sièges du canton (proportionnelle :
   // pas de vainqueur du canton)
-  if (etat.mode === "act" || etat.mode === "lead" || etat.mode === "e23") return [bandes(defs, "ch-" + ab, siegesCanton(ab), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.85];
+  if (etat.mode === "act" || etat.mode === "lead" || etat.mode === "e23") return [bandes(defs, "ch-" + ab, siegesCanton(ab), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.6];
   const o = trie(partsCanton(ab) || {});
   if (!o.length) return ["var(--soft)", 1];
   if (etat.mode === "second") { const [p, v] = o[1] || o[0]; return [COUL[p] || COUL.AUT, Math.max(0.45, Math.min(1, (v - 5) / 22))]; }
@@ -318,6 +318,7 @@ function peindre() {
   document.querySelectorAll("#viChips button").forEach(b => b.setAttribute("aria-pressed", voteMode() && b.dataset.p === etat.parti));
   $("viChips").setAttribute("aria-disabled", !voteMode());
   gK.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.K); this.style.fill = c; this.style.fillOpacity = o; });
+  svg.classed("vi-bandes", TYPE === "cn" && ["lead", "e23", "act"].includes(etat.mode));   // bandes : frontières épaissies
   const f = sel ? DATA.geo.features.find(x => x.properties.K === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
   $("viPct").hidden = !voteMode(); $("viPct").setAttribute("aria-pressed", etat.pct);

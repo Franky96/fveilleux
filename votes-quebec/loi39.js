@@ -407,7 +407,7 @@ function fillRegion(code){
   const R = RES.regions[code], seats = DIST[code]+LIST[code];
   // sièges : bandes proportionnelles aux sièges de la région, circonscriptions et région (proportionnelle : pas de
   // vainqueur de la région)
-  if (state.mode==="lead") return [bandes(defsL, "l39-" + code, Object.fromEntries(P.map(p => [p, R.d[p]+R.l[p]])), p => PV[p], SEAT_ORDER) || "var(--soft)", 0.85];
+  if (state.mode==="lead") return [bandes(defsL, "l39-" + code, Object.fromEntries(P.map(p => [p, R.d[p]+R.l[p]])), p => PV[p], SEAT_ORDER) || "var(--soft)", 0.6];
   const p = state.party;
   if (p==="ALL"){   // tous les partis : le nombre de sièges de la région, en teinte neutre
     if (state.mode==="seat") return [ALLC, 0.1 + 0.5*seats/MAXSEATS()];
@@ -516,7 +516,7 @@ function paintMap(){
   const byReg = state.view==="reg", isCur = state.view==="cur";
   const bLead = document.getElementById("l39-m-lead"); bLead.dataset.txt ||= bLead.textContent;   // vue Régions : « Sièges » (bandes)
   bLead.textContent = byReg ? "Sièges" : bLead.dataset.txt;
-  mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
+  mapSvg.attr("class", byReg ? "v-reg" : "v-circ").classed("vi-bandes", byReg && state.mode==="lead");   // bandes : frontières épaissies
   gCur.style("display", isCur ? null : "none");
   gReg.style("display", isCur && CREG ? "none" : null);
   gRegCur.style("display", isCur ? null : "none");

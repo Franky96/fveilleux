@@ -157,6 +157,7 @@
 .loi39 #l39-map path.rid:hover{stroke:var(--ink);stroke-opacity:1;stroke-width:1.2px}
 .loi39 #l39-map path.regline{fill:none;stroke:var(--surface);stroke-width:1.6px;vector-effect:non-scaling-stroke;pointer-events:none}
 .loi39 #l39-map.v-circ path.regline{stroke-width:1.1px}
+.loi39 #l39-map.vi-bandes path.regline{stroke-width:3px}   /* mode Sièges en bandes : frontières épaissies */
 .loi39 #l39-map path:focus{outline:none}
 .loi39 #l39-map path:focus-visible{outline:none;stroke:var(--focus);stroke-width:2.5px;vector-effect:non-scaling-stroke}
 .loi39 #l39-map:focus{outline:none}

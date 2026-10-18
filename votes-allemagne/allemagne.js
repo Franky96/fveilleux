@@ -166,7 +166,7 @@ const partsLand = L => groupe() === "e25" ? (etat.mode === "e25" ? R25.lands[L]?
 function remplirLand(L) {
   // sièges (projection ou élus de 2025) : bandes proportionnelles aux sièges du Land (la seconde voix les répartit à la
   // proportionnelle : pas de vainqueur du Land)
-  if (etat.mode === "lead" || etat.mode === "e25") return [bandes(svg.select("defs"), "de-" + L, siegesLand(L), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.85];
+  if (etat.mode === "lead" || etat.mode === "e25") return [bandes(svg.select("defs"), "de-" + L, siegesLand(L), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.6];
   const parts = partsLand(L); if (!parts) return ["var(--soft)", 1];
   if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, partDe(parts, etat.parti) / 50))];
   const deux = etat.mode === "second", [p, v] = tri(parts)[deux ? 1 : 0] || ["AUT", 0];
@@ -312,6 +312,7 @@ function peindre() {
   document.querySelectorAll("#viModes button[data-m]").forEach(b => { b.dataset.txt ||= b.textContent;
     b.textContent = enLander() && (b.dataset.m === "lead" || b.dataset.m === "e25") ? "Sièges" : b.dataset.txt; });
   gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
+  svg.classed("vi-bandes", enLander() && (etat.mode === "lead" || etat.mode === "e25"));   // bandes : frontières épaissies
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });
   gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = o; });   // Land choisi : contour seulement, les autres gardent leur couleur
   gHach.selectAll("path").data(DATA.ridingGeo.features.filter(f => sansSiege(f.properties.RID)), f => f.properties.RID)
