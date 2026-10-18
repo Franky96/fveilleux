@@ -804,13 +804,6 @@
     #viPlan [data-p] { transition: fill 0.2s; }
     @media (prefers-reduced-motion: reduce) { #viPlan [data-p] { transition: none; } }
     .vi-partis-note { flex-basis: 100%; color: var(--muted); font-size: 0.78rem; }
-    /* partis groupés de gauche à droite (BORDS dans partis.js) : titre du groupe au-dessus de ses boutons, barre entre les groupes */
-    .vi-partis-bande { align-items: flex-end; row-gap: 10px; }
-    .vi-partis-bande > .vi-partis-titre { align-self: center; }
-    .vi-partis-groupe { display: grid; gap: 4px; padding-left: 12px; border-left: 1px solid var(--rule); }
-    .vi-partis-titre + .vi-partis-groupe, .vi-partis-groupe.vi-partis-debut { padding-left: 0; border-left: 0; }
-    .vi-partis-glab { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-    .vi-partis-gbtns { display: flex; flex-wrap: wrap; gap: 6px; }
     @media (max-width: 700px) { .vi-partis-btn span { display: none; } }   /* téléphone : sigles seulement, le nom est dans la bulle */
     .vi-partis-bulle { position: fixed; z-index: 1000; display: grid; gap: 4px; width: max-content; max-width: min(340px, calc(100vw - 16px)); padding: 10px 13px;
       border-left: 4px solid var(--c); border-radius: 10px; background: #0E1117; color: #F2F4F8; box-shadow: 0 12px 32px rgba(0,0,0,0.45);

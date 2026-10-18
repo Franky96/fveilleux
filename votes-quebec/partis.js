@@ -15,7 +15,8 @@
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent.
    Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre, droite, droite
    radicale ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
-   (encyclopédies, politologues), forcément approximatif ; l'ordre de la page est gardé à l'intérieur d'un groupe. */
+   (encyclopédies, politologues), forcément approximatif ; la bande les range dans cet ordre (sans titres de groupe),
+   l'ordre de la page étant gardé à l'intérieur d'un groupe ; les hémicycles aussi. */
 
 const P = (nom, info, bord = "aut") => ({ nom, info, bord });
 export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite radicale"], ["aut", "Autres"]];
@@ -161,19 +162,10 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
   sec._items = liste;
   const bouton = x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
     + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`;
-  // groupés de gauche à droite ; un petit titre par groupe, une barre entre les groupes
-  const groupes = BORDS.map(([k, nom]) => [nom, liste.filter(x => (dico[x.cle].bord || "aut") === k)]).filter(([, xs]) => xs.length);
+  // une seule ligne de boutons, rangés de gauche à droite (BORDS), sans titres de groupe
   sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>`
-    + groupes.map(([nom, xs]) => `<span class="vi-partis-groupe" role="group" aria-label="${ESC(nom)}"><span class="vi-partis-glab">${ESC(nom)}</span>`
-      + `<span class="vi-partis-gbtns">${xs.map(bouton).join("")}</span></span>`).join("")
+    + trierAxe(dico, liste.map(x => x.cle)).map(k => bouton(liste.find(x => x.cle === k))).join("")
     + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
-  debutsLigne(sec);
-  if (!sec._lignes) { sec._lignes = true; addEventListener("resize", () => debutsLigne(sec)); }
-}
-// groupe qui commence une nouvelle ligne de la bande : pas de barre à sa gauche
-function debutsLigne(sec) {
-  let haut = null;
-  for (const g of sec.querySelectorAll(".vi-partis-groupe")) { g.classList.remove("vi-partis-debut"); const y = g.offsetTop; if (haut !== null && y > haut + 4) g.classList.add("vi-partis-debut"); haut = y; }
 }
 
 // mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris
