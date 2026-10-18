@@ -322,17 +322,19 @@ function peindre() {
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
   const quoi = groupe() === "e25" ? `résultat de ${AN(2025)}` : "projection du site";
   const hach = `<span>· hachures : vainqueur de la 1<sup>re</sup> voix sans siège (pas assez de secondes voix pour son parti dans le Land)</span>`;
+  // rappel des deux voix, sous la légende des deux vues
+  const VOIX = `<span class="va-voix"><b>1<sup>re</sup> voix</b> (Erststimme) : un candidat dans chaque <b>Wahlkreis</b> · <b>2<sup>e</sup> voix</b> (Zweitstimme) : la liste d'un parti dans chaque <b>Land</b>, qui fixe les sièges</span>`;
   if (enLander()) {   // vue Länder : voix de tout le Land
-    const voix = groupe() === "e25" && etat.mode === "e25" ? "premières voix (candidats)" : `secondes voix (listes)${groupe() === "proj" ? " projetées" : ""}`;
+    const voix = groupe() === "e25" && etat.mode === "e25" ? "premières voix (candidats des Wahlkreise)" : `secondes voix (listes du Land)${groupe() === "proj" ? " projetées" : ""}`;
     $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
       ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Land (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}` : ""}</span>`
-      : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "en tête"} des ${voix} dans chaque Land (${quoi}). Plus la couleur est foncée, plus son score est élevé. Clique sur un Land pour son détail.</span>`);
+      : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "en tête"} des ${voix} dans chaque Land (${quoi}). Plus la couleur est foncée, plus son score est élevé. Clique sur un Land pour son détail.</span>`) + VOIX;
     return;
   }
   $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Wahlkreis (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}, plus de Wahlkreise en zoomant` : ""}</span>`
-    : etat.mode === "e25z" ? `<span>Couleur : parti arrivé en tête des secondes voix (listes) dans chaque Wahlkreis en ${AN(2025)}. Plus la couleur est foncée, plus son score est élevé.</span>`
-    : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : etat.mode === "e25" ? "élu" : "en tête"} à la 1<sup>re</sup> voix (candidats) dans chaque Wahlkreis (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>${etat.mode === "second" ? "" : hach}`);
+    : etat.mode === "e25z" ? `<span>Couleur : parti arrivé en tête des secondes voix (listes du Land) dans chaque Wahlkreis en ${AN(2025)}. Plus la couleur est foncée, plus son score est élevé.</span>`
+    : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : etat.mode === "e25" ? "élu" : "en tête"} à la 1<sup>re</sup> voix (candidat du Wahlkreis) dans chaque Wahlkreis (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>${etat.mode === "second" ? "" : hach}`) + VOIX;
 }
 function infobulle(e, f) {
   const i = f.properties.RID, r = DATA.ridings[i], t = $("viTip"), cp = CP[i], ce = CE[i];
@@ -418,7 +420,7 @@ function dessinerPanneau() {
       const m = PROJ.moyenne;
       z.innerHTML = `${tete("Projection du site · si l'élection avait lieu aujourd'hui", sg, n)}
         <p class="lv-muted">Simulation faite par cette page, pas la projection d'un institut : moyenne du dernier sondage de chacun des ${m.sondages.length} instituts publiés entre le ${dateFr(PROJ.maj.debut)} et le ${dateFr(PROJ.maj.dernier)}, puis répartition des 630 sièges selon la loi de 2023 (Sainte-Laguë, seuil de 5 %${PROJ.clause.length ? `, clause des trois Wahlkreise pour ${PROJ.clause.map(lab).join(", ")}` : ""}, SSW exempté). ${enLander() ? "Clique sur un Land pour son détail." : "Clique sur un Wahlkreis pour son détail."}</p>
-        <span class="lv-eyebrow">Secondes voix et sièges${L ? ` · ${esc(nomR)} (écart uniforme sur ${AN(2025)})` : ""} <small>· écart avec ${AN(2025)}</small></span>
+        <span class="lv-eyebrow">Secondes voix (listes du Land) et sièges${L ? ` · ${esc(nomR)} (écart uniforme sur ${AN(2025)})` : ""} <small>· écart avec ${AN(2025)}</small></span>
         <div class="vi-vrows">${lignesVS(vote, sg, ref, COLS)}</div>
         ${L ? "" : `<p class="va-note">CDU et CSU : intentions de l'Union partagées selon leur rapport de ${AN(2025)} (la CSU ne se présente qu'en Bavière).${PROJ.clause.includes("CSU") ? " Sous 5 % des voix du pays, la CSU entrerait grâce à ses Wahlkreise." : ""}</p>${coalitions(sg)}`}
         ${meilleures(CP, "projection")}
@@ -450,7 +452,7 @@ function dessinerPanneau() {
     const gagnes = CE.reduce((o, c, i) => { if (c && dans(i)) o[c.g] = (o[c.g] || 0) + 1; return o; }, {});
     z.innerHTML = `${tete(`Élection du 23 février ${AN(2025)}`, sg, n)}
       <p class="lv-muted">Résultat officiel (Bundeswahlleiterin). Participation : ${nf(100 * (L ? R25.lands[L].votants / R25.lands[L].inscrits : R25.votants / R25.inscrits), 1)} %. Barres : secondes voix ; à droite, sièges obtenus.</p>
-      <span class="lv-eyebrow">Secondes voix et sièges${L ? ` · ${esc(nomR)}` : ""}</span>
+      <span class="lv-eyebrow">Secondes voix (listes du Land) et sièges${L ? ` · ${esc(nomR)}` : ""}</span>
       <div class="vi-vrows">${lignesVS(zv, sg, null, COLS)}</div>
       <span class="lv-eyebrow">Premières voix et Wahlkreise gagnés</span>
       <div class="vi-vrows">${COLS.filter(p => ev[p] >= 0.5).sort((a, b) => (gagnes[b] || 0) - (gagnes[a] || 0) || ev[b] - ev[a]).map(p => jauge(lab(p), COUL[p], ev[p], `<b>${gagnes[p] || 0}</b> <small>circ.</small>`, 50, "va-proj")).join("")}</div>
@@ -468,8 +470,8 @@ function dessinerPanneau() {
     + `<span class="vi-num">${nf(v, 1)} %</span><span class="vi-num"></span></div>`).join("");
   const replie = (titre, corps) => `<details class="lv-sg vc-replie"><summary><span>${titre}</span></summary><div class="vi-vrows">${corps}</div></details>`;
   const bloc = (titre, corps, ouvert) => ouvert ? `<span class="lv-eyebrow">${titre}</span><div class="vi-vrows">${corps}</div>` : replie(titre, corps);
-  const e25 = ce ? bloc(`${AN(2025)} · première voix (candidats)`, lignes(ce.e, ce.g), g === "e25" && !secondes()) + bloc(`${AN(2025)} · seconde voix (listes)`, lignes(ce.z, ce.gz), g === "e25" && secondes()) : "";
-  const pr = cp ? bloc("Projection · première voix", lignes(cp.e, cp.g), g === "proj" && !secondes()) + bloc("Projection · seconde voix", lignes(cp.z, cp.gz), true) : "";
+  const e25 = ce ? bloc(`${AN(2025)} · première voix · Erststimme (candidat du Wahlkreis)`, lignes(ce.e, ce.g), g === "e25" && !secondes()) + bloc(`${AN(2025)} · seconde voix · Zweitstimme (liste du Land)`, lignes(ce.z, ce.gz), g === "e25" && secondes()) : "";
+  const pr = cp ? bloc("Projection · première voix · Erststimme (candidat du Wahlkreis)", lignes(cp.e, cp.g), g === "proj" && !secondes()) + bloc("Projection · seconde voix · Zweitstimme (liste du Land)", lignes(cp.z, cp.gz), true) : "";
   const elu = ce ? `<p class="vi-elu" style="--c:${COUL[ce.g] || COUL.AUT}">${ce.siege ? `<b>${esc(ce.elu || "")}</b> · ${NOMS[ce.g] || ce.g} <small>(élu en 2025 avec ${nf(ce.e[ce.g], 1)} % des premières voix)</small>`
     : `<b>Aucun député de Wahlkreis</b> <small>: le candidat ${lab(ce.g)} est arrivé en tête (${nf(ce.e[ce.g], 1)} %), mais son parti n'avait pas assez de sièges dans le Land pour tous ses vainqueurs (couverture par les secondes voix).</small>`}</p>` : "";
   const pills = g === "e25" ? (ce ? `<div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[ce.g]}"></i>En tête en 2025 : ${lab(ce.g)}</span><span class="vi-pill">Avance : ${nf(ce.marge, 1)} pts</span>${ce.siege ? "" : `<span class="va-sans-siege">sans siège</span>`}<span class="vi-pill">Participation : ${nf(ce.particip, 1)} %</span></div>` : "")
