@@ -273,7 +273,7 @@ function construireCarte() {
 function outilsCarte() {
   const bouton = ([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`;
   $("viModes").className = "vf-modes";
-  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Carte</span><span class="lv-groupe">${[["circ", "Circonscriptions"], ["lander", "Länder (régions)"]]
+  $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Carte</span><span class="lv-groupe">${[["circ", "Wahlkreis (circonscription)"], ["lander", "Länder (régions)"]]
       .map(([v, t]) => `<button type="button" data-vue-carte="${v}" aria-pressed="${v === etat.vue}">${t}</button>`).join("")}</span></span>`
     + (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu 1re voix"], ["e25z", "2e voix en tête"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
