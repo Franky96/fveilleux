@@ -7,9 +7,10 @@
 #   ./reconstruire.sh tout       → les deux
 #
 # Prérequis : /usr/bin/python3 (PAS le python3 de mise, voir LISEZMOI), node + npx (mapshaper), curl, unzip.
+# Les scripts Python lisent des fichiers téléchargés : ils tournent en mode isolé (-I).
 set -euo pipefail
 cd "$(dirname "$0")"
-PY=/usr/bin/python3
+PY="/usr/bin/python3 -I"
 MS="npx -y mapshaper@0.6"
 EQ=https://donnees.electionsquebec.qc.ca/autres/provincial
 MODE=${1:-page}
@@ -25,7 +26,11 @@ if [[ $MODE == decoupage || $MODE == tout ]]; then
   curl -sL -A "Mozilla/5.0" $EQ/sections_vote_2026_shapefile.zip -o brut/sv.zip
   (cd brut/sv && unzip -o -q ../sv.zip)
   curl -sL -A "Mozilla/5.0" $EQ/circonscriptions_electorales_sans_eau_2026.json -o brut/circ2026.json
-  curl -sL -A "Mozilla/5.0" $EQ/electeur_inscrit.csv -o elec_circ.csv
+  # votes valides par circonscription (résultats officiels du 5 octobre 2026) et Répertoire des municipalités (MAMH)
+  curl -sL -A "Mozilla/5.0" https://donnees.electionsquebec.qc.ca/production/provincial/resultats/archives/gen2026-10-05/resultats.json \
+      -o brut/resultats-2026.json
+  curl -sL -A "Mozilla/5.0" https://donneesouvertes.affmunqc.net/repertoire/MUN.csv -o brut/MUN.csv
+  $PY votes_circ.py
   SHP=$(ls brut/sv/*.shp | head -1)
 
   echo "== Masque terre ferme, points et voisinage des sections"
@@ -55,7 +60,8 @@ json.dump({str(k): sorted(v) for k, v in adj.items()}, open('m80/adj.json', 'w')
 print('voisinage :', len(adj), 'sections')
 EOF
 
-  echo "== Découpage à 80 (≈ 1 min)"
+  echo "== Régions de l'annexe I (municipalité → MRC → région) et découpage à 80 (≈ 2 min)"
+  $PY m80/regions39.py
   $PY m80/district2.py
 
   echo "== Contours des 80 circonscriptions et des 17 régions"
@@ -73,7 +79,8 @@ EOF
   # carte du mode actuel : les 127 circonscriptions (15 % des points : assez fin pour Montréal zoomé)
   $MS -i brut/circ2026.json -proj wgs84 -filter-fields NM_CEP,CO_CEP -clip m80/land.json \
       -simplify 15% weighted keep-shapes -filter-islands min-area=4km2 -clean -o m80/c127.json format=geojson precision=0.0008
-  # limites de région de la carte actuelle : les 127 circonscriptions fusionnées par région
+  # limites de région de la carte actuelle : les 127 circonscriptions fusionnées selon leur région principale
+  # (celle de la majorité de leurs électeurs, d'après les sections de vote : m80/districts.json, rid_reg)
   $PY m80/r127.py
   $MS -i m80/c127_reg.json -dissolve REG -o m80/r127.json format=geojson precision=0.0008
   rm -f m80/c127_reg.json

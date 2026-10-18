@@ -1,40 +1,45 @@
 """Découpage hypothétique en 80 circonscriptions (projet de loi 39), version d'un seul tenant.
 
-1. Nombre de circonscriptions par région : art. 14.2, électeurs inscrits 2026.
-2. Graphe de voisinage des sections de vote (frontières communes).
-3. Croissance : chaque circonscription part d'un germe et n'ajoute que des sections voisines ;
+1. Région de chaque section de vote : annexe I, par sa municipalité et sa MRC (m80/regions39.py → m80/mun_region.csv).
+   Les circonscriptions sont tracées région par région : aucune ne franchit une limite de région.
+2. Nombre de circonscriptions par région : art. 14.2, électeurs des sections de vote 2026 (le même compte sert partout).
+3. Graphe de voisinage des sections de vote (frontières communes).
+4. Croissance : chaque circonscription part d'un germe et n'ajoute que des sections voisines ;
    la plus petite grandit en premier. Coût = distance au centre + pénalité si on franchit une limite
    de municipalité ou de circonscription actuelle.
-4. Équilibrage : transferts de sections de bordure seulement si la circonscription qui cède
+5. Équilibrage : transferts de sections de bordure seulement si la circonscription qui cède
    reste d'un seul morceau.
+Îles-de-la-Madeleine (annexe II : municipalités des Îles-de-la-Madeleine et de Grosse-Île) et Ungava (annexe III :
+toute la région du Nord-du-Québec) sont fixées par la loi.
 """
-import csv, json, re, math, importlib.util, io, contextlib
+import csv, json, re, math, importlib.util
 from collections import defaultdict, Counter, deque
 
 spec = importlib.util.spec_from_file_location("sim", "sim.py"); sim = importlib.util.module_from_spec(spec)
-with contextlib.redirect_stdout(io.StringIO()): spec.loader.exec_module(sim)
+spec.loader.exec_module(sim)
 norm = lambda s: re.sub(r'[^a-z]', '', s.lower().replace('’', '').translate(str.maketrans('éèêëàâîïôöûùüç', 'eeeeaaiioouuuc')))
-Q = {norm(k): k for k in sim.REGION_OF}
-GASP, NORD = "Gaspésie–Îles-de-la-Madeleine", "Nord-du-Québec"
-FIXED = {"Îles-de-la-Madeleine", "Ungava"}
+Q = {norm(k): k for k in json.load(open('proj.json', encoding='utf-8'))}      # noms des 127 circonscriptions (Qc125)
+REG = {r['CODE_MUNCP']: r['REGION'] for r in csv.DictReader(open('m80/mun_region.csv', encoding='utf-8'))}
+GASP, NORD = sim.GASP, sim.NORD
+ILES = {'01023', '01042'}       # annexe II : Les Îles-de-la-Madeleine et Grosse-Île
 TOL = 0.08          # écart visé par rapport à la moyenne régionale (la Loi électorale permet ±25 %)
 PEN_MUN, PEN_RID = 0.45, 0.30
 
-S = {}
+S, SANS_XY = {}, []
 for r in csv.DictReader(open('m80/sections_pts.csv', encoding='utf-8')):
-    if not r['X']: continue
-    prov = Q[norm(r['NM_CEP'])]
-    S[int(r['IDX'])] = dict(prov=prov, reg=sim.REGION_OF[prov], mun=r['CODE_MUNCP'], munn=r['NM_MUNCP'],
-                            w=int(r['ELEC_2026'] or 0), x=float(r['X']) / 1000, y=float(r['Y']) / 1000)
+    p = dict(prov=Q[norm(r['NM_CEP'])], reg=REG[r['CODE_MUNCP'].zfill(5)], mun=r['CODE_MUNCP'].zfill(5), munn=r['NM_MUNCP'],
+             w=int(r['ELEC_2026'] or 0))
+    # une section sans géométrie (434 électeurs à Pointe-aux-Trembles) : comptée, puis rattachée après le découpage
+    if not r['X']: SANS_XY.append(p); continue
+    S[int(r['IDX'])] = dict(p, x=float(r['X']) / 1000, y=float(r['Y']) / 1000)
 ADJ = {int(k): [j for j in v if j in S] for k, v in json.load(open('m80/adj.json')).items() if int(k) in S}
 for i in S: ADJ.setdefault(i, [])
 
-elec_reg = Counter()
-for p in S.values(): elec_reg[p['reg']] += p['w']
-extra = sim.highest_quotients(elec_reg, 62)
-DIST = {r: 1 + (r == GASP) + extra[r] for r in sim.POP}
-extra_l = sim.highest_quotients(elec_reg, 29)
-LIST = {r: (r != NORD) + extra_l[r] for r in sim.POP}
+# électeurs par région et par circonscription actuelle × région : toutes les sections, avec ou sans géométrie
+elec_reg, rid_reg = Counter(), defaultdict(Counter)
+for p in list(S.values()) + SANS_XY: elec_reg[p['reg']] += p['w']; rid_reg[p['prov']][p['reg']] += p['w']
+DIST, LIST = sim.sieges(elec_reg)
+assert DIST[NORD] == 1, DIST[NORD]          # Ungava = tout le Nord-du-Québec (annexe III)
 dist = lambda a, b: math.hypot(S[a]['x'] - b[0], S[a]['y'] - b[1])
 
 
@@ -166,7 +171,9 @@ def partition(nodes, k):
                 opts.append((cost(n, b) - cost(n, a), n))
         opts.sort()
         moved = False
-        for _, n in opts[:12]:
+        # toutes les sections de bordure, de la moins coûteuse à la plus coûteuse (les 12 premières seulement laissaient
+        # Labelle bloquée à −44 % dans les Laurentides : ses voisines les moins coûteuses coupaient toutes la cédante en deux)
+        for _, n in opts:
             if still_connected(a, n):
                 move(n, a, b); moved = True; break
         if moved: exhausted.clear()
@@ -176,11 +183,11 @@ def partition(nodes, k):
 
 assign, districts = {}, {}
 did = 0
-for reg in sim.POP:
+for reg in sim.REGIONS:
     nodes = [n for n, p in S.items() if p['reg'] == reg]
-    fixed = [n for n in nodes if S[n]['prov'] in FIXED]
-    free = [n for n in nodes if S[n]['prov'] not in FIXED]
-    groups = [[n for n in fixed if S[n]['prov'] == fp] for fp in sorted({S[n]['prov'] for n in fixed})]
+    if reg == NORD: groups, free = [nodes], []
+    elif reg == GASP: groups, free = [[n for n in nodes if S[n]['mun'] in ILES]], [n for n in nodes if S[n]['mun'] not in ILES]
+    else: groups, free = [], nodes
     k = DIST[reg] - len(groups)
     if k > 0:
         A, dev = partition(free, k)
@@ -193,7 +200,16 @@ for reg in sim.POP:
         comp = Counter(); mun = Counter()
         for n in G:
             comp[S[n]['prov']] += S[n]['w']; mun[S[n]['munn']] += S[n]['w']; assign[n] = did
-        districts[did] = dict(reg=reg, electors=sum(comp.values()), comp=dict(comp.most_common()), mun=dict(mun.most_common(4)))
+        districts[did] = dict(reg=reg, electors=sum(comp.values()), comp=comp, mun=mun)
+
+# sections sans géométrie : dans la circonscription qui a le plus d'électeurs de la même municipalité et circonscription actuelle
+for p in SANS_XY:
+    d = max(districts.values(), key=lambda d: sum(S[n]['w'] for n, j in assign.items() if districts[j] is d
+                                                  and S[n]['mun'] == p['mun'] and S[n]['prov'] == p['prov']))
+    assert d['reg'] == p['reg']
+    d['comp'][p['prov']] += p['w']; d['mun'][p['munn']] += p['w']; d['electors'] += p['w']
+for d in districts.values(): d['comp'], d['mun'] = dict(d['comp'].most_common()), dict(d['mun'].most_common(4))
+assert sum(d['electors'] for d in districts.values()) == sum(elec_reg.values())
 
 used = Counter()
 for d in districts.values():
@@ -210,7 +226,8 @@ for i, d in districts.items():
 with open('m80/assign.csv', 'w', newline='') as f:
     w = csv.writer(f); w.writerow(['IDX', 'DID'])
     for k, v in assign.items(): w.writerow([k, v])
-json.dump({'districts': districts, 'DIST': DIST, 'LIST': LIST, 'elec_reg': dict(elec_reg)},
+json.dump({'districts': districts, 'DIST': DIST, 'LIST': LIST, 'elec_reg': dict(elec_reg),
+           'rid_reg': {c: dict(v.most_common()) for c, v in sorted(rid_reg.items())}},
           open('m80/districts.json', 'w'), ensure_ascii=False, indent=1)
 e = [d['electors'] for d in districts.values()]
 print(f"\n{len(districts)} circonscriptions · électeurs min {min(e)} · max {max(e)}")

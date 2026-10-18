@@ -6,6 +6,7 @@ liste_trousse-1_1.jpg
 # Loi 39 : téléchargements bruts (retéléchargés par outils/reconstruire.sh)
 votes-quebec/outils/brut/*.json
 votes-quebec/outils/brut/*.zip
+votes-quebec/outils/brut/*.csv
 votes-quebec/outils/brut/sv/
 __pycache__/
 # Sous-produits de votes-quebec/outils/build_site.py (non publiés)

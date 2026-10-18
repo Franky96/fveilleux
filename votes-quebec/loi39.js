@@ -16,10 +16,13 @@ const REG = Object.fromEntries(DATA.regions.map(r => [r.code, r]));
 const fmt = (x, d=1) => x.toLocaleString("fr-CA",{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-/* Base : moyenne des circonscriptions actuelles, pondérée par leurs électeurs */
+/* Poids d'une circonscription actuelle : ses votes valides de 2026 (vv), sinon ses électeurs */
+const VV = r => r.vv ?? r.e;
+/* Base : vote national de la même source que les résultats (élection 2026, sinon projection Qc125),
+   chaque circonscription pondérée par ses votes valides */
 const BASE = (() => {
   const t = [0,0,0,0,0]; let T = 0;
-  for (const r of DATA.ridings){ const S = r.s.reduce((a,b)=>a+b,0); r.s.forEach((v,i) => { t[i] += r.e*v/S; }); T += r.e; }
+  for (const r of DATA.ridings){ const s = ELECTION ? r.se : r.s, S = s.reduce((a,b)=>a+b,0); s.forEach((v,i) => { t[i] += VV(r)*v/S; }); T += VV(r); }
   return t.map(v => 100*v/T);
 })();
 
@@ -47,12 +50,15 @@ function simulate(){
   const votes = {}, fptpReg = {}, dReg = {}, fptp = zero();
   for (const r of DATA.regions){ votes[r.code] = [0,0,0,0,0]; fptpReg[r.code] = zero(); dReg[r.code] = zero(); }
   const nat = [0,0,0,0,0];
-  // Les 127 circonscriptions actuelles (résultat de l'élection, sinon projection Qc125) : mode actuel et votes régionaux
+  // Les 127 circonscriptions actuelles (résultat de l'élection, sinon projection Qc125) : mode actuel et votes régionaux.
+  // Votes = parts × votes valides 2026 ; une circonscription coupée par une limite de région (rp) y verse ses votes
+  // au prorata de ses électeurs de chaque côté (vote supposé uniforme dans la circonscription).
   const ridings = DATA.ridings.map(rd0 => {
     const rd = ELECTION ? {...rd0, s: rd0.se, o: rd0.oe} : rd0;
     const S = rd.s.reduce((a,b)=>a+b,0);
     const v = rd.s.map((x,i) => x/S*k[i]);
-    v.forEach((x,i) => { votes[rd.r][i] += rd.e*x; nat[i] += rd.e*x; });
+    v.forEach((x,i) => { nat[i] += VV(rd)*x; });
+    for (const [c,e] of rd.rp ?? [[rd.r, rd.e]]) v.forEach((x,i) => { votes[c][i] += VV(rd)*e/rd.e*x; });
     let w = rd.o[0];                              // ordre de départage (gagnant officiel d'abord)
     for (const i of rd.o) if (v[i] > v[w]) w = i;
     fptp[P[w]]++; fptpReg[rd.r][P[w]]++;
@@ -60,9 +66,10 @@ function simulate(){
     return {...rd, v, sh: v.map(x=>100*x/t), w: P[w]};
   });
   // Les 80 circonscriptions hypothétiques : votes = somme des sections de vote qui les composent
+  // (électeurs venus de chaque circonscription actuelle × sa participation de 2026 × ses parts)
   const districts = DATA.districts.map(di => {
     const v = [0,0,0,0,0];
-    for (const [ri,e] of di.comp) ridings[ri].v.forEach((x,i) => { v[i] += e*x; });
+    for (const [ri,e] of di.comp){ const rd = ridings[ri], f = e/rd.e*VV(rd); rd.v.forEach((x,i) => { v[i] += f*x; }); }
     let w = 0; for (let i = 1; i < 5; i++) if (v[i] > v[w]) w = i;
     dReg[di.r][P[w]]++;
     const t = v.reduce((a,b)=>a+b,0);
@@ -753,7 +760,7 @@ function renderRidingPanel(){
     <div style="display:grid;gap:8px"><span class="eyebrow">${SRC.vote}</span>${rows}</div>
     <div class="explain">
       <span class="eyebrow">De quoi est faite cette circonscription</span>
-      <p>Elle regroupe des sections de vote de ${x.comp.length} circonscription${x.comp.length>1?"s":""} actuelle${x.comp.length>1?"s":""}. Son vote est la moyenne des votes (${SRC.nom}) de ces circonscriptions, pondérée par le nombre d'électeurs qui en viennent.</p>
+      <p>Elle regroupe des sections de vote de ${x.comp.length} circonscription${x.comp.length>1?"s":""} actuelle${x.comp.length>1?"s":""}. Son vote est la moyenne des votes (${SRC.nom}) de ces circonscriptions, pondérée par les votes qui en viennent (électeurs × participation de la circonscription en 2026).</p>
       <div class="tablebox"><table class="ctable"><thead><tr><th>Circonscription actuelle</th><th>Part des électeurs</th><th>${SRC.gagnant}</th></tr></thead>
         <tbody>${parts}</tbody></table></div>
     </div>
@@ -780,7 +787,7 @@ function renderAllCurPanel(){
       <p class="muted" style="font-size:.86rem">${SRC.circ} dans chaque circonscription réelle : le parti en tête l'emporte, sans compensation. Cliquez sur une circonscription pour son détail.</p>
     </div>
     <div style="display:grid;gap:8px"><span class="eyebrow">Vote et sièges</span>${rows}</div>
-    <div style="display:grid;gap:8px"><span class="eyebrow">Sièges par région (limites de 2019)</span>
+    <div style="display:grid;gap:8px"><span class="eyebrow">Sièges par région (annexe I ; circonscription coupée : région de la majorité de ses électeurs)</span>
       <div class="tablebox"><table class="ctable regsum"><thead><tr><th>Région</th>${P.map(p=>`<th style="color:${PV[p]}">${p}</th>`).join("")}</tr></thead><tbody>${byReg}</tbody></table></div></div>`;
 }
 function renderCurPanel(){
@@ -801,6 +808,7 @@ function renderCurPanel(){
         <span class="pill"><i class="dot" style="background:${PV[x.w]}"></i>En tête : ${x.w}</span>
         <span class="pill num">Avance : ${fmt(margin)} pts</span>
         <span class="pill num">${x.e.toLocaleString("fr-CA")} électeurs</span>
+        ${(x.rp||[]).length > 1 ? `<span class="pill num" title="Région électorale de l'annexe I de ses électeurs (sections de vote)">${x.rp.map(([c,e]) => `${esc(REG[c].name)} ${fmt(100*e/x.e,0)} %`).join(" · ")}</span>` : ""}
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap">
         <button type="button" class="linkbtn" data-all>← Tout le Québec</button>

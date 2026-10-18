@@ -1,34 +1,41 @@
 """Assemble data.json (tout ce que la page charge) à partir des fichiers de outils/.
 
-Entrées : proj.json + ridings.tsv (Qc125), elec_circ.csv (Élections Québec), m80/sections_pts.csv (codes CEP),
-          m80/districts.json + m80/d80.json + m80/r80.json (sortie de m80/district2.py + mapshaper),
-          m80/c127.json (127 circonscriptions actuelles, simplifiées par mapshaper).
+Entrées : proj.json + ridings.tsv (Qc125), votes_circ_2026.csv (votes valides 2026, votes_circ.py), m80/sections_pts.csv
+          (codes CEP), m80/districts.json + m80/d80.json + m80/r80.json (sortie de m80/district2.py + mapshaper),
+          m80/c127.json + m80/r127.json (127 circonscriptions actuelles et leurs régions, simplifiées par mapshaper).
 Sortie  : data.json
+
+Un seul compte d'électeurs partout : les électeurs des sections de vote 2026 (ELEC_2026), par région de l'annexe I
+(regions[].electors, art. 14.2 et 14.3), par circonscription actuelle (ridings[].e) et hypothétique (districts[].e).
 """
-import json, csv, re, importlib.util, io, contextlib, os
+import json, csv, re, importlib.util, os
 
 spec = importlib.util.spec_from_file_location("sim", "sim.py"); sim = importlib.util.module_from_spec(spec)
-with contextlib.redirect_stdout(io.StringIO()): spec.loader.exec_module(sim)
-
-CODES = ["Bas-Saint-Laurent", "Saguenay–Lac-Saint-Jean", "Capitale-Nationale", "Mauricie", "Estrie", "Montréal",
-         "Outaouais", "Abitibi-Témiscamingue", "Côte-Nord", "Nord-du-Québec", "Gaspésie–Îles-de-la-Madeleine",
-         "Chaudière-Appalaches", "Laval", "Lanaudière", "Laurentides", "Montérégie", "Centre-du-Québec"]
-code = {n: f"{i+1:02d}" for i, n in enumerate(CODES)}
+spec.loader.exec_module(sim)
+code = sim.CODE
 norm = lambda s: re.sub(r'[^a-z]', '', s.lower().replace('’', '').translate(str.maketrans('éèêëàâîïôöûùüç', 'eeeeaaiioouuuc')))
 P = sim.PARTIES
+D = json.load(open("m80/districts.json", encoding="utf-8"))
 
-# 127 circonscriptions actuelles : projections Qc125 + électeurs
+# 127 circonscriptions actuelles : projections Qc125, électeurs des sections et leur région (annexe I)
+#   r  : région principale (celle de la majorité de ses électeurs) : carte et tableaux du mode actuel
+#   rp : [[région, électeurs], …] : ses électeurs dans chaque région (quelques circonscriptions sont coupées)
 ids = {n: i for i, n in (l.rstrip("\n").split("\t") for l in open("ridings.tsv", encoding="utf-8"))}
 proj = json.load(open("proj.json", encoding="utf-8"))
-rid = [{"n": n, "id": ids[n], "r": code[sim.REGION_OF[n]], "s": [v.get(p, 0) for p in P],
-        "o": [P.index(p) for p in v if p in P]} for n, v in proj.items()]
+rr = {norm(n): v for n, v in D["rid_reg"].items()}
+rid = []
+for n, v in proj.items():
+    parts = sorted(((code[r], e) for r, e in rr[norm(n)].items() if e), key=lambda t: -t[1])
+    rid.append({"n": n, "id": ids[n], "r": parts[0][0], "rp": [list(t) for t in parts], "e": sum(e for _, e in parts),
+                "s": [v.get(p, 0) for p in P], "o": [P.index(p) for p in v if p in P]})
 byn = {norm(x["n"]): x for x in rid}
+
+# votes valides de l'élection du 5 octobre 2026 (votes_circ.py) : poids de chaque circonscription dans les votes
+# régionaux et nationaux (le vote réel, et non plus les parts × électeurs inscrits, qui ignoraient la participation)
 cep2name = {r["CO_CEP"]: r["NM_CEP"] for r in csv.DictReader(open("m80/sections_pts.csv", encoding="utf-8"))}
-for r in csv.DictReader(open("elec_circ.csv", encoding="latin1"), delimiter=";"):
-    c = r["CODE_CIRCONSCRIPTION"]
-    if c in cep2name:
-        byn[norm(cep2name[c])]["e"] = int(r["NOMBRE_ELECTEURS_APRES_REVISION_ORDINAIRE"] or r["NOMBRE_ELECTEURS_AU_DECRET"])
-assert all("e" in x for x in rid), [x["n"] for x in rid if "e" not in x]
+VC = {norm(cep2name[r["CO_CEP"]]): r for r in csv.DictReader(open("votes_circ_2026.csv", encoding="utf-8"))}
+assert all(norm(x["n"]) in VC for x in rid), [x["n"] for x in rid if norm(x["n"]) not in VC]
+for x in rid: x["vv"] = int(VC[norm(x["n"])]["VALIDES"])
 
 # résultat officiel de l'élection du 5 octobre 2026 (election.py, Élections Québec) : la simulation Loi 39 le prend comme
 # base dès qu'il est définitif ; « s » garde la projection Qc125 (utilisée par Votes Québec quand les sondages reprendront)
@@ -39,18 +46,20 @@ if os.path.exists("../election-2026.json"):
         elec = {norm(n): c for n, c in EL["circ"].items()}
         assert all(norm(x["n"]) in elec for x in rid), [x["n"] for x in rid if norm(x["n"]) not in elec]
         for x in rid:
-            c, g = elec[norm(x["n"])]["s"], elec[norm(x["n"])]["g"]
-            x["se"] = [c.get(p, 0) for p in P]
-            # ordre pour départager : le gagnant officiel d'abord (parts arrondies à 0,1 : Vachon, PLQ et PQ à 27,5 %)
+            v, g = VC[norm(x["n"])], elec[norm(x["n"])]["g"]
+            # parts en % des votes valides, calculées sur les votes exacts (votes_circ_2026.csv), pas sur les parts arrondies
+            x["se"] = [round(100 * int(v[p]) / int(v["VALIDES"]), 3) for p in P]
+            # ordre pour départager : le gagnant officiel d'abord
             x["oe"] = sorted(range(len(P)), key=lambda i: (-x["se"][i], P[i] != g))
+            assert x["oe"][0] == P.index(g), x["n"]
         SOURCE = {"type": "election", "date": EL["date"], "texte": "5 octobre 2026", "titre": EL.get("titre", "")}
 
 # 80 circonscriptions hypothétiques
-D = json.load(open("m80/districts.json", encoding="utf-8"))
 idx = {x["n"]: i for i, x in enumerate(rid)}
 districts = [{"id": int(k), "name": d["name"], "r": code[d["reg"]], "e": d["electors"],
-              "comp": [[idx[p], e] for p, e in d["comp"].items()]}
+              "comp": [[idx[p], e] for p, e in d["comp"].items() if e]}   # sans les sections inhabitées (0 électeur)
              for k, d in sorted(D["districts"].items(), key=lambda t: int(t[0]))]
+assert sum(x["e"] for x in rid) == sum(D["elec_reg"].values()) == sum(d["e"] for d in districts)
 
 
 # d3 veut des anneaux extérieurs en sens horaire (aire planaire < 0) et des trous antihoraires
@@ -75,12 +84,12 @@ ridx = {norm(x["n"]): i for i, x in enumerate(rid)}
 for f in cg["features"]: f["properties"] = {"RID": ridx[norm(f["properties"]["NM_CEP"])]}
 assert sorted(f["properties"]["RID"] for f in cg["features"]) == list(range(len(rid)))
 
-# régions de la carte actuelle : les 127 circonscriptions fusionnées par région (m80/r127.py + mapshaper)
+# régions de la carte actuelle : les 127 circonscriptions fusionnées selon leur région principale (m80/r127.py + mapshaper)
 cr = rewind(json.load(open("m80/r127.json", encoding="utf-8"))) if os.path.exists("m80/r127.json") else None
 if cr:
     for f in cr["features"]: f["properties"] = {"REG": code[f["properties"]["REG"]]}
 
-data = {"regions": [{"code": code[n], "name": n, "electors": D["elec_reg"][n]} for n in CODES],
+data = {"regions": [{"code": code[n], "name": n, "electors": D["elec_reg"][n]} for n in sim.REGIONS],
         "ridings": rid, "districts": districts, "districtGeo": dg, "regionGeo": rg, "ridingGeo": cg, "curRegionGeo": cr,
         "maj": json.load(open("maj.json", encoding="utf-8")) if os.path.exists("maj.json") else {}, "source": SOURCE}
 open("data.json", "w", encoding="utf-8").write(json.dumps(data, ensure_ascii=False, separators=(",", ":")))

@@ -1,11 +1,11 @@
-"""Régions de la carte « mode actuel » : chaque circonscription de c127.json reçoit sa région (REGION_OF de sim.py),
-pour que mapshaper fusionne ensuite les 127 circonscriptions par région (m80/r127.json). Ainsi les limites de région
-de la carte actuelle suivent exactement celles des circonscriptions réelles (pas celles du découpage à 80)."""
-import json, re, importlib.util, io, contextlib
-spec = importlib.util.spec_from_file_location("sim", "sim.py"); sim = importlib.util.module_from_spec(spec)
-with contextlib.redirect_stdout(io.StringIO()): spec.loader.exec_module(sim)
+"""Régions de la carte « mode actuel » : chaque circonscription de c127.json reçoit sa région principale, celle où vit la
+majorité de ses électeurs d'après les sections de vote (m80/districts.json, rid_reg, sortie de m80/district2.py), pour que
+mapshaper fusionne ensuite les 127 circonscriptions par région (m80/r127.json). Les limites de région de la carte actuelle
+suivent donc les circonscriptions réelles ; les vraies limites de l'annexe I (qui coupent 6 circonscriptions) sont dans
+m80/r80.json. Même règle que « r » des circonscriptions dans build_data80.py."""
+import json, re
 norm = lambda s: re.sub(r'[^a-z]', '', s.lower().replace('’', '').translate(str.maketrans('éèêëàâîïôöûùüç', 'eeeeaaiioouuuc')))
-reg = {norm(n): r for n, r in sim.REGION_OF.items()}
+reg = {norm(n): max(v, key=v.get) for n, v in json.load(open("m80/districts.json", encoding="utf-8"))["rid_reg"].items()}
 g = json.load(open("m80/c127.json", encoding="utf-8"))
 for f in g["features"]: f["properties"] = {"REG": reg[norm(f["properties"]["NM_CEP"])]}
 json.dump(g, open("m80/c127_reg.json", "w", encoding="utf-8"), ensure_ascii=False)

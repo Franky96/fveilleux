@@ -43,13 +43,16 @@ loi39-site/
     ├── page.author.html     ★ SOURCE UNIQUE de la page (CSS + HTML + JS non préfixés)
     ├── build_site.py        page.author.html → page.src.html (artifact), kit, version autonome
     ├── build_data80.py      assemble data.json
-    ├── sim.py               correspondance circonscription → région + formule des diviseurs (Python)
+    ├── sim.py               règles communes : les 17 régions (codes 01–17) et la formule des diviseurs (Python)
     ├── sim80.py             simulation de référence en Python (doit donner les mêmes chiffres que la page)
     ├── scrape_qc125.py      télécharge les projections Qc125 → proj.json, ridings.tsv
     ├── reconstruire.sh      enchaîne tout (voir § 5)
     ├── preview.js           aperçu SVG d'une zone de la carte à 80 (contrôle visuel)
-    ├── proj.json, ridings.tsv, elec_circ.csv   entrées (Qc125, électeurs inscrits)
+    ├── votes_circ.py        votes valides 2026 par circonscription (Élections Québec) → votes_circ_2026.csv
+    ├── proj.json, ridings.tsv, votes_circ_2026.csv   entrées (Qc125, votes valides de l'élection 2026)
     ├── m80/                 découpage hypothétique à 80
+    │   ├── regions39.py        annexe I : municipalité → MRC → région (Répertoire du MAMH) → mun_region.csv
+    │   ├── mun_region.csv      région de chaque code géographique des sections de vote, avec la règle appliquée
     │   ├── district2.py        algorithme de découpage
     │   ├── districts.json      résultat : composition, électeurs, nom de chaque circonscription
     │   ├── d80.json, r80.json  contours (80 circonscriptions, 17 régions)
@@ -112,10 +115,19 @@ http://localhost:8000/exemple.html.
 ### Données
 - **Projections :** Qc125 par circonscription (127 circonscriptions, carte 2026). La page utilise la valeur centrale,
   sans marge d'erreur.
-- **Électeurs inscrits 2026 :** Élections Québec. Ils servent à répartir les sièges entre les régions (la loi parle
-  d'électeurs, pas de population).
-- **Région de chaque circonscription actuelle :** table `REGION_OF` dans `sim.py`. Cas incertains : Daniel-Johnson →
-  Montérégie, Côte-du-Sud → Chaudière-Appalaches.
+- **Électeurs inscrits 2026 :** ceux des **sections de vote 2026** d'Élections Québec (`ELEC_2026`, fichier du
+  15 juillet 2026). C'est le **seul** compte d'électeurs utilisé : régions (art. 14.2 et 14.3), circonscriptions
+  actuelles (`ridings[].e`) et hypothétiques. La loi parle d'électeurs, pas de population.
+- **Régions (annexe I) :** chaque section de vote est placée dans sa région d'après sa municipalité (`CODE_MUNCP`) et
+  la MRC de celle-ci dans le Répertoire des municipalités du MAMH (`m80/regions39.py` → `m80/mun_region.csv`, colonne
+  `REGLE`). Organisation municipale **actuelle** (l'annexe date de 2019). Cas jugés : MRC Robert-Cliche = Beauce-Centre ;
+  réserves et TNO non nommés → région de la division de recensement qui les entoure (Kahnawake, Kanesatake,
+  Kawawachikamach [terres IA-N] → Côte-Nord, etc.) ; tout code 99xxx → Nord-du-Québec ; Courcelles (Estrie en 2019)
+  suit Courcelles–Saint-Évariste (Chaudière-Appalaches) depuis 2024. Six circonscriptions actuelles sont coupées :
+  Côte-du-Sud, Bertrand, Les Plaines, Daniel-Johnson, Mégantic, Beauce-Sud. Leur région « principale » (`r`, carte
+  actuelle et `curRegionGeo`) est celle de la majorité de leurs électeurs ; `rp` donne la part de chaque région.
+- **Votes :** votes valides officiels par circonscription (`votes_circ_2026.csv`, archive `gen2026-10-05/resultats.json`).
+  Les résultats par section de vote (`resultats-bureau-vote.zip`) n'étaient pas publiés pour 2026 au 18 octobre 2026.
 
 ### La carte hypothétique à 80 (point le plus délicat)
 Aucune carte officielle n'existe : la loi n'a jamais été adoptée. Ce qu'on sait :
@@ -128,8 +140,10 @@ Aucune carte officielle n'existe : la loi n'a jamais été adoptée. Ce qu'on sa
 
 **Découpage construit (`m80/district2.py`) :**
 1. **Nombre par région :** le nombre de circonscriptions de chaque région vient de l'art. 14.2, calculé avec les
-   électeurs 2026. Résultat : Montréal 15, Montérégie 14, Capitale-Nationale 7, Laurentides 6, Lanaudière 5,
-   Chaudière-Appalaches 5, Laval 4, Outaouais 4, etc.
+   électeurs 2026 des sections, par région de l'annexe I. Chaque région est découpée à part : aucune circonscription
+   ne franchit une limite de région. Résultat : Montréal 15, Montérégie 14, Capitale-Nationale 7, Laurentides 6, Lanaudière 5,
+   Chaudière-Appalaches 4, Estrie 4, Laval 4, Outaouais 4, etc. Le 62ᵉ quotient (Estrie ÷ 3 = 89 749) ne dépasse le
+   63ᵉ (Montérégie ÷ 14 = 89 146) que de quelque 1 800 électeurs estriens : ce 4ᵉ siège de l'Estrie est fragile.
 2. **Unités :** les 16 951 **sections de vote 2026** d'Élections Québec, avec leur nombre d'électeurs. Leur
    voisinage vient des frontières communes (TopoJSON). Les îles sont reliées au plus proche voisin.
 3. **Croissance :** chaque circonscription part d'un germe (k-moyennes pondérées), et la plus petite ajoute
@@ -139,7 +153,8 @@ Aucune carte officielle n'existe : la loi n'a jamais été adoptée. Ce qu'on sa
 4. **Équilibrage :** entre deux circonscriptions voisines déséquilibrées, on transfère des sections de bordure,
    **seulement si celle qui cède reste d'un seul tenant**. Cible : `TOL` = ±8 % de la moyenne régionale ; résultat
    ≤ 9 % partout. La Loi électorale permet ±25 %.
-5. **Exceptions :** Îles-de-la-Madeleine (11 146 électeurs) et Ungava gardent leurs limites actuelles.
+5. **Exceptions :** Îles-de-la-Madeleine (annexe II : municipalités des Îles et de Grosse-Île, 11 146 électeurs) et
+   Ungava (annexe III : toute la région du Nord-du-Québec) sont fixées par la loi.
 6. **Noms :** générés à partir des circonscriptions actuelles dominantes (« A » si ≥ 60 % des électeurs, sinon
    « A / B »).
 
@@ -153,20 +168,25 @@ convertir avec `magick`). Pour le Grand Montréal : `-74.1 45.35 -73.35 45.75`.
   viennent ses électeurs, pondérée par leur nombre (`districts[].comp`). Hypothèse : le vote est uniforme à
   l'intérieur d'une circonscription actuelle.
 - **Vote de liste :** on suppose qu'il est égal au vote de circonscription. La loi prévoit pourtant deux bulletins.
-- **Vote régional et vote national :** somme pondérée par les électeurs des 127 circonscriptions actuelles.
+- **Poids :** votes valides 2026 de chaque circonscription actuelle (`vv`), et non plus parts × électeurs inscrits
+  (qui ignorait la participation). Une circonscription hypothétique reçoit, de chaque circonscription actuelle,
+  électeurs venus × participation 2026 × parts.
+- **Vote régional et vote national :** somme des votes valides des 127 circonscriptions actuelles ; une circonscription
+  coupée verse ses votes dans chaque région au prorata de ses électeurs (`rp`). Parts calculées sur les 5 partis
+  (autres partis, 1,3 %, exclus du dénominateur, comme avant).
 - **« Mode actuel » (hémicycle de gauche) :** gagnant de chacune des 127 circonscriptions Qc125. Égalités départagées
   selon l'ordre publié par Qc125 (`o`). Ça redonne exactement la projection de sièges de Qc125.
 
-### Résultat de référence (projection Qc125 du 28 sept. 2026)
-Vote : PQ 29,6 · PLQ 24,0 · CAQ 18,1 · PCQ 17,2 · QS 11,2 %.
+### Résultat de référence (élection du 5 octobre 2026)
+Vote (5 partis) : PQ 28,4 · PLQ 24,6 · PCQ 20,9 · CAQ 13,5 · QS 12,6 %.
 
 | Parti | Mode actuel (127) | Circ. (80) | Région (45) | Total (125) |
 |---|---|---|---|---|
-| PQ | 67 | 45 | 9 | **54** |
-| PLQ | 37 | 22 | 6 | **28** |
-| PCQ | 15 | 10 | 10 | **20** |
-| CAQ | 0 | 0 | 17 | **17** |
-| QS | 8 | 3 | 3 | **6** |
+| PQ | 59 | 41 | 11 | **52** |
+| PLQ | 40 | 23 | 8 | **31** |
+| PCQ | 19 | 13 | 11 | **24** |
+| CAQ | 0 | 0 | 10 | **10** |
+| QS | 9 | 3 | 5 | **8** |
 
 `/usr/bin/python3 outils/sim80.py` doit donner ces chiffres, **et la page aussi**. Si les deux divergent, la page a
 un bogue.
@@ -181,7 +201,8 @@ Un seul fichier : `<title>`, polices, `<style>`, balisage, `<script type="module
 ```js
 {
   regions:   [{code:"06", name:"Montréal", electors:1311258}, …],           // 17, codes 01–17
-  ridings:   [{n:"Acadie", id:"1003", r:"06", s:[PQ,PLQ,CAQ,PCQ,QS] (%), o:[ordre Qc125], e:électeurs}, …], // 127
+  ridings:   [{n:"Acadie", id:"1003", r:"06", rp:[["06",électeurs], …], e:électeurs, vv:votes valides 2026,
+               s:[PQ,PLQ,CAQ,PCQ,QS] (% Qc125), o:[ordre Qc125], se:[…] (% élection), oe:[ordre élection]}, …], // 127
   districts: [{id:1, name:"…", r:"01", e:électeurs, comp:[[indexRiding, électeurs], …]}, …], // 80
   districtGeo: GeoJSON (properties.DID), regionGeo: GeoJSON (properties.REG),
   ridingGeo: GeoJSON des 127 circonscriptions actuelles (properties.RID = rang dans ridings ; m80/c127.json)
@@ -190,7 +211,8 @@ Un seul fichier : `<title>`, polices, `<style>`, balisage, `<script type="module
 
 **JavaScript, dans l'ordre du fichier :**
 - **Constantes :** `P` (partis), `PV` (couleurs = variables CSS), `SEAT_ORDER`.
-- **`BASE` :** vote national pondéré par les électeurs.
+- **`BASE` :** vote national de la même source que les résultats (`se` si `source.type === "election"`, sinon `s`),
+  pondéré par les votes valides (`vv`).
 - **`state` :** `{target, thr, mode, party, view, sel}`.
   - `sel` vaut `{type:"all"}` (par défaut), `{type:"reg", code}` ou `{type:"circ", id}`.
 - **`highestQuotients`, `DIST`, `LIST` :** les art. 14.2 et 14.3.

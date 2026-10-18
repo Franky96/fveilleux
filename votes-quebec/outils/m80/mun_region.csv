@@ -1,0 +1,1342 @@
+CODE_MUNCP,NM_MUNCP,DESIGNATION,TERRITOIRE,REG,REGION,REGLE,SECTIONS,ELEC_2026,REG_ADM_MAMH,CIRC_2026
+01023,Les Îles-de-la-Madeleine,Municipalité,Les Îles-de-la-Madeleine,11,Gaspésie–Îles-de-la-Madeleine,municipal,29,10771,Gaspésie--Îles-de-la-Madeleine (11),Îles-de-la-Madeleine
+01042,Grosse-Île,Municipalité,Grosse-Île,11,Gaspésie–Îles-de-la-Madeleine,municipal,2,375,Gaspésie--Îles-de-la-Madeleine (11),Îles-de-la-Madeleine
+02005,Percé,Ville,MRC Le Rocher-Percé,11,Gaspésie–Îles-de-la-Madeleine,mrc,8,2688,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+02010,Sainte-Thérèse-de-Gaspé,Municipalité,MRC Le Rocher-Percé,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,850,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+02015,Grande-Rivière,Ville,MRC Le Rocher-Percé,11,Gaspésie–Îles-de-la-Madeleine,mrc,7,2803,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+02028,Chandler,Ville,MRC Le Rocher-Percé,11,Gaspésie–Îles-de-la-Madeleine,mrc,16,6184,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+02047,Port-Daniel--Gascons,Municipalité,MRC Le Rocher-Percé,11,Gaspésie–Îles-de-la-Madeleine,mrc,5,2013,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+02902,Mont-Alexandre,Territoire non organisé,MRC Le Rocher-Percé,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,0,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+02990,TNO aquatique de la MRC du Rocher-Percé,(absent du Répertoire),"enclave, division 02",11,Gaspésie–Îles-de-la-Madeleine,enclave,3,0,,Bonaventure | Gaspé
+03005,Gaspé,Ville,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,34,12210,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03010,Cloridorme,Canton,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,557,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03015,Petite-Vallée,Municipalité,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,147,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03020,Grande-Vallée,Municipalité,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,3,923,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03025,Murdochville,Ville,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,467,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03902,Rivière-Saint-Jean,Territoire non organisé,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,0,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03904,Collines-du-Basque,Territoire non organisé,MRC La Côte-de-Gaspé,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,0,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+03990,TNO aquatique de la MRC de La Côte-de-Gaspé,(absent du Répertoire),"enclave, division 03",11,Gaspésie–Îles-de-la-Madeleine,enclave,2,0,,Gaspé
+04005,Sainte-Madeleine-de-la-Rivière-Madeleine,Municipalité,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,280,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04010,Saint-Maxime-du-Mont-Louis,Municipalité,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,3,912,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04015,Mont-Saint-Pierre,Village,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,171,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04020,Rivière-à-Claude,Municipalité,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,156,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04025,Marsoui,Village,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,226,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04030,La Martre,Municipalité,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,192,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04037,Sainte-Anne-des-Monts,Ville,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,14,5168,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04047,Cap-Chat,Ville,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,6,2104,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04902,Mont-Albert,Territoire non organisé,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,168,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04904,Coulée-des-Adolphe,Territoire non organisé,MRC La Haute-Gaspésie,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,0,Gaspésie--Îles-de-la-Madeleine (11),Gaspé
+04990,TNO aquatique de la MRC de La Haute-Gaspésie,(absent du Répertoire),"enclave, division 04",11,Gaspésie–Îles-de-la-Madeleine,enclave,4,0,,Gaspé
+05010,Shigawake,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,265,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05015,Saint-Godefroi,Canton,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,314,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05020,Hope Town,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,291,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05025,Hope,Canton,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,523,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05032,Paspébiac,Ville,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,7,2747,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05040,New Carlisle,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,5,1131,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05045,Bonaventure,Ville,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,5,2211,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05050,Saint-Elzéar,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,375,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05055,Saint-Siméon,Paroisse,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,3,1043,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05060,Caplan,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,5,1668,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05065,Saint-Alphonse,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,585,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05070,New Richmond,Ville,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,9,3130,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05077,Cascapédia--Saint-Jules,Municipalité,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,623,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05902,Rivière-Bonaventure,Territoire non organisé,MRC Bonaventure,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,54,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+05990,TNO aquatique de la MRC de Bonaventure,(absent du Répertoire),"enclave, division 05",11,Gaspésie–Îles-de-la-Madeleine,enclave,4,0,,Bonaventure
+06005,Maria,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,7,2169,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06013,Carleton-sur-Mer,Ville,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,9,3539,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06020,Nouvelle,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,4,1504,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06025,Escuminac,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,506,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06030,Pointe-à-la-Croix,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,3,1105,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06035,Ristigouche-Sud-Est,Canton,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,165,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06040,Saint-André-de-Restigouche,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,129,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06045,Matapédia,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,509,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06050,Saint-Alexis-de-Matapédia,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,447,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06055,Saint-François-d'Assise,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,2,576,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06060,L'Ascension-de-Patapédia,Municipalité,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,134,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06802,Gesgapegiag,Réserve indienne,"Réserve indienne · enclave, division Avignon (06)",11,Gaspésie–Îles-de-la-Madeleine,enclave,2,508,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06804,Listuguj,Réserve indienne,"Réserve indienne · enclave, division Avignon (06)",11,Gaspésie–Îles-de-la-Madeleine,enclave,3,1331,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06902,Rivière-Nouvelle,Territoire non organisé,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,0,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06904,Ruisseau-Ferguson,Territoire non organisé,MRC Avignon,11,Gaspésie–Îles-de-la-Madeleine,mrc,1,0,Gaspésie--Îles-de-la-Madeleine (11),Bonaventure
+06990,TNO aquatique de la MRC d'Avignon,(absent du Répertoire),"enclave, division 06",11,Gaspésie–Îles-de-la-Madeleine,enclave,6,0,,Bonaventure
+07005,Sainte-Marguerite-Marie,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,152,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07010,Sainte-Florence,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,309,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07018,Causapscal,Ville,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,4,1747,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07025,Albertville,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,201,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07030,Saint-Léon-le-Grand,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,2,780,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07035,Saint-Zénon-du-Lac-Humqui,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,309,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07040,Sainte-Irène,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,307,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07047,Amqui,Ville,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,14,4982,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07057,Lac-au-Saumon,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,5,1091,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07065,Saint-Alexandre-des-Lacs,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,224,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07070,Saint-Tharcisius,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,320,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07075,Saint-Vianney,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,359,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07080,Val-Brillant,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,2,765,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07085,Sayabec,Municipalité,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,4,1415,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07090,Saint-Cléophas,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,279,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07095,Saint-Moïse,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,439,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07100,Saint-Noël,Village,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,312,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07105,Saint-Damase,Paroisse,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,292,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07902,Routhierville,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,13,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07904,Rivière-Vaseuse,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07906,Rivière-Patapédia-Est,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07908,Lac-Casault,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,6,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07910,Ruisseau-des-Mineurs,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07912,Lac-Alfred,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+07914,Lac-Matapédia,Territoire non organisé,MRC La Matapédia,01,Bas-Saint-Laurent,mrc,1,12,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08005,Les Méchins,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,2,851,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08010,Saint-Jean-de-Cherbourg,Paroisse,MRC La Matanie,01,Bas-Saint-Laurent,mrc,1,146,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08015,Grosses-Roches,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,1,344,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08023,Sainte-Félicité,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,2,860,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08030,Saint-Adelme,Paroisse,MRC La Matanie,01,Bas-Saint-Laurent,mrc,1,396,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08035,Saint-René-de-Matane,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,2,801,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08040,Sainte-Paule,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,1,225,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08053,Matane,Ville,MRC La Matanie,01,Bas-Saint-Laurent,mrc,28,11429,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08065,Saint-Léandre,Paroisse,MRC La Matanie,01,Bas-Saint-Laurent,mrc,1,295,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08073,Saint-Ulric,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,4,1349,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08080,Baie-des-Sables,Municipalité,MRC La Matanie,01,Bas-Saint-Laurent,mrc,2,503,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08902,Rivière-Bonjour,Territoire non organisé,MRC La Matanie,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+08990,TNO aquatique de la MRC de La Matanie,(absent du Répertoire),"enclave, division 08",01,Bas-Saint-Laurent,enclave,3,0,,Matane-Matapédia-Mitis
+09005,La Rédemption,Paroisse,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,347,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09010,Saint-Charles-Garnier,Paroisse,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,200,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09015,Les Hauteurs,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,374,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09020,Sainte-Jeanne-d'Arc-de-la-Mitis,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,243,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09025,Saint-Gabriel-de-Rimouski,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,3,925,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09030,Saint-Donat,Paroisse,MRC La Mitis,01,Bas-Saint-Laurent,mrc,2,726,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09035,Sainte-Angèle-de-Mérici,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,2,793,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09040,Padoue,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,200,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09048,Métis-sur-Mer,Ville,MRC La Mitis,01,Bas-Saint-Laurent,mrc,2,452,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09055,Saint-Octave-de-Métis,Paroisse,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,391,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09060,Grand-Métis,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,192,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09065,Price,Village,MRC La Mitis,01,Bas-Saint-Laurent,mrc,3,1347,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09070,Saint-Joseph-de-Lepage,Paroisse,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,445,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09077,Mont-Joli,Ville,MRC La Mitis,01,Bas-Saint-Laurent,mrc,15,5214,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09085,Sainte-Flavie,Paroisse,MRC La Mitis,01,Bas-Saint-Laurent,mrc,2,758,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09092,Sainte-Luce,Municipalité,MRC La Mitis,01,Bas-Saint-Laurent,mrc,7,2301,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09902,Lac-des-Eaux-Mortes,Territoire non organisé,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,1,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09904,Lac-à-la-Croix,Territoire non organisé,MRC La Mitis,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Matane-Matapédia-Mitis
+09990,TNO aquatique de la MRC de La Mitis,(absent du Répertoire),"enclave, division 09",01,Bas-Saint-Laurent,enclave,1,0,,Matane-Matapédia-Mitis
+10005,Esprit-Saint,Municipalité,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,1,283,Bas-Saint-Laurent (01),Rimouski
+10010,La Trinité-des-Monts,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,1,208,Bas-Saint-Laurent (01),Rimouski
+10015,Saint-Narcisse-de-Rimouski,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,3,928,Bas-Saint-Laurent (01),Rimouski
+10025,Saint-Marcellin,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,1,364,Bas-Saint-Laurent (01),Rimouski
+10030,Saint-Anaclet-de-Lessard,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,6,2373,Bas-Saint-Laurent (01),Rimouski
+10043,Rimouski,Ville,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,108,39632,Bas-Saint-Laurent (01),Rimouski
+10060,Saint-Valérien,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,2,756,Bas-Saint-Laurent (01),Rimouski
+10070,Saint-Fabien,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,5,1466,Bas-Saint-Laurent (01),Rimouski
+10075,Saint-Eugène-de-Ladrière,Paroisse,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,1,314,Bas-Saint-Laurent (01),Rimouski
+10902,Lac-Huron,Territoire non organisé,MRC Rimouski-Neigette,01,Bas-Saint-Laurent,mrc,1,19,Bas-Saint-Laurent (01),Rimouski
+10990,TNO aquatique de la MRC de Rimouski-Neigette,(absent du Répertoire),"enclave, division 10",01,Bas-Saint-Laurent,enclave,4,0,,Rimouski
+11005,Saint-Clément,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,406,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11010,Saint-Jean-de-Dieu,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,3,1280,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11015,Sainte-Rita,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,266,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11025,Saint-Médard,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,187,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11030,Sainte-Françoise,Paroisse,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,325,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11035,Saint-Éloi,Paroisse,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,253,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11040,Trois-Pistoles,Ville,MRC Les Basques,01,Bas-Saint-Laurent,mrc,8,2588,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11045,Notre-Dame-des-Neiges,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,3,980,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11050,Saint-Mathieu-de-Rioux,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,2,588,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11055,Saint-Simon-de-Rimouski,Municipalité,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,414,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11902,Lac-Boisbouscache,Territoire non organisé,MRC Les Basques,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+11990,TNO aquatique de la MRC des Basques,(absent du Répertoire),"enclave, division 11",01,Bas-Saint-Laurent,enclave,3,0,,Rivière-du-Loup–Témiscouata–Les Basques
+12005,Saint-Cyprien,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,2,832,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12010,Saint-Hubert-de-Rivière-du-Loup,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,3,1125,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12015,Saint-Antonin,Ville,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,9,3488,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12020,Saint-Modeste,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,2,886,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12025,Saint-François-Xavier-de-Viger,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,1,212,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12030,Saint-Épiphane,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,2,642,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12035,Saint-Paul-de-la-Croix,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,1,265,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12043,L'Isle-Verte,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,3,1108,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12045,Notre-Dame-des-Sept-Douleurs,Paroisse,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,1,53,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12057,Cacouna,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,4,1546,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12065,Saint-Arsène,Paroisse,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,3,957,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12072,Rivière-du-Loup,Ville,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,44,15962,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12080,Notre-Dame-du-Portage,Municipalité,MRC Rivière-du-Loup,01,Bas-Saint-Laurent,mrc,3,1073,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12802,Kataskomiq,Réserve indienne,"Réserve indienne · enclave, division Rivière-du-Loup (12)",01,Bas-Saint-Laurent,enclave,1,0,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+12804,Cacouna,Réserve indienne,"Réserve indienne · enclave, division Rivière-du-Loup (12)",01,Bas-Saint-Laurent,enclave,1,0,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13005,Dégelis,Ville,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,7,2473,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13010,Saint-Jean-de-la-Lande,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,222,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13015,Packington,Paroisse,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,2,496,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13020,Saint-Marc-du-Lac-Long,Paroisse,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,295,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13025,Rivière-Bleue,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,3,1072,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13030,Saint-Eusèbe,Paroisse,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,2,462,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13040,Saint-Juste-du-Lac,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,2,462,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13045,Auclair,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,367,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13050,Lejeune,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,206,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13055,Biencourt,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,367,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13062,Lac-des-Aigles,Ville,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,2,493,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13065,Saint-Michel-du-Squatec,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,2,911,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13073,Témiscouata-sur-le-Lac,Ville,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,12,4203,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13075,Saint-Pierre-de-Lamy,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,100,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13080,Saint-Louis-du-Ha! Ha!,Paroisse,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,3,1083,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13085,Saint-Elzéar-de-Témiscouata,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,289,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13090,Saint-Honoré-de-Témiscouata,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,2,641,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13095,Pohénégamook,Ville,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,7,2123,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+13100,Saint-Athanase,Municipalité,MRC Témiscouata,01,Bas-Saint-Laurent,mrc,1,232,Bas-Saint-Laurent (01),Rivière-du-Loup–Témiscouata–Les Basques
+14005,Mont-Carmel,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,3,939,Bas-Saint-Laurent (01),Côte-du-Sud
+14010,Saint-Bruno-de-Kamouraska,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,2,474,Bas-Saint-Laurent (01),Côte-du-Sud
+14018,Saint-Pascal,Ville,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,8,2829,Bas-Saint-Laurent (01),Côte-du-Sud
+14025,Sainte-Hélène-de-Kamouraska,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,2,745,Bas-Saint-Laurent (01),Côte-du-Sud
+14030,Saint-Joseph-de-Kamouraska,Paroisse,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,1,321,Bas-Saint-Laurent (01),Côte-du-Sud
+14035,Saint-Alexandre-de-Kamouraska,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,5,1736,Bas-Saint-Laurent (01),Côte-du-Sud
+14040,Saint-André-de-Kamouraska,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,3,518,Bas-Saint-Laurent (01),Côte-du-Sud
+14045,Saint-Germain-de-Kamouraska,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,1,246,Bas-Saint-Laurent (01),Côte-du-Sud
+14050,Kamouraska,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,2,497,Bas-Saint-Laurent (01),Côte-du-Sud
+14055,Saint-Denis-De La Bouteillerie,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,1,401,Bas-Saint-Laurent (01),Côte-du-Sud
+14060,Saint-Philippe-de-Néri,Paroisse,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,2,663,Bas-Saint-Laurent (01),Côte-du-Sud
+14065,Rivière-Ouelle,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,2,774,Bas-Saint-Laurent (01),Côte-du-Sud
+14070,Saint-Pacôme,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,4,1252,Bas-Saint-Laurent (01),Côte-du-Sud
+14075,Saint-Gabriel-Lalemant,Municipalité,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,2,569,Bas-Saint-Laurent (01),Côte-du-Sud
+14082,La Pocatière,Ville,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,14,5077,Bas-Saint-Laurent (01),Côte-du-Sud
+14902,Picard,Territoire non organisé,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,1,1,Bas-Saint-Laurent (01),Côte-du-Sud
+14904,Petit-Lac-Sainte-Anne,Territoire non organisé,MRC Kamouraska,01,Bas-Saint-Laurent,mrc,1,0,Bas-Saint-Laurent (01),Côte-du-Sud
+14990,TNO aquatique de la MRC de Kamouraska,(absent du Répertoire),"enclave, division 14",01,Bas-Saint-Laurent,enclave,1,0,,Côte-du-Sud
+15005,Saint-Irénée,Municipalité,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,2,600,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15013,La Malbaie,Ville,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,20,6890,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15025,Notre-Dame-des-Monts,Municipalité,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,2,675,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15030,Saint-Aimé-des-Lacs,Municipalité,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,3,912,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15035,Clermont,Ville,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,6,2560,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15058,Saint-Siméon,Municipalité,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,3,969,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15065,Baie-Sainte-Catherine,Municipalité,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,1,152,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15902,Mont-Élie,Territoire non organisé,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,1,73,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+15904,Sagard,Territoire non organisé,MRC Charlevoix-Est,03,Capitale-Nationale,mrc,1,105,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16005,Petite-Rivière-Saint-François,Municipalité,MRC Charlevoix,03,Capitale-Nationale,mrc,2,857,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16013,Baie-Saint-Paul,Ville,MRC Charlevoix,03,Capitale-Nationale,mrc,17,6166,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16023,L'Isle-aux-Coudres,Municipalité,MRC Charlevoix,03,Capitale-Nationale,mrc,3,995,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16048,Les Éboulements,Municipalité,MRC Charlevoix,03,Capitale-Nationale,mrc,3,1291,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16050,Saint-Hilarion,Paroisse,MRC Charlevoix,03,Capitale-Nationale,mrc,3,972,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16055,Saint-Urbain,Paroisse,MRC Charlevoix,03,Capitale-Nationale,mrc,3,1164,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16902,Lac-Pikauba,Territoire non organisé,MRC Charlevoix,03,Capitale-Nationale,mrc,1,2,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+16990,TNO aquatique de la MRC de Charlevoix,(absent du Répertoire),"enclave, division 16",03,Capitale-Nationale,enclave,1,0,,Charlevoix–Côte-de-Beaupré
+17005,Saint-Omer,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,1,239,Chaudière-Appalaches (12),Côte-du-Sud
+17010,Saint-Pamphile,Ville,MRC L'Islet,12,Chaudière-Appalaches,mrc,5,1977,Chaudière-Appalaches (12),Côte-du-Sud
+17015,Saint-Adalbert,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,1,392,Chaudière-Appalaches (12),Côte-du-Sud
+17020,Saint-Marcel,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,1,362,Chaudière-Appalaches (12),Côte-du-Sud
+17025,Sainte-Félicité,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,1,322,Chaudière-Appalaches (12),Côte-du-Sud
+17030,Sainte-Perpétue,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,3,1338,Chaudière-Appalaches (12),Côte-du-Sud
+17035,Tourville,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,2,495,Chaudière-Appalaches (12),Côte-du-Sud
+17040,Saint-Damase-de-L'Islet,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,2,483,Chaudière-Appalaches (12),Côte-du-Sud
+17045,Saint-Cyrille-de-Lessard,Paroisse,MRC L'Islet,12,Chaudière-Appalaches,mrc,2,643,Chaudière-Appalaches (12),Côte-du-Sud
+17055,Saint-Aubert,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,3,1149,Chaudière-Appalaches (12),Côte-du-Sud
+17060,Sainte-Louise,Paroisse,MRC L'Islet,12,Chaudière-Appalaches,mrc,2,571,Chaudière-Appalaches (12),Côte-du-Sud
+17065,Saint-Roch-des-Aulnaies,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,2,785,Chaudière-Appalaches (12),Côte-du-Sud
+17070,Saint-Jean-Port-Joli,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,6,2710,Chaudière-Appalaches (12),Côte-du-Sud
+17078,L'Islet,Municipalité,MRC L'Islet,12,Chaudière-Appalaches,mrc,8,3142,Chaudière-Appalaches (12),Côte-du-Sud
+18005,Saint-Just-de-Bretenières,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,2,555,Chaudière-Appalaches (12),Côte-du-Sud
+18010,Lac-Frontière,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,1,154,Chaudière-Appalaches (12),Côte-du-Sud
+18015,Saint-Fabien-de-Panet,Paroisse,MRC Montmagny,12,Chaudière-Appalaches,mrc,2,845,Chaudière-Appalaches (12),Côte-du-Sud
+18020,Sainte-Lucie-de-Beauregard,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,1,234,Chaudière-Appalaches (12),Côte-du-Sud
+18025,Sainte-Apolline-de-Patton,Paroisse,MRC Montmagny,12,Chaudière-Appalaches,mrc,1,439,Chaudière-Appalaches (12),Côte-du-Sud
+18030,Saint-Paul-de-Montminy,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,2,644,Chaudière-Appalaches (12),Côte-du-Sud
+18035,Sainte-Euphémie-sur-Rivière-du-Sud,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,1,307,Chaudière-Appalaches (12),Côte-du-Sud
+18040,Notre-Dame-du-Rosaire,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,1,370,Chaudière-Appalaches (12),Côte-du-Sud
+18045,Cap-Saint-Ignace,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,6,2522,Chaudière-Appalaches (12),Côte-du-Sud
+18050,Montmagny,Ville,MRC Montmagny,12,Chaudière-Appalaches,mrc,24,9249,Chaudière-Appalaches (12),Côte-du-Sud
+18055,Saint-Pierre-de-la-Rivière-du-Sud,Paroisse,MRC Montmagny,12,Chaudière-Appalaches,mrc,2,714,Chaudière-Appalaches (12),Côte-du-Sud
+18060,Saint-François-de-la-Rivière-du-Sud,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,3,1162,Chaudière-Appalaches (12),Côte-du-Sud
+18065,Berthier-sur-Mer,Municipalité,MRC Montmagny,12,Chaudière-Appalaches,mrc,4,1487,Chaudière-Appalaches (12),Côte-du-Sud
+18070,Saint-Antoine-de-l'Isle-aux-Grues,Paroisse,MRC Montmagny,12,Chaudière-Appalaches,mrc,1,111,Chaudière-Appalaches (12),Côte-du-Sud
+18990,TNO aquatique de la MRC de Montmagny,(absent du Répertoire),"enclave, division 18",12,Chaudière-Appalaches,enclave,1,0,,Côte-du-Sud
+19005,Saint-Philémon,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,595,Chaudière-Appalaches (12),Bellechasse
+19010,Notre-Dame-Auxiliatrice-de-Buckland,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,672,Chaudière-Appalaches (12),Bellechasse
+19015,Saint-Nazaire-de-Dorchester,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,1,293,Chaudière-Appalaches (12),Bellechasse
+19020,Saint-Léon-de-Standon,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,896,Chaudière-Appalaches (12),Bellechasse
+19025,Saint-Malachie,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,4,1340,Chaudière-Appalaches (12),Bellechasse
+19030,Saint-Damien-de-Buckland,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,4,1406,Chaudière-Appalaches (12),Bellechasse
+19037,Armagh,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,3,1157,Chaudière-Appalaches (12),Bellechasse
+19045,Saint-Nérée-de-Bellechasse,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,636,Chaudière-Appalaches (12),Bellechasse
+19050,Saint-Lazare-de-Bellechasse,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,4,1020,Chaudière-Appalaches (12),Bellechasse
+19055,Sainte-Claire,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,8,2899,Chaudière-Appalaches (12),Bellechasse
+19062,Saint-Anselme,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,8,3320,Chaudière-Appalaches (12),Bellechasse
+19068,Saint-Henri,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,12,4331,Chaudière-Appalaches (12),Bellechasse
+19070,Honfleur,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,623,Chaudière-Appalaches (12),Bellechasse
+19075,Saint-Gervais,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,4,1719,Chaudière-Appalaches (12),Bellechasse
+19082,Saint-Raphaël,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,6,2016,Chaudière-Appalaches (12),Bellechasse
+19090,La Durantaye,Paroisse,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,628,Chaudière-Appalaches (12),Bellechasse
+19097,Saint-Charles-de-Bellechasse,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,6,1990,Chaudière-Appalaches (12),Bellechasse
+19105,Beaumont,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,7,2487,Chaudière-Appalaches (12),Bellechasse
+19110,Saint-Michel-de-Bellechasse,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,4,1471,Chaudière-Appalaches (12),Bellechasse
+19117,Saint-Vallier,Municipalité,MRC Bellechasse,12,Chaudière-Appalaches,mrc,2,839,Chaudière-Appalaches (12),Bellechasse
+19990,TNO aquatique de la MRC de Bellechasse,(absent du Répertoire),"enclave, division 19",12,Chaudière-Appalaches,enclave,2,0,,Bellechasse
+20005,Saint-François-de-l'Île-d'Orléans,Municipalité,MRC L'Île-d'Orléans,03,Capitale-Nationale,mrc,1,442,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+20010,Sainte-Famille-de-l'Île-d'Orléans,Municipalité,MRC L'Île-d'Orléans,03,Capitale-Nationale,mrc,2,682,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+20015,Saint-Jean-de-l'Île-d'Orléans,Municipalité,MRC L'Île-d'Orléans,03,Capitale-Nationale,mrc,2,813,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+20020,Saint-Laurent-de-l'Île-d'Orléans,Municipalité,MRC L'Île-d'Orléans,03,Capitale-Nationale,mrc,3,1347,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+20025,Saint-Pierre-de-l'Île-d'Orléans,Municipalité,MRC L'Île-d'Orléans,03,Capitale-Nationale,mrc,5,1418,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+20030,Sainte-Pétronille,Village,MRC L'Île-d'Orléans,03,Capitale-Nationale,mrc,2,872,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+20990,TNO aquatique de la MRC de L'Île-d'Orléans,(absent du Répertoire),"enclave, division 20",03,Capitale-Nationale,enclave,4,0,,Charlevoix–Côte-de-Beaupré
+21005,Saint-Tite-des-Caps,Municipalité,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,3,1274,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21010,Saint-Ferréol-les-Neiges,Municipalité,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,8,3227,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21015,Saint-Louis-de-Gonzague-du-Cap-Tourmente,Paroisse,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,1,2,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21020,Saint-Joachim,Paroisse,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,3,1175,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21025,Beaupré,Ville,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,10,3459,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21030,Sainte-Anne-de-Beaupré,Ville,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,6,2560,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21035,Château-Richer,Ville,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,10,3755,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21040,L'Ange-Gardien,Municipalité,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,9,3290,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21045,Boischatel,Municipalité,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,19,7111,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21902,Sault-au-Cochon,Territoire non organisé,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,1,0,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21904,Lac-Jacques-Cartier,Territoire non organisé,MRC La Côte-de-Beaupré,03,Capitale-Nationale,mrc,1,0,Capitale-Nationale (03),Charlevoix–Côte-de-Beaupré
+21990,TNO aquatique de la MRC de La Côte-de-Beaupré,(absent du Répertoire),"enclave, division 21",03,Capitale-Nationale,enclave,2,0,,Charlevoix–Côte-de-Beaupré
+22005,Sainte-Catherine-de-la-Jacques-Cartier,Ville,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,16,7008,Capitale-Nationale (03),Portneuf
+22010,Fossambault-sur-le-Lac,Ville,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,5,1917,Capitale-Nationale (03),Portneuf
+22015,Lac-Saint-Joseph,Ville,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,1,257,Capitale-Nationale (03),Portneuf
+22020,Shannon,Ville,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,12,4850,Capitale-Nationale (03),La Peltrie
+22025,Saint-Gabriel-de-Valcartier,Municipalité,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,6,2360,Capitale-Nationale (03),La Peltrie
+22030,Lac-Delage,Ville,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,2,585,Capitale-Nationale (03),Chauveau
+22035,Stoneham-et-Tewkesbury,Cantons unis,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,18,7522,Capitale-Nationale (03),Chauveau
+22040,Lac-Beauport,Municipalité,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,16,6646,Capitale-Nationale (03),Chauveau
+22045,Sainte-Brigitte-de-Laval,Ville,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,14,6239,Capitale-Nationale (03),Montmorency
+22902,Lac-Croche,Territoire non organisé,MRC La Jacques-Cartier,03,Capitale-Nationale,mrc,1,0,Capitale-Nationale (03),Chauveau
+23015,Notre-Dame-des-Anges,Paroisse,Notre-Dame-des-Anges,03,Capitale-Nationale,municipal,1,242,Capitale-Nationale (03),Taschereau
+23027,Québec,Ville,Québec,03,Capitale-Nationale,municipal,1078,420022,Capitale-Nationale (03),Vanier-Les Rivières | Charlesbourg | Montmorency | Taschereau | Jean-Talon | Jean-Lesage | Chauveau | La Peltrie | Louis-Hébert
+23057,L'Ancienne-Lorette,Ville,L'Ancienne-Lorette,03,Capitale-Nationale,municipal,34,13647,Capitale-Nationale (03),La Peltrie
+23072,Saint-Augustin-de-Desmaures,Ville,Saint-Augustin-de-Desmaures,03,Capitale-Nationale,municipal,42,16735,Capitale-Nationale (03),Louis-Hébert
+23802,Wendake,Réserve indienne,Wendake,03,Capitale-Nationale,municipal,4,1863,Capitale-Nationale (03),Chauveau
+25213,Lévis,Ville,Lévis,12,Chaudière-Appalaches,municipal,309,122710,Chaudière-Appalaches (12),Chutes-de-la-Chaudière | Lévis | Bellechasse
+26005,Frampton,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,3,1136,Chaudière-Appalaches (12),Beauce-Nord
+26010,Saints-Anges,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,3,991,Chaudière-Appalaches (12),Beauce-Nord
+26015,Vallée-Jonction,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,5,1620,Chaudière-Appalaches (12),Beauce-Nord
+26022,Saint-Elzéar,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,6,2046,Chaudière-Appalaches (12),Beauce-Nord
+26030,Sainte-Marie,Ville,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,26,10523,Chaudière-Appalaches (12),Beauce-Nord
+26035,Sainte-Marguerite,Paroisse,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,3,1063,Chaudière-Appalaches (12),Beauce-Nord
+26040,Sainte-Hénédine,Paroisse,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,3,1119,Chaudière-Appalaches (12),Beauce-Nord
+26048,Scott,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,5,2178,Chaudière-Appalaches (12),Beauce-Nord
+26055,Saint-Bernard,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,5,1895,Chaudière-Appalaches (12),Beauce-Nord
+26063,Saint-Isidore,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,6,2683,Chaudière-Appalaches (12),Beauce-Nord
+26070,Saint-Lambert-de-Lauzon,Municipalité,MRC La Nouvelle-Beauce,12,Chaudière-Appalaches,mrc,14,5772,Chaudière-Appalaches (12),Beauce-Nord
+26990,TNO aquatique de la MRC de La Nouvelle-Beauce,(absent du Répertoire),"enclave, division 26",12,Chaudière-Appalaches,enclave,1,0,,Beauce-Nord
+27008,Saint-Victor,Municipalité,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,5,1907,Chaudière-Appalaches (12),Beauce-Nord
+27015,Saint-Alfred,Municipalité,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,1,452,Chaudière-Appalaches (12),Beauce-Nord
+27028,Beauceville,Ville,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,13,4882,Chaudière-Appalaches (12),Beauce-Nord
+27035,Saint-Odilon-de-Cranbourne,Municipalité,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,3,1126,Chaudière-Appalaches (12),Beauce-Nord
+27043,Saint-Joseph-de-Beauce,Ville,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,11,3891,Chaudière-Appalaches (12),Beauce-Nord
+27050,Saint-Joseph-des-Érables,Municipalité,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,1,284,Chaudière-Appalaches (12),Beauce-Nord
+27055,Saint-Jules,Paroisse,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,1,403,Chaudière-Appalaches (12),Beauce-Nord
+27060,Tring-Jonction,Village,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,3,1271,Chaudière-Appalaches (12),Beauce-Nord
+27065,Saint-Frédéric,Paroisse,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,3,877,Chaudière-Appalaches (12),Beauce-Nord
+27070,Saint-Séverin,Paroisse,MRC Beauce-Centre,12,Chaudière-Appalaches,mrc,1,251,Chaudière-Appalaches (12),Beauce-Nord
+28005,Saint-Zacharie,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,3,1330,Chaudière-Appalaches (12),Beauce-Sud
+28015,Sainte-Aurélie,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,2,731,Chaudière-Appalaches (12),Beauce-Sud
+28020,Saint-Prosper,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,7,3118,Chaudière-Appalaches (12),Beauce-Sud
+28025,Saint-Benjamin,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,2,913,Chaudière-Appalaches (12),Beauce-Sud
+28030,Sainte-Rose-de-Watford,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,2,599,Chaudière-Appalaches (12),Bellechasse
+28035,Saint-Louis-de-Gonzague,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,1,323,Chaudière-Appalaches (12),Bellechasse
+28040,Saint-Cyprien,Paroisse,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,1,430,Chaudière-Appalaches (12),Bellechasse
+28045,Sainte-Justine,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,4,1397,Chaudière-Appalaches (12),Bellechasse
+28053,Lac-Etchemin,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,11,3452,Chaudière-Appalaches (12),Bellechasse
+28060,Saint-Luc-de-Bellechasse,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,1,404,Chaudière-Appalaches (12),Bellechasse
+28065,Sainte-Sabine,Paroisse,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,1,320,Chaudière-Appalaches (12),Bellechasse
+28070,Saint-Camille-de-Lellis,Paroisse,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,2,632,Chaudière-Appalaches (12),Bellechasse
+28075,Saint-Magloire,Municipalité,MRC Les Etchemins,12,Chaudière-Appalaches,mrc,2,596,Chaudière-Appalaches (12),Bellechasse
+29005,Saint-Théophile,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,2,554,Chaudière-Appalaches (12),Beauce-Sud
+29013,Saint-Gédéon-de-Beauce,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,4,1640,Chaudière-Appalaches (12),Beauce-Sud
+29020,Saint-Hilaire-de-Dorset,Paroisse,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,1,90,Chaudière-Appalaches (12),Beauce-Sud
+29027,Courcelles--Saint-Évariste,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,3,1033,Chaudière-Appalaches (12),Beauce-Sud
+29030,La Guadeloupe,Village,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,4,1362,Chaudière-Appalaches (12),Beauce-Sud
+29038,Saint-Honoré-de-Shenley,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,3,1180,Chaudière-Appalaches (12),Beauce-Sud
+29045,Saint-Martin,Paroisse,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,5,1975,Chaudière-Appalaches (12),Beauce-Sud
+29050,Saint-René,Paroisse,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,2,764,Chaudière-Appalaches (12),Beauce-Sud
+29057,Saint-Côme--Linière,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,6,2498,Chaudière-Appalaches (12),Beauce-Sud
+29065,Saint-Philibert,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,1,284,Chaudière-Appalaches (12),Beauce-Sud
+29073,Saint-Georges,Ville,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,64,26166,Chaudière-Appalaches (12),Beauce-Sud
+29095,Lac-Poulin,Village,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,1,145,Chaudière-Appalaches (12),Beauce-Sud
+29100,Saint-Benoît-Labre,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,3,1260,Chaudière-Appalaches (12),Beauce-Sud
+29112,Saint-Éphrem-de-Beauce,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,5,1894,Chaudière-Appalaches (12),Beauce-Sud
+29120,Notre-Dame-des-Pins,Paroisse,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,4,1436,Chaudière-Appalaches (12),Beauce-Sud
+29125,Saint-Simon-les-Mines,Municipalité,MRC Beauce-Sartigan,12,Chaudière-Appalaches,mrc,1,485,Chaudière-Appalaches (12),Beauce-Sud
+30005,Saint-Augustin-de-Woburn,Paroisse,MRC Le Granit,05,Estrie,mrc,2,562,Estrie (05),Mégantic
+30010,Notre-Dame-des-Bois,Municipalité,MRC Le Granit,05,Estrie,mrc,2,977,Estrie (05),Mégantic
+30015,Val-Racine,Municipalité,MRC Le Granit,05,Estrie,mrc,1,156,Estrie (05),Mégantic
+30020,Piopolis,Municipalité,MRC Le Granit,05,Estrie,mrc,1,348,Estrie (05),Mégantic
+30025,Frontenac,Municipalité,MRC Le Granit,05,Estrie,mrc,4,1472,Estrie (05),Mégantic
+30030,Lac-Mégantic,Ville,MRC Le Granit,05,Estrie,mrc,13,4838,Estrie (05),Mégantic
+30035,Marston,Canton,MRC Le Granit,05,Estrie,mrc,2,639,Estrie (05),Mégantic
+30040,Milan,Municipalité,MRC Le Granit,05,Estrie,mrc,1,258,Estrie (05),Mégantic
+30045,Nantes,Municipalité,MRC Le Granit,05,Estrie,mrc,3,1142,Estrie (05),Mégantic
+30050,Sainte-Cécile-de-Whitton,Municipalité,MRC Le Granit,05,Estrie,mrc,2,719,Estrie (05),Mégantic
+30055,Audet,Municipalité,MRC Le Granit,05,Estrie,mrc,2,533,Estrie (05),Mégantic
+30070,Saint-Robert-Bellarmin,Municipalité,MRC Le Granit,05,Estrie,mrc,1,452,Estrie (05),Beauce-Sud
+30072,Saint-Ludger,Municipalité,MRC Le Granit,05,Estrie,mrc,2,877,Estrie (05),Beauce-Sud
+30080,Lac-Drolet,Municipalité,MRC Le Granit,05,Estrie,mrc,2,856,Estrie (05),Mégantic
+30085,Saint-Sébastien,Municipalité,MRC Le Granit,05,Estrie,mrc,2,539,Estrie (05),Mégantic
+30095,Lambton,Municipalité,MRC Le Granit,05,Estrie,mrc,3,1340,Estrie (05),Mégantic
+30100,Saint-Romain,Municipalité,MRC Le Granit,05,Estrie,mrc,2,581,Estrie (05),Mégantic
+30105,Stornoway,Municipalité,MRC Le Granit,05,Estrie,mrc,1,438,Estrie (05),Mégantic
+30110,Stratford,Canton,MRC Le Granit,05,Estrie,mrc,2,903,Estrie (05),Mégantic
+31008,Beaulac-Garthby,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,2,863,Chaudière-Appalaches (12),Mégantic
+31015,Disraeli,Ville,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,6,1899,Chaudière-Appalaches (12),Mégantic
+31020,Disraeli,Paroisse,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,3,1024,Chaudière-Appalaches (12),Mégantic
+31025,Saint-Jacques-le-Majeur-de-Wolfestown,Paroisse,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,169,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31030,Saint-Fortunat,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,233,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31035,Saint-Julien,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,353,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31040,Irlande,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,2,730,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31045,Saint-Joseph-de-Coleraine,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,4,1543,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31050,Sainte-Praxède,Paroisse,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,298,Chaudière-Appalaches (12),Mégantic
+31056,Adstock,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,6,2428,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31060,Sainte-Clotilde-de-Beauce,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,420,Chaudière-Appalaches (12),Beauce-Sud
+31084,Thetford Mines,Ville,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,62,20857,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31095,Saint-Adrien-d'Irlande,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,302,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31100,Saint-Jean-de-Brébeuf,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,292,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31105,Kinnear's Mills,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,323,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31122,East Broughton,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,5,1774,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31130,Sacré-Coeur-de-Jésus,Paroisse,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,1,436,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31135,Saint-Pierre-de-Broughton,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,2,706,Chaudière-Appalaches (12),Lotbinière-Frontenac
+31140,Saint-Jacques-de-Leeds,Municipalité,MRC Les Appalaches,12,Chaudière-Appalaches,mrc,2,539,Chaudière-Appalaches (12),Lotbinière-Frontenac
+32013,Saint-Ferdinand,Municipalité,MRC L'Érable,17,Centre-du-Québec,mrc,4,1731,Centre-du-Québec (17),Arthabaska-L'Érable
+32023,Sainte-Sophie-d'Halifax,Municipalité,MRC L'Érable,17,Centre-du-Québec,mrc,1,460,Centre-du-Québec (17),Arthabaska-L'Érable
+32033,Princeville,Ville,MRC L'Érable,17,Centre-du-Québec,mrc,12,4921,Centre-du-Québec (17),Arthabaska-L'Érable
+32043,Plessisville,Ville,MRC L'Érable,17,Centre-du-Québec,mrc,19,7280,Centre-du-Québec (17),Arthabaska-L'Érable
+32050,Saint-Pierre-Baptiste,Paroisse,MRC L'Érable,17,Centre-du-Québec,mrc,1,481,Centre-du-Québec (17),Arthabaska-L'Érable
+32058,Inverness,Municipalité,MRC L'Érable,17,Centre-du-Québec,mrc,2,764,Centre-du-Québec (17),Arthabaska-L'Érable
+32065,Lyster,Municipalité,MRC L'Érable,17,Centre-du-Québec,mrc,3,1297,Centre-du-Québec (17),Arthabaska-L'Érable
+32072,Laurierville,Municipalité,MRC L'Érable,17,Centre-du-Québec,mrc,3,1065,Centre-du-Québec (17),Arthabaska-L'Érable
+32080,Notre-Dame-de-Lourdes,Paroisse,MRC L'Érable,17,Centre-du-Québec,mrc,2,589,Centre-du-Québec (17),Arthabaska-L'Érable
+32085,Villeroy,Municipalité,MRC L'Érable,17,Centre-du-Québec,mrc,1,412,Centre-du-Québec (17),Arthabaska-L'Érable
+33007,Saint-Sylvestre,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,824,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33017,Sainte-Agathe-de-Lotbinière,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,913,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33025,Saint-Patrice-de-Beaurivage,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,881,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33030,Saint-Narcisse-de-Beaurivage,Paroisse,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,955,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33035,Saint-Gilles,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,8,2634,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33040,Dosquet,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,755,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33045,Saint-Agapit,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,8,3539,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33052,Saint-Flavien,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,4,1268,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33060,Laurier-Station,Village,MRC Lotbinière,12,Chaudière-Appalaches,mrc,6,2266,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33065,Saint-Janvier-de-Joly,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,926,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33070,Val-Alain,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,883,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33080,Saint-Édouard-de-Lotbinière,Paroisse,MRC Lotbinière,12,Chaudière-Appalaches,mrc,3,944,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33085,Notre-Dame-du-Sacré-Coeur-d'Issoudun,Paroisse,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,679,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33090,Saint-Apollinaire,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,16,6676,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33095,Saint-Antoine-de-Tilly,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,4,1427,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33102,Sainte-Croix,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,6,2013,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33115,Lotbinière,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,2,759,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33123,Leclercville,Municipalité,MRC Lotbinière,12,Chaudière-Appalaches,mrc,1,404,Chaudière-Appalaches (12),Lotbinière-Frontenac
+33990,TNO aquatique de la MRC de Lotbinière,(absent du Répertoire),"enclave, division 33",12,Chaudière-Appalaches,enclave,4,0,,Lotbinière-Frontenac
+34007,Neuville,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,9,3669,Capitale-Nationale (03),Portneuf
+34017,Pont-Rouge,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,22,8859,Capitale-Nationale (03),Portneuf
+34025,Donnacona,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,15,5718,Capitale-Nationale (03),Portneuf
+34030,Cap-Santé,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,8,3016,Capitale-Nationale (03),Portneuf
+34038,Saint-Basile,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,6,2325,Capitale-Nationale (03),Portneuf
+34048,Portneuf,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,8,2819,Capitale-Nationale (03),Portneuf
+34058,Deschambault-Grondines,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,5,1854,Capitale-Nationale (03),Portneuf
+34060,Saint-Gilbert,Paroisse,MRC Portneuf,03,Capitale-Nationale,mrc,1,251,Capitale-Nationale (03),Portneuf
+34065,Saint-Marc-des-Carrières,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,8,2443,Capitale-Nationale (03),Portneuf
+34078,Saint-Casimir,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,4,1201,Capitale-Nationale (03),Portneuf
+34085,Saint-Thuribe,Paroisse,MRC Portneuf,03,Capitale-Nationale,mrc,1,248,Capitale-Nationale (03),Portneuf
+34090,Saint-Ubalde,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,3,1204,Capitale-Nationale (03),Portneuf
+34097,Saint-Alban,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,4,1066,Capitale-Nationale (03),Portneuf
+34105,Sainte-Christine-d'Auvergne,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,2,610,Capitale-Nationale (03),Portneuf
+34115,Saint-Léonard-de-Portneuf,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,3,979,Capitale-Nationale (03),Portneuf
+34120,Lac-Sergent,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,1,466,Capitale-Nationale (03),Portneuf
+34128,Saint-Raymond,Ville,MRC Portneuf,03,Capitale-Nationale,mrc,25,9460,Capitale-Nationale (03),Portneuf
+34135,Rivière-à-Pierre,Municipalité,MRC Portneuf,03,Capitale-Nationale,mrc,2,502,Capitale-Nationale (03),Portneuf
+34902,Lac-Blanc,Territoire non organisé,MRC Portneuf,03,Capitale-Nationale,mrc,1,0,Capitale-Nationale (03),Portneuf
+34904,Linton,Territoire non organisé,MRC Portneuf,03,Capitale-Nationale,mrc,1,2,Capitale-Nationale (03),Portneuf
+34906,Lac-Lapeyrère,Territoire non organisé,MRC Portneuf,03,Capitale-Nationale,mrc,1,0,Capitale-Nationale (03),Portneuf
+34990,TNO aquatique de la MRC de Portneuf,(absent du Répertoire),"enclave, division 34",03,Capitale-Nationale,enclave,1,0,,Portneuf
+35005,Notre-Dame-de-Montauban,Municipalité,MRC Mékinac,04,Mauricie,mrc,2,695,Mauricie (04),Champlain
+35010,Lac-aux-Sables,Paroisse,MRC Mékinac,04,Mauricie,mrc,3,1295,Mauricie (04),Champlain
+35015,Saint-Adelphe,Paroisse,MRC Mékinac,04,Mauricie,mrc,2,823,Mauricie (04),Champlain
+35020,Saint-Séverin,Paroisse,MRC Mékinac,04,Mauricie,mrc,2,656,Mauricie (04),Champlain
+35027,Saint-Tite,Ville,MRC Mékinac,04,Mauricie,mrc,9,3111,Mauricie (04),Champlain
+35035,Hérouxville,Paroisse,MRC Mékinac,04,Mauricie,mrc,3,1254,Mauricie (04),Champlain
+35040,Grandes-Piles,Village,MRC Mékinac,04,Mauricie,mrc,2,510,Mauricie (04),Laviolette–Saint-Maurice
+35045,Saint-Roch-de-Mékinac,Paroisse,MRC Mékinac,04,Mauricie,mrc,1,318,Mauricie (04),Laviolette–Saint-Maurice
+35050,Sainte-Thècle,Municipalité,MRC Mékinac,04,Mauricie,mrc,5,2090,Mauricie (04),Champlain
+35055,Trois-Rives,Municipalité,MRC Mékinac,04,Mauricie,mrc,2,426,Mauricie (04),Laviolette–Saint-Maurice
+35902,Lac-Masketsi,Territoire non organisé,MRC Mékinac,04,Mauricie,mrc,1,5,Mauricie (04),Laviolette–Saint-Maurice
+35904,Lac-Normand,Territoire non organisé,MRC Mékinac,04,Mauricie,mrc,1,36,Mauricie (04),Laviolette–Saint-Maurice
+35906,Rivière-de-la-Savane,Territoire non organisé,MRC Mékinac,04,Mauricie,mrc,1,9,Mauricie (04),Laviolette–Saint-Maurice
+35908,Lac-Boulé,Territoire non organisé,MRC Mékinac,04,Mauricie,mrc,1,0,Mauricie (04),Laviolette–Saint-Maurice
+35990,TNO aquatique de la MRC de Mékinac,(absent du Répertoire),"enclave, division 35",04,Mauricie,enclave,1,0,,Laviolette–Saint-Maurice
+36033,Shawinigan,Ville,Shawinigan,04,Mauricie,municipal,114,42594,Mauricie (04),Laviolette–Saint-Maurice
+36990,TNO aquatique de la MRC géographique de Shawinigan,(absent du Répertoire),"enclave, division 36",04,Mauricie,enclave,2,0,,Laviolette–Saint-Maurice
+37067,Trois-Rivières,Ville,Trois-Rivières,04,Mauricie,municipal,284,109963,Mauricie (04),Trois-Rivières | Champlain | Maskinongé
+37205,Sainte-Anne-de-la-Pérade,Municipalité,MRC Des Chenaux,04,Mauricie,mrc,4,1656,Mauricie (04),Champlain
+37210,Batiscan,Municipalité,MRC Des Chenaux,04,Mauricie,mrc,2,900,Mauricie (04),Champlain
+37215,Sainte-Geneviève-de-Batiscan,Paroisse,MRC Des Chenaux,04,Mauricie,mrc,3,948,Mauricie (04),Champlain
+37220,Champlain,Municipalité,MRC Des Chenaux,04,Mauricie,mrc,4,1576,Mauricie (04),Champlain
+37225,Saint-Luc-de-Vincennes,Municipalité,MRC Des Chenaux,04,Mauricie,mrc,1,477,Mauricie (04),Champlain
+37230,Saint-Maurice,Paroisse,MRC Des Chenaux,04,Mauricie,mrc,7,2826,Mauricie (04),Champlain
+37235,Notre-Dame-du-Mont-Carmel,Paroisse,MRC Des Chenaux,04,Mauricie,mrc,13,5242,Mauricie (04),Laviolette–Saint-Maurice
+37240,Saint-Narcisse,Paroisse,MRC Des Chenaux,04,Mauricie,mrc,4,1501,Mauricie (04),Champlain
+37245,Saint-Stanislas,Municipalité,MRC Des Chenaux,04,Mauricie,mrc,2,880,Mauricie (04),Champlain
+37250,Saint-Prosper-de-Champlain,Municipalité,MRC Des Chenaux,04,Mauricie,mrc,1,434,Mauricie (04),Champlain
+37990,TNO aquatique de la MRC des Chenaux,(absent du Répertoire),"enclave, division 37",04,Mauricie,enclave,1,0,,Champlain
+38005,Saint-Sylvère,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,2,636,Centre-du-Québec (17),Nicolet-Bécancour
+38010,Bécancour,Ville,MRC Bécancour,17,Centre-du-Québec,mrc,34,11784,Centre-du-Québec (17),Nicolet-Bécancour
+38015,Sainte-Marie-de-Blandford,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,1,380,Centre-du-Québec (17),Nicolet-Bécancour
+38020,Lemieux,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,1,232,Centre-du-Québec (17),Nicolet-Bécancour
+38028,Manseau,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,2,671,Centre-du-Québec (17),Nicolet-Bécancour
+38035,Sainte-Françoise,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,1,386,Centre-du-Québec (17),Nicolet-Bécancour
+38040,Sainte-Sophie-de-Lévrard,Paroisse,MRC Bécancour,17,Centre-du-Québec,mrc,2,620,Centre-du-Québec (17),Nicolet-Bécancour
+38047,Fortierville,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,2,488,Centre-du-Québec (17),Nicolet-Bécancour
+38055,Parisville,Paroisse,MRC Bécancour,17,Centre-du-Québec,mrc,1,419,Centre-du-Québec (17),Nicolet-Bécancour
+38060,Sainte-Cécile-de-Lévrard,Paroisse,MRC Bécancour,17,Centre-du-Québec,mrc,1,293,Centre-du-Québec (17),Nicolet-Bécancour
+38065,Saint-Pierre-les-Becquets,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,4,958,Centre-du-Québec (17),Nicolet-Bécancour
+38070,Deschaillons-sur-Saint-Laurent,Municipalité,MRC Bécancour,17,Centre-du-Québec,mrc,2,765,Centre-du-Québec (17),Nicolet-Bécancour
+38802,Wôlinak,Réserve indienne,"Réserve indienne · enclave, division Bécancour (38)",17,Centre-du-Québec,enclave,1,199,Centre-du-Québec (17),Nicolet-Bécancour
+39005,Saints-Martyrs-Canadiens,Paroisse,MRC Arthabaska,17,Centre-du-Québec,mrc,2,240,Centre-du-Québec (17),Drummond–Bois-Francs
+39010,Ham-Nord,Canton,MRC Arthabaska,17,Centre-du-Québec,mrc,2,770,Centre-du-Québec (17),Drummond–Bois-Francs
+39015,Notre-Dame-de-Ham,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,1,335,Centre-du-Québec (17),Drummond–Bois-Francs
+39020,Saint-Rémi-de-Tingwick,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,1,408,Centre-du-Québec (17),Drummond–Bois-Francs
+39025,Tingwick,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,3,1129,Centre-du-Québec (17),Drummond–Bois-Francs
+39030,Chesterville,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,2,684,Centre-du-Québec (17),Drummond–Bois-Francs
+39035,Sainte-Hélène-de-Chester,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,1,329,Centre-du-Québec (17),Arthabaska-L'Érable
+39043,Saint-Norbert-d'Arthabaska,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,3,966,Centre-du-Québec (17),Arthabaska-L'Érable
+39060,Saint-Christophe-d'Arthabaska,Paroisse,MRC Arthabaska,17,Centre-du-Québec,mrc,6,2556,Centre-du-Québec (17),Arthabaska-L'Érable
+39062,Victoriaville,Ville,MRC Arthabaska,17,Centre-du-Québec,mrc,99,37940,Centre-du-Québec (17),Arthabaska-L'Érable
+39077,Warwick,Ville,MRC Arthabaska,17,Centre-du-Québec,mrc,11,3892,Centre-du-Québec (17),Drummond–Bois-Francs
+39085,Saint-Albert,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,3,1322,Centre-du-Québec (17),Drummond–Bois-Francs
+39090,Sainte-Élizabeth-de-Warwick,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,1,267,Centre-du-Québec (17),Drummond–Bois-Francs
+39097,Kingsey Falls,Ville,MRC Arthabaska,17,Centre-du-Québec,mrc,4,1580,Centre-du-Québec (17),Drummond–Bois-Francs
+39105,Sainte-Séraphine,Paroisse,MRC Arthabaska,17,Centre-du-Québec,mrc,1,314,Centre-du-Québec (17),Drummond–Bois-Francs
+39117,Sainte-Clotilde-de-Horton,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,3,1341,Centre-du-Québec (17),Drummond–Bois-Francs
+39130,Saint-Samuel,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,2,637,Centre-du-Québec (17),Drummond–Bois-Francs
+39135,Saint-Valère,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,3,980,Centre-du-Québec (17),Arthabaska-L'Érable
+39145,Saint-Rosaire,Paroisse,MRC Arthabaska,17,Centre-du-Québec,mrc,2,695,Centre-du-Québec (17),Nicolet-Bécancour
+39152,Daveluyville,Ville,MRC Arthabaska,17,Centre-du-Québec,mrc,5,1974,Centre-du-Québec (17),Nicolet-Bécancour
+39165,Maddington Falls,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,1,355,Centre-du-Québec (17),Nicolet-Bécancour
+39170,Saint-Louis-de-Blandford,Municipalité,MRC Arthabaska,17,Centre-du-Québec,mrc,2,848,Centre-du-Québec (17),Nicolet-Bécancour
+40005,Ham-Sud,Municipalité,MRC Les Sources,05,Estrie,mrc,1,258,Estrie (05),Mégantic
+40010,Saint-Adrien,Municipalité,MRC Les Sources,05,Estrie,mrc,1,452,Estrie (05),Mégantic
+40017,Wotton,Municipalité,MRC Les Sources,05,Estrie,mrc,3,1142,Estrie (05),Mégantic
+40025,Saint-Camille,Canton,MRC Les Sources,05,Estrie,mrc,1,427,Estrie (05),Mégantic
+40032,Saint-Georges-de-Windsor,Municipalité,MRC Les Sources,05,Estrie,mrc,2,779,Estrie (05),Mégantic
+40043,Val-des-Sources,Ville,MRC Les Sources,05,Estrie,mrc,16,5687,Estrie (05),Mégantic
+40047,Danville,Ville,MRC Les Sources,05,Estrie,mrc,8,3236,Estrie (05),Mégantic
+41012,Saint-Isidore-de-Clifton,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,2,583,Estrie (05),Mégantic
+41020,Chartierville,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,1,268,Estrie (05),Mégantic
+41027,La Patrie,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,2,665,Estrie (05),Mégantic
+41037,Newport,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,2,605,Estrie (05),Mégantic
+41038,Cookshire-Eaton,Ville,MRC Le Haut-Saint-François,05,Estrie,mrc,11,4379,Estrie (05),Mégantic
+41055,Ascot Corner,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,6,2711,Estrie (05),Mégantic
+41060,East Angus,Ville,MRC Le Haut-Saint-François,05,Estrie,mrc,9,3554,Estrie (05),Mégantic
+41065,Westbury,Canton,MRC Le Haut-Saint-François,05,Estrie,mrc,2,872,Estrie (05),Mégantic
+41070,Bury,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,3,977,Estrie (05),Mégantic
+41075,Hampden,Canton,MRC Le Haut-Saint-François,05,Estrie,mrc,1,145,Estrie (05),Mégantic
+41080,Scotstown,Ville,MRC Le Haut-Saint-François,05,Estrie,mrc,1,395,Estrie (05),Mégantic
+41085,Lingwick,Canton,MRC Le Haut-Saint-François,05,Estrie,mrc,1,366,Estrie (05),Mégantic
+41098,Weedon,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,7,2305,Estrie (05),Mégantic
+41117,Dudswell,Municipalité,MRC Le Haut-Saint-François,05,Estrie,mrc,4,1527,Estrie (05),Mégantic
+42005,Stoke,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,6,2452,Estrie (05),Richmond
+42020,Saint-François-Xavier-de-Brompton,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,5,1989,Estrie (05),Richmond
+42025,Saint-Denis-de-Brompton,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,9,3938,Estrie (05),Richmond
+42032,Racine,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,3,1229,Estrie (05),Daniel-Johnson
+42040,Bonsecours,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,2,552,Estrie (05),Daniel-Johnson
+42045,Lawrenceville,Village,MRC Le Val-Saint-François,05,Estrie,mrc,2,514,Estrie (05),Daniel-Johnson
+42050,Sainte-Anne-de-la-Rochelle,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,2,477,Estrie (05),Daniel-Johnson
+42055,Valcourt,Ville,MRC Le Val-Saint-François,05,Estrie,mrc,4,1786,Estrie (05),Daniel-Johnson
+42060,Valcourt,Canton,MRC Le Val-Saint-François,05,Estrie,mrc,2,858,Estrie (05),Daniel-Johnson
+42065,Maricourt,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,1,374,Estrie (05),Daniel-Johnson
+42070,Kingsbury,Village,MRC Le Val-Saint-François,05,Estrie,mrc,1,104,Estrie (05),Richmond
+42075,Melbourne,Canton,MRC Le Val-Saint-François,05,Estrie,mrc,3,945,Estrie (05),Richmond
+42078,Ulverton,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,1,399,Estrie (05),Richmond
+42088,Windsor,Ville,MRC Le Val-Saint-François,05,Estrie,mrc,11,4333,Estrie (05),Richmond
+42095,Val-Joli,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,4,1398,Estrie (05),Richmond
+42098,Richmond,Ville,MRC Le Val-Saint-François,05,Estrie,mrc,8,2606,Estrie (05),Richmond
+42100,Saint-Claude,Municipalité,MRC Le Val-Saint-François,05,Estrie,mrc,3,988,Estrie (05),Richmond
+42110,Cleveland,Canton,MRC Le Val-Saint-François,05,Estrie,mrc,4,1340,Estrie (05),Richmond
+42990,TNO aquatique de la MRC du Val-Saint-François,(absent du Répertoire),"enclave, division 42",05,Estrie,enclave,5,0,,Richmond
+43027,Sherbrooke,Ville,Sherbrooke,05,Estrie,municipal,345,131205,Estrie (05),Sherbrooke | Saint-François | Richmond
+44003,Saint-Malo,Municipalité,MRC Coaticook,05,Estrie,mrc,1,370,Estrie (05),Saint-François
+44005,Saint-Venant-de-Paquette,Municipalité,MRC Coaticook,05,Estrie,mrc,1,97,Estrie (05),Saint-François
+44010,East Hereford,Municipalité,MRC Coaticook,05,Estrie,mrc,1,211,Estrie (05),Saint-François
+44015,Saint-Herménégilde,Municipalité,MRC Coaticook,05,Estrie,mrc,2,604,Estrie (05),Saint-François
+44023,Dixville,Municipalité,MRC Coaticook,05,Estrie,mrc,2,587,Estrie (05),Saint-François
+44037,Coaticook,Ville,MRC Coaticook,05,Estrie,mrc,21,7167,Estrie (05),Saint-François
+44045,Barnston-Ouest,Municipalité,MRC Coaticook,05,Estrie,mrc,2,457,Estrie (05),Saint-François
+44050,Stanstead-Est,Municipalité,MRC Coaticook,05,Estrie,mrc,2,487,Estrie (05),Saint-François
+44055,Sainte-Edwidge-de-Clifton,Canton,MRC Coaticook,05,Estrie,mrc,1,382,Estrie (05),Saint-François
+44060,Martinville,Municipalité,MRC Coaticook,05,Estrie,mrc,1,397,Estrie (05),Saint-François
+44071,Compton,Municipalité,MRC Coaticook,05,Estrie,mrc,7,2554,Estrie (05),Saint-François
+44080,Waterville,Ville,MRC Coaticook,05,Estrie,mrc,4,1862,Estrie (05),Saint-François
+45008,Stanstead,Ville,MRC Memphrémagog,05,Estrie,mrc,6,2237,Estrie (05),Orford
+45020,Ogden,Municipalité,MRC Memphrémagog,05,Estrie,mrc,2,640,Estrie (05),Orford
+45025,Stanstead,Canton,MRC Memphrémagog,05,Estrie,mrc,3,977,Estrie (05),Orford
+45030,Potton,Canton,MRC Memphrémagog,05,Estrie,mrc,4,1778,Estrie (05),Orford
+45035,Ayer's Cliff,Village,MRC Memphrémagog,05,Estrie,mrc,3,987,Estrie (05),Orford
+45043,Hatley,Municipalité,MRC Memphrémagog,05,Estrie,mrc,2,632,Estrie (05),Orford
+45050,North Hatley,Village,MRC Memphrémagog,05,Estrie,mrc,2,600,Estrie (05),Orford
+45055,Hatley,Canton,MRC Memphrémagog,05,Estrie,mrc,5,1990,Estrie (05),Orford
+45060,Sainte-Catherine-de-Hatley,Municipalité,MRC Memphrémagog,05,Estrie,mrc,6,2361,Estrie (05),Orford
+45072,Magog,Ville,MRC Memphrémagog,05,Estrie,mrc,61,23761,Estrie (05),Orford
+45080,Saint-Benoît-du-Lac,Municipalité,MRC Memphrémagog,05,Estrie,mrc,1,23,Estrie (05),Orford
+45085,Austin,Municipalité,MRC Memphrémagog,05,Estrie,mrc,4,1708,Estrie (05),Orford
+45093,Eastman,Municipalité,MRC Memphrémagog,05,Estrie,mrc,6,2419,Estrie (05),Orford
+45095,Bolton-Est,Municipalité,MRC Memphrémagog,05,Estrie,mrc,3,1106,Estrie (05),Orford
+45100,Saint-Étienne-de-Bolton,Municipalité,MRC Memphrémagog,05,Estrie,mrc,2,818,Estrie (05),Orford
+45105,Stukely-Sud,Village,MRC Memphrémagog,05,Estrie,mrc,3,1144,Estrie (05),Orford
+45115,Orford,Canton,MRC Memphrémagog,05,Estrie,mrc,10,4440,Estrie (05),Orford
+46005,Abercorn,Village,MRC Brome-Missisquoi,16,Montérégie,mrc,1,306,Estrie (05),Brome-Missisquoi
+46010,Frelighsburg,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,3,1041,Estrie (05),Brome-Missisquoi
+46017,Saint-Armand,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,3,1056,Estrie (05),Brome-Missisquoi
+46025,Pike River,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,445,Estrie (05),Brome-Missisquoi
+46030,Stanbridge Station,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,1,228,Estrie (05),Brome-Missisquoi
+46035,Bedford,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,7,2489,Estrie (05),Brome-Missisquoi
+46040,Bedford,Canton,MRC Brome-Missisquoi,16,Montérégie,mrc,2,600,Estrie (05),Brome-Missisquoi
+46045,Stanbridge East,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,711,Estrie (05),Brome-Missisquoi
+46050,Dunham,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,7,2919,Estrie (05),Brome-Missisquoi
+46058,Sutton,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,11,4037,Estrie (05),Brome-Missisquoi
+46065,Bolton-Ouest,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,619,Estrie (05),Brome-Missisquoi
+46070,Brome,Village,MRC Brome-Missisquoi,16,Montérégie,mrc,1,282,Estrie (05),Brome-Missisquoi
+46075,Lac-Brome,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,15,5441,Estrie (05),Brome-Missisquoi
+46078,Bromont,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,25,10246,Estrie (05),Brome-Missisquoi
+46080,Cowansville,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,35,13755,Estrie (05),Brome-Missisquoi
+46085,East Farnham,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,584,Estrie (05),Brome-Missisquoi
+46090,Brigham,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,5,1951,Estrie (05),Brome-Missisquoi
+46095,Saint-Ignace-de-Stanbridge,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,538,Estrie (05),Brome-Missisquoi
+46100,Notre-Dame-de-Stanbridge,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,546,Estrie (05),Brome-Missisquoi
+46105,Sainte-Sabine,Municipalité,MRC Brome-Missisquoi,16,Montérégie,mrc,2,895,Estrie (05),Brome-Missisquoi
+46112,Farnham,Ville,MRC Brome-Missisquoi,16,Montérégie,mrc,22,8573,Estrie (05),Brome-Missisquoi
+46990,TNO aquatique de la MRC de Brome-Missisquoi,(absent du Répertoire),"enclave, division 46",16,Montérégie,enclave,1,0,,Brome-Missisquoi
+47010,Saint-Alphonse-de-Granby,Municipalité,MRC La Haute-Yamaska,16,Montérégie,mrc,7,2665,Estrie (05),Granby
+47017,Granby,Ville,MRC La Haute-Yamaska,16,Montérégie,mrc,142,55995,Estrie (05),Granby
+47025,Waterloo,Ville,MRC La Haute-Yamaska,16,Montérégie,mrc,12,4763,Estrie (05),Daniel-Johnson
+47030,Warden,Village,MRC La Haute-Yamaska,16,Montérégie,mrc,1,299,Estrie (05),Daniel-Johnson
+47035,Shefford,Canton,MRC La Haute-Yamaska,16,Montérégie,mrc,16,6521,Estrie (05),Daniel-Johnson
+47040,Saint-Joachim-de-Shefford,Municipalité,MRC La Haute-Yamaska,16,Montérégie,mrc,3,1190,Estrie (05),Daniel-Johnson
+47047,Roxton Pond,Municipalité,MRC La Haute-Yamaska,16,Montérégie,mrc,9,3974,Estrie (05),Daniel-Johnson
+47055,Sainte-Cécile-de-Milton,Municipalité,MRC La Haute-Yamaska,16,Montérégie,mrc,4,1713,Estrie (05),Daniel-Johnson
+48005,Béthanie,Municipalité,MRC Acton,16,Montérégie,mrc,1,265,Montérégie (16),Daniel-Johnson
+48010,Roxton Falls,Village,MRC Acton,16,Montérégie,mrc,3,1144,Montérégie (16),Daniel-Johnson
+48015,Roxton,Canton,MRC Acton,16,Montérégie,mrc,2,859,Montérégie (16),Daniel-Johnson
+48020,Sainte-Christine,Paroisse,MRC Acton,16,Montérégie,mrc,2,644,Montérégie (16),Daniel-Johnson
+48028,Acton Vale,Ville,MRC Acton,16,Montérégie,mrc,17,6378,Montérégie (16),Daniel-Johnson
+48038,Upton,Municipalité,MRC Acton,16,Montérégie,mrc,5,1788,Montérégie (16),Daniel-Johnson
+48045,Saint-Théodore-d'Acton,Municipalité,MRC Acton,16,Montérégie,mrc,3,1254,Montérégie (16),Daniel-Johnson
+48050,Saint-Nazaire-d'Acton,Paroisse,MRC Acton,16,Montérégie,mrc,2,684,Montérégie (16),Daniel-Johnson
+49005,Saint-Félix-de-Kingsey,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,3,1230,Centre-du-Québec (17),Drummond–Bois-Francs
+49015,Durham-Sud,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,2,804,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49020,Lefebvre,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,2,753,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49025,L'Avenir,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,3,1169,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49030,Saint-Lucien,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,4,1581,Centre-du-Québec (17),Drummond–Bois-Francs
+49040,Wickham,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,5,1989,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49048,Saint-Germain-de-Grantham,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,9,3897,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49058,Drummondville,Ville,MRC Drummond,17,Centre-du-Québec,mrc,159,63178,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie | Drummond–Bois-Francs
+49070,Saint-Cyrille-de-Wendover,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,9,4117,Centre-du-Québec (17),Drummond–Bois-Francs
+49075,Notre-Dame-du-Bon-Conseil,Village,MRC Drummond,17,Centre-du-Québec,mrc,6,1556,Centre-du-Québec (17),Drummond–Bois-Francs
+49080,Notre-Dame-du-Bon-Conseil,Paroisse,MRC Drummond,17,Centre-du-Québec,mrc,2,745,Centre-du-Québec (17),Drummond–Bois-Francs
+49085,Sainte-Brigitte-des-Saults,Paroisse,MRC Drummond,17,Centre-du-Québec,mrc,2,603,Centre-du-Québec (17),Drummond–Bois-Francs
+49095,Saint-Majorique-de-Grantham,Paroisse,MRC Drummond,17,Centre-du-Québec,mrc,3,1091,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49100,Saint-Edmond-de-Grantham,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,2,629,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49105,Saint-Eugène,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,3,980,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49113,Saint-Guillaume,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,3,1141,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49125,Saint-Bonaventure,Municipalité,MRC Drummond,17,Centre-du-Québec,mrc,2,824,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49130,Saint-Pie-de-Guire,Paroisse,MRC Drummond,17,Centre-du-Québec,mrc,1,370,Centre-du-Québec (17),Marie-Lacoste-Gérin-Lajoie
+49990,TNO aquatique de la MRC de Drummond,(absent du Répertoire),"enclave, division 49",17,Centre-du-Québec,enclave,1,0,,Marie-Lacoste-Gérin-Lajoie
+50005,Sainte-Eulalie,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,2,797,Centre-du-Québec (17),Nicolet-Bécancour
+50013,Aston-Jonction,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,1,314,Centre-du-Québec (17),Nicolet-Bécancour
+50023,Saint-Wenceslas,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,3,916,Centre-du-Québec (17),Nicolet-Bécancour
+50030,Saint-Célestin,Village,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,3,690,Centre-du-Québec (17),Nicolet-Bécancour
+50035,Saint-Célestin,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,2,472,Centre-du-Québec (17),Nicolet-Bécancour
+50042,Saint-Léonard-d'Aston,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,5,2102,Centre-du-Québec (17),Nicolet-Bécancour
+50050,Sainte-Perpétue,Paroisse,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,2,780,Centre-du-Québec (17),Nicolet-Bécancour
+50057,Sainte-Monique,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,1,400,Centre-du-Québec (17),Nicolet-Bécancour
+50065,Grand-Saint-Esprit,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,1,384,Centre-du-Québec (17),Nicolet-Bécancour
+50072,Nicolet,Ville,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,22,6907,Centre-du-Québec (17),Nicolet-Bécancour
+50085,La Visitation-de-Yamaska,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,1,258,Centre-du-Québec (17),Nicolet-Bécancour
+50090,Saint-Zéphirin-de-Courval,Paroisse,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,2,566,Centre-du-Québec (17),Nicolet-Bécancour
+50095,Saint-Elphège,Paroisse,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,1,197,Centre-du-Québec (17),Nicolet-Bécancour
+50100,Baie-du-Febvre,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,2,810,Centre-du-Québec (17),Nicolet-Bécancour
+50113,Pierreville,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,4,1725,Centre-du-Québec (17),Nicolet-Bécancour
+50128,Saint-François-du-Lac,Municipalité,MRC Nicolet-Yamaska,17,Centre-du-Québec,mrc,4,1583,Centre-du-Québec (17),Nicolet-Bécancour
+50802,Odanak,Réserve indienne,"Réserve indienne · enclave, division Nicolet-Yamaska (50)",17,Centre-du-Québec,enclave,1,424,Centre-du-Québec (17),Nicolet-Bécancour
+51008,Maskinongé,Municipalité,MRC Maskinongé,04,Mauricie,mrc,5,1980,Mauricie (04),Maskinongé
+51015,Louiseville,Ville,MRC Maskinongé,04,Mauricie,mrc,19,5965,Mauricie (04),Maskinongé
+51020,Yamachiche,Municipalité,MRC Maskinongé,04,Mauricie,mrc,5,2203,Mauricie (04),Maskinongé
+51025,Saint-Barnabé,Paroisse,MRC Maskinongé,04,Mauricie,mrc,3,952,Mauricie (04),Maskinongé
+51030,Saint-Sévère,Paroisse,MRC Maskinongé,04,Mauricie,mrc,1,245,Mauricie (04),Maskinongé
+51035,Saint-Léon-le-Grand,Paroisse,MRC Maskinongé,04,Mauricie,mrc,2,744,Mauricie (04),Maskinongé
+51040,Sainte-Ursule,Municipalité,MRC Maskinongé,04,Mauricie,mrc,3,1146,Mauricie (04),Maskinongé
+51045,Saint-Justin,Municipalité,MRC Maskinongé,04,Mauricie,mrc,2,849,Mauricie (04),Maskinongé
+51050,Saint-Édouard-de-Maskinongé,Municipalité,MRC Maskinongé,04,Mauricie,mrc,2,670,Mauricie (04),Maskinongé
+51055,Sainte-Angèle-de-Prémont,Municipalité,MRC Maskinongé,04,Mauricie,mrc,2,573,Mauricie (04),Maskinongé
+51060,Saint-Paulin,Municipalité,MRC Maskinongé,04,Mauricie,mrc,3,1327,Mauricie (04),Maskinongé
+51065,Saint-Alexis-des-Monts,Paroisse,MRC Maskinongé,04,Mauricie,mrc,7,2759,Mauricie (04),Maskinongé
+51070,Saint-Mathieu-du-Parc,Municipalité,MRC Maskinongé,04,Mauricie,mrc,3,1377,Mauricie (04),Maskinongé
+51075,Saint-Élie-de-Caxton,Municipalité,MRC Maskinongé,04,Mauricie,mrc,4,1699,Mauricie (04),Maskinongé
+51080,Charette,Municipalité,MRC Maskinongé,04,Mauricie,mrc,3,944,Mauricie (04),Maskinongé
+51085,Saint-Boniface,Municipalité,MRC Maskinongé,04,Mauricie,mrc,10,4175,Mauricie (04),Maskinongé
+51090,Saint-Étienne-des-Grès,Paroisse,MRC Maskinongé,04,Mauricie,mrc,9,3694,Mauricie (04),Maskinongé
+51990,TNO aquatique de la MRC de Maskinongé,(absent du Répertoire),"enclave, division 51",04,Mauricie,enclave,3,0,,Maskinongé
+52007,Lavaltrie,Ville,MRC D'Autray,14,Lanaudière,mrc,31,12243,Lanaudière (14),L'Assomption
+52017,Lanoraie,Municipalité,MRC D'Autray,14,Lanaudière,mrc,11,4373,Lanaudière (14),Berthier
+52030,Sainte-Élisabeth,Municipalité,MRC D'Autray,14,Lanaudière,mrc,3,1162,Lanaudière (14),Berthier
+52035,Berthierville,Ville,MRC D'Autray,14,Lanaudière,mrc,11,3597,Lanaudière (14),Berthier
+52040,Sainte-Geneviève-de-Berthier,Municipalité,MRC D'Autray,14,Lanaudière,mrc,5,1855,Lanaudière (14),Berthier
+52045,Saint-Ignace-de-Loyola,Municipalité,MRC D'Autray,14,Lanaudière,mrc,4,1830,Lanaudière (14),Berthier
+52050,La Visitation-de-l'Île-Dupas,Municipalité,MRC D'Autray,14,Lanaudière,mrc,2,578,Lanaudière (14),Berthier
+52055,Saint-Barthélemy,Paroisse,MRC D'Autray,14,Lanaudière,mrc,4,1733,Lanaudière (14),Berthier
+52062,Saint-Cuthbert,Municipalité,MRC D'Autray,14,Lanaudière,mrc,4,1503,Lanaudière (14),Berthier
+52070,Saint-Norbert,Paroisse,MRC D'Autray,14,Lanaudière,mrc,2,875,Lanaudière (14),Berthier
+52075,Saint-Cléophas-de-Brandon,Municipalité,MRC D'Autray,14,Lanaudière,mrc,1,212,Lanaudière (14),Berthier
+52080,Saint-Gabriel,Ville,MRC D'Autray,14,Lanaudière,mrc,7,2360,Lanaudière (14),Berthier
+52085,Saint-Gabriel-de-Brandon,Municipalité,MRC D'Autray,14,Lanaudière,mrc,6,2445,Lanaudière (14),Berthier
+52090,Saint-Didace,Paroisse,MRC D'Autray,14,Lanaudière,mrc,2,668,Lanaudière (14),Berthier
+52095,Mandeville,Municipalité,MRC D'Autray,14,Lanaudière,mrc,5,2170,Lanaudière (14),Berthier
+52990,TNO aquatique de la MRC de D'Autray,(absent du Répertoire),"enclave, division 52",14,Lanaudière,enclave,1,0,,Berthier
+53005,Saint-David,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,2,643,Montérégie (16),Richelieu
+53010,Massueville,Village,MRC Pierre-De Saurel,16,Montérégie,mrc,1,455,Montérégie (16),Richelieu
+53015,Saint-Aimé,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,1,375,Montérégie (16),Richelieu
+53020,Saint-Robert,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,4,1500,Montérégie (16),Richelieu
+53025,Sainte-Victoire-de-Sorel,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,5,2197,Montérégie (16),Richelieu
+53032,Saint-Ours,Ville,MRC Pierre-De Saurel,16,Montérégie,mrc,4,1502,Montérégie (16),Richelieu
+53040,Saint-Roch-de-Richelieu,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,6,2405,Montérégie (16),Richelieu
+53050,Saint-Joseph-de-Sorel,Ville,MRC Pierre-De Saurel,16,Montérégie,mrc,3,1232,Montérégie (16),Richelieu
+53052,Sorel-Tracy,Ville,MRC Pierre-De Saurel,16,Montérégie,mrc,79,29499,Montérégie (16),Richelieu
+53065,Sainte-Anne-de-Sorel,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,5,2292,Montérégie (16),Richelieu
+53072,Yamaska,Municipalité,MRC Pierre-De Saurel,16,Montérégie,mrc,4,1456,Montérégie (16),Richelieu
+53085,Saint-Gérard-Majella,Paroisse,MRC Pierre-De Saurel,16,Montérégie,mrc,1,188,Montérégie (16),Richelieu
+53990,TNO aquatique de la MRC Pierre-De Saurel,(absent du Répertoire),"enclave, division 53",16,Montérégie,enclave,1,0,,Richelieu
+54008,Saint-Pie,Ville,MRC Les Maskoutains,16,Montérégie,mrc,11,4630,Montérégie (16),Daniel-Johnson
+54017,Saint-Damase,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,5,1952,Montérégie (16),Saint-Hyacinthe
+54025,Sainte-Madeleine,Village,MRC Les Maskoutains,16,Montérégie,mrc,4,1775,Montérégie (16),Saint-Hyacinthe
+54030,Sainte-Marie-Madeleine,Paroisse,MRC Les Maskoutains,16,Montérégie,mrc,6,2328,Montérégie (16),Saint-Hyacinthe
+54035,La Présentation,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,5,2037,Montérégie (16),Saint-Hyacinthe
+54048,Saint-Hyacinthe,Ville,MRC Les Maskoutains,16,Montérégie,mrc,114,44590,Montérégie (16),Saint-Hyacinthe
+54060,Saint-Dominique,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,5,2213,Montérégie (16),Daniel-Johnson
+54065,Saint-Valérien-de-Milton,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,4,1431,Montérégie (16),Daniel-Johnson
+54072,Saint-Liboire,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,6,2357,Montérégie (16),Daniel-Johnson
+54090,Saint-Simon,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,3,1085,Montérégie (16),Saint-Hyacinthe
+54095,Sainte-Hélène-de-Bagot,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,4,1364,Montérégie (16),Daniel-Johnson
+54100,Saint-Hugues,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,3,1057,Montérégie (16),Saint-Hyacinthe
+54105,Saint-Barnabé-Sud,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,2,659,Montérégie (16),Saint-Hyacinthe
+54110,Saint-Jude,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,3,1065,Montérégie (16),Richelieu
+54115,Saint-Bernard-de-Michaudville,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,2,485,Montérégie (16),Richelieu
+54120,Saint-Louis,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,2,627,Montérégie (16),Richelieu
+54125,Saint-Marcel-de-Richelieu,Municipalité,MRC Les Maskoutains,16,Montérégie,mrc,1,403,Montérégie (16),Richelieu
+55008,Ange-Gardien,Municipalité,MRC Rouville,16,Montérégie,mrc,5,2075,Montérégie (16),Iberville
+55015,Saint-Paul-d'Abbotsford,Municipalité,MRC Rouville,16,Montérégie,mrc,5,2204,Montérégie (16),Iberville
+55023,Saint-Césaire,Ville,MRC Rouville,16,Montérégie,mrc,12,4609,Montérégie (16),Iberville
+55030,Sainte-Angèle-de-Monnoir,Municipalité,MRC Rouville,16,Montérégie,mrc,4,1400,Montérégie (16),Iberville
+55037,Rougemont,Municipalité,MRC Rouville,16,Montérégie,mrc,5,2232,Montérégie (16),Iberville
+55048,Marieville,Ville,MRC Rouville,16,Montérégie,mrc,23,8833,Montérégie (16),Iberville
+55057,Richelieu,Ville,MRC Rouville,16,Montérégie,mrc,14,4740,Montérégie (16),Chambly
+55065,Saint-Mathias-sur-Richelieu,Municipalité,MRC Rouville,16,Montérégie,mrc,9,3729,Montérégie (16),Chambly
+56005,Venise-en-Québec,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,5,1916,Montérégie (16),Iberville
+56010,Clarenceville,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,3,1070,Montérégie (16),Iberville
+56015,Noyan,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,3,1317,Montérégie (16),Iberville
+56023,Lacolle,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,5,2237,Montérégie (16),Huntingdon
+56030,Saint-Valentin,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,1,357,Montérégie (16),Huntingdon
+56035,Saint-Paul-de-l'Île-aux-Noix,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,5,1952,Montérégie (16),Huntingdon
+56042,Henryville,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,3,1261,Montérégie (16),Iberville
+56050,Saint-Sébastien,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,2,538,Montérégie (16),Iberville
+56055,Saint-Alexandre,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,5,2010,Montérégie (16),Iberville
+56060,Sainte-Anne-de-Sabrevois,Paroisse,MRC Le Haut-Richelieu,16,Montérégie,mrc,4,1739,Montérégie (16),Iberville
+56065,Saint-Blaise-sur-Richelieu,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,5,1699,Montérégie (16),Huntingdon
+56083,Saint-Jean-sur-Richelieu,Ville,MRC Le Haut-Richelieu,16,Montérégie,mrc,198,77613,Montérégie (16),Saint-Jean | Iberville
+56097,Mont-Saint-Grégoire,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,6,2528,Montérégie (16),Iberville
+56105,Sainte-Brigide-d'Iberville,Municipalité,MRC Le Haut-Richelieu,16,Montérégie,mrc,3,1170,Montérégie (16),Iberville
+57005,Chambly,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,57,23305,Montérégie (16),Chambly
+57010,Carignan,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,23,9332,Montérégie (16),Chambly
+57020,Saint-Basile-le-Grand,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,32,13117,Montérégie (16),Chambly
+57025,McMasterville,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,11,4590,Montérégie (16),Borduas
+57030,Otterburn Park,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,17,7470,Montérégie (16),Borduas
+57033,Saint-Jean-Baptiste,Municipalité,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,6,2460,Montérégie (16),Borduas
+57035,Mont-Saint-Hilaire,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,37,15673,Montérégie (16),Borduas
+57040,Beloeil,Ville,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,47,18962,Montérégie (16),Borduas
+57045,Saint-Mathieu-de-Beloeil,Municipalité,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,6,2560,Montérégie (16),Borduas
+57050,Saint-Marc-sur-Richelieu,Municipalité,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,4,1752,Montérégie (16),Borduas
+57057,Saint-Charles-sur-Richelieu,Municipalité,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,4,1508,Montérégie (16),Borduas
+57068,Saint-Denis-sur-Richelieu,Municipalité,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,5,1933,Montérégie (16),Borduas
+57075,Saint-Antoine-sur-Richelieu,Municipalité,MRC La Vallée-du-Richelieu,16,Montérégie,mrc,4,1422,Montérégie (16),Borduas
+58007,Brossard,Ville,Brossard,16,Montérégie,municipal,160,64980,Montérégie (16),La Pinière | Pierre-Laporte
+58012,Saint-Lambert,Ville,Saint-Lambert,16,Montérégie,municipal,49,17406,Montérégie (16),Pierre-Laporte
+58033,Boucherville,Ville,Boucherville,16,Montérégie,municipal,82,33031,Montérégie (16),Montarville
+58037,Saint-Bruno-de-Montarville,Ville,Saint-Bruno-de-Montarville,16,Montérégie,municipal,49,20542,Montérégie (16),Montarville
+58227,Longueuil,Ville,Longueuil,16,Montérégie,municipal,452,178921,Montérégie (16),Vachon | Taillon | Marie-Victorin | Pierre-Laporte
+59010,Sainte-Julie,Ville,MRC Marguerite-D'Youville,16,Montérégie,mrc,62,24613,Montérégie (16),Verchères
+59015,Saint-Amable,Ville,MRC Marguerite-D'Youville,16,Montérégie,mrc,27,10079,Montérégie (16),Verchères
+59020,Varennes,Ville,MRC Marguerite-D'Youville,16,Montérégie,mrc,41,16654,Montérégie (16),Verchères
+59025,Verchères,Municipalité,MRC Marguerite-D'Youville,16,Montérégie,mrc,11,4478,Montérégie (16),Verchères
+59030,Calixa-Lavallée,Municipalité,MRC Marguerite-D'Youville,16,Montérégie,mrc,2,413,Montérégie (16),Verchères
+59035,Contrecoeur,Ville,MRC Marguerite-D'Youville,16,Montérégie,mrc,21,7697,Montérégie (16),Richelieu
+60005,Charlemagne,Ville,MRC L'Assomption,14,Lanaudière,mrc,12,5183,Lanaudière (14),Repentigny
+60013,Repentigny,Ville,MRC L'Assomption,14,Lanaudière,mrc,174,67706,Lanaudière (14),Repentigny | L'Assomption
+60020,Saint-Sulpice,Paroisse,MRC L'Assomption,14,Lanaudière,mrc,7,2960,Lanaudière (14),L'Assomption
+60028,L'Assomption,Ville,MRC L'Assomption,14,Lanaudière,mrc,48,18168,Lanaudière (14),L'Assomption
+60037,L'Épiphanie,Ville,MRC L'Assomption,14,Lanaudière,mrc,17,6957,Lanaudière (14),L'Assomption
+60990,TNO aquatique de la MRC de L'Assomption,(absent du Répertoire),"enclave, division 60",14,Lanaudière,enclave,1,0,,L'Assomption
+61005,Saint-Paul,Municipalité,MRC Joliette,14,Lanaudière,mrc,13,5379,Lanaudière (14),Joliette
+61013,Crabtree,Ville,MRC Joliette,14,Lanaudière,mrc,8,3241,Lanaudière (14),Joliette
+61020,Saint-Pierre,Village,MRC Joliette,14,Lanaudière,mrc,1,222,Lanaudière (14),Joliette
+61025,Joliette,Ville,MRC Joliette,14,Lanaudière,mrc,44,17105,Lanaudière (14),Joliette
+61027,Saint-Thomas,Municipalité,MRC Joliette,14,Lanaudière,mrc,6,2650,Lanaudière (14),Joliette
+61030,Notre-Dame-des-Prairies,Ville,MRC Joliette,14,Lanaudière,mrc,20,7923,Lanaudière (14),Joliette
+61035,Saint-Charles-Borromée,Ville,MRC Joliette,14,Lanaudière,mrc,41,13677,Lanaudière (14),Joliette
+61040,Saint-Ambroise-de-Kildare,Municipalité,MRC Joliette,14,Lanaudière,mrc,9,3708,Lanaudière (14),Joliette
+61045,Notre-Dame-de-Lourdes,Municipalité,MRC Joliette,14,Lanaudière,mrc,6,2560,Lanaudière (14),Joliette
+61050,Sainte-Mélanie,Municipalité,MRC Joliette,14,Lanaudière,mrc,6,2667,Lanaudière (14),Joliette
+61990,TNO aquatique de la MRC de Joliette,(absent du Répertoire),"enclave, division 61",14,Lanaudière,enclave,1,0,,Joliette
+62007,Saint-Félix-de-Valois,Municipalité,MRC Matawinie,14,Lanaudière,mrc,14,6194,Lanaudière (14),Berthier
+62015,Saint-Jean-de-Matha,Municipalité,MRC Matawinie,14,Lanaudière,mrc,12,4401,Lanaudière (14),Berthier
+62020,Sainte-Béatrix,Municipalité,MRC Matawinie,14,Lanaudière,mrc,5,1987,Lanaudière (14),Berthier
+62025,Saint-Alphonse-Rodriguez,Municipalité,MRC Matawinie,14,Lanaudière,mrc,7,3077,Lanaudière (14),Berthier
+62030,Sainte-Marcelline-de-Kildare,Municipalité,MRC Matawinie,14,Lanaudière,mrc,4,1591,Lanaudière (14),Berthier
+62037,Rawdon,Municipalité,MRC Matawinie,14,Lanaudière,mrc,26,11058,Lanaudière (14),Bertrand
+62047,Chertsey,Municipalité,MRC Matawinie,14,Lanaudière,mrc,10,4568,Lanaudière (14),Bertrand
+62053,Entrelacs,Municipalité,MRC Matawinie,14,Lanaudière,mrc,2,956,Lanaudière (14),Bertrand
+62055,Notre-Dame-de-la-Merci,Municipalité,MRC Matawinie,14,Lanaudière,mrc,3,1011,Lanaudière (14),Bertrand
+62060,Saint-Donat,Municipalité,MRC Matawinie,14,Lanaudière,mrc,11,4399,Lanaudière (14),Bertrand
+62065,Saint-Côme,Municipalité,MRC Matawinie,14,Lanaudière,mrc,6,2415,Lanaudière (14),Berthier
+62070,Sainte-Émélie-de-l'Énergie,Municipalité,MRC Matawinie,14,Lanaudière,mrc,4,1542,Lanaudière (14),Berthier
+62075,Saint-Damien,Paroisse,MRC Matawinie,14,Lanaudière,mrc,5,2013,Lanaudière (14),Berthier
+62080,Saint-Zénon,Municipalité,MRC Matawinie,14,Lanaudière,mrc,3,1190,Lanaudière (14),Berthier
+62085,Saint-Michel-des-Saints,Municipalité,MRC Matawinie,14,Lanaudière,mrc,6,2347,Lanaudière (14),Berthier
+62802,Manawan,Réserve indienne,"Réserve indienne · enclave, division Matawinie (62)",14,Lanaudière,enclave,4,1505,Lanaudière (14),Berthier
+62902,Lac-Minaki,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62904,Lac-Devenyns,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62906,Baie-de-la-Bouteille,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,9,Lanaudière (14),Berthier
+62908,Lac-Matawin,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,22,Lanaudière (14),Berthier
+62910,Lac-Legendre,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62912,Saint-Guillaume-Nord,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,2,98,Lanaudière (14),Berthier
+62914,Lac-des-Dix-Milles,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Bertrand
+62916,Lac-Santé,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62918,Baie-Obaoca,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62919,Lac-Cabasta,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62920,Baie-Atibenne,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62922,Lac-du-Taureau,Territoire non organisé,MRC Matawinie,14,Lanaudière,mrc,1,0,Lanaudière (14),Berthier
+62990,TNO aquatique de la MRC de Matawinie,(absent du Répertoire),"enclave, division 62",14,Lanaudière,enclave,2,0,,Berthier
+63005,Sainte-Marie-Salomé,Municipalité,MRC Montcalm,14,Lanaudière,mrc,3,1003,Lanaudière (14),Rousseau
+63013,Saint-Jacques,Municipalité,MRC Montcalm,14,Lanaudière,mrc,11,3767,Lanaudière (14),Rousseau
+63023,Saint-Alexis,Municipalité,MRC Montcalm,14,Lanaudière,mrc,3,1128,Lanaudière (14),Rousseau
+63030,Saint-Esprit,Municipalité,MRC Montcalm,14,Lanaudière,mrc,5,1804,Lanaudière (14),Rousseau
+63035,Saint-Roch-de-l'Achigan,Municipalité,MRC Montcalm,14,Lanaudière,mrc,13,4199,Lanaudière (14),Rousseau
+63040,Saint-Roch-Ouest,Municipalité,MRC Montcalm,14,Lanaudière,mrc,1,221,Lanaudière (14),Rousseau
+63048,Saint-Lin--Laurentides,Ville,MRC Montcalm,14,Lanaudière,mrc,45,18910,Lanaudière (14),Rousseau
+63055,Saint-Calixte,Municipalité,MRC Montcalm,14,Lanaudière,mrc,15,6171,Lanaudière (14),Rousseau
+63060,Sainte-Julienne,Municipalité,MRC Montcalm,14,Lanaudière,mrc,25,10313,Lanaudière (14),Rousseau
+63065,Saint-Liguori,Municipalité,MRC Montcalm,14,Lanaudière,mrc,4,1749,Lanaudière (14),Rousseau
+64008,Terrebonne,Ville,MRC Les Moulins,14,Lanaudière,mrc,231,92617,Lanaudière (14),Terrebonne | Les Plaines | Masson
+64015,Mascouche,Ville,MRC Les Moulins,14,Lanaudière,mrc,102,42436,Lanaudière (14),Masson
+65005,Laval,Ville,Laval,13,Laval,municipal,811,325529,Laval (13),Fabre | Sainte-Rose | Chomedey | Laval-des-Rapides | Mille-Îles | Vimont-Auteuil
+66007,Montréal-Est,Ville,Montréal-Est,06,Montréal,municipal,8,3475,Montréal (06),Pointe-aux-Trembles
+66023,Montréal,Ville,Montréal,06,Montréal,municipal,2914,1131965,Montréal (06),Saint-Henri–Sainte-Anne | Saint-Laurent | Marguerite-Bourgeoys | Rosemont | Acadie | Jeanne-Mance–Viger | Verdun | Camille-Laurin | Maurice-Richard | Mercier | Bourassa-Sauvé | Laurier-Dorion | Mont-Royal–Outremont | Nelligan | Notre-Dame-de-Grâce | Gouin | LaFontaine | Sainte-Marie–Saint-Jacques | Anjou–Louis-Riel | Hochelaga-Maisonneuve | Viau | Westmount–Saint-Louis | Pointe-aux-Trembles | Marquette | D'Arcy-McGee | Robert-Baldwin
+66032,Westmount,Ville,Westmount,06,Montréal,municipal,36,14232,Montréal (06),Westmount–Saint-Louis
+66047,Montréal-Ouest,Ville,Montréal-Ouest,06,Montréal,municipal,10,3749,Montréal (06),Notre-Dame-de-Grâce
+66058,Côte-Saint-Luc,Ville,Côte-Saint-Luc,06,Montréal,municipal,60,23275,Montréal (06),D'Arcy-McGee
+66062,Hampstead,Ville,Hampstead,06,Montréal,municipal,11,4876,Montréal (06),D'Arcy-McGee
+66072,Mont-Royal,Ville,Mont-Royal,06,Montréal,municipal,38,14414,Montréal (06),Mont-Royal–Outremont
+66087,Dorval,Ville,Dorval,06,Montréal,municipal,36,14494,Montréal (06),Marquette
+66092,L'Île-Dorval,Ville,L'Île-Dorval,06,Montréal,municipal,1,0,Montréal (06),Marquette
+66097,Pointe-Claire,Ville,Pointe-Claire,06,Montréal,municipal,68,26593,Montréal (06),Jacques-Cartier
+66102,Kirkland,Ville,Kirkland,06,Montréal,municipal,38,14290,Montréal (06),Nelligan
+66107,Beaconsfield,Ville,Beaconsfield,06,Montréal,municipal,37,14097,Montréal (06),Jacques-Cartier
+66112,Baie-D'Urfé,Ville,Baie-D'Urfé,06,Montréal,municipal,8,2850,Montréal (06),Jacques-Cartier
+66117,Sainte-Anne-de-Bellevue,Ville,Sainte-Anne-de-Bellevue,06,Montréal,municipal,10,3659,Montréal (06),Jacques-Cartier
+66127,Senneville,Village,Senneville,06,Montréal,municipal,2,822,Montréal (06),Jacques-Cartier
+66142,Dollard-des-Ormeaux,Ville,Dollard-des-Ormeaux,06,Montréal,municipal,91,36016,Montréal (06),Robert-Baldwin
+66940,TNO terrestre de la MRC géographique de Montréal,(absent du Répertoire),"enclave, division 66",06,Montréal,enclave,3,0,,Hochelaga-Maisonneuve | Camille-Laurin
+66990,TNO aquatique de la MRC géographique de Montréal,(absent du Répertoire),"enclave, division 66",06,Montréal,enclave,6,0,,Camille-Laurin | Maurice-Richard | Hochelaga-Maisonneuve | Acadie
+67005,Saint-Mathieu,Municipalité,MRC Roussillon,16,Montérégie,mrc,5,1943,Montérégie (16),Sanguinet
+67010,Saint-Philippe,Ville,MRC Roussillon,16,Montérégie,mrc,15,6305,Montérégie (16),La Prairie
+67015,La Prairie,Ville,MRC Roussillon,16,Montérégie,mrc,49,20112,Montérégie (16),La Prairie
+67020,Candiac,Ville,MRC Roussillon,16,Montérégie,mrc,43,17789,Montérégie (16),La Prairie
+67025,Delson,Ville,MRC Roussillon,16,Montérégie,mrc,16,6673,Montérégie (16),La Prairie
+67030,Sainte-Catherine,Ville,MRC Roussillon,16,Montérégie,mrc,34,13009,Montérégie (16),Sanguinet
+67035,Saint-Constant,Ville,MRC Roussillon,16,Montérégie,mrc,55,23292,Montérégie (16),Sanguinet
+67040,Saint-Isidore,Paroisse,MRC Roussillon,16,Montérégie,mrc,5,2157,Montérégie (16),Châteauguay
+67045,Mercier,Ville,MRC Roussillon,16,Montérégie,mrc,27,11213,Montérégie (16),Châteauguay
+67050,Châteauguay,Ville,MRC Roussillon,16,Montérégie,mrc,96,38314,Montérégie (16),Châteauguay
+67055,Léry,Ville,MRC Roussillon,16,Montérégie,mrc,5,2216,Montérégie (16),Châteauguay
+67802,Kahnawake,Réserve indienne,"Réserve indienne · enclave, division Roussillon (67)",16,Montérégie,enclave,2,2677,Montérégie (16),Châteauguay
+67940,TNO terrestre de la MRC de Roussillon,(absent du Répertoire),"enclave, division 67",16,Montérégie,enclave,1,0,,Châteauguay
+67990,TNO aquatique de la MRC de Roussillon,(absent du Répertoire),"enclave, division 67",16,Montérégie,enclave,4,0,,Châteauguay | La Prairie
+68005,Saint-Bernard-de-Lacolle,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,3,1414,Montérégie (16),Huntingdon
+68010,Hemmingford,Village,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,2,787,Montérégie (16),Huntingdon
+68015,Hemmingford,Canton,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,4,1759,Montérégie (16),Huntingdon
+68020,Sainte-Clotilde,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,4,1881,Montérégie (16),Huntingdon
+68025,Saint-Patrice-de-Sherrington,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,4,1528,Montérégie (16),Huntingdon
+68030,Napierville,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,8,3421,Montérégie (16),Huntingdon
+68035,Saint-Cyprien-de-Napierville,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,4,1397,Montérégie (16),Huntingdon
+68040,Saint-Jacques-le-Mineur,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,4,1561,Montérégie (16),Huntingdon
+68045,Saint-Édouard,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,3,1087,Montérégie (16),Huntingdon
+68050,Saint-Michel,Municipalité,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,6,2605,Montérégie (16),Huntingdon
+68055,Saint-Rémi,Ville,MRC Les Jardins-de-Napierville,16,Montérégie,mrc,18,6927,Montérégie (16),Sanguinet
+69005,Havelock,Canton,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,2,635,Montérégie (16),Huntingdon
+69010,Franklin,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,4,1452,Montérégie (16),Huntingdon
+69017,Saint-Chrysostome,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,5,2119,Montérégie (16),Huntingdon
+69025,Howick,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,2,694,Montérégie (16),Huntingdon
+69030,Très-Saint-Sacrement,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,2,872,Montérégie (16),Huntingdon
+69037,Ormstown,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,10,3281,Montérégie (16),Huntingdon
+69045,Hinchinbrooke,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,4,1858,Montérégie (16),Huntingdon
+69050,Elgin,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,1,329,Montérégie (16),Huntingdon
+69055,Huntingdon,Ville,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,7,2639,Montérégie (16),Huntingdon
+69060,Godmanchester,Canton,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,3,1141,Montérégie (16),Huntingdon
+69065,Sainte-Barbe,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,4,1680,Montérégie (16),Huntingdon
+69070,Saint-Anicet,Municipalité,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,5,2326,Montérégie (16),Huntingdon
+69075,Dundee,Canton,MRC Le Haut-Saint-Laurent,16,Montérégie,mrc,1,303,Montérégie (16),Huntingdon
+69802,Akwesasne,Réserve indienne,"Réserve indienne · enclave, division Le Haut-Saint-Laurent (69)",16,Montérégie,enclave,4,1527,Montérégie (16),Huntingdon
+69990,TNO aquatique de la MRC du Haut-Saint-Laurent,(absent du Répertoire),"enclave, division 69",16,Montérégie,enclave,2,0,,Huntingdon
+70005,Saint-Urbain-Premier,Municipalité,MRC Beauharnois-Salaberry,16,Montérégie,mrc,3,1031,Montérégie (16),Huntingdon
+70012,Sainte-Martine,Municipalité,MRC Beauharnois-Salaberry,16,Montérégie,mrc,10,4510,Montérégie (16),Huntingdon
+70022,Beauharnois,Ville,MRC Beauharnois-Salaberry,16,Montérégie,mrc,30,11873,Montérégie (16),Beauharnois
+70030,Saint-Étienne-de-Beauharnois,Municipalité,MRC Beauharnois-Salaberry,16,Montérégie,mrc,2,880,Montérégie (16),Beauharnois
+70035,Saint-Louis-de-Gonzague,Paroisse,MRC Beauharnois-Salaberry,16,Montérégie,mrc,5,1986,Montérégie (16),Beauharnois
+70040,Saint-Stanislas-de-Kostka,Municipalité,MRC Beauharnois-Salaberry,16,Montérégie,mrc,4,1697,Montérégie (16),Beauharnois
+70052,Salaberry-de-Valleyfield,Ville,MRC Beauharnois-Salaberry,16,Montérégie,mrc,100,36920,Montérégie (16),Beauharnois
+70990,TNO aquatique de la MRC de Beauharnois-Salaberry,(absent du Répertoire),"enclave, division 70",16,Montérégie,enclave,4,0,,Beauharnois
+71005,Rivière-Beaudette,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,5,2150,Montérégie (16),Soulanges
+71015,Saint-Télesphore,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,2,613,Montérégie (16),Soulanges
+71020,Saint-Polycarpe,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,5,1947,Montérégie (16),Soulanges
+71025,Saint-Zotique,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,19,7967,Montérégie (16),Soulanges
+71033,Les Coteaux,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,11,4861,Montérégie (16),Soulanges
+71040,Coteau-du-Lac,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,15,6124,Montérégie (16),Beauharnois
+71045,Saint-Clet,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,4,1383,Montérégie (16),Soulanges
+71050,Les Cèdres,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,13,5476,Montérégie (16),Soulanges
+71055,Pointe-des-Cascades,Village,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,3,1354,Montérégie (16),Soulanges
+71060,L'Île-Perrot,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,22,8842,Montérégie (16),Vaudreuil
+71065,Notre-Dame-de-l'Île-Perrot,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,21,9064,Montérégie (16),Vaudreuil
+71070,Pincourt,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,28,11312,Montérégie (16),Vaudreuil
+71075,Terrasse-Vaudreuil,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,4,1482,Montérégie (16),Vaudreuil
+71083,Vaudreuil-Dorion,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,82,32335,Montérégie (16),Vaudreuil | Soulanges
+71090,Vaudreuil-sur-le-Lac,Village,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,3,1069,Montérégie (16),Vaudreuil
+71095,L'Île-Cadieux,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,1,105,Montérégie (16),Vaudreuil
+71100,Hudson,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,11,4647,Montérégie (16),Soulanges
+71105,Saint-Lazare,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,39,16869,Montérégie (16),Soulanges
+71110,Sainte-Marthe,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,2,829,Montérégie (16),Soulanges
+71115,Sainte-Justine-de-Newton,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,2,756,Montérégie (16),Soulanges
+71125,Très-Saint-Rédempteur,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,2,852,Montérégie (16),Soulanges
+71133,Rigaud,Ville,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,17,6340,Montérégie (16),Soulanges
+71140,Pointe-Fortune,Municipalité,MRC Vaudreuil-Soulanges,16,Montérégie,mrc,2,517,Montérégie (16),Soulanges
+71990,TNO aquatique de la MRC de Vaudreuil-Soulanges,(absent du Répertoire),"enclave, division 71",16,Montérégie,enclave,2,0,,Vaudreuil
+72005,Saint-Eustache,Ville,MRC Deux-Montagnes,15,Laurentides,mrc,94,36237,Laurentides (15),Deux-Montagnes
+72010,Deux-Montagnes,Ville,MRC Deux-Montagnes,15,Laurentides,mrc,34,13973,Laurentides (15),Deux-Montagnes
+72015,Sainte-Marthe-sur-le-Lac,Ville,MRC Deux-Montagnes,15,Laurentides,mrc,36,15712,Laurentides (15),Mirabel
+72020,Pointe-Calumet,Municipalité,MRC Deux-Montagnes,15,Laurentides,mrc,12,4916,Laurentides (15),Mirabel
+72025,Saint-Joseph-du-Lac,Municipalité,MRC Deux-Montagnes,15,Laurentides,mrc,14,5672,Laurentides (15),Mirabel
+72032,Oka,Municipalité,MRC Deux-Montagnes,15,Laurentides,mrc,8,3283,Laurentides (15),Mirabel
+72043,Saint-Placide,Municipalité,MRC Deux-Montagnes,15,Laurentides,mrc,4,1464,Laurentides (15),Argenteuil
+72802,Kanesatake,(absent du Répertoire),"enclave, division 72",15,Laurentides,enclave,2,563,,Mirabel
+73005,Boisbriand,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,54,21729,Laurentides (15),Groulx
+73010,Sainte-Thérèse,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,59,21104,Laurentides (15),Groulx
+73015,Blainville,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,117,46953,Laurentides (15),Blainville
+73020,Rosemère,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,29,11191,Laurentides (15),Groulx
+73025,Lorraine,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,17,7250,Laurentides (15),Blainville
+73030,Bois-des-Filion,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,21,7869,Laurentides (15),Blainville
+73035,Sainte-Anne-des-Plaines,Ville,MRC Thérèse-De Blainville,15,Laurentides,mrc,27,11363,Laurentides (15),Les Plaines
+73990,TNO aquatique de la MRC de Thérèse-De Blainville,(absent du Répertoire),"enclave, division 73",15,Laurentides,enclave,1,0,,Blainville
+74005,Mirabel,Ville,Mirabel,15,Laurentides,municipal,116,49613,Laurentides (15),Mirabel | Les Plaines | Bellefeuille
+75005,Saint-Colomban,Ville,MRC La Rivière-du-Nord,15,Laurentides,mrc,33,14241,Laurentides (15),Bellefeuille
+75017,Saint-Jérôme,Ville,MRC La Rivière-du-Nord,15,Laurentides,mrc,168,65076,Laurentides (15),Saint-Jérôme | Bellefeuille
+75028,Sainte-Sophie,Municipalité,MRC La Rivière-du-Nord,15,Laurentides,mrc,35,14567,Laurentides (15),Prévost
+75040,Prévost,Ville,MRC La Rivière-du-Nord,15,Laurentides,mrc,28,11367,Laurentides (15),Prévost
+75045,Saint-Hippolyte,Municipalité,MRC La Rivière-du-Nord,15,Laurentides,mrc,24,10160,Laurentides (15),Prévost
+75990,TNO aquatique de la MRC de La Rivière-du-Nord,(absent du Répertoire),"enclave, division 75",15,Laurentides,enclave,1,0,,Bellefeuille
+76008,Saint-André-d'Argenteuil,Municipalité,MRC Argenteuil,15,Laurentides,mrc,6,2733,Laurentides (15),Argenteuil
+76020,Lachute,Ville,MRC Argenteuil,15,Laurentides,mrc,31,12161,Laurentides (15),Argenteuil
+76025,Gore,Canton,MRC Argenteuil,15,Laurentides,mrc,5,2178,Laurentides (15),Argenteuil
+76030,Mille-Isles,Municipalité,MRC Argenteuil,15,Laurentides,mrc,4,1585,Laurentides (15),Argenteuil
+76035,Wentworth,Canton,MRC Argenteuil,15,Laurentides,mrc,2,554,Laurentides (15),Argenteuil
+76043,Brownsburg-Chatham,Ville,MRC Argenteuil,15,Laurentides,mrc,17,6861,Laurentides (15),Argenteuil
+76052,Grenville-sur-la-Rouge,Municipalité,MRC Argenteuil,15,Laurentides,mrc,6,2446,Laurentides (15),Argenteuil
+76055,Grenville,Village,MRC Argenteuil,15,Laurentides,mrc,4,1477,Laurentides (15),Argenteuil
+76065,Harrington,Canton,MRC Argenteuil,15,Laurentides,mrc,2,805,Laurentides (15),Argenteuil
+76990,TNO aquatique de la MRC d'Argenteuil,(absent du Répertoire),"enclave, division 76",15,Laurentides,enclave,3,0,,Argenteuil
+77011,Estérel,Ville,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,1,262,Laurentides (15),Bertrand
+77012,Sainte-Marguerite-du-Lac-Masson,Ville,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,8,3426,Laurentides (15),Bertrand
+77022,Sainte-Adèle,Ville,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,34,13252,Laurentides (15),Bertrand
+77030,Piedmont,Municipalité,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,8,3192,Laurentides (15),Prévost
+77035,Sainte-Anne-des-Lacs,Paroisse,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,8,3465,Laurentides (15),Prévost
+77043,Saint-Sauveur,Ville,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,27,10394,Laurentides (15),Prévost
+77050,Morin-Heights,Municipalité,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,11,4390,Laurentides (15),Argenteuil
+77055,Lac-des-Seize-Îles,Municipalité,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,2,178,Laurentides (15),Argenteuil
+77060,Wentworth-Nord,Municipalité,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,3,1388,Laurentides (15),Argenteuil
+77065,Saint-Adolphe-d'Howard,Municipalité,MRC Les Pays-d'en-Haut,15,Laurentides,mrc,9,3403,Laurentides (15),Argenteuil
+78005,Val-Morin,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,7,2629,Laurentides (15),Bertrand
+78010,Val-David,Village,MRC Les Laurentides,15,Laurentides,mrc,11,4685,Laurentides (15),Bertrand
+78015,Lantier,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,3,988,Laurentides (15),Bertrand
+78020,Sainte-Lucie-des-Laurentides,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,3,1359,Laurentides (15),Bertrand
+78032,Sainte-Agathe-des-Monts,Ville,MRC Les Laurentides,15,Laurentides,mrc,26,10060,Laurentides (15),Bertrand
+78042,Ivry-sur-le-Lac,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,1,319,Laurentides (15),Bertrand
+78047,Mont-Blanc,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,8,3247,Laurentides (15),Labelle
+78050,Barkmere,Ville,MRC Les Laurentides,15,Laurentides,mrc,1,66,Laurentides (15),Argenteuil
+78055,Montcalm,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,2,565,Laurentides (15),Argenteuil
+78060,Arundel,Canton,MRC Les Laurentides,15,Laurentides,mrc,2,498,Laurentides (15),Argenteuil
+78065,Huberdeau,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,3,765,Laurentides (15),Labelle
+78070,Amherst,Canton,MRC Les Laurentides,15,Laurentides,mrc,4,1466,Laurentides (15),Labelle
+78075,Brébeuf,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,2,858,Laurentides (15),Labelle
+78095,Lac-Supérieur,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,4,1751,Laurentides (15),Labelle
+78100,Val-des-Lacs,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,2,717,Laurentides (15),Bertrand
+78102,Mont-Tremblant,Ville,MRC Les Laurentides,15,Laurentides,mrc,25,9486,Laurentides (15),Labelle
+78115,La Conception,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,3,1359,Laurentides (15),Labelle
+78120,Labelle,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,6,2324,Laurentides (15),Labelle
+78127,Lac-Tremblant-Nord,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,1,70,Laurentides (15),Labelle
+78130,La Minerve,Municipalité,MRC Les Laurentides,15,Laurentides,mrc,3,1196,Laurentides (15),Labelle
+78802,Doncaster,Réserve indienne,"Réserve indienne · enclave, division Les Laurentides (78)",15,Laurentides,enclave,1,0,Laurentides (15),Bertrand
+79005,Notre-Dame-du-Laus,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,4,1601,Laurentides (15),Labelle
+79010,Notre-Dame-de-Pontmain,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,852,Laurentides (15),Labelle
+79015,Lac-du-Cerf,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,1,413,Laurentides (15),Labelle
+79022,Saint-Aimé-du-Lac-des-Îles,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,697,Laurentides (15),Labelle
+79025,Kiamika,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,717,Laurentides (15),Labelle
+79030,Nominingue,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,5,1982,Laurentides (15),Labelle
+79037,Rivière-Rouge,Ville,MRC Antoine-Labelle,15,Laurentides,mrc,13,4157,Laurentides (15),Labelle
+79047,La Macaza,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,804,Laurentides (15),Labelle
+79050,L'Ascension,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,870,Laurentides (15),Labelle
+79060,Lac-Saguay,Village,MRC Antoine-Labelle,15,Laurentides,mrc,1,466,Laurentides (15),Labelle
+79065,Chute-Saint-Philippe,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,924,Laurentides (15),Labelle
+79078,Lac-des-Écorces,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,6,2448,Laurentides (15),Labelle
+79088,Mont-Laurier,Ville,MRC Antoine-Labelle,15,Laurentides,mrc,33,11793,Laurentides (15),Labelle
+79097,Ferme-Neuve,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,7,2377,Laurentides (15),Labelle
+79105,Lac-Saint-Paul,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,504,Laurentides (15),Labelle
+79110,Mont-Saint-Michel,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,529,Laurentides (15),Labelle
+79115,Sainte-Anne-du-Lac,Municipalité,MRC Antoine-Labelle,15,Laurentides,mrc,2,509,Laurentides (15),Labelle
+79902,Lac-de-la-Pomme,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79904,Lac-Akonapwehikan,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79906,Lac-Wagwabika,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79910,Lac-Bazinet,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79912,Lac-De La Bidière,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79914,Lac-Oscar,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,1,Laurentides (15),Labelle
+79916,Lac-de-la-Maison-de-Pierre,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79920,Baie-des-Chaloupes,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79922,Lac-Douaire,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,10,Laurentides (15),Labelle
+79924,Lac-Ernest,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79926,Lac-Marguerite,Territoire non organisé,MRC Antoine-Labelle,15,Laurentides,mrc,1,0,Laurentides (15),Labelle
+79992,TNO aquatique de la MRC d'Antoine-Labelle,(absent du Répertoire),"enclave, division 79",15,Laurentides,enclave,1,0,,Labelle
+80005,Fassett,Municipalité,MRC Papineau,07,Outaouais,mrc,1,442,Outaouais (07),Papineau
+80010,Montebello,Municipalité,MRC Papineau,07,Outaouais,mrc,3,794,Outaouais (07),Papineau
+80015,Notre-Dame-de-Bonsecours,Municipalité,MRC Papineau,07,Outaouais,mrc,1,279,Outaouais (07),Papineau
+80020,Notre-Dame-de-la-Paix,Municipalité,MRC Papineau,07,Outaouais,mrc,2,579,Outaouais (07),Papineau
+80027,Saint-André-Avellin,Municipalité,MRC Papineau,07,Outaouais,mrc,9,3155,Outaouais (07),Papineau
+80037,Papineauville,Municipalité,MRC Papineau,07,Outaouais,mrc,5,1949,Outaouais (07),Papineau
+80045,Plaisance,Municipalité,MRC Papineau,07,Outaouais,mrc,3,956,Outaouais (07),Papineau
+80050,Thurso,Ville,MRC Papineau,07,Outaouais,mrc,6,2648,Outaouais (07),Papineau
+80055,Lochaber,Canton,MRC Papineau,07,Outaouais,mrc,1,373,Outaouais (07),Papineau
+80060,Lochaber-Partie-Ouest,Canton,MRC Papineau,07,Outaouais,mrc,2,770,Outaouais (07),Papineau
+80065,Mayo,Municipalité,MRC Papineau,07,Outaouais,mrc,2,567,Outaouais (07),Papineau
+80070,Saint-Sixte,Municipalité,MRC Papineau,07,Outaouais,mrc,1,432,Outaouais (07),Papineau
+80078,Ripon,Municipalité,MRC Papineau,07,Outaouais,mrc,4,1430,Outaouais (07),Papineau
+80085,Mulgrave-et-Derry,Municipalité,MRC Papineau,07,Outaouais,mrc,2,357,Outaouais (07),Papineau
+80087,Notre-Dame-de-la-Salette,Municipalité,MRC Papineau,07,Outaouais,mrc,2,688,Outaouais (07),Papineau
+80090,Montpellier,Municipalité,MRC Papineau,07,Outaouais,mrc,3,991,Outaouais (07),Papineau
+80095,Lac-Simon,Municipalité,MRC Papineau,07,Outaouais,mrc,3,932,Outaouais (07),Papineau
+80103,Chénéville,Municipalité,MRC Papineau,07,Outaouais,mrc,2,791,Outaouais (07),Papineau
+80110,Namur,Municipalité,MRC Papineau,07,Outaouais,mrc,2,515,Outaouais (07),Papineau
+80115,Boileau,Municipalité,MRC Papineau,07,Outaouais,mrc,1,295,Outaouais (07),Papineau
+80125,Saint-Émile-de-Suffolk,Municipalité,MRC Papineau,07,Outaouais,mrc,3,490,Outaouais (07),Papineau
+80130,Lac-des-Plages,Municipalité,MRC Papineau,07,Outaouais,mrc,2,525,Outaouais (07),Papineau
+80135,Duhamel,Municipalité,MRC Papineau,07,Outaouais,mrc,1,439,Outaouais (07),Papineau
+80140,Val-des-Bois,Municipalité,MRC Papineau,07,Outaouais,mrc,2,864,Outaouais (07),Papineau
+80145,Bowman,Municipalité,MRC Papineau,07,Outaouais,mrc,2,601,Outaouais (07),Papineau
+80990,TNO aquatique de la MRC de Papineau,(absent du Répertoire),"enclave, division 80",07,Outaouais,enclave,1,0,,Papineau
+81017,Gatineau,Ville,Gatineau,07,Outaouais,municipal,506,203502,Outaouais (07),Hull | Chapleau | Pontiac | Papineau | Gatineau
+82005,L'Ange-Gardien,Municipalité,MRC Les Collines-de-l'Outaouais,07,Outaouais,mrc,13,5622,Outaouais (07),Papineau
+82015,Val-des-Monts,Municipalité,MRC Les Collines-de-l'Outaouais,07,Outaouais,mrc,24,10468,Outaouais (07),Gatineau
+82020,Cantley,Municipalité,MRC Les Collines-de-l'Outaouais,07,Outaouais,mrc,20,8976,Outaouais (07),Gatineau
+82025,Chelsea,Municipalité,MRC Les Collines-de-l'Outaouais,07,Outaouais,mrc,17,6431,Outaouais (07),Gatineau
+82030,Pontiac,Municipalité,MRC Les Collines-de-l'Outaouais,07,Outaouais,mrc,12,4794,Outaouais (07),Pontiac
+82035,La Pêche,Municipalité,MRC Les Collines-de-l'Outaouais,07,Outaouais,mrc,19,6947,Outaouais (07),Gatineau
+83005,Denholm,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,467,Outaouais (07),Gatineau
+83010,Low,Canton,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,837,Outaouais (07),Gatineau
+83015,Kazabazua,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,802,Outaouais (07),Gatineau
+83020,Lac-Sainte-Marie,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,538,Outaouais (07),Gatineau
+83032,Gracefield,Ville,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,5,2098,Outaouais (07),Gatineau
+83040,Cayamant,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,799,Outaouais (07),Gatineau
+83045,Blue Sea,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,597,Outaouais (07),Gatineau
+83050,Bouchette,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,638,Outaouais (07),Gatineau
+83055,Sainte-Thérèse-de-la-Gatineau,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,449,Outaouais (07),Gatineau
+83060,Messines,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,5,1431,Outaouais (07),Gatineau
+83065,Maniwaki,Ville,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,9,3091,Outaouais (07),Gatineau
+83070,Déléage,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,4,1599,Outaouais (07),Gatineau
+83075,Egan-Sud,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,424,Outaouais (07),Gatineau
+83085,Bois-Franc,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,354,Outaouais (07),Gatineau
+83088,Montcerf-Lytton,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,598,Outaouais (07),Gatineau
+83090,Aumond,Canton,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,2,651,Outaouais (07),Gatineau
+83095,Grand-Remous,Municipalité,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,3,1012,Outaouais (07),Gatineau
+83802,Kitigan Zibi,Réserve indienne,"Réserve indienne · enclave, division La Vallée-de-la-Gatineau (83)",07,Outaouais,enclave,2,822,Outaouais (07),Gatineau
+83804,Lac-Rapide,Réserve indienne,"Réserve indienne · enclave, division La Vallée-de-la-Gatineau (83)",07,Outaouais,enclave,1,215,Outaouais (07),Gatineau
+83902,Lac-Pythonga,Territoire non organisé,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,0,Outaouais (07),Gatineau
+83904,Cascades-Malignes,Territoire non organisé,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,0,Outaouais (07),Gatineau
+83906,Lac-Lenôtre,Territoire non organisé,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,0,Outaouais (07),Gatineau
+83908,Lac-Moselle,Territoire non organisé,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,0,Outaouais (07),Gatineau
+83912,Dépôt-Échouani,Territoire non organisé,MRC La Vallée-de-la-Gatineau,07,Outaouais,mrc,1,0,Outaouais (07),Gatineau
+83990,TNO aquatique de la MRC de La Vallée-de-la-Gatineau,(absent du Répertoire),"enclave, division 83",07,Outaouais,enclave,5,0,,Gatineau
+84005,Bristol,Municipalité,MRC Pontiac,07,Outaouais,mrc,2,822,Outaouais (07),Pontiac
+84010,Shawville,Municipalité,MRC Pontiac,07,Outaouais,mrc,4,1319,Outaouais (07),Pontiac
+84015,Clarendon,Municipalité,MRC Pontiac,07,Outaouais,mrc,3,1035,Outaouais (07),Pontiac
+84020,Portage-du-Fort,Village,MRC Pontiac,07,Outaouais,mrc,1,186,Outaouais (07),Pontiac
+84025,Bryson,Municipalité,MRC Pontiac,07,Outaouais,mrc,2,532,Outaouais (07),Pontiac
+84030,Campbell's Bay,Municipalité,MRC Pontiac,07,Outaouais,mrc,2,561,Outaouais (07),Pontiac
+84035,L'Île-du-Grand-Calumet,Municipalité,MRC Pontiac,07,Outaouais,mrc,2,553,Outaouais (07),Pontiac
+84040,Litchfield,Municipalité,MRC Pontiac,07,Outaouais,mrc,1,381,Outaouais (07),Pontiac
+84045,Thorne,Municipalité,MRC Pontiac,07,Outaouais,mrc,1,396,Outaouais (07),Pontiac
+84050,Alleyn-et-Cawood,Municipalité,MRC Pontiac,07,Outaouais,mrc,1,205,Outaouais (07),Pontiac
+84055,Otter Lake,Municipalité,MRC Pontiac,07,Outaouais,mrc,2,798,Outaouais (07),Pontiac
+84060,Fort-Coulonge,Village,MRC Pontiac,07,Outaouais,mrc,3,1039,Outaouais (07),Pontiac
+84065,Mansfield-et-Pontefract,Municipalité,MRC Pontiac,07,Outaouais,mrc,5,1912,Outaouais (07),Pontiac
+84070,Waltham,Municipalité,MRC Pontiac,07,Outaouais,mrc,1,305,Outaouais (07),Pontiac
+84082,L'Isle-aux-Allumettes,Municipalité,MRC Pontiac,07,Outaouais,mrc,3,957,Outaouais (07),Pontiac
+84090,Chichester,Canton,MRC Pontiac,07,Outaouais,mrc,1,258,Outaouais (07),Pontiac
+84095,Sheenboro,Municipalité,MRC Pontiac,07,Outaouais,mrc,1,84,Outaouais (07),Pontiac
+84100,Rapides-des-Joachims,Municipalité,MRC Pontiac,07,Outaouais,mrc,1,98,Outaouais (07),Pontiac
+84902,Lac-Nilgaut,Territoire non organisé,MRC Pontiac,07,Outaouais,mrc,1,1,Outaouais (07),Pontiac
+84990,TNO aquatique de la MRC de Pontiac,(absent du Répertoire),"enclave, division 84",07,Outaouais,enclave,4,0,,Pontiac
+85005,Témiscaming,Ville,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,4,1735,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85010,Kipawa,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,391,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85015,Saint-Édouard-de-Fabre,Paroisse,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,530,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85020,Béarn,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,566,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85025,Ville-Marie,Ville,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,6,1964,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85030,Duhamel-Ouest,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,786,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85037,Lorrainville,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,3,1014,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85045,Saint-Bruno-de-Guigues,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,909,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85052,Laverlochère-Angliers,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,3,780,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85055,Fugèreville,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,247,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85060,Latulipe-et-Gaboury,Cantons unis,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,243,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85065,Belleterre,Ville,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,225,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85070,Laforce,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,202,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85075,Moffet,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,159,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85085,Saint-Eugène-de-Guigues,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,359,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85090,Notre-Dame-du-Nord,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,2,790,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85095,Guérin,Canton,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,255,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85100,Nédélec,Canton,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,285,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85105,Rémigny,Municipalité,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,277,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85802,Kebaowek,Réserve indienne,"Réserve indienne · enclave, division Témiscamingue (85)",08,Abitibi-Témiscamingue,enclave,1,280,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85803,Hunter's Point,(absent du Répertoire),"enclave, division 85",08,Abitibi-Témiscamingue,enclave,1,1,,Rouyn-Noranda–Témiscamingue
+85804,Winneway,(absent du Répertoire),"enclave, division 85",08,Abitibi-Témiscamingue,enclave,1,230,,Rouyn-Noranda–Témiscamingue
+85806,Timiskaming,Réserve indienne,"Réserve indienne · enclave, division Témiscamingue (85)",08,Abitibi-Témiscamingue,enclave,1,467,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85905,Laniel,Territoire non organisé,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,59,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+85907,Les Lacs-du-Témiscamingue,Territoire non organisé,MRC Témiscamingue,08,Abitibi-Témiscamingue,mrc,1,17,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue
+86042,Rouyn-Noranda,Ville,Rouyn-Noranda,08,Abitibi-Témiscamingue,municipal,86,32227,Abitibi-Témiscamingue (08),Rouyn-Noranda–Témiscamingue | Abitibi-Est
+87005,Duparquet,Ville,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,555,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87010,Rapide-Danseur,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,282,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87015,Roquemaure,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,303,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87020,Gallichan,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,416,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87025,Palmarolle,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,3,1106,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87030,Sainte-Germaine-Boulé,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,672,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87035,Poularies,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,504,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87042,Taschereau,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,756,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87050,Authier,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,229,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87058,Macamic,Ville,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,7,2027,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87070,Sainte-Hélène-de-Mancebourg,Paroisse,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,283,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87075,Clerval,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,296,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87080,La Reine,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,244,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87085,Dupuy,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,721,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87090,La Sarre,Ville,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,15,5703,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87095,Chazel,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,220,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87100,Authier-Nord,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,243,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87105,Val-Saint-Gilles,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,138,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87110,Clermont,Canton,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,364,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87115,Normétal,Municipalité,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,580,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87120,Saint-Lambert,Paroisse,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,149,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87902,Lac-Duparquet,Territoire non organisé,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,1,0,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87904,Rivière-Ojima,Territoire non organisé,MRC Abitibi-Ouest,08,Abitibi-Témiscamingue,mrc,2,61,Abitibi-Témiscamingue (08),Abitibi-Ouest
+87990,TNO aquatique de la MRC d'Abitibi-Ouest,(absent du Répertoire),"enclave, division 87",08,Abitibi-Témiscamingue,enclave,1,0,,Abitibi-Ouest
+88005,Champneuf,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,85,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88012,La Morandière-Rochebaucourt,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,273,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88022,Barraute,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,4,1476,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88030,La Corne,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,2,706,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88035,Landrienne,Canton,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,2,755,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88040,Saint-Marc-de-Figuery,Paroisse,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,2,750,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88045,La Motte,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,406,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88050,Saint-Mathieu-d'Harricana,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,2,604,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88057,Amos,Ville,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,28,10422,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88065,Saint-Dominique-du-Rosaire,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,353,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88070,Berry,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,442,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88075,Trécesson,Canton,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,3,997,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88080,Launay,Canton,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,160,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88085,Sainte-Gertrude-Manneville,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,2,614,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88090,Preissac,Municipalité,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,2,841,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88802,Pikogan,Réserve indienne,"Réserve indienne · enclave, division Abitibi (88)",08,Abitibi-Témiscamingue,enclave,1,467,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88902,Lac-Despinassy,Territoire non organisé,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,14,Abitibi-Témiscamingue (08),Abitibi-Ouest
+88904,Lac-Chicobi,Territoire non organisé,MRC Abitibi,08,Abitibi-Témiscamingue,mrc,1,114,Abitibi-Témiscamingue (08),Abitibi-Ouest
+89008,Val-d'Or,Ville,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,69,24578,Abitibi-Témiscamingue (08),Abitibi-Est
+89010,Rivière-Héva,Municipalité,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,4,1261,Abitibi-Témiscamingue (08),Abitibi-Est
+89015,Malartic,Ville,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,8,2563,Abitibi-Témiscamingue (08),Abitibi-Est
+89040,Senneterre,Ville,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,6,2137,Abitibi-Témiscamingue (08),Abitibi-Est
+89045,Senneterre,Paroisse,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,3,1007,Abitibi-Témiscamingue (08),Abitibi-Est
+89050,Belcourt,Municipalité,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,1,177,Abitibi-Témiscamingue (08),Abitibi-Est
+89802,Kitcisakik,(absent du Répertoire),"enclave, division 89",08,Abitibi-Témiscamingue,enclave,1,119,,Abitibi-Est
+89804,Lac-Simon,Réserve indienne,"Réserve indienne · enclave, division La Vallée-de-l'Or (89)",08,Abitibi-Témiscamingue,enclave,2,958,Abitibi-Témiscamingue (08),Abitibi-Est
+89902,Matchi-Manitou,Territoire non organisé,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,1,0,Abitibi-Témiscamingue (08),Abitibi-Est
+89908,Lac-Metei,Territoire non organisé,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,1,0,Abitibi-Témiscamingue (08),Abitibi-Est
+89910,Réservoir-Dozois,Territoire non organisé,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,1,0,Abitibi-Témiscamingue (08),Abitibi-Est
+89912,Lac-Granet,Territoire non organisé,MRC La Vallée-de-l'Or,08,Abitibi-Témiscamingue,mrc,1,0,Abitibi-Témiscamingue (08),Abitibi-Est
+90012,La Tuque,Ville,La Tuque,04,Mauricie,municipal,27,8844,Mauricie (04),Laviolette–Saint-Maurice
+90017,La Bostonnais,Municipalité,La Bostonnais,04,Mauricie,municipal,2,505,Mauricie (04),Laviolette–Saint-Maurice
+90027,Lac-Édouard,Municipalité,Lac-Édouard,04,Mauricie,municipal,1,169,Mauricie (04),Laviolette–Saint-Maurice
+90801,Coucoucache,Réserve indienne,"Réserve indienne · enclave, division La Tuque (90)",04,Mauricie,enclave,1,0,Mauricie (04),Laviolette–Saint-Maurice
+90802,Wemotaci,Réserve indienne,"Réserve indienne · enclave, division La Tuque (90)",04,Mauricie,enclave,1,827,Mauricie (04),Laviolette–Saint-Maurice
+90804,Obedjiwan,Réserve indienne,"Réserve indienne · enclave, division La Tuque (90)",04,Mauricie,enclave,1,1181,Mauricie (04),Laviolette–Saint-Maurice
+91005,Lac-Bouchette,Municipalité,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,3,998,Saguenay--Lac-Saint-Jean (02),Roberval
+91010,Saint-André-du-Lac-Saint-Jean,Village,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,1,405,Saguenay--Lac-Saint-Jean (02),Roberval
+91015,Saint-François-de-Sales,Municipalité,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,2,521,Saguenay--Lac-Saint-Jean (02),Roberval
+91020,Chambord,Municipalité,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,5,1448,Saguenay--Lac-Saint-Jean (02),Roberval
+91025,Roberval,Ville,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,22,7791,Saguenay--Lac-Saint-Jean (02),Roberval
+91030,Sainte-Hedwidge,Municipalité,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,2,761,Saguenay--Lac-Saint-Jean (02),Roberval
+91035,Saint-Prime,Municipalité,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,5,2196,Saguenay--Lac-Saint-Jean (02),Roberval
+91042,Saint-Félicien,Ville,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,21,7958,Saguenay--Lac-Saint-Jean (02),Roberval
+91050,La Doré,Paroisse,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,3,1099,Saguenay--Lac-Saint-Jean (02),Roberval
+91802,Mashteuiatsh,Réserve indienne,"Réserve indienne · enclave, division Le Domaine-du-Roy (91)",02,Saguenay–Lac-Saint-Jean,enclave,4,1646,Saguenay--Lac-Saint-Jean (02),Roberval
+91902,Lac-Ashuapmushuan,Territoire non organisé,MRC Le Domaine-du-Roy,02,Saguenay–Lac-Saint-Jean,mrc,1,30,Saguenay--Lac-Saint-Jean (02),Roberval
+91990,TNO aquatique de la MRC du Domaine-du-Roy,(absent du Répertoire),"enclave, division 91",02,Saguenay–Lac-Saint-Jean,enclave,2,0,,Roberval
+92005,Saint-Augustin,Paroisse,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,280,Saguenay--Lac-Saint-Jean (02),Roberval
+92010,Péribonka,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,2,508,Saguenay--Lac-Saint-Jean (02),Roberval
+92015,Sainte-Jeanne-d'Arc,Village,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,2,892,Saguenay--Lac-Saint-Jean (02),Roberval
+92022,Dolbeau-Mistassini,Ville,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,30,11053,Saguenay--Lac-Saint-Jean (02),Roberval
+92030,Albanel,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,4,1761,Saguenay--Lac-Saint-Jean (02),Roberval
+92040,Normandin,Ville,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,7,2319,Saguenay--Lac-Saint-Jean (02),Roberval
+92045,Saint-Thomas-Didyme,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,2,661,Saguenay--Lac-Saint-Jean (02),Roberval
+92050,Saint-Edmond-les-Plaines,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,308,Saguenay--Lac-Saint-Jean (02),Roberval
+92055,Girardville,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,2,852,Saguenay--Lac-Saint-Jean (02),Roberval
+92060,Notre-Dame-de-Lorette,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,140,Saguenay--Lac-Saint-Jean (02),Roberval
+92065,Saint-Eugène-d'Argentenay,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,395,Saguenay--Lac-Saint-Jean (02),Roberval
+92070,Saint-Stanislas,Municipalité,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,317,Saguenay--Lac-Saint-Jean (02),Roberval
+92902,Passes-Dangereuses,Territoire non organisé,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,2,51,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean | Roberval
+92903,Sainte-Élisabeth-de-Proulx,Territoire non organisé,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,123,Saguenay--Lac-Saint-Jean (02),Roberval
+92904,Rivière-Mistassini,Territoire non organisé,MRC Maria-Chapdelaine,02,Saguenay–Lac-Saint-Jean,mrc,1,25,Saguenay--Lac-Saint-Jean (02),Roberval
+93005,Desbiens,Ville,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,2,840,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93012,Métabetchouan--Lac-à-la-Croix,Ville,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,10,3229,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93022,Hébertville,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,13,5390,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93035,Saint-Gédéon,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,5,1902,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93042,Alma,Ville,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,63,24634,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93045,Saint-Nazaire,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,4,1651,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93055,Labrecque,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,3,1169,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93060,Lamarche,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,2,500,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93065,L'Ascension-de-Notre-Seigneur,Paroisse,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,5,1849,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93070,Saint-Henri-de-Taillon,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,2,691,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93075,Sainte-Monique,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,2,721,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93080,Saint-Ludger-de-Milot,Municipalité,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,2,567,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93902,Mont-Apica,Territoire non organisé,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,1,0,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93904,Lac-Moncouche,Territoire non organisé,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,1,0,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93906,Lac-Achouakan,Territoire non organisé,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,1,0,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93908,Belle-Rivière,Territoire non organisé,MRC Lac-Saint-Jean-Est,02,Saguenay–Lac-Saint-Jean,mrc,1,9,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+93990,TNO aquatique de la MRC de Lac-Saint-Jean-Est,(absent du Répertoire),"enclave, division 93",02,Saguenay–Lac-Saint-Jean,enclave,6,0,,Lac-Saint-Jean
+94068,Saguenay,Ville,Saguenay,02,Saguenay–Lac-Saint-Jean,municipal,311,115364,Saguenay--Lac-Saint-Jean (02),Chicoutimi | Jonquière | Dubuc
+94205,Petit-Saguenay,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,2,548,Saguenay--Lac-Saint-Jean (02),Dubuc
+94210,L'Anse-Saint-Jean,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,3,1086,Saguenay--Lac-Saint-Jean (02),Dubuc
+94215,Rivière-Éternité,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,1,365,Saguenay--Lac-Saint-Jean (02),Dubuc
+94220,Ferland-et-Boilleau,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,2,558,Saguenay--Lac-Saint-Jean (02),Dubuc
+94225,Saint-Félix-d'Otis,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,3,1017,Saguenay--Lac-Saint-Jean (02),Dubuc
+94230,Sainte-Rose-du-Nord,Paroisse,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,1,413,Saguenay--Lac-Saint-Jean (02),Dubuc
+94235,Saint-Fulgence,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,5,1861,Saguenay--Lac-Saint-Jean (02),Dubuc
+94240,Saint-Honoré,Ville,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,13,5347,Saguenay--Lac-Saint-Jean (02),Dubuc
+94245,Saint-David-de-Falardeau,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,6,2406,Saguenay--Lac-Saint-Jean (02),Dubuc
+94250,Bégin,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,2,699,Saguenay--Lac-Saint-Jean (02),Dubuc
+94255,Saint-Ambroise,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,8,3383,Saguenay--Lac-Saint-Jean (02),Dubuc
+94260,Saint-Charles-de-Bourget,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,2,741,Saguenay--Lac-Saint-Jean (02),Dubuc
+94265,Larouche,Municipalité,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,4,1388,Saguenay--Lac-Saint-Jean (02),Lac-Saint-Jean
+94926,Lalemant,Territoire non organisé,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,1,0,Saguenay--Lac-Saint-Jean (02),Dubuc
+94928,Lac-Ministuk,Territoire non organisé,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,1,65,Saguenay--Lac-Saint-Jean (02),Dubuc
+94930,Mont-Valin,Territoire non organisé,MRC Le Fjord-du-Saguenay,02,Saguenay–Lac-Saint-Jean,mrc,1,22,Saguenay--Lac-Saint-Jean (02),Dubuc
+94990,TNO aquatique de la MRC du Fjord-du-Saguenay,(absent du Répertoire),"enclave, division 94",02,Saguenay–Lac-Saint-Jean,enclave,2,0,,Dubuc
+95005,Tadoussac,Village,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,2,677,Côte-Nord (09),René-Lévesque
+95010,Sacré-Coeur,Municipalité,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,4,1372,Côte-Nord (09),René-Lévesque
+95018,Les Bergeronnes,Municipalité,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,2,537,Côte-Nord (09),René-Lévesque
+95025,Les Escoumins,Municipalité,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,4,1428,Côte-Nord (09),René-Lévesque
+95032,Longue-Rive,Municipalité,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,2,834,Côte-Nord (09),René-Lévesque
+95040,Portneuf-sur-Mer,Municipalité,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,2,534,Côte-Nord (09),René-Lévesque
+95045,Forestville,Ville,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,6,2366,Côte-Nord (09),René-Lévesque
+95050,Colombier,Municipalité,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,2,586,Côte-Nord (09),René-Lévesque
+95802,Essipit,Réserve indienne,"Réserve indienne · enclave, division La Haute-Côte-Nord (95)",09,Côte-Nord,enclave,1,273,Côte-Nord (09),René-Lévesque
+95902,Lac-au-Brochet,Territoire non organisé,MRC La Haute-Côte-Nord,09,Côte-Nord,mrc,1,6,Côte-Nord (09),René-Lévesque
+95990,TNO aquatique de la MRC de La Haute-Côte-Nord,(absent du Répertoire),"enclave, division 95",09,Côte-Nord,enclave,5,0,,René-Lévesque
+96005,Baie-Trinité,Village,MRC Manicouagan,09,Côte-Nord,mrc,1,347,Côte-Nord (09),René-Lévesque
+96010,Godbout,Village,MRC Manicouagan,09,Côte-Nord,mrc,1,254,Côte-Nord (09),René-Lévesque
+96015,Franquelin,Municipalité,MRC Manicouagan,09,Côte-Nord,mrc,1,260,Côte-Nord (09),René-Lévesque
+96020,Baie-Comeau,Ville,MRC Manicouagan,09,Côte-Nord,mrc,42,15753,Côte-Nord (09),René-Lévesque
+96025,Pointe-Lebel,Village,MRC Manicouagan,09,Côte-Nord,mrc,4,1469,Côte-Nord (09),René-Lévesque
+96030,Pointe-aux-Outardes,Village,MRC Manicouagan,09,Côte-Nord,mrc,3,1090,Côte-Nord (09),René-Lévesque
+96035,Chute-aux-Outardes,Village,MRC Manicouagan,09,Côte-Nord,mrc,3,1154,Côte-Nord (09),René-Lévesque
+96040,Ragueneau,Paroisse,MRC Manicouagan,09,Côte-Nord,mrc,3,1119,Côte-Nord (09),René-Lévesque
+96802,Pessamit,Réserve indienne,"Réserve indienne · enclave, division Manicouagan (96)",09,Côte-Nord,enclave,4,1817,Côte-Nord (09),René-Lévesque
+96902,Rivière-aux-Outardes,Territoire non organisé,MRC Manicouagan,09,Côte-Nord,mrc,1,90,Côte-Nord (09),René-Lévesque
+96990,TNO aquatique de la MRC de Manicouagan,(absent du Répertoire),"enclave, division 96",09,Côte-Nord,enclave,4,0,,René-Lévesque
+97007,Sept-Îles,Ville,MRC Sept-Rivières,09,Côte-Nord,mrc,50,18279,Côte-Nord (09),Duplessis
+97022,Port-Cartier,Ville,MRC Sept-Rivières,09,Côte-Nord,mrc,13,4905,Côte-Nord (09),Duplessis
+97035,Fermont,Ville,MRC Caniapiscau,09,Côte-Nord,mrc,4,1575,Côte-Nord (09),Duplessis
+97040,Schefferville,Ville,MRC Caniapiscau,09,Côte-Nord,mrc,1,136,Côte-Nord (09),Duplessis
+97802,Uashat,Réserve indienne,"Réserve indienne · enclave, division Sept-Rivières - Caniapiscau (97)",09,Côte-Nord,enclave,3,1188,Côte-Nord (09),Duplessis
+97804,Maliotenam,Réserve indienne,"Réserve indienne · enclave, division Sept-Rivières - Caniapiscau (97)",09,Côte-Nord,enclave,3,1126,Côte-Nord (09),Duplessis
+97806,Kawawachikamach,Terre de la catégorie IA-N,"Terre de la catégorie IA-N · enclave, division Sept-Rivières - Caniapiscau (97)",09,Côte-Nord,enclave,1,472,Côte-Nord (09),Duplessis
+97808,Matimekosh,Réserve indienne,"Réserve indienne · enclave, division Sept-Rivières - Caniapiscau (97)",09,Côte-Nord,enclave,1,446,Côte-Nord (09),Duplessis
+97810,Lac-John,Réserve indienne,"Réserve indienne · enclave, division Sept-Rivières - Caniapiscau (97)",09,Côte-Nord,enclave,1,16,Côte-Nord (09),Duplessis
+97902,Rivière-Nipissis,Territoire non organisé,MRC Sept-Rivières,09,Côte-Nord,mrc,1,0,Côte-Nord (09),Duplessis
+97904,Lac-Walker,Territoire non organisé,MRC Sept-Rivières,09,Côte-Nord,mrc,1,93,Côte-Nord (09),Duplessis
+97906,Rivière-Mouchalagane,Territoire non organisé,MRC Caniapiscau,09,Côte-Nord,mrc,1,1,Côte-Nord (09),Duplessis
+97908,Caniapiscau,Territoire non organisé,MRC Caniapiscau,09,Côte-Nord,mrc,1,0,Côte-Nord (09),Duplessis
+97912,Lac-Juillet,Territoire non organisé,MRC Caniapiscau,09,Côte-Nord,mrc,1,0,Côte-Nord (09),Duplessis
+97914,Lac-Vacher,Territoire non organisé,MRC Caniapiscau,09,Côte-Nord,mrc,1,0,Côte-Nord (09),Duplessis
+97990,TNO aquatique de la MRC de Sept-Rivières,(absent du Répertoire),"enclave, division 97",09,Côte-Nord,enclave,3,0,,Duplessis
+98005,Blanc-Sablon,Municipalité,MRC Le Golfe-du-Saint-Laurent,09,Côte-Nord,mrc,3,889,Côte-Nord (09),Duplessis
+98010,Bonne-Espérance,Municipalité,MRC Le Golfe-du-Saint-Laurent,09,Côte-Nord,mrc,2,639,Côte-Nord (09),Duplessis
+98012,Saint-Augustin,Municipalité,MRC Le Golfe-du-Saint-Laurent,09,Côte-Nord,mrc,2,496,Côte-Nord (09),Duplessis
+98014,Gros-Mécatina,Municipalité,MRC Le Golfe-du-Saint-Laurent,09,Côte-Nord,mrc,2,353,Côte-Nord (09),Duplessis
+98015,Côte-Nord-du-Golfe-du-Saint-Laurent,Municipalité,MRC Le Golfe-du-Saint-Laurent,09,Côte-Nord,mrc,5,602,Côte-Nord (09),Duplessis
+98020,L'Île-d'Anticosti,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,173,Côte-Nord (09),Duplessis
+98025,Natashquan,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,215,Côte-Nord (09),Duplessis
+98030,Aguanish,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,208,Côte-Nord (09),Duplessis
+98035,Baie-Johan-Beetz,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,69,Côte-Nord (09),Duplessis
+98040,Havre-Saint-Pierre,Municipalité,MRC Minganie,09,Côte-Nord,mrc,7,2754,Côte-Nord (09),Duplessis
+98045,Longue-Pointe-de-Mingan,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,332,Côte-Nord (09),Duplessis
+98050,Rivière-Saint-Jean,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,190,Côte-Nord (09),Duplessis
+98055,Rivière-au-Tonnerre,Municipalité,MRC Minganie,09,Côte-Nord,mrc,1,238,Côte-Nord (09),Duplessis
+98802,Pakuashipi,(absent du Répertoire),"enclave, division 98",09,Côte-Nord,enclave,1,114,,Duplessis
+98804,La Romaine,Réserve indienne,"Réserve indienne · enclave, division Minganie-Basse-Côte-Nord (98)",09,Côte-Nord,enclave,2,620,Côte-Nord (09),Duplessis
+98806,Nutashkuan,Réserve indienne,"Réserve indienne · enclave, division Minganie-Basse-Côte-Nord (98)",09,Côte-Nord,enclave,2,641,Côte-Nord (09),Duplessis
+98808,Mingan,Réserve indienne,"Réserve indienne · enclave, division Minganie-Basse-Côte-Nord (98)",09,Côte-Nord,enclave,1,299,Côte-Nord (09),Duplessis
+98904,Lac-Jérôme,Territoire non organisé,MRC Minganie,09,Côte-Nord,mrc,1,0,Côte-Nord (09),Duplessis
+98912,Petit-Mécatina,Territoire non organisé,MRC Le Golfe-du-Saint-Laurent,09,Côte-Nord,mrc,1,0,Côte-Nord (09),Duplessis
+98990,TNO aquatique de la MRC de Minganie,(absent du Répertoire),"enclave, division 98",09,Côte-Nord,enclave,1,0,,Duplessis
+98992,TNO aquatique de la MRC Le Golfe-du-Saint-Laurent,(absent du Répertoire),"enclave, division 98",09,Côte-Nord,enclave,2,0,,Duplessis
+99005,Lebel-sur-Quévillon,Ville,Lebel-sur-Quévillon,10,Nord-du-Québec,nord,5,1649,Nord-du-Québec (10),Ungava
+99010,Waswanipi,Village cri (Terre de la catégorie,Waswanipi,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99015,Matagami,Ville,Matagami,10,Nord-du-Québec,nord,3,1053,Nord-du-Québec (10),Ungava
+99020,Chapais,Ville,Chapais,10,Nord-du-Québec,nord,3,1038,Nord-du-Québec (10),Ungava
+99025,Chibougamau,Ville,Chibougamau,10,Nord-du-Québec,nord,15,5018,Nord-du-Québec (10),Ungava
+99030,Mistissini,Village cri (Terre de la catégorie,Mistissini,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99035,Waskaganish,Village cri (Terre de la catégorie,Waskaganish,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99040,Nemaska,Village cri (Terre de la catégorie,Nemaska,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99045,Eastmain,Village cri (Terre de la catégorie,Eastmain,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99050,Wemindji,Village cri (Terre de la catégorie,Wemindji,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99055,Chisasibi,Village cri (Terre de la catégorie,Chisasibi,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99060,Eeyou Istchee Baie-James,Gouvernement régional,Eeyou Istchee Baie-James,10,Nord-du-Québec,nord,11,1531,Nord-du-Québec (10),Ungava
+99065,Kawawachikamach,Village naskapi (Terre de la catégo,Kawawachikamach,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Duplessis
+99070,Whapmagoostui,Village cri (Terre de la catégorie,Whapmagoostui,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99075,Kuujjuarapik,Village nordique,Kuujjuarapik,10,Nord-du-Québec,nord,1,584,Nord-du-Québec (10),Ungava
+99080,Umiujaq,Village nordique,Umiujaq,10,Nord-du-Québec,nord,1,315,Nord-du-Québec (10),Ungava
+99085,Inukjuak,Village nordique,Inukjuak,10,Nord-du-Québec,nord,2,1194,Nord-du-Québec (10),Ungava
+99090,Kangiqsualujjuaq,Village nordique,Kangiqsualujjuaq,10,Nord-du-Québec,nord,1,662,Nord-du-Québec (10),Ungava
+99095,Kuujjuaq,Village nordique,Kuujjuaq,10,Nord-du-Québec,nord,3,1612,Nord-du-Québec (10),Ungava
+99100,Tasiujaq,Village nordique,Tasiujaq,10,Nord-du-Québec,nord,1,216,Nord-du-Québec (10),Ungava
+99105,Aupaluk,Village nordique,Aupaluk,10,Nord-du-Québec,nord,1,144,Nord-du-Québec (10),Ungava
+99110,Kangirsuk,Village nordique,Kangirsuk,10,Nord-du-Québec,nord,1,363,Nord-du-Québec (10),Ungava
+99115,Quaqtaq,Village nordique,Quaqtaq,10,Nord-du-Québec,nord,1,261,Nord-du-Québec (10),Ungava
+99120,Puvirnituq,Village nordique,Puvirnituq,10,Nord-du-Québec,nord,2,1096,Nord-du-Québec (10),Ungava
+99125,Akulivik,Village nordique,Akulivik,10,Nord-du-Québec,nord,1,375,Nord-du-Québec (10),Ungava
+99130,Kangiqsujuaq,Village nordique,Kangiqsujuaq,10,Nord-du-Québec,nord,1,523,Nord-du-Québec (10),Ungava
+99135,Salluit,Village nordique,Salluit,10,Nord-du-Québec,nord,2,921,Nord-du-Québec (10),Ungava
+99140,Ivujivik,Village nordique,Ivujivik,10,Nord-du-Québec,nord,1,265,Nord-du-Québec (10),Ungava
+99802,Waswanipi,Terre de la catégorie IA,Waswanipi,10,Nord-du-Québec,nord,2,1260,Nord-du-Québec (10),Ungava
+99804,Mistissini,Terre de la catégorie IA,Mistissini,10,Nord-du-Québec,nord,4,2763,Nord-du-Québec (10),Ungava
+99806,Waskaganish,Terre de la catégorie IA,Waskaganish,10,Nord-du-Québec,nord,3,1680,Nord-du-Québec (10),Ungava
+99808,Nemaska,Terre de la catégorie IA,Nemaska,10,Nord-du-Québec,nord,1,545,Nord-du-Québec (10),Ungava
+99810,Eastmain,Terre de la catégorie IA,Eastmain,10,Nord-du-Québec,nord,1,621,Nord-du-Québec (10),Ungava
+99812,Wemindji,Terre de la catégorie IA,Wemindji,10,Nord-du-Québec,nord,2,1140,Nord-du-Québec (10),Ungava
+99814,Chisasibi,Terre de la catégorie IA,Chisasibi,10,Nord-du-Québec,nord,5,3279,Nord-du-Québec (10),Ungava
+99816,Whapmagoostui,Terre de la catégorie IA,Whapmagoostui,10,Nord-du-Québec,nord,1,519,Nord-du-Québec (10),Ungava
+99818,Oujé-Bougoumou,Terre de la catégorie IA,Oujé-Bougoumou,10,Nord-du-Québec,nord,1,576,Nord-du-Québec (10),Ungava
+99820,Oujé-Bougoumou,Village cri (Terre de la catégorie,Oujé-Bougoumou,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99875,Kiggaluk,(absent du Répertoire),Nord-du-Québec,10,Nord-du-Québec,nord,1,0,,Ungava
+99877,Kuujjuarapik,Terre de la catégorie I,Kuujjuarapik,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99878,Umiujaq,Terre de la catégorie I,Umiujaq,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99879,Inukjuak,Terre de la catégorie I,Inukjuak,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99883,Akulivik,Terre de la catégorie I,Akulivik,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99885,Ivujivik,Terre de la catégorie I,Ivujivik,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99887,Salluit,Terre de la catégorie I,Salluit,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99888,Kangiqsujuaq,Terre de la catégorie I,Kangiqsujuaq,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99889,Quaqtaq,Terre de la catégorie I,Quaqtaq,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99890,Kangirsuk,Terre de la catégorie I,Kangirsuk,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99891,Aupaluk,Terre de la catégorie I,Aupaluk,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99892,Tasiujaq,Terre de la catégorie I,Tasiujaq,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99893,Kuujjuaq,Terre de la catégorie I,Kuujjuaq,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99894,Kangiqsualujjuaq,Terre de la catégorie I,Kangiqsualujjuaq,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99896,Killiniq,(absent du Répertoire),Nord-du-Québec,10,Nord-du-Québec,nord,1,0,,Ungava
+99902,Rivière-Koksoak,Territoire non organisé,Rivière-Koksoak,10,Nord-du-Québec,nord,2,0,Nord-du-Québec (10),Duplessis | Ungava
+99904,Baie-d'Hudson,Territoire non organisé,Baie-d'Hudson,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99908,Toponyme à venir pour 99908,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99910,Toponyme à venir pour 99910,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,2,0,Nord-du-Québec (10),Ungava
+99914,Toponyme à venir pour 99914,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,4,0,Nord-du-Québec (10),Ungava
+99916,Toponyme à venir pour 99916,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99918,Toponyme à venir pour 99918,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,2,545,Nord-du-Québec (10),Ungava
+99920,Toponyme à venir pour 99920,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99922,Toponyme à venir pour 99922,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
+99924,Toponyme à venir pour 99924,Territoire non organisé,Toponyme à venir,10,Nord-du-Québec,nord,1,0,Nord-du-Québec (10),Ungava
