@@ -432,7 +432,7 @@ function fillRiding(id){
   return [PV[x.w], Math.max(0.3, Math.min(1, (x.sh[i]-15)/35))];
 }
 function labelLines(code){
-  if (state.mode==="lead") return [`${LIST[code]} rég.`, `(${DIST[code]} circ.)`];
+  if (state.mode==="lead") return [];   // en tête : pas de texte sur la région (l'anneau donne ses sièges)
   return [labelFor(code)];
 }
 // Pôle d'inaccessibilité (d'après polylabel, Mapbox) d'un polygone en coordonnées de la carte : [x, y, rayon]
@@ -566,7 +566,7 @@ function paintMap(){
        : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? `actuelle (${SRC.nom})` : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (${SRC.nom}). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : ${SRC.w.toLowerCase()} de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
-    : state.mode==="lead" ? `Couleur : parti en tête des votes dans la région. Plus la couleur est foncée, plus son score est élevé. Anneau : partage des sièges de la région entre les partis (circonscriptions et sièges de région), total au centre. Étiquettes : sièges de région de chaque région, et entre parenthèses ses sièges de circonscription.`
+    : state.mode==="lead" ? `Couleur : parti en tête des votes dans la région. Plus la couleur est foncée, plus son score est élevé. Anneau : partage des sièges de la région entre les partis (circonscriptions et sièges de région), total au centre.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
     : p==="ALL" ? (state.mode==="seat"
         ? `Tous les partis · chiffre = nombre total de sièges de la région (circonscriptions + région). Plus la région ressort, plus elle a de sièges.`
