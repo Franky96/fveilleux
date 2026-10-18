@@ -14,12 +14,12 @@
      titre : libellé de la bande (« Partis en lice » par défaut) ; note : courte précision affichée au bout de la bande
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent.
    Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre, droite, droite
-   nationaliste ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
+   populiste, droite nationaliste ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
    (encyclopédies, politologues), forcément approximatif ; la bande montre une colonne par groupe, dans cet ordre,
    l'ordre de la page étant gardé à l'intérieur d'un groupe ; les hémicycles suivent le même ordre. */
 
 const P = (nom, info, bord = "aut") => ({ nom, info, bord });
-export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite nationaliste"], ["aut", "Autres"]];
+export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dp", "Droite populiste"], ["dr", "Droite nationaliste"], ["aut", "Autres"]];
 const RANG = Object.fromEntries(BORDS.map(([k], i) => [k, i]));
 // place sur l'axe d'une clé de parti : dictionnaire du pays, sinon « extra » (clés absentes du dictionnaire), sinon « autres »
 export const bordDe = (dico, k, extra = {}) => dico?.[k]?.bord || extra[k] || "aut";
@@ -43,7 +43,7 @@ export const PARTIS = {
     BQ: P("Bloc québécois", "Parti souverainiste qui ne présente des candidats qu'au Québec, fondé en 1991.", "g"),
     NPD: P("Nouveau Parti démocratique", "Parti de gauche social-démocrate fondé en 1961.", "g"),
     PVC: P("Parti vert du Canada", "Parti écologiste fondé en 1983.", "g"),
-    PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018.", "dr"),
+    PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018.", "dp"),
   },
   alberta: {
     UCP: P("Parti conservateur uni (United Conservative Party)", "Parti de droite né en 2017 de la fusion des progressistes-conservateurs et du Wildrose ; il gouverne depuis 2019.", "d"),
