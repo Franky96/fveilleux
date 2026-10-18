@@ -11,6 +11,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
+import { anneaux, DESSOUS } from "../votes-quebec/anneau.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -173,7 +174,7 @@ function dessinerChambre() {
 
 /* ---------- carte ---------- */
 const MW = 900, MH = 580;
-let svg, gZ, gK, gLac, gSel, gLbl, defs, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity;
+let svg, gZ, gK, gLac, gSel, gAnn, gLbl, defs, PATH, PROJ_FN, ZOOM, curK = 1, curT = d3.zoomIdentity;
 const PRESETS = {};
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const partDe = (ab, p, g) => (partsCanton(ab, g) || {})[p] || 0;
@@ -236,8 +237,12 @@ function ancre(f) {
 }
 function placerEtiquettes() {
   const el = svg.node(), base = Math.min(el.clientWidth / MW, el.clientHeight / MH) || 1, px = base * curK, fs = 10.5 / px;   // police de 10,5 px à l'écran
+  // Conseil national (proportionnelle par canton) : anneau des sièges de chaque canton (votes-quebec/anneau.js),
+  // sigle du canton décalé sous l'anneau
+  const avecAnneau = anneaux(gAnn, TYPE === "cn" ? DATA.geo.features.map(f => { const [x, y, rad] = ancre(f); return { id: f.properties.K, x, y, rad, sieges: siegesCanton(f.properties.K) || {} }; }) : [],
+    { px, coul: p => COUL[p] || COUL.AUT });
   gLbl.selectAll("g.vi-lab").each(function (f) {
-    const [x, y, rad] = ancre(f), room = rad * px, val = voteMode() && etat.pct;
+    const [x, y0, rad] = ancre(f), y = y0 + (avecAnneau.has(f.properties.K) ? DESSOUS / px : 0), room = rad * px, val = voteMode() && etat.pct;
     const g = d3.select(this).style("display", room >= (val ? 13 : 8) ? null : "none");
     g.select("text.vi-val").style("display", val ? null : "none");
     g.select("text.vi-nom").attr("dy", val ? "-0.45em" : "0.35em");
@@ -261,7 +266,7 @@ function construireCarte() {
   svg = d3.select("#viCarte").attr("viewBox", `0 0 ${MW} ${MH}`);
   defs = svg.append("defs");
   gZ = svg.append("g");
-  gK = gZ.append("g"); gLac = gZ.append("g"); gSel = gZ.append("g"); gLbl = gZ.append("g");
+  gK = gZ.append("g"); gLac = gZ.append("g"); gSel = gZ.append("g"); gAnn = gZ.append("g"); gLbl = gZ.append("g");
   gK.selectAll("path").data(DATA.geo.features).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => CANT[f.properties.K].nom)
     .on("click", (e, f) => choisir(f.properties.K))
