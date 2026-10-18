@@ -205,7 +205,7 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     sec.addEventListener("pointerdown", e => { const svg = e.target.closest(".vi-m-3d"); if (!svg || e.button) return;
       cancelAnimationFrame(sec._raf); glisse = { x: e.clientX, y: e.clientY, a: sec._angle }; svg.setPointerCapture(e.pointerId); svg.classList.add("vi-m-tient"); });
     sec.addEventListener("pointermove", e => { if (!glisse) return; const [a, b] = glisse.a;
-      sec._angle = [a + (e.clientX - glisse.x) * 0.008, Math.max(-0.15, Math.min(1.35, b + (e.clientY - glisse.y) * 0.008))]; dessiner3D(sec); });
+      sec._angle = [a - (e.clientX - glisse.x) * 0.008, Math.max(-0.15, Math.min(1.35, b + (e.clientY - glisse.y) * 0.008))]; dessiner3D(sec); });
     const lacher = () => { glisse = null; sec.querySelector(".vi-m-tient")?.classList.remove("vi-m-tient"); };
     sec.addEventListener("pointerup", lacher); sec.addEventListener("pointercancel", lacher);
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(() => { if (sec._multiOn) dessinerMulti(sec); }, 120); });
@@ -294,7 +294,11 @@ function cadreMulti(sec, box) {
   const pts = sec._items.filter(it => m.y.valeurs[it.cle] && (!deux || m.z.valeurs[it.cle]) && sec._dico[it.cle].bord !== "aut")
     .map(it => ({ it, x: RANG[sec._dico[it.cle].bord] - RANG.c, y: m.y.valeurs[it.cle].v, z: deux ? m.z.valeurs[it.cle].v : 0 }));
   const mx = Math.max(1, ...pts.map(p => Math.abs(p.x))) + 0.5, my = m.y.max + 0.4, mz = (m.z?.max ?? 1) + 0.4;
-  const g = { l: 56, r: 56, t: 30, b: 46 }, S = Math.round(Math.max(200, Math.min(440, box.clientWidth - g.l - g.r)));
+  // carré de 440 px en 2 axes ; en 3D, cube plus grand (jusqu'à 640 px, selon la largeur et la hauteur de la fenêtre) :
+  // le rectangle s'allonge vers le bas, en douceur pendant le passage d'une vue à l'autre (sec._grand de 0 à 1)
+  const g = { l: 56, r: 56, t: 30, b: 46 }, place = box.clientWidth - g.l - g.r;
+  const S2 = Math.max(200, Math.min(440, place)), S3 = Math.max(S2, Math.min(640, place, innerHeight - 230));
+  const S = Math.round(deux ? S2 + (S3 - S2) * (sec._grand ?? 1) : S2);
   const note = [m.y.note, deux && m.z.note, m.noteX].filter(Boolean).join(" ");
   return { m, pts, mx, my, mz, g, S, W: S + g.l + g.r, H: S + g.t + g.b, note };
 }
@@ -351,7 +355,7 @@ function dessiner3D(sec, complet) {
     for (const vj of crans[j]) for (const vl of crans[l]) {
       const c = [0, 0, 0]; c[j] = vj; c[l] = vl;
       c[i] = -1; const p = P(...c); c[i] = 1; const q = P(...c);
-      fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}" opacity="${Math.max(0.35, Math.min(1, 0.75 - 0.25 * (p.d + q.d) / 2)).toFixed(2)}"/>`;
+      fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}" opacity="${Math.max(0.2, Math.min(0.65, 0.42 - 0.2 * (p.d + q.d) / 2)).toFixed(2)}"/>`;
     }
   }
   coins.forEach((c, i) => coins.forEach((e, j) => {   // arêtes du cube (coins qui diffèrent d'une seule coordonnée), celles de derrière plus pâles
@@ -376,18 +380,20 @@ function dessiner3D(sec, complet) {
       + `<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(9 - 2 * q.d)}"/><text x="${f(q.x + 14)}" y="${f(q.y + 4.5)}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
   const dedans = `<g class="vi-m-fond">${fond}</g>${points}<g class="vi-m-fond">${bouts}</g>`;
   const svg = box.querySelector(".vi-m-3d");
-  if (!complet && svg && +svg.getAttribute("width") === W) { svg.innerHTML = dedans; return; }   // pendant une rotation : même svg (glisser continue)
+  if (!complet && svg) {   // pendant une rotation : même svg (le glisser continue)
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H); svg.innerHTML = dedans; return;
+  }
   box.innerHTML = `<svg class="vi-m-svg vi-m-3d" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon trois axes : gauche-droite, ${m.y.titre.toLowerCase()}, ${m.z.titre.toLowerCase()} ; glisser pour tourner`)}">${dedans}</svg>`
     + `<small class="vi-partis-note">${ESC(note)} Glisser le cube pour le tourner.</small>`;
 }
 
-// angle de la vue 3D amené en douceur jusqu'à « vers », puis fin()
-function tourner(sec, vers, fin) {
+// angle de la vue 3D (et taille du cube, grand : 0 = carré 2 axes, 1 = cube) amenés en douceur, puis fin()
+function tourner(sec, vers, grand, fin) {
   cancelAnimationFrame(sec._raf);
-  const de = sec._angle || [0, 0], t0 = performance.now(), D = 900;
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { sec._angle = vers; dessiner3D(sec); fin?.(); return; }
+  const de = sec._angle || [0, 0], g0 = sec._grand ?? 1, t0 = performance.now(), D = 900;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { sec._angle = vers; sec._grand = grand; dessiner3D(sec); fin?.(); return; }
   const pas = t => { const u = Math.min(1, (t - t0) / D), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
-    sec._angle = [de[0] + (vers[0] - de[0]) * e, de[1] + (vers[1] - de[1]) * e]; dessiner3D(sec);
+    sec._angle = [de[0] + (vers[0] - de[0]) * e, de[1] + (vers[1] - de[1]) * e]; sec._grand = g0 + (grand - g0) * e; dessiner3D(sec);
     if (u < 1) sec._raf = requestAnimationFrame(pas); else fin?.(); };
   sec._raf = requestAnimationFrame(pas);
 }
@@ -395,9 +401,9 @@ function tourner(sec, vers, fin) {
 function choisirVue(sec, v) {
   if (v === (sec._vue || 2) || !sec._multi?.z) return;
   sec.querySelectorAll(".vi-partis-vues [data-vue]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.vue === v)));
-  if (v === 3) { sec._vue = 3; sec._angle = [0, 0]; dessiner3D(sec, true); tourner(sec, VUE3); return; }
+  if (v === 3) { sec._vue = 3; sec._angle = [0, 0]; sec._grand = 0; dessiner3D(sec, true); tourner(sec, VUE3, 1); return; }
   const [a, b] = sec._angle || [0, 0]; sec._angle = [Math.atan2(Math.sin(a), Math.cos(a)), b];   // plus court chemin vers la face avant
-  tourner(sec, [0, 0], () => { sec._vue = 2; dessinerMulti(sec);
+  tourner(sec, [0, 0], 0, () => { sec._vue = 2; sec._grand = 1; dessinerMulti(sec);
     sec.querySelectorAll(".vi-m-tick, .vi-m-grille").forEach(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, easing: "ease-out" })); });
 }
 
