@@ -11,8 +11,8 @@
 
    tracerBlocs(g, places, parts, { cx, cy, Rmax, noms })   // après le dessin des sièges
    parts : [{ n, bord }] dans l'ordre des sièges (partis déjà triés de gauche à droite, trierAxe de partis.js) ;
-   une fine ligne sépare les blocs (gauche radicale, gauche, centre, droite, droite radicale) en passant entre les sièges,
-   et le nom de chaque bloc assez grand s'écrit au bord de l'arc ; la boîte du dessin s'agrandit pour les noms. */
+   le nom de chaque bloc assez grand (gauche radicale, gauche, centre, droite, droite radicale) s'écrit au bord de l'arc ;
+   la boîte du dessin s'agrandit pour les noms. */
 export function regrouper(places, tailles) {
   const rangees = [...new Set(places.map(p => p.r))].sort((a, b) => a - b)
     .map(r => places.filter(p => p.r === r).sort((p, q) => q.a - p.a));
@@ -70,16 +70,6 @@ export function tracerBlocs(g, places, parts, { cx, cy, Rmax, noms = {} }) {
   const rangees = rs.map(r => places.map((p, i) => ({ p, i })).filter(x => x.p.r === r).sort((x, y) => y.p.a - x.p.a));
   const pasR = rs.length > 1 ? rs[1] - rs[0] : 0.1;
   const pt = (a, r) => [cx + Math.cos(a) * r * Rmax, cy - Math.sin(a) * r * Rmax];
-  const sep = g.append("g").attr("class", "vf-hemi-seps");
-  blocs.slice(1).forEach(b => {
-    const coupe = b.debut; if (coupe <= 0 || coupe >= attribues) return;
-    const angles = rangees.map(l => {
-      const k = l.findIndex(x => x.i >= coupe), pas = l.length > 1 ? Math.abs(l[0].p.a - l[1].p.a) : 0.1;
-      return k < 0 ? l[l.length - 1].p.a - pas / 2 : k === 0 ? l[0].p.a + pas / 2 : (l[k - 1].p.a + l[k].p.a) / 2;
-    });
-    const pts = [pt(angles[0], rs[0] - pasR * 0.55), ...angles.map((a, j) => pt(a, rs[j])), pt(angles[angles.length - 1], rs[rs.length - 1] + pasR * 0.55)];
-    sep.append("path").attr("d", "M" + pts.map(q => q.map(v => v.toFixed(1)).join(",")).join("L"));
-  });
   // noms des blocs au bord de l'arc (blocs d'au moins 4 % des sièges, hors « autres »)
   const ext = rangees[rangees.length - 1], rOut = rs[rs.length - 1] + pasR * 0.6;
   const lab = g.append("g").attr("class", "vf-hemi-blocs");

@@ -161,10 +161,11 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
   }
   sec._items = liste;
   const bouton = x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
-    + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`;
+    + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span title="${ESC(dico[x.cle].nom)}">${ESC(dico[x.cle].nom)}</span></button>`;
   // une seule ligne de boutons, rangés de gauche à droite (BORDS), sans titres de groupe
+  // titre au-dessus, puis une grille régulière de boutons de même largeur (colonnes alignées d'une rangée à l'autre)
   sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>`
-    + trierAxe(dico, liste.map(x => x.cle)).map(k => bouton(liste.find(x => x.cle === k))).join("")
+    + `<div class="vi-partis-grille">${trierAxe(dico, liste.map(x => x.cle)).map(k => bouton(liste.find(x => x.cle === k))).join("")}</div>`
     + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
 }
 

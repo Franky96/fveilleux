@@ -562,8 +562,7 @@
     .vf .vi-plan.vf-hemi { max-width: none; }
     .vf-hemi-n { fill: var(--ink); font: 800 64px "Literata", Georgia, serif; }
     .vf-hemi-maj { fill: var(--muted); font: 600 20px "Public Sans", system-ui, sans-serif; }
-    /* hémicycles : ligne entre les blocs gauche-droite (votes-quebec/hemicycle.js, tracerBlocs) et nom des blocs au bord */
-    .vf-hemi-seps path { fill: none; stroke: var(--muted); stroke-width: 1.5px; stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; vector-effect: non-scaling-stroke; pointer-events: none; }
+    /* hémicycles : nom des blocs gauche-droite au bord de l'arc (votes-quebec/hemicycle.js, tracerBlocs) */
     .vf-hemi-blocs text { fill: var(--muted); font: 700 17px "Public Sans", system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; pointer-events: none; }
     .vf-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.8rem; color: var(--muted); }
     .vf-legende span { display: inline-flex; align-items: center; gap: 6px; }
@@ -803,6 +802,14 @@
     @media (prefers-reduced-motion: reduce) { #viPlan [data-p] { transition: none; } }
     .vi-partis-note { flex-basis: 100%; color: var(--muted); font-size: 0.78rem; }
     @media (max-width: 700px) { .vi-partis-btn span { display: none; } }   /* téléphone : sigles seulement, le nom est dans la bulle */
+    /* rangement : titre au-dessus, grille de boutons de même largeur ; nom coupé proprement s'il est trop long (complet dans la bulle) */
+    .vi-partis-bande { display: grid; gap: 8px; padding: 12px 14px; }
+    .vi-partis-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 8px; }   /* auto-fit : peu de partis = boutons étirés sur toute la ligne */
+    .vi-partis-grille .vi-partis-btn { width: 100%; min-width: 0; border-radius: 10px; padding: 7px 11px; text-align: left; }
+    .vi-partis-grille .vi-partis-btn b { flex: none; }
+    .vi-partis-grille .vi-partis-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vi-partis-bande > .vi-partis-titre { margin: 0; }
+    @media (max-width: 700px) { .vi-partis-grille { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } }
     .vi-partis-bulle { position: fixed; z-index: 1000; display: grid; gap: 4px; width: max-content; max-width: min(340px, calc(100vw - 16px)); padding: 10px 13px;
       border-left: 4px solid var(--c); border-radius: 10px; background: #0E1117; color: #F2F4F8; box-shadow: 0 12px 32px rgba(0,0,0,0.45);
       font-size: 0.85rem; line-height: 1.45; pointer-events: none; }
