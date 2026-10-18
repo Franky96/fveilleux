@@ -251,7 +251,8 @@ function construireCarte() {
       svg.select("#vaHach").attr("patternTransform", `rotate(45) scale(${1 / curK})`); placerEtiquettes(); });
   svg.call(ZOOM).on("dblclick.zoom", null);
   svg.node().parentElement.addEventListener("wheel", e => e.preventDefault(), { passive: false });
-  svg.on("click", e => { if (e.target === svg.node()) choisir(null); });
+  // clic hors de la carte : vue Länder, le Land choisi est désélectionné ; vue Wahlkreis, le Wahlkreis choisi
+  svg.on("click", e => { if (e.target !== svg.node()) return; if (enLander()) { if (etat.reg) choisirLand(null); } else choisir(null); });
   new ResizeObserver(() => placerEtiquettes()).observe(svg.node());
   $("viZoom").addEventListener("click", e => {
     const z = e.target.closest("button")?.dataset.z; if (!z) return;
@@ -358,7 +359,7 @@ function infobulleLand(e, f) {
     + `<small>2e voix 2025 : ${top3(R25.lands[L]?.z)}</small>`;
 }
 // clic sur un Land (vue Länder) : son panneau, sans zoomer (les autres Länder restent visibles et cliquables)
-function choisirLand(L) { etat.reg = L; sel = null; peindre(); dessinerPanneau(); infoPlein(); }
+function choisirLand(L) { etat.reg = L; sel = null; peindre(); dessinerPanneau(); if (L) infoPlein(); }
 
 /* ---------- panneau : toute l'Allemagne, un Land ou une circonscription ---------- */
 function choisir(i) { sel = i; peindre(); dessinerPanneau(); if (i != null) infoPlein(); }
