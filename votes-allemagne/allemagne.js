@@ -278,10 +278,13 @@ function outilsCarte() {
     + (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu 1re voix"], ["e25z", "2e voix en tête"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
 }
-// circonscriptions ⇄ Länder : la sélection d'une circonscription est levée, celle d'un Land gardée
+// Wahlkreise ⇄ Länder : la sélection d'un Wahlkreis est levée, celle d'un Land gardée ; en vue Länder, toute
+// l'Allemagne (pas de zoom) ; de retour aux Wahlkreise avec un Land choisi, zoom sur ce Land (comme le choix « Land : »)
 function changerVue(v) {
   if (v === etat.vue) return;
   etat.vue = v; ecrireLS("vaVue", v); sel = null; $("viTip").hidden = true;
+  if (enLander()) { if (curK !== 1) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity); }
+  else if (etat.reg) zoomVers({ type: "FeatureCollection", features: DATA.curRegionGeo.features.filter(f => f.properties.REG === etat.reg) }, 0.9);
   peindre(); dessinerPanneau();
 }
 function changerMode(m) {
@@ -305,7 +308,7 @@ function peindre() {
     : sel != null ? DATA.ridingGeo.features.find(x => x.properties.RID === sel) : null;
   gSel.selectAll("path").data(f ? [f] : []).join("path").attr("class", "lv-selline").attr("d", PATH);
   $("viPct").hidden = !voteMode(); $("viPct").setAttribute("aria-pressed", etat.pct);
-  const labs = gLbl.selectAll("g.vi-lab").data(voteMode() && etat.pct ? (enLander() ? DATA.curRegionGeo.features : DATA.ridingGeo.features) : [], f => f.properties.RID ?? "L" + f.properties.REG)
+  const labs = gLbl.selectAll("g.vi-lab").data(voteMode() && etat.pct ? (enLander() ? DATA.curRegionGeo.features : DATA.ridingGeo.features.filter(f => dans(f.properties.RID))) : [], f => f.properties.RID ?? "L" + f.properties.REG)
     .join(enter => { const g = enter.append("g").attr("class", "vi-lab");
       g.append("text").attr("class", "vi-lbl vi-nom").attr("text-anchor", "middle").attr("dy", "-0.85em");
       g.append("text").attr("class", "vi-lbl vi-val").attr("text-anchor", "middle").attr("dy", "0.35em"); return g; });
@@ -414,7 +417,7 @@ function dessinerPanneau() {
       const bascules = CP.map((c, i) => [i, c]).filter(([i, c]) => c && CE[i] && c.g !== CE[i].g && dans(i));
       const m = PROJ.moyenne;
       z.innerHTML = `${tete("Projection du site · si l'élection avait lieu aujourd'hui", sg, n)}
-        <p class="lv-muted">Simulation faite par cette page, pas la projection d'un institut : moyenne du dernier sondage de chacun des ${m.sondages.length} instituts publiés entre le ${dateFr(PROJ.maj.debut)} et le ${dateFr(PROJ.maj.dernier)}, puis répartition des 630 sièges selon la loi de 2023 (Sainte-Laguë, seuil de 5 %${PROJ.clause.length ? `, clause des trois Wahlkreise pour ${PROJ.clause.map(lab).join(", ")}` : ""}, SSW exempté). Clique sur un Wahlkreis pour son détail.</p>
+        <p class="lv-muted">Simulation faite par cette page, pas la projection d'un institut : moyenne du dernier sondage de chacun des ${m.sondages.length} instituts publiés entre le ${dateFr(PROJ.maj.debut)} et le ${dateFr(PROJ.maj.dernier)}, puis répartition des 630 sièges selon la loi de 2023 (Sainte-Laguë, seuil de 5 %${PROJ.clause.length ? `, clause des trois Wahlkreise pour ${PROJ.clause.map(lab).join(", ")}` : ""}, SSW exempté). ${enLander() ? "Clique sur un Land pour son détail." : "Clique sur un Wahlkreis pour son détail."}</p>
         <span class="lv-eyebrow">Secondes voix et sièges${L ? ` · ${esc(nomR)} (écart uniforme sur ${AN(2025)})` : ""} <small>· écart avec ${AN(2025)}</small></span>
         <div class="vi-vrows">${lignesVS(vote, sg, ref, COLS)}</div>
         ${L ? "" : `<p class="va-note">CDU et CSU : intentions de l'Union partagées selon leur rapport de ${AN(2025)} (la CSU ne se présente qu'en Bavière).${PROJ.clause.includes("CSU") ? " Sous 5 % des voix du pays, la CSU entrerait grâce à ses Wahlkreise." : ""}</p>${coalitions(sg)}`}
