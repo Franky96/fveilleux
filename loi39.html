@@ -810,6 +810,20 @@
     .vi-partis-col .vi-partis-btn { width: 100%; min-width: 0; border-radius: 10px; padding: 7px 10px; text-align: left; }
     .vi-partis-col .vi-partis-btn b { flex: none; }
     .vi-partis-col .vi-partis-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* axe gauche-droite (option axe de sectionPartis) : trait fléché sur les colonnes de l'axe, repère au centre */
+    .vi-partis-regle { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); column-gap: 14px; margin-bottom: -2px; }
+    .vi-partis-trait { position: relative; display: grid; grid-template-columns: subgrid; align-items: center; height: 18px; grid-row: 1;
+      background: linear-gradient(var(--muted), var(--muted)) center / calc(100% - 8px) 1.5px no-repeat; }
+    .vi-partis-trait::before, .vi-partis-trait::after { content: ""; position: absolute; top: 50%; width: 8px; height: 9px; margin-top: -4.5px; background: var(--muted); }
+    .vi-partis-trait::before { left: 0; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
+    .vi-partis-trait::after { right: 0; clip-path: polygon(100% 50%, 0 0, 0 100%); }
+    .vi-partis-bout { grid-row: 1; grid-column: 1; justify-self: start; margin: 0 14px; padding: 0 6px; background: var(--surface); color: var(--muted);
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; }
+    .vi-partis-bout ~ .vi-partis-bout { justify-self: end; }
+    .vi-partis-centre { grid-row: 1; justify-self: center; width: 2px; height: 18px; border-radius: 1px; background: var(--ink); position: relative; }
+    .vi-partis-centre::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; transform: rotate(45deg);
+      background: var(--surface); border: 2px solid var(--ink); box-sizing: border-box; }
+    @media (max-width: 1100px) { .vi-partis-regle { display: none; } }   /* colonnes réarrangées : l'axe ne correspond plus */
     @media (max-width: 1100px) { .vi-partis-axe { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); } }
     @media (max-width: 700px) { .vi-partis-axe { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); } }
     .vi-partis-bulle { position: fixed; z-index: 1000; display: grid; gap: 4px; width: max-content; max-width: min(340px, calc(100vw - 16px)); padding: 10px 13px;
