@@ -116,9 +116,27 @@ export const PARTIS = {
   },
 };
 
+// Axes multiples (essai sur Votes Québec) : deuxième axe d'un pays, avec une valeur et sa justification factuelle par
+// parti ; axe horizontal = colonne gauche-droite de la bande (BORDS), centre au milieu
+export const AXES = {
+  quebec: {
+    titre: "Affirmation identitaire", bas: "moins", haut: "plus",
+    note: "Axe vertical : somme de trois positions, de −1 à +1 chacune : immigration (seuil annuel promis en 2026), laïcité (loi 21 et interdiction "
+      + "des signes religieux), langue (loi 96). Sources : programmes de la campagne 2026 (La Presse, CTV, Le Délit), votes à l'Assemblée nationale "
+      + "(loi 21 en 2019, loi 96 en 2022). Axe horizontal : groupe gauche-droite de la bande des partis.",
+    valeurs: {
+      PQ: { y: 3, pourquoi: "immigration : baisse à 35 000 par an (+1) · laïcité : défend la loi 21, votée en 2019 (+1) · langue : contre la loi 96 en 2022 parce qu'elle n'allait pas assez loin (+1)" },
+      CAQ: { y: 2, pourquoi: "immigration : maintien à 45 000 par an et baisse des temporaires (+½) · laïcité : a fait adopter la loi 21 et renouvelé sa dérogation jusqu'en 2031 (+1) · langue : a fait adopter la loi 96 (+½)" },
+      PCQ: { y: 1, pourquoi: "immigration : seuils fixés par chaque région, sans chiffre (0) · laïcité : renouvellerait la dérogation de la loi 21 et appuie l'interdiction des signes religieux pour tout le personnel des écoles (+1) · langue : garderait la dérogation de la loi 96 mais en changerait des articles (0)" },
+      QS: { y: -1.5, pourquoi: "immigration : hausse à 70 000 par an (−1) · laïcité : contre la loi 21 en 2019, abrogerait l'interdiction des signes religieux (−1) · langue : pour la loi 96 en 2022 (+½)" },
+      PLQ: { y: -2.5, pourquoi: "immigration : 45 000 à 70 000 par an (−½) · laïcité : contre la loi 21 en 2019, ne renouvellerait pas sa dérogation (−1) · langue : contre la loi 96 en 2022 (−1)" },
+    },
+  },
+};
+
 const ESC = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-export function sectionPartis(dico, items, { titre = "Partis en lice", note = "", axe = true } = {}) {
+export function sectionPartis(dico, items, { titre = "Partis en lice", note = "", axe = true, multi = null } = {}) {
   const wrap = document.querySelector("#vue-votes .lv-wrap"); if (!wrap || !dico) return;
   const liste = items.filter(x => dico[x.cle]);
   let sec = document.getElementById("viPartis"), bulle = document.getElementById("viPartisBulle");
@@ -135,7 +153,9 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
       actif = b; ouvertA = performance.now();
       sec._choisi = b.dataset.partieParti; appliquerSelection();   // sièges du parti en évidence
       bulle.style.setProperty("--c", it.couleur || "#8D949A");
-      bulle.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><b>${ESC(d.nom)}</b><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`;
+      const ax = sec._multiOn && sec._multi?.valeurs[it.cle];
+      bulle.innerHTML = `<span class="vi-partis-sigle">${ESC(it.etiquette || it.cle)}</span><b>${ESC(d.nom)}</b><p>${ESC(d.info)}</p>${it.detail ? `<p class="vi-partis-chiffres">${it.detail}</p>` : ""}`
+        + (ax ? `<p class="vi-partis-chiffres"><b>${ESC(sec._multi.titre)}</b> : ${ESC(ax.pourquoi)}</p>` : "");
       bulle.hidden = false;
       b.setAttribute("aria-describedby", "viPartisBulle");
       // sous le bouton (au-dessus s'il n'y a pas la place), sans sortir de l'écran
@@ -161,9 +181,12 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     const plan = document.getElementById("viPlan");
     if (plan) { let prevu = false; new MutationObserver(() => { if (prevu) return; prevu = true; requestAnimationFrame(() => { prevu = false; appliquerSelection(); }); }).observe(plan, { childList: true }); }
     document.addEventListener("keydown", e => { if (e.key === "Escape") cacher(); });
+    // bouton « Axes multiples » : la bande passe des colonnes au graphique à deux axes, et inversement
+    sec.addEventListener("click", e => { if (!e.target.closest(".vi-partis-multi")) return; cacher(); sec._multiOn = !sec._multiOn; basculerMulti(sec); });
+    let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(() => { if (sec._multiOn) dessinerMulti(sec); }, 120); });
     addEventListener("scroll", cacher, { passive: true });
   }
-  sec._items = liste;
+  sec._items = liste; sec._dico = dico; sec._multi = multi;
   const bouton = x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
     + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span title="${ESC(dico[x.cle].nom)}">${ESC(dico[x.cle].nom)}</span></button>`;
   // une seule ligne de boutons, rangés de gauche à droite (BORDS), sans titres de groupe
@@ -178,10 +201,45 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     : iDroite > 0 ? `<i class="vi-partis-centre vi-partis-entre" style="grid-column:${iDroite + 1}"></i>` : "";
   const regle = axe && nAxe > 1 ? `<div class="vi-partis-regle" style="--n:${groupes.length}" aria-hidden="true"><div class="vi-partis-trait" style="grid-column:1 / span ${nAxe}">`
     + `<span class="vi-partis-bout">Gauche</span>${centre}<span class="vi-partis-bout" style="grid-column:${nAxe}">Droite</span></div></div>` : "";
-  sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>` + regle
+  const tete = multi ? `<div class="vi-partis-tete"><button type="button" class="vi-partis-multi" aria-pressed="false">Axes multiples</button>`
+    + `<span class="vi-partis-titre">${ESC(titre)}</span></div>` : `<span class="vi-partis-titre">${ESC(titre)}</span>`;
+  sec.innerHTML = tete + regle
     + `<div class="vi-partis-axe" style="--n:${groupes.length}">${groupes.map(([nom, xs]) => `<div class="vi-partis-col" role="group" aria-label="${ESC(nom)}">`
       + `<span class="vi-partis-glab">${ESC(nom)}</span>${xs.map(bouton).join("")}</div>`).join("")}</div>`
+    + (multi ? `<div class="vi-partis-plan2" hidden></div>` : "")
     + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
+  if (multi) basculerMulti(sec);
+}
+
+function basculerMulti(sec) {
+  const on = !!sec._multiOn, box = sec.querySelector(".vi-partis-plan2"); if (!box) return;
+  sec.classList.toggle("vi-multi", on); box.hidden = !on;
+  sec.querySelector(".vi-partis-multi")?.setAttribute("aria-pressed", String(on));
+  if (on) dessinerMulti(sec);
+}
+
+// graphique à deux axes : x = groupe de la bande (centre = 0), y = valeur du deuxième axe ; points survolables comme les boutons
+function dessinerMulti(sec) {
+  const m = sec._multi, box = sec.querySelector(".vi-partis-plan2"); if (!m || !box) return;
+  const pts = sec._items.filter(it => m.valeurs[it.cle] && sec._dico[it.cle].bord !== "aut")
+    .map(it => ({ it, x: RANG[sec._dico[it.cle].bord] - RANG.c, y: m.valeurs[it.cle].y }));
+  const W = Math.max(300, box.clientWidth), H = Math.round(Math.min(380, Math.max(260, W * 0.3)));
+  const mx = Math.max(2, ...pts.map(p => Math.abs(p.x))) + 0.6, my = Math.max(2, ...pts.map(p => Math.abs(p.y))) + 0.8;
+  const g = { l: 18, r: 18, t: 26, b: 34 };
+  const X = x => g.l + (x + mx) / (2 * mx) * (W - g.l - g.r), Y = y => g.t + (my - y) / (2 * my) * (H - g.t - g.b);
+  let svg = "";
+  for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) {   // un repère par groupe gauche-droite
+    const b = BORDS[r + RANG.c]; if (!b || b[0] === "aut") continue;
+    svg += `<line class="vi-m-grille" x1="${X(r)}" x2="${X(r)}" y1="${g.t}" y2="${H - g.b}"/>`
+      + `<text class="vi-m-tick" x="${X(r)}" y="${H - g.b + 18}" text-anchor="middle">${ESC(b[1])}</text>`;
+  }
+  svg += `<line class="vi-m-axe" x1="${g.l}" x2="${W - g.r}" y1="${Y(0)}" y2="${Y(0)}"/><line class="vi-m-axe" x1="${X(0)}" x2="${X(0)}" y1="${g.t}" y2="${H - g.b}"/>`
+    + `<text class="vi-m-titre" x="${X(0) + 8}" y="${g.t - 10}">▲ ${ESC(m.titre)} : ${ESC(m.haut)}</text>`
+    + `<text class="vi-m-titre" x="${X(0) + 8}" y="${H - g.b - 6}">▼ ${ESC(m.bas)}</text>`;
+  svg += pts.map(p => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
+    + `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9"/><text x="${X(p.x) + 14}" y="${Y(p.y) + 4.5}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
+  box.innerHTML = `<svg class="vi-m-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon l'axe gauche-droite et l'axe ${m.titre.toLowerCase()}`)}">${svg}</svg>`
+    + `<small class="vi-partis-note">${ESC(m.note)}</small>`;
 }
 
 // mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris

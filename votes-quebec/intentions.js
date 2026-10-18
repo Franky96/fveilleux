@@ -6,7 +6,7 @@
    meilleur deuxième, vote par parti avec le % de chaque circonscription ; plan de l'Assemblée au lieu de la barre. */
 import { domaineY, decouper, placerBulle } from "./zoom-y.js";
 import { preparerSysteme } from "./systeme.js";
-import { sectionPartis, PARTIS } from "./partis.js";
+import { sectionPartis, PARTIS, AXES } from "./partis.js";
 import { equilibrerHaut } from "./equilibre.js";
 import { preparerPleinEcran, infoPlein } from "./plein.js";
 
@@ -582,7 +582,7 @@ function systemeElectoral() {
 function partisEnLice() {
   const S = ELEC?.sieges || {}, V = ELEC?.national || {};
   sectionPartis(PARTIS.quebec, P5.slice().sort((a, b) => (S[b] || 0) - (S[a] || 0) || (V[b] || 0) - (V[a] || 0)).map(p => ({ cle: p, etiquette: p, couleur: COUL[p],
-    detail: `Élection du 5 octobre 2026 : <b>${S[p] || 0} siège${(S[p] || 0) > 1 ? "s" : ""}</b> sur 127 · ${nf(V[p] || 0, 1)} % des voix` })));
+    detail: `Élection du 5 octobre 2026 : <b>${S[p] || 0} siège${(S[p] || 0) > 1 ? "s" : ""}</b> sur 127 · ${nf(V[p] || 0, 1)} % des voix` })), { multi: AXES.quebec });
 }
 
 async function demarrer() {
