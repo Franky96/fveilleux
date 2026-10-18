@@ -11,7 +11,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
-import { anneaux, DESSOUS } from "../votes-quebec/anneau.js";
+import { anneaux, bandes, DESSOUS } from "../votes-quebec/anneau.js";
 
 const CN = 200, MAJ_CN = 101, CE = 46, MAJ_CE = 24;
 const P = ["UDC", "PS", "C", "PLR", "VERT", "PVL"];                                   // partis des sondages (graphique)
@@ -53,9 +53,9 @@ let TYPE = Object.keys(HASH).find(k => HASH[k] === location.hash) || lireLS("vsT
 if (!HASH[TYPE]) TYPE = "cn";
 let DATA, R23, SOND, PROJ = null, ACT = null, CANT = {}, sel = null, demarre = false;
 const MODES = {                                   // groupes de boutons de la carte : futur · présent · passé
-  cn: [["proj", "Projection du site", [["lead", "Premier parti"], ["second", "Deuxième"], ["vote", "Vote"]]],
+  cn: [["proj", "Projection du site", [["lead", "Sièges"], ["second", "Deuxième"], ["vote", "Vote"]]],
        ["act", "Conseil actuel", [["act", "Élus"]]],
-       ["e23", `Élection ${AN(2023)}`, [["e23", "Premier parti"], ["e23vote", "Vote"]]]],
+       ["e23", `Élection ${AN(2023)}`, [["e23", "Sièges"], ["e23vote", "Vote"]]]],
   ce: [["act", "Conseil actuel", [["ceact", "Élus"]]],
        ["e23", `Élection ${AN(2023)}`, [["ce23", "Élus"]]]] };
 const GROUPE_DE = { lead: "proj", second: "proj", vote: "proj", act: "act", e23: "e23", e23vote: "e23", ceact: "act", ce23: "e23" };
@@ -192,8 +192,9 @@ function remplirCE(ab) {
 }
 function remplir(ab) {
   if (TYPE === "ce") return remplirCE(ab);
-  if (etat.mode === "act") { const s = compte(ACT.cn[ab]), [p, n] = premier(s), tot = somme(s);
-    return [COUL[p] || COUL.AUT, tot === 1 ? 0.8 : Math.max(0.5, Math.min(1, 0.3 + 1.2 * n / tot))]; }
+  // sièges (projection, élus actuels, élus de 2023) : bandes proportionnelles aux sièges du canton (proportionnelle :
+  // pas de vainqueur du canton)
+  if (etat.mode === "act" || etat.mode === "lead" || etat.mode === "e23") return [bandes(defs, "ch-" + ab, siegesCanton(ab), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.85];
   const o = trie(partsCanton(ab) || {});
   if (!o.length) return ["var(--soft)", 1];
   if (etat.mode === "second") { const [p, v] = o[1] || o[0]; return [COUL[p] || COUL.AUT, Math.max(0.45, Math.min(1, (v - 5) / 22))]; }
@@ -337,8 +338,8 @@ function peindre() {
   const quoi = g === "e23" ? `résultat de ${AN(2023)}` : "projection du site";
   $("viEchelle").innerHTML = (g === "e23" ? `<b>2023</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>45 % et +</span><span>· vote ${esc(nomP(p))} dans chaque canton (${quoi})${etat.pct ? " · chiffre = % du parti" : ""}</span>`
-    : etat.mode === "act" ? `${legende(presents(Object.values(ACT.cn).flat().map(x => x.p)))}<span>· parti qui a le plus d'élus du canton au Conseil national aujourd'hui (plus foncé : plus de sièges pour lui)</span>`
-    : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "arrivé premier"} en voix dans chaque canton (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>`);
+    : etat.mode === "second" ? `<span>Couleur : parti arrivé deuxième en voix dans chaque canton (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>`
+    : `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le canton (${etat.mode === "act" ? "élus actuels" : quoi}) : à la proportionnelle, pas de vainqueur du canton. Anneau : sièges de chaque parti, total au centre.</span>`);
 }
 const listeSieges = s => trie(s).map(([p, n]) => `${nomP(p)} ${n}`).join(" · ");
 function infobulle(e, f) {

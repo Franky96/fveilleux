@@ -1,5 +1,5 @@
 // Simulation loi 39 : à charger avec type="module", après d3 (global).
-import { anneaux, DESSOUS } from "./anneau.js";
+import { anneaux, bandes, DESSOUS } from "./anneau.js";
 const ROOT = document.querySelector(".loi39");
 const DATA = window.LOI39_DATA ?? await (await fetch(ROOT.dataset.src || "data.json", {cache: "no-cache"})).json();
 // base des votes : résultat officiel de l'élection du 5 octobre 2026 (build_data80.py), sinon projection Qc125
@@ -250,6 +250,7 @@ const LBL_MIN = 19, LBL_MIN_CIRC = 14, LBL_NAME = 70, NAME_ZOOM = 5;   // circon
 const mapSvg = d3.select("#l39-map");
 const gZoom = mapSvg.append("g");
 const gCur = gZoom.append("g"), gRid = gZoom.append("g"), gRegFill = gZoom.append("g"), gReg = gZoom.append("g"), gRegCur = gZoom.append("g"), gSel = gZoom.append("g"), gAnn = gZoom.append("g"), gLbl = gZoom.append("g");
+const defsL = mapSvg.append("defs");
 let curK = 1, curT = d3.zoomIdentity;
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40,-40],[MW+40,MH+40]])
@@ -404,8 +405,9 @@ const MAXSEATS = () => Math.max(...Object.keys(RES.regions).map(c => DIST[c]+LIS
 const MAXLIST = () => Math.max(...Object.keys(RES.regions).map(c => LIST[c]));
 function fillRegion(code){
   const R = RES.regions[code], seats = DIST[code]+LIST[code];
-  // en tête : parti qui a le plus de votes dans la région (l'anneau montre le partage des sièges)
-  if (state.mode==="lead"){ const p = P.reduce((a, b) => R.share[b] > R.share[a] ? b : a); return [PV[p], Math.max(0.3, Math.min(1, (R.share[p]-15)/35))]; }
+  // sièges : bandes proportionnelles aux sièges de la région, circonscriptions et région (proportionnelle : pas de
+  // vainqueur de la région)
+  if (state.mode==="lead") return [bandes(defsL, "l39-" + code, Object.fromEntries(P.map(p => [p, R.d[p]+R.l[p]])), p => PV[p], SEAT_ORDER) || "var(--soft)", 0.85];
   const p = state.party;
   if (p==="ALL"){   // tous les partis : le nombre de sièges de la région, en teinte neutre
     if (state.mode==="seat") return [ALLC, 0.1 + 0.5*seats/MAXSEATS()];
@@ -512,6 +514,8 @@ function labelFor(code){
 }
 function paintMap(){
   const byReg = state.view==="reg", isCur = state.view==="cur";
+  const bLead = document.getElementById("l39-m-lead"); bLead.dataset.txt ||= bLead.textContent;   // vue Régions : « Sièges » (bandes)
+  bLead.textContent = byReg ? "Sièges" : bLead.dataset.txt;
   mapSvg.attr("class", byReg ? "v-reg" : "v-circ");
   gCur.style("display", isCur ? null : "none");
   gReg.style("display", isCur && CREG ? "none" : null);
@@ -566,7 +570,7 @@ function paintMap(){
        : state.mode==="second" ? `Couleur : parti arrivé deuxième dans chaque circonscription ${isCur ? `actuelle (${SRC.nom})` : "hypothétique"}. Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
        : isCur ? `Couleur : parti en tête dans chaque circonscription actuelle (${SRC.nom}). Plus la couleur est foncée, plus son score est élevé.`
        : `Couleur : ${SRC.w.toLowerCase()} de chaque circonscription. Plus la couleur est foncée, plus son score est élevé.`)
-    : state.mode==="lead" ? `Couleur : parti en tête des votes dans la région. Plus la couleur est foncée, plus son score est élevé. Anneau : partage des sièges de la région entre les partis (circonscriptions et sièges de région), total au centre.`
+    : state.mode==="lead" ? `Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans la région (circonscriptions et sièges de région) : avec la compensation régionale, il n'y a pas de vainqueur de la région. Anneau : sièges de chaque parti, total au centre.`
     : state.mode==="vote" ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans la région</span>`
     : p==="ALL" ? (state.mode==="seat"
         ? `Tous les partis · chiffre = nombre total de sièges de la région (circonscriptions + région). Plus la région ressort, plus elle a de sièges.`

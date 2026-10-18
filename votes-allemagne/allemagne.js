@@ -11,7 +11,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
-import { anneaux, DESSOUS } from "../votes-quebec/anneau.js";
+import { anneaux, bandes, DESSOUS } from "../votes-quebec/anneau.js";
 
 const SIEGES = 630, MAJ = 316;
 // partis du graphique d'évolution et des pastilles de la carte (la CDU et la CSU forment l'Union : un seul groupe, des sondages communs)
@@ -164,6 +164,9 @@ function remplir(i) {
 // « Élu 1re voix », secondes voix sinon)
 const partsLand = L => groupe() === "e25" ? (etat.mode === "e25" ? R25.lands[L]?.e : R25.lands[L]?.z) : PROJ.lands[L];
 function remplirLand(L) {
+  // sièges (projection ou élus de 2025) : bandes proportionnelles aux sièges du Land (la seconde voix les répartit à la
+  // proportionnelle : pas de vainqueur du Land)
+  if (etat.mode === "lead" || etat.mode === "e25") return [bandes(svg.select("defs"), "de-" + L, siegesLand(L), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.85];
   const parts = partsLand(L); if (!parts) return ["var(--soft)", 1];
   if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, partDe(parts, etat.parti) / 50))];
   const deux = etat.mode === "second", [p, v] = tri(parts)[deux ? 1 : 0] || ["AUT", 0];
@@ -305,6 +308,9 @@ function peindre() {
   document.querySelectorAll("#viChips button").forEach(b => b.setAttribute("aria-pressed", voteMode() && b.dataset.p === etat.parti));
   $("viChips").setAttribute("aria-disabled", !voteMode());
   document.querySelectorAll("#viModes button[data-vue-carte]").forEach(b => b.setAttribute("aria-pressed", b.dataset.vueCarte === etat.vue));
+  // vue Länder : « En tête » et « Élu 1re voix » deviennent « Sièges » (bandes)
+  document.querySelectorAll("#viModes button[data-m]").forEach(b => { b.dataset.txt ||= b.textContent;
+    b.textContent = enLander() && (b.dataset.m === "lead" || b.dataset.m === "e25") ? "Sièges" : b.dataset.txt; });
   gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });
   gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = o; });   // Land choisi : contour seulement, les autres gardent leur couleur
@@ -334,6 +340,7 @@ function peindre() {
     const voix = groupe() === "e25" && etat.mode === "e25" ? "premières voix (candidats des Wahlkreise)" : `secondes voix (listes du Land)${groupe() === "proj" ? " projetées" : ""}`;
     $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
       ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Land (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}` : ""}</span>`
+      : etat.mode === "lead" || etat.mode === "e25" ? `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le Land (${groupe() === "e25" ? `élus en ${AN(2025)}` : "projection du site"}) : la seconde voix répartit les sièges à la proportionnelle, il n'y a pas de vainqueur du Land. Anneau : sièges de chaque parti, total au centre. Clique sur un Land pour son détail.</span>`
       : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "en tête"} des ${voix} dans chaque Land (${quoi}). Plus la couleur est foncée, plus son score est élevé. Clique sur un Land pour son détail.</span>`) + VOIX;
     return;
   }
