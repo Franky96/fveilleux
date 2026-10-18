@@ -14,12 +14,12 @@
      titre : libellé de la bande (« Partis en lice » par défaut) ; note : courte précision affichée au bout de la bande
    Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent.
    Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre, droite, droite
-   radicale ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
+   nationaliste ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
    (encyclopédies, politologues), forcément approximatif ; la bande montre une colonne par groupe, dans cet ordre,
    l'ordre de la page étant gardé à l'intérieur d'un groupe ; les hémicycles suivent le même ordre. */
 
 const P = (nom, info, bord = "aut") => ({ nom, info, bord });
-export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite radicale"], ["aut", "Autres"]];
+export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite nationaliste"], ["aut", "Autres"]];
 const RANG = Object.fromEntries(BORDS.map(([k], i) => [k, i]));
 // place sur l'axe d'une clé de parti : dictionnaire du pays, sinon « extra » (clés absentes du dictionnaire), sinon « autres »
 export const bordDe = (dico, k, extra = {}) => dico?.[k]?.bord || extra[k] || "aut";
