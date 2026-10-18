@@ -293,6 +293,7 @@ function outilsCarte() {
 function changerVue(v) {
   if (v === etat.vue) return;
   etat.vue = v; ecrireLS("vaVue", v); sel = null; etat.reg = null; $("viTip").hidden = true;
+  if (enLander() && etat.mode === "second") etat.mode = "lead";   // pas de « Meilleur 2e » par Land (proportionnelle)
   if (curK !== 1) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity);
   peindre(); dessinerPanneau();
 }
@@ -310,7 +311,8 @@ function peindre() {
   document.querySelectorAll("#viModes button[data-vue-carte]").forEach(b => b.setAttribute("aria-pressed", b.dataset.vueCarte === etat.vue));
   // vue Länder : « En tête » et « Élu 1re voix » deviennent « Sièges » (bandes)
   document.querySelectorAll("#viModes button[data-m]").forEach(b => { b.dataset.txt ||= b.textContent;
-    b.textContent = enLander() && (b.dataset.m === "lead" || b.dataset.m === "e25") ? "Sièges" : b.dataset.txt; });
+    b.textContent = enLander() && (b.dataset.m === "lead" || b.dataset.m === "e25") ? "Sièges" : b.dataset.txt;
+    b.hidden = enLander() && b.dataset.m === "second"; });   // « Meilleur 2e » : Wahlkreise seulement
   gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
   svg.classed("vi-bandes", enLander() && (etat.mode === "lead" || etat.mode === "e25"));   // bandes : frontières épaissies
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });

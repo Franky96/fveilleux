@@ -194,6 +194,7 @@
     .lv-groupe button { border-radius: 0; margin-left: -1px; }
     .lv-groupe button:first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
     .lv-groupe button:last-child { border-radius: 0 8px 8px 0; }
+    .lv-groupe button[hidden], .loi39 button[hidden] { display: none; }   /* ex. « Meilleur 2e » caché dans les vues par région */
     .lv-groupe button:only-child { border-radius: 8px; }          /* bouton seul dans son groupe (ex. « Députés ») */
     /* participation : chiffre de l'ensemble du Québec (en-tête) et légende du dégradé vers le blanc */
     .lv-head-droite { display: flex; align-items: flex-end; gap: 10px; }
@@ -1383,7 +1384,7 @@
           </div>
           <div class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="l39-m-lead" aria-pressed="true">Parti en tête</button>
-            <button type="button" id="l39-m-second" aria-pressed="false" disabled title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
+            <button type="button" id="l39-m-second" aria-pressed="false" hidden title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
             <button type="button" id="l39-m-vote" aria-pressed="false">Vote</button>
             <button type="button" id="l39-m-seat" aria-pressed="false">Sièges totaux</button>
             <button type="button" id="l39-m-comp" aria-pressed="false">Sièges compensatoires seulement</button>

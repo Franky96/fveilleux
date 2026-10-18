@@ -843,7 +843,7 @@ function setView(v, {silent = false} = {}){
   document.getElementById("l39-v-reg").setAttribute("aria-pressed", v==="reg");
   document.getElementById("l39-v-circ").setAttribute("aria-pressed", v==="circ");
   for (const id of ["seat","comp"]) document.getElementById("l39-m-"+id).disabled = v!=="reg";
-  document.getElementById("l39-m-second").disabled = v==="reg";   // 2e place : seulement par circonscription
+  document.getElementById("l39-m-second").hidden = v==="reg";   // 2e place : seulement par circonscription (pas de sens à la proportionnelle)
   if ((v!=="reg" && (state.mode==="seat" || state.mode==="comp")) || (v==="reg" && state.mode==="second")) setMode("lead", {silent:true});
   if (!silent){
     // garder une sélection cohérente avec l'affichage

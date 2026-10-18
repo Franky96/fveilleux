@@ -53,7 +53,7 @@ let TYPE = Object.keys(HASH).find(k => HASH[k] === location.hash) || lireLS("vsT
 if (!HASH[TYPE]) TYPE = "cn";
 let DATA, R23, SOND, PROJ = null, ACT = null, CANT = {}, sel = null, demarre = false;
 const MODES = {                                   // groupes de boutons de la carte : futur · présent · passé
-  cn: [["proj", "Projection du site", [["lead", "Sièges"], ["second", "Deuxième"], ["vote", "Vote"]]],
+  cn: [["proj", "Projection du site", [["lead", "Sièges"], ["vote", "Vote"]]],
        ["act", "Conseil actuel", [["act", "Élus"]]],
        ["e23", `Élection ${AN(2023)}`, [["e23", "Sièges"], ["e23vote", "Vote"]]]],
   ce: [["act", "Conseil actuel", [["ceact", "Élus"]]],
@@ -197,7 +197,6 @@ function remplir(ab) {
   if (etat.mode === "act" || etat.mode === "lead" || etat.mode === "e23") return [bandes(defs, "ch-" + ab, siegesCanton(ab), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.6];
   const o = trie(partsCanton(ab) || {});
   if (!o.length) return ["var(--soft)", 1];
-  if (etat.mode === "second") { const [p, v] = o[1] || o[0]; return [COUL[p] || COUL.AUT, Math.max(0.45, Math.min(1, (v - 5) / 22))]; }
   if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, partDe(ab, etat.parti) / 45))];
   return [COUL[o[0][0]] || COUL.AUT, Math.max(0.5, Math.min(1, (o[0][1] - 10) / 35))];
 }
@@ -339,7 +338,6 @@ function peindre() {
   const quoi = g === "e23" ? `résultat de ${AN(2023)}` : "projection du site";
   $("viEchelle").innerHTML = (g === "e23" ? `<b>2023</b> · ` : "") + (voteMode()
     ? `<span>0 %</span>${ramp}<span>45 % et +</span><span>· vote ${esc(nomP(p))} dans chaque canton (${quoi})${etat.pct ? " · chiffre = % du parti" : ""}</span>`
-    : etat.mode === "second" ? `<span>Couleur : parti arrivé deuxième en voix dans chaque canton (${quoi}). Plus la couleur est foncée, plus son score est élevé.</span>`
     : `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le canton (${etat.mode === "act" ? "élus actuels" : quoi}) : à la proportionnelle, pas de vainqueur du canton. Anneau : sièges de chaque parti, total au centre.</span>`);
 }
 const listeSieges = s => trie(s).map(([p, n]) => `${nomP(p)} ${n}`).join(" · ");
