@@ -12,89 +12,93 @@
      items : [{ cle, etiquette, couleur, detail }] dans l'ordre d'affichage (clé du dictionnaire, sigle affiché,
              couleur du parti sur la page, phrase de chiffres tirés des données de la page)
      titre : libellé de la bande (« Partis en lice » par défaut) ; note : courte précision affichée au bout de la bande
-   Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent. */
+   Les descriptions restent générales (orientation, origine) : pas de chefs ni de chiffres qui changent.
+   Classement : les partis sont groupés de gauche à droite (BORDS : gauche radicale, gauche, centre, droite, droite
+   radicale ; « autres » à la fin pour les indépendants, régionalistes, inclassables), selon le classement usuel
+   (encyclopédies, politologues), forcément approximatif ; l'ordre de la page est gardé à l'intérieur d'un groupe. */
 
-const P = (nom, info) => ({ nom, info });
+const P = (nom, info, bord = "aut") => ({ nom, info, bord });
+export const BORDS = [["gr", "Gauche radicale"], ["g", "Gauche"], ["c", "Centre"], ["d", "Droite"], ["dr", "Droite radicale"], ["aut", "Autres"]];
 export const PARTIS = {
   quebec: {
-    PQ: P("Parti québécois", "Parti souverainiste et social-démocrate fondé en 1968 par René Lévesque."),
-    PLQ: P("Parti libéral du Québec", "Parti fédéraliste de centre, le plus ancien parti du Québec (1867)."),
-    CAQ: P("Coalition avenir Québec", "Parti nationaliste de centre droit fondé en 2011 ; il a gouverné de 2018 à 2026."),
-    PCQ: P("Parti conservateur du Québec", "Parti de droite, relancé en 2009."),
-    QS: P("Québec solidaire", "Parti de gauche, souverainiste et écologiste, fondé en 2006."),
+    PQ: P("Parti québécois", "Parti souverainiste et social-démocrate fondé en 1968 par René Lévesque.", "g"),
+    PLQ: P("Parti libéral du Québec", "Parti fédéraliste de centre, le plus ancien parti du Québec (1867).", "c"),
+    CAQ: P("Coalition avenir Québec", "Parti nationaliste de centre droit fondé en 2011 ; il a gouverné de 2018 à 2026.", "d"),
+    PCQ: P("Parti conservateur du Québec", "Parti de droite, relancé en 2009.", "d"),
+    QS: P("Québec solidaire", "Parti de gauche, souverainiste et écologiste, fondé en 2006.", "g"),
   },
   canada: {
-    PLC: P("Parti libéral du Canada", "Parti de centre, présent depuis la Confédération ; il gouverne depuis 2015."),
-    PCC: P("Parti conservateur du Canada", "Parti de droite né en 2003 de la fusion de l'Alliance canadienne et du Parti progressiste-conservateur."),
-    BQ: P("Bloc québécois", "Parti souverainiste qui ne présente des candidats qu'au Québec, fondé en 1991."),
-    NPD: P("Nouveau Parti démocratique", "Parti de gauche social-démocrate fondé en 1961."),
-    PVC: P("Parti vert du Canada", "Parti écologiste fondé en 1983."),
-    PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018."),
+    PLC: P("Parti libéral du Canada", "Parti de centre, présent depuis la Confédération ; il gouverne depuis 2015.", "c"),
+    PCC: P("Parti conservateur du Canada", "Parti de droite né en 2003 de la fusion de l'Alliance canadienne et du Parti progressiste-conservateur.", "d"),
+    BQ: P("Bloc québécois", "Parti souverainiste qui ne présente des candidats qu'au Québec, fondé en 1991.", "g"),
+    NPD: P("Nouveau Parti démocratique", "Parti de gauche social-démocrate fondé en 1961.", "g"),
+    PVC: P("Parti vert du Canada", "Parti écologiste fondé en 1983.", "g"),
+    PPC: P("Parti populaire du Canada", "Parti de droite populiste fondé en 2018.", "dr"),
   },
   alberta: {
-    UCP: P("Parti conservateur uni (United Conservative Party)", "Parti de droite né en 2017 de la fusion des progressistes-conservateurs et du Wildrose ; il gouverne depuis 2019."),
-    NPD: P("Nouveau Parti démocratique de l'Alberta", "Parti de centre gauche, au pouvoir de 2015 à 2019 ; il domine à Edmonton."),
-    PT: P("Progressive Tory Party of Alberta", "Parti de centre droit, nouveau nom du Parti albertain depuis décembre 2025 ; un député, exclu de l'UCP."),
-    LIB: P("Parti libéral de l'Alberta", "Parti de centre, au pouvoir de 1905 à 1921 ; sans député depuis 2019."),
-    VERT: P("Parti vert de l'Alberta", "Parti écologiste."),
-    RPA: P("Parti républicain de l'Alberta", "Parti indépendantiste de droite, l'ancien Buffalo Party, renommé en 2025."),
+    UCP: P("Parti conservateur uni (United Conservative Party)", "Parti de droite né en 2017 de la fusion des progressistes-conservateurs et du Wildrose ; il gouverne depuis 2019.", "d"),
+    NPD: P("Nouveau Parti démocratique de l'Alberta", "Parti de centre gauche, au pouvoir de 2015 à 2019 ; il domine à Edmonton.", "g"),
+    PT: P("Progressive Tory Party of Alberta", "Parti de centre droit, nouveau nom du Parti albertain depuis décembre 2025 ; un député, exclu de l'UCP.", "d"),
+    LIB: P("Parti libéral de l'Alberta", "Parti de centre, au pouvoir de 1905 à 1921 ; sans député depuis 2019.", "c"),
+    VERT: P("Parti vert de l'Alberta", "Parti écologiste.", "g"),
+    RPA: P("Parti républicain de l'Alberta", "Parti indépendantiste de droite, l'ancien Buffalo Party, renommé en 2025.", "d"),
   },
   usa: {
-    D: P("Parti démocrate", "Parti de centre gauche, le plus ancien des deux grands partis (fondé en 1828)."),
-    R: P("Parti républicain", "Parti de droite conservatrice fondé en 1854, surnommé le « Grand Old Party » (GOP)."),
+    D: P("Parti démocrate", "Parti de centre gauche, le plus ancien des deux grands partis (fondé en 1828).", "g"),
+    R: P("Parti républicain", "Parti de droite conservatrice fondé en 1854, surnommé le « Grand Old Party » (GOP).", "d"),
     I: P("Indépendant", "Élu sans étiquette ; au Sénat, les deux indépendants votent avec les démocrates."),
   },
   france: {
-    RN: P("Rassemblement national", "Parti de droite nationaliste, issu du Front national (1972), renommé en 2018."),
-    "RN-UDR": P("Rassemblement national et alliés (UDR)", "Le RN et les candidats de l'Union des droites pour la République, ses alliés depuis 2024."),
-    UDR: P("Union des droites pour la République", "Parti de droite allié au RN depuis les législatives de 2024."),
-    UDDPLR: P("Union des droites pour la République", "Groupe de députés de droite alliés au RN depuis 2024."),
-    NFP: P("Nouveau Front populaire", "Alliance de gauche formée en juin 2024 (LFI, PS, Écologistes, PCF…)."),
-    ENS: P("Ensemble", "Coalition de centre qui soutient Emmanuel Macron (Renaissance, MoDem, Horizons…)."),
-    LR: P("Les Républicains", "Parti de droite fondé en 2015, successeur de l'UMP."),
-    EXG: P("Extrême gauche", "Candidats d'extrême gauche (Lutte ouvrière, NPA…)."),
-    DVG: P("Divers gauche", "Candidats de gauche hors des grandes alliances."),
-    DVC: P("Divers centre", "Candidats du centre hors de la coalition Ensemble."),
-    DVD: P("Divers droite", "Candidats de droite hors des grands partis."),
-    EXD: P("Extrême droite", "Candidats d'extrême droite hors du RN (Reconquête…)."),
+    RN: P("Rassemblement national", "Parti de droite nationaliste, issu du Front national (1972), renommé en 2018.", "dr"),
+    "RN-UDR": P("Rassemblement national et alliés (UDR)", "Le RN et les candidats de l'Union des droites pour la République, ses alliés depuis 2024.", "dr"),
+    UDR: P("Union des droites pour la République", "Parti de droite allié au RN depuis les législatives de 2024.", "dr"),
+    UDDPLR: P("Union des droites pour la République", "Groupe de députés de droite alliés au RN depuis 2024.", "dr"),
+    NFP: P("Nouveau Front populaire", "Alliance de gauche formée en juin 2024 (LFI, PS, Écologistes, PCF…).", "g"),
+    ENS: P("Ensemble", "Coalition de centre qui soutient Emmanuel Macron (Renaissance, MoDem, Horizons…).", "c"),
+    LR: P("Les Républicains", "Parti de droite fondé en 2015, successeur de l'UMP.", "d"),
+    EXG: P("Extrême gauche", "Candidats d'extrême gauche (Lutte ouvrière, NPA…).", "gr"),
+    DVG: P("Divers gauche", "Candidats de gauche hors des grandes alliances.", "g"),
+    DVC: P("Divers centre", "Candidats du centre hors de la coalition Ensemble.", "c"),
+    DVD: P("Divers droite", "Candidats de droite hors des grands partis.", "d"),
+    EXD: P("Extrême droite", "Candidats d'extrême droite hors du RN (Reconquête…).", "dr"),
     REG: P("Régionalistes", "Partis régionalistes ou autonomistes (Corse, Bretagne, Alsace, outre-mer…)."),
     DIV: P("Divers", "Candidats sans étiquette politique claire."),
-    "LFI-NFP": P("La France insoumise – Nouveau Front populaire", "Groupe de gauche radicale à l'Assemblée nationale."),
-    GDR: P("Gauche démocrate et républicaine", "Groupe des communistes et de députés d'outre-mer."),
-    ECOS: P("Écologiste et social", "Groupe des députés écologistes."),
-    SOC: P("Socialistes et apparentés", "Groupe du Parti socialiste à l'Assemblée nationale."),
-    LIOT: P("Libertés, indépendants, outre-mer et territoires", "Groupe centriste qui rassemble des députés de sensibilités variées."),
-    DEM: P("Les Démocrates", "Groupe du MoDem, parti centriste allié d'Emmanuel Macron."),
-    EPR: P("Ensemble pour la République", "Groupe de Renaissance, le parti d'Emmanuel Macron."),
-    HOR: P("Horizons et indépendants", "Groupe d'Horizons, parti de centre droit allié d'Emmanuel Macron."),
-    DR: P("Droite républicaine", "Groupe des députés Les Républicains."),
+    "LFI-NFP": P("La France insoumise – Nouveau Front populaire", "Groupe de gauche radicale à l'Assemblée nationale.", "gr"),
+    GDR: P("Gauche démocrate et républicaine", "Groupe des communistes et de députés d'outre-mer.", "gr"),
+    ECOS: P("Écologiste et social", "Groupe des députés écologistes.", "g"),
+    SOC: P("Socialistes et apparentés", "Groupe du Parti socialiste à l'Assemblée nationale.", "g"),
+    LIOT: P("Libertés, indépendants, outre-mer et territoires", "Groupe centriste qui rassemble des députés de sensibilités variées.", "c"),
+    DEM: P("Les Démocrates", "Groupe du MoDem, parti centriste allié d'Emmanuel Macron.", "c"),
+    EPR: P("Ensemble pour la République", "Groupe de Renaissance, le parti d'Emmanuel Macron.", "c"),
+    HOR: P("Horizons et indépendants", "Groupe d'Horizons, parti de centre droit allié d'Emmanuel Macron.", "d"),
+    DR: P("Droite républicaine", "Groupe des députés Les Républicains.", "d"),
     NI: P("Non-inscrits", "Députés qui ne font partie d'aucun groupe."),
   },
   allemagne: {
-    Union: P("Union CDU/CSU", "Alliance de la CDU et de la CSU, qui forment un groupe commun au Bundestag."),
-    CDU: P("Union chrétienne-démocrate", "Parti de centre droit fondé en 1945 ; il se présente partout sauf en Bavière."),
-    CSU: P("Union chrétienne-sociale", "Parti frère de la CDU, qui ne se présente qu'en Bavière."),
-    SPD: P("Parti social-démocrate", "Parti de centre gauche, le plus ancien parti allemand (XIXe siècle)."),
-    AfD: P("Alternative pour l'Allemagne", "Parti de droite nationaliste fondé en 2013 ; les autres grands partis refusent de gouverner avec lui."),
-    "Grüne": P("Alliance 90 / Les Verts", "Parti écologiste, issu en 1993 de l'union des Verts de l'Ouest et d'Alliance 90, venue de l'Est."),
-    Linke: P("Die Linke (La Gauche)", "Parti de gauche fondé en 2007."),
+    Union: P("Union CDU/CSU", "Alliance de la CDU et de la CSU, qui forment un groupe commun au Bundestag.", "d"),
+    CDU: P("Union chrétienne-démocrate", "Parti de centre droit fondé en 1945 ; il se présente partout sauf en Bavière.", "d"),
+    CSU: P("Union chrétienne-sociale", "Parti frère de la CDU, qui ne se présente qu'en Bavière.", "d"),
+    SPD: P("Parti social-démocrate", "Parti de centre gauche, le plus ancien parti allemand (XIXe siècle).", "g"),
+    AfD: P("Alternative pour l'Allemagne", "Parti de droite nationaliste fondé en 2013 ; les autres grands partis refusent de gouverner avec lui.", "dr"),
+    "Grüne": P("Alliance 90 / Les Verts", "Parti écologiste, issu en 1993 de l'union des Verts de l'Ouest et d'Alliance 90, venue de l'Est.", "g"),
+    Linke: P("Die Linke (La Gauche)", "Parti de gauche fondé en 2007.", "gr"),
     BSW: P("Alliance Sahra Wagenknecht", "Parti fondé en 2024 par d'anciens membres de Die Linke ; resté sous 5 % en 2025."),
-    FDP: P("Parti libéral-démocrate", "Parti libéral de centre droit ; resté sous 5 % en 2025, il n'a plus de députés."),
-    FW: P("Électeurs libres (Freie Wähler)", "Parti de centre droit surtout implanté en Bavière."),
+    FDP: P("Parti libéral-démocrate", "Parti libéral de centre droit ; resté sous 5 % en 2025, il n'a plus de députés.", "c"),
+    FW: P("Électeurs libres (Freie Wähler)", "Parti de centre droit surtout implanté en Bavière.", "d"),
     SSW: P("Association des électeurs du Schleswig du Sud", "Parti de la minorité danoise et frisonne, exempté du seuil de 5 %."),
   },
   suisse: {
-    UDC: P("Union démocratique du centre", "Parti de droite conservatrice, premier parti du pays depuis 1999."),
-    PS: P("Parti socialiste suisse", "Parti de gauche, deuxième force du Conseil national."),
-    C: P("Le Centre", "Parti de centre né en 2021 de la fusion du PDC et du PBD."),
-    PLR: P("PLR. Les Libéraux-Radicaux", "Parti de droite libérale né en 2009 de la fusion des radicaux et des libéraux."),
-    VERT: P("Les Vert-e-s suisses", "Parti écologiste de gauche."),
-    PVL: P("Vert'libéraux", "Parti de centre qui allie écologie et libéralisme économique."),
-    PEV: P("Parti évangélique suisse", "Petit parti de centre d'inspiration chrétienne."),
-    UDF: P("Union démocratique fédérale", "Petit parti de droite chrétienne conservatrice."),
-    MCG: P("Mouvement citoyens genevois", "Parti populiste présent seulement dans le canton de Genève."),
-    LEGA: P("Lega dei Ticinesi", "Parti populiste présent seulement au Tessin."),
-    PST: P("Parti suisse du Travail – solidaritéS", "Petits partis de gauche radicale."),
+    UDC: P("Union démocratique du centre", "Parti de droite conservatrice, premier parti du pays depuis 1999.", "dr"),
+    PS: P("Parti socialiste suisse", "Parti de gauche, deuxième force du Conseil national.", "g"),
+    C: P("Le Centre", "Parti de centre né en 2021 de la fusion du PDC et du PBD.", "c"),
+    PLR: P("PLR. Les Libéraux-Radicaux", "Parti de droite libérale né en 2009 de la fusion des radicaux et des libéraux.", "d"),
+    VERT: P("Les Vert-e-s suisses", "Parti écologiste de gauche.", "g"),
+    PVL: P("Vert'libéraux", "Parti de centre qui allie écologie et libéralisme économique.", "c"),
+    PEV: P("Parti évangélique suisse", "Petit parti de centre d'inspiration chrétienne.", "c"),
+    UDF: P("Union démocratique fédérale", "Petit parti de droite chrétienne conservatrice.", "d"),
+    MCG: P("Mouvement citoyens genevois", "Parti populiste présent seulement dans le canton de Genève.", "dr"),
+    LEGA: P("Lega dei Ticinesi", "Parti populiste présent seulement au Tessin.", "dr"),
+    PST: P("Parti suisse du Travail – solidaritéS", "Petits partis de gauche radicale.", "gr"),
   },
 };
 
@@ -146,10 +150,21 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     addEventListener("scroll", cacher, { passive: true });
   }
   sec._items = liste;
+  const bouton = x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
+    + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`;
+  // groupés de gauche à droite ; un petit titre par groupe, une barre entre les groupes
+  const groupes = BORDS.map(([k, nom]) => [nom, liste.filter(x => (dico[x.cle].bord || "aut") === k)]).filter(([, xs]) => xs.length);
   sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>`
-    + liste.map(x => `<button type="button" class="vi-partis-btn" style="--c:${x.couleur || "var(--muted)"}" data-partie-parti="${ESC(x.cle)}">`
-      + `<i></i><b>${ESC(x.etiquette || x.cle)}</b><span>${ESC(dico[x.cle].nom)}</span></button>`).join("")
+    + groupes.map(([nom, xs]) => `<span class="vi-partis-groupe" role="group" aria-label="${ESC(nom)}"><span class="vi-partis-glab">${ESC(nom)}</span>`
+      + `<span class="vi-partis-gbtns">${xs.map(bouton).join("")}</span></span>`).join("")
     + (note ? `<small class="vi-partis-note">${ESC(note)}</small>` : "");
+  debutsLigne(sec);
+  if (!sec._lignes) { sec._lignes = true; addEventListener("resize", () => debutsLigne(sec)); }
+}
+// groupe qui commence une nouvelle ligne de la bande : pas de barre à sa gauche
+function debutsLigne(sec) {
+  let haut = null;
+  for (const g of sec.querySelectorAll(".vi-partis-groupe")) { g.classList.remove("vi-partis-debut"); const y = g.offsetTop; if (haut !== null && y > haut + 4) g.classList.add("vi-partis-debut"); haut = y; }
 }
 
 // mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris
