@@ -310,6 +310,10 @@ function dessinerMulti(sec) {
     fond += `<line class="vi-m-grille" x1="${X(r)}" x2="${X(r)}" y1="${g.t}" y2="${g.t + S}"/>`
       + `<text class="vi-m-tick" x="${X(r)}" y="${g.t + S + 17}" text-anchor="middle">${ESC(l1)}${l2 ? `<tspan x="${X(r)}" dy="12">${ESC(l2)}</tspan>` : ""}</text>`;
   }
+  for (let v = -m.max; v <= m.max; v++) {   // quadrillage : une ligne par cran de l'axe vertical (0 = axe), valeur à gauche
+    if (v) fond += `<line class="vi-m-grille" x1="${g.l}" x2="${g.l + S}" y1="${Y(v)}" y2="${Y(v)}"/>`;
+    fond += `<text class="vi-m-val" x="${g.l - 7}" y="${Y(v) + 3.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`;
+  }
   fond += `<rect class="vi-m-cadre" x="${g.l}" y="${g.t}" width="${S}" height="${S}"/>`
     + `<line class="vi-m-axe" x1="${g.l}" x2="${g.l + S}" y1="${Y(0)}" y2="${Y(0)}"/><line class="vi-m-axe" x1="${X(0)}" x2="${X(0)}" y1="${g.t}" y2="${g.t + S}"/>`
     + `<text class="vi-m-titre" x="${X(0)}" y="${g.t - 11}" text-anchor="middle">▲ ${ESC(m.titre)} : ${ESC(m.haut)}</text>`
@@ -336,6 +340,22 @@ function dessiner3D(sec, complet) {
   const P = (x, y, z) => { const r = rot(x, y, z); return { x: cx + r[0] * k * S / 2, y: cy - r[1] * k * S / 2, d: r[2] }; };
   const f = n => n.toFixed(1);
   let fond = "";
+  // quadrillage des trois faces du fond (pour chaque axe, la face la plus éloignée : elle change quand le cube tourne) ;
+  // crans : groupes gauche-droite en x, valeurs entières en y et z, en coordonnées du cube (−1 à 1)
+  const crans = [[], [], []];
+  for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) crans[0].push(r / mx);
+  for (let v = -m.y.max; v <= m.y.max; v++) crans[1].push(v / my);
+  for (let v = -m.z.max; v <= m.z.max; v++) crans[2].push(v / mz);
+  for (let i = 0; i < 3; i++) {
+    const face = s => { const c = [0, 0, 0]; c[i] = s; return P(...c).d; };
+    const s = face(1) > face(-1) ? 1 : -1, [j, l] = [0, 1, 2].filter(n => n !== i);
+    const pt = (vj, vl) => { const c = [0, 0, 0]; c[i] = s; c[j] = vj; c[l] = vl; return P(...c); };
+    for (const [a1, a2, liste] of [[j, l, crans[j]], [l, j, crans[l]]])
+      for (const v of liste) {
+        const p = a1 === j ? pt(v, -1) : pt(-1, v), q = a1 === j ? pt(v, 1) : pt(1, v);
+        fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}"/>`;
+      }
+  }
   coins.forEach((c, i) => coins.forEach((e, j) => {   // arêtes du cube (coins qui diffèrent d'une seule coordonnée), celles de derrière plus pâles
     if (j <= i || c.filter((v, n) => v !== e[n]).length !== 1) return;
     const p = P(...c), q = P(...e);
