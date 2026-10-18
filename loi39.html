@@ -810,7 +810,7 @@
     .vi-partis-col .vi-partis-btn { width: 100%; min-width: 0; border-radius: 10px; padding: 7px 10px; text-align: left; }
     .vi-partis-col .vi-partis-btn b { flex: none; }
     .vi-partis-col .vi-partis-btn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    /* axe gauche-droite (option axe de sectionPartis) : trait fléché sur les colonnes de l'axe, repère au centre */
+    /* axe gauche-droite de sectionPartis : trait fléché sur les colonnes de l'axe, repère au centre */
     .vi-partis-regle { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); column-gap: 14px; margin-bottom: -2px; }
     .vi-partis-trait { position: relative; display: grid; grid-template-columns: subgrid; align-items: center; height: 18px; grid-row: 1;
       background: linear-gradient(var(--muted), var(--muted)) center / calc(100% - 8px) 1.5px no-repeat; }
@@ -821,6 +821,7 @@
       font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; }
     .vi-partis-bout ~ .vi-partis-bout { justify-self: end; }
     .vi-partis-centre { grid-row: 1; justify-self: center; width: 2px; height: 14px; border-radius: 1px; background: var(--ink); }
+    .vi-partis-entre { justify-self: start; margin-left: -8px; }   /* pas de colonne Centre : au milieu de l'espace entre deux colonnes (14 px) */
     @media (max-width: 1100px) { .vi-partis-regle { display: none; } }   /* colonnes réarrangées : l'axe ne correspond plus */
     @media (max-width: 1100px) { .vi-partis-axe { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); } }
     @media (max-width: 700px) { .vi-partis-axe { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); } }

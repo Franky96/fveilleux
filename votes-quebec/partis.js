@@ -118,7 +118,7 @@ export const PARTIS = {
 
 const ESC = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-export function sectionPartis(dico, items, { titre = "Partis en lice", note = "", axe = false } = {}) {
+export function sectionPartis(dico, items, { titre = "Partis en lice", note = "", axe = true } = {}) {
   const wrap = document.querySelector("#vue-votes .lv-wrap"); if (!wrap || !dico) return;
   const liste = items.filter(x => dico[x.cle]);
   let sec = document.getElementById("viPartis"), bulle = document.getElementById("viPartisBulle");
@@ -170,11 +170,14 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
   // titre au-dessus, puis une colonne par groupe de l'axe gauche-droite (BORDS), de gauche à droite : nom du groupe en
   // tête de colonne, ses partis empilés dessous ; toutes les colonnes ont la même largeur
   const groupes = BORDS.map(([k, nom]) => [nom, liste.filter(x => (dico[x.cle].bord || "aut") === k), k]).filter(([, xs]) => xs.length);
-  // axe (option) : trait gauche → droite au-dessus des colonnes de l'axe (sans « Autres »), repère au milieu de la colonne Centre
+  // axe : trait gauche → droite au-dessus des colonnes de l'axe (sans « Autres »), repère au milieu de la colonne Centre
+  // (sans colonne Centre : dans l'espace entre le dernier groupe de gauche et le premier de droite)
   const nAxe = groupes.filter(g => g[2] !== "aut").length, iCentre = groupes.findIndex(g => g[2] === "c");
+  const iDroite = groupes.findIndex(g => g[2] !== "aut" && RANG[g[2]] > RANG.c);
+  const centre = iCentre >= 0 ? `<i class="vi-partis-centre" style="grid-column:${iCentre + 1}"></i>`
+    : iDroite > 0 ? `<i class="vi-partis-centre vi-partis-entre" style="grid-column:${iDroite + 1}"></i>` : "";
   const regle = axe && nAxe > 1 ? `<div class="vi-partis-regle" style="--n:${groupes.length}" aria-hidden="true"><div class="vi-partis-trait" style="grid-column:1 / span ${nAxe}">`
-    + `<span class="vi-partis-bout">Gauche</span>${iCentre >= 0 && iCentre < nAxe ? `<i class="vi-partis-centre" style="grid-column:${iCentre + 1}"></i>` : ""}`
-    + `<span class="vi-partis-bout" style="grid-column:${nAxe}">Droite</span></div></div>` : "";
+    + `<span class="vi-partis-bout">Gauche</span>${centre}<span class="vi-partis-bout" style="grid-column:${nAxe}">Droite</span></div></div>` : "";
   sec.innerHTML = `<span class="vi-partis-titre">${ESC(titre)}</span>` + regle
     + `<div class="vi-partis-axe" style="--n:${groupes.length}">${groupes.map(([nom, xs]) => `<div class="vi-partis-col" role="group" aria-label="${ESC(nom)}">`
       + `<span class="vi-partis-glab">${ESC(nom)}</span>${xs.map(bouton).join("")}</div>`).join("")}</div>`
