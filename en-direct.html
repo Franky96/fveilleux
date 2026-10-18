@@ -847,7 +847,9 @@
     .vi-partis-plan2[hidden] { display: none; }
     .vi-m-svg { display: block; max-width: 100%; height: auto; margin: 0 auto; overflow: visible; }
     .vi-m-val { fill: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
-    .vi-m-grille3 { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 4; }   /* quadrillage intérieur du cube : pointillé */
+    .vi-m-grille3 { stroke: var(--rule); stroke-width: 1; }   /* quadrillage des faces du fond du cube */
+    .vi-m-guide { stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 3 3; }   /* repères du parti survolé */
+    .vi-m-pied { fill: var(--c); }
     .vi-m-cadre { fill: none; stroke: var(--rule); stroke-width: 1; }
     .vi-partis-plan2 .vi-partis-note { max-width: 760px; justify-self: center; text-align: center; }
     .vi-m-grille { stroke: var(--rule); stroke-width: 1; }

@@ -329,8 +329,8 @@ function dessinerMulti(sec) {
 }
 
 // vue 3D (3 axes) : projection orthogonale du cube x · y · z tourné (lacet a, tangage b), réduite pour tenir dans le
-// carré ; à l'angle 0 elle se confond avec la vue 2 axes, d'où le passage animé de l'une à l'autre ; quadrillage dans
-// tout le cube pour lire la profondeur, partis peints du plus loin au plus proche
+// carré ; à l'angle 0 elle se confond avec la vue 2 axes, d'où le passage animé de l'une à l'autre ; quadrillage sur les
+// faces du fond et, au survol d'un parti, ses repères jusqu'à ces faces ; partis peints du plus loin au plus proche
 const VUE3 = [-0.62, 0.38];
 function dessiner3D(sec, complet) {
   const box = sec.querySelector(".vi-partis-plan2"); if (!sec._multi?.z || !box) return;
@@ -344,20 +344,23 @@ function dessiner3D(sec, complet) {
   const P = (x, y, z) => { const r = rot(x, y, z); return { x: cx + r[0] * k * S / 2, y: cy - r[1] * k * S / 2, d: r[2] }; };
   const f = n => n.toFixed(1);
   let fond = "";
-  // quadrillage dans tout le cube : pour chaque axe, une ligne à chaque croisement des crans des deux autres (groupes
-  // gauche-droite en x, valeurs entières en y et z, en coordonnées du cube −1 à 1) ; les lignes proches un peu plus marquées
-  const crans = [[], [], []];
+  // quadrillage des trois faces du fond (pour chaque axe, la face la plus éloignée : elle change quand le cube tourne) ;
+  // crans : groupes gauche-droite en x, valeurs entières en y et z, en coordonnées du cube (−1 à 1)
+  const crans = [[], [], []], fondCote = [];
   for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) crans[0].push(r / mx);
   for (let v = -m.y.max; v <= m.y.max; v++) crans[1].push(v / my);
   for (let v = -m.z.max; v <= m.z.max; v++) crans[2].push(v / mz);
   for (let i = 0; i < 3; i++) {
-    const [j, l] = [0, 1, 2].filter(n => n !== i);
-    for (const vj of crans[j]) for (const vl of crans[l]) {
-      const c = [0, 0, 0]; c[j] = vj; c[l] = vl;
-      c[i] = -1; const p = P(...c); c[i] = 1; const q = P(...c);
-      fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}" opacity="${Math.max(0.2, Math.min(0.65, 0.42 - 0.2 * (p.d + q.d) / 2)).toFixed(2)}"/>`;
+    const face = s => { const c = [0, 0, 0]; c[i] = s; return P(...c).d; };
+    const s = fondCote[i] = face(1) > face(-1) ? 1 : -1, [j, l] = [0, 1, 2].filter(n => n !== i);
+    for (const [a1, a2] of [[j, l], [l, j]]) for (const v of crans[a1]) {
+      const c = [0, 0, 0]; c[i] = s; c[a1] = v;
+      c[a2] = -1; const p = P(...c); c[a2] = 1; const q = P(...c);
+      fond += `<line class="vi-m-grille3" x1="${f(p.x)}" y1="${f(p.y)}" x2="${f(q.x)}" y2="${f(q.y)}"/>`;
     }
   }
+  // pour les repères du parti survolé (majGuides) : projection, faces du fond et position de chaque parti dans le cube
+  sec._g3 = { P, fondCote, pos: Object.fromEntries(pts.map(p => [p.it.cle, { c: [p.x / mx, p.y / my, p.z / mz], couleur: p.it.couleur }])) };
   coins.forEach((c, i) => coins.forEach((e, j) => {   // arêtes du cube (coins qui diffèrent d'une seule coordonnée), celles de derrière plus pâles
     if (j <= i || c.filter((v, n) => v !== e[n]).length !== 1) return;
     const p = P(...c), q = P(...e);
@@ -378,7 +381,7 @@ function dessiner3D(sec, complet) {
   const points = pts.map(p => ({ p, q: P(p.x / mx, p.y / my, p.z / mz) })).sort((u, v) => v.q.d - u.q.d)
     .map(({ p, q }) => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
       + `<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(9 - 2 * q.d)}"/><text x="${f(q.x + 14)}" y="${f(q.y + 4.5)}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
-  const dedans = `<g class="vi-m-fond">${fond}</g>${points}<g class="vi-m-fond">${bouts}</g>`;
+  const dedans = `<g class="vi-m-fond">${fond}</g><g class="vi-m-guides">${guidesHTML(sec)}</g>${points}<g class="vi-m-fond">${bouts}</g>`;
   const svg = box.querySelector(".vi-m-3d");
   if (!complet && svg) {   // pendant une rotation : même svg (le glisser continue)
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H); svg.innerHTML = dedans; return;
@@ -386,6 +389,15 @@ function dessiner3D(sec, complet) {
   box.innerHTML = `<svg class="vi-m-svg vi-m-3d" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon trois axes : gauche-droite, ${m.y.titre.toLowerCase()}, ${m.z.titre.toLowerCase()} ; glisser pour tourner`)}">${dedans}</svg>`
     + `<small class="vi-partis-note">${ESC(note)} Glisser le cube pour le tourner.</small>`;
 }
+
+// repères du parti survolé en 3D : pointillés à sa couleur jusqu'aux trois faces du fond, avec un point à chaque arrivée
+function guidesHTML(sec) {
+  const g3 = sec._g3, e = g3?.pos[sec._choisi]; if (!e) return "";
+  const f = n => n.toFixed(1), a = g3.P(...e.c);
+  return [0, 1, 2].map(i => { const c = e.c.slice(); c[i] = g3.fondCote[i]; const b = g3.P(...c);
+    return `<line class="vi-m-guide" x1="${f(a.x)}" y1="${f(a.y)}" x2="${f(b.x)}" y2="${f(b.y)}" style="--c:${e.couleur}"/><circle class="vi-m-pied" cx="${f(b.x)}" cy="${f(b.y)}" r="3.5" style="--c:${e.couleur}"/>`; }).join("");
+}
+function majGuides(sec) { const el = sec.querySelector(".vi-m-3d .vi-m-guides"); if (el) el.innerHTML = guidesHTML(sec); }
 
 // angle de la vue 3D (et taille du cube, grand : 0 = carré 2 axes, 1 = cube) amenés en douceur, puis fin()
 function tourner(sec, vers, grand, fin) {
@@ -410,6 +422,7 @@ function choisirVue(sec, v) {
 // mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris
 function appliquerSelection() {
   const sec = document.getElementById("viPartis"), plan = document.getElementById("viPlan"); if (!sec) return;
+  if (sec._multiOn && sec._vue === 3) majGuides(sec);
   const k = sec._choisi;
   if (!plan) return;
   const sieges = [...plan.querySelectorAll("[data-p]")], siens = k ? sieges.filter(e => e.dataset.p.split(" ").includes(k)) : [];
