@@ -300,7 +300,7 @@ function peindre() {
   document.querySelectorAll("#viModes button[data-vue-carte]").forEach(b => b.setAttribute("aria-pressed", b.dataset.vueCarte === etat.vue));
   gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });
-  gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = !etat.reg || etat.reg === L ? o : o * 0.3; });
+  gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = o; });   // Land choisi : contour seulement, les autres gardent leur couleur
   gHach.selectAll("path").data(DATA.ridingGeo.features.filter(f => sansSiege(f.properties.RID)), f => f.properties.RID)
     .join("path").attr("d", PATH).style("fill", "url(#vaHach)").style("pointer-events", "none");
   const f = enLander() ? (etat.reg ? DATA.curRegionGeo.features.find(x => x.properties.REG === etat.reg) : null)
