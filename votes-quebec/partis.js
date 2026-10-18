@@ -120,7 +120,7 @@ export const PARTIS = {
 // parti ; axe horizontal = colonne gauche-droite de la bande (BORDS), centre au milieu
 export const AXES = {
   quebec: {
-    titre: "Affirmation identitaire", bas: "moins", haut: "plus",
+    titre: "Affirmation identitaire", bas: "moins", haut: "plus", max: 3,   // max : valeur extrême possible (3 sujets × 1)
     note: "Axe vertical : somme de trois positions, de −1 à +1 chacune : immigration (seuil annuel promis en 2026), laïcité (loi 21 et interdiction "
       + "des signes religieux), langue (loi 96). Sources : programmes de la campagne 2026 (La Presse, CTV, Le Délit), votes à l'Assemblée nationale "
       + "(loi 21 en 2019, loi 96 en 2022). Axe horizontal : groupe gauche-droite de la bande des partis.",
@@ -182,7 +182,7 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     if (plan) { let prevu = false; new MutationObserver(() => { if (prevu) return; prevu = true; requestAnimationFrame(() => { prevu = false; appliquerSelection(); }); }).observe(plan, { childList: true }); }
     document.addEventListener("keydown", e => { if (e.key === "Escape") cacher(); });
     // bouton « Axes multiples » : la bande passe des colonnes au graphique à deux axes, et inversement
-    sec.addEventListener("click", e => { if (!e.target.closest(".vi-partis-multi")) return; cacher(); sec._multiOn = !sec._multiOn; basculerMulti(sec); });
+    sec.addEventListener("click", e => { if (!e.target.closest(".vi-partis-multi")) return; cacher(); transformer(sec); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(() => { if (sec._multiOn) dessinerMulti(sec); }, 120); });
     addEventListener("scroll", cacher, { passive: true });
   }
@@ -201,8 +201,8 @@ export function sectionPartis(dico, items, { titre = "Partis en lice", note = ""
     : iDroite > 0 ? `<i class="vi-partis-centre vi-partis-entre" style="grid-column:${iDroite + 1}"></i>` : "";
   const regle = axe && nAxe > 1 ? `<div class="vi-partis-regle" style="--n:${groupes.length}" aria-hidden="true"><div class="vi-partis-trait" style="grid-column:1 / span ${nAxe}">`
     + `<span class="vi-partis-bout">Gauche</span>${centre}<span class="vi-partis-bout" style="grid-column:${nAxe}">Droite</span></div></div>` : "";
-  const tete = multi ? `<div class="vi-partis-tete"><button type="button" class="vi-partis-multi" aria-pressed="false">Axes multiples</button>`
-    + `<span class="vi-partis-titre">${ESC(titre)}</span></div>` : `<span class="vi-partis-titre">${ESC(titre)}</span>`;
+  const tete = multi ? `<div class="vi-partis-tete"><span class="vi-partis-titre">${ESC(titre)}</span>`
+    + `<button type="button" class="vi-partis-multi" aria-pressed="false">Axes multiples</button></div>` : `<span class="vi-partis-titre">${ESC(titre)}</span>`;
   sec.innerHTML = tete + regle
     + `<div class="vi-partis-axe" style="--n:${groupes.length}">${groupes.map(([nom, xs]) => `<div class="vi-partis-col" role="group" aria-label="${ESC(nom)}">`
       + `<span class="vi-partis-glab">${ESC(nom)}</span>${xs.map(bouton).join("")}</div>`).join("")}</div>`
@@ -218,28 +218,70 @@ function basculerMulti(sec) {
   if (on) dessinerMulti(sec);
 }
 
-// graphique à deux axes : x = groupe de la bande (centre = 0), y = valeur du deuxième axe ; points survolables comme les boutons
+// passage colonnes ⇄ graphique animé : le rectangle change de hauteur en douceur et chaque parti glisse de son bouton
+// à son point (ou de son point à son bouton) ; rien d'animé si l'utilisateur a demandé moins de mouvement
+const DOUX = "cubic-bezier(.2,.8,.2,1)";
+function reperes(sec) {   // centre de la marque de couleur de chaque parti dans la vue affichée
+  const m = {};
+  sec.querySelectorAll(sec._multiOn ? ".vi-m-pt circle" : ".vi-partis-col .vi-partis-btn i").forEach(el => {
+    const r = el.getBoundingClientRect(); m[el.closest("[data-partie-parti]").dataset.partieParti] = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  });
+  return m;
+}
+function transformer(sec) {
+  const avant = reperes(sec), h0 = sec.offsetHeight;
+  sec._multiOn = !sec._multiOn; basculerMulti(sec);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const apres = reperes(sec), h1 = sec.offsetHeight;
+  sec.getAnimations().forEach(a => a.cancel());
+  sec.style.overflow = "hidden";
+  sec.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 600, easing: DOUX }).finished.then(() => { sec.style.overflow = ""; }, () => {});
+  const fondu = (els, delai, duree = 450) => els.forEach(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: duree, delay: delai, easing: "ease-out", fill: "backwards" }));
+  if (sec._multiOn) {
+    sec.querySelectorAll(".vi-m-pt").forEach((g, i) => {
+      const a = avant[g.dataset.partieParti], b = apres[g.dataset.partieParti]; if (!a || !b) return;
+      g.animate([{ transform: `translate(${a.x - b.x}px, ${a.y - b.y}px)` }, { transform: "none" }], { duration: 750, delay: 50 * i, easing: DOUX, fill: "backwards" });
+      fondu([g.querySelector("text")], 500 + 50 * i, 300);
+    });
+    fondu(sec.querySelectorAll(".vi-m-fond"), 150, 600);
+    fondu(sec.querySelectorAll(".vi-partis-plan2 .vi-partis-note"), 450);
+  } else {
+    sec.querySelectorAll(".vi-partis-col .vi-partis-btn").forEach((btn, i) => {
+      const a = avant[btn.dataset.partieParti], b = apres[btn.dataset.partieParti]; if (!a || !b) return;
+      const r = btn.getBoundingClientRect(); btn.style.transformOrigin = `${b.x - r.left}px ${b.y - r.top}px`;
+      btn.animate([{ transform: `translate(${a.x - b.x}px, ${a.y - b.y}px) scale(.25)`, opacity: 0.4 }, { transform: "none", opacity: 1 }],
+        { duration: 650, delay: 40 * i, easing: DOUX, fill: "backwards" });
+    });
+    fondu(sec.querySelectorAll(".vi-partis-glab, .vi-partis-regle, .vi-partis-bande > .vi-partis-note"), 250);
+  }
+}
+
+// graphique à deux axes, carré : x = groupe de la bande (centre = 0), y = valeur du deuxième axe ; les deux axes couvrent la
+// même longueur (de bout en bout), donc un carré de taille fixe au milieu du rectangle, plus petit si la page est étroite ;
+// points survolables comme les boutons
 function dessinerMulti(sec) {
   const m = sec._multi, box = sec.querySelector(".vi-partis-plan2"); if (!m || !box) return;
   const pts = sec._items.filter(it => m.valeurs[it.cle] && sec._dico[it.cle].bord !== "aut")
     .map(it => ({ it, x: RANG[sec._dico[it.cle].bord] - RANG.c, y: m.valeurs[it.cle].y }));
-  const W = Math.max(300, box.clientWidth), H = Math.round(Math.min(380, Math.max(260, W * 0.3)));
-  const mx = Math.max(2, ...pts.map(p => Math.abs(p.x))) + 0.6, my = Math.max(2, ...pts.map(p => Math.abs(p.y))) + 0.8;
-  const g = { l: 18, r: 18, t: 26, b: 34 };
-  const X = x => g.l + (x + mx) / (2 * mx) * (W - g.l - g.r), Y = y => g.t + (my - y) / (2 * my) * (H - g.t - g.b);
-  let svg = "";
-  for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) {   // un repère par groupe gauche-droite
+  const mx = Math.max(1, ...pts.map(p => Math.abs(p.x))) + 0.5, my = (m.max ?? Math.max(1, ...pts.map(p => Math.abs(p.y)))) + 0.4;
+  const g = { l: 56, r: 56, t: 30, b: 46 }, S = Math.round(Math.max(200, Math.min(440, box.clientWidth - g.l - g.r)));
+  const W = S + g.l + g.r, H = S + g.t + g.b;
+  const X = x => g.l + (x + mx) / (2 * mx) * S, Y = y => g.t + (my - y) / (2 * my) * S;
+  let fond = "";
+  for (let r = -Math.floor(mx); r <= Math.floor(mx); r++) {   // un repère par groupe gauche-droite (nom sur deux lignes au trait d'union)
     const b = BORDS[r + RANG.c]; if (!b || b[0] === "aut") continue;
-    svg += `<line class="vi-m-grille" x1="${X(r)}" x2="${X(r)}" y1="${g.t}" y2="${H - g.b}"/>`
-      + `<text class="vi-m-tick" x="${X(r)}" y="${H - g.b + 18}" text-anchor="middle">${ESC(b[1])}</text>`;
+    const [l1, l2] = b[1].includes("-") ? [b[1].slice(0, b[1].indexOf("-") + 1), b[1].slice(b[1].indexOf("-") + 1)] : [b[1], ""];
+    fond += `<line class="vi-m-grille" x1="${X(r)}" x2="${X(r)}" y1="${g.t}" y2="${g.t + S}"/>`
+      + `<text class="vi-m-tick" x="${X(r)}" y="${g.t + S + 17}" text-anchor="middle">${ESC(l1)}${l2 ? `<tspan x="${X(r)}" dy="12">${ESC(l2)}</tspan>` : ""}</text>`;
   }
-  svg += `<line class="vi-m-axe" x1="${g.l}" x2="${W - g.r}" y1="${Y(0)}" y2="${Y(0)}"/><line class="vi-m-axe" x1="${X(0)}" x2="${X(0)}" y1="${g.t}" y2="${H - g.b}"/>`
-    + `<text class="vi-m-titre" x="${X(0) + 8}" y="${g.t - 10}">▲ ${ESC(m.titre)} : ${ESC(m.haut)}</text>`
-    + `<text class="vi-m-titre" x="${X(0) + 8}" y="${H - g.b - 6}">▼ ${ESC(m.bas)}</text>`;
-  svg += pts.map(p => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
+  fond += `<rect class="vi-m-cadre" x="${g.l}" y="${g.t}" width="${S}" height="${S}"/>`
+    + `<line class="vi-m-axe" x1="${g.l}" x2="${g.l + S}" y1="${Y(0)}" y2="${Y(0)}"/><line class="vi-m-axe" x1="${X(0)}" x2="${X(0)}" y1="${g.t}" y2="${g.t + S}"/>`
+    + `<text class="vi-m-titre" x="${X(0)}" y="${g.t - 11}" text-anchor="middle">▲ ${ESC(m.titre)} : ${ESC(m.haut)}</text>`
+    + `<text class="vi-m-titre" x="${X(0) + 8}" y="${g.t + S - 7}">▼ ${ESC(m.bas)}</text>`;
+  const points = pts.map(p => `<g class="vi-m-pt" data-partie-parti="${ESC(p.it.cle)}" tabindex="0" style="--c:${p.it.couleur || "var(--muted)"}">`
     + `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="9"/><text x="${X(p.x) + 14}" y="${Y(p.y) + 4.5}">${ESC(p.it.etiquette || p.it.cle)}</text></g>`).join("");
-  box.innerHTML = `<svg class="vi-m-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon l'axe gauche-droite et l'axe ${m.titre.toLowerCase()}`)}">${svg}</svg>`
-    + `<small class="vi-partis-note">${ESC(m.note)}</small>`;
+  box.innerHTML = `<svg class="vi-m-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${ESC(`Partis selon l'axe gauche-droite et l'axe ${m.titre.toLowerCase()}`)}">`
+    + `<g class="vi-m-fond">${fond}</g>${points}</svg><small class="vi-partis-note">${ESC(m.note)}</small>`;
 }
 
 // mise en évidence du parti survolé dans le plan ou l'hémicycle : ses sièges en couleur, les autres en gris

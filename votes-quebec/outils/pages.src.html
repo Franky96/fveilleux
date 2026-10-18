@@ -823,17 +823,19 @@
     .vi-partis-bout ~ .vi-partis-bout { justify-self: end; }
     .vi-partis-centre { grid-row: 1; justify-self: center; width: 2px; height: 14px; border-radius: 1px; background: var(--ink); }
     .vi-partis-entre { justify-self: start; margin-left: -8px; }   /* pas de colonne Centre : au milieu de l'espace entre deux colonnes (14 px) */
-    /* axes multiples (essai, Votes Québec) : bouton en haut à gauche, graphique à deux axes à la place des colonnes */
+    /* axes multiples (essai, Votes Québec) : bouton en haut à droite, graphique à deux axes à la place des colonnes */
     .vi-partis-tete { display: flex; align-items: center; gap: 12px; }
     .vi-partis-tete .vi-partis-titre { margin: 0; }
-    .vi-partis-multi { padding: 4px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; }
+    .vi-partis-multi { margin-left: auto; padding: 4px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; }
     .vi-partis-multi:hover { border-color: var(--ink); }
     .vi-partis-multi[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
     .vi-partis-multi:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     .vi-multi .vi-partis-axe, .vi-multi .vi-partis-regle { display: none; }
     .vi-partis-plan2 { display: grid; gap: 6px; min-width: 0; }
     .vi-partis-plan2[hidden] { display: none; }
-    .vi-m-svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .vi-m-svg { display: block; max-width: 100%; height: auto; margin: 0 auto; overflow: visible; }
+    .vi-m-cadre { fill: none; stroke: var(--rule); stroke-width: 1; }
+    .vi-partis-plan2 .vi-partis-note { max-width: 760px; justify-self: center; text-align: center; }
     .vi-m-grille { stroke: var(--rule); stroke-width: 1; }
     .vi-m-axe { stroke: var(--muted); stroke-width: 1.5; }
     .vi-m-tick { fill: var(--muted); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
