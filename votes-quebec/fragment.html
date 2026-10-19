@@ -83,21 +83,21 @@
     <div class="mapgrid">
       <div class="mapcard">
         <div class="toolbar">
-          <div class="seg" role="group" aria-label="Carte affichée">
+          <span class="mgrp"><span class="mlab">Carte</span><span class="seg" role="group" aria-label="Carte affichée">
             <button type="button" id="l39-c-act" aria-pressed="false">Carte actuelle (127)</button>
             <button type="button" id="l39-c-loi" aria-pressed="true">Loi 39 · simulée</button>
-          </div>
-          <div class="seg" role="group" aria-label="Découpage de la loi 39" id="l39-loiSeg">
+          </span></span>
+          <span class="mgrp" id="l39-loiSeg"><span class="mlab">Découpage</span><span class="seg" role="group" aria-label="Découpage de la loi 39">
             <button type="button" id="l39-v-reg" aria-pressed="true">Régions (17)</button>
             <button type="button" id="l39-v-circ" aria-pressed="false">Circonscriptions (80)</button>
-          </div>
-          <div class="seg modeseg" role="group" aria-label="Mode de la carte">
+          </span></span>
+          <span class="mgrp"><span class="mlab">Mode</span><span class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="l39-m-lead" aria-pressed="true">Parti en tête</button>
             <button type="button" id="l39-m-second" aria-pressed="false" hidden title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
             <button type="button" id="l39-m-vote" aria-pressed="false">Vote</button>
             <button type="button" id="l39-m-seat" aria-pressed="false">Sièges totaux</button>
             <button type="button" id="l39-m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
-          </div>
+          </span></span>
           <div class="chips" id="l39-partyChips" aria-label="Parti affiché"></div>
         </div>
         <div class="mapstage" id="l39-stage">

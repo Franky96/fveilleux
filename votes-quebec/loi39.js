@@ -329,14 +329,16 @@ const isFs = () => document.fullscreenElement === mapGrid || mapGrid.classList.c
 const panelBtn = document.getElementById("l39-panelBtn"), scenBtn = document.getElementById("l39-scenBtn");
 // En plein écran, le détail et le scénario flottent sur la carte ; on les affiche ou les masque
 // hauteurs réelles des barres du haut, pour empiler les éléments flottants sans chevauchement
+const tel = window.matchMedia("(max-width: 700px)");   // téléphone : contrôles repliés (bouton « Contrôles »), plein écran ou non
 function placeFloats(){
-  if (!isFs()) return;
+  if (!isFs() && !tel.matches) return;
   const zb = mapGrid.querySelector(".zoombar"), tb = mapGrid.querySelector(".toolbar");
-  // encadré des outils ajusté à sa ligne la plus longue (sinon, dès qu'il passe sur deux lignes, il prend toute la largeur)
+  // encadré des outils ajusté à sa ligne la plus longue (sinon, dès qu'il passe sur deux lignes, il prend toute la largeur) ;
+  // sur téléphone, toute la largeur
   tb.style.width = ""; tb.style.boxSizing = "border-box";
   const r0 = tb.getBoundingClientRect(), cs = getComputedStyle(tb);
   let droite = r0.left;
-  for (const b of tb.querySelectorAll("button")) if (b.offsetParent) droite = Math.max(droite, b.getBoundingClientRect().right);
+  if (!tel.matches) for (const b of tb.querySelectorAll("button")) if (b.offsetParent) droite = Math.max(droite, b.getBoundingClientRect().right);
   if (droite > r0.left) tb.style.width = Math.ceil(droite - r0.left + parseFloat(cs.paddingRight) + parseFloat(cs.borderRightWidth) + 1) + "px";
   mapGrid.style.setProperty("--zbh", zb.offsetHeight + "px");
   mapGrid.style.setProperty("--tbh", tb.offsetHeight + "px");
@@ -345,8 +347,23 @@ function placeFloats(){
 }
 window.addEventListener("resize", placeFloats);
 // contenu des outils changé (boutons des partis, découpage) : on réajuste l'encadré en plein écran
-new MutationObserver(() => { if (isFs()) requestAnimationFrame(placeFloats); })
+new MutationObserver(() => { if (isFs() || tel.matches) requestAnimationFrame(placeFloats); })
   .observe(mapGrid.querySelector(".toolbar"), { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden", "disabled", "class", "aria-pressed"] });
+tel.addEventListener("change", () => requestAnimationFrame(placeFloats));
+// bouton « ☰ Contrôles · <mode> » (téléphone) : ouvre ou ferme les outils et les zooms de la carte
+const ctlBtn = document.createElement("button");
+ctlBtn.type = "button"; ctlBtn.className = "ctlbtn"; ctlBtn.setAttribute("aria-expanded", "false");
+ctlBtn.title = "Afficher ou masquer les contrôles de la carte (carte, découpage, modes, partis, zooms)";
+document.getElementById("l39-stage").prepend(ctlBtn);
+const modeSeg = mapGrid.querySelector(".modeseg");
+function resumeCtl(){ const m = modeSeg.querySelector("button[aria-pressed='true']"); ctlBtn.textContent = "☰ Contrôles" + (m ? " · " + m.textContent.trim() : ""); }
+new MutationObserver(resumeCtl).observe(modeSeg, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["aria-pressed"] });
+resumeCtl();
+ctlBtn.addEventListener("click", () => {
+  const on = ctlBtn.getAttribute("aria-expanded") !== "true";
+  mapGrid.classList.toggle("ctl-ouvert", on); ctlBtn.setAttribute("aria-expanded", on);
+  requestAnimationFrame(placeFloats);
+});
 function showFloat(cls, on){
   mapGrid.classList.toggle(cls, on);
   requestAnimationFrame(placeFloats);
@@ -872,7 +889,7 @@ function setView(v, {silent = false} = {}){
   document.getElementById("l39-loiSeg").hidden = v==="cur";
   document.getElementById("l39-v-reg").setAttribute("aria-pressed", v==="reg");
   document.getElementById("l39-v-circ").setAttribute("aria-pressed", v==="circ");
-  for (const id of ["seat","comp"]) document.getElementById("l39-m-"+id).disabled = v!=="reg";
+  for (const id of ["seat","comp"]) document.getElementById("l39-m-"+id).hidden = v!=="reg";   // sièges : seulement par région
   document.getElementById("l39-m-second").hidden = v==="reg";   // 2e place : seulement par circonscription (pas de sens à la proportionnelle)
   if ((v!=="reg" && (state.mode==="seat" || state.mode==="comp")) || (v==="reg" && state.mode==="second")) setMode("lead", {silent:true});
   if (!silent){

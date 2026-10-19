@@ -6,6 +6,9 @@
 
    Les outils de la carte (modes Parti en tête / Meilleur deuxième / Vote, boutons des partis, « % Pourcentage ») entrent
    aussi dans la carte en plein écran (tout en haut ; zooms et panneau passent dessous) ; les boutons des partis n'y paraissent qu'en mode Vote.
+   Sur téléphone (700 px et moins), plein écran ou non, ils sont toujours dans la carte, repliés derrière un bouton
+   « ☰ Contrôles · <mode> » en haut à gauche, qui les ouvre ou les ferme avec les zooms (classe vi-ctl-ouvert sur la carte) :
+   la carte garde toute la place.
 
    preparerPleinEcran()   // une fois, quand la carte est montée
    infoPlein()            // après le choix d'une circonscription : ouvre le panneau si la carte est en plein écran */
@@ -20,6 +23,11 @@ export function preparerPleinEcran() {
   info.type = "button"; info.id = "viInfo"; info.className = "lv-info-btn"; info.setAttribute("aria-pressed", "false");
   info.title = "Afficher ou masquer le panneau d'information"; info.textContent = "ⓘ Info";
   btn.after(info);
+  const tel = matchMedia("(max-width: 700px)");
+  const ctl = document.createElement("button");
+  ctl.type = "button"; ctl.className = "vi-ctl-btn"; ctl.setAttribute("aria-expanded", "false");
+  ctl.title = "Afficher ou masquer les contrôles de la carte (modes, partis, zooms)";
+  carte.prepend(ctl);
   const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
   const plein = () => ecran() === carte || carte.classList.contains("lv-plein");
   const repere = document.createComment("place du panneau");
@@ -30,9 +38,18 @@ export function preparerPleinEcran() {
     if (!dedans && outils.parentElement === carte) { repereOutils.replaceWith(outils); outils.classList.remove("vi-outils-plein"); carte.style.removeProperty("--haut-outils"); }
   };
   // hauteur de la barre d'outils en haut de la carte : les zooms et le panneau se placent juste dessous
-  const hauteur = () => { if (outils && outils.parentElement === carte) carte.style.setProperty("--haut-outils", outils.offsetHeight + "px"); };
+  const hauteur = () => { if (outils && outils.parentElement === carte && outils.offsetHeight) carte.style.setProperty("--haut-outils", outils.offsetHeight + "px"); };
   addEventListener("resize", hauteur);
   if (outils && window.ResizeObserver) new ResizeObserver(hauteur).observe(outils);
+  // bouton « Contrôles » (téléphone) : libellé = mode affiché ; ouvert ou fermé
+  const resume = () => { const m = outils?.querySelector("button[data-m][aria-pressed='true']");
+    ctl.textContent = "☰ Contrôles" + (m ? " · " + m.textContent.trim() : ""); };
+  const ouvrirCtl = on => { carte.classList.toggle("vi-ctl-ouvert", on); ctl.setAttribute("aria-expanded", on); requestAnimationFrame(hauteur); };
+  ctl.addEventListener("click", () => ouvrirCtl(ctl.getAttribute("aria-expanded") !== "true"));
+  if (outils) new MutationObserver(resume).observe(outils, { subtree: true, childList: true, attributes: true, attributeFilter: ["aria-pressed"] });
+  resume();
+  tel.addEventListener("change", () => placerOutils(plein() || tel.matches));
+  placerOutils(tel.matches);
   const panneau = ouvrir => {
     const pan = $("viPanneau"); if (!pan) return;
     if (ouvrir && pan.parentElement !== carte) { pan.before(repere); carte.appendChild(pan); pan.classList.add("lv-panneau-plein"); }
@@ -44,7 +61,7 @@ export function preparerPleinEcran() {
     const on = plein();
     btn.setAttribute("aria-pressed", on); btn.textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran";
     if (on && !avant) { panneau(innerWidth > 900); placerOutils(true); }
-    if (!on) { panneau(false); placerOutils(false); }
+    if (!on) { panneau(false); placerOutils(tel.matches); }
     avant = on;
   };
   btn.addEventListener("click", () => {

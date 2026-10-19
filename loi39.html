@@ -776,11 +776,31 @@
     .vi-carte:has(> .vi-outils-plein) > .lv-zoom:not(.lv-zoom-bas) { top: calc(var(--haut-outils, 56px) + 18px); }
     .vi-carte:has(> .vi-outils-plein) > .lv-panneau-plein { top: calc(var(--haut-outils, 56px) + 18px); max-height: calc(100% - var(--haut-outils, 56px) - 84px); }
     .vi-carte:fullscreen #viCarte, .vi-carte.lv-plein #viCarte { height: 100%; }
+    /* panneau Info par-dessus la carte : chaque bloc garde sa hauteur (sinon un tableau défilant s'écrase à zéro) */
+    .vi-carte .lv-panneau-plein { grid-auto-rows: max-content; }
+    /* téléphone (plein.js) : outils de la carte dans la carte, repliés derrière « ☰ Contrôles » en haut à gauche ; ouverts :
+       outils sous le bouton, zooms dessous ; panneau Info en tiroir en bas */
+    .vi-ctl-btn { display: none; }
+    @media (max-width: 700px) {
+      .vi-carte > .vi-ctl-btn { display: inline-flex; align-items: center; gap: 6px; position: absolute; z-index: 5; top: 10px; left: 10px; max-width: calc(100% - 20px);
+        font: inherit; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink);
+        cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); }
+      .vi-carte > .vi-ctl-btn[aria-expanded="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+      .vi-carte > .vi-ctl-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      .vi-carte:not(.vi-ctl-ouvert) > .vi-outils-plein, .vi-carte:not(.vi-ctl-ouvert) > .lv-zoom:not(.lv-zoom-bas) { display: none; }
+      .vi-carte > .vi-outils-plein { top: 52px; }
+      .vi-carte:has(> .vi-outils-plein) > .lv-zoom:not(.lv-zoom-bas) { top: calc(var(--haut-outils, 56px) + 60px); }
+      .vi-carte.vi-ctl-ouvert > #viZoom button:not([hidden]) { display: inline-block; }   /* tous les zooms, dans le menu ouvert */
+      .vi-carte > #viZoom button { font-size: 0.76rem; padding: 5px 9px; }
+      .vi-carte:has(> .vi-outils-plein) > .lv-panneau-plein { top: auto; bottom: 58px; left: 10px; right: 10px; width: auto; max-height: 55%; }
+      .vi-carte.vi-ctl-ouvert .vf-an-carte { display: none !important; }
+      .vi-carte:fullscreen .vf-an-carte, .vi-carte.lv-plein .vf-an-carte { max-width: calc(100% - 230px); font-size: 0.72rem; }
+    }
     #viCarte { display: block; width: 100%; height: clamp(420px, 70vh, 860px); background: var(--bg); touch-action: none; }
     .vi-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
     @media (min-width: 1100px) { .vi-grid { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); } }
     @media (max-width: 900px) { #viCarte { height: 60vh; } }
-    @media (max-width: 600px) { #viZoom [data-z] { display: none; } }
+    /* téléphone : les zooms ne paraissent que dans le menu « Contrôles » ouvert (règles plus bas) */
     .vi-serres, .vi-parts, .vi-cands { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
     .vi-serres li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 6px; background: var(--bg); cursor: pointer; font-size: 0.85rem; }
     .vi-serres li:hover, .vi-serres li:focus-visible { outline: 1px solid var(--c); }
@@ -1208,21 +1228,21 @@
     <div class="mapgrid">
       <div class="mapcard">
         <div class="toolbar">
-          <div class="seg" role="group" aria-label="Carte affichée">
+          <span class="mgrp"><span class="mlab">Carte</span><span class="seg" role="group" aria-label="Carte affichée">
             <button type="button" id="l39-c-act" aria-pressed="false">Carte actuelle (127)</button>
             <button type="button" id="l39-c-loi" aria-pressed="true">Loi 39 · simulée</button>
-          </div>
-          <div class="seg" role="group" aria-label="Découpage de la loi 39" id="l39-loiSeg">
+          </span></span>
+          <span class="mgrp" id="l39-loiSeg"><span class="mlab">Découpage</span><span class="seg" role="group" aria-label="Découpage de la loi 39">
             <button type="button" id="l39-v-reg" aria-pressed="true">Régions (17)</button>
             <button type="button" id="l39-v-circ" aria-pressed="false">Circonscriptions (80)</button>
-          </div>
-          <div class="seg modeseg" role="group" aria-label="Mode de la carte">
+          </span></span>
+          <span class="mgrp"><span class="mlab">Mode</span><span class="seg modeseg" role="group" aria-label="Mode de la carte">
             <button type="button" id="l39-m-lead" aria-pressed="true">Parti en tête</button>
             <button type="button" id="l39-m-second" aria-pressed="false" hidden title="Par circonscription : carte actuelle ou 80 circonscriptions">Meilleur deuxième</button>
             <button type="button" id="l39-m-vote" aria-pressed="false">Vote</button>
             <button type="button" id="l39-m-seat" aria-pressed="false">Sièges totaux</button>
             <button type="button" id="l39-m-comp" aria-pressed="false">Sièges compensatoires seulement</button>
-          </div>
+          </span></span>
           <div class="chips" id="l39-partyChips" aria-label="Parti affiché"></div>
         </div>
         <div class="mapstage" id="l39-stage">
