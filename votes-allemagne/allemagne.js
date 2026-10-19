@@ -92,16 +92,31 @@ function hemicycle(svgEl, parts, sous) {
   rayons.forEach((r, i) => { const n = parRangee[i];
     for (let k = 0; k < n; k++) { const a = Math.PI - k * Math.PI / (n - 1); places.push({ a, r, x: cx + Math.cos(a) * r * Rmax, y: cy - Math.sin(a) * r * Rmax }); } });
   places = regrouper(places, parts.map(p => p.n));   // chaque parti groupé (votes-quebec/hemicycle.js)
-  const sieges = parts.flatMap(p => d3.range(p.n).map(() => p));
-  const rayon = ecart * 0.4;
+  // dans le quartier de chaque parti, de gauche à droite : ses élus de Wahlkreis (d, cercles pleins), puis ses élus de
+  // liste (cercles vides à sa couleur, comme les sièges de région de Loi 39) ; la disposition des quartiers ne change pas
+  let i0 = 0;
+  const sieges = parts.flatMap(p => { const tranche = places.slice(i0, i0 + p.n).sort((a, b) => b.a - a.a);
+    places.splice(i0, tranche.length, ...tranche); i0 += p.n;
+    return d3.range(p.n).map(j => ({ ...p, liste: p.d != null && j >= p.d })); });
+  const rayon = ecart * 0.4, trait = rayon * 0.36;
   const g = d3.select(svgEl).attr("viewBox", `0 0 ${W} ${H}`); g.selectAll("*").remove();
-  g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y).attr("r", rayon)
+  g.selectAll("circle").data(places).join("circle").attr("cx", p => p.x).attr("cy", p => p.y)
+    .attr("r", (p, i) => sieges[i]?.liste ? rayon - trait / 2 : rayon)
     .attr("data-p", (p, i) => sieges[i] ? (sieges[i].k === "Union" ? "Union CDU CSU" : sieges[i].k) : null)   // parti du siège (bande des partis)
-    .style("fill", (p, i) => sieges[i] ? (sieges[i].k === "VAC" ? "none" : sieges[i].c) : "var(--soft)")
-    .style("stroke", (p, i) => sieges[i]?.k === "VAC" ? "var(--muted)" : null).style("stroke-width", 2)
-    .append("title").text((p, i) => sieges[i] ? sieges[i].nom : "");
+    .style("fill", (p, i) => sieges[i] ? (sieges[i].k === "VAC" ? "none" : sieges[i].liste ? "var(--surface)" : sieges[i].c) : "var(--soft)")
+    .style("stroke", (p, i) => sieges[i]?.k === "VAC" ? "var(--muted)" : sieges[i]?.liste ? sieges[i].c : null)
+    .style("stroke-width", (p, i) => sieges[i]?.liste ? trait : 2)
+    .append("title").text((p, i) => !sieges[i] ? "" : sieges[i].d == null || sieges[i].k === "VAC" ? sieges[i].nom
+      : `${sieges[i].nom} · ce siège : ${sieges[i].liste ? "élu de liste (2e voix, liste du Land)" : "élu de Wahlkreis (1re voix)"}`);
   g.append("text").attr("x", cx).attr("y", cy - 50).attr("text-anchor", "middle").attr("class", "vf-hemi-n").text(SIEGES);
   g.append("text").attr("x", cx).attr("y", cy - 18).attr("text-anchor", "middle").attr("class", "vf-hemi-maj").text(sous);
+}
+
+// élus de Wahlkreis par parti (clés comme SIEGES_DE : CDU et CSU à part, sauf « act » : groupes parlementaires)
+function directs(ch) {
+  const src = ch === "proj" ? CP : CE; if (!src || (ch === "proj" && !PROJ)) return null;
+  const n = {}; for (const c of src) if (c && c.siege) n[c.g] = (n[c.g] || 0) + 1;
+  return ch === "act" ? parGroupe(n, true) : n;
 }
 
 /* ---------- en-tête, choix du Bundestag affiché ---------- */
@@ -124,7 +139,10 @@ function dessinerTete() {
     choix.innerHTML = Object.entries(CHAMBRES).filter(([k]) => SIEGES_DE[k]).map(([k, t]) => `<button type="button" data-ch="${k}">${t.replace("2025", AN(2025))}</button>`).join("");
     $("viSiegesTitre").after(choix);
     choix.addEventListener("click", e => { const b = e.target.closest("button[data-ch]"); if (!b) return; etat.chambre = b.dataset.ch;
-      if (etat.chambre !== "act" && etat.chambre !== groupe()) changerMode(etat.chambre === "e25" ? "e25" : "lead"); else { dessinerChambre(); dessinerPanneau(); } });
+      // la carte suit (projection ou élection de 2025) ; l'hémicycle est redessiné dans tous les cas (changerMode ne le fait
+      // que si la chambre diffère du mode, or elle vient d'être choisie)
+      if (etat.chambre !== "act" && etat.chambre !== groupe()) changerMode(etat.chambre === "e25" ? "e25" : "lead"); else dessinerPanneau();
+      dessinerChambre(); });
   }
   dessinerChambre();
 }
@@ -140,11 +158,18 @@ function dessinerChambre() {
   eb.innerHTML = etat.chambre === "proj" ? `Bundestag · projection du site au ${dateFr(PROJ.maj.date)}`
     : etat.chambre === "act" ? `Bundestag · composition au ${dateFr(BT.date)}` : `Bundestag · élection du 23 février ${AN(2025)}`;
   // de gauche à droite, même classement que la bande des partis (votes-quebec/partis.js)
-  const parts = trierAxe(PARTIS.allemagne, ORDRE.filter(k => s[k])).map(k => ({ k, n: s[k], c: COUL[k] || COUL.AUT, nom: `${NOMS[k] || k} : ${s[k]} sièges`, bord: k === "VAC" ? "vac" : bordDe(PARTIS.allemagne, k) }));
+  // élus de Wahlkreis de chaque parti : Wahlkreise gagnés avec un siège (loi de 2023 : couverts par les secondes voix) ;
+  // Bundestag actuel : ceux de l'élection de 2025, regroupés par groupe parlementaire (les non-inscrits actuels sont des élus de liste)
+  const dir = directs(etat.chambre);
+  const parts = trierAxe(PARTIS.allemagne, ORDRE.filter(k => s[k])).map(k => ({ k, n: s[k], c: COUL[k] || COUL.AUT, nom: `${NOMS[k] || k} : ${s[k]} sièges`
+    + (dir && k !== "VAC" ? ` (${Math.min(dir[k] || 0, s[k])} de Wahlkreis, ${s[k] - Math.min(dir[k] || 0, s[k])} de liste)` : ""),
+    d: dir && k !== "VAC" ? Math.min(dir[k] || 0, s[k]) : null, bord: k === "VAC" ? "vac" : bordDe(PARTIS.allemagne, k) }));
   hemicycle($("viPlan"), parts, `sièges · majorité ${MAJ}`);
   const legende = Object.keys(s).filter(k => k !== "VAC").sort((a, b) => s[b] - s[a] || ORDRE.indexOf(a) - ORDRE.indexOf(b));
   if (s.VAC) legende.push("VAC");
-  $("viLegende").innerHTML = legende.map(k => `<span style="--c:${k === "VAC" ? "var(--muted)" : COUL[k] || COUL.AUT}"><i></i>${lab(k)} <b>${s[k]}</b></span>`).join("");
+  $("viLegende").innerHTML = legende.map(k => `<span style="--c:${k === "VAC" ? "var(--muted)" : COUL[k] || COUL.AUT}"><i></i>${lab(k)} <b>${s[k]}</b></span>`).join("")
+    + (dir ? `<span class="va-mandats"><span style="--c:var(--muted)"><i></i>élu de Wahlkreis (1re voix)</span>`
+      + `<span class="va-liste" style="--c:var(--muted)"><i></i>élu de liste (2e voix)${etat.chambre === "act" ? ` · répartition de l'élection de ${AN(2025)}` : ""}</span></span>` : "");
 }
 
 /* ---------- carte ---------- */

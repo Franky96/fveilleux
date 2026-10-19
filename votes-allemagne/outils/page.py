@@ -20,6 +20,9 @@ STYLE = """  <style>
     .vi-vrow.va-proj .vi-num { white-space: nowrap; }
     .va .vi-table td, .va .vi-table th { padding-left: 3px; padding-right: 3px; }
     .va .vi-table td .vi-lien { text-align: left; }
+    /* légende de l'hémicycle : élus de Wahlkreis (pastille pleine) et élus de liste (cercle vide, comme les sièges de région de Loi 39) */
+    .va-mandats { display: inline-flex; flex-wrap: wrap; gap: 6px 14px; flex-basis: 100%; }
+    .va-liste i { background: transparent !important; box-shadow: inset 0 0 0 2px var(--c); }
     .va-note { font-size: 0.8rem; color: var(--muted); line-height: 1.5; margin: 0; }
     .va-sans-siege { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted);
       border: 1px dashed var(--muted); border-radius: 4px; padding: 0 5px; margin-left: 4px; }
