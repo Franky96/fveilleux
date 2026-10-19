@@ -854,6 +854,12 @@ const PRESETS = {
   qc:  box([-71.55,46.68],[-71.0,46.98]),
   sud: box([-75.6,45.0],[-70.0,47.3]),
 };
+// arrivée sur la page (vue Régions) : zoom sur le sud du Québec, juste assez pour voir une dizaine d'anneaux de régions
+// (points du contour : la projection courbe les parallèles, le bas du cadre est au milieu, sous Montréal)
+// ; carte étroite (téléphone) : cadre plus serré, sinon les anneaux n'ont pas la place dans les régions du sud
+const cadre = pts => ({type:"Feature",geometry:{type:"MultiPoint",coordinates:pts}});
+const DEPART = cadre([[-76.6,45.1],[-73.6,44.9],[-69.6,45.4],[-76.6,48.9],[-69.6,48.9]]);
+const DEPART_ETROIT = cadre([[-74.6,45.3],[-73.0,45.1],[-70.6,45.6],[-74.6,47.6],[-70.6,47.6]]);
 // Position des étiquettes (coordonnées de la carte), à l'intérieur de la région. Les autres régions
 // utilisent le centre de leur plus grand morceau. Une étiquette n'est affichée que si sa région est assez
 // grande à l'écran pour la contenir : Montréal, Laval, etc. apparaissent en zoomant.
@@ -874,11 +880,16 @@ const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-40,-40],[MW+40,MH
     placeLabels();
   });
 
-function zoomToFeature(f, pad = 0.85){
+function zoomToFeature(f, pad = 0.85, duree = 700, fenetre = false){
   const [[x0,y0],[x1,y1]] = path.bounds(f);
-  const k = Math.min(60, pad / Math.max((x1-x0)/MW, (y1-y0)/MH));
+  // fenetre : cadrer sur la partie de la carte vraiment visible (viewBox « meet » : plus large ou plus haute que 600 × 704
+  // selon l'écran) plutôt que sur le viewBox
+  const el = mapSvg.node(), s = fenetre && el.clientWidth ? Math.min(el.clientWidth / MW, el.clientHeight / MH) : 0;
+  const vw = s ? el.clientWidth / s : MW, vh = s ? el.clientHeight / s : MH;
+  const k = Math.min(60, pad / Math.max((x1-x0)/vw, (y1-y0)/vh));
   const t = d3.zoomIdentity.translate(MW/2, MH/2).scale(k).translate(-(x0+x1)/2, -(y0+y1)/2);
-  mapSvg.transition().duration(reduceMotion ? 0 : 700).call(zoom.transform, t);
+  if (duree) mapSvg.transition().duration(reduceMotion ? 0 : duree).call(zoom.transform, t);
+  else mapSvg.call(zoom.transform, t);
 }
 
 function drawBase(){
@@ -1698,6 +1709,7 @@ document.getElementById("l39-reset").addEventListener("click", () => {
 });
 
 drawBase(); syncSliders(); render();
+zoomToFeature(mapSvg.node().clientWidth < 500 ? DEPART_ETROIT : DEPART, 1, 0, true);
 // premier rendu terminé : on montre la page (évite l'éclair du squelette vide pendant le chargement)
 document.getElementsByClassName("wrap")[0].classList.add("ready");
 </script>
