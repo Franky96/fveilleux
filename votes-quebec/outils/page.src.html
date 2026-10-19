@@ -1064,9 +1064,8 @@ function labelLines(code){
   return [labelFor(code)];
 }
 // Pôle d'inaccessibilité (d'après polylabel, Mapbox) d'un polygone en coordonnées de la carte : [x, y, rayon]
-function polylabel(rings, precision = 0.5){
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const [x, y] of rings[0]){ minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+// distance signée au contour d'un polygone (positive dedans), en coordonnées de la carte
+function distContour(rings){
   const segDist2 = (px, py, a, b) => { let x = a[0], y = a[1], dx = b[0]-x, dy = b[1]-y;
     if (dx || dy){ const t = ((px-x)*dx + (py-y)*dy) / (dx*dx + dy*dy); if (t > 1){ x = b[0]; y = b[1]; } else if (t > 0){ x += dx*t; y += dy*t; } }
     dx = px-x; dy = py-y; return dx*dx + dy*dy; };
@@ -1076,6 +1075,12 @@ function polylabel(rings, precision = 0.5){
       if ((a[1] > y) !== (b[1] > y) && x < (b[0]-a[0])*(y-a[1])/(b[1]-a[1]) + a[0]) inside = !inside;
       m = Math.min(m, segDist2(x, y, a, b)); }
     return (inside ? 1 : -1) * Math.sqrt(m); };
+  return dist;
+}
+function polylabel(rings, precision = 0.5){
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of rings[0]){ minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+  const dist = distContour(rings);
   const cell = (x, y, h) => { const d = dist(x, y); return {x, y, h, d, max: d + h*Math.SQRT2}; };
   const size = Math.min(maxX-minX, maxY-minY); if (!size) return [minX, minY, 0];
   let h = size/2, q = [];
@@ -1089,8 +1094,9 @@ function polylabel(rings, precision = 0.5){
   }
   return [best.x, best.y, best.d];
 }
-// point d'ancrage de chaque région : pôle de son plus grand morceau (calculé une fois, en coordonnées de la carte)
-const ANCHOR = {};
+// point d'ancrage de chaque région : pôle de son plus grand morceau (calculé une fois, en coordonnées de la carte) ;
+// régions de AU_CENTRE : au centre (centroïde) de leur plus grand morceau, le pôle tombant loin du milieu (Mauricie : tout au nord)
+const ANCHOR = {}, AU_CENTRE = new Set(["g04"]);
 // clé d'une entité étiquetée : région (REG), circonscription actuelle (RID) ou hypothétique (DID)
 const labKey = f => f.properties.REG != null ? "g" + f.properties.REG : f.properties.RID != null ? "c" + f.properties.RID : "d" + f.properties.DID;
 function anchorOf(f){
@@ -1102,6 +1108,11 @@ function anchorOf(f){
     const rings = poly.map(r => r.map(c => projection(c)));
     const cand = polylabel(rings);
     if (cand[2] > best[2]) best = cand;
+  }
+  if (AU_CENTRE.has(code)){
+    const morceau = polys.map(poly => poly.map(r => r.map(c => projection(c)))).find(rings => distContour(rings)(best[0], best[1]) > 0);
+    const [cx, cy] = d3.polygonCentroid(morceau[0]), rad = distContour(morceau)(cx, cy);
+    if (rad > 0) best = [cx, cy, rad];
   }
   return ANCHOR[code] = best;
 }
