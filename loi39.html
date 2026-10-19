@@ -33,7 +33,9 @@
     .site-top a.retour:hover { border-color: var(--st-ink); color: var(--st-ink); }
     .site-top a.retour:focus-visible, #theme-toggle:focus-visible { outline: 2px solid var(--st-ink); outline-offset: 2px; }
     .site-top .titre { text-align: center; margin: 0; color: var(--st-ink); font-size: 0.9rem; font-weight: 600; }
-    .site-top { position: relative; z-index: 50; }
+    /* bandeau et menu hamburger devant tout le reste de la page ; translateZ : son propre calque, sinon Safari sur iPhone peut
+       peindre les bandes défilantes (onglets) par-dessus le menu ouvert */
+    .site-top { position: relative; z-index: 50; transform: translateZ(0); }
     /* interrupteur + menu hamburger du site (page-controls.js), aux couleurs de la page */
     .page-topbar-controls { grid-column: -2; justify-self: end; position: relative; display: flex; align-items: center; gap: 0.5rem; }
     #hamburger-btn { width: auto; background: transparent; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px;
@@ -446,17 +448,15 @@
        Couleurs des réponses hors des couleurs des partis : rester (rouge), processus de séparation (bleu), oui (vert), non (orange) */
     .vue-direct { --ed-rester:#C8102E; --ed-sep:#1D5FB4; --ed-oui:#0E8A5F; --ed-non:#C2470A; }
     :root[data-theme="dark"] .vue-direct { --ed-rester:#F0505F; --ed-sep:#5B95F0; --ed-oui:#2DBE8A; --ed-non:#F07A3A; }
-    /* page « En direct » : fond en dégradé de gauche à droite sur toute la page (bleu → rouge), sous la bande d'onglets aussi */
-    body:has(.vue-direct:not([hidden])) {
-      background: linear-gradient(90deg, #17305C 0%, #121B33 35%, #1A1A30 65%, #4A1A2A 100%); background-attachment: fixed; }
-    html[data-theme="light"] body:has(.vue-direct:not([hidden])) {
-      background: linear-gradient(90deg, #C9D9F2 0%, #E6EDF8 35%, #F1E8EF 65%, #F2CCD5 100%); background-attachment: fixed; }
-    /* toutes les pages des votes sauf le direct : dégradé en diagonale (sarcelle → indigo → violet) ; le direct garde le sien
-       (règles « body:has(.vue-direct…) » ci-dessus, plus précises) */
-    body:not(:has(.vue-direct:not([hidden]))) {
-      background: linear-gradient(135deg, #0E3A3A 0%, #10223A 40%, #171C38 65%, #34204F 100%); background-attachment: fixed; }
-    html[data-theme="light"] body:not(:has(.vue-direct:not([hidden]))) {
-      background: linear-gradient(135deg, #CBEDE6 0%, #E4EEF6 40%, #ECEAF7 65%, #DCCDF2 100%); background-attachment: fixed; }
+    /* Fond en dégradé : une couche fixe derrière tout le contenu (body::before, z-index -1), de la taille de l'écran, qui ne
+       défile pas — Safari sur iPhone ignore « background-attachment: fixed » et étirait le dégradé sur toute la page.
+       Toutes les pages des votes : dégradé en diagonale (sarcelle → indigo → violet) ; le direct : de gauche à droite (bleu → rouge) */
+    body { --fond: linear-gradient(135deg, #0E3A3A 0%, #10223A 40%, #171C38 65%, #34204F 100%); }
+    html[data-theme="light"] body { --fond: linear-gradient(135deg, #CBEDE6 0%, #E4EEF6 40%, #ECEAF7 65%, #DCCDF2 100%); }
+    body:has(.vue-direct:not([hidden])) { --fond: linear-gradient(90deg, #17305C 0%, #121B33 35%, #1A1A30 65%, #4A1A2A 100%); }
+    html[data-theme="light"] body:has(.vue-direct:not([hidden])) { --fond: linear-gradient(90deg, #C9D9F2 0%, #E6EDF8 35%, #F1E8EF 65%, #F2CCD5 100%); }
+    body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100lvh; z-index: -1;
+      pointer-events: none; background: var(--fond); }
     .scrutins, .vue-live, .loi39 { background: transparent; }
     /* lignes des menus bien visibles par-dessus le dégradé : traits plus contrastés, boutons sur un fond translucide */
     .scrutins { --st-rule: rgba(230, 233, 241, 0.30); }
