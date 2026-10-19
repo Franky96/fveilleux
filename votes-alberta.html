@@ -64,15 +64,12 @@
     .scrutins { background: var(--st-bg); border-bottom: 1px solid var(--st-rule); padding: 0.6rem clamp(16px, 3vw, 56px);
       font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
     .sc-tabs { max-width: 1680px; margin: 0 auto; display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; }
-    /* bandes d'onglets défilantes : fine barre, fondu sur le bord qui cache encore des onglets (classes posées par le script sous la barre) */
+    /* bandes d'onglets défilantes : fine barre, pas de fondu sur les bords (demande de l'utilisateur) */
     .sc-tabs, .sc-sous { scrollbar-width: thin; scrollbar-color: var(--st-rule) transparent; padding-bottom: 4px; }
     .sc-tabs::-webkit-scrollbar, .sc-sous::-webkit-scrollbar { height: 5px; }
     .sc-tabs::-webkit-scrollbar-thumb, .sc-sous::-webkit-scrollbar-thumb { background: var(--st-rule); border-radius: 3px; }
     .sc-sep { flex: none; align-self: stretch; width: 1px; margin: 0.15rem 0.25rem; background: var(--st-rule); }   /* barre entre provinces et pays */
     .sc-deborde { cursor: grab; }
-    .sc-deborde.sc-d { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent); }
-    .sc-deborde.sc-g { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px); mask-image: linear-gradient(to right, transparent, #000 48px); }
-    .sc-deborde.sc-g.sc-d { -webkit-mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
     .sc-tab { flex: none; display: grid; gap: 1px; text-align: left; padding: 0.45rem 0.9rem; border-radius: 9px; cursor: pointer;
       background: transparent; border: 1px solid var(--st-rule); color: var(--st-muted); font: inherit; }
     .sc-tab b { font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem; }
@@ -1099,14 +1096,14 @@
   </nav>
   <script>
     // bandes d'onglets : quand les onglets dépassent, défilement à la molette et en glissant à la souris (au doigt, c'est natif),
-    // fondu sur le bord qui cache encore des onglets, et l'onglet de la page courante amené au centre à l'ouverture
+    // et l'onglet de la page courante amené au centre à l'ouverture
     (function () {
       // sous-titre d'un onglet en infobulle (il est caché sur grand écran)
       for (const t of document.querySelectorAll('.sc-tabs .sc-tab')) { const sm = t.querySelector('small'); if (sm && !t.title) t.title = sm.textContent.trim(); }
       for (const bande of document.querySelectorAll('.sc-tabs, .sc-sous')) {
         const maj = () => {
           const max = bande.scrollWidth - bande.clientWidth;
-          bande.classList.toggle('sc-deborde', max > 2); bande.classList.toggle('sc-g', bande.scrollLeft > 2); bande.classList.toggle('sc-d', bande.scrollLeft < max - 2);
+          bande.classList.toggle('sc-deborde', max > 2);
         };
         bande.addEventListener('wheel', e => {
           if (bande.scrollWidth <= bande.clientWidth + 2 || Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;
