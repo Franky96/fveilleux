@@ -57,7 +57,12 @@ def eau_osm(x0, y0, x1, y1):
     from shapely.geometry import LineString, Polygon
     from shapely.ops import linemerge, polygonize
     b = f"{y0},{x0},{y1},{x1}"
-    ids = overpass(f'[out:json][timeout:250];(way["natural"="water"]({b});relation["natural"="water"]({b}););out ids;')["elements"]
+    os.makedirs(CACHE, exist_ok=True)
+    fid = os.path.join(CACHE, "ids-" + b.replace(",", "_") + ".json")
+    if os.path.exists(fid): ids = json.load(open(fid))
+    else:
+        ids = overpass(f'[out:json][timeout:250];(way["natural"="water"]({b});relation["natural"="water"]({b}););out ids;')["elements"]
+        json.dump(ids, open(fid, "w"))
     els = elements("way", [e["id"] for e in ids if e["type"] == "way"], 200) + elements("relation", [e["id"] for e in ids if e["type"] == "relation"], 5)
     ligne = lambda g: LineString([(p["lon"], p["lat"]) for p in g])
     polys = []
