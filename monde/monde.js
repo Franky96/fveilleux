@@ -43,7 +43,7 @@ const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
 const ZOOM_MAX = 300;   // de quoi voir les quartiers d'une ville (demande de l'utilisateur)
-let rot = [96, -45, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille du canvas
+let rot = [40, -30, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (vue sur l'Atlantique), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
   C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe"]
@@ -213,9 +213,9 @@ function placer(polys, F = 1.5, sym = false) {
   if (w > 0 && h > 0 && isFinite(e)) {
     // (au plus 2,5 radians du centre : au-delà, la projection azimutale replie le cadre)
     // (en largeur, on rogne deux fois plus du côté opposé au mât, où l'emblème est souvent : cercle du Groenland, canton
-    // des États-Unis, étoile du Chili… ; autant des deux côtés pour un drapeau symétrique : le rouge des deux côtés du
-    // Canada, demande de l'utilisateur)
-    if (e > 1) { const x = Math.max(0, Math.min(w * e, 5) - w), g = sym ? 1 / 2 : 1 / 3; X0 -= x * g; X1 += x * (1 - g); }
+    // des États-Unis, étoile du Chili… ; un drapeau symétrique n'est pas rogné en largeur, seulement étiré : on voit ses
+    // deux bords, ex. tout le rouge du Canada, demande de l'utilisateur)
+    if (e > 1 && !sym) { const x = Math.max(0, Math.min(w * e, 5) - w); X0 -= x / 3; X1 += 2 * x / 3; }
     else { const m = (Y0 + Y1) / 2, d = Math.min(h / e, 5) / 2; Y0 = m - d; Y1 = m + d; }
   }
   // grille fixe de points du drapeau ramenés sur le globe (ligne 0 = haut du drapeau), une case par 5° environ (1 × 1 à
@@ -629,13 +629,15 @@ async function remplirChoix() {
 }
 
 async function depuisAdresse(bouger) {
-  const h = decodeURIComponent(location.hash.slice(1)) || "CA";
+  // à l'arrivée (sans adresse) : le Groenland, globe tourné vers l'Atlantique (demande de l'utilisateur)
+  const h = decodeURIComponent(location.hash.slice(1)) || "GL";
+  if (!location.hash.slice(1)) bouger = false;
   if (/^Q\d+$/.test(h)) for (const a2 of Object.keys(SOUS)) {
     const S = await charger(a2), v = S?.villes.find(x => x.q === h);
     if (v) return choisir(PAYS.find(f => f.properties.a2 === a2), null, v, { bouger });
   }
   const a2 = h.slice(0, 2).toUpperCase(), sub = h.length > 3 ? h.toUpperCase() : null;
-  const pays = PAYS.find(f => f.properties.a2 === a2) || PAYS.find(f => f.properties.en === h) || PAYS.find(f => f.properties.a2 === "CA");
+  const pays = PAYS.find(f => f.properties.a2 === a2) || PAYS.find(f => f.properties.en === h) || PAYS.find(f => f.properties.a2 === "GL");
   const S = await charger(pays.properties.a2);
   return choisir(pays, sub && S ? S.features.find(s => s.properties.code === sub) || null : null, null, { bouger });
 }
