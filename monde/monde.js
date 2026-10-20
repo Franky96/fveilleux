@@ -58,7 +58,10 @@ function alleger(geo, pas = 0.12) {
     return x1 - x0 < pas && y1 - y0 < pas; };
   const anneau = a => { const o = [a[0]]; for (let i = 1; i < a.length - 1; i++) { const q = o[o.length - 1]; if (Math.abs(a[i][0] - q[0]) + Math.abs(a[i][1] - q[1]) >= pas) o.push(a[i]); }
     o.push(a[a.length - 1]); return o.length >= 4 ? o : a; };
-  const poly = p => petit(p[0]) ? null : [anneau(p[0]), ...p.slice(1).filter(h => !petit(h)).map(anneau)];
+  // un anneau trop simplifié peut changer de sens : d3 le prendrait alors pour tout le reste du globe ; on garde l'original
+  const poly = p => { if (petit(p[0])) return null;
+    const q = [anneau(p[0]), ...p.slice(1).filter(h => !petit(h)).map(anneau)];
+    return d3.geoArea({ type: "Polygon", coordinates: q }) > 2 * Math.PI ? p : q; };
   if (geo.type === "Polygon") { const p = poly(geo.coordinates); return p ? { type: "Polygon", coordinates: p } : geo; }
   if (geo.type === "MultiPolygon") { const ps = geo.coordinates.map(poly).filter(Boolean);
     return ps.length ? { type: "MultiPolygon", coordinates: ps } : { type: "MultiPolygon", coordinates: [] }; }
@@ -73,10 +76,21 @@ function choisirPas() {
   pasCourant = PAS.find(p => p * pxDeg <= tol) ?? null;
 }
 // forme au niveau de détail courant (calculée une fois par niveau)
-function lod(f) {
-  if (!pasCourant || !f) return f;
+function lod(f, pas = pasCourant) {
+  if (!pas || !f) return f;
   const c = f._lod || (f._lod = {});
-  return c[pasCourant] || (c[pasCourant] = f.type === "Feature" ? { type: "Feature", properties: f.properties, geometry: alleger(f.geometry, pasCourant) } : alleger(f, pasCourant));
+  return c[pas] || (c[pas] = f.type === "Feature" ? { type: "Feature", properties: f.properties, geometry: alleger(f.geometry, pas) } : alleger(f, pas));
+}
+// calcule d'avance, par petits lots quand le navigateur est libre, tous les niveaux de détail et leurs morceaux :
+// pas d'à-coup la première fois qu'on zoome
+function prechauffer(formes) {
+  const travail = [];
+  for (const pas of [...PAS, null]) for (const f of formes) travail.push(() => morceaux(lod(f, pas)));
+  const lot = dl => { const fin = performance.now() + Math.max(4, dl?.timeRemaining?.() ?? 8);
+    while (travail.length && performance.now() < fin) travail.shift()();
+    if (travail.length) suivant(); };
+  const suivant = () => window.requestIdleCallback ? requestIdleCallback(lot, { timeout: 200 }) : setTimeout(lot, 16);
+  suivant();
 }
 const centreVue = () => [-rot[0], -rot[1]];
 // rayon angulaire de ce qui est à l'écran (la face visible entière quand le globe tient dans le cadre)
@@ -114,6 +128,7 @@ async function charger(a2) {
   // limites des territoires des villes (Québec pour l'instant : limites_qc.py)
   await Promise.all(villes.filter(v => v.limites).map(async v => {
     try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f); } catch {} }));
+  prechauffer([...d.features, mesh]);
   return (charges[a2] = { features: d.features, mesh, villes });
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
@@ -137,28 +152,31 @@ function remplir(formes, couleur, trait = false) {
 function peindre() {
   const dpr = Math.min(2, devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-  proj.rotate(rot).scale(R * k).translate([W / 2, H / 2]).clipExtent([[-2, -2], [W + 2, H + 2]]);   // rien hors de l'écran
+  proj.rotate(rot).scale(R * k).translate([W / 2, H / 2])
+    .clipExtent(R * k > Math.min(W, H) / 2 ? [[-2, -2], [W + 2, H + 2]] : null);   // rien hors de l'écran (quand le globe déborde du cadre)
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.fillStyle = C.ocean; ctx.fill();
   ctx.beginPath(); chemin(grille); ctx.strokeStyle = C.grille; ctx.lineWidth = 1; ctx.stroke();
   // contours au niveau de détail du zoom : côtes réalistes de près comme de loin, même en mouvement (demande de l'utilisateur)
   choisirPas(); majVue();
   const paysSel = sel?.pays, survole = survol && !survol.sous ? survol.pays : null;
-  remplir(PAYS.filter(f => enVue(f) && f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2).map(lod), C.terre);
+  remplir(PAYS.filter(f => enVue(f) && f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2).map(f => lod(f)), C.terre);
   if (survole && survole !== paysSel) { ctx.beginPath(); chemin(lod(survole)); ctx.fillStyle = C["terre-survol"]; ctx.fill(); }
   const paysDessin = lod(paysSel);
-  if (paysSel) remplir([paysDessin], sel.sous ? C["pays-fond"] : C.choisi);
-  // subdivisions du pays choisi : la choisie (ou survolée) en couleur, frontières internes
-  const S = paysSel && charges[paysSel.properties.a2];
+  // subdivisions du pays choisi : elles remplissent aussi le pays (même carte que leurs frontières : la côte correspond),
+  // par-dessus le contour du pays (qui bouche les éventuels interstices) ; la choisie (ou survolée) en couleur
+  const S = paysSel && charges[paysSel.properties.a2], fondPays = sel?.sous ? C["pays-fond"] : C.choisi;
+  if (paysSel) remplir([paysDessin], fondPays);
+  if (S) remplir(S.features.map(f => lod(f)), fondPays);
   if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
     ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
   // (tous les lacs, même en mouvement)
-  remplir(LACS.features.filter(enVue).map(lod), C.ocean);
+  remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
   ctx.lineWidth = 0.6; remplir([lod(FRONTIERES)], C.frontiere, true);
   if (S) {
     ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true);
   }
-  if (paysSel) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
+  if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
   // villes de la subdivision choisie : territoire (quand on a ses limites), point (carré pour une capitale), nom quand on est assez près
   pointsVilles = [];
   if (S && sel.sous) for (const v of villesDe(paysSel.properties.a2, sel.sous.properties.code)) if (v.zone) {
@@ -454,6 +472,11 @@ async function depuisAdresse(bouger) {
   taille();
   await depuisAdresse(true);
   remplirChoix();
+  prechauffer([...PAYS, ...LACS.features, FRONTIERES]);
   addEventListener("hashchange", () => depuisAdresse(true));
+  // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
+  if (new URLSearchParams(location.search).has("essai")) window.__globe = {
+    dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
+    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();
