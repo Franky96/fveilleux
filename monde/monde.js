@@ -159,8 +159,14 @@ function trame(d, largeur, hauteur) {
       const ecart = c => { const [a, b] = c.split("x").map(Number); return Math.abs(Math.log(a / tw)) + Math.abs(Math.log(b / th)); };
       return d.trames[pretes.reduce((a, b) => ecart(b) < ecart(a) ? b : a)];
     }
+    // le SVG est d'abord tramé à ses propres proportions, puis étiré : dessiné directement dans un cadre d'autres proportions,
+    // Firefox le garde à ses proportions, centré (drapeau tassé en bande, selon la taille de la trame donc selon le zoom :
+    // signalé par l'utilisateur), là où Chrome l'étire
+    const r = d.img.naturalWidth / d.img.naturalHeight || 1.5;
+    const sw = Math.min(4096, Math.max(tw, Math.round(th * r))), sh = Math.max(1, Math.round(sw / r));
+    const s = document.createElement("canvas"); s.width = sw; s.height = sh; s.getContext("2d").drawImage(d.img, 0, 0, sw, sh);
     const c = document.createElement("canvas"); c.width = tw; c.height = th;
-    const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(d.img, 0, 0, tw, th);
+    const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(s, 0, 0, tw, th);
     d.trames[cle] = c;
   }
   return d.trames[cle];
@@ -220,12 +226,12 @@ function peindreMorceaux(L, d, place) {
   ctx.save(); ctx.clip();
   ctx.imageSmoothingQuality = "high"; ctx.fillStyle = mo;
   // triangle de sommets écran p0, p1, p2 (image u0,v0 · u1,v0 · u0,v1, ou leur symétrique) : transformation exacte, triangle
-  // grossi de 0,6 px pour qu'aucune couture ne se voie
+  // grossi de 1 px pour qu'aucune couture ne se voie
   const tri = (p0, p1, p2, du, dv, u0, v0) => {
     const m = new DOMMatrix([(p1[0] - p0[0]) / du, (p1[1] - p0[1]) / du, (p2[0] - p0[0]) / dv, (p2[1] - p0[1]) / dv, 0, 0]);
     m.e = p0[0] - m.a * u0 - m.c * v0; m.f = p0[1] - m.b * u0 - m.d * v0;
     mo.setTransform(m);
-    const cx = (p0[0] + p1[0] + p2[0]) / 3, cy = (p0[1] + p1[1] + p2[1]) / 3, g = q => { const dx = q[0] - cx, dy = q[1] - cy, n = Math.hypot(dx, dy) || 1; return [q[0] + dx / n * 0.6, q[1] + dy / n * 0.6]; };
+    const cx = (p0[0] + p1[0] + p2[0]) / 3, cy = (p0[1] + p1[1] + p2[1]) / 3, g = q => { const dx = q[0] - cx, dy = q[1] - cy, n = Math.hypot(dx, dy) || 1; return [q[0] + dx / n, q[1] + dy / n]; };
     const [q0, q1, q2] = [g(p0), g(p1), g(p2)];
     ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]); ctx.closePath(); ctx.fill();
   };
@@ -638,6 +644,6 @@ majRubriques();
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
-    proj, PAYS, LACS, dansLac, C, DRAP, W: () => W, H: () => H, R: () => R, k: () => k };
+    proj, PAYS, LACS, dansLac, C, DRAP, charges, groupeDe, W: () => W, H: () => H, R: () => R, k: () => k };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();
