@@ -33,7 +33,7 @@ const nomSous = (a2, s) => nomCode(a2, s.properties.code);
 const drapeauPays = a2 => `monde/drapeaux/${a2.toLowerCase()}.svg`;
 const drapeauSous = (a2, s) => SOUS[a2].dossier + s.properties.code.split("-")[1].toLowerCase() + ".svg";
 
-let PAYS = [], FRONTIERES, LEGER = [], FRONTIERES_LEGER, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], GRANDS_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
+let PAYS = [], FRONTIERES, LEGER = [], FRONTIERES_LEGER, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
@@ -61,7 +61,7 @@ function alleger(geo, pas = 0.12) {
 }
 const centreVue = () => [-rot[0], -rot[1]];
 const enVue = f => !f._c || d3.geoDistance(f._c, centreVue()) < Math.PI / 2 + f._r;
-// pendant qu'on tourne ou zoome : contours simplifiés (1:110 M), petits lacs omis, précision réduite ; dessin complet 150 ms après
+// pendant qu'on tourne ou zoome : contours simplifiés (1:110 M), précision réduite (tous les lacs restent) ; dessin complet 150 ms après
 let rapide = false, finRapide = null;
 function bouger() {
   rapide = true; proj.precision(2); clearTimeout(finRapide);
@@ -120,7 +120,9 @@ function peindre() {
   if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
     ctx.beginPath(); chemin(rapide ? s._leger : s); ctx.fillStyle = s === sel.sous ? C.choisi : C["terre-survol"]; ctx.globalAlpha = s === sel.sous ? 1 : 0.6; ctx.fill(); ctx.globalAlpha = 1; }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
-  ctx.beginPath(); for (const f of rapide ? GRANDS_LACS : LACS.features) if (enVue(f)) chemin(f); ctx.fillStyle = C.ocean; ctx.fill();
+  // (tous les lacs, même en mouvement, allégés pendant le mouvement)
+  ctx.beginPath(); for (const f of LACS.features) if (enVue(f)) chemin(rapide ? f._leger : f);
+  ctx.fillStyle = C.ocean; ctx.fill();
   ctx.beginPath(); chemin(rapide ? FRONTIERES_LEGER : FRONTIERES); ctx.strokeStyle = C.frontiere; ctx.lineWidth = 0.6; ctx.stroke();
   if (S) {
     ctx.beginPath(); chemin(rapide ? S.meshLeger : S.mesh); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 0.8; ctx.stroke();
@@ -424,7 +426,7 @@ async function depuisAdresse(bouger) {
     FRONTIERES_LEGER = topojson.mesh(w110, w110.objects.countries, (a, b) => a !== b);
   } else { LEGER = PAYS; FRONTIERES_LEGER = FRONTIERES; }
   if (lacs) { sensHoraire(lacs); LACS = lacs; lacs.features.forEach(cercle); BOITES_LACS = lacs.features.map(f => f._b);
-    GRANDS_LACS = lacs.features.filter(f => d3.geoArea(f) > 2e-5); }
+    for (const f of lacs.features) f._leger = { type: "Feature", geometry: alleger(f.geometry, 0.04) }; }
   new ResizeObserver(taille).observe(canvas);
   taille();
   await depuisAdresse(true);
