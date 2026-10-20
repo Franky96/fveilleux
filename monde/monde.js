@@ -126,7 +126,7 @@ function sousLe([x, y]) {
 }
 
 /* ---------- déplacement animé vers un lieu ---------- */
-// plus grand morceau (France sans l'outre-mer, États-Unis sans l'Alaska) : centre et zoom pour qu'il remplisse le globe
+// plus grand morceau (France sans l'outre-mer, États-Unis sans l'Alaska) : son centre
 function plusGrand(f) {
   if (f.geometry.type !== "MultiPolygon") return f;
   let best, aire = -1;
@@ -135,14 +135,9 @@ function plusGrand(f) {
 }
 let anim = null;
 const arreter = () => { if (anim) { anim.stop(); anim = null; } };
+// pas de zoom automatique (demande de l'utilisateur) : le globe tourne seulement pour amener le lieu au centre
 function allerA(cible) {
-  let c, k2;
-  if (cible.lon != null) { c = [cible.lon, cible.lat]; k2 = Math.max(k, 14); }   // ville
-  else {
-    const g = plusGrand(cible); c = d3.geoCentroid(g);
-    let r = 0; d3.geoStream(g, { point(x, y) { r = Math.max(r, d3.geoDistance(c, [x, y])); }, lineStart() {}, lineEnd() {}, polygonStart() {}, polygonEnd() {}, sphere() {} });
-    k2 = Math.max(1, Math.min(30, 0.55 / Math.sin(Math.min(Math.PI / 2, Math.max(r, 0.004)))));
-  }
+  const c = cible.lon != null ? [cible.lon, cible.lat] : d3.geoCentroid(plusGrand(cible)), k2 = k;
   const r0 = rot.slice(), k0 = k, r2 = [-c[0], -c[1], 0];
   r2[0] = r0[0] + ((((r2[0] - r0[0]) % 360) + 540) % 360 - 180);   // le plus court chemin en longitude
   arreter();
@@ -267,7 +262,7 @@ const fin = e => {
     if (!bouge && p && e.type === "pointerup") {
       const t = sousLe(p);
       if (t?.ocean) monter();
-      else if (t) choisir(t.pays, t.sous, t.ville);
+      else if (t) choisir(t.pays, t.sous, t.ville, { bouger: false });
     }
     depart = null;
   }
