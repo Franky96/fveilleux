@@ -167,9 +167,11 @@ function symetrique(d) {
 // tourne ou zoome, pas de nouvelle trame (préparer une image coûte) : la plus proche déjà prête
 const TAILLES = [64, 128, 256, 512, 1024, 2048];
 const tailleTrame = v => TAILLES.find(x => x >= v * Math.min(2, devicePixelRatio || 1)) || 2048;
-// [fx, fy] : part du cadre occupée par le drapeau (moins de 1 : couleurs du bord prolongées jusqu'au bout du cadre)
-function trame(d, largeur, hauteur, [fx, fy] = [1, 1]) {
-  const tw = tailleTrame(largeur), th = tailleTrame(hauteur), suf = fx < 1 || fy < 1 ? `@${fx.toFixed(3)},${fy.toFixed(3)}` : "", cle = tw + "x" + th + suf;
+// f = [fx, fy, ox, oy] : part du cadre occupée par le drapeau et place de son coin haut gauche (fractions du cadre) ;
+// autour, les couleurs du bord du drapeau sont prolongées jusqu'au bout du cadre
+function trame(d, largeur, hauteur, f = [1, 1, 0, 0]) {
+  const [fx, fy, ox, oy] = f, plein = fx >= 1 && fy >= 1;
+  const tw = tailleTrame(largeur), th = tailleTrame(hauteur), suf = plein ? "" : "@" + f.map(v => v.toFixed(3)).join(","), cle = tw + "x" + th + suf;
   if (!d.trames[cle]) {
     const pretes = Object.keys(d.trames).filter(c => (c.includes("@") ? c.slice(c.indexOf("@")) : "") === suf);
     if (rapide && pretes.length) {
@@ -179,18 +181,21 @@ function trame(d, largeur, hauteur, [fx, fy] = [1, 1]) {
     // le SVG est d'abord tramé à ses propres proportions, puis étiré : dessiné directement dans un cadre d'autres proportions,
     // Firefox le garde à ses proportions, centré (drapeau tassé en bande, selon la taille de la trame donc selon le zoom :
     // signalé par l'utilisateur), là où Chrome l'étire
+    const x0 = Math.round(tw * ox), y0 = Math.round(th * oy), cw = Math.max(1, Math.round(tw * Math.min(1, fx))), ch = Math.max(1, Math.round(th * Math.min(1, fy)));
     const r = d.img.naturalWidth / d.img.naturalHeight || 1.5;
-    const sw = Math.min(4096, Math.max(tw, Math.round(th * r))), sh = Math.max(1, Math.round(sw / r));
+    const sw = Math.min(4096, Math.max(cw, Math.round(ch * r))), sh = Math.max(1, Math.round(sw / r));
     const s = document.createElement("canvas"); s.width = sw; s.height = sh; s.getContext("2d").drawImage(d.img, 0, 0, sw, sh);
     const c = document.createElement("canvas"); c.width = tw; c.height = th;
     const g = c.getContext("2d"); g.imageSmoothingQuality = "high";
-    const x0 = Math.round(tw * (1 - fx) / 2), y0 = Math.round(th * (1 - fy) / 2), cw = tw - 2 * x0, ch = th - 2 * y0;
     g.drawImage(s, x0, y0, cw, ch);
-    // couleurs prolongées (demande de l'utilisateur) : la 2e rangée (ou colonne) du bord recopiée jusqu'au bout du cadre,
+    // couleurs prolongées (demande de l'utilisateur) : la 2e rangée (puis colonne) du bord recopiée jusqu'au bout du cadre,
     // ex. le rouge et le blanc du Canada continuent en haut et en bas
     g.imageSmoothingEnabled = false;
-    if (y0 > 0 && ch > 2) { g.drawImage(c, 0, y0 + 1, tw, 1, 0, 0, tw, y0 + 1); g.drawImage(c, 0, y0 + ch - 2, tw, 1, 0, y0 + ch - 1, tw, th - y0 - ch + 1); }
-    if (x0 > 0 && cw > 2) { g.drawImage(c, x0 + 1, 0, 1, th, 0, 0, x0 + 1, th); g.drawImage(c, x0 + cw - 2, 0, 1, th, x0 + cw - 1, 0, tw - x0 - cw + 1, th); }
+    const bas = y0 + ch, droite = x0 + cw;
+    if (y0 > 0 && ch > 2) g.drawImage(c, x0, y0 + 1, cw, 1, x0, 0, cw, y0 + 1);
+    if (bas < th && ch > 2) g.drawImage(c, x0, bas - 2, cw, 1, x0, bas - 1, cw, th - bas + 1);
+    if (x0 > 0 && cw > 2) g.drawImage(c, x0 + 1, 0, 1, th, 0, 0, x0 + 1, th);
+    if (droite < tw && cw > 2) g.drawImage(c, droite - 2, 0, 1, th, droite - 1, 0, tw - droite + 1, th);
     d.trames[cle] = c;
   }
   return d.trames[cle];
@@ -208,34 +213,45 @@ function groupeDe(f) {
 // place fixe du drapeau (demande de l'utilisateur, d'après ses exemples) : le drapeau couvre tout le cadre du territoire
 // (d'ouest en est et du nord au sud, dans une projection azimutale équidistante centrée sur lui, nord en haut) ; pour ne
 // pas trop l'étirer (demande de l'utilisateur : le cercle du Groenland devenait ovale, Canada et États-Unis très étirés),
-// le drapeau est étiré de la racine cubique de l'écart de proportions seulement, et le cadre agrandi du reste (le drapeau
-// dépasse alors du territoire, rogné par la frontière : ex. les bandes rouges du Canada en partie) ; les points de la grille sont
-// des points du globe, projetés à chaque image : le drapeau reste fixé sur son territoire quand on tourne ou zoome
-function placer(polys, F = 1.5, sym = false) {
+// le drapeau n'est étiré que d'une part de l'écart de proportions (racine cubique par défaut), et le reste :
+//  - « rogner » (par défaut) : le drapeau est agrandi jusqu'à couvrir le territoire et rogné par la frontière ; en largeur,
+//    deux fois plus du côté opposé au mât, où l'emblème est souvent (cercle du Groenland, canton des États-Unis…) ;
+//  - « prolonger » (par défaut pour un drapeau symétrique de gauche à droite) : le drapeau tient dans le territoire, au
+//    milieu, et ses couleurs du bord sont prolongées jusqu'au bout (demande de l'utilisateur : tout le rouge du Canada, et
+//    le blanc du milieu prolongé en haut et en bas, sans quoi il avait l'air d'un carré) ;
+// réglages propres à un drapeau dans monde/drapeaux-reglages.json (REGLAGES) : mode, k (part de l'étirement, 0 = aucun,
+// 1 = tout), ax et ay (où va l'écart : 0 = drapeau collé à gauche ou en haut, 1 = à droite ou en bas), echelle
+// (agrandit le drapeau autour de cette place) ; les points de la grille sont des points du globe, projetés à chaque
+// image : le drapeau reste fixé sur son territoire quand on tourne ou zoome
+function placer(polys, F = 1.5, o = {}) {
   let [[x0, y0], [x1, y1]] = d3.geoBounds({ type: "MultiPolygon", coordinates: polys }); if (x1 < x0) x1 += 360;
   const lc = (x0 + x1) / 2, pc = (y0 + y1) / 2;
   const az = d3.geoAzimuthalEquidistant().rotate([-lc, -pc]).scale(1).translate([0, 0]).clipAngle(null).precision(0);
   let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
   for (const c of polys) for (const r of c) for (const g of r) { const [x, y] = az(g); if (x < X0) X0 = x; if (x > X1) X1 = x; if (-y < Y0) Y0 = -y; if (-y > Y1) Y1 = -y; }
-  let fx = 1, fy = 1;
-  const w = X1 - X0, h = Y1 - Y0, e = Math.pow(F / (w / h), 2 / 3);   // e > 1 : territoire plus étroit que le drapeau
-  if (w > 0 && h > 0 && isFinite(e)) {
-    // (au plus 2,5 radians du centre : au-delà, la projection azimutale replie le cadre)
-    // (en largeur, on rogne deux fois plus du côté opposé au mât, où l'emblème est souvent : cercle du Groenland, canton
-    // des États-Unis, étoile du Chili…) ; un drapeau symétrique n'est pas rogné : le cadre reste celui du territoire, le
-    // drapeau en occupe le milieu et ses couleurs du bord sont prolongées jusqu'au bout (demande de l'utilisateur : tout le
-    // rouge du Canada, et le blanc du milieu prolongé en haut et en bas, sans quoi il avait l'air d'un carré)
-    if (sym) { if (e > 1) fy = 1 / e; else fx = e; }
-    else if (e > 1) { const x = Math.max(0, Math.min(w * e, 5) - w); X0 -= x / 3; X1 += 2 * x / 3; }
-    else { const m = (Y0 + Y1) / 2, d = Math.min(h / e, 5) / 2; Y0 = m - d; Y1 = m + d; }
-  }
-  // grille fixe de points du drapeau ramenés sur le globe (ligne 0 = haut du drapeau), une case par 7° environ (1 × 1 à
-  // 16 × 12) : la même au repos, en mouvement et à tout zoom (une grille qui changeait faisait sauter le drapeau)
-  const deg = 180 / Math.PI, gx = Math.max(1, Math.min(16, Math.ceil((X1 - X0) * deg / 7))), gy = Math.max(1, Math.min(12, Math.ceil((Y1 - Y0) * deg / 7)));
+  const w = Math.max(X1 - X0, 1e-6), h = Math.max(Y1 - Y0, 1e-6), A = w / h;
+  const mode = o.mode || (o.sym ? "prolonger" : "rogner"), k = o.k ?? 1 / 3, ax = o.ax ?? (o.sym ? 0.5 : 1 / 3), ay = o.ay ?? 0.5;
+  const Fd = F * Math.pow(A / F, k);   // proportions du drapeau affiché
+  let [fw, fh] = (mode === "prolonger") === (Fd > A) ? [w, w / Fd] : [h * Fd, h];
+  fw *= o.echelle ?? 1; fh *= o.echelle ?? 1;
+  // (au plus 5 radians de large : au-delà, la projection azimutale replie le cadre)
+  const red = Math.min(1, 5 / Math.max(fw, fh)); fw *= red; fh *= red;
+  // drapeau : bord gauche L, bord haut T (Y croît vers le nord) ; cadre = drapeau et territoire réunis
+  const L = X0 + (w - fw) * ax, T = Y1 - (h - fh) * ay;
+  const CX0 = Math.min(X0, L), CX1 = Math.max(X1, L + fw), CY1 = Math.max(Y1, T), CY0 = Math.min(Y0, T - fh);
+  const CW = CX1 - CX0, CH = CY1 - CY0;
+  const f = [fw / CW, fh / CH, (L - CX0) / CW, (CY1 - T) / CH].map(v => Math.round(v * 1000) / 1000);
+  // grille fixe de points du cadre ramenés sur le globe (ligne 0 = haut), une case par 7° environ (1 × 1 à 16 × 12) :
+  // la même au repos, en mouvement et à tout zoom (une grille qui changeait faisait sauter le drapeau)
+  const deg = 180 / Math.PI, gx = Math.max(1, Math.min(16, Math.ceil(CW * deg / 7))), gy = Math.max(1, Math.min(12, Math.ceil(CH * deg / 7)));
   const geo = (x, y) => az.invert([x, -y]), grille = [];
-  for (let j = 0; j <= gy; j++) { const l = []; for (let i = 0; i <= gx; i++) l.push(geo(X0 + (X1 - X0) * i / gx, Y1 - (Y1 - Y0) * j / gy)); grille.push(l); }
-  return { grille, f: [fx, fy] };
+  for (let j = 0; j <= gy; j++) { const l = []; for (let i = 0; i <= gx; i++) l.push(geo(CX0 + CW * i / gx, CY1 - CH * j / gy)); grille.push(l); }
+  return { grille, f };
 }
+// réglages du drapeau d'un territoire (clé : code ISO du pays, ou de la subdivision)
+let REGLAGES = {};
+const cleDrapeau = f => f.properties.code || f.properties.a2;
+const reglage = (f, d) => ({ sym: symetrique(d), ...(REGLAGES[cleDrapeau(f)] || {}) });
 // couleur principale du drapeau (la plus fréquente) : fond du reste du territoire
 function couleurPrincipale(d) {
   if (d.couleur) return d.couleur;
@@ -285,11 +301,11 @@ function peindreDrapeau(f, src) {
   const d = imageDrapeau(src); if (!d) return false;
   const G = groupeDe(f), L = morceaux(lod(f)).filter(enVue);
   const prin = L.filter(m => G.dans(m._c));
-  if (prin.length) peindreMorceaux(prin, d, () => G.place || (budget-- > 0 ? (G.place = placer(G.prin, rapport(d), symetrique(d))) : null));
+  if (prin.length) peindreMorceaux(prin, d, () => G.place || (budget-- > 0 ? (G.place = placer(G.prin, rapport(d), reglage(f, d))) : null));
   for (const m of L) {
     if (G.dans(m._c)) continue;
     const o = G.loin.find(x => dansCadre(x._b, m._c));
-    peindreMorceaux([m], d, () => !o ? null : o._place || (budget-- > 0 ? (o._place = placer([o.coordinates], rapport(d), symetrique(d))) : null));
+    peindreMorceaux([m], d, () => !o ? null : o._place || (budget-- > 0 ? (o._place = placer([o.coordinates], rapport(d), reglage(f, d))) : null));
   }
   return true;
 }
@@ -678,8 +694,8 @@ async function preparerTout() {
   let n = 0; avance(0.1, "Drapeaux…");
   await Promise.all(cibles.map(([, src]) => { imageDrapeau(src); return DRAP.get(src).pret.then(() => avance(0.1 + 0.3 * ++n / cibles.length)); }));
   const travail = cibles.map(([f, src]) => () => { const d = DRAP.get(src); if (!d.ok) return;
-    couleurPrincipale(d); const G = groupeDe(f), r = rapport(d), sy = symetrique(d);
-    G.place ||= placer(G.prin, r, sy); for (const o of G.loin) o._place ||= placer([o.coordinates], r, sy); });
+    couleurPrincipale(d); const G = groupeDe(f), r = rapport(d), rg = reglage(f, d);
+    G.place ||= placer(G.prin, r, rg); for (const o of G.loin) o._place ||= placer([o.coordinates], r, rg); });
   const formes = [...PAYS, ...LACS.features, FRONTIERES, ...Object.values(charges).filter(Boolean).flatMap(X => [...X.features, X.mesh])];
   for (const pas of [...PAS, null]) for (const f of formes) travail.push(() => morceaux(lod(f, pas)));
   avance(0.4, "Place des drapeaux et contours…");
@@ -694,6 +710,7 @@ async function preparerTout() {
   const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
     fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
+  REGLAGES = await fetch("monde/drapeaux-reglages.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
   PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
   for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
@@ -710,6 +727,14 @@ async function preparerTout() {
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
-    proj, PAYS, LACS, dansLac, C, DRAP, charges, groupeDe, W: () => W, H: () => H, R: () => R, k: () => k };
+    proj, PAYS, LACS, dansLac, C, DRAP, charges, groupeDe, W: () => W, H: () => H, R: () => R, k: () => k,
+    // réglage d'un drapeau à l'essai (monde/outils/essai_drapeau.mjs) : place recalculée, puis le territoire cadré
+    territoire: cle => cle.includes("-") ? charges[cle.slice(0, 2)]?.features.find(s => s.properties.code === cle) : PAYS.find(f => f.properties.a2 === cle),
+    regler(cle, o) { const f = this.territoire(cle); if (o) REGLAGES[cle] = o; else delete REGLAGES[cle]; delete f._grp; dessiner(); },
+    cadrer(cle) {
+      const f = this.territoire(cle), G = groupeDe(f), M = morceaux(f).filter(m => G.dans(m._c));
+      const c = d3.geoCentroid({ type: "MultiPolygon", coordinates: G.prin }), r = Math.max(...M.map(m => d3.geoDistance(c, m._c) + m._r));
+      return { rot: [-c[0], -c[1], 0], k: Math.max(1, Math.min(ZOOM_MAX, 0.4 * Math.min(W, H) / (R * Math.sin(Math.min(r, Math.PI / 2))))) };
+    } };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();
