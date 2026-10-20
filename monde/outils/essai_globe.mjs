@@ -8,7 +8,7 @@ import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const p = await b.newPage({ viewport: { width: 1300, height: 900 } });
 p.on('pageerror', e => console.log('ERR', e.message));
-await p.addInitScript(() => { sessionStorage.setItem('loggedIn','1'); sessionStorage.setItem('userRole','admin'); });
+await p.addInitScript(() => { sessionStorage.setItem('loggedIn','1'); sessionStorage.setItem('userRole','admin'); localStorage.setItem('mondeRub', '{"drapeaux":false}'); });   // géométrie seule (sans drapeaux)
 await p.goto('http://localhost:8799/information-monde.html?essai#ZZ'); await p.waitForTimeout(3000);
 const res = await p.evaluate(async () => {
   const G = window.__globe, cv = document.getElementById('globe'), ctx = cv.getContext('2d');

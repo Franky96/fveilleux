@@ -33,6 +33,11 @@ const nomSous = (a2, s) => nomCode(a2, s.properties.code);
 const drapeauPays = a2 => `monde/drapeaux/${a2.toLowerCase()}.svg`;
 const drapeauSous = (a2, s) => SOUS[a2].dossier + s.properties.code.split("-")[1].toLowerCase() + ".svg";
 
+// rubriques (en haut de la page) : « Drapeaux » = chaque territoire rempli de son drapeau, au niveau des pays ou des
+// États et provinces (Canada seulement pour l'instant) ; les rubriques de statistiques viendront s'ajouter
+const RUB = (() => { try { return { drapeaux: true, aff: "pays", ...JSON.parse(localStorage.getItem("mondeRub") || "{}") }; } catch { return { drapeaux: true, aff: "pays" }; } })();
+const garderRub = () => { try { localStorage.setItem("mondeRub", JSON.stringify(RUB)); } catch {} };
+const modeEtats = () => RUB.drapeaux && RUB.aff === "etat";
 let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
@@ -132,6 +137,81 @@ async function charger(a2) {
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
 
+/* ---------- drapeaux sur le globe ---------- */
+// image de chaque drapeau, chargée la première fois qu'elle sert, puis tramée une fois par taille (256 ou 1024 px de large)
+const DRAP = new Map();
+function imageDrapeau(src) {
+  let d = DRAP.get(src);
+  if (!d) { d = { img: new Image(), ok: false, trames: {} }; d.img.onload = () => { d.ok = true; dessiner(); }; d.img.src = src; DRAP.set(src, d); }
+  return d.ok ? d : null;
+}
+function trame(d, largeur) {
+  const t = largeur > 300 ? 1024 : 256;
+  if (!d.trames[t]) {
+    const c = document.createElement("canvas"), ar = d.img.naturalHeight / d.img.naturalWidth || 0.5;
+    c.width = t; c.height = Math.max(1, Math.round(t * ar)); c.getContext("2d").drawImage(d.img, 0, 0, c.width, c.height);
+    d.trames[t] = c;
+  }
+  return d.trames[t];
+}
+// le drapeau couvre le gros du territoire (plus grand morceau et morceaux à moins de 25° de lui, ex. les îles du Nunavut) ;
+// un morceau éloigné (Alaska, outre-mer) a son propre drapeau, sinon un seul drapeau étiré sur tout le Pacifique
+function groupeDe(f) {
+  if (f._grp) return f._grp;
+  let [[x0, y0], [x1, y1]] = d3.geoBounds(plusGrand(f)); if (x1 < x0) x1 += 360;
+  const dx = Math.min(x1 - x0 + 2, 25), dy = Math.min(y1 - y0 + 2, 25);
+  const dans = c => { let x = c[0]; if (x < x0 - dx) x += 360; return x >= x0 - dx && x <= x1 + dx && c[1] >= y0 - dy && c[1] <= y1 + dy; };
+  let X0 = Infinity, X1 = -Infinity, Y0 = Infinity, Y1 = -Infinity;
+  for (const m of morceaux(f)) if (dans(m._c)) {
+    let [[a, b], [c, d]] = m._b; if (c < a) c += 360; if (a < x0 - dx) { a += 360; c += 360; }
+    X0 = Math.min(X0, a); X1 = Math.max(X1, c); Y0 = Math.min(Y0, b); Y1 = Math.max(Y1, d);
+  }
+  return (f._grp = { dans, boite: [[X0, Y0], [X1, Y1]] });
+}
+// cadre à l'écran d'un cadre géographique : 6 × 6 points (gardés avec leur vecteur unitaire), visibles si du côté du
+// centre de la vue (produit scalaire), projetés
+const RAD = Math.PI / 180, unitaire = ([l, p]) => [Math.cos(p * RAD) * Math.cos(l * RAD), Math.cos(p * RAD) * Math.sin(l * RAD), Math.sin(p * RAD)];
+function boiteEcran(cadre) {
+  if (!cadre._pts) {
+    let [[x0, y0], [x1, y1]] = cadre; if (x1 < x0) x1 += 360;
+    cadre._pts = [];
+    for (let i = 0; i <= 5; i++) for (let j = 0; j <= 5; j++) { const p = [x0 + (x1 - x0) * i / 5, y0 + (y1 - y0) * j / 5]; cadre._pts.push([p, unitaire(p)]); }
+  }
+  const c = unitaire(centre);
+  let a = Infinity, b = Infinity, cc = -Infinity, d = -Infinity;
+  for (const [p, v] of cadre._pts) {
+    if (v[0] * c[0] + v[1] * c[1] + v[2] * c[2] <= 0) continue;
+    const [x, y] = proj(p); if (x < a) a = x; if (y < b) b = y; if (x > cc) cc = x; if (y > d) d = y;
+  }
+  return a < cc ? [a, b, cc, d] : null;
+}
+// petit morceau (îlot) : son cercle englobant suffit
+function boiteCercle(m) {
+  if (d3.geoDistance(m._c, centre) > Math.PI / 2) return null;
+  const [x, y] = proj(m._c), r = Math.max(1, m._r * R * k);
+  return [x - r, y - r, x + r, y + r];
+}
+// remplissage à motif (le drapeau, placé pour couvrir le cadre) : plus rapide qu'un découpage suivi d'une image
+function motif(d, [a, b, c, e]) {
+  const bw = c - a, bh = e - b, t = trame(d, Math.max(bw, bh)), sc = Math.max(bw / t.width, bh / t.height) * 1.06;
+  const m = d.motifs?.[t.width] || ((d.motifs ||= {})[t.width] = ctx.createPattern(t, "no-repeat"));
+  m.setTransform(new DOMMatrix([sc, 0, 0, sc, a + (bw - t.width * sc) / 2, b + (bh - t.height * sc) / 2]));
+  return m;
+}
+// vrai si le drapeau est dessiné (image chargée)
+function peindreDrapeau(f, src) {
+  const d = imageDrapeau(src); if (!d) return false;
+  const G = groupeDe(f), L = morceaux(lod(f)).filter(enVue);
+  const prin = L.filter(m => G.dans(m._c));
+  if (prin.length) { const bx = boiteEcran(G.boite); if (bx) { ctx.fillStyle = motif(d, bx); ctx.beginPath(); for (const m of prin) chemin(m); ctx.fill(); } }
+  for (const m of L) {
+    if (G.dans(m._c)) continue;
+    const bx = m._r < 0.05 ? boiteCercle(m) : boiteEcran(m._b); if (!bx || (bx[2] - bx[0] < 2 && bx[3] - bx[1] < 2)) continue;
+    ctx.fillStyle = motif(d, bx); ctx.beginPath(); chemin(m); ctx.fill();
+  }
+  return true;
+}
+
 /* ---------- dessin ---------- */
 let prevu = false;
 const dessiner = () => { if (prevu) return; prevu = true; requestAnimationFrame(() => { prevu = false; peindre(); }); };
@@ -158,23 +238,38 @@ function peindre() {
   // contours au niveau de détail du zoom : côtes réalistes de près comme de loin, même en mouvement (demande de l'utilisateur)
   choisirPas(); majVue();
   const paysSel = sel?.pays, survole = survol && !survol.sous ? survol.pays : null;
-  remplir(PAYS.filter(f => enVue(f) && f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2).map(f => lod(f)), C.terre);
-  if (survole && survole !== paysSel) { ctx.beginPath(); chemin(lod(survole)); ctx.fillStyle = C["terre-survol"]; ctx.fill(); }
+  // fond uni (en mode Drapeaux au niveau Pays : seulement sous les pays dont le drapeau n'est pas encore chargé)
+  const drapPays = RUB.drapeaux && !modeEtats(), aDrapeau = f => drapPays && f.properties.a2 && DRAP.get(drapeauPays(f.properties.a2))?.ok;
+  remplir(PAYS.filter(f => enVue(f) && !aDrapeau(f) && (RUB.drapeaux || (f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2))).map(f => lod(f)), C.terre);
+  if (!RUB.drapeaux && survole && survole !== paysSel) { ctx.beginPath(); chemin(lod(survole)); ctx.fillStyle = C["terre-survol"]; ctx.fill(); }
   const paysDessin = lod(paysSel);
   // subdivisions du pays choisi : elles remplissent aussi le pays (même carte que leurs frontières : la côte correspond),
   // par-dessus le contour du pays (qui bouche les éventuels interstices) ; la choisie (ou survolée) en couleur
   const S = paysSel && charges[paysSel.properties.a2], fondPays = sel?.sous ? C["pays-fond"] : C.choisi;
-  if (paysSel) remplir([paysDessin], fondPays);
-  if (S) remplir(S.features.map(f => lod(f)), fondPays);
-  if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
-    ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
+  if (RUB.drapeaux) {
+    // rubrique Drapeaux : chaque pays, ou chaque État et province (pays qui en ont), rempli de son drapeau
+    if (!modeEtats()) { for (const f of PAYS) if (f.properties.a2 && enVue(f)) peindreDrapeau(f, drapeauPays(f.properties.a2)); }
+    else for (const [a2, X] of Object.entries(charges)) if (X) for (const s of X.features) peindreDrapeau(s, drapeauSous(a2, s));
+  } else {
+    if (paysSel) remplir([paysDessin], fondPays);
+    if (S) remplir(S.features.map(f => lod(f)), fondPays);
+    if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
+      ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
+  }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres (tous, même en mouvement)
   remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
   ctx.lineWidth = 0.6; remplir([lod(FRONTIERES)], C.frontiere, true);
-  if (S) {
-    ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true);
+  if (RUB.drapeaux) {
+    // frontières des États et provinces, puis le territoire choisi (et survolé) en contour, par-dessus les drapeaux
+    if (modeEtats()) for (const X of Object.values(charges)) if (X) { ctx.lineWidth = 0.7; remplir([lod(X.mesh)], C.frontiere, true); }
+    // (au niveau États et provinces, seule une province choisie est soulignée, pas tout le pays)
+    const ch = sel?.sous || (modeEtats() && charges[paysSel?.properties.a2] ? null : paysSel), sv = survol && (survol.sous || survol.pays);
+    if (sv && sv !== ch) { ctx.lineWidth = 1.5; remplir([lod(sv)], C["texte-globe"], true); }
+    if (ch) { ctx.lineWidth = 3; remplir([lod(ch)], C.frontiere, true); ctx.lineWidth = 1.6; remplir([lod(ch)], C.choisi, true); }
+  } else {
+    if (S) { ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true); }
+    if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
   }
-  if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
   // villes de la subdivision choisie : un point par ville (carré pour une capitale), partout pareil (demande de l'utilisateur)
   pointsVilles = [];
   if (S && sel.sous) {
@@ -225,7 +320,7 @@ function sousLe([x, y]) {
   const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - H / 2) < R * k ? { ocean: true } : null;
   if (dansLac(p)) return { ocean: true };
   const pays = PAYS.find(f => dansBoiteGeo(f._b, p) && d3.geoContains(f, p)); if (!pays) return { ocean: true };
-  const S = pays === sel?.pays && charges[pays.properties.a2];
+  const S = (pays === sel?.pays || modeEtats()) && charges[pays.properties.a2];
   return { pays, sous: S ? S.features.find(s => d3.geoContains(s, p)) || null : null, ville: null };
 }
 
@@ -460,6 +555,17 @@ async function depuisAdresse(bouger) {
   const S = await charger(pays.properties.a2);
   return choisir(pays, sub && S ? S.features.find(s => s.properties.code === sub) || null : null, null, { bouger });
 }
+
+/* ---------- rubriques ---------- */
+function majRubriques() {
+  $("rubDrapeaux").setAttribute("aria-pressed", RUB.drapeaux);
+  $("affNiveau").hidden = !RUB.drapeaux;
+  $("affNiveau").querySelectorAll("[data-aff]").forEach(b => b.setAttribute("aria-pressed", b.dataset.aff === RUB.aff));
+  $("affNote").hidden = !modeEtats();
+}
+$("rubDrapeaux").addEventListener("click", () => { RUB.drapeaux = !RUB.drapeaux; garderRub(); majRubriques(); dessiner(); });
+$("affNiveau").addEventListener("click", e => { const b = e.target.closest("[data-aff]"); if (!b) return; RUB.aff = b.dataset.aff; garderRub(); majRubriques(); dessiner(); });
+majRubriques();
 
 /* ---------- démarrage ---------- */
 (async () => {

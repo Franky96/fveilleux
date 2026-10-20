@@ -59,8 +59,20 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 .top{padding-block:18px 14px;border-bottom:1px solid var(--line)}
 .top h1{font-size:40px;line-height:1;font-weight:700}
 .top p{margin:8px 0 0;color:var(--muted);max-width:70ch}
-.onglets{display:flex;gap:6px;margin-top:14px}
-.onglets span{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;padding:5px 12px;border-radius:4px;border:1px solid var(--accent);background:var(--accent-d);color:var(--on-accent)}
+/* rubriques : un bouton par rubrique (Drapeaux pour l'instant), puis le niveau des territoires affichés */
+.onglets{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px}
+.rub{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;padding:5px 12px;border-radius:4px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);cursor:pointer}
+.rub:hover{border-color:var(--accent)}
+.rub[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-d);color:var(--on-accent)}
+.aff{display:inline-flex;align-items:center;gap:0}
+.aff[hidden]{display:none}
+.aff-lab{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:var(--muted);margin-right:8px}
+.aff button{font:inherit;font-size:13px;padding:5px 11px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);cursor:pointer;margin-left:-1px}
+.aff button:first-of-type{border-radius:4px 0 0 4px;margin-left:0}
+.aff button:last-of-type{border-radius:0 4px 4px 0}
+.aff button:hover{border-color:var(--accent)}
+.aff button[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text);position:relative}
+.aff-note{margin:6px 0 0;font-size:12px;color:var(--muted)}
 
 .grille{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,400px);gap:16px;margin-top:16px;align-items:start}
 @media (max-width:860px){.grille{grid-template-columns:1fr}}
@@ -139,8 +151,14 @@ body.plein-actif{overflow:hidden}
   <div class="toprow"><a href="dashboard.html" class="back">&#8592; Menu</a><span id="tg-slot"></span></div>
   <header class="top">
     <h1>Information Monde</h1>
-    <p>Tourne le globe et choisis un pays pour voir son drapeau, puis ceux de ses provinces et de ses grandes villes.</p>
-    <nav class="onglets" aria-label="Rubriques"><span aria-current="page">Drapeaux</span></nav>
+    <p>Des données par pays, État et ville, rubrique par rubrique. Tourne le globe et choisis un territoire pour voir sa fiche.</p>
+    <nav class="onglets" aria-label="Rubriques">
+      <button type="button" class="rub" id="rubDrapeaux" aria-pressed="true" title="Chaque territoire rempli de son drapeau">Drapeaux</button>
+      <div class="aff" id="affNiveau" role="group" aria-label="Territoires affichés">
+        <span class="aff-lab">Territoires</span><button type="button" data-aff="pays" aria-pressed="true">Pays</button><button type="button" data-aff="etat" aria-pressed="false">États et provinces</button>
+      </div>
+    </nav>
+    <p class="aff-note" id="affNote" hidden>États et provinces : seulement le Canada pour l'instant ; les autres pays restent unis.</p>
   </header>
 
   <div class="grille">
