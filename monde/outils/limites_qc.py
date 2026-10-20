@@ -28,22 +28,40 @@ def requete(url, p):
     return json.loads(urllib.request.urlopen(urllib.request.Request(url + urllib.parse.urlencode(p), headers=UA), timeout=300).read())
 
 
+CACHE = os.path.join(__import__("tempfile").gettempdir(), "fveilleux-osm")   # éléments déjà reçus : une relance reprend
+
+
+def overpass(q):
+    for essai in range(6):   # le miroir répond parfois 504 ou coupe la connexion : on réessaie
+        try:
+            req = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({"data": q}).encode(), headers=UA)
+            return json.loads(urllib.request.urlopen(req, timeout=400).read())
+        except (urllib.error.URLError, http.client.HTTPException, ConnectionError, TimeoutError) as e:   # 504, coupure…
+            if (isinstance(e, urllib.error.HTTPError) and e.code not in (429, 502, 503, 504)) or essai == 5: raise
+            time.sleep(20 * (essai + 1))
+
+
+def elements(genre, ids, lot):
+    """Géométrie complète des chemins ou relations, par petits lots (le miroir surchargé coupe les grosses requêtes)."""
+    os.makedirs(CACHE, exist_ok=True)
+    fichier = lambda i: os.path.join(CACHE, f"{genre}-{i}.json")
+    manque = [i for i in ids if not os.path.exists(fichier(i))]
+    for k in range(0, len(manque), lot):
+        d = overpass(f"[out:json][timeout:250];{genre}(id:{','.join(map(str, manque[k:k + lot]))});out geom;")
+        for el in d["elements"]: json.dump(el, open(fichier(el["id"]), "w"))
+    return [json.load(open(fichier(i))) for i in ids if os.path.exists(fichier(i))]
+
+
 def eau_osm(x0, y0, x1, y1):
     """Plans d'eau d'OpenStreetMap qui touchent le cadre : chemins fermés et multipolygones (anneaux assemblés)."""
     from shapely.geometry import LineString, Polygon
     from shapely.ops import linemerge, polygonize
     b = f"{y0},{x0},{y1},{x1}"
-    q = f'[out:json][timeout:180];(way["natural"="water"]({b});relation["natural"="water"]({b}););out geom;'
-    for essai in range(6):   # le miroir répond parfois 504 ou coupe la connexion : on réessaie
-        try:
-            req = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({"data": q}).encode(), headers=UA)
-            d = json.loads(urllib.request.urlopen(req, timeout=400).read()); break
-        except (urllib.error.URLError, http.client.HTTPException, ConnectionError, TimeoutError) as e:   # 504, coupure…
-            if (isinstance(e, urllib.error.HTTPError) and e.code not in (429, 502, 503, 504)) or essai == 5: raise
-            time.sleep(20 * (essai + 1))
+    ids = overpass(f'[out:json][timeout:250];(way["natural"="water"]({b});relation["natural"="water"]({b}););out ids;')["elements"]
+    els = elements("way", [e["id"] for e in ids if e["type"] == "way"], 200) + elements("relation", [e["id"] for e in ids if e["type"] == "relation"], 5)
     ligne = lambda g: LineString([(p["lon"], p["lat"]) for p in g])
     polys = []
-    for el in d["elements"]:
+    for el in els:
         if el["type"] == "way" and len(el.get("geometry", [])) >= 4 and el["geometry"][0] == el["geometry"][-1]:
             polys.append(Polygon([(p["lon"], p["lat"]) for p in el["geometry"]]).buffer(0))
         elif el["type"] == "relation":
