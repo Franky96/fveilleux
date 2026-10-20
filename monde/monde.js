@@ -33,7 +33,7 @@ const nomSous = (a2, s) => nomCode(a2, s.properties.code);
 const drapeauPays = a2 => `monde/drapeaux/${a2.toLowerCase()}.svg`;
 const drapeauSous = (a2, s) => SOUS[a2].dossier + s.properties.code.split("-")[1].toLowerCase() + ".svg";
 
-let PAYS = [], FRONTIERES, LEGER = [], FRONTIERES_LEGER, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
+let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
@@ -50,18 +50,40 @@ function cercle(f) {
   d3.geoStream(f, { point(x, y) { r = Math.max(r, d3.geoDistance(c, [x, y])); }, lineStart() {}, lineEnd() {}, polygonStart() {}, polygonEnd() {}, sphere() {} });
   f._c = c; f._r = r; f._b = d3.geoBounds(f); return f;
 }
-// version allégée d'une forme : on saute les points à moins de « pas » degrés du dernier gardé
+// version allégée d'une forme : on saute les points à moins de « pas » degrés du dernier gardé, et les îles, lacs ou
+// morceaux de ligne plus petits que « pas » (invisibles à ce zoom : moins d'un pixel)
 function alleger(geo, pas = 0.12) {
+  const petit = a => { let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const [x, y] of a) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    return x1 - x0 < pas && y1 - y0 < pas; };
   const anneau = a => { const o = [a[0]]; for (let i = 1; i < a.length - 1; i++) { const q = o[o.length - 1]; if (Math.abs(a[i][0] - q[0]) + Math.abs(a[i][1] - q[1]) >= pas) o.push(a[i]); }
     o.push(a[a.length - 1]); return o.length >= 4 ? o : a; };
-  const g = geo.type === "Polygon" ? { type: "Polygon", coordinates: geo.coordinates.map(anneau) }
-    : geo.type === "MultiPolygon" ? { type: "MultiPolygon", coordinates: geo.coordinates.map(p => p.map(anneau)) }
-    : geo.type === "MultiLineString" ? { type: "MultiLineString", coordinates: geo.coordinates.map(anneau) } : geo;
-  return g;
+  const poly = p => petit(p[0]) ? null : [anneau(p[0]), ...p.slice(1).filter(h => !petit(h)).map(anneau)];
+  if (geo.type === "Polygon") { const p = poly(geo.coordinates); return p ? { type: "Polygon", coordinates: p } : geo; }
+  if (geo.type === "MultiPolygon") { const ps = geo.coordinates.map(poly).filter(Boolean);
+    return ps.length ? { type: "MultiPolygon", coordinates: ps } : { type: "MultiPolygon", coordinates: [] }; }
+  if (geo.type === "MultiLineString") return { type: "MultiLineString", coordinates: geo.coordinates.filter(l => !petit(l)).map(anneau) };
+  return geo;
+}
+// niveaux de détail : on saute les points à moins d'un pixel l'un de l'autre au zoom actuel (le tracé reste identique à l'œil)
+const PAS = [0.3, 0.12, 0.05, 0.02];
+let pasCourant = null;
+function choisirPas() {
+  const pxDeg = R * k * Math.PI / 180, tol = rapide ? 2 : 0.8;
+  pasCourant = PAS.find(p => p * pxDeg <= tol) ?? null;
+}
+// forme au niveau de détail courant (calculée une fois par niveau)
+function lod(f) {
+  if (!pasCourant || !f) return f;
+  const c = f._lod || (f._lod = {});
+  return c[pasCourant] || (c[pasCourant] = f.type === "Feature" ? { type: "Feature", properties: f.properties, geometry: alleger(f.geometry, pasCourant) } : alleger(f, pasCourant));
 }
 const centreVue = () => [-rot[0], -rot[1]];
-const enVue = f => !f._c || d3.geoDistance(f._c, centreVue()) < Math.PI / 2 + f._r;
-// pendant qu'on tourne ou zoome : contours simplifiés (1:110 M), précision réduite (tous les lacs restent) ; dessin complet 150 ms après
+// rayon angulaire de ce qui est à l'écran (la face visible entière quand le globe tient dans le cadre)
+let rayonVue = Math.PI / 2, centre = [0, 0];
+const majVue = () => { centre = centreVue(); rayonVue = Math.asin(Math.min(1, Math.hypot(W, H) / 2 / (R * k))); };
+const enVue = f => !f._c || d3.geoDistance(f._c, centre) < rayonVue + f._r;
+// pendant qu'on tourne ou zoome : précision et niveau de détail un peu réduits (sous 1,5 px), dessin plus fin 150 ms après ; dessin complet 150 ms après
 let rapide = false, finRapide = null;
 function bouger() {
   rapide = true; proj.precision(2); clearTimeout(finRapide);
@@ -92,8 +114,7 @@ async function charger(a2) {
   // limites des territoires des villes (Québec pour l'instant : limites_qc.py)
   await Promise.all(villes.filter(v => v.limites).map(async v => {
     try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f); } catch {} }));
-  for (const s of d.features) s._leger = { type: "Feature", properties: s.properties, geometry: alleger(s.geometry) };
-  return (charges[a2] = { features: d.features, mesh, meshLeger: alleger(mesh), villes });
+  return (charges[a2] = { features: d.features, mesh, villes });
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
 
@@ -102,32 +123,42 @@ let prevu = false;
 const dessiner = () => { if (prevu) return; prevu = true; requestAnimationFrame(() => { prevu = false; peindre(); }); };
 const visible = p => d3.geoDistance(p, [-rot[0], -rot[1]]) < Math.PI / 2 - 0.01;
 let pointsVilles = [];   // villes dessinées (pour le clic)
+// remplit ou trace des formes par paquets de polygones : un seul chemin géant rend le canvas très lent (closePath)
+// morceaux (polygones) d'une forme, chacun avec son cercle englobant : on saute ceux qui sont hors de l'écran
+const morceaux = g => { g = g.geometry || g;
+  return g._m || (g._m = (g.type === "MultiPolygon" ? g.coordinates.map(c => ({ type: "Polygon", coordinates: c }))
+    : g.type === "MultiLineString" ? g.coordinates.map(c => ({ type: "LineString", coordinates: c })) : [g]).map(cercle)); };
+function remplir(formes, couleur, trait = false) {
+  ctx[trait ? "strokeStyle" : "fillStyle"] = couleur; ctx.beginPath(); let n = 0;
+  const finir = () => trait ? ctx.stroke() : ctx.fill();
+  for (const f of formes) for (const m of morceaux(f)) { if (!enVue(m)) continue; chemin(m); if (++n % 40 === 0) { finir(); ctx.beginPath(); } }
+  finir();
+}
 function peindre() {
   const dpr = Math.min(2, devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-  proj.rotate(rot).scale(R * k).translate([W / 2, H / 2]);
+  proj.rotate(rot).scale(R * k).translate([W / 2, H / 2]).clipExtent([[-2, -2], [W + 2, H + 2]]);   // rien hors de l'écran
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.fillStyle = C.ocean; ctx.fill();
   ctx.beginPath(); chemin(grille); ctx.strokeStyle = C.grille; ctx.lineWidth = 1; ctx.stroke();
+  // contours au niveau de détail du zoom : côtes réalistes de près comme de loin, même en mouvement (demande de l'utilisateur)
+  choisirPas(); majVue();
   const paysSel = sel?.pays, survole = survol && !survol.sous ? survol.pays : null;
-  ctx.beginPath();
-  for (const f of rapide ? LEGER : PAYS) if (enVue(f) && f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2) chemin(f);
-  ctx.fillStyle = C.terre; ctx.fill();
-  if (survole && survole !== paysSel) { ctx.beginPath(); chemin(survole); ctx.fillStyle = C["terre-survol"]; ctx.fill(); }
-  const paysDessin = paysSel && (rapide && LEGER.find(f => f._a2 === paysSel._a2)) || paysSel;
-  if (paysSel) { ctx.beginPath(); chemin(paysDessin); ctx.fillStyle = sel.sous ? C["pays-fond"] : C.choisi; ctx.fill(); }
+  remplir(PAYS.filter(f => enVue(f) && f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2).map(lod), C.terre);
+  if (survole && survole !== paysSel) { ctx.beginPath(); chemin(lod(survole)); ctx.fillStyle = C["terre-survol"]; ctx.fill(); }
+  const paysDessin = lod(paysSel);
+  if (paysSel) remplir([paysDessin], sel.sous ? C["pays-fond"] : C.choisi);
   // subdivisions du pays choisi : la choisie (ou survolée) en couleur, frontières internes
   const S = paysSel && charges[paysSel.properties.a2];
   if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
-    ctx.beginPath(); chemin(rapide ? s._leger : s); ctx.fillStyle = s === sel.sous ? C.choisi : C["terre-survol"]; ctx.globalAlpha = s === sel.sous ? 1 : 0.6; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
-  // (tous les lacs, même en mouvement, allégés pendant le mouvement)
-  ctx.beginPath(); for (const f of LACS.features) if (enVue(f)) chemin(rapide ? f._leger : f);
-  ctx.fillStyle = C.ocean; ctx.fill();
-  ctx.beginPath(); chemin(rapide ? FRONTIERES_LEGER : FRONTIERES); ctx.strokeStyle = C.frontiere; ctx.lineWidth = 0.6; ctx.stroke();
+  // (tous les lacs, même en mouvement)
+  remplir(LACS.features.filter(enVue).map(lod), C.ocean);
+  ctx.lineWidth = 0.6; remplir([lod(FRONTIERES)], C.frontiere, true);
   if (S) {
-    ctx.beginPath(); chemin(rapide ? S.meshLeger : S.mesh); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true);
   }
-  if (paysSel) { ctx.beginPath(); chemin(paysDessin); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 1.4; ctx.stroke(); }
+  if (paysSel) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
   // villes de la subdivision choisie : territoire (quand on a ses limites), point (carré pour une capitale), nom quand on est assez près
   pointsVilles = [];
   if (S && sel.sous) for (const v of villesDe(paysSel.properties.a2, sel.sous.properties.code)) if (v.zone) {
@@ -412,21 +443,13 @@ async function depuisAdresse(bouger) {
 /* ---------- démarrage ---------- */
 (async () => {
   couleurs();
-  const [w, fiches, lacs, w110] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
-    fetch("monde/lacs.json").then(r => r.json()).catch(() => null), fetch("monde/pays-110.json").then(r => r.json()).catch(() => null)]);
+  const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+    fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
   PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
-  // clé commune aux deux échelles (code numérique ISO, sinon nom)
   for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
-  const num = Object.fromEntries(w.objects.countries.geometries.map(g => [g.id ?? g.properties.en, g.properties.a2 || g.properties.en]));
-  if (w110) {
-    LEGER = topojson.feature(w110, w110.objects.countries).features.map(cercle);
-    for (const f of LEGER) f._a2 = num[f.id ?? f.properties.name] || f.properties.name;
-    FRONTIERES_LEGER = topojson.mesh(w110, w110.objects.countries, (a, b) => a !== b);
-  } else { LEGER = PAYS; FRONTIERES_LEGER = FRONTIERES; }
-  if (lacs) { sensHoraire(lacs); LACS = lacs; lacs.features.forEach(cercle); BOITES_LACS = lacs.features.map(f => f._b);
-    for (const f of lacs.features) f._leger = { type: "Feature", geometry: alleger(f.geometry, 0.04) }; }
+  if (lacs) { sensHoraire(lacs); LACS = lacs; lacs.features.forEach(cercle); BOITES_LACS = lacs.features.map(f => f._b); }
   new ResizeObserver(taille).observe(canvas);
   taille();
   await depuisAdresse(true);
