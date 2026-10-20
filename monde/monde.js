@@ -154,60 +154,88 @@ function trame(d, largeur) {
   }
   return d.trames[t];
 }
-// le drapeau couvre le gros du territoire (plus grand morceau et morceaux à moins de 25° de lui, ex. les îles du Nunavut) ;
-// un morceau éloigné (Alaska, outre-mer) a son propre drapeau, sinon un seul drapeau étiré sur tout le Pacifique
+// le drapeau est placé sur le gros du territoire (plus grand morceau et morceaux à moins de 25° de lui, ex. les îles du
+// Nunavut) ; un morceau éloigné (Alaska, outre-mer) a son propre drapeau
 function groupeDe(f) {
   if (f._grp) return f._grp;
   let [[x0, y0], [x1, y1]] = d3.geoBounds(plusGrand(f)); if (x1 < x0) x1 += 360;
   const dx = Math.min(x1 - x0 + 2, 25), dy = Math.min(y1 - y0 + 2, 25);
   const dans = c => { let x = c[0]; if (x < x0 - dx) x += 360; return x >= x0 - dx && x <= x1 + dx && c[1] >= y0 - dy && c[1] <= y1 + dy; };
-  let X0 = Infinity, X1 = -Infinity, Y0 = Infinity, Y1 = -Infinity;
-  for (const m of morceaux(f)) if (dans(m._c)) {
-    let [[a, b], [c, d]] = m._b; if (c < a) c += 360; if (a < x0 - dx) { a += 360; c += 360; }
-    X0 = Math.min(X0, a); X1 = Math.max(X1, c); Y0 = Math.min(Y0, b); Y1 = Math.max(Y1, d);
-  }
-  return (f._grp = { dans, boite: [[X0, Y0], [X1, Y1]] });
+  const M = morceaux(f);
+  return (f._grp = { dans, prin: M.filter(m => dans(m._c)).map(m => m.coordinates), loin: M.filter(m => !dans(m._c)) });
 }
-// cadre à l'écran d'un cadre géographique : 6 × 6 points (gardés avec leur vecteur unitaire), visibles si du côté du
-// centre de la vue (produit scalaire), projetés
-const RAD = Math.PI / 180, unitaire = ([l, p]) => [Math.cos(p * RAD) * Math.cos(l * RAD), Math.cos(p * RAD) * Math.sin(l * RAD), Math.sin(p * RAD)];
-function boiteEcran(cadre) {
-  if (!cadre._pts) {
-    let [[x0, y0], [x1, y1]] = cadre; if (x1 < x0) x1 += 360;
-    cadre._pts = [];
-    for (let i = 0; i <= 5; i++) for (let j = 0; j <= 5; j++) { const p = [x0 + (x1 - x0) * i / 5, y0 + (y1 - y0) * j / 5]; cadre._pts.push([p, unitaire(p)]); }
+// place fixe du drapeau (demande de l'utilisateur : drapeaux fixes, et le plus de drapeau visible dans le territoire) :
+// calculée une fois dans un plan local autour du centre du territoire (x = écart de longitude × cos(latitude), y = écart de
+// latitude, en degrés) : la plus grande taille, et à cette taille la meilleure position, qui garde au moins 90 % du
+// drapeau dans le territoire ; à chaque image, ce plan est projeté par une transformation affine autour du centre, donc
+// le drapeau suit le territoire quand on tourne ou zoome ; le reste du territoire prend la couleur principale du drapeau
+const RAD = Math.PI / 180;
+function placer(polys, aspect) {
+  let [[x0, y0], [x1, y1]] = d3.geoBounds({ type: "MultiPolygon", coordinates: polys }); if (x1 < x0) x1 += 360;
+  const lc = (x0 + x1) / 2, pc = (y0 + y1) / 2, cs = Math.max(0.05, Math.cos(pc * RAD));
+  const plan = ([l, p]) => [((l - lc + 540) % 360 - 180) * cs, p - pc];
+  // anneaux des morceaux assez grands (1 % du plus grand), allégés à 80 points, avec leur cadre (test rapide)
+  const aire = c => { let [[a, b], [e, g]] = d3.geoBounds({ type: "Polygon", coordinates: c }); if (e < a) e += 360; return (e - a) * (g - b); };
+  const amax = Math.max(...polys.map(aire));
+  const anneaux = polys.filter(c => aire(c) >= amax / 100).flatMap(c => c.map(r => {
+    const pas = Math.max(1, Math.floor(r.length / 80)), a = r.filter((_, i) => i % pas === 0).map(plan);
+    return { a, b: [Math.min(...a.map(q => q[0])), Math.min(...a.map(q => q[1])), Math.max(...a.map(q => q[0])), Math.max(...a.map(q => q[1]))] };
+  })).filter(x => x.a.length >= 4);
+  const dedans = (x, y) => { let c = false;
+    for (const { a, b } of anneaux) { if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+      for (let i = 0, j = a.length - 1; i < a.length; j = i++) { const [xi, yi] = a[i], [xj, yj] = a[j];
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } }
+    return c; };
+  const W0 = (x1 - x0) * cs, H0 = y1 - y0, fw0 = Math.min(W0, H0 / aspect);
+  let best = null;
+  for (const t of [1, 0.85, 0.72, 0.6, 0.5, 0.4, 0.32, 0.25]) {
+    const w = fw0 * t, h = w * aspect;
+    for (let i = 0; i <= 4; i++) for (let j = 0; j <= 4; j++) {
+      const rx = -W0 / 2 + (W0 - w) * i / 4, ry = -H0 / 2 + (H0 - h) * j / 4;
+      let n = 0;
+      for (let u = 0; u < 6; u++) for (let v = 0; v < 4; v++) if (dedans(rx + w * (u + 0.5) / 6, ry + h * (v + 0.5) / 4)) n++;
+      const fr = n / 24, score = fr >= 0.9 ? 10 + w * h + fr : fr * w * h;
+      if (!best || score > best.score) best = { score, rx, ry, w, h };
+    }
+    if (best.score >= 10) break;
   }
-  const c = unitaire(centre);
-  let a = Infinity, b = Infinity, cc = -Infinity, d = -Infinity;
-  for (const [p, v] of cadre._pts) {
-    if (v[0] * c[0] + v[1] * c[1] + v[2] * c[2] <= 0) continue;
-    const [x, y] = proj(p); if (x < a) a = x; if (y < b) b = y; if (x > cc) cc = x; if (y > d) d = y;
-  }
-  return a < cc ? [a, b, cc, d] : null;
+  return { c: [lc, pc], cs, x: best.rx, y: best.ry, w: best.w, h: best.h };
 }
-// petit morceau (îlot) : son cercle englobant suffit
-function boiteCercle(m) {
-  if (d3.geoDistance(m._c, centre) > Math.PI / 2) return null;
-  const [x, y] = proj(m._c), r = Math.max(1, m._r * R * k);
-  return [x - r, y - r, x + r, y + r];
+// couleur principale du drapeau (la plus fréquente) : fond du reste du territoire
+function couleurPrincipale(d) {
+  if (d.couleur) return d.couleur;
+  const t = trame(d, 0), px = t.getContext("2d").getImageData(0, 0, t.width, t.height).data, n = new Map();
+  for (let i = 0; i < px.length; i += 16) { if (px[i + 3] < 200) continue; const q = (px[i] >> 4) << 8 | (px[i + 1] >> 4) << 4 | (px[i + 2] >> 4); n.set(q, (n.get(q) || 0) + 1); }
+  let q = 0, m = -1; for (const [c, v] of n) if (v > m) { m = v; q = c; }
+  return (d.couleur = `rgb(${(q >> 8 & 15) * 17},${(q >> 4 & 15) * 17},${(q & 15) * 17})`);
 }
-// remplissage à motif (le drapeau, placé pour couvrir le cadre) : plus rapide qu'un découpage suivi d'une image
-function motif(d, [a, b, c, e]) {
-  const bw = c - a, bh = e - b, t = trame(d, Math.max(bw, bh)), sc = Math.max(bw / t.width, bh / t.height) * 1.06;
-  const m = d.motifs?.[t.width] || ((d.motifs ||= {})[t.width] = ctx.createPattern(t, "no-repeat"));
-  m.setTransform(new DOMMatrix([sc, 0, 0, sc, a + (bw - t.width * sc) / 2, b + (bh - t.height * sc) / 2]));
-  return m;
+const dansCadre = ([[x0, y0], [x1, y1]], [x, y]) => y >= y0 - 0.01 && y <= y1 + 0.01 && (x0 <= x1 ? x >= x0 - 0.01 && x <= x1 + 0.01 : x >= x0 || x <= x1);
+let budget = 0, enAttente = false;   // places calculées par image (les autres à l'image suivante, sans à-coup)
+function peindreMorceaux(L, d, place) {
+  ctx.beginPath(); for (const m of L) chemin(m);
+  ctx.fillStyle = couleurPrincipale(d); ctx.fill();
+  const P = place(); if (!P) { enAttente = true; return; }
+  if (d3.geoDistance(P.c, centre) > Math.PI / 2 - 0.02) return;   // centre du drapeau derrière le globe : couleur seule
+  // drapeau droit à l'écran, attaché au centre de son territoire : échelles en x et en y prises de la projection autour du
+  // centre (le drapeau grandit avec le zoom et s'écrase un peu près du bord du globe, comme le territoire)
+  const p0 = proj(P.c), px = proj([P.c[0] + 1 / P.cs, P.c[1]]), py = proj([P.c[0], P.c[1] + (P.c[1] > 88 ? -1 : 1)]);
+  const sx = Math.hypot(px[0] - p0[0], px[1] - p0[1]), sy = Math.hypot(py[0] - p0[0], py[1] - p0[1]);
+  const t = trame(d, sx * P.w), su = P.w / t.width, sv = P.h / t.height;
+  const mo = d.motifs?.[t.width] || ((d.motifs ||= {})[t.width] = ctx.createPattern(t, "no-repeat"));
+  // pixel (u, v) de l'image → plan (x + u·su, y + h − v·sv) → écran (p0.x + sx·X, p0.y − sy·Y)
+  mo.setTransform(new DOMMatrix([sx * su, 0, 0, sy * sv, p0[0] + sx * P.x, p0[1] - sy * (P.y + P.h)]));
+  ctx.fillStyle = mo; ctx.fill();
 }
 // vrai si le drapeau est dessiné (image chargée)
 function peindreDrapeau(f, src) {
   const d = imageDrapeau(src); if (!d) return false;
-  const G = groupeDe(f), L = morceaux(lod(f)).filter(enVue);
+  const G = groupeDe(f), L = morceaux(lod(f)).filter(enVue), aspect = d.img.naturalHeight / d.img.naturalWidth || 0.5;
   const prin = L.filter(m => G.dans(m._c));
-  if (prin.length) { const bx = boiteEcran(G.boite); if (bx) { ctx.fillStyle = motif(d, bx); ctx.beginPath(); for (const m of prin) chemin(m); ctx.fill(); } }
+  if (prin.length) peindreMorceaux(prin, d, () => G.place || (budget-- > 0 ? (G.place = placer(G.prin, aspect)) : null));
   for (const m of L) {
     if (G.dans(m._c)) continue;
-    const bx = m._r < 0.05 ? boiteCercle(m) : boiteEcran(m._b); if (!bx || (bx[2] - bx[0] < 2 && bx[3] - bx[1] < 2)) continue;
-    ctx.fillStyle = motif(d, bx); ctx.beginPath(); chemin(m); ctx.fill();
+    const o = G.loin.find(x => dansCadre(x._b, m._c));
+    peindreMorceaux([m], d, () => !o ? null : o._place || (budget-- > 0 ? (o._place = placer([o.coordinates], aspect)) : null));
   }
   return true;
 }
@@ -237,6 +265,7 @@ function peindre() {
   ctx.beginPath(); chemin(grille); ctx.strokeStyle = C.grille; ctx.lineWidth = 1; ctx.stroke();
   // contours au niveau de détail du zoom : côtes réalistes de près comme de loin, même en mouvement (demande de l'utilisateur)
   choisirPas(); majVue();
+  budget = 15; enAttente = false;
   const paysSel = sel?.pays, survole = survol && !survol.sous ? survol.pays : null;
   // fond uni (en mode Drapeaux au niveau Pays : seulement sous les pays dont le drapeau n'est pas encore chargé)
   const drapPays = RUB.drapeaux && !modeEtats(), aDrapeau = f => drapPays && f.properties.a2 && DRAP.get(drapeauPays(f.properties.a2))?.ok;
@@ -305,6 +334,7 @@ function peindre() {
     ctx.textAlign = "left";
   }
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.strokeStyle = C.contour; ctx.lineWidth = 1.5; ctx.stroke();
+  if (enAttente) dessiner();   // places de drapeaux pas encore calculées : à l'image suivante
 }
 function taille() {
   const dpr = Math.min(2, devicePixelRatio || 1);
