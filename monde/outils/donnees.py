@@ -1,6 +1,7 @@
 """Information Monde : données de la page information-monde.html (à relancer seulement pour changer de source).
 
 - monde/pays.json : contours des pays (world-atlas 2.0.2, Natural Earth 1:50 M, domaine public), code ISO 3166-1 alpha-2 ajouté (« a2 »).
+- monde/lacs.json : lacs (Natural Earth 1:50 M, domaine public), dessinés couleur de l'eau par-dessus les pays.
 - monde/canada.json : provinces et territoires (Natural Earth 1:50 M admin-1, domaine public), coordonnées arrondies.
 - monde/drapeaux/<a2>.svg : drapeaux des pays (flagcdn.com, Flagpedia, proportions officielles).
 - monde/drapeaux/ca/<code>.svg : drapeaux des provinces et territoires (Wikimedia Commons, domaine public).
@@ -44,6 +45,12 @@ def canada():
          for x in d["features"] if x["properties"]["adm0_a3"] == "CAN"]
     json.dump({"type": "FeatureCollection", "features": f}, open(os.path.join(MONDE, "canada.json"), "w"), separators=(",", ":"))
 
+def lacs():
+    d = json.loads(lire("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_lakes.geojson"))
+    f = [{"type": "Feature", "properties": {}, "geometry": {"type": x["geometry"]["type"], "coordinates": arrondir(x["geometry"]["coordinates"])}}
+         for x in d["features"]]
+    json.dump({"type": "FeatureCollection", "features": f}, open(os.path.join(MONDE, "lacs.json"), "w"), separators=(",", ":"))
+
 # fichiers de Wikimedia Commons (domaine public)
 PROVINCES = {
     "CA-AB": "Flag of Alberta.svg", "CA-BC": "Flag of British Columbia.svg", "CA-MB": "Flag of Manitoba.svg",
@@ -63,5 +70,7 @@ def drapeaux(liste):
         time.sleep(3)
 
 if __name__ == "__main__":
-    liste = pays(); canada(); drapeaux(liste)
+    import sys
+    if sys.argv[1:] == ["lacs"]: lacs(); sys.exit()   # seulement les lacs
+    liste = pays(); canada(); lacs(); drapeaux(liste)
     print(len(liste), "pays")

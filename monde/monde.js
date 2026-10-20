@@ -33,7 +33,7 @@ const nomSous = (a2, s) => nomCode(a2, s.properties.code);
 const drapeauPays = a2 => `monde/drapeaux/${a2.toLowerCase()}.svg`;
 const drapeauSous = (a2, s) => SOUS[a2].dossier + s.properties.code.split("-")[1].toLowerCase() + ".svg";
 
-let PAYS = [], FRONTIERES, FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
+let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.4);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
@@ -44,15 +44,20 @@ const couleurs = () => { const s = getComputedStyle(document.documentElement);
     .map(n => [n, s.getPropertyValue("--" + n).trim()])); };
 
 /* ---------- données des subdivisions et villes ---------- */
-async function charger(a2) {
-  if (!SOUS[a2]) return null;
-  if (charges[a2]) return charges[a2];
-  const [d, villes] = await Promise.all([fetch(SOUS[a2].fichier).then(r => r.json()), fetch(SOUS[a2].villes).then(r => r.ok ? r.json() : []).catch(() => [])]);
-  // anneaux dans le sens attendu par d3 (horaire) : sinon le polygone couvrirait tout le reste du globe
+// anneaux dans le sens attendu par d3 (horaire) : sinon le polygone couvrirait tout le reste du globe
+function sensHoraire(d) {
   for (const s of d.features) if (d3.geoArea(s) > 2 * Math.PI) {
     const polys = s.geometry.type === "Polygon" ? [s.geometry.coordinates] : s.geometry.coordinates;
     for (const p of polys) for (const r of p) r.reverse();
   }
+}
+// un point dans un lac (boîte d'abord, pour aller vite)
+const dansLac = ([x, y]) => BOITES_LACS.some(([[x0, y0], [x1, y1]], i) => x >= x0 && x <= x1 && y >= y0 && y <= y1 && d3.geoContains(LACS.features[i], [x, y]));
+async function charger(a2) {
+  if (!SOUS[a2]) return null;
+  if (charges[a2]) return charges[a2];
+  const [d, villes] = await Promise.all([fetch(SOUS[a2].fichier).then(r => r.json()), fetch(SOUS[a2].villes).then(r => r.ok ? r.json() : []).catch(() => [])]);
+  sensHoraire(d);
   d.features.sort((a, b) => nomSous(a2, a).localeCompare(nomSous(a2, b), "fr"));
   // frontières internes : contours de chaque subdivision (ceux du pays sont redessinés par-dessus)
   const mesh = { type: "MultiLineString", coordinates: d.features.flatMap(s => (s.geometry.type === "Polygon" ? [s.geometry.coordinates] : s.geometry.coordinates).flat()) };
@@ -76,12 +81,14 @@ function peindre() {
     ctx.beginPath(); chemin(f);
     ctx.fillStyle = f === paysSel ? (sel.sous ? C["pays-fond"] : C.choisi) : f === survol?.pays && !survol.sous ? C["terre-survol"] : C.terre; ctx.fill();
   }
-  ctx.beginPath(); chemin(FRONTIERES); ctx.strokeStyle = C.frontiere; ctx.lineWidth = 0.6; ctx.stroke();
   // subdivisions du pays choisi : la choisie (ou survolée) en couleur, frontières internes
   const S = paysSel && charges[paysSel.properties.a2];
+  if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
+    ctx.beginPath(); chemin(s); ctx.fillStyle = s === sel.sous ? C.choisi : C["terre-survol"]; ctx.globalAlpha = s === sel.sous ? 1 : 0.6; ctx.fill(); ctx.globalAlpha = 1; }
+  // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
+  ctx.beginPath(); chemin(LACS); ctx.fillStyle = C.ocean; ctx.fill();
+  ctx.beginPath(); chemin(FRONTIERES); ctx.strokeStyle = C.frontiere; ctx.lineWidth = 0.6; ctx.stroke();
   if (S) {
-    for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
-      ctx.beginPath(); chemin(s); ctx.fillStyle = s === sel.sous ? C.choisi : C["terre-survol"]; ctx.globalAlpha = s === sel.sous ? 1 : 0.6; ctx.fill(); ctx.globalAlpha = 1; }
     ctx.beginPath(); chemin(S.mesh); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 0.8; ctx.stroke();
   }
   if (paysSel) { ctx.beginPath(); chemin(paysSel); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 1.4; ctx.stroke(); }
@@ -120,6 +127,7 @@ function sousLe([x, y]) {
   for (const p of pointsVilles) { const d = Math.hypot(p.x - x, p.y - y); if (d < dmin) { dmin = d; proche = p.v; } }
   if (proche) return { pays: sel.pays, sous: sel.sous, ville: proche };
   const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - H / 2) < R * k ? { ocean: true } : null;
+  if (dansLac(p)) return { ocean: true };
   const pays = PAYS.find(f => d3.geoContains(f, p)); if (!pays) return { ocean: true };
   const S = pays === sel?.pays && charges[pays.properties.a2];
   return { pays, sous: S ? S.features.find(s => d3.geoContains(s, p)) || null : null, ville: null };
@@ -359,8 +367,10 @@ async function depuisAdresse(bouger) {
 /* ---------- démarrage ---------- */
 (async () => {
   couleurs();
-  const [w, fiches] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({}))]);
+  const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+    fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
+  if (lacs) { sensHoraire(lacs); LACS = lacs; BOITES_LACS = lacs.features.map(f => d3.geoBounds(f)); }
   PAYS = topojson.feature(w, w.objects.countries).features;
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
   new ResizeObserver(taille).observe(canvas);
