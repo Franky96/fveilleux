@@ -9,7 +9,7 @@ const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const p = await b.newPage({ viewport: { width: 1300, height: 900 } });
 p.on('pageerror', e => console.log('ERR', e.message));
 await p.addInitScript(() => { sessionStorage.setItem('loggedIn','1'); sessionStorage.setItem('userRole','admin'); localStorage.setItem('mondeRub', '{"drapeaux":false}'); });   // géométrie seule (sans drapeaux)
-await p.goto('http://localhost:8799/information-monde.html?essai#ZZ'); await p.waitForTimeout(3000);
+await p.goto('http://localhost:8799/information-monde.html?essai#ZZ'); await p.waitForFunction(() => window.__globe && document.getElementById('charge').hidden, null, { timeout: 90000 });
 const res = await p.evaluate(async () => {
   const G = window.__globe, cv = document.getElementById('globe'), ctx = cv.getContext('2d');
   const hex = h => { const m = h.match(/\w\w/g).map(x => parseInt(x, 16)); return m; };

@@ -87,6 +87,17 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 .zooms button{width:34px;height:34px;border-radius:6px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;font-size:17px;line-height:1}
 .zooms button:hover{border-color:var(--accent)}
 .bulle{position:absolute;pointer-events:none;background:#0b1016e6;color:#eef3f7;font-size:13px;padding:4px 8px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-130%)}
+/* chargement au début (monde.js : preparerTout) : barre par-dessus le globe, effacée une fois tout prêt */
+.charge{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:var(--ocean);transition:opacity .4s ease}
+.charge.fini{opacity:0;pointer-events:none}
+.charge[hidden]{display:none}
+.charge-boite{display:grid;gap:10px;width:min(320px,calc(100% - 48px))}
+.charge-titre{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:14px;color:var(--text)}
+.charge-barre{height:6px;border-radius:3px;background:var(--line2);overflow:hidden}
+.charge-barre i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s linear}
+.charge-ligne{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted)}
+#chargePct{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){.charge,.charge-barre i{transition:none}}
 .aide{margin:0;padding:8px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
 .bas{position:absolute;left:10px;bottom:52px;display:flex;gap:6px}
 .bas button{padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;font-size:.82rem;font-weight:600}
@@ -168,6 +179,13 @@ body.plein-actif{overflow:hidden}
         <button type="button" id="zPlus" title="Zoom avant" aria-label="Zoom avant">+</button>
         <button type="button" id="zMoins" title="Zoom arrière" aria-label="Zoom arrière">−</button>
         <button type="button" id="zTout" title="Voir tout le globe" aria-label="Voir tout le globe">⟲</button>
+      </div>
+      <div class="charge" id="charge" role="status" aria-live="polite">
+        <div class="charge-boite">
+          <span class="charge-titre">Préparation du globe</span>
+          <div class="charge-barre"><i id="chargeBarre"></i></div>
+          <span class="charge-ligne"><span id="chargeEtape">Chargement…</span><span id="chargePct">0 %</span></span>
+        </div>
       </div>
       <div class="bulle" id="bulle" hidden></div>
       <div class="bas">
