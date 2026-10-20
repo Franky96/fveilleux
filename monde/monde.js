@@ -167,12 +167,13 @@ function symetrique(d) {
 // tourne ou zoome, pas de nouvelle trame (préparer une image coûte) : la plus proche déjà prête
 const TAILLES = [64, 128, 256, 512, 1024, 2048];
 const tailleTrame = v => TAILLES.find(x => x >= v * Math.min(2, devicePixelRatio || 1)) || 2048;
-function trame(d, largeur, hauteur) {
-  const tw = tailleTrame(largeur), th = tailleTrame(hauteur), cle = tw + "x" + th;
+// [fx, fy] : part du cadre occupée par le drapeau (moins de 1 : couleurs du bord prolongées jusqu'au bout du cadre)
+function trame(d, largeur, hauteur, [fx, fy] = [1, 1]) {
+  const tw = tailleTrame(largeur), th = tailleTrame(hauteur), suf = fx < 1 || fy < 1 ? `@${fx.toFixed(3)},${fy.toFixed(3)}` : "", cle = tw + "x" + th + suf;
   if (!d.trames[cle]) {
-    const pretes = Object.keys(d.trames);
+    const pretes = Object.keys(d.trames).filter(c => (c.includes("@") ? c.slice(c.indexOf("@")) : "") === suf);
     if (rapide && pretes.length) {
-      const ecart = c => { const [a, b] = c.split("x").map(Number); return Math.abs(Math.log(a / tw)) + Math.abs(Math.log(b / th)); };
+      const ecart = c => { const [a, b] = c.split("@")[0].split("x").map(Number); return Math.abs(Math.log(a / tw)) + Math.abs(Math.log(b / th)); };
       return d.trames[pretes.reduce((a, b) => ecart(b) < ecart(a) ? b : a)];
     }
     // le SVG est d'abord tramé à ses propres proportions, puis étiré : dessiné directement dans un cadre d'autres proportions,
@@ -182,7 +183,14 @@ function trame(d, largeur, hauteur) {
     const sw = Math.min(4096, Math.max(tw, Math.round(th * r))), sh = Math.max(1, Math.round(sw / r));
     const s = document.createElement("canvas"); s.width = sw; s.height = sh; s.getContext("2d").drawImage(d.img, 0, 0, sw, sh);
     const c = document.createElement("canvas"); c.width = tw; c.height = th;
-    const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(s, 0, 0, tw, th);
+    const g = c.getContext("2d"); g.imageSmoothingQuality = "high";
+    const x0 = Math.round(tw * (1 - fx) / 2), y0 = Math.round(th * (1 - fy) / 2), cw = tw - 2 * x0, ch = th - 2 * y0;
+    g.drawImage(s, x0, y0, cw, ch);
+    // couleurs prolongées (demande de l'utilisateur) : la 2e rangée (ou colonne) du bord recopiée jusqu'au bout du cadre,
+    // ex. le rouge et le blanc du Canada continuent en haut et en bas
+    g.imageSmoothingEnabled = false;
+    if (y0 > 0 && ch > 2) { g.drawImage(c, 0, y0 + 1, tw, 1, 0, 0, tw, y0 + 1); g.drawImage(c, 0, y0 + ch - 2, tw, 1, 0, y0 + ch - 1, tw, th - y0 - ch + 1); }
+    if (x0 > 0 && cw > 2) { g.drawImage(c, x0 + 1, 0, 1, th, 0, 0, x0 + 1, th); g.drawImage(c, x0 + cw - 2, 0, 1, th, x0 + cw - 1, 0, tw - x0 - cw + 1, th); }
     d.trames[cle] = c;
   }
   return d.trames[cle];
@@ -209,21 +217,24 @@ function placer(polys, F = 1.5, sym = false) {
   const az = d3.geoAzimuthalEquidistant().rotate([-lc, -pc]).scale(1).translate([0, 0]).clipAngle(null).precision(0);
   let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
   for (const c of polys) for (const r of c) for (const g of r) { const [x, y] = az(g); if (x < X0) X0 = x; if (x > X1) X1 = x; if (-y < Y0) Y0 = -y; if (-y > Y1) Y1 = -y; }
+  let fx = 1, fy = 1;
   const w = X1 - X0, h = Y1 - Y0, e = Math.pow(F / (w / h), 2 / 3);   // e > 1 : territoire plus étroit que le drapeau
   if (w > 0 && h > 0 && isFinite(e)) {
     // (au plus 2,5 radians du centre : au-delà, la projection azimutale replie le cadre)
     // (en largeur, on rogne deux fois plus du côté opposé au mât, où l'emblème est souvent : cercle du Groenland, canton
-    // des États-Unis, étoile du Chili… ; un drapeau symétrique n'est pas rogné en largeur, seulement étiré : on voit ses
-    // deux bords, ex. tout le rouge du Canada, demande de l'utilisateur)
-    if (e > 1 && !sym) { const x = Math.max(0, Math.min(w * e, 5) - w); X0 -= x / 3; X1 += 2 * x / 3; }
+    // des États-Unis, étoile du Chili…) ; un drapeau symétrique n'est pas rogné : le cadre reste celui du territoire, le
+    // drapeau en occupe le milieu et ses couleurs du bord sont prolongées jusqu'au bout (demande de l'utilisateur : tout le
+    // rouge du Canada, et le blanc du milieu prolongé en haut et en bas, sans quoi il avait l'air d'un carré)
+    if (sym) { if (e > 1) fy = 1 / e; else fx = e; }
+    else if (e > 1) { const x = Math.max(0, Math.min(w * e, 5) - w); X0 -= x / 3; X1 += 2 * x / 3; }
     else { const m = (Y0 + Y1) / 2, d = Math.min(h / e, 5) / 2; Y0 = m - d; Y1 = m + d; }
   }
-  // grille fixe de points du drapeau ramenés sur le globe (ligne 0 = haut du drapeau), une case par 5° environ (1 × 1 à
+  // grille fixe de points du drapeau ramenés sur le globe (ligne 0 = haut du drapeau), une case par 7° environ (1 × 1 à
   // 16 × 12) : la même au repos, en mouvement et à tout zoom (une grille qui changeait faisait sauter le drapeau)
   const deg = 180 / Math.PI, gx = Math.max(1, Math.min(16, Math.ceil((X1 - X0) * deg / 7))), gy = Math.max(1, Math.min(12, Math.ceil((Y1 - Y0) * deg / 7)));
   const geo = (x, y) => az.invert([x, -y]), grille = [];
   for (let j = 0; j <= gy; j++) { const l = []; for (let i = 0; i <= gx; i++) l.push(geo(X0 + (X1 - X0) * i / gx, Y1 - (Y1 - Y0) * j / gy)); grille.push(l); }
-  return { grille };
+  return { grille, f: [fx, fy] };
 }
 // couleur principale du drapeau (la plus fréquente) : fond du reste du territoire
 function couleurPrincipale(d) {
@@ -245,7 +256,7 @@ function peindreMorceaux(L, d, place) {
   const G = P.grille, nx = G[0].length - 1, ny = G.length - 1, vu = g => d3.geoDistance(g, centre) < Math.PI / 2 - 0.005;
   const a = proj(G[0][0]), b = proj(G[0][nx]), c = proj(G[ny][0]);
   const larg = Math.hypot(b[0] - a[0], b[1] - a[1]), haut = Math.hypot(c[0] - a[0], c[1] - a[1]);
-  const t = trame(d, larg, haut), cleT = t.width + "x" + t.height;
+  const t = trame(d, larg, haut, P.f), cleT = t.width + "x" + t.height + "@" + P.f;
   const mo = d.motifs?.[cleT] || ((d.motifs ||= {})[cleT] = ctx.createPattern(t, "no-repeat"));
   const pr = G.map(l => l.map(g => vu(g) ? proj(g) : null));
   const dehors = (...q) => q.every(p => p[0] < 0) || q.every(p => p[0] > W) || q.every(p => p[1] < 0) || q.every(p => p[1] > H);
