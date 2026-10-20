@@ -729,7 +729,8 @@ async function preparerTout() {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
     proj, PAYS, LACS, dansLac, C, DRAP, charges, groupeDe, W: () => W, H: () => H, R: () => R, k: () => k,
     // réglage d'un drapeau à l'essai (monde/outils/essai_drapeau.mjs) : place recalculée, puis le territoire cadré
-    territoire: cle => cle.includes("-") ? charges[cle.slice(0, 2)]?.features.find(s => s.properties.code === cle) : PAYS.find(f => f.properties.a2 === cle),
+    territoire: cle => cle.includes("-") ? charges[cle.slice(0, 2)]?.features.find(s => s.properties.code === cle)
+      : PAYS.filter(f => f.properties.a2 === cle).sort((x, y) => y._r - x._r)[0],   // (deux « AU » : l'Australie, et les îles Ashmore-et-Cartier)
     regler(cle, o) { const f = this.territoire(cle); if (o) REGLAGES[cle] = o; else delete REGLAGES[cle]; delete f._grp; dessiner(); },
     cadrer(cle) {
       const f = this.territoire(cle), G = groupeDe(f), M = morceaux(f).filter(m => G.dans(m._c));
