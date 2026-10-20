@@ -1,4 +1,4 @@
-"""Présidentielle 2027 : intentions de vote au 1er tour (Wikipédia anglais, « Opinion polling for the 2027 French presidential
+"""Présidentielle 2027 : intentions de vote au 1er tour et au 2e tour (duels) (Wikipédia anglais, « Opinion polling for the 2027 French presidential
 election », qui cite la notice de chaque sondage) → ../sondages-pres.json
 
 Chaque sondage teste plusieurs scénarios (listes de candidats différentes) : on garde le premier, comme Wikipédia le
@@ -20,7 +20,7 @@ def verifie(page):
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 URL = "https://en.wikipedia.org/w/index.php?title=Opinion_polling_for_the_2027_French_presidential_election&action=raw"
-HDR = {"User-Agent": "fveilleuxBot/1.0 (https://fveilleux.com; franky.veilleux@gmail.com)"}
+HDR = {"User-Agent": "fveilleuxBot/1.0 (https://fveilleux.com)"}
 MOIS = {m: i + 1 for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"])}
 # parti (modèle {{party color|…}} de Wikipédia) → étiquette et couleur de la page
 PARTI = {
@@ -107,12 +107,48 @@ for table in re.findall(r"\{\|.*?\n\|\}", premier, flags=re.S):
             REJETS.append((d, firme, col, len(noms), sum(vals.values()))); continue
         sondages.append({"d": d, "f": firme, "n": ech, "v": vals})
 
+# 2e tour : un tableau par duel (« === Philippe vs. Le Pen === »), jusqu'aux scénarios ; les duels rangés sous « Declined to
+# be candidates » (candidat qui a renoncé) sont marqués
+second = texte[texte.find("== Second round =="): texte.find("== Scenario polling ==")]
+duels, renonce = [], False
+for morceau in re.split(r"\n(?==+ ?[^=\n]+ ?=+)", second):
+    titre = re.match(r"=+ ?([^=\n]+?) ?=+", morceau)
+    if not titre: continue
+    if re.match(r"===? ?[^=]", morceau): renonce = "declined" in titre[1].lower()   # titre de niveau 3 : nouvelle rubrique
+    for table in re.findall(r"\{\|.*?\n\|\}", morceau, flags=re.S):
+        noms, partis = [], []
+        for l in table.split("\n"):
+            if not l.startswith("!") or "File:" in l: continue
+            liens = re.findall(r"\[\[([^\]|]+)(?:\|[^\]]*)?\]\]", l)
+            if liens: noms.append(liens[0].strip()); partis.append(liens[1].strip() if len(liens) > 1 else "")
+        if len(noms) != 2: continue
+        couleurs = re.findall(r"party color\|([^}]+)\}\}", table)[:2]
+        for n, pl, pc in zip(noms, partis, couleurs + [""] * 2):
+            lab, coul = PARTI.get(pc.strip(), PARTI.get(pl, (pl or "", "#8D949A")))
+            candidats.setdefault(n, {"parti": lab, "c": coul})
+        res = []
+        for bloc in table.split("\n|-")[1:]:
+            lignes = [l for l in bloc.split("\n") if l.startswith("|") and not l.startswith("|-") and not l.startswith("|}")]
+            if len(lignes) < 5: continue
+            cell = [cellule(l) for l in lignes]
+            d = date_de(cell[1][0] + cell[1][1])
+            if not d: continue
+            firme = sans_modeles(cell[0][1])
+            firme = re.sub(r"\[https?://\S+\s+([^\]]+)\]", r"\1", firme)
+            firme = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]*)\]\]", r"\1", firme).strip()
+            ech = re.sub(r"[^\d]", "", sans_modeles(cell[2][1]))
+            v = [re.search(r"(\d+(?:\.\d+)?)\s*%", sans_modeles(c[1]).replace("'", "")) for c in cell[3:5]]
+            if not all(v) or not 98 <= float(v[0][1]) + float(v[1][1]) <= 102 or not firme: continue
+            res.append({"d": d, "f": firme, "n": ech, "a": float(v[0][1]), "b": float(v[1][1])})
+        if res: duels.append({"a": noms[0], "b": noms[1], **({"renonce": True} if renonce else {}), "sondages": sorted(res, key=lambda x: x["d"])})
+
 sondages.sort(key=lambda s: s["d"])
 if "-v" in __import__("sys").argv: print(*REJETS[:40], sep="\n")
 if len(sondages) < 30: raise SystemExit(f"Seulement {len(sondages)} sondages lus : sondages-pres.json inchangé.")
-utilises = {n for s in sondages for n in s["v"]}
+utilises = {n for s in sondages for n in s["v"]} | {n for x in duels for n in (x["a"], x["b"])}
 json.dump({"source": "Wikipédia, « Opinion polling for the 2027 French presidential election » (notices de la Commission des sondages)",
-           "candidats": {n: c for n, c in candidats.items() if n in utilises}, "sondages": sondages},
+           "candidats": {n: c for n, c in candidats.items() if n in utilises}, "sondages": sondages, "duels": duels},
           open(os.path.join(ICI, "..", "sondages-pres.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(f"{len(sondages)} sondages · du {sondages[0]['d']} au {sondages[-1]['d']} · {len(utilises)} candidats · dernier : {sondages[-1]['f']}")
+print(f"2e tour : {len(duels)} duels, {sum(len(x['sondages']) for x in duels)} sondages ·", " · ".join(f"{x['a'].split()[-1]}–{x['b'].split()[-1]} {len(x['sondages'])}" for x in duels[:8]))
 verifie("france")

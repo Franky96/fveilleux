@@ -21,7 +21,7 @@ def verifie(page):
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 URL = "https://en.wikipedia.org/w/index.php?title=Next_French_legislative_election&action=raw"
-HDR = {"User-Agent": "fveilleuxBot/1.0 (https://fveilleux.com; franky.veilleux@gmail.com)"}
+HDR = {"User-Agent": "fveilleuxBot/1.0 (https://fveilleux.com)"}
 # colonnes du tableau Wikipédia, dans l'ordre → bloc de la page
 COLONNES = ["EXG", "LFI", "LE", "PCF", "PS", "DVG", "ECO", "ENS", "DVC", "LR", "DVD", "DLF", "UDR", "RN", "REC", "AUT"]
 BLOC = {"EXG": "EXG", "LFI": "NFP", "LE": "NFP", "PCF": "NFP", "PS": "NFP", "DVG": "DVG", "ECO": "DVG", "ENS": "ENS", "DVC": "DVC",

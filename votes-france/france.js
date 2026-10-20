@@ -74,6 +74,28 @@ function presRecente() {
   const moy = Object.entries(cands).filter(([, v]) => v.length >= Math.ceil(r.length / 2)).map(([k, v]) => [k, d3.mean(v)]).sort((a, b) => b[1] - a[1]);
   return { moy, n: r.length, de: r[0].d, a: r[r.length - 1].d };
 }
+// 2e tour : duel entre les deux premiers de la moyenne du 1er tour ; moyenne des cinq derniers sondages de ce duel
+// (comme les duels de Votes États-Unis) ; autres duels testés depuis 4 mois (hors candidats qui ont renoncé)
+const moyDuel = x => { const r = x.sondages.slice(-5); return { a: d3.mean(r, s => s.a), b: d3.mean(r, s => s.b), n: r.length, de: r[0].d, au: r[r.length - 1].d }; };
+const duelDe = (u, v) => (PRES.duels || []).find(x => (x.a === u && x.b === v) || (x.a === v && x.b === u));
+function secondTour(p) {
+  const [[u], [v]] = p.moy, D = duelDe(u, v);
+  const fin = d3.max((PRES.duels || []).flatMap(x => x.sondages), s => s.d);
+  const autres = (PRES.duels || []).filter(x => x !== D && !x.renonce && fin && (new Date(fin) - new Date(x.sondages[x.sondages.length - 1].d)) / 864e5 <= 120)
+    .sort((x, y) => y.sondages.length - x.sondages.length);
+  const ligne = (x, m) => `<div class="vu-duel"><span class="vu-duel-noms"><b style="color:${coulC(x.a)}">${esc(x.a)} <span>${nf(m.a, 0)} %</span></b><small>${m.n} sondage${m.n > 1 ? "s" : ""}</small><b style="color:${coulC(x.b)}"><span>${nf(m.b, 0)} %</span> ${esc(x.b)}</b></span>
+    <span class="vu-duel-barre"><i style="width:${m.a}%;background:${coulC(x.a)}"></i><i style="width:${m.b}%;background:${coulC(x.b)}"></i></span></div>`;
+  let h = `<span class="lv-eyebrow vf-t2">2e tour projeté · ${esc(nomCourt(u))} contre ${esc(nomCourt(v))}</span>`;
+  if (!D) return h + `<p class="lv-muted lv-source">Aucun sondage de 2e tour publié pour ce duel.</p>`;
+  const m = moyDuel(D), g = m.a >= m.b ? "a" : "b", gp = Math.max(m.a, m.b);
+  h += `<p class="vf-t2-titre"><b style="color:${coulC(D[g])}">${esc(D[g])}</b> l'emporterait avec <b>${nf(gp, 1)} %</b> des voix.</p>` + ligne(D, m)
+    + `<p class="lv-muted lv-source">Duel entre les deux premiers de la moyenne du 1er tour ; moyenne des ${m.n} derniers sondages de ce duel (du ${dateFr(m.de)} au ${dateFr(m.au)}). Ce sont des intentions de vote, pas une prévision : les reports de voix peuvent changer d'ici le vote.</p>`;
+  // 2e place serrée au 1er tour : l'autre qualifié possible
+  const t3 = p.moy[2];
+  if (t3 && p.moy[1][1] - t3[1] < 3) h += `<p class="lv-muted lv-source">La 2e place est serrée : ${esc(nomCourt(v))} ne devance ${esc(nomCourt(t3[0]))} que de ${nf(p.moy[1][1] - t3[1], 1)} point${p.moy[1][1] - t3[1] >= 2 ? "s" : ""} au 1er tour${duelDe(u, t3[0]) ? `, et le duel ${esc(nomCourt(u))}–${esc(nomCourt(t3[0]))} est aussi sondé (ci-dessous)` : ""}.</p>`;
+  if (autres.length) h += `<span class="lv-eyebrow">Autres duels testés depuis 4 mois</span>` + autres.map(x => ligne(x, moyDuel(x))).join("");
+  return h;
+}
 const nomCourt = n => n.split(" ").slice(-1)[0].replace(/^(Pen|Villepin|Aignan)$/, m => ({ Pen: "Le Pen", Villepin: "de Villepin", Aignan: "Dupont-Aignan" })[m]);
 
 /* ---------- en-tête et hémicycle : Assemblée actuelle ---------- */
@@ -107,7 +129,7 @@ function dessinerTete() {
     const max = Math.max(40, top[1]);
     bloc.innerHTML = p.moy.filter(([, v]) => v >= 1).map(([k, v]) => `<div class="vf-cand" style="--c:${coulC(k)}"><span><b>${esc(k)}</b><small>${esc(parti22(k))}${P22.national[k] != null ? ` · <span class="vf-avant">${nf(P22.national[k], 1)} % en 2022</span>` : ""}</small></span>`
       + `<span class="vf-cand-barre"><i style="width:${100 * v / max}%"></i></span><b class="vf-cand-v">${nf(v, 1)} %</b></div>`).join("")
-      + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour.</p>`;
+      + `<p class="lv-muted lv-source">Les deux premiers se qualifient pour le 2e tour.</p>` + secondTour(p);
     return;
   }
   eyebrow.textContent = `Assemblée nationale · 577 sièges · majorité absolue ${MAJ}`;
