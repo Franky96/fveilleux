@@ -41,7 +41,7 @@ const ZOOM_MAX = 300;   // de quoi voir les quartiers d'une ville (demande de l'
 let rot = [96, -45, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
-  C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe", "ville-zone", "ville-zone-survol", "ville-choisie", "ville-limite"]
+  C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe"]
     .map(n => [n, s.getPropertyValue("--" + n).trim()])); };
 
 /* ---------- vitesse ---------- */
@@ -116,23 +116,7 @@ function sensHoraire(d) {
 // un point dans un lac (boîte d'abord, pour aller vite)
 const dansBoite = ([[x0, y0], [x1, y1]], [x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
 const dansLacMonde = p => BOITES_LACS.some((b, i) => dansBoite(b, p) && d3.geoContains(LACS.features[i], p));
-// eau détaillée (OpenStreetMap) des zones autour des villes (eau_qc.py) : dans une zone chargée, elle remplace les lacs du 1:50 M
-let ZONES_EAU = [];   // { id, cadre, zone, eau } ; zone et eau chargées quand la zone passe à l'écran
-const zoneDe = p => ZONES_EAU.find(z => z.eau && dansBoite([[z.cadre[0], z.cadre[1]], [z.cadre[2], z.cadre[3]]], p) && d3.geoContains(z.zone, p));
-const dansLac = p => { const z = zoneDe(p); return z ? dansBoite(z.boite, p) && d3.geoContains(z.eau, p) : dansLacMonde(p); };
-function chargerZonesVisibles() {
-  for (const z of ZONES_EAU) {
-    if (z.charge) continue;
-    const c = [(z.cadre[0] + z.cadre[2]) / 2, (z.cadre[1] + z.cadre[3]) / 2], r = d3.geoDistance([z.cadre[0], z.cadre[1]], [z.cadre[2], z.cadre[3]]) / 2;
-    if (d3.geoDistance(c, centre) > rayonVue + r) continue;
-    z.charge = true;
-    fetch(`monde/eau/${z.id}.json`).then(r => r.json()).then(f => {
-      const zone = { type: "Feature", properties: {}, geometry: f.zone }, eau = { type: "Feature", properties: {}, geometry: f.geometry };
-      sensHoraire({ features: [zone, eau] }); z.zone = cercle(zone); z.eau = eau; z.boite = d3.geoBounds(eau);
-      prechauffer([eau]); dessiner();
-    }).catch(() => {});
-  }
-}
+const dansLac = dansLacMonde;
 // boîte qui peut passer l'antiméridien (Russie, Fidji…)
 const dansBoiteGeo = ([[x0, y0], [x1, y1]], [x, y]) => y >= y0 && y <= y1 && (x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1);
 async function charger(a2) {
@@ -143,13 +127,7 @@ async function charger(a2) {
   d.features.sort((a, b) => nomSous(a2, a).localeCompare(nomSous(a2, b), "fr"));
   // frontières internes : contours de chaque subdivision (ceux du pays sont redessinés par-dessus)
   const mesh = { type: "MultiLineString", coordinates: d.features.flatMap(s => (s.geometry.type === "Polygon" ? [s.geometry.coordinates] : s.geometry.coordinates).flat()) };
-  // limites des territoires des villes (Québec pour l'instant : limites_qc.py)
-  await Promise.all(villes.filter(v => v.limites).map(async v => {
-    try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f);
-      // eau du territoire municipal (fleuve, rivières, lacs : limites_qc.py), dessinée couleur de l'eau
-      if (f.eau) { const e = { type: "Feature", properties: {}, geometry: f.eau }; sensHoraire({ features: [e] }); v.eau = e; }
-    } catch {} }));
-  prechauffer([...d.features, mesh, ...villes.flatMap(v => [v.zone, v.eau].filter(Boolean))]);
+  prechauffer([...d.features, mesh]);
   return (charges[a2] = { features: d.features, mesh, villes });
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
@@ -190,34 +168,15 @@ function peindre() {
   if (S) remplir(S.features.map(f => lod(f)), fondPays);
   if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
     ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
-  // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
-  // (tous les lacs, même en mouvement)
-  // lacs du 1:50 M, sauf dans les zones d'eau détaillée chargées (découpées du dessin), puis l'eau détaillée de ces zones
-  const zones = ZONES_EAU.filter(z => z.eau && enVue(z.zone));
-  if (zones.length) {
-    ctx.save(); ctx.beginPath(); ctx.rect(-10, -10, W + 20, H + 20); for (const z of zones) chemin(z.zone); ctx.clip("evenodd");
-    remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
-    ctx.restore();
-    remplir(zones.map(z => lod(z.eau)), C.ocean);
-  } else remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
-  if (k >= 3) chargerZonesVisibles();
+  // lacs et plans d'eau : couleur de l'eau, par-dessus les terres (tous, même en mouvement)
+  remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
   ctx.lineWidth = 0.6; remplir([lod(FRONTIERES)], C.frontiere, true);
   if (S) {
     ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true);
   }
   if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
-  // villes de la subdivision choisie : territoire (quand on a ses limites), point (carré pour une capitale), nom quand on est assez près
+  // villes de la subdivision choisie : un point par ville (carré pour une capitale), partout pareil (demande de l'utilisateur)
   pointsVilles = [];
-  // territoire des villes : leurs données (précises) passent avant celles du monde (1:50 M, grossières de près) :
-  // terre de la ville en fond opaque, puis son eau (fleuve, rivières, lacs), puis la teinte de la ville
-  const villesSel = S && sel.sous ? villesDe(paysSel.properties.a2, sel.sous.properties.code).filter(v => v.zone) : [];
-  remplir(villesSel.map(v => lod(v.zone)), C.choisi);
-  remplir(villesSel.filter(v => v.eau).map(v => lod(v.eau)), C.ocean);
-  for (const v of villesSel) {
-    ctx.beginPath(); chemin(lod(v.zone));
-    ctx.fillStyle = v === sel.ville ? C["ville-choisie"] : v === survol?.ville ? C["ville-zone-survol"] : C["ville-zone"]; ctx.fill();
-    ctx.strokeStyle = C["ville-limite"]; ctx.lineWidth = v === sel.ville ? 1.6 : 1; ctx.stroke();
-  }
   if (S && sel.sous) {
     ctx.font = "600 12px 'IBM Plex Sans', system-ui, sans-serif"; ctx.textBaseline = "middle";
     const liste = villesDe(paysSel.properties.a2, sel.sous.properties.code).filter(v => visible([v.lon, v.lat]));
@@ -227,15 +186,28 @@ function peindre() {
       ctx.beginPath(); v.cap ? ctx.rect(x - r, y - r, 2 * r, 2 * r) : ctx.arc(x, y, r, 0, 2 * Math.PI);
       ctx.fillStyle = choisie ? C.choisi : C.ville; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C["ville-trait"]; ctx.stroke();
     }
-    // noms : les plus peuplées d'abord, sans chevauchement
+    // noms sans chevauchement (demande de l'utilisateur) : ville choisie, capitales, puis par population ; pour chacune,
+    // à droite, à gauche, dessus, dessous puis en diagonale, la première place libre (ni sur un nom, ni sur un point) ;
+    // sinon pas de nom (la bulle au survol et la liste le donnent)
+    const touche = (a, b) => !(a[2] <= b[0] || a[0] >= b[2] || a[3] <= b[1] || a[1] >= b[3]);
+    const points = pointsVilles.map(({ v, x, y }) => ({ v, b: [x - 7, y - 7, x + 7, y + 7] }));
     const pris = [];
-    for (const { v, x, y } of [...pointsVilles].sort((a, b) => (b.v === sel.ville) - (a.v === sel.ville) || (b.v.pop || 0) - (a.v.pop || 0))) {
-      const w = ctx.measureText(v.nom).width, bx = [x + 8, y - 8, x + 12 + w, y + 8];
-      if (k < 5 && v !== sel.ville && !v.cap) continue;
-      if (pris.some(b => !(bx[2] < b[0] || bx[0] > b[2] || bx[3] < b[1] || bx[1] > b[3]))) continue;
-      pris.push(bx);
-      ctx.lineWidth = 3; ctx.strokeStyle = C.ocean; ctx.strokeText(v.nom, x + 9, y); ctx.fillStyle = C["texte-globe"]; ctx.fillText(v.nom, x + 9, y);
+    const ordre = [...pointsVilles].sort((a, b) => (b.v === sel.ville) - (a.v === sel.ville) || !!b.v.cap - !!a.v.cap || (b.v.pop || 0) - (a.v.pop || 0));
+    for (const { v, x, y } of ordre) {
+      const w = ctx.measureText(v.nom).width, h = 14, e = 9;
+      const places = [[x + e, y, "left"], [x - e, y, "right"], [x, y - e - 2, "center"], [x, y + e + 2, "center"],
+                      [x + e - 2, y - e, "left"], [x + e - 2, y + e, "left"], [x - e + 2, y - e, "right"], [x - e + 2, y + e, "right"]];
+      for (const [tx, ty, al] of places) {
+        const x0 = al === "left" ? tx : al === "right" ? tx - w : tx - w / 2, b = [x0 - 2, ty - h / 2, x0 + w + 2, ty + h / 2];
+        if (b[0] < 0 || b[2] > W || b[1] < 0 || b[3] > H) continue;
+        if (pris.some(p => touche(b, p)) || points.some(p => p.v !== v && touche(b, p.b))) continue;
+        pris.push(b);
+        ctx.textAlign = al; ctx.lineWidth = 3; ctx.strokeStyle = C.ocean; ctx.strokeText(v.nom, tx, ty);
+        ctx.fillStyle = C["texte-globe"]; ctx.fillText(v.nom, tx, ty);
+        break;
+      }
     }
+    ctx.textAlign = "left";
   }
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.strokeStyle = C.contour; ctx.lineWidth = 1.5; ctx.stroke();
 }
@@ -252,9 +224,6 @@ function sousLe([x, y]) {
   if (proche) return { pays: sel.pays, sous: sel.sous, ville: proche };
   const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - H / 2) < R * k ? { ocean: true } : null;
   if (dansLac(p)) return { ocean: true };
-  if (sel?.sous && villesDe(sel.pays.properties.a2, sel.sous.properties.code).some(v => v.eau && dansBoite(v.boite, p) && d3.geoContains(v.eau, p))) return { ocean: true };
-  if (sel?.sous) { const v = villesDe(sel.pays.properties.a2, sel.sous.properties.code).find(v => v.zone && dansBoite(v.boite, p) && d3.geoContains(v.zone, p));
-    if (v) return { pays: sel.pays, sous: sel.sous, ville: v }; }
   const pays = PAYS.find(f => dansBoiteGeo(f._b, p) && d3.geoContains(f, p)); if (!pays) return { ocean: true };
   const S = pays === sel?.pays && charges[pays.properties.a2];
   return { pays, sous: S ? S.features.find(s => d3.geoContains(s, p)) || null : null, ville: null };
@@ -336,8 +305,7 @@ function fiche() {
   if (ville) {
     nom = ville.nom; genre = ["Ville", capitale(a2, ville)].filter(Boolean).join(" · ");
     ({ img, credit } = imageVille(ville)); cle = ville.q;
-    extra = `<div class="code">${[ville.pop && `Population (recensement de 2021) : ${NB.format(ville.pop)}`,
-      ville.zone?.properties.km2 && `Superficie terrestre : ${NB.format(Math.round(ville.zone.properties.km2))} km²`].filter(Boolean).join("<br>")}</div>`;
+    extra = `<div class="code">${[ville.pop && `Population (recensement de 2021) : ${NB.format(ville.pop)}`].filter(Boolean).join("<br>")}</div>`;
   } else if (sous) {
     nom = nomSous(a2, sous); genre = sd.noms[sous.properties.code]?.[1] || "Subdivision";
     img = `<img src="${drapeauSous(a2, sous)}" alt="Drapeau : ${ESC(nom)}">`; code = sous.properties.code; cle = code;
@@ -358,8 +326,8 @@ function fiche() {
       const vs = villesDe(a2, sous.properties.code);
       html += `<h3>Villes · ${vs.length}</h3>` + (vs.length ? `<ul>${vs.map(v => `<li><button type="button" data-v="${v.q}"${v === ville ? ' aria-current="true"' : ""}>
         ${v.drapeau ? `<img src="${ESC(v.drapeau.src)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<i class="sans" aria-hidden="true"></i>`}<span>${ESC(v.nom)}</span></button></li>`).join("")}</ul>`
-        : `<p class="vide">Aucune ville de 100 000 habitants et plus ni capitale.</p>`)
-        + `<p class="note">Villes de 100 000 habitants et plus au recensement de 2021, et capitales (carré sur le globe).</p>`;
+        : `<p class="vide">Aucune ville connue.</p>`)
+        + `<p class="note">Les 5 villes les plus peuplées au recensement de 2021, et la capitale (carré sur le globe).</p>`;
     }
     html += `<h3>${ESC(sd.titre)} · ${S.features.length}</h3><ul>${S.features.map((s, i) => `<li><button type="button" data-i="${i}"${s === sous ? ' aria-current="true"' : ""}>
       <img src="${drapeauSous(a2, s)}" alt="" loading="lazy"><span>${ESC(nomSous(a2, s))}</span></button></li>`).join("")}</ul>`;
@@ -499,7 +467,6 @@ async function depuisAdresse(bouger) {
   const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
     fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
-  fetch("monde/eau/index.json").then(r => r.ok ? r.json() : []).then(l => { ZONES_EAU = l.map(z => ({ ...z })); dessiner(); }).catch(() => {});
   PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
   for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
@@ -513,6 +480,6 @@ async function depuisAdresse(bouger) {
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
-    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k, villes: () => Object.values(charges).flatMap(c => c.villes), zones: () => ZONES_EAU };
+    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();

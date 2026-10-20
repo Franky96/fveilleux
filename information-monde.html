@@ -23,7 +23,7 @@
   --accent:#e8b04a; --accent-d:#3a2c12; --on-accent:#fbe7bf;
   /* globe (lu par monde.js) */
   --ocean:#0e2332; --grille:rgba(160,200,225,.08); --terre:#3b4855; --terre-survol:#506172;
-  --frontiere:#0b1016; --choisi:#43b86a; --pays-fond:#2b5a3a; --ville:#f4f1ea; --ville-trait:#0b1016; --texte-globe:#f4f1ea; --ville-zone:rgba(20,60,35,.55); --ville-zone-survol:rgba(20,60,35,.8); --ville-choisie:#1f7a43; --ville-limite:#e9fff0; --sous-trait:#d9f5e1; --contour:#2b4a60;
+  --frontiere:#0b1016; --choisi:#43b86a; --pays-fond:#2b5a3a; --ville:#f4f1ea; --ville-trait:#0b1016; --texte-globe:#f4f1ea; --sous-trait:#d9f5e1; --contour:#2b4a60;
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -34,7 +34,7 @@ html.light{
   --text:#14202a; --muted:#53636f;
   --accent:#a8670a; --accent-d:#f6e6c8; --on-accent:#5a3600;
   --ocean:#cfe2ec; --grille:rgba(30,70,100,.09); --terre:#e7e1d5; --terre-survol:#d6cdbb;
-  --frontiere:#9aa8b2; --choisi:#3d9f5a; --pays-fond:#bfe0c8; --ville:#1d2a35; --ville-trait:#ffffff; --texte-globe:#14202a; --ville-zone:rgba(255,255,255,.55); --ville-zone-survol:rgba(255,255,255,.8); --ville-choisie:#1f6e3a; --ville-limite:#123d22; --sous-trait:#1d4d2c; --contour:#9bb6c6;
+  --frontiere:#9aa8b2; --choisi:#3d9f5a; --pays-fond:#bfe0c8; --ville:#1d2a35; --ville-trait:#ffffff; --texte-globe:#14202a; --sous-trait:#1d4d2c; --contour:#9bb6c6;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--text)}
@@ -171,7 +171,7 @@ body.plein-actif{overflow:hidden}
     </section>
   </div>
 
-  <p class="sources">Contours : Natural Earth (1:50 M, domaine public), par world-atlas. Drapeaux des pays : Flagpedia (flagcdn.com) ; drapeaux des provinces et territoires du Canada : Wikimedia Commons (domaine public). Limites des villes du Québec : Découpages administratifs du Québec, ministère des Ressources naturelles et des Forêts (CC BY 4.0), découpées aux rives avec les plans d’eau d’OpenStreetMap (© contributeurs d’OpenStreetMap, ODbL). Villes : Wikidata (population du recensement de 2021 de Statistique Canada) ; drapeaux de Wikimedia Commons (licence et auteur sous chaque drapeau) ou, s'ils ne sont pas libres, vignettes affichées depuis Wikipédia. Dates d'adoption et proportions : Wikidata ; descriptions : Wikipédia (CC BY-SA). Noms des pays en français : ceux du navigateur (normes CLDR).</p>
+  <p class="sources">Contours : Natural Earth (1:50 M, domaine public), par world-atlas. Drapeaux des pays : Flagpedia (flagcdn.com) ; drapeaux des provinces et territoires du Canada : Wikimedia Commons (domaine public). Villes : les 5 plus peuplées de chaque province et territoire, plus les capitales (population du recensement de 2021 de Statistique Canada, table 98-10-0002 ; coordonnées et drapeaux de Wikidata) ; drapeaux de Wikimedia Commons (licence et auteur sous chaque drapeau) ou, s'ils ne sont pas libres, vignettes affichées depuis Wikipédia. Dates d'adoption et proportions : Wikidata ; descriptions : Wikipédia (CC BY-SA). Noms des pays en français : ceux du navigateur (normes CLDR).</p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>

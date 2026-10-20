@@ -15,11 +15,7 @@ const res = await p.evaluate(async () => {
   const hex = h => { const m = h.match(/\w\w/g).map(x => parseInt(x, 16)); return m; };
   const ocean = hex(G.C.ocean);
   const estEau = ([r, g, b]) => Math.abs(r - ocean[0]) + Math.abs(g - ocean[1]) + Math.abs(b - ocean[2]) < 45;   // quadrillage léger toléré
-  // villes avec limites : leurs données (terre, eau) priment sur celles du monde
-  const villes = G.villes().filter(v => v.zone);
-  const attendu = ll => { if (!ll) return null;
-    for (const v of villes) { if (d3.geoContains(v.zone, ll)) return 'terre'; if (v.eau && d3.geoContains(v.eau, ll)) return 'eau'; }
-    if (G.dansLac(ll)) return 'eau'; const [x, y] = ll; return G.PAYS.some(f => { const [[x0, y0], [x1, y1]] = f._b; return y >= y0 && y <= y1 && (x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1) && d3.geoContains(f, ll); }) ? 'terre' : 'eau'; };
+  const attendu = ll => { if (!ll) return null; if (G.dansLac(ll)) return 'eau'; const [x, y] = ll; return G.PAYS.some(f => { const [[x0, y0], [x1, y1]] = f._b; return y >= y0 && y <= y1 && (x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1) && d3.geoContains(f, ll); }) ? 'terre' : 'eau'; };
   const out = []; let tot = 0, faux = 0;
   for (const kk of [1, 3, 8]) for (const enMvt of [false, true]) for (let lam = -180; lam < 180; lam += 60) for (const phi of [-50, 0, 50]) {
     G.dessinerA([lam, phi, 0], kk, enMvt);
