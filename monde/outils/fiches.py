@@ -116,7 +116,10 @@ def villes():
             v.pop("fichier")
         time.sleep(1)
     liste = sorted(V.values(), key=lambda v: -v.get("pop", 0))
-    for v in liste: v.pop("en", None)
+    for v in liste:
+        v.pop("en", None)
+        # limites du territoire (limites_qc.py) quand on les a
+        if os.path.exists(os.path.join(MONDE, "limites", v["q"] + ".json")): v["limites"] = f"monde/limites/{v['q']}.json"
     json.dump(liste, open(os.path.join(MONDE, "villes-ca.json"), "w"), ensure_ascii=False, separators=(",", ":"))
     return liste
 

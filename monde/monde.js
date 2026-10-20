@@ -40,7 +40,7 @@ const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
 let rot = [96, -45, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
-  C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe"]
+  C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe", "ville-zone", "ville-zone-survol", "ville-choisie", "ville-limite"]
     .map(n => [n, s.getPropertyValue("--" + n).trim()])); };
 
 /* ---------- données des subdivisions et villes ---------- */
@@ -52,7 +52,8 @@ function sensHoraire(d) {
   }
 }
 // un point dans un lac (boîte d'abord, pour aller vite)
-const dansLac = ([x, y]) => BOITES_LACS.some(([[x0, y0], [x1, y1]], i) => x >= x0 && x <= x1 && y >= y0 && y <= y1 && d3.geoContains(LACS.features[i], [x, y]));
+const dansBoite = ([[x0, y0], [x1, y1]], [x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
+const dansLac = p => BOITES_LACS.some((b, i) => dansBoite(b, p) && d3.geoContains(LACS.features[i], p));
 async function charger(a2) {
   if (!SOUS[a2]) return null;
   if (charges[a2]) return charges[a2];
@@ -61,6 +62,9 @@ async function charger(a2) {
   d.features.sort((a, b) => nomSous(a2, a).localeCompare(nomSous(a2, b), "fr"));
   // frontières internes : contours de chaque subdivision (ceux du pays sont redessinés par-dessus)
   const mesh = { type: "MultiLineString", coordinates: d.features.flatMap(s => (s.geometry.type === "Polygon" ? [s.geometry.coordinates] : s.geometry.coordinates).flat()) };
+  // limites des territoires des villes (Québec pour l'instant : limites_qc.py)
+  await Promise.all(villes.filter(v => v.limites).map(async v => {
+    try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f); } catch {} }));
   return (charges[a2] = { features: d.features, mesh, villes });
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
@@ -92,8 +96,13 @@ function peindre() {
     ctx.beginPath(); chemin(S.mesh); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 0.8; ctx.stroke();
   }
   if (paysSel) { ctx.beginPath(); chemin(paysSel); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 1.4; ctx.stroke(); }
-  // villes de la subdivision choisie : point (carré pour une capitale), nom quand on est assez près
+  // villes de la subdivision choisie : territoire (quand on a ses limites), point (carré pour une capitale), nom quand on est assez près
   pointsVilles = [];
+  if (S && sel.sous) for (const v of villesDe(paysSel.properties.a2, sel.sous.properties.code)) if (v.zone) {
+    ctx.beginPath(); chemin(v.zone);
+    ctx.fillStyle = v === sel.ville ? C["ville-choisie"] : v === survol?.ville ? C["ville-zone-survol"] : C["ville-zone"]; ctx.fill();
+    ctx.strokeStyle = C["ville-limite"]; ctx.lineWidth = v === sel.ville ? 1.6 : 1; ctx.stroke();
+  }
   if (S && sel.sous) {
     ctx.font = "600 12px 'IBM Plex Sans', system-ui, sans-serif"; ctx.textBaseline = "middle";
     const liste = villesDe(paysSel.properties.a2, sel.sous.properties.code).filter(v => visible([v.lon, v.lat]));
@@ -128,6 +137,8 @@ function sousLe([x, y]) {
   if (proche) return { pays: sel.pays, sous: sel.sous, ville: proche };
   const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - H / 2) < R * k ? { ocean: true } : null;
   if (dansLac(p)) return { ocean: true };
+  if (sel?.sous) { const v = villesDe(sel.pays.properties.a2, sel.sous.properties.code).find(v => v.zone && dansBoite(v.boite, p) && d3.geoContains(v.zone, p));
+    if (v) return { pays: sel.pays, sous: sel.sous, ville: v }; }
   const pays = PAYS.find(f => d3.geoContains(f, p)); if (!pays) return { ocean: true };
   const S = pays === sel?.pays && charges[pays.properties.a2];
   return { pays, sous: S ? S.features.find(s => d3.geoContains(s, p)) || null : null, ville: null };
@@ -171,8 +182,9 @@ async function choisir(pays, sous = null, ville = null, { bouger = true } = {}) 
 }
 function monter() {
   if (!sel) return;
-  if (sel.ville) choisir(sel.pays, sel.sous);
-  else if (sel.sous) choisir(sel.pays);
+  // remonter ne déplace pas le globe
+  if (sel.ville) choisir(sel.pays, sel.sous, null, { bouger: false });
+  else if (sel.sous) choisir(sel.pays, null, null, { bouger: false });
 }
 
 // date d'adoption, proportions et début de l'article de Wikipédia sur le drapeau (fiches.py)
@@ -208,7 +220,8 @@ function fiche() {
   if (ville) {
     nom = ville.nom; genre = ["Ville", capitale(a2, ville)].filter(Boolean).join(" · ");
     ({ img, credit } = imageVille(ville)); cle = ville.q;
-    extra = `<div class="code">${ville.pop ? `Population (recensement de 2021) : ${NB.format(ville.pop)}` : ""}</div>`;
+    extra = `<div class="code">${[ville.pop && `Population (recensement de 2021) : ${NB.format(ville.pop)}`,
+      ville.zone?.properties.km2 && `Superficie : ${NB.format(Math.round(ville.zone.properties.km2))} km²`].filter(Boolean).join("<br>")}</div>`;
   } else if (sous) {
     nom = nomSous(a2, sous); genre = sd.noms[sous.properties.code]?.[1] || "Subdivision";
     img = `<img src="${drapeauSous(a2, sous)}" alt="Drapeau : ${ESC(nom)}">`; code = sous.properties.code; cle = code;
