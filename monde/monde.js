@@ -37,6 +37,7 @@ let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, B
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
+const ZOOM_MAX = 300;   // de quoi voir les quartiers d'une ville (demande de l'utilisateur)
 let rot = [96, -45, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
@@ -127,8 +128,11 @@ async function charger(a2) {
   const mesh = { type: "MultiLineString", coordinates: d.features.flatMap(s => (s.geometry.type === "Polygon" ? [s.geometry.coordinates] : s.geometry.coordinates).flat()) };
   // limites des territoires des villes (Québec pour l'instant : limites_qc.py)
   await Promise.all(villes.filter(v => v.limites).map(async v => {
-    try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f); } catch {} }));
-  prechauffer([...d.features, mesh]);
+    try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f);
+      // eau du territoire municipal (fleuve, rivières, lacs : limites_qc.py), dessinée couleur de l'eau
+      if (f.eau) { const e = { type: "Feature", properties: {}, geometry: f.eau }; sensHoraire({ features: [e] }); v.eau = e; }
+    } catch {} }));
+  prechauffer([...d.features, mesh, ...villes.flatMap(v => [v.zone, v.eau].filter(Boolean))]);
   return (charges[a2] = { features: d.features, mesh, villes });
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
@@ -179,8 +183,13 @@ function peindre() {
   if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
   // villes de la subdivision choisie : territoire (quand on a ses limites), point (carré pour une capitale), nom quand on est assez près
   pointsVilles = [];
-  if (S && sel.sous) for (const v of villesDe(paysSel.properties.a2, sel.sous.properties.code)) if (v.zone) {
-    ctx.beginPath(); chemin(v.zone);
+  // territoire des villes : leurs données (précises) passent avant celles du monde (1:50 M, grossières de près) :
+  // terre de la ville en fond opaque, puis son eau (fleuve, rivières, lacs), puis la teinte de la ville
+  const villesSel = S && sel.sous ? villesDe(paysSel.properties.a2, sel.sous.properties.code).filter(v => v.zone) : [];
+  remplir(villesSel.map(v => lod(v.zone)), C.choisi);
+  remplir(villesSel.filter(v => v.eau).map(v => lod(v.eau)), C.ocean);
+  for (const v of villesSel) {
+    ctx.beginPath(); chemin(lod(v.zone));
     ctx.fillStyle = v === sel.ville ? C["ville-choisie"] : v === survol?.ville ? C["ville-zone-survol"] : C["ville-zone"]; ctx.fill();
     ctx.strokeStyle = C["ville-limite"]; ctx.lineWidth = v === sel.ville ? 1.6 : 1; ctx.stroke();
   }
@@ -218,6 +227,7 @@ function sousLe([x, y]) {
   if (proche) return { pays: sel.pays, sous: sel.sous, ville: proche };
   const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - H / 2) < R * k ? { ocean: true } : null;
   if (dansLac(p)) return { ocean: true };
+  if (sel?.sous && villesDe(sel.pays.properties.a2, sel.sous.properties.code).some(v => v.eau && dansBoite(v.boite, p) && d3.geoContains(v.eau, p))) return { ocean: true };
   if (sel?.sous) { const v = villesDe(sel.pays.properties.a2, sel.sous.properties.code).find(v => v.zone && dansBoite(v.boite, p) && d3.geoContains(v.zone, p));
     if (v) return { pays: sel.pays, sous: sel.sous, ville: v }; }
   const pays = PAYS.find(f => dansBoiteGeo(f._b, p) && d3.geoContains(f, p)); if (!pays) return { ocean: true };
@@ -302,7 +312,7 @@ function fiche() {
     nom = ville.nom; genre = ["Ville", capitale(a2, ville)].filter(Boolean).join(" · ");
     ({ img, credit } = imageVille(ville)); cle = ville.q;
     extra = `<div class="code">${[ville.pop && `Population (recensement de 2021) : ${NB.format(ville.pop)}`,
-      ville.zone?.properties.km2 && `Superficie : ${NB.format(Math.round(ville.zone.properties.km2))} km²`].filter(Boolean).join("<br>")}</div>`;
+      ville.zone?.properties.km2 && `Superficie terrestre : ${NB.format(Math.round(ville.zone.properties.km2))} km²`].filter(Boolean).join("<br>")}</div>`;
   } else if (sous) {
     nom = nomSous(a2, sous); genre = sd.noms[sous.properties.code]?.[1] || "Subdivision";
     img = `<img src="${drapeauSous(a2, sous)}" alt="Drapeau : ${ESC(nom)}">`; code = sous.properties.code; cle = code;
@@ -347,7 +357,7 @@ canvas.addEventListener("pointermove", e => {
   const p = pos(e);
   if (!pointeurs.has(e.pointerId)) { if (e.pointerType === "mouse" && !rapide) survoler(p); return; }
   pointeurs.set(e.pointerId, p);
-  if (pince && pointeurs.size === 2) { const [a, b] = [...pointeurs.values()]; k = Math.max(1, Math.min(40, pince.k * Math.hypot(a[0] - b[0], a[1] - b[1]) / pince.d)); bouger(); return dessiner(); }
+  if (pince && pointeurs.size === 2) { const [a, b] = [...pointeurs.values()]; k = Math.max(1, Math.min(ZOOM_MAX, pince.k * Math.hypot(a[0] - b[0], a[1] - b[1]) / pince.d)); bouger(); return dessiner(); }
   if (!depart) return;
   const dx = p[0] - depart.p[0], dy = p[1] - depart.p[1];
   if (!bouge && Math.hypot(dx, dy) < 4) return;
@@ -371,7 +381,7 @@ const fin = e => {
 };
 canvas.addEventListener("pointerup", fin); canvas.addEventListener("pointercancel", fin);
 canvas.addEventListener("pointerleave", () => { if (survol) { survol = null; $("bulle").hidden = true; dessiner(); } });
-canvas.addEventListener("wheel", e => { e.preventDefault(); arreter(); k = Math.max(1, Math.min(40, k * Math.exp(-e.deltaY * 0.0015))); bouger(); dessiner(); }, { passive: false });
+canvas.addEventListener("wheel", e => { e.preventDefault(); arreter(); k = Math.max(1, Math.min(ZOOM_MAX, k * Math.exp(-e.deltaY * 0.0015))); bouger(); dessiner(); }, { passive: false });
 document.addEventListener("keydown", e => { if (e.key !== "Escape" || e.target.closest("input")) return;
   if (boite.classList.contains("plein")) return basculerPlein();   // plein écran de secours : Échap en sort
   monter(); });
@@ -419,7 +429,7 @@ function survoler(p) {
     if (change) dessiner();
   });
 }
-const zoomer = f => { arreter(); k = Math.max(1, Math.min(40, k * f)); bouger(); dessiner(); };
+const zoomer = f => { arreter(); k = Math.max(1, Math.min(ZOOM_MAX, k * f)); bouger(); dessiner(); };
 $("zPlus").addEventListener("click", () => zoomer(1.6));
 $("zMoins").addEventListener("click", () => zoomer(1 / 1.6));
 $("zTout").addEventListener("click", () => { arreter(); k = 1; dessiner(); });
@@ -477,6 +487,6 @@ async function depuisAdresse(bouger) {
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
-    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k };
+    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k, villes: () => Object.values(charges).flatMap(c => c.villes) };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();
