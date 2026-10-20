@@ -115,7 +115,24 @@ function sensHoraire(d) {
 }
 // un point dans un lac (boîte d'abord, pour aller vite)
 const dansBoite = ([[x0, y0], [x1, y1]], [x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
-const dansLac = p => BOITES_LACS.some((b, i) => dansBoite(b, p) && d3.geoContains(LACS.features[i], p));
+const dansLacMonde = p => BOITES_LACS.some((b, i) => dansBoite(b, p) && d3.geoContains(LACS.features[i], p));
+// eau détaillée (OpenStreetMap) des zones autour des villes (eau_qc.py) : dans une zone chargée, elle remplace les lacs du 1:50 M
+let ZONES_EAU = [];   // { id, cadre, zone, eau } ; zone et eau chargées quand la zone passe à l'écran
+const zoneDe = p => ZONES_EAU.find(z => z.eau && dansBoite([[z.cadre[0], z.cadre[1]], [z.cadre[2], z.cadre[3]]], p) && d3.geoContains(z.zone, p));
+const dansLac = p => { const z = zoneDe(p); return z ? dansBoite(z.boite, p) && d3.geoContains(z.eau, p) : dansLacMonde(p); };
+function chargerZonesVisibles() {
+  for (const z of ZONES_EAU) {
+    if (z.charge) continue;
+    const c = [(z.cadre[0] + z.cadre[2]) / 2, (z.cadre[1] + z.cadre[3]) / 2], r = d3.geoDistance([z.cadre[0], z.cadre[1]], [z.cadre[2], z.cadre[3]]) / 2;
+    if (d3.geoDistance(c, centre) > rayonVue + r) continue;
+    z.charge = true;
+    fetch(`monde/eau/${z.id}.json`).then(r => r.json()).then(f => {
+      const zone = { type: "Feature", properties: {}, geometry: f.zone }, eau = { type: "Feature", properties: {}, geometry: f.geometry };
+      sensHoraire({ features: [zone, eau] }); z.zone = cercle(zone); z.eau = eau; z.boite = d3.geoBounds(eau);
+      prechauffer([eau]); dessiner();
+    }).catch(() => {});
+  }
+}
 // boîte qui peut passer l'antiméridien (Russie, Fidji…)
 const dansBoiteGeo = ([[x0, y0], [x1, y1]], [x, y]) => y >= y0 && y <= y1 && (x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1);
 async function charger(a2) {
@@ -175,7 +192,15 @@ function peindre() {
     ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
   // (tous les lacs, même en mouvement)
-  remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
+  // lacs du 1:50 M, sauf dans les zones d'eau détaillée chargées (découpées du dessin), puis l'eau détaillée de ces zones
+  const zones = ZONES_EAU.filter(z => z.eau && enVue(z.zone));
+  if (zones.length) {
+    ctx.save(); ctx.beginPath(); ctx.rect(-10, -10, W + 20, H + 20); for (const z of zones) chemin(z.zone); ctx.clip("evenodd");
+    remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
+    ctx.restore();
+    remplir(zones.map(z => lod(z.eau)), C.ocean);
+  } else remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
+  if (k >= 3) chargerZonesVisibles();
   ctx.lineWidth = 0.6; remplir([lod(FRONTIERES)], C.frontiere, true);
   if (S) {
     ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true);
@@ -474,6 +499,7 @@ async function depuisAdresse(bouger) {
   const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
     fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
+  fetch("monde/eau/index.json").then(r => r.ok ? r.json() : []).then(l => { ZONES_EAU = l.map(z => ({ ...z })); dessiner(); }).catch(() => {});
   PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
   for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
@@ -487,6 +513,6 @@ async function depuisAdresse(bouger) {
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
-    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k, villes: () => Object.values(charges).flatMap(c => c.villes) };
+    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k, villes: () => Object.values(charges).flatMap(c => c.villes), zones: () => ZONES_EAU };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();

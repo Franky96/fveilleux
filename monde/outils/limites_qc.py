@@ -48,7 +48,9 @@ def elements(genre, ids, lot):
     manque = [i for i in ids if not os.path.exists(fichier(i))]
     for k in range(0, len(manque), lot):
         d = overpass(f"[out:json][timeout:250];{genre}(id:{','.join(map(str, manque[k:k + lot]))});out geom;")
-        for el in d["elements"]: json.dump(el, open(fichier(el["id"]), "w"))
+        for el in d["elements"]:   # écriture atomique : plusieurs tâches de fond partagent le cache
+            tmp = fichier(el["id"]) + f".{os.getpid()}.tmp"
+            json.dump(el, open(tmp, "w")); os.replace(tmp, fichier(el["id"]))
     return [json.load(open(fichier(i))) for i in ids if os.path.exists(fichier(i))]
 
 
@@ -62,7 +64,7 @@ def eau_osm(x0, y0, x1, y1):
     if os.path.exists(fid): ids = json.load(open(fid))
     else:
         ids = overpass(f'[out:json][timeout:250];(way["natural"="water"]({b});relation["natural"="water"]({b}););out ids;')["elements"]
-        json.dump(ids, open(fid, "w"))
+        tmp = fid + f".{os.getpid()}.tmp"; json.dump(ids, open(tmp, "w")); os.replace(tmp, fid)
     els = elements("way", [e["id"] for e in ids if e["type"] == "way"], 200) + elements("relation", [e["id"] for e in ids if e["type"] == "relation"], 5)
     ligne = lambda g: LineString([(p["lon"], p["lat"]) for p in g])
     polys = []
