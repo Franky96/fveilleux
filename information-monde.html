@@ -90,17 +90,58 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 .zooms button{width:34px;height:34px;border-radius:6px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;font-size:17px;line-height:1}
 .zooms button:hover{border-color:var(--accent)}
 .bulle{position:absolute;pointer-events:none;background:#0b1016e6;color:#eef3f7;font-size:13px;padding:4px 8px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-130%)}
-/* chargement au début (monde.js : preparerTout) : barre par-dessus le globe, effacée une fois tout prêt */
-.charge{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:var(--ocean);transition:opacity .4s ease}
+/* chargement au début (monde.js : preparerTout) : globe esquissé à la place et à la taille du vrai globe (monde.js :
+   introTaille), quadrillage tracé, terres en silhouette, drapeaux posés sur leur territoire à mesure qu'ils arrivent, contour qui se remplit
+   (avancement) ; à la fin, il se fond dans le vrai globe ; animations de transform et d'opacité seulement (le fil
+   principal est occupé par la préparation) */
+.charge{position:absolute;inset:0;z-index:4;background:var(--panel);transition:opacity .5s ease}
 .charge.fini{opacity:0;pointer-events:none}
 .charge[hidden]{display:none}
-.charge-boite{display:grid;gap:10px;width:min(320px,calc(100% - 48px))}
-.charge-titre{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:14px;color:var(--text)}
-.charge-barre{height:6px;border-radius:3px;background:var(--line2);overflow:hidden}
-.charge-barre i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s linear}
-.charge-ligne{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--muted)}
-#chargePct{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion: reduce){.charge,.charge-barre i{transition:none}}
+.intro{position:absolute;left:0;top:0;width:var(--w,100%);height:var(--h,100%)}
+.intro>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.intro-fond{opacity:0;transition:opacity .4s ease;will-change:opacity}
+.intro.vu .intro-fond{opacity:1}
+.intro-ocean{fill:var(--ocean)}
+/* terres en silhouette (mêmes contours que le vrai globe), montrées dès que les contours sont arrivés */
+.intro-terre{fill:var(--terre);opacity:0;transition:opacity .6s ease}
+.intro-lacs{fill:var(--ocean)}
+.intro.terre .intro-terre{opacity:1}
+.intro-grille{fill:none;stroke:var(--grille);stroke-width:1}
+/* quadrillage de 30° (des lignes du vrai quadrillage de 10°), tracé ligne après ligne */
+.intro-traits path{fill:none;stroke:var(--muted);stroke-opacity:.38;stroke-width:1;stroke-dasharray:1 1;stroke-dashoffset:1}
+.intro.vu .intro-traits path{animation:intro-trace 1.6s cubic-bezier(.35,.6,.25,1) calc(var(--i) * 55ms) forwards}
+@keyframes intro-trace{to{stroke-dashoffset:0}}
+.intro-disque{position:absolute;left:calc(var(--cx) - var(--r));top:calc(var(--cy) - var(--r));width:calc(2 * var(--r));height:calc(2 * var(--r));border-radius:50%;pointer-events:none}
+/* reflet lent qui passe d'ouest en est sur le globe */
+.intro-balayage{overflow:hidden;opacity:0;transition:opacity .6s ease}
+.intro.vu .intro-balayage{opacity:1}
+.intro-balayage i{position:absolute;inset:0 auto 0 0;width:46%;background:radial-gradient(closest-side,rgba(255,255,255,.07),rgba(255,255,255,0));transform:translateX(-100%);animation:intro-reflet 4.2s cubic-bezier(.45,0,.55,1) .8s infinite}
+html.light .intro-balayage i{background:radial-gradient(closest-side,rgba(255,255,255,.45),rgba(255,255,255,0))}
+@keyframes intro-reflet{to{transform:translateX(217%)}}
+/* relief du vrai globe en mode Drapeaux (monde.js : peindre), pour que le fondu ne change rien */
+.intro-relief{display:none;background:radial-gradient(circle calc(var(--r) * .9) at 32.5% 30%,rgba(255,255,255,.10),rgba(255,255,255,0)),radial-gradient(circle var(--r) at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.32))}
+.intro.relief .intro-relief{display:block}
+/* vignettes des drapeaux (monde.js : introVignettes) : une seule toile, posées à leur arrivée, à demi, puis allumées
+   quand leur place est calculée ; une image par drapeau coûtait cher à la préparation */
+.intro-drapeaux{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .5s ease;will-change:opacity}
+.intro.vu .intro-drapeaux{opacity:1}
+.charge.fini .intro-drapeaux{opacity:0;transition-duration:.25s}
+/* (calques à part : leurs repeints ne repeignent pas le reste de l'esquisse) */
+#introAnneau{will-change:opacity}
+.intro-contour{fill:none;stroke:var(--contour);stroke-width:1.5}
+.intro-avance{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:100;opacity:0;transition:stroke-dashoffset .3s linear,opacity .3s ease}
+.charge-boite{position:absolute;left:var(--cx,50%);top:var(--cy,50%);transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;padding:26px 40px;text-align:center;background:radial-gradient(closest-side,var(--ocean) 62%,transparent);transition:opacity .25s ease;white-space:nowrap}
+.charge.fini .charge-boite{opacity:0}
+.charge-titre{font-family:var(--f-display);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--text)}
+#chargePct{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:30px;line-height:1.15;font-weight:500;color:var(--accent)}
+#chargeEtape{font-size:12px;color:var(--muted)}
+#chargeCompte{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--muted);min-height:1.4em}
+@media (max-width:700px){.charge-boite{padding:18px 28px}#chargePct{font-size:24px}}
+@media (prefers-reduced-motion: reduce){
+  .charge,.charge-boite,.intro-fond,.intro-terre,.intro-avance,.intro-drapeaux{transition:none}
+  .intro.vu .intro-traits path{animation:none;stroke-dashoffset:0}
+  .intro-balayage{display:none}
+}
 .aide{margin:0;padding:8px 12px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
 .bas{position:absolute;left:10px;bottom:52px;display:flex;gap:6px}
 .bas button{padding:6px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;font-size:.82rem;font-weight:600}
@@ -184,10 +225,18 @@ body.plein-actif{overflow:hidden}
         <button type="button" id="zTout" title="Voir tout le globe" aria-label="Voir tout le globe">⟲</button>
       </div>
       <div class="charge" id="charge" role="status" aria-live="polite">
-        <div class="charge-boite">
-          <span class="charge-titre">Préparation du globe</span>
-          <div class="charge-barre"><i id="chargeBarre"></i></div>
-          <span class="charge-ligne"><span id="chargeEtape">Chargement…</span><span id="chargePct">0 %</span></span>
+        <div class="intro" id="intro">
+          <svg class="intro-fond" id="introFond" aria-hidden="true"><circle class="intro-ocean"/><path class="intro-terre"/><path class="intro-lacs"/><path class="intro-grille"/><g class="intro-traits"></g></svg>
+          <div class="intro-disque intro-balayage" aria-hidden="true"><i></i></div>
+          <canvas class="intro-drapeaux" id="introDrapeaux" aria-hidden="true"></canvas>
+          <div class="intro-disque intro-relief" aria-hidden="true"></div>
+          <svg id="introAnneau" aria-hidden="true"><circle class="intro-contour"/><circle class="intro-avance" id="chargeAnneau" pathLength="100"/></svg>
+          <div class="charge-boite">
+            <span class="charge-titre">Préparation du globe</span>
+            <span id="chargePct">0 %</span>
+            <span id="chargeEtape">Chargement…</span>
+            <span id="chargeCompte" aria-hidden="true"></span>
+          </div>
         </div>
       </div>
       <div class="bulle" id="bulle" hidden></div>

@@ -311,8 +311,8 @@ function peindreDrapeau(f, src) {
 }
 
 /* ---------- dessin ---------- */
-let prevu = false;
-const dessiner = () => { if (prevu) return; prevu = true; requestAnimationFrame(() => { prevu = false; peindre(); }); };
+let prevu = false, pret = false;   // (pas de dessin pendant la préparation, sous le chargement : il la ralentissait)
+const dessiner = () => { if (prevu || !pret) return; prevu = true; requestAnimationFrame(() => { prevu = false; peindre(); }); };
 const visible = p => d3.geoDistance(p, [-rot[0], -rot[1]]) < Math.PI / 2 - 0.01;
 let pointsVilles = [];   // villes dessinées (pour le clic)
 // remplit ou trace des formes par paquets de polygones : un seul chemin géant rend le canvas très lent (closePath)
@@ -422,7 +422,8 @@ function peindre() {
 function taille() {
   const dpr = Math.min(2, devicePixelRatio || 1);
   W = Math.round(canvas.clientWidth); H = Math.round(canvas.clientHeight) || W;
-  R = Math.min(W, H) / 2 - 6; canvas.width = W * dpr; canvas.height = H * dpr; peindre();
+  R = Math.min(W, H) / 2 - 6; canvas.width = W * dpr; canvas.height = H * dpr;
+  if (pret) peindre(); else introTaille();   // (pendant la préparation, sous l'esquisse : pas de dessin)
 }
 
 /* ---------- repérage d'un point ---------- */
@@ -682,31 +683,98 @@ $("rubDrapeaux").addEventListener("click", () => { RUB.drapeaux = !RUB.drapeaux;
 $("affNiveau").addEventListener("click", e => { const b = e.target.closest("[data-aff]"); if (!b) return; RUB.aff = b.dataset.aff; garderRub(); majRubriques(); dessiner(); });
 majRubriques();
 
+/* ---------- ouverture : globe esquissé pendant la préparation ---------- */
+// même place, même taille, même vue, mêmes côtes et même quadrillage que le vrai globe (dessiné dessous) : à la fin, l'esquisse se fond
+// dans le vrai globe sans que rien ne bouge ; chaque drapeau arrivé se pose en vignette sur son territoire (à demi), puis
+// s'allume quand sa place est calculée ; le contour se remplit à la couleur d'accent (avancement)
+const SVG = "http://www.w3.org/2000/svg";
+const intro = { proj: d3.geoOrthographic().clipAngle(90).precision(0.7), vignettes: [], w: 0, h: 0 };
+// territoires dessinés dans la rubrique (pays, ou provinces à la place de leur pays au niveau États et provinces)
+const dessineDrapeau = f => f.properties.code ? modeEtats() : !!f.properties.a2 && !(modeEtats() && SOUS[f.properties.a2]);
+function introTaille() {
+  const w = Math.round(canvas.clientWidth), h = Math.round(canvas.clientHeight) || w, r = Math.min(w, h) / 2 - 6;
+  if (!w || (w === intro.w && h === intro.h && (intro.terre || !PAYS.length))) return;
+  intro.w = w; intro.h = h; intro.r = r;
+  const el = $("intro"), P = intro.proj.rotate(rot).scale(r).translate([w / 2, h / 2]), chem = d3.geoPath(P);
+  for (const [n, v] of [["w", w], ["h", h], ["r", r], ["cx", w / 2], ["cy", h / 2]]) el.style.setProperty("--" + n, v + "px");
+  el.classList.toggle("relief", RUB.drapeaux);
+  for (const s of el.querySelectorAll("svg")) s.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  for (const c of el.querySelectorAll("circle")) { c.setAttribute("cx", w / 2); c.setAttribute("cy", h / 2); c.setAttribute("r", r); }
+  $("chargeAnneau").setAttribute("transform", `rotate(-90 ${w / 2} ${h / 2})`);   // (l'avancement part du haut)
+  el.querySelector(".intro-grille").setAttribute("d", chem(grille) || "");
+  // terres et lacs en silhouette, une fois les contours arrivés (un seul chemin, résolution grossière : ~30 ms)
+  if (PAYS.length) { const gros = d3.geoPath(intro.proj.precision(2));
+    el.querySelector(".intro-terre").setAttribute("d", gros({ type: "FeatureCollection", features: PAYS }) || "");
+    el.querySelector(".intro-lacs").setAttribute("d", gros(LACS) || ""); intro.proj.precision(0.7);
+    intro.terre = true; requestAnimationFrame(() => el.classList.add("terre")); }
+  // lignes de 30° (méridiens puis parallèles), créées une fois : leur tracé animé ne recommence pas si la taille change
+  const g = el.querySelector(".intro-traits"), L = d3.geoGraticule().step([30, 30]).lines();
+  if (!g.childNodes.length) L.forEach((l, i) => { const p = document.createElementNS(SVG, "path"); p.setAttribute("pathLength", 1); p.style.setProperty("--i", i); g.appendChild(p); });
+  L.forEach((l, i) => g.childNodes[i].setAttribute("d", chem(l) || ""));
+  introVignettes();
+  requestAnimationFrame(() => el.classList.add("vu"));
+}
+// vignettes sur une seule toile, au centre du plus grand morceau, à peu près à la taille du territoire (4 px à 7 % du
+// rayon de haut), les petites par-dessus ; trame de 64 × 40 (celle de couleurPrincipale : rien de plus à préparer)
+let introPrevu = false;
+function introVignettes() {
+  if (introPrevu) return; introPrevu = true;
+  requestAnimationFrame(() => { introPrevu = false;
+    const t = $("introDrapeaux"), dpr = Math.min(2, devicePixelRatio || 1), g = t.getContext("2d"), r = intro.r;
+    if (t.width !== Math.round(intro.w * dpr) || t.height !== Math.round(intro.h * dpr)) { t.width = Math.round(intro.w * dpr); t.height = Math.round(intro.h * dpr); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, intro.w, intro.h); g.imageSmoothingQuality = "high";
+    g.lineWidth = 0.5; g.strokeStyle = "rgba(0,0,0,.45)";
+    for (const v of intro.vignettes) {
+      const [x, y] = intro.proj(v.c), h = Math.max(4, Math.min(0.07 * r, 0.22 * r * Math.sqrt(v.aire))), w = h * v.ratio;
+      g.globalAlpha = v.place ? 1 : 0.55; g.drawImage(trame(v.d, 64, 40), x - w / 2, y - h / 2, w, h);
+      g.strokeRect(x - w / 2, y - h / 2, w, h);
+    }
+  });
+}
+function introVignette(f, src) {
+  const d = DRAP.get(src); if (!d?.ok || !dessineDrapeau(f)) return null;
+  const m = plusGrand(f), c = d3.geoCentroid(m);
+  if (d3.geoDistance(c, centreVue()) > 1.4) return null;   // face cachée ou trop près du bord
+  const v = { d, c, aire: d3.geoArea(m), ratio: Math.min(2.5, Math.max(1, rapport(d))), place: false };
+  // (rangées de la plus grande à la plus petite)
+  const i = intro.vignettes.findIndex(o => o.aire < v.aire); intro.vignettes.splice(i < 0 ? intro.vignettes.length : i, 0, v);
+  introVignettes();
+  return v;
+}
+
 /* ---------- démarrage ---------- */
-// chargement au début, avec une barre (demande de l'utilisateur) : ce qui coûte est fait d'avance pour que le globe soit
+// chargement au début, avec l'avancement (demande de l'utilisateur) : ce qui coûte est fait d'avance pour que le globe soit
 // fluide ensuite : tous les drapeaux chargés, avec leur couleur principale et leur place sur le globe, et les niveaux de
 // détail (et morceaux) de chaque forme
 const pause = () => new Promise(r => setTimeout(r, 0));
-const avance = (p, t) => { $("chargeBarre").style.width = (100 * p).toFixed(1) + "%"; $("chargePct").textContent = Math.round(100 * p) + " %"; if (t) $("chargeEtape").textContent = t; };
+const avance = (p, t) => { const a = $("chargeAnneau");
+  a.style.strokeDashoffset = (100 - 100 * p).toFixed(1); a.style.opacity = p > 0.005 ? 1 : 0;
+  $("chargePct").textContent = Math.round(100 * p) + " %"; if (t) $("chargeEtape").textContent = t; };
+const compte = (n, total) => { $("chargeCompte").textContent = `${n} / ${total} drapeaux`; };
 async function preparerTout() {
   const cibles = PAYS.filter(f => f.properties.a2).map(f => [f, drapeauPays(f.properties.a2)]);
   for (const [a2, X] of Object.entries(charges)) if (X) for (const s of X.features) cibles.push([s, drapeauSous(a2, s)]);
-  let n = 0; avance(0.1, "Drapeaux…");
-  await Promise.all(cibles.map(([, src]) => { imageDrapeau(src); return DRAP.get(src).pret.then(() => avance(0.1 + 0.3 * ++n / cibles.length)); }));
+  let n = 0; avance(0.1, "Drapeaux…"); compte(0, cibles.length);
+  const vign = [];   // vignette de chaque cible (allumée quand sa place est calculée)
+  await Promise.all(cibles.map(([f, src], j) => { imageDrapeau(src);
+    return DRAP.get(src).pret.then(() => { vign[j] = introVignette(f, src); compte(++n, cibles.length); avance(0.1 + 0.3 * n / cibles.length); }); }));
   const travail = cibles.map(([f, src]) => () => { const d = DRAP.get(src); if (!d.ok) return;
     couleurPrincipale(d); const G = groupeDe(f), r = rapport(d), rg = reglage(f, d);
     G.place ||= placer(G.prin, r, rg); for (const o of G.loin) o._place ||= placer([o.coordinates], r, rg); });
   const formes = [...PAYS, ...LACS.features, FRONTIERES, ...Object.values(charges).filter(Boolean).flatMap(X => [...X.features, X.mesh])];
   for (const pas of [...PAS, null]) for (const f of formes) travail.push(() => morceaux(lod(f, pas)));
-  avance(0.4, "Place des drapeaux et contours…");
-  for (let i = 0; i < travail.length;) {
+  avance(0.4, "Place des drapeaux…");
+  for (let i = 0, allumes = 0; i < travail.length;) {
     const fin = performance.now() + 40; while (i < travail.length && performance.now() < fin) travail[i++]();
-    avance(0.4 + 0.55 * i / travail.length); await pause();
+    if (allumes < Math.min(i, cibles.length)) { for (; allumes < Math.min(i, cibles.length); allumes++) if (vign[allumes]) vign[allumes].place = true; introVignettes(); }
+    avance(0.4 + 0.55 * i / travail.length, i < cibles.length ? null : "Contours au fil du zoom…"); await pause();
   }
   avance(0.97, "Premier dessin…"); await pause();
 }
 (async () => {
-  couleurs(); avance(0.02, "Contours des pays…");
+  couleurs(); introTaille(); avance(0.02, "Contours des pays…");
+  // (l'esquisse suit la taille du cadre, plein écran compris, jusqu'à ce que le vrai globe soit prêt)
+  new ResizeObserver(() => FRONTIERES ? taille() : introTaille()).observe(canvas);
   const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
     fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
@@ -715,14 +783,18 @@ async function preparerTout() {
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
   for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
   if (lacs) { sensHoraire(lacs); LACS = lacs; lacs.features.forEach(cercle); BOITES_LACS = lacs.features.map(f => f._b); }
-  new ResizeObserver(taille).observe(canvas);
   taille();
   await Promise.all(Object.keys(SOUS).map(charger));
-  await depuisAdresse(true);
+  // lieu de l'adresse choisi tout de suite, mais le globe ne tourne vers lui qu'une fois le vrai globe montré
+  // (pendant la préparation, il garde la vue de l'esquisse)
+  const versLieu = !!location.hash.slice(1);   // (choisir() écrit ensuite le lieu dans l'adresse)
+  await depuisAdresse(false);
   remplirChoix();
   try { await preparerTout(); } catch (e) { console.error(e); }
-  peindre(); avance(1, "Prêt");
-  $("charge").classList.add("fini"); setTimeout(() => { $("charge").hidden = true; }, 400);
+  pret = true; peindre(); avance(1, "Prêt");
+  $("charge").classList.add("fini");
+  setTimeout(() => { $("charge").hidden = true; intro.vignettes = []; $("introDrapeaux").width = 0;
+    if (versLieu && sel) allerA(sel.ville || sel.sous || sel.pays); }, 500);
   addEventListener("hashchange", () => depuisAdresse(true));
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
