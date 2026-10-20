@@ -46,7 +46,7 @@ const ZOOM_MAX = 300;   // de quoi voir les quartiers d'une ville (demande de l'
 let rot = [40, -30, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (vue sur l'Atlantique), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
-  C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe"]
+  C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe", "focus", "focus-pays", "focus-trait", "ville-focus", "ville-focus-trait", "accent"]
     .map(n => [n, s.getPropertyValue("--" + n).trim()])); };
 
 /* ---------- vitesse ---------- */
@@ -328,7 +328,7 @@ function peindre() {
   const paysDessin = lod(paysSel);
   // subdivisions du pays choisi : elles remplissent aussi le pays (même carte que leurs frontières : la côte correspond),
   // par-dessus le contour du pays (qui bouche les éventuels interstices) ; la choisie (ou survolée) en couleur
-  const S = paysSel && charges[paysSel.properties.a2], fondPays = sel?.sous ? C["pays-fond"] : C.choisi;
+  const S = paysSel && charges[paysSel.properties.a2], fondPays = sel?.sous ? C["focus-pays"] : C.focus;   // sans rubrique : territoire choisi en blanc, plus neutre (demande de l'utilisateur)
   if (RUB.drapeaux) {
     // rubrique Drapeaux : chaque pays, ou chaque État et province (pays qui en ont), rempli de son drapeau
     if (!modeEtats()) { for (const f of PAYS) if (f.properties.a2 && enVue(f)) peindreDrapeau(f, drapeauPays(f.properties.a2)); }
@@ -337,7 +337,7 @@ function peindre() {
     if (paysSel) remplir([paysDessin], fondPays);
     if (S) remplir(S.features.map(f => lod(f)), fondPays);
     if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
-      ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.choisi : C["terre-survol"]); ctx.globalAlpha = 1; }
+      ctx.globalAlpha = s === sel.sous ? 1 : 0.6; remplir([lod(s)], s === sel.sous ? C.focus : C["terre-survol"]); ctx.globalAlpha = 1; }
   }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres (tous, même en mouvement)
   remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
@@ -352,8 +352,8 @@ function peindre() {
     // (le halo sombre seulement à l'arrêt : sur un grand pays aux milliers d'îles, chaque trait coûte cher)
     if (ch) { if (!rapide) { ctx.lineWidth = 3; remplir([lod(ch)], C.frontiere, true); } ctx.lineWidth = 1.6; remplir([lod(ch)], C.choisi, true); }
   } else {
-    if (S) { ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true); }
-    if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
+    if (S) { ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["focus-trait"], true); }
+    if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["focus-trait"], true); }
   }
   // villes de la subdivision choisie : un point par ville (carré pour une capitale), partout pareil (demande de l'utilisateur)
   pointsVilles = [];
@@ -364,7 +364,9 @@ function peindre() {
       const [x, y] = proj([v.lon, v.lat]), choisie = v === sel.ville, r = choisie ? 6.5 : v === survol?.ville ? 5.5 : 4.5;
       pointsVilles.push({ v, x, y });
       ctx.beginPath(); v.cap ? ctx.rect(x - r, y - r, 2 * r, 2 * r) : ctx.arc(x, y, r, 0, 2 * Math.PI);
-      ctx.fillStyle = choisie ? C.choisi : C.ville; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C["ville-trait"]; ctx.stroke();
+      // (sans rubrique, sur la province blanche : points sombres, ville choisie à la couleur d'accent)
+      ctx.fillStyle = RUB.drapeaux ? (choisie ? C.choisi : C.ville) : (choisie ? C.accent : C["ville-focus"]); ctx.fill();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = RUB.drapeaux ? C["ville-trait"] : C["ville-focus-trait"]; ctx.stroke();
     }
     // noms sans chevauchement (demande de l'utilisateur) : ville choisie, capitales, puis par population ; pour chacune,
     // à droite, à gauche, dessus, dessous puis en diagonale, la première place libre (ni sur un nom, ni sur un point) ;
