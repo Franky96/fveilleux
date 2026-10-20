@@ -174,9 +174,12 @@ function placer(polys) {
   const az = d3.geoAzimuthalEquidistant().rotate([-lc, -pc]).scale(1).translate([0, 0]).clipAngle(null).precision(0);
   let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
   for (const c of polys) for (const r of c) for (const g of r) { const [x, y] = az(g); if (x < X0) X0 = x; if (x > X1) X1 = x; if (-y < Y0) Y0 = -y; if (-y > Y1) Y1 = -y; }
-  const geo = (x, y) => az.invert([x, -y]);
-  return { coins: [geo(X0, Y1), geo(X1, Y1), geo(X0, Y0)], centre: geo((X0 + X1) / 2, (Y0 + Y1) / 2) };
+  // grille 12 × 8 de points du drapeau, ramenés sur le globe (ligne 0 = haut du drapeau)
+  const geo = (x, y) => az.invert([x, -y]), grille = [];
+  for (let j = 0; j <= GY; j++) { const l = []; for (let i = 0; i <= GX; i++) l.push(geo(X0 + (X1 - X0) * i / GX, Y1 - (Y1 - Y0) * j / GY)); grille.push(l); }
+  return { grille, centre: geo((X0 + X1) / 2, (Y0 + Y1) / 2) };
 }
+const GX = 12, GY = 8;
 // couleur principale du drapeau (la plus fréquente) : fond du reste du territoire
 function couleurPrincipale(d) {
   if (d.couleur) return d.couleur;
@@ -191,17 +194,35 @@ function peindreMorceaux(L, d, place) {
   ctx.beginPath(); for (const m of L) chemin(m);
   ctx.fillStyle = couleurPrincipale(d); ctx.fill();
   const P = place(); if (!P) { enAttente = true; return; }
-  if (d3.geoDistance(P.centre, centre) > Math.PI / 2 - 0.02) return;   // centre du drapeau derrière le globe : couleur seule
-  // drapeau fixe dans son territoire (demande de l'utilisateur) : ses trois coins (haut gauche, haut droit, bas gauche)
-  // sont des points du globe, projetés ; l'image suit exactement ces trois points (il penche près du bord du globe, comme
-  // le territoire) ; un coin derrière le globe : le coin est ramené sur le bord visible
-  const vu = g => d3.geoDistance(g, centre) < Math.PI / 2 - 0.01;
-  const [pA, pB, pC] = P.coins.map(g => vu(g) ? proj(g) : proj(d3.geoInterpolate(P.centre, g)(0.5)));
-  const t = trame(d, Math.hypot(pB[0] - pA[0], pB[1] - pA[1]));
-  const mo = d.motifs?.[t.width] || ((d.motifs ||= {})[t.width] = ctx.createPattern(t, "no-repeat"));
-  // pixel (u, v) de l'image → écran : pA + (pB − pA)·u/largeur + (pC − pA)·v/hauteur
-  mo.setTransform(new DOMMatrix([(pB[0] - pA[0]) / t.width, (pB[1] - pA[1]) / t.width, (pC[0] - pA[0]) / t.height, (pC[1] - pA[1]) / t.height, pA[0], pA[1]]));
-  ctx.fillStyle = mo; ctx.fill();
+  // drapeau fixe dans son territoire (demande de l'utilisateur) : plié avec le globe, par une grille de triangles dont
+  // chaque sommet est un point du globe projeté (une image plate attachée par ses seuls coins glissait sur un grand pays) ;
+  // plus de triangles quand le drapeau est grand à l'écran ; les cases dont un coin est derrière le globe sont sautées
+  const G = P.grille, vu = g => d3.geoDistance(g, centre) < Math.PI / 2 - 0.005;
+  const a = proj(G[0][0]), b = proj(G[0][GX]), c = proj(G[GY][0]);
+  const larg = Math.hypot(b[0] - a[0], b[1] - a[1]), haut = Math.hypot(c[0] - a[0], c[1] - a[1]);
+  const nx = Math.max(1, Math.min(GX, Math.round(larg / 45))), ny = Math.max(1, Math.min(GY, Math.round(haut / 45)));
+  const I = [...Array(nx + 1)].map((_, q) => Math.round(q * GX / nx)), J = [...Array(ny + 1)].map((_, q) => Math.round(q * GY / ny));
+  const t = trame(d, larg), mo = d.motifs?.[t.width] || ((d.motifs ||= {})[t.width] = ctx.createPattern(t, "no-repeat"));
+  const pr = J.map(jj => I.map(ii => vu(G[jj][ii]) ? proj(G[jj][ii]) : null));
+  ctx.save(); ctx.clip();
+  ctx.fillStyle = mo;
+  // triangle de sommets écran p0, p1, p2 (image u0,v0 · u1,v0 · u0,v1, ou leur symétrique) : transformation exacte, triangle
+  // grossi de 0,6 px pour qu'aucune couture ne se voie
+  const tri = (p0, p1, p2, du, dv, u0, v0) => {
+    const m = new DOMMatrix([(p1[0] - p0[0]) / du, (p1[1] - p0[1]) / du, (p2[0] - p0[0]) / dv, (p2[1] - p0[1]) / dv, 0, 0]);
+    m.e = p0[0] - m.a * u0 - m.c * v0; m.f = p0[1] - m.b * u0 - m.d * v0;
+    mo.setTransform(m);
+    const cx = (p0[0] + p1[0] + p2[0]) / 3, cy = (p0[1] + p1[1] + p2[1]) / 3, g = q => { const dx = q[0] - cx, dy = q[1] - cy, n = Math.hypot(dx, dy) || 1; return [q[0] + dx / n * 0.6, q[1] + dy / n * 0.6]; };
+    const [q0, q1, q2] = [g(p0), g(p1), g(p2)];
+    ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]); ctx.closePath(); ctx.fill();
+  };
+  for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
+    const A = pr[y][x], B = pr[y][x + 1], Cc = pr[y + 1][x], D = pr[y + 1][x + 1]; if (!A || !B || !Cc || !D) continue;
+    const u0 = I[x] / GX * t.width, u1 = I[x + 1] / GX * t.width, v0 = J[y] / GY * t.height, v1 = J[y + 1] / GY * t.height;
+    tri(A, B, Cc, u1 - u0, v1 - v0, u0, v0);                 // haut gauche
+    tri(D, Cc, B, u0 - u1, v0 - v1, u1, v1);                 // bas droite (même formule, axes inversés)
+  }
+  ctx.restore();
 }
 // vrai si le drapeau est dessiné (image chargée)
 function peindreDrapeau(f, src) {
