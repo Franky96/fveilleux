@@ -34,6 +34,10 @@
 "ay": 0,
 "k": 0.5
 },
+"CA-NT": {
+"mode": "prolonger",
+"ay": 1
+},
 "CA-SK": {
 "ax": 0
 },
@@ -48,12 +52,38 @@
 "ax": -0.4,
 "ay": 0
 },
+"CF": {
+"mode": "prolonger",
+"echelle": 0.45,
+"ax": 0.18,
+"ay": 0.7
+},
 "CG": {
 "k": 1
+},
+"CL": {
+"mode": "prolonger",
+"k": 0,
+"echelle": 0.39,
+"ax": 1.148,
+"ay": 0.118
 },
 "CM": {
 "mode": "prolonger",
 "ay": 0.9
+},
+"CR": {
+"mode": "prolonger",
+"echelle": 1.1,
+"ax": -1.5,
+"ay": 0
+},
+"CU": {
+"mode": "prolonger",
+"k": 0,
+"echelle": 0.6,
+"ax": 0,
+"ay": 0
 },
 "DK": {
 "ax": 1
@@ -64,6 +94,12 @@
 "EH": {
 "mode": "prolonger",
 "ay": 0.8
+},
+"ES": {
+"mode": "prolonger",
+"echelle": 0.55,
+"ax": 1,
+"ay": 0.05
 },
 "GL": {
 "mode": "prolonger",
@@ -108,6 +144,12 @@
 },
 "JO": {
 "ax": 0
+},
+"JP": {
+"mode": "prolonger",
+"echelle": 0.6,
+"ax": 0.75,
+"ay": 0.4
 },
 "KW": {
 "ax": 0
@@ -175,6 +217,13 @@
 "NO": {
 "ax": 0
 },
+"NP": {
+"mode": "rogner",
+"k": 0,
+"echelle": 0.28,
+"ax": 0.1,
+"ay": -0.05
+},
 "OM": {
 "ax": 0
 },
@@ -214,6 +263,12 @@
 },
 "SS": {
 "ax": 0
+},
+"ST": {
+"mode": "prolonger",
+"echelle": 0.45,
+"ax": 0,
+"ay": 1
 },
 "TD": {
 "mode": "prolonger"
