@@ -1,4 +1,4 @@
-/* Information monde (information-monde.html) : globe des pays (projection orthographique, canvas), drapeau du lieu choisi
+/* Information Monde (information-monde.html) : globe des pays (projection orthographique, canvas), drapeau du lieu choisi
    à trois niveaux : pays → subdivision (province, État…) → ville. Les subdivisions et villes ne sont connues que pour les
    pays de SOUS (Canada pour l'instant ; ajouter un pays = contours, noms, drapeaux et liste de villes).
    Données : monde/outils/donnees.py (contours, drapeaux des pays et provinces), monde/outils/fiches.py (villes, fiches).
@@ -37,7 +37,7 @@ let PAYS = [], FRONTIERES, FICHES = {}, charges = {}, sel = null, memo = {}, sur
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.4);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
-let rot = [96, -45, 0], k = 1, R = 300, W = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille
+let rot = [96, -45, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
   C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe"]
@@ -67,8 +67,8 @@ const visible = p => d3.geoDistance(p, [-rot[0], -rot[1]]) < Math.PI / 2 - 0.01;
 let pointsVilles = [];   // villes dessinées (pour le clic)
 function peindre() {
   const dpr = devicePixelRatio || 1;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, W);
-  proj.rotate(rot).scale(R * k).translate([W / 2, W / 2]);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  proj.rotate(rot).scale(R * k).translate([W / 2, H / 2]);
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.fillStyle = C.ocean; ctx.fill();
   ctx.beginPath(); chemin(grille); ctx.strokeStyle = C.grille; ctx.lineWidth = 1; ctx.stroke();
   const paysSel = sel?.pays;
@@ -109,8 +109,9 @@ function peindre() {
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.strokeStyle = C.contour; ctx.lineWidth = 1.5; ctx.stroke();
 }
 function taille() {
-  const w = Math.round(canvas.clientWidth), dpr = devicePixelRatio || 1;
-  W = w; R = w / 2 - 6; canvas.width = w * dpr; canvas.height = w * dpr; peindre();
+  const dpr = devicePixelRatio || 1;
+  W = Math.round(canvas.clientWidth); H = Math.round(canvas.clientHeight) || W;
+  R = Math.min(W, H) / 2 - 6; canvas.width = W * dpr; canvas.height = H * dpr; peindre();
 }
 
 /* ---------- repérage d'un point ---------- */
@@ -118,7 +119,7 @@ function sousLe([x, y]) {
   let proche = null, dmin = 12;
   for (const p of pointsVilles) { const d = Math.hypot(p.x - x, p.y - y); if (d < dmin) { dmin = d; proche = p.v; } }
   if (proche) return { pays: sel.pays, sous: sel.sous, ville: proche };
-  const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - W / 2) < R * k ? { ocean: true } : null;
+  const p = proj.invert([x, y]); if (!p || !visible(p)) return Math.hypot(x - W / 2, y - H / 2) < R * k ? { ocean: true } : null;
   const pays = PAYS.find(f => d3.geoContains(f, p)); if (!pays) return { ocean: true };
   const S = pays === sel?.pays && charges[pays.properties.a2];
   return { pays, sous: S ? S.features.find(s => d3.geoContains(s, p)) || null : null, ville: null };
@@ -274,7 +275,39 @@ const fin = e => {
 canvas.addEventListener("pointerup", fin); canvas.addEventListener("pointercancel", fin);
 canvas.addEventListener("pointerleave", () => { if (survol) { survol = null; $("bulle").hidden = true; dessiner(); } });
 canvas.addEventListener("wheel", e => { e.preventDefault(); arreter(); k = Math.max(1, Math.min(40, k * Math.exp(-e.deltaY * 0.0015))); dessiner(); }, { passive: false });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !e.target.closest("input")) monter(); });
+document.addEventListener("keydown", e => { if (e.key !== "Escape" || e.target.closest("input")) return;
+  if (boite.classList.contains("plein")) return basculerPlein();   // plein écran de secours : Échap en sort
+  monter(); });
+
+/* ---------- plein écran : le globe prend tout l'écran ; « Info » montre le panneau par-dessus (ouvert d'office sur grand écran) ---------- */
+const boite = canvas.closest(".globe"), panneau = document.querySelector(".panneau"), repere = document.createComment("place du panneau");
+const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
+const enPlein = () => ecran() === boite || boite.classList.contains("plein");
+function info(ouvrir) {
+  if (ouvrir && panneau.parentElement !== boite) { panneau.before(repere); boite.appendChild(panneau); panneau.classList.add("flottant"); }
+  if (!ouvrir && panneau.parentElement === boite) { repere.replaceWith(panneau); panneau.classList.remove("flottant"); }
+  $("info").setAttribute("aria-pressed", ouvrir);
+}
+let etaitPlein = false;
+function etatPlein() {
+  const on = enPlein();
+  $("plein").textContent = on ? "✕ Quitter le plein écran" : "⛶ Plein écran"; $("plein").setAttribute("aria-pressed", on);
+  $("info").hidden = !on;
+  if (on && !etaitPlein) info(innerWidth > 900);
+  if (!on) info(false);
+  etaitPlein = on;
+  requestAnimationFrame(taille);
+}
+function basculerPlein() {
+  if (ecran()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  else if (boite.classList.contains("plein")) { boite.classList.remove("plein"); document.body.classList.remove("plein-actif"); etatPlein(); }
+  else if (boite.requestFullscreen || boite.webkitRequestFullscreen) (boite.requestFullscreen || boite.webkitRequestFullscreen).call(boite);
+  else { boite.classList.add("plein"); document.body.classList.add("plein-actif"); etatPlein(); }   // iPhone : pas de plein écran d'élément
+}
+$("plein").addEventListener("click", basculerPlein);
+$("info").addEventListener("click", () => info($("info").getAttribute("aria-pressed") !== "true"));
+document.addEventListener("fullscreenchange", etatPlein);
+document.addEventListener("webkitfullscreenchange", etatPlein);
 let survolPrevu = null;
 function survoler(p) {
   if (survolPrevu) { survolPrevu = p; return; } survolPrevu = p;

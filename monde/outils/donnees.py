@@ -1,4 +1,4 @@
-"""Information monde : données de la page information-monde.html (à relancer seulement pour changer de source).
+"""Information Monde : données de la page information-monde.html (à relancer seulement pour changer de source).
 
 - monde/pays.json : contours des pays (world-atlas 2.0.2, Natural Earth 1:50 M, domaine public), code ISO 3166-1 alpha-2 ajouté (« a2 »).
 - monde/canada.json : provinces et territoires (Natural Earth 1:50 M admin-1, domaine public), coordonnées arrondies.

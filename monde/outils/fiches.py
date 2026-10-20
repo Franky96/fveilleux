@@ -1,4 +1,4 @@
-"""Information monde : villes et fiches des drapeaux (à relancer pour mettre à jour).
+"""Information Monde : villes et fiches des drapeaux (à relancer pour mettre à jour).
 
 - monde/villes-ca.json : municipalités du Canada de 100 000 habitants et plus au recensement de 2021 (subdivisions de
   recensement de Statistique Canada, code à 7 chiffres dans Wikidata ; Toronto, aussi division de recensement, ajoutée),
