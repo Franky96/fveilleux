@@ -1,1 +1,261 @@
-{}
+{
+"AF": {
+"mode": "prolonger"
+},
+"AG": {
+"ay": 1,
+"echelle": 0.8
+},
+"AU": {
+"mode": "prolonger",
+"ay": 0,
+"k": 0.5
+},
+"BD": {
+"k": 0
+},
+"BJ": {
+"mode": "prolonger"
+},
+"BN": {
+"ax": 1
+},
+"BY": {
+"ax": 0
+},
+"BZ": {
+"k": 0
+},
+"CA-AB": {
+"k": 0
+},
+"CA-MB": {
+"mode": "prolonger",
+"ay": 0,
+"k": 0.5
+},
+"CA-SK": {
+"ax": 0
+},
+"CA-YT": {
+"mode": "prolonger",
+"echelle": 0.65,
+"ax": 0,
+"ay": 0.7
+},
+"CD": {
+"echelle": 1.25,
+"ax": -0.4,
+"ay": 0
+},
+"CG": {
+"k": 1
+},
+"CM": {
+"mode": "prolonger",
+"ay": 0.9
+},
+"DK": {
+"ax": 1
+},
+"DM": {
+"k": 0
+},
+"EH": {
+"mode": "prolonger",
+"ay": 0.8
+},
+"GL": {
+"mode": "prolonger",
+"k": 0,
+"echelle": 1.5,
+"ax": 0.17
+},
+"GQ": {
+"mode": "prolonger",
+"echelle": 0.6,
+"ax": 1,
+"ay": 1
+},
+"GR": {
+"ax": 0
+},
+"GW": {
+"ax": 0,
+"ay": 1,
+"echelle": 1.4
+},
+"HK": {
+"echelle": 0.7,
+"ay": 0.15
+},
+"HR": {
+"ay": 0
+},
+"HT": {
+"echelle": 0.5,
+"ax": 1
+},
+"IE": {
+"mode": "prolonger"
+},
+"IL": {
+"ay": 0.85
+},
+"IM": {
+"k": 0,
+"echelle": 1.3
+},
+"JO": {
+"ax": 0
+},
+"KW": {
+"ax": 0
+},
+"KY": {
+"echelle": 1.4,
+"ax": 0,
+"ay": 0
+},
+"LA": {
+"echelle": 0.55,
+"ax": 0.2,
+"ay": 0.3
+},
+"LK": {
+"mode": "prolonger"
+},
+"LR": {
+"ax": 0
+},
+"MA": {
+"echelle": 0.7,
+"ax": 0.85,
+"ay": 0.15
+},
+"MD": {
+"mode": "prolonger"
+},
+"MK": {
+"mode": "rogner",
+"k": 0,
+"ax": 0.5
+},
+"MM": {
+"k": 0.15,
+"ay": 0.3
+},
+"MP": {
+"echelle": 0.3,
+"ax": 1,
+"ay": 0.53
+},
+"MS": {
+"mode": "prolonger",
+"ay": 0.35,
+"k": 0
+},
+"MW": {
+"k": 0,
+"echelle": 1.5,
+"ax": 1,
+"ay": 0.6
+},
+"MZ": {
+"ax": 0,
+"echelle": 1.4,
+"ay": 0
+},
+"NC": {
+"mode": "prolonger",
+"echelle": 0.4,
+"ax": 0.83,
+"ay": 0.65
+},
+"NO": {
+"ax": 0
+},
+"OM": {
+"ax": 0
+},
+"PG": {
+"echelle": 1.3,
+"ax": 0.9,
+"ay": 0.5,
+"k": 0.6
+},
+"PH": {
+"echelle": 0.7,
+"ax": -0.35,
+"ay": -0.13
+},
+"PK": {
+"ax": 0.6
+},
+"PM": {
+"ax": 0.7
+},
+"PN": {
+"mode": "prolonger",
+"ay": 0
+},
+"PS": {
+"ax": 0
+},
+"SH": {
+"echelle": 0.8,
+"ax": 0.5
+},
+"SO": {
+"k": 0,
+"echelle": 0.6,
+"ax": 0,
+"ay": 0.8
+},
+"SS": {
+"ax": 0
+},
+"TD": {
+"mode": "prolonger"
+},
+"TG": {
+"ax": 0
+},
+"TL": {
+"echelle": 1.4,
+"ax": 0.1,
+"ay": 0
+},
+"TN": {
+"k": 0,
+"echelle": 1.2,
+"ax": 1,
+"ay": 0.42
+},
+"TW": {
+"echelle": 0.5,
+"ax": 2,
+"ay": 0
+},
+"UY": {
+"ax": 0
+},
+"VC": {
+"mode": "prolonger",
+"ay": 0,
+"ax": 1,
+"echelle": 0.6
+},
+"VN": {
+"k": 0,
+"ay": 0.05,
+"echelle": 1.2
+},
+"ZM": {
+"ax": 1
+},
+"ZW": {
+"mode": "prolonger",
+"ax": 0
+}
+}
