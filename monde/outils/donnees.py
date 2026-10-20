@@ -1,6 +1,7 @@
 """Information Monde : données de la page information-monde.html (à relancer seulement pour changer de source).
 
 - monde/pays.json : contours des pays (world-atlas 2.0.2, Natural Earth 1:50 M, domaine public), code ISO 3166-1 alpha-2 ajouté (« a2 »).
+- monde/pays-110.json : contours simplifiés (world-atlas 1:110 M), dessinés pendant qu'on tourne ou zoome le globe (plus fluide).
 - monde/lacs.json : lacs (Natural Earth 1:50 M, domaine public), dessinés couleur de l'eau par-dessus les pays.
 - monde/canada.json : provinces et territoires (Natural Earth 1:50 M admin-1, domaine public), coordonnées arrondies.
 - monde/drapeaux/<a2>.svg : drapeaux des pays (flagcdn.com, Flagpedia, proportions officielles).
@@ -33,6 +34,7 @@ def pays():
         a2 = codes.get(g.get("id")) or SANS_CODE.get(nom)
         g["properties"] = {"a2": a2, "en": nom}
     json.dump(w, open(os.path.join(MONDE, "pays.json"), "w"), separators=(",", ":"))
+    open(os.path.join(MONDE, "pays-110.json"), "wb").write(lire("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json"))
     return sorted({g["properties"]["a2"] for g in w["objects"]["countries"]["geometries"] if g["properties"]["a2"]})
 
 def arrondir(c):

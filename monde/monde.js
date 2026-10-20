@@ -33,15 +33,40 @@ const nomSous = (a2, s) => nomCode(a2, s.properties.code);
 const drapeauPays = a2 => `monde/drapeaux/${a2.toLowerCase()}.svg`;
 const drapeauSous = (a2, s) => SOUS[a2].dossier + s.properties.code.split("-")[1].toLowerCase() + ".svg";
 
-let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
+let PAYS = [], FRONTIERES, LEGER = [], FRONTIERES_LEGER, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], GRANDS_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
 const canvas = $("globe"), ctx = canvas.getContext("2d");
-const proj = d3.geoOrthographic().clipAngle(90).precision(0.4);
+const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
 let rot = [96, -45, 0], k = 1, R = 300, W = 600, H = 600;   // rotation (centre sur le Canada), zoom, rayon de base, taille du canvas
 let C = {};
 const couleurs = () => { const s = getComputedStyle(document.documentElement);
   C = Object.fromEntries(["ocean", "grille", "terre", "terre-survol", "frontiere", "choisi", "pays-fond", "sous-trait", "contour", "ville", "ville-trait", "texte-globe", "ville-zone", "ville-zone-survol", "ville-choisie", "ville-limite"]
     .map(n => [n, s.getPropertyValue("--" + n).trim()])); };
+
+/* ---------- vitesse ---------- */
+// cercle englobant (centre, rayon angulaire) et boîte de chaque forme
+function cercle(f) {
+  const c = d3.geoCentroid(f); let r = 0;
+  d3.geoStream(f, { point(x, y) { r = Math.max(r, d3.geoDistance(c, [x, y])); }, lineStart() {}, lineEnd() {}, polygonStart() {}, polygonEnd() {}, sphere() {} });
+  f._c = c; f._r = r; f._b = d3.geoBounds(f); return f;
+}
+// version allégée d'une forme : on saute les points à moins de « pas » degrés du dernier gardé
+function alleger(geo, pas = 0.12) {
+  const anneau = a => { const o = [a[0]]; for (let i = 1; i < a.length - 1; i++) { const q = o[o.length - 1]; if (Math.abs(a[i][0] - q[0]) + Math.abs(a[i][1] - q[1]) >= pas) o.push(a[i]); }
+    o.push(a[a.length - 1]); return o.length >= 4 ? o : a; };
+  const g = geo.type === "Polygon" ? { type: "Polygon", coordinates: geo.coordinates.map(anneau) }
+    : geo.type === "MultiPolygon" ? { type: "MultiPolygon", coordinates: geo.coordinates.map(p => p.map(anneau)) }
+    : geo.type === "MultiLineString" ? { type: "MultiLineString", coordinates: geo.coordinates.map(anneau) } : geo;
+  return g;
+}
+const centreVue = () => [-rot[0], -rot[1]];
+const enVue = f => !f._c || d3.geoDistance(f._c, centreVue()) < Math.PI / 2 + f._r;
+// pendant qu'on tourne ou zoome : contours simplifiés (1:110 M), petits lacs omis, précision réduite ; dessin complet 150 ms après
+let rapide = false, finRapide = null;
+function bouger() {
+  rapide = true; proj.precision(2); clearTimeout(finRapide);
+  finRapide = setTimeout(() => { rapide = false; proj.precision(0.7); dessiner(); }, 150);
+}
 
 /* ---------- données des subdivisions et villes ---------- */
 // anneaux dans le sens attendu par d3 (horaire) : sinon le polygone couvrirait tout le reste du globe
@@ -54,6 +79,8 @@ function sensHoraire(d) {
 // un point dans un lac (boîte d'abord, pour aller vite)
 const dansBoite = ([[x0, y0], [x1, y1]], [x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
 const dansLac = p => BOITES_LACS.some((b, i) => dansBoite(b, p) && d3.geoContains(LACS.features[i], p));
+// boîte qui peut passer l'antiméridien (Russie, Fidji…)
+const dansBoiteGeo = ([[x0, y0], [x1, y1]], [x, y]) => y >= y0 && y <= y1 && (x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1);
 async function charger(a2) {
   if (!SOUS[a2]) return null;
   if (charges[a2]) return charges[a2];
@@ -65,7 +92,8 @@ async function charger(a2) {
   // limites des territoires des villes (Québec pour l'instant : limites_qc.py)
   await Promise.all(villes.filter(v => v.limites).map(async v => {
     try { const f = await fetch(v.limites).then(r => r.json()); sensHoraire({ features: [f] }); v.zone = f; v.boite = d3.geoBounds(f); } catch {} }));
-  return (charges[a2] = { features: d.features, mesh, villes });
+  for (const s of d.features) s._leger = { type: "Feature", properties: s.properties, geometry: alleger(s.geometry) };
+  return (charges[a2] = { features: d.features, mesh, meshLeger: alleger(mesh), villes });
 }
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
 
@@ -75,27 +103,29 @@ const dessiner = () => { if (prevu) return; prevu = true; requestAnimationFrame(
 const visible = p => d3.geoDistance(p, [-rot[0], -rot[1]]) < Math.PI / 2 - 0.01;
 let pointsVilles = [];   // villes dessinées (pour le clic)
 function peindre() {
-  const dpr = devicePixelRatio || 1;
+  const dpr = Math.min(2, devicePixelRatio || 1);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
   proj.rotate(rot).scale(R * k).translate([W / 2, H / 2]);
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.fillStyle = C.ocean; ctx.fill();
   ctx.beginPath(); chemin(grille); ctx.strokeStyle = C.grille; ctx.lineWidth = 1; ctx.stroke();
-  const paysSel = sel?.pays;
-  for (const f of PAYS) {
-    ctx.beginPath(); chemin(f);
-    ctx.fillStyle = f === paysSel ? (sel.sous ? C["pays-fond"] : C.choisi) : f === survol?.pays && !survol.sous ? C["terre-survol"] : C.terre; ctx.fill();
-  }
+  const paysSel = sel?.pays, survole = survol && !survol.sous ? survol.pays : null;
+  ctx.beginPath();
+  for (const f of rapide ? LEGER : PAYS) if (enVue(f) && f._a2 !== paysSel?._a2 && f._a2 !== survole?._a2) chemin(f);
+  ctx.fillStyle = C.terre; ctx.fill();
+  if (survole && survole !== paysSel) { ctx.beginPath(); chemin(survole); ctx.fillStyle = C["terre-survol"]; ctx.fill(); }
+  const paysDessin = paysSel && (rapide && LEGER.find(f => f._a2 === paysSel._a2)) || paysSel;
+  if (paysSel) { ctx.beginPath(); chemin(paysDessin); ctx.fillStyle = sel.sous ? C["pays-fond"] : C.choisi; ctx.fill(); }
   // subdivisions du pays choisi : la choisie (ou survolée) en couleur, frontières internes
   const S = paysSel && charges[paysSel.properties.a2];
   if (S) for (const s of S.features) if (s === sel.sous || s === survol?.sous) {
-    ctx.beginPath(); chemin(s); ctx.fillStyle = s === sel.sous ? C.choisi : C["terre-survol"]; ctx.globalAlpha = s === sel.sous ? 1 : 0.6; ctx.fill(); ctx.globalAlpha = 1; }
+    ctx.beginPath(); chemin(rapide ? s._leger : s); ctx.fillStyle = s === sel.sous ? C.choisi : C["terre-survol"]; ctx.globalAlpha = s === sel.sous ? 1 : 0.6; ctx.fill(); ctx.globalAlpha = 1; }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres
-  ctx.beginPath(); chemin(LACS); ctx.fillStyle = C.ocean; ctx.fill();
-  ctx.beginPath(); chemin(FRONTIERES); ctx.strokeStyle = C.frontiere; ctx.lineWidth = 0.6; ctx.stroke();
+  ctx.beginPath(); for (const f of rapide ? GRANDS_LACS : LACS.features) if (enVue(f)) chemin(f); ctx.fillStyle = C.ocean; ctx.fill();
+  ctx.beginPath(); chemin(rapide ? FRONTIERES_LEGER : FRONTIERES); ctx.strokeStyle = C.frontiere; ctx.lineWidth = 0.6; ctx.stroke();
   if (S) {
-    ctx.beginPath(); chemin(S.mesh); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.beginPath(); chemin(rapide ? S.meshLeger : S.mesh); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 0.8; ctx.stroke();
   }
-  if (paysSel) { ctx.beginPath(); chemin(paysSel); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 1.4; ctx.stroke(); }
+  if (paysSel) { ctx.beginPath(); chemin(paysDessin); ctx.strokeStyle = C["sous-trait"]; ctx.lineWidth = 1.4; ctx.stroke(); }
   // villes de la subdivision choisie : territoire (quand on a ses limites), point (carré pour une capitale), nom quand on est assez près
   pointsVilles = [];
   if (S && sel.sous) for (const v of villesDe(paysSel.properties.a2, sel.sous.properties.code)) if (v.zone) {
@@ -125,7 +155,7 @@ function peindre() {
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.strokeStyle = C.contour; ctx.lineWidth = 1.5; ctx.stroke();
 }
 function taille() {
-  const dpr = devicePixelRatio || 1;
+  const dpr = Math.min(2, devicePixelRatio || 1);
   W = Math.round(canvas.clientWidth); H = Math.round(canvas.clientHeight) || W;
   R = Math.min(W, H) / 2 - 6; canvas.width = W * dpr; canvas.height = H * dpr; peindre();
 }
@@ -139,7 +169,7 @@ function sousLe([x, y]) {
   if (dansLac(p)) return { ocean: true };
   if (sel?.sous) { const v = villesDe(sel.pays.properties.a2, sel.sous.properties.code).find(v => v.zone && dansBoite(v.boite, p) && d3.geoContains(v.zone, p));
     if (v) return { pays: sel.pays, sous: sel.sous, ville: v }; }
-  const pays = PAYS.find(f => d3.geoContains(f, p)); if (!pays) return { ocean: true };
+  const pays = PAYS.find(f => dansBoiteGeo(f._b, p) && d3.geoContains(f, p)); if (!pays) return { ocean: true };
   const S = pays === sel?.pays && charges[pays.properties.a2];
   return { pays, sous: S ? S.features.find(s => d3.geoContains(s, p)) || null : null, ville: null };
 }
@@ -162,7 +192,7 @@ function allerA(cible) {
   arreter();
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) { rot = r2; k = k2; return dessiner(); }
   const ir = d3.interpolate(r0, r2), lk = d3.interpolate(Math.log(k0), Math.log(k2));
-  anim = d3.timer(t => { const u = d3.easeCubicInOut(Math.min(1, t / 1000)); rot = ir(u); k = Math.exp(lk(u)); peindre(); if (u >= 1) arreter(); });
+  anim = d3.timer(t => { const u = d3.easeCubicInOut(Math.min(1, t / 1000)); rot = ir(u); k = Math.exp(lk(u)); bouger(); peindre(); if (u >= 1) arreter(); });
 }
 
 /* ---------- choix ---------- */
@@ -264,16 +294,16 @@ canvas.addEventListener("pointerdown", e => {
 });
 canvas.addEventListener("pointermove", e => {
   const p = pos(e);
-  if (!pointeurs.has(e.pointerId)) { if (e.pointerType === "mouse") survoler(p); return; }
+  if (!pointeurs.has(e.pointerId)) { if (e.pointerType === "mouse" && !rapide) survoler(p); return; }
   pointeurs.set(e.pointerId, p);
-  if (pince && pointeurs.size === 2) { const [a, b] = [...pointeurs.values()]; k = Math.max(1, Math.min(40, pince.k * Math.hypot(a[0] - b[0], a[1] - b[1]) / pince.d)); return dessiner(); }
+  if (pince && pointeurs.size === 2) { const [a, b] = [...pointeurs.values()]; k = Math.max(1, Math.min(40, pince.k * Math.hypot(a[0] - b[0], a[1] - b[1]) / pince.d)); bouger(); return dessiner(); }
   if (!depart) return;
   const dx = p[0] - depart.p[0], dy = p[1] - depart.p[1];
   if (!bouge && Math.hypot(dx, dy) < 4) return;
   bouge = true; canvas.classList.add("tire"); $("bulle").hidden = true;
   const f = 180 / (Math.PI * R * k);   // degrés par pixel
   rot = [depart.rot[0] + dx * f, Math.max(-90, Math.min(90, depart.rot[1] - dy * f)), 0];
-  dessiner();
+  bouger(); dessiner();
 });
 const fin = e => {
   const p = pointeurs.get(e.pointerId); pointeurs.delete(e.pointerId);
@@ -290,7 +320,7 @@ const fin = e => {
 };
 canvas.addEventListener("pointerup", fin); canvas.addEventListener("pointercancel", fin);
 canvas.addEventListener("pointerleave", () => { if (survol) { survol = null; $("bulle").hidden = true; dessiner(); } });
-canvas.addEventListener("wheel", e => { e.preventDefault(); arreter(); k = Math.max(1, Math.min(40, k * Math.exp(-e.deltaY * 0.0015))); dessiner(); }, { passive: false });
+canvas.addEventListener("wheel", e => { e.preventDefault(); arreter(); k = Math.max(1, Math.min(40, k * Math.exp(-e.deltaY * 0.0015))); bouger(); dessiner(); }, { passive: false });
 document.addEventListener("keydown", e => { if (e.key !== "Escape" || e.target.closest("input")) return;
   if (boite.classList.contains("plein")) return basculerPlein();   // plein écran de secours : Échap en sort
   monter(); });
@@ -338,7 +368,7 @@ function survoler(p) {
     if (change) dessiner();
   });
 }
-const zoomer = f => { arreter(); k = Math.max(1, Math.min(40, k * f)); dessiner(); };
+const zoomer = f => { arreter(); k = Math.max(1, Math.min(40, k * f)); bouger(); dessiner(); };
 $("zPlus").addEventListener("click", () => zoomer(1.6));
 $("zMoins").addEventListener("click", () => zoomer(1 / 1.6));
 $("zTout").addEventListener("click", () => { arreter(); k = 1; dessiner(); });
@@ -380,12 +410,21 @@ async function depuisAdresse(bouger) {
 /* ---------- démarrage ---------- */
 (async () => {
   couleurs();
-  const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
-    fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
+  const [w, fiches, lacs, w110] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
+    fetch("monde/lacs.json").then(r => r.json()).catch(() => null), fetch("monde/pays-110.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
-  if (lacs) { sensHoraire(lacs); LACS = lacs; BOITES_LACS = lacs.features.map(f => d3.geoBounds(f)); }
-  PAYS = topojson.feature(w, w.objects.countries).features;
+  PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
+  // clé commune aux deux échelles (code numérique ISO, sinon nom)
+  for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
+  const num = Object.fromEntries(w.objects.countries.geometries.map(g => [g.id ?? g.properties.en, g.properties.a2 || g.properties.en]));
+  if (w110) {
+    LEGER = topojson.feature(w110, w110.objects.countries).features.map(cercle);
+    for (const f of LEGER) f._a2 = num[f.id ?? f.properties.name] || f.properties.name;
+    FRONTIERES_LEGER = topojson.mesh(w110, w110.objects.countries, (a, b) => a !== b);
+  } else { LEGER = PAYS; FRONTIERES_LEGER = FRONTIERES; }
+  if (lacs) { sensHoraire(lacs); LACS = lacs; lacs.features.forEach(cercle); BOITES_LACS = lacs.features.map(f => f._b);
+    GRANDS_LACS = lacs.features.filter(f => d3.geoArea(f) > 2e-5); }
   new ResizeObserver(taille).observe(canvas);
   taille();
   await depuisAdresse(true);
