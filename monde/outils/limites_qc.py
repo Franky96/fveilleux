@@ -10,7 +10,7 @@ Résultat : monde/limites/<Q>.json = Feature du territoire terrestre (limite qui
 du territoire municipal qui est de l'eau (dessinée couleur de l'eau sur le globe) ; superficie terrestre calculée.
 Usage : python3 monde/outils/limites_qc.py Q340
 """
-import json, math, os, sys, time, urllib.error, urllib.parse, urllib.request
+import http.client, json, math, os, sys, time, urllib.error, urllib.parse, urllib.request
 from shapely.geometry import box, shape, mapping
 from shapely.ops import unary_union
 
@@ -34,12 +34,12 @@ def eau_osm(x0, y0, x1, y1):
     from shapely.ops import linemerge, polygonize
     b = f"{y0},{x0},{y1},{x1}"
     q = f'[out:json][timeout:180];(way["natural"="water"]({b});relation["natural"="water"]({b}););out geom;'
-    for essai in range(5):   # le miroir répond parfois 504 : on réessaie
+    for essai in range(6):   # le miroir répond parfois 504 ou coupe la connexion : on réessaie
         try:
             req = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({"data": q}).encode(), headers=UA)
             d = json.loads(urllib.request.urlopen(req, timeout=400).read()); break
-        except urllib.error.HTTPError as e:
-            if e.code not in (429, 502, 503, 504) or essai == 4: raise
+        except (urllib.error.URLError, http.client.HTTPException, ConnectionError, TimeoutError) as e:   # 504, coupure…
+            if (isinstance(e, urllib.error.HTTPError) and e.code not in (429, 502, 503, 504)) or essai == 5: raise
             time.sleep(20 * (essai + 1))
     ligne = lambda g: LineString([(p["lon"], p["lat"]) for p in g])
     polys = []
