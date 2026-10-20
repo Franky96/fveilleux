@@ -13,7 +13,7 @@ const RAFRAICHIR = 60;                                       // secondes entre d
 const NB = 87;
 const OUVERTURE = new Date("2026-10-19T09:00:00-06:00"), FERMETURE = new Date("2026-10-19T20:00:00-06:00");   // heure avancée des Rocheuses
 const FIN_DEPOUILLEMENT = new Date("2026-10-21T20:00:00-06:00"), OFFICIELS = new Date("2026-10-29T10:00:00-06:00");
-const SITE_RES = "https://officialresults.elections.ab.ca/";
+const SITE_RES = "https://results.elections.ab.ca/";
 const SERRE = 5;                                             // lutte serrée : moins de 5 points d'écart
 
 const $ = id => document.getElementById(id);
@@ -187,8 +187,33 @@ function lirePage(p, evt) {
   return { q: k, inconnu: true };
 }
 
+// données JSON du tableau de bord d'Élections Alberta (results.elections.ab.ca, relais ou pipeline) : par question
+// (identifiant 11 = question 10), voix oui / non (question 10 : option 1 rester / option 2 processus) par circonscription ;
+// sections dépouillées par circonscription (communes aux 10 questions) ; ni rejetés, ni votants, ni inscrits publiés
+function normaliserEab(d, out) {
+  const e = d.eab, sec = {};
+  for (const w of e.wards || []) sec[+w.ward] = [w.pollsReporting ?? null, w.totalPolls ?? null];
+  const S = e.widgets?.summary || {};
+  for (const qs of e.questionStats || []) {
+    const k = qs.questionID === 11 ? 10 : qs.questionID;
+    if (!(k >= 1 && k <= 10) || out.questions[k]) continue;
+    // les sections dépouillées valent pour la question 10, comptée d'abord ; les questions 1 à 9 suivent (avancement non publié)
+    const circ = {}, dix = k === 10;
+    for (const w of qs.wardStats || []) {
+      const n = +w.ward, x = dix ? sec[n] || [null, null] : [null, null];
+      const frac = x[0] != null && x[1] ? Math.min(1, x[0] / x[1]) : null;
+      circ[n] = { a: w.yesVotes || 0, b: w.noVotes || 0, rej: 0, vot: null, ins: null, part: null, sec: x, frac, final: frac === 1 };
+    }
+    out.questions[k] = { q: k, circ, tot: { a: qs.yesVotes || 0, b: qs.noVotes || 0, rej: 0, vot: null, ins: null,
+      sec: dix ? [S.pollsReporting ?? null, S.totalPolls ?? null] : [null, null], part: null } };
+    if ((qs.yesVotes || 0) + (qs.noVotes || 0) > 0) out.publiees++;
+  }
+  return out;
+}
+
 function normaliser(d) {
   const out = { maj: d.maj ? new Date(d.maj) : null, demo: !!d.demo, via: d.via, questions: {}, publiees: 0, inconnues: 0 };
+  if (d.eab) return normaliserEab(d, out);
   for (const [evt, p] of Object.entries(d.pages || {})) {
     if (p.statut !== 200) continue;
     const r = lirePage(p, +evt);
@@ -224,7 +249,7 @@ function demoPartielle(R, p) {
 async function lireRelais() {
   const r = await fetch("api/alberta.php?type=resultats", { credentials: "include", cache: "no-store" });
   if (r.status === 401) throw new Error("Session expirée : reconnecte-toi.");
-  try { const d = await r.json(); return d && d.pages ? d : null; } catch { return null; }   // pas de PHP (serveur local) : copie du pipeline
+  try { const d = await r.json(); return d && (d.eab || d.pages) ? d : null; } catch { return null; }   // pas de PHP (serveur local) : copie du pipeline
 }
 async function lireCopie() {
   const r = await fetch("en-direct/resultats.json", { cache: "no-cache" });

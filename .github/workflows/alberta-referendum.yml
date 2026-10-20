@@ -38,11 +38,11 @@ jobs:
         run: |
           git add en-direct/resultats.json
           if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
-          N=$(python3 -c "import json;d=json.load(open('en-direct/resultats.json'));print(sum(p.get('statut')==200 for p in d['pages'].values()))")
+          N=$(python3 -c "import json;s=json.load(open('en-direct/resultats.json'))['eab']['widgets']['summary'];print(f\"{s['pollsReporting']}/{s['totalPolls']} sections\")")
           H=$(TZ=America/Edmonton date +"%H h %M")
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Référendum Alberta : résultats non officiels de $H, heure de l'Alberta ($N/10 questions)"
+          git commit -m "Référendum Alberta : résultats non officiels de $H, heure de l'Alberta ($N)"
           for essai in 1 2 3 4; do
             git push origin HEAD:master && exit 0
             sleep $((2 ** essai)); git pull --rebase origin master
