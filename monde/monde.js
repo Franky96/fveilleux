@@ -75,7 +75,7 @@ function alleger(geo, pas = 0.12) {
   return geo;
 }
 // niveaux de détail : on saute les points à moins d'un pixel l'un de l'autre au zoom actuel (le tracé reste identique à l'œil)
-const PAS = [0.3, 0.12, 0.05, 0.02];
+const PAS = [0.5, 0.3, 0.2, 0.12, 0.08, 0.05, 0.03, 0.02];   // niveaux intermédiaires : juste assez de points à chaque zoom
 let pasCourant = null;
 function choisirPas() {
   const pxDeg = R * k * Math.PI / 180, tol = rapide ? 2 : 0.8;
@@ -138,21 +138,32 @@ async function charger(a2) {
 const villesDe = (a2, code) => (charges[a2]?.villes || []).filter(v => v.prov === code);
 
 /* ---------- drapeaux sur le globe ---------- */
-// image de chaque drapeau, chargée la première fois qu'elle sert, puis tramée une fois par taille (256 ou 1024 px de large)
+// image de chaque drapeau, chargée la première fois qu'elle sert, puis tramée une fois par taille (trame() ci-dessous)
 const DRAP = new Map();
 function imageDrapeau(src) {
   let d = DRAP.get(src);
   if (!d) { d = { img: new Image(), ok: false, trames: {} }; d.img.onload = () => { d.ok = true; dessiner(); }; d.img.src = src; DRAP.set(src, d); }
   return d.ok ? d : null;
 }
-function trame(d, largeur) {
-  const t = largeur > 300 ? 1024 : 256;
-  if (!d.trames[t]) {
-    const c = document.createElement("canvas"), ar = d.img.naturalHeight / d.img.naturalWidth || 0.5;
-    c.width = t; c.height = Math.max(1, Math.round(t * ar)); c.getContext("2d").drawImage(d.img, 0, 0, c.width, c.height);
-    d.trames[t] = c;
+// trame aux proportions et à la taille du drapeau à l'écran (64 à 2048 px dans chaque sens, densité de pixels comprise) :
+// le drapeau est étiré dès la trame, comme à l'écran, pour que l'image ne soit pas réduite plus dans un sens que dans
+// l'autre (le navigateur lisse alors selon le sens le plus réduit et brouille l'autre : drapeaux flous) ; pendant qu'on
+// tourne ou zoome, pas de nouvelle trame (préparer une image coûte) : la plus proche déjà prête
+const TAILLES = [64, 128, 256, 512, 1024, 2048];
+const tailleTrame = v => TAILLES.find(x => x >= v * Math.min(2, devicePixelRatio || 1)) || 2048;
+function trame(d, largeur, hauteur) {
+  const tw = tailleTrame(largeur), th = tailleTrame(hauteur), cle = tw + "x" + th;
+  if (!d.trames[cle]) {
+    const pretes = Object.keys(d.trames);
+    if (rapide && pretes.length) {
+      const ecart = c => { const [a, b] = c.split("x").map(Number); return Math.abs(Math.log(a / tw)) + Math.abs(Math.log(b / th)); };
+      return d.trames[pretes.reduce((a, b) => ecart(b) < ecart(a) ? b : a)];
+    }
+    const c = document.createElement("canvas"); c.width = tw; c.height = th;
+    const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(d.img, 0, 0, tw, th);
+    d.trames[cle] = c;
   }
-  return d.trames[t];
+  return d.trames[cle];
 }
 // le drapeau est placé sur le gros du territoire (plus grand morceau et morceaux à moins de 25° de lui, ex. les îles du
 // Nunavut) ; un morceau éloigné (Alaska, outre-mer) a son propre drapeau
@@ -183,7 +194,7 @@ const GX = 12, GY = 8;
 // couleur principale du drapeau (la plus fréquente) : fond du reste du territoire
 function couleurPrincipale(d) {
   if (d.couleur) return d.couleur;
-  const t = trame(d, 0), px = t.getContext("2d").getImageData(0, 0, t.width, t.height).data, n = new Map();
+  const t = trame(d, 64, 40), px = t.getContext("2d").getImageData(0, 0, t.width, t.height).data, n = new Map();
   for (let i = 0; i < px.length; i += 16) { if (px[i + 3] < 200) continue; const q = (px[i] >> 4) << 8 | (px[i + 1] >> 4) << 4 | (px[i + 2] >> 4); n.set(q, (n.get(q) || 0) + 1); }
   let q = 0, m = -1; for (const [c, v] of n) if (v > m) { m = v; q = c; }
   return (d.couleur = `rgb(${(q >> 8 & 15) * 17},${(q >> 4 & 15) * 17},${(q & 15) * 17})`);
@@ -200,12 +211,14 @@ function peindreMorceaux(L, d, place) {
   const G = P.grille, vu = g => d3.geoDistance(g, centre) < Math.PI / 2 - 0.005;
   const a = proj(G[0][0]), b = proj(G[0][GX]), c = proj(G[GY][0]);
   const larg = Math.hypot(b[0] - a[0], b[1] - a[1]), haut = Math.hypot(c[0] - a[0], c[1] - a[1]);
-  const nx = Math.max(1, Math.min(GX, Math.round(larg / 45))), ny = Math.max(1, Math.min(GY, Math.round(haut / 45)));
+  const pasT = rapide ? 90 : 45;   // une case par 45 px à l'arrêt, 90 px pendant le mouvement
+  const nx = Math.max(1, Math.min(GX, Math.round(larg / pasT))), ny = Math.max(1, Math.min(GY, Math.round(haut / pasT)));
   const I = [...Array(nx + 1)].map((_, q) => Math.round(q * GX / nx)), J = [...Array(ny + 1)].map((_, q) => Math.round(q * GY / ny));
-  const t = trame(d, larg), mo = d.motifs?.[t.width] || ((d.motifs ||= {})[t.width] = ctx.createPattern(t, "no-repeat"));
+  const t = trame(d, larg, haut), cleT = t.width + "x" + t.height;
+  const mo = d.motifs?.[cleT] || ((d.motifs ||= {})[cleT] = ctx.createPattern(t, "no-repeat"));
   const pr = J.map(jj => I.map(ii => vu(G[jj][ii]) ? proj(G[jj][ii]) : null));
   ctx.save(); ctx.clip();
-  ctx.fillStyle = mo;
+  ctx.imageSmoothingQuality = "high"; ctx.fillStyle = mo;
   // triangle de sommets écran p0, p1, p2 (image u0,v0 · u1,v0 · u0,v1, ou leur symétrique) : transformation exacte, triangle
   // grossi de 0,6 px pour qu'aucune couture ne se voie
   const tri = (p0, p1, p2, du, dv, u0, v0) => {
@@ -285,14 +298,16 @@ function peindre() {
   }
   // lacs et plans d'eau : couleur de l'eau, par-dessus les terres (tous, même en mouvement)
   remplir(LACS.features.filter(enVue).map(f => lod(f)), C.ocean);
-  ctx.lineWidth = 0.6; remplir([lod(FRONTIERES)], C.frontiere, true);
+  // frontières : plus marquées entre deux drapeaux
+  ctx.lineWidth = RUB.drapeaux ? 1.1 : 0.6; remplir([lod(FRONTIERES)], RUB.drapeaux ? "rgba(8,12,18,.75)" : C.frontiere, true);
   if (RUB.drapeaux) {
     // frontières des États et provinces, puis le territoire choisi (et survolé) en contour, par-dessus les drapeaux
     if (modeEtats()) for (const X of Object.values(charges)) if (X) { ctx.lineWidth = 0.7; remplir([lod(X.mesh)], C.frontiere, true); }
     // (au niveau États et provinces, seule une province choisie est soulignée, pas tout le pays)
     const ch = sel?.sous || (modeEtats() && charges[paysSel?.properties.a2] ? null : paysSel), sv = survol && (survol.sous || survol.pays);
     if (sv && sv !== ch) { ctx.lineWidth = 1.5; remplir([lod(sv)], C["texte-globe"], true); }
-    if (ch) { ctx.lineWidth = 3; remplir([lod(ch)], C.frontiere, true); ctx.lineWidth = 1.6; remplir([lod(ch)], C.choisi, true); }
+    // (le halo sombre seulement à l'arrêt : sur un grand pays aux milliers d'îles, chaque trait coûte cher)
+    if (ch) { if (!rapide) { ctx.lineWidth = 3; remplir([lod(ch)], C.frontiere, true); } ctx.lineWidth = 1.6; remplir([lod(ch)], C.choisi, true); }
   } else {
     if (S) { ctx.lineWidth = 0.8; remplir([lod(S.mesh)], C["sous-trait"], true); }
     if (paysSel && !S) { ctx.lineWidth = 1.4; remplir([paysDessin], C["sous-trait"], true); }
@@ -330,6 +345,15 @@ function peindre() {
       }
     }
     ctx.textAlign = "left";
+  }
+  // relief (rubrique Drapeaux) : le globe s'assombrit doucement vers ses bords, lumière légère en haut à gauche
+  if (RUB.drapeaux) {
+    const rr = R * k, cx = W / 2, cy = H / 2;
+    const o = ctx.createRadialGradient(cx, cy, rr * 0.55, cx, cy, rr);
+    o.addColorStop(0, "rgba(0,0,0,0)"); o.addColorStop(1, "rgba(0,0,0,.32)");
+    const l = ctx.createRadialGradient(cx - rr * 0.35, cy - rr * 0.4, 0, cx - rr * 0.35, cy - rr * 0.4, rr * 0.9);
+    l.addColorStop(0, "rgba(255,255,255,.10)"); l.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.beginPath(); chemin({ type: "Sphere" }); ctx.fillStyle = o; ctx.fill(); ctx.fillStyle = l; ctx.fill();
   }
   ctx.beginPath(); chemin({ type: "Sphere" }); ctx.strokeStyle = C.contour; ctx.lineWidth = 1.5; ctx.stroke();
   if (enAttente) dessiner();   // places de drapeaux pas encore calculées : à l'image suivante
@@ -614,6 +638,6 @@ majRubriques();
   // accès pour le test de cohérence du rendu (information-monde.html?essai) : globe dessiné à un angle et un zoom donnés
   if (new URLSearchParams(location.search).has("essai")) window.__globe = {
     dessinerA(r, kk, enMouvement) { arreter(); rot = r; k = kk; if (enMouvement) bouger(); else { clearTimeout(finRapide); rapide = false; proj.precision(0.7); } peindre(); },
-    proj, PAYS, LACS, dansLac, C, W: () => W, H: () => H, R: () => R, k: () => k };
+    proj, PAYS, LACS, dansLac, C, DRAP, W: () => W, H: () => H, R: () => R, k: () => k };
   addEventListener("themechange", () => { couleurs(); dessiner(); });
 })();
