@@ -164,53 +164,18 @@ function groupeDe(f) {
   const M = morceaux(f);
   return (f._grp = { dans, prin: M.filter(m => dans(m._c)).map(m => m.coordinates), loin: M.filter(m => !dans(m._c)) });
 }
-// place fixe du drapeau (demande de l'utilisateur : drapeaux fixes dans leur pays, et le plus de drapeau visible) :
-// calculée une fois dans un plan local (projection azimutale équidistante centrée sur le territoire, en radians, nord en
-// haut) : la plus grande taille, et à cette taille la meilleure position, qui garde au moins 93 % du drapeau dans le
-// territoire (93 % des points de l'intérieur et des bords) ; à chaque image, trois coins du drapeau sont ramenés sur le globe et
-// projetés : le drapeau suit son territoire quand on tourne ou zoome ; le reste du territoire prend la couleur principale
-const RAD = Math.PI / 180;
-function placer(polys, aspect) {
+// place fixe du drapeau (demande de l'utilisateur, d'après ses exemples) : le drapeau est étiré pour remplir exactement le
+// cadre du territoire (d'ouest en est et du nord au sud, dans une projection azimutale équidistante centrée sur lui, nord
+// en haut) : tout le territoire est couvert et on voit le drapeau en entier, même déformé ; ses trois coins sont des
+// points du globe, projetés à chaque image : le drapeau reste fixé sur son territoire quand on tourne ou zoome
+function placer(polys) {
   let [[x0, y0], [x1, y1]] = d3.geoBounds({ type: "MultiPolygon", coordinates: polys }); if (x1 < x0) x1 += 360;
   const lc = (x0 + x1) / 2, pc = (y0 + y1) / 2;
   const az = d3.geoAzimuthalEquidistant().rotate([-lc, -pc]).scale(1).translate([0, 0]).clipAngle(null).precision(0);
-  const plan = g => { const q = az(g); return [q[0], -q[1]]; };
-  // anneaux des morceaux assez grands (1 % du plus grand), allégés à 80 points, avec leur cadre (test rapide)
-  const aire = c => { let [[a, b], [e, g]] = d3.geoBounds({ type: "Polygon", coordinates: c }); if (e < a) e += 360; return (e - a) * (g - b); };
-  const amax = Math.max(...polys.map(aire));
-  const anneaux = polys.filter(c => aire(c) >= amax / 100).flatMap(c => c.map(r => {
-    const pas = Math.max(1, Math.floor(r.length / 80)), a = r.filter((_, i) => i % pas === 0).map(plan);
-    return { a, b: [Math.min(...a.map(q => q[0])), Math.min(...a.map(q => q[1])), Math.max(...a.map(q => q[0])), Math.max(...a.map(q => q[1]))] };
-  })).filter(x => x.a.length >= 4);
-  const dedans = (x, y) => { let c = false;
-    for (const { a, b } of anneaux) { if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
-      for (let i = 0, j = a.length - 1; i < a.length; j = i++) { const [xi, yi] = a[i], [xj, yj] = a[j];
-        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } }
-    return c; };
-  // cadre du territoire dans le plan
   let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
-  for (const { b } of anneaux) { X0 = Math.min(X0, b[0]); Y0 = Math.min(Y0, b[1]); X1 = Math.max(X1, b[2]); Y1 = Math.max(Y1, b[3]); }
-  const W0 = X1 - X0, H0 = Y1 - Y0, fw0 = Math.min(W0, H0 / aspect);
-  // points testés : grille 8 × 6 de l'intérieur et points des quatre bords
-  const pts = [];
-  for (let u = 0; u < 8; u++) for (let v = 0; v < 6; v++) pts.push([(u + 0.5) / 8, (v + 0.5) / 6]);
-  for (let u = 0; u <= 8; u++) pts.push([u / 8, 0.01], [u / 8, 0.99]);
-  for (let v = 1; v < 6; v++) pts.push([0.01, v / 6], [0.99, v / 6]);
-  let best = null;
-  for (const t of [1, 0.85, 0.72, 0.6, 0.5, 0.42, 0.35, 0.29, 0.24, 0.2, 0.16]) {
-    const w = fw0 * t, h = w * aspect;
-    for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) {
-      const rx = X0 + (W0 - w) * i / 8, ry = Y0 + (H0 - h) * j / 8;
-      let n = 0;
-      for (const [u, v] of pts) if (dedans(rx + w * u, ry + h * v)) n++;
-      const fr = n / pts.length, score = fr >= 0.93 ? 10 + w * h + fr : fr * w * h;
-      if (!best || score > best.score) best = { score, rx, ry, w, h };
-    }
-    if (best.score >= 10) break;
-  }
-  // les coins du drapeau ramenés sur le globe (plan → longitude, latitude)
+  for (const c of polys) for (const r of c) for (const g of r) { const [x, y] = az(g); if (x < X0) X0 = x; if (x > X1) X1 = x; if (-y < Y0) Y0 = -y; if (-y > Y1) Y1 = -y; }
   const geo = (x, y) => az.invert([x, -y]);
-  return { c: [lc, pc], coins: [geo(best.rx, best.ry + best.h), geo(best.rx + best.w, best.ry + best.h), geo(best.rx, best.ry)], centre: geo(best.rx + best.w / 2, best.ry + best.h / 2) };
+  return { coins: [geo(X0, Y1), geo(X1, Y1), geo(X0, Y0)], centre: geo((X0 + X1) / 2, (Y0 + Y1) / 2) };
 }
 // couleur principale du drapeau (la plus fréquente) : fond du reste du territoire
 function couleurPrincipale(d) {
@@ -241,13 +206,13 @@ function peindreMorceaux(L, d, place) {
 // vrai si le drapeau est dessiné (image chargée)
 function peindreDrapeau(f, src) {
   const d = imageDrapeau(src); if (!d) return false;
-  const G = groupeDe(f), L = morceaux(lod(f)).filter(enVue), aspect = d.img.naturalHeight / d.img.naturalWidth || 0.5;
+  const G = groupeDe(f), L = morceaux(lod(f)).filter(enVue);
   const prin = L.filter(m => G.dans(m._c));
-  if (prin.length) peindreMorceaux(prin, d, () => G.place || (budget-- > 0 ? (G.place = placer(G.prin, aspect)) : null));
+  if (prin.length) peindreMorceaux(prin, d, () => G.place || (budget-- > 0 ? (G.place = placer(G.prin)) : null));
   for (const m of L) {
     if (G.dans(m._c)) continue;
     const o = G.loin.find(x => dansCadre(x._b, m._c));
-    peindreMorceaux([m], d, () => !o ? null : o._place || (budget-- > 0 ? (o._place = placer([o.coordinates], aspect)) : null));
+    peindreMorceaux([m], d, () => !o ? null : o._place || (budget-- > 0 ? (o._place = placer([o.coordinates])) : null));
   }
   return true;
 }
