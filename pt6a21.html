@@ -97,6 +97,14 @@ button,input,select{font:inherit;color:inherit}
 .tip small{display:block;color:var(--muted);font-family:var(--f-mono);font-size:10px}
 .viewport:fullscreen{height:100%;max-height:none;border-radius:0;border:0}
 .viewport:-webkit-full-screen{height:100%;border-radius:0;border:0}
+/* flèche pour masquer ou ramener les commandes et les instruments (demande de l'utilisateur : plus de place pour la vue 3D) */
+.ctl-tab{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:4;width:26px;height:64px;display:grid;place-items:center;padding:0;cursor:pointer;
+  background:rgba(10,14,17,.82);border:1px solid var(--line2);border-right:0;border-radius:6px 0 0 6px;color:var(--text);font-size:22px;line-height:1;backdrop-filter:blur(4px)}
+.ctl-tab:hover{border-color:var(--accent);color:var(--accent)}
+.viewport:fullscreen .ctl-tab,.viewport.pseudo-fs .ctl-tab{display:none}
+.wrap.ctl-cache .app{grid-template-columns:minmax(0,1fr)}
+.wrap.ctl-cache .app>.side,.wrap.ctl-cache .panel{display:none}
+.wrap.ctl-cache .viewport{height:min(86vh,1100px)}
 .hud{position:absolute;right:10px;bottom:34px;display:grid;grid-template-columns:repeat(4,auto);gap:1px;background:var(--line2);border:1px solid var(--line2);border-radius:4px;overflow:hidden;font-family:var(--f-mono);font-size:12px}
 .hud div{background:rgba(10,14,17,.86);padding:5px 10px;display:flex;flex-direction:column;align-items:flex-end;min-width:74px}
 .hud span{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;color:var(--muted)}
@@ -269,6 +277,8 @@ html.pseudo-fs-on,html.pseudo-fs-on body{overflow:hidden;overscroll-behavior:non
   .app>.viewport{grid-area:vp;margin-top:14px;height:calc(100vh - 190px);max-height:none;min-height:560px}
   .app>.viewport:fullscreen{height:100%;margin:0}
   .app>.side{grid-area:side;margin-top:14px}
+  .wrap.ctl-cache{grid-template-columns:minmax(0,1fr);grid-template-areas:"back" "top" "vp" "lower" "docs"}
+  .wrap.ctl-cache .app>.viewport{height:calc(100vh - 190px)}
   .panel{grid-area:panel;grid-template-columns:1fr;align-content:start}
   .gauges{grid-template-columns:repeat(3,minmax(0,1fr))}
   .gauges canvas:last-child{grid-column:2}
@@ -306,7 +316,7 @@ html.light .vmenu .mnote,html.light .vmenu h4,html.light .vmenu h4 .hint,html.li
 html.light .ticks,html.light .log time,html.light .fine,html.light .mref.off{color:var(--muted)}
 /* vue 3D */
 html.light .viewport{background:radial-gradient(120% 90% at 50% 40%,#f4f7f9 0%,#dfe6eb 70%)}
-html.light .menu-btn,html.light .seg,html.light .chipr,html.light .hud div,html.light .oilkey,html.light .flowkey{background:var(--glass)}
+html.light .ctl-tab,html.light .menu-btn,html.light .seg,html.light .chipr,html.light .hud div,html.light .oilkey,html.light .flowkey{background:var(--glass)}
 html.light .menu-btn,html.light .vbar-main .seg,html.light .chipr{box-shadow:0 1px 4px rgba(21,32,42,.08)}
 html.light .vmenu{background:var(--glass-hi);box-shadow:var(--shadow)}
 html.light .vmenu .seg{background:rgba(244,247,249,.95);box-shadow:none}
@@ -470,13 +480,14 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
       <div class="calbtns"><button id="cal-ortho" aria-pressed="false" title="Supprime l'effet de perspective pour comparer avec la coupe">Ortho</button><button id="cal-front" aria-pressed="false">Toujours devant</button><button id="cal-reset">Recaler</button></div>
       <input id="cal-file" type="file" accept="image/*" hidden>
     </div>
+    <button class="ctl-tab" id="t-ctl" aria-expanded="true" aria-controls="cockpit instruments" title="Masquer les commandes et les instruments : la vue 3D prend toute la place (touche C)"><span aria-hidden="true">›</span></button>
     <div class="hud" id="hud" hidden></div>
     <div class="frozen" id="frozen" hidden>Simulation figée</div>
     <div class="oilkey" id="oilkey" hidden><span><i style="background:#ffc933"></i>pression</span><span><i style="background:#d2691e"></i>récupération</span><span><i style="background:#f0a030"></i>retour refroidisseur</span><span><i style="background:#dfe6ea"></i>air du reniflard</span></div>
     <div class="flowkey" id="flowkey" hidden><span>froid</span><i></i><span>chaud</span></div>
   </div>
 
-  <aside class="side">
+  <aside class="side" id="cockpit">
     <div class="card">
       <h2>Poste de pilotage <em id="phase">Ralenti sol</em></h2>
       <div class="sw">
@@ -519,7 +530,7 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
   </aside>
 </section>
 
-<section class="panel" aria-label="Instruments moteur">
+<section class="panel" id="instruments" aria-label="Instruments moteur">
   <div class="gauges">
     <canvas id="g-trq"></canvas><canvas id="g-itt"></canvas><canvas id="g-ng"></canvas><canvas id="g-np"></canvas>
     <canvas id="g-ff"></canvas><canvas id="g-op"></canvas><canvas id="g-ot"></canvas>
@@ -1850,7 +1861,20 @@ function setMenus(open, remember) {
 $('menu-toggle').onclick = () => { setMenus($('vmenu').hidden, true); if (isoPart) placeIso(); };
 addEventListener('keydown', e => { if ((e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { setMenus($('vmenu').hidden, true); if (isoPart) placeIso(); } });
 addEventListener('keydown', e => { if ((e.key === 'f' || e.key === 'F') && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) toggleFS(); });
-function onFS() { const on = !!fsEl(); $('t-fs').setAttribute('aria-pressed', on); $('t-fs').textContent = on ? '✕ Quitter' : '⛶ Plein écran'; $('hud').hidden = !on; }
+function onFS() { const on = !!fsEl(); $('t-fs').setAttribute('aria-pressed', on); $('t-fs').textContent = on ? '✕ Quitter' : '⛶ Plein écran'; $('hud').hidden = !(on || ctlCache); }
+// flèche « › » / « ‹ » : commandes et instruments masqués, vue 3D agrandie (touche C) ; les 4 valeurs clés restent dans la
+// vue (même bandeau qu'en plein écran) ; choix gardé dans localStorage
+let ctlCache = false;
+function setCtl(cache) {
+  ctlCache = cache; document.querySelector('.wrap').classList.toggle('ctl-cache', cache);
+  $('t-ctl').setAttribute('aria-expanded', !cache); $('t-ctl').firstElementChild.textContent = cache ? '‹' : '›';
+  $('t-ctl').title = cache ? 'Ramener les commandes et les instruments (touche C)' : 'Masquer les commandes et les instruments : la vue 3D prend toute la place (touche C)';
+  $('hud').hidden = !(cache || fsEl());
+  try { localStorage.setItem('pt6Ctl', cache ? 'cache' : ''); } catch {}
+}
+$('t-ctl').addEventListener('click', () => setCtl(!ctlCache));
+addEventListener('keydown', e => { if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) setCtl(!ctlCache); });
+try { if (localStorage.getItem('pt6Ctl') === 'cache') setCtl(true); } catch {}
 document.addEventListener('fullscreenchange', onFS); document.addEventListener('webkitfullscreenchange', onFS);
 
 /* ---------- vues caméra ---------- */
@@ -2500,7 +2524,7 @@ function uiTick() {
   let ph = 'Arrêt';
   if (st.lit) ph = st.Ng < 50 ? 'Démarrage' : inp.pcl < -0.35 ? 'Inversion' : inp.pcl <= 0.02 ? (inp.fcl === 2 ? 'Ralenti vol' : 'Ralenti sol') : 'Puissance';
   else if (st.Ng > 1) ph = inp.starter ? 'Ventilation / démarreur' : 'Décélération';
-  if (fsEl()) {
+  if (fsEl() || ctlCache) {
     const cell = (l, v, x) => `<div><span>${l}</span><b class="${x ? 'x' : ''}">${v}</b></div>`;
     $('hud').innerHTML = cell('Ng', st.Ng.toFixed(1) + ' %', st.Ng > 101.5) + cell('ITT', Math.round(st.itt) + ' °C', st.itt > 695 && st.Ng >= 50) + cell('Couple', Math.round(st.trq) + ' lb·pi', st.trq > 1315) + cell('Np', Math.round(st.Np) + ' tr/min', st.Np > 2211);
   }
