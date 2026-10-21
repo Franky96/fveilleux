@@ -13,7 +13,7 @@ const RAFRAICHIR = 60;                                       // secondes entre d
 const NB = 87;
 const OUVERTURE = new Date("2026-10-19T09:00:00-06:00"), FERMETURE = new Date("2026-10-19T20:00:00-06:00");   // heure avancée des Rocheuses
 const FIN_DEPOUILLEMENT = new Date("2026-10-21T20:00:00-06:00"), OFFICIELS = new Date("2026-10-29T10:00:00-06:00");
-const SITE_RES = "https://results.elections.ab.ca/";
+const SITE_RES = "https://results.elections.ab.ca/8400";   // tableau de bord des résultats (8400 : toute l'Alberta)
 const SERRE = 5;                                             // lutte serrée : moins de 5 points d'écart
 
 const $ = id => document.getElementById(id);
@@ -333,7 +333,7 @@ function dessinerVerifs() {
   const m = Date.now(), verif = brut.via === "relais" && brut.ageCache != null ? new Date(lu - brut.ageCache * 1000) : null;
   const publie = brut.via === "copie" && brut.publie ? new Date(brut.publie) : null;
   el.innerHTML = [
-    `<span><b>Données</b> d'Élections Alberta : ${maj ? `${dateAb(maj)}, heure de l'Alberta (${heureQc(maj)} au Québec)` : "pas encore d'heure publiée"}</span>`,
+    `<span><b>Données</b> d'<a href="${SITE_RES}" target="_blank" rel="noopener">Élections Alberta</a> : ${maj ? `${dateAb(maj)}, heure de l'Alberta (${heureQc(maj)} au Québec)` : "pas encore d'heure publiée"}</span>`,
     `<span><b>Vérifiées</b> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
       : `sur la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
       + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heures du Québec</span>`,
