@@ -73,6 +73,9 @@ svg.pompe text.jauge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;
 .goutte{fill:rgba(255,255,255,.85)}
 .courant{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 15}
 .poche{stroke:rgba(0,0,0,.18);stroke-width:.6}
+/* vue « pompe seule » ou « dans un circuit » (d'après le schéma de l'utilisateur) */
+.panel:not(.vue-circ) .circ,.panel.vue-circ .seul{display:none}
+.plis{stroke-width:2.2}
 #status{text-align:center;margin:8px 0 14px;font-size:14px;min-height:2.6em}
 .reglages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:4px}
 @media (max-width:760px){.reglages{grid-template-columns:1fr}}
@@ -122,22 +125,29 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 
 <section class="panel" aria-labelledby="t-sim">
   <h2 id="t-sim" class="sr-only">Simulation de la pompe</h2>
+  <div class="modes" role="group" aria-label="Vue">
+    <span class="lab">Vue</span>
+    <button class="btn" type="button" data-vue="seule" aria-pressed="true">Pompe seule</button>
+    <button class="btn" type="button" data-vue="circuit" aria-pressed="false">Dans un circuit</button>
+  </div>
   <div class="modes" role="group" aria-label="Situations">
     <span class="lab">Situations</span>
     <button class="btn" type="button" data-cas="normal">Fonctionnement normal</button>
     <button class="btn" type="button" data-cas="froid">Démarrage à froid</button>
     <button class="btn" type="button" data-cas="chaud">Huile très chaude</button>
     <button class="btn" type="button" data-cas="bouche">Circuit obstrué</button>
+    <button class="btn circ" type="button" data-cas="filtre">Filtre colmaté</button>
     <button class="btn" type="button" data-cas="arret">Pompe arrêtée</button>
   </div>
   <svg class="pompe" id="svg" viewBox="0 42 760 432" role="img" aria-labelledby="svg-t svg-d">
     <title id="svg-t">Pompe à engrenages extérieurs et son circuit d'huile</title>
-    <desc id="svg-d">Deux pignons dans un carter ; l'huile monte du réservoir par l'aspiration, fait le tour des pignons par l'extérieur, sort au refoulement vers le circuit puis revient au réservoir. Un clapet de décharge relie le refoulement à l'aspiration. La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute).</desc>
+    <desc id="svg-d">Vue « pompe seule » : deux pignons dans un carter ; l'huile monte du réservoir par l'aspiration, fait le tour des pignons par l'extérieur, sort au refoulement vers le circuit puis revient au réservoir. Un clapet de décharge relie le refoulement à l'aspiration. La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute). Vue « dans un circuit » : la pompe refoule vers le filtre à huile puis le moteur, avec une soupape de dérivation autour du filtre, une soupape de surpression qui renvoie à l'aspiration et un clapet antiretour.</desc>
     <defs>
       <linearGradient id="g-cav" x1="0" y1="1" x2="0" y2="0">
         <stop id="s-c0" offset="0"/><stop id="s-c1" offset=".47"/><stop id="s-c2" offset=".53"/><stop id="s-c3" offset="1"/>
       </linearGradient>
     </defs>
+    <g class="seul">
     <!-- réservoir -->
     <rect x="250" y="400" width="490" height="66" rx="6" class="carter"/>
     <rect id="niveau" x="254" y="420" width="482" height="42" rx="3" opacity=".55"/>
@@ -161,21 +171,60 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="118" y="240" class="fin" style="fill:var(--text)">décharge</text>
     <!-- manomètre -->
     <path d="M612 60V118" stroke="var(--tuyau)" stroke-width="4"/>
-    <circle cx="612" cy="150" r="33" class="carter"/>
-    <g id="cadran"></g>
-    <line id="aiguille" x1="612" y1="150" x2="612" y2="125" stroke="var(--rouge)" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="612" cy="150" r="3" fill="var(--text)"/>
-    <text id="jauge-v" x="612" y="172" text-anchor="middle" class="jauge-v">0</text>
-    <!-- carter de la pompe et cavité (huile) -->
-    <rect x="176" y="121" width="368" height="228" rx="26" class="carter"/>
-    <path id="cavite" fill="url(#g-cav)"/>
-    <g id="poches"></g>
-    <g id="pg-g"></g><g id="pg-d"></g>
-    <g id="gouttes"></g>
+    <g id="mano-seul"></g>
+    <g id="c-seul"></g>
     <text x="372" y="84">Refoulement</text>
     <text x="372" y="374">Aspiration</text>
     <text x="290" y="114" text-anchor="middle" class="fin">pignon menant (arbre)</text>
     <text x="430" y="114" text-anchor="middle" class="fin">pignon mené</text>
+    </g>
+    <g class="circ">
+    <!-- circuit d'huile (d'après le schéma) : pompe → filtre (clapet antiretour) → moteur ; soupape de dérivation en
+         parallèle du filtre ; soupape de surpression qui renvoie la ligne du moteur à l'aspiration -->
+    <path class="tuyau" d="M10 330H189M331 330H520M430 330V130M90 130H60V330M170 130H740V58M610 165V130"/>
+    <path class="huile" id="k-asp" d="M10 330H189M90 130H60V330"/>
+    <path class="huile" id="k-p1" d="M331 330H520M430 330V262"/>
+    <path class="huile" id="k-p2" d="M430 200V130M170 130H740V58M610 165V130"/>
+    <path d="M730 70L740 52L750 70" fill="none" stroke="var(--text)" stroke-width="2.5"/>
+    <text x="724" y="80" text-anchor="end">Vers le moteur</text>
+    <text x="74" y="352" class="fin">depuis le réservoir</text>
+    <text x="260" y="466" text-anchor="middle">Pompe à engrenages</text>
+    <!-- soupape de surpression (horizontale) : ressort à gauche, s'ouvre quand la ligne du moteur dépasse le tarage -->
+    <rect x="88" y="113" width="84" height="34" rx="6" class="carter"/>
+    <rect id="k-sp-b" x="94" y="122" width="56" height="16"/><rect id="k-sp-h" x="150" y="122" width="20" height="16"/>
+    <path d="M150 122V126M150 134V138" stroke="var(--text)" stroke-width="3"/>
+    <polyline id="k-sp-r" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
+    <polygon id="k-sp-c" fill="var(--acier)" stroke="var(--acier-trait)"/>
+    <text x="130" y="102" text-anchor="middle">Soupape de surpression</text>
+    <!-- soupape de dérivation (verticale) : en parallèle du filtre, s'ouvre quand le filtre résiste trop -->
+    <rect x="413" y="198" width="34" height="66" rx="6" class="carter"/>
+    <rect id="k-dv-h" x="421" y="202" width="18" height="34"/><rect id="k-dv-b" x="421" y="236" width="18" height="26"/>
+    <path d="M421 236H425M435 236H439" stroke="var(--text)" stroke-width="3"/>
+    <polyline id="k-dv-r" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
+    <polygon id="k-dv-c" fill="var(--acier)" stroke="var(--acier-trait)"/>
+    <text x="455" y="226" class="fin" style="fill:var(--text)">Soupape de</text>
+    <text x="455" y="240" class="fin" style="fill:var(--text)">dérivation</text>
+    <!-- filtre à huile : l'huile entoure l'élément, le traverse vers le tube central et sort par le haut -->
+    <rect x="520" y="165" width="180" height="285" rx="12" class="carter"/>
+    <rect id="k-sale" x="530" y="176" width="160" height="264" rx="6"/>
+    <rect x="550" y="196" width="120" height="228" rx="3" fill="var(--panel2)" stroke="var(--carter-trait)"/>
+    <g id="k-plis"></g>
+    <rect id="k-propre" x="600" y="190" width="20" height="236"/>
+    <line id="k-ar" x1="532" y1="318" x2="532" y2="342" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>
+    <text x="514" y="356" text-anchor="end" class="fin" style="fill:var(--text)">clapet antiretour</text>
+    <text x="610" y="468" text-anchor="middle">Filtre à huile</text>
+    <path d="M300 118V130" stroke="var(--tuyau)" stroke-width="4"/>
+    <g id="mano-circ"></g>
+    <g id="c-circ"></g>
+    </g>
+    <!-- pompe : carter, cavité (huile), poches, pignons ; déplacée et tournée dans la vue « circuit » -->
+    <g id="pompe">
+    <rect x="176" y="121" width="368" height="228" rx="26" class="carter"/>
+    <path id="cavite" fill="url(#g-cav)"/>
+    <g id="poches"></g>
+    <g id="pg-g"></g><g id="pg-d"></g>
+    <g id="c-pompe"></g>
+    </g>
   </svg>
   <div class="lecture">
     <button class="btn" id="pp" type="button">❚❚ Figer</button>
@@ -188,8 +237,9 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <h3>Fonctionnement</h3>
     <div class="ctrl"><label for="n">Régime de la pompe</label><input type="range" id="n" min="0" max="6000" step="50" value="3000"><output id="o-n" for="n"></output></div>
     <div class="ctrl"><label for="t">Température de l'huile</label><input type="range" id="t" min="-30" max="130" step="1" value="80"><output id="o-t" for="t"></output></div>
-    <div class="ctrl"><label for="s">Ouverture du circuit</label><input type="range" id="s" min="5" max="100" step="1" value="40"><output id="o-s" for="s"></output></div>
-    <div class="ctrl"><label for="ps">Tarage du clapet</label><input type="range" id="ps" min="40" max="150" step="1" value="100"><output id="o-ps" for="ps"></output></div>
+    <div class="ctrl"><label for="s" id="l-s">Ouverture du circuit</label><input type="range" id="s" min="5" max="100" step="1" value="40"><output id="o-s" for="s"></output></div>
+    <div class="ctrl circ"><label for="c">Colmatage du filtre</label><input type="range" id="c" min="0" max="100" step="1" value="0"><output id="o-c" for="c"></output></div>
+    <div class="ctrl"><label for="ps" id="l-ps">Tarage du clapet</label><input type="range" id="ps" min="40" max="150" step="1" value="100"><output id="o-ps" for="ps"></output></div>
     <h3>Géométrie des pignons</h3>
     <div class="ctrl"><label for="z">Nombre de dents</label><input type="range" id="z" min="8" max="20" step="1" value="12"><output id="o-z" for="z"></output></div>
     <div class="ctrl"><label for="m">Module</label><input type="range" id="m" min="2" max="5" step="0.25" value="3"><output id="o-m" for="m"></output></div>
@@ -198,10 +248,14 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 
   <div class="vals">
     <div class="val cle"><span>Pression de refoulement</span><b id="v-p">—</b><small id="v-pb"></small></div>
-    <div class="val cle"><span>Débit vers le circuit</span><b id="v-q">—</b><small id="v-qs"></small></div>
+    <div class="val cle circ"><span>Pression vers le moteur</span><b id="v-p2">—</b><small id="v-p2b"></small></div>
+    <div class="val cle"><span id="l-q">Débit vers le circuit</span><b id="v-q">—</b><small id="v-qs"></small></div>
+    <div class="val circ"><span>Perte de charge du filtre</span><b id="v-dp">—</b><small>entrée − sortie</small></div>
+    <div class="val circ"><span>Débit filtré</span><b id="v-fi">—</b><small id="v-fis"></small></div>
+    <div class="val circ"><span>Par la dérivation</span><b id="v-dv">—</b><small id="v-dvs"></small></div>
     <div class="val"><span>Débit théorique</span><b id="v-qt">—</b><small id="v-cyl"></small></div>
     <div class="val"><span>Fuites internes</span><b id="v-f">—</b><small id="v-ev"></small></div>
-    <div class="val"><span>Par le clapet</span><b id="v-r">—</b><small id="v-rs"></small></div>
+    <div class="val"><span id="l-r">Par le clapet</span><b id="v-r">—</b><small id="v-rs"></small></div>
     <div class="val"><span>Couple à l'arbre</span><b id="v-c">—</b></div>
     <div class="val"><span>Puissance absorbée</span><b id="v-w">—</b><small id="v-eg"></small></div>
     <div class="val"><span>Viscosité de l'huile</span><b id="v-nu">—</b></div>
@@ -234,11 +288,16 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <p>Une huile très chaude, donc très fluide, fuit davantage : le débit réel baisse.</p>
   </section>
   <section class="note">
+    <h2>Dans un circuit</h2>
+    <p>La pompe refoule vers le <b>filtre à huile</b> : l'huile entoure l'élément filtrant, le traverse vers le tube central et part vers le moteur. Un <b>clapet antiretour</b> empêche le filtre de se vider vers la pompe à l'arrêt.</p>
+    <p>Si le filtre résiste trop (colmaté, ou huile froide et épaisse), la <b>soupape de dérivation</b> s'ouvre : l'huile le contourne sans être filtrée, mais le moteur reste graissé. Si la pression vers le moteur dépasse le tarage, la <b>soupape de surpression</b> renvoie le surplus à l'aspiration de la pompe.</p>
+  </section>
+  <section class="note">
     <h2>Dans le PT6A-21</h2>
     <p>La pompe de pression est une pompe à engrenages placée au fond du réservoir d'huile et entraînée par le boîtier d'accessoires. Une soupape règle la pression du circuit, qui doit rester entre 80 et 100 psi au-dessus de 28 000 tr/min Ng (bande verte du manomètre). D'autres pompes à engrenages, dites de récupération, ramènent l'huile des paliers et du réducteur au réservoir.</p>
   </section>
 </div>
-<p class="source">Simulation pédagogique : géométrie et réglages génériques, pas ceux d'une pompe particulière. Huile de turbine de 5 cSt (type MIL-PRF-23699), environ 25 cSt à 40 °C et 5 cSt à 100 °C, viscosité selon la loi de Walther ; fuites laminaires ; circuit modélisé comme une résistance en partie laminaire, en partie turbulente ; clapet à ressort. Les chiffres du PT6A-21 viennent du manuel de maintenance P&amp;WC 3013242 (voir la <a href="pt6a21.html">page du moteur</a>).</p>
+<p class="source">Simulation pédagogique : géométrie et réglages génériques, pas ceux d'une pompe particulière. Huile de turbine de 5 cSt (type MIL-PRF-23699), environ 25 cSt à 40 °C et 5 cSt à 100 °C, viscosité selon la loi de Walther ; fuites laminaires ; circuit modélisé comme une résistance en partie laminaire, en partie turbulente ; clapet à ressort ; vue « dans un circuit » : filtre comme résistance laminaire (environ 3 psi propre à 80 °C), soupape de dérivation tarée à 15 psi de différence et soupape de surpression sur la ligne du moteur (valeurs génériques). Les chiffres du PT6A-21 viennent du manuel de maintenance P&amp;WC 3013242 (voir la <a href="pt6a21.html">page du moteur</a>).</p>
 </div>
 
 <script>
@@ -275,6 +334,27 @@ function resoudre(r) {
   const couple = V * p / (TAU * 0.9) + KV * u * w * r.b / 20, puis = couple * w;
   return { V, qth, p, qp, qr, qc, qf, couple, puis, nu: nu(r.t), ev: qth ? qp / qth : 1, eg: puis ? qp * p / puis : 0,
     vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z };
+}
+
+// vue « dans un circuit » : pompe → filtre (résistance laminaire, plus forte s'il est colmaté ou si l'huile est froide),
+// soupape de dérivation en parallèle du filtre (tarée à 15 psi de différence), moteur (même résistance que le circuit),
+// soupape de surpression sur la ligne du moteur, qui renvoie à l'aspiration ; deux dichotomies imbriquées
+const RF0 = 3 * PSI / Q0, DPDER = 15 * PSI;
+function resoudreCircuit(r) {
+  const V = cyl(r.m, r.z, r.b), w = r.n / 60 * TAU, qth = V * r.n / 60, u = mu(r.t), s = r.s / 100, pset = r.ps * PSI;
+  const CL = C0 * r.b / 20, A = A0 * (u / MU80) / s, B = B0 / (s * s), Kr = Math.max(qth, 1e-7) / (8 * PSI), Kb = Math.max(qth, 1e-7) / (4 * PSI);
+  const Rf = RF0 * (u / MU80) / (1 - 0.97 * r.c / 100);
+  const qPompe = p => Math.max(0, qth - CL * p / u), qClapet = p => Kr * Math.max(0, p - pset);
+  const qMoteur = p => (-A + Math.sqrt(A * A + 4 * B * p)) / (2 * B);
+  const qFiltre = dp => dp / Rf, qDer = dp => Kb * Math.max(0, dp - DPDER);
+  const dpPour = Q => { let lo = 0, hi = 5000 * PSI; for (let i = 0; i < 70; i++) { const d = (lo + hi) / 2; if (qFiltre(d) + qDer(d) < Q) lo = d; else hi = d; } return (lo + hi) / 2; };
+  let lo = 0, hi = 5000 * PSI;
+  for (let i = 0; i < 70; i++) { const p2 = (lo + hi) / 2, Qn = qClapet(p2) + qMoteur(p2); if (qPompe(p2 + dpPour(Qn)) - Qn > 0) lo = p2; else hi = p2; }
+  const p2 = qth > 0 ? (lo + hi) / 2 : 0, qr = qClapet(p2), qc = qth > 0 ? qMoteur(p2) : 0, dp = qth > 0 ? dpPour(qr + qc) : 0, p = p2 + dp;
+  const qp = qPompe(p), qfi = qFiltre(dp), qb = qDer(dp), qf = qth - qp;
+  const couple = V * p / (TAU * 0.9) + KV * u * w * r.b / 20, puis = couple * w;
+  return { V, qth, p, p2, dp, qp, qr, qc, qfi, qb, qf, couple, puis, nu: nu(r.t), ev: qth ? qp / qth : 1, eg: puis ? qp * p / puis : 0,
+    vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z, net: qb - qr };
 }
 
 /* ---------- couleur de l'huile selon sa pression (bleu → ambre → rouge, 0 à 150 psi) ---------- */
@@ -322,64 +402,111 @@ function construire(Z) {
   geo = { Z, mp, rg, poches, yh, yb, phiD: Math.PI + Math.PI / Z };
 }
 
-/* ---------- manomètre (0 à 150 psi, bande verte 80 à 100 psi du PT6A-21) ---------- */
+/* ---------- manomètres (0 à 150 psi, bande verte 80 à 100 psi du PT6A-21) ---------- */
 const GA = v => (135 + 270 * Math.min(1, Math.max(0, v / 150))) * Math.PI / 180;
-(function cadran() {
-  const g = $('cadran'), R = 27, arc = (v0, v1, cls) => { const a0 = GA(v0), a1 = GA(v1);
-    return `<path d="M${612 + R * Math.cos(a0)} ${150 + R * Math.sin(a0)}A${R} ${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${612 + R * Math.cos(a1)} ${150 + R * Math.sin(a1)}" fill="none" stroke="${cls}" stroke-width="4"/>`; };
-  let h = arc(0, 150, 'var(--line2)') + arc(80, 100, 'var(--vert)');
-  for (let v = 0; v <= 150; v += 25) { const a = GA(v);
-    h += `<line x1="${612 + 22 * Math.cos(a)}" y1="${150 + 22 * Math.sin(a)}" x2="${612 + 30 * Math.cos(a)}" y2="${150 + 30 * Math.sin(a)}" stroke="var(--muted)" stroke-width="1.2"/>`; }
-  h += `<line id="repere" stroke="var(--rouge)" stroke-width="2.5"/>`;
-  g.innerHTML = h;
-})();
+function manometre(g, cx, cy) {
+  const R = 27, P = (r, v) => [cx + r * Math.cos(GA(v)), cy + r * Math.sin(GA(v))], arc = (v0, v1, col) => { const [x0, y0] = P(R, v0), [x1, y1] = P(R, v1);
+    return `<path d="M${x0} ${y0}A${R} ${R} 0 ${GA(v1) - GA(v0) > Math.PI ? 1 : 0} 1 ${x1} ${y1}" fill="none" stroke="${col}" stroke-width="4"/>`; };
+  let h = `<circle cx="${cx}" cy="${cy}" r="33" class="carter"/>` + arc(0, 150, 'var(--line2)') + arc(80, 100, 'var(--vert)');
+  for (let v = 0; v <= 150; v += 25) { const [x0, y0] = P(22, v), [x1, y1] = P(30, v); h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--muted)" stroke-width="1.2"/>`; }
+  g.innerHTML = h + `<line class="rep" stroke="var(--rouge)" stroke-width="2.5"/><line class="aig" x1="${cx}" y1="${cy}" stroke="var(--rouge)" stroke-width="2.5" stroke-linecap="round"/>`
+    + `<circle cx="${cx}" cy="${cy}" r="3" fill="var(--text)"/><text x="${cx}" y="${cy + 22}" text-anchor="middle" class="jauge-v"></text>`;
+  const rep = g.querySelector('.rep'), aig = g.querySelector('.aig'), txt = g.querySelector('text');
+  return {
+    repere(v) { const [x0, y0] = P(21, v), [x1, y1] = P(31, v); rep.setAttribute('x1', x0); rep.setAttribute('y1', y0); rep.setAttribute('x2', x1); rep.setAttribute('y2', y1); },
+    valeur(v) { const [x, y] = P(25, v); aig.setAttribute('x2', x.toFixed(1)); aig.setAttribute('y2', y.toFixed(1)); txt.textContent = NB(v) + ' psi'; },
+  };
+}
+const MANO = { seule: manometre($('mano-seul'), 612, 150), circuit: manometre($('mano-circ'), 300, 85) };
+// plis de l'élément filtrant
+$('k-plis').innerHTML = Array.from({ length: 15 }, (_, i) => `<line class="plis" x1="${556 + i * 8}" y1="199" x2="${556 + i * 8}" y2="421"/>`).join('');
 
 /* ---------- gouttes qui circulent dans les tuyaux ---------- */
 // courants : traits qui défilent dans le sens de l'écoulement, à une vitesse proportionnelle au débit de la branche ;
 // dans les orifices, l'huile se partage entre les creux des deux pignons (aspiration) et en sort vers le refoulement ;
 // rien ne traverse l'engrènement, qui fait l'étanchéité entre les deux orifices
+// (vue « circuit » : débit signé sur la ligne entre la dérivation et le filtre, « net » = dérivation − surpression)
 const COURANTS = [
-  ['M360 452V320', 'qp'], ['M357 349C352 326 342 312 326 303', 'qp'], ['M363 349C368 326 378 312 394 303', 'qp'],
-  ['M326 167C342 160 353 146 357 121', 'qp'], ['M394 167C378 160 367 146 363 121', 'qp'],
-  ['M360 175V60H680V262', 'qc'], ['M680 278V412', 'qc'], ['M360 90H90V380H360', 'qr'],
-].map(([d, q]) => { const e = document.createElementNS(NS, 'path'); e.setAttribute('d', d); e.setAttribute('class', 'courant'); $('gouttes').appendChild(e); return { e, q, off: 0 }; });
+  ['c-pompe', 'M360 349V320', 'qp'], ['c-pompe', 'M357 349C352 326 342 312 326 303', 'qp'], ['c-pompe', 'M363 349C368 326 378 312 394 303', 'qp'],
+  ['c-pompe', 'M326 167C342 160 353 146 357 121', 'qp'], ['c-pompe', 'M394 167C378 160 367 146 363 121', 'qp'], ['c-pompe', 'M360 175V121', 'qp'],
+  ['c-seul', 'M360 452V349', 'qp'], ['c-seul', 'M360 121V60H680V262', 'qc'], ['c-seul', 'M680 278V412', 'qc'], ['c-seul', 'M360 90H90V380H360', 'qr'],
+  ['c-circ', 'M10 330H60', 'qc'], ['c-circ', 'M60 330H189', 'qp'], ['c-circ', 'M331 330H430', 'qp'], ['c-circ', 'M430 330H520', 'qfi'],
+  ['c-circ', 'M430 330V130', 'qb'], ['c-circ', 'M534 330V200', 'qfi'], ['c-circ', 'M534 330V430', 'qfi'],
+  ['c-circ', 'M552 262H600', 'qfi'], ['c-circ', 'M552 330H600', 'qfi'], ['c-circ', 'M552 398H600', 'qfi'],
+  ['c-circ', 'M686 330V200', 'qfi'], ['c-circ', 'M686 330V430', 'qfi'], ['c-circ', 'M668 262H620', 'qfi'], ['c-circ', 'M668 330H620', 'qfi'], ['c-circ', 'M668 398H620', 'qfi'],
+  ['c-circ', 'M610 420V130', 'qfi'], ['c-circ', 'M610 130H740V58', 'qc'], ['c-circ', 'M430 130H610', 'net'],
+  ['c-circ', 'M430 130H170', 'qr'], ['c-circ', 'M90 130H60V330', 'qr'],
+].map(([g, d, q]) => { const e = document.createElementNS(NS, 'path'); e.setAttribute('d', d); e.setAttribute('class', 'courant'); $(g).appendChild(e); return { e, q, off: 0, g }; });
 
 /* ---------- réglages, situations ---------- */
-const R = { n: 3000, t: 80, s: 40, ps: 100, z: 12, m: 3, b: 20 };
-const FMT = { n: v => NB(v) + ' tr/min', t: v => NB(v) + ' °C', s: v => NB(v) + ' %', ps: v => NB(v) + ' psi', z: v => NB(v), m: v => NB(v, 2) + ' mm', b: v => NB(v) + ' mm' };
+const R = { n: 3000, t: 80, s: 40, ps: 100, c: 0, z: 12, m: 3, b: 20 };
+let vue = 'seule';
+const FMT = { c: v => NB(v) + ' %', n: v => NB(v) + ' tr/min', t: v => NB(v) + ' °C', s: v => NB(v) + ' %', ps: v => NB(v) + ' psi', z: v => NB(v), m: v => NB(v, 2) + ' mm', b: v => NB(v) + ' mm' };
 const CAS = {
   normal: { n: 3000, t: 80, s: 40, ps: 100 }, froid: { n: 3000, t: -20, s: 40, ps: 100 }, chaud: { n: 3000, t: 125, s: 40, ps: 100 },
   bouche: { n: 3000, t: 80, s: 8, ps: 100 }, arret: { n: 0, t: 80, s: 40, ps: 100 },
 };
-let E = null, pAff = 0, clapAff = 0;
+for (const c of Object.values(CAS)) c.c = 0;
+CAS.filtre = { n: 3000, t: 80, s: 40, ps: 100, c: 92 };
+let E = null, pAff = 0, p2Aff = 0, clapAff = 0, derAff = 0, arAff = 0;
 function maj() {
   for (const k in R) $('o-' + k).textContent = FMT[k](R[k]);
   if (!geo || geo.Z !== R.z) construire(R.z);
-  E = resoudre(R);
-  for (const b of document.querySelectorAll('[data-cas]')) { const c = CAS[b.dataset.cas]; b.setAttribute('aria-pressed', Object.keys(c).every(k => R[k] === c[k]) && R.z === 12 && R.m === 3 && R.b === 20); }
+  E = vue === 'circuit' ? resoudreCircuit(R) : resoudre(R);
+  const ci = vue === 'circuit';
+  $('l-s').textContent = ci ? 'Ouverture du circuit (moteur)' : 'Ouverture du circuit';
+  $('l-ps').textContent = ci ? 'Tarage de la surpression' : 'Tarage du clapet';
+  $('l-q').textContent = ci ? 'Débit vers le moteur' : 'Débit vers le circuit';
+  $('l-r').textContent = ci ? 'Par la surpression' : 'Par le clapet';
+  for (const b of document.querySelectorAll('[data-cas]')) { const c = CAS[b.dataset.cas]; b.setAttribute('aria-pressed', Object.keys(c).every(k => R[k] === c[k] || (k === 'c' && vue !== 'circuit')) && R.z === 12 && R.m === 3 && R.b === 20); }
   const L = q => NB(q / LMIN, q / LMIN < 10 ? 1 : 0) + ' L/min', pp = E.p / PSI;
   $('v-p').textContent = NB(pp) + ' psi'; $('v-pb').textContent = NB(E.p / 1e5, 1) + ' bar';
   $('v-q').textContent = L(E.qc); $('v-qs').textContent = E.qth ? NB(100 * E.qc / E.qth) + ' % du théorique' : '';
   $('v-qt').textContent = L(E.qth); $('v-cyl').textContent = 'cylindrée ' + NB(E.V * 1e6, 1) + ' cm³/tr';
   $('v-f').textContent = L(E.qf); $('v-ev').textContent = 'rendement vol. ' + NB(100 * E.ev, 1) + ' %';
-  $('v-r').textContent = L(E.qr); $('v-rs').textContent = E.qr > 1e-7 ? 'clapet ouvert' : 'clapet fermé';
+  $('v-r').textContent = L(E.qr); $('v-rs').textContent = E.qr > 1e-7 ? (ci ? 'soupape ouverte' : 'clapet ouvert') : (ci ? 'soupape fermée' : 'clapet fermé');
+  if (ci) {
+    $('v-p2').textContent = NB(E.p2 / PSI) + ' psi'; $('v-p2b').textContent = NB(E.p2 / 1e5, 1) + ' bar';
+    $('v-dp').textContent = NB(E.dp / PSI, E.dp / PSI < 10 ? 1 : 0) + ' psi';
+    $('v-fi').textContent = L(E.qfi); $('v-fis').textContent = E.qp ? NB(100 * E.qfi / E.qp) + ' % du refoulé' : '';
+    $('v-dv').textContent = L(E.qb); $('v-dvs').textContent = E.qb > 1e-7 ? 'soupape ouverte, huile non filtrée' : 'soupape fermée';
+  }
   $('v-c').textContent = NB(E.couple, E.couple < 10 ? 2 : 1) + ' N·m';
   $('v-w').textContent = E.puis < 1000 ? NB(E.puis) + ' W' : NB(E.puis / 1000, 2) + ' kW'; $('v-eg').textContent = E.puis ? 'rendement global ' + NB(100 * E.eg) + ' %' : '';
   $('v-nu').textContent = NB(E.nu, E.nu < 10 ? 1 : 0) + ' cSt';
   $('v-vt').textContent = NB(E.vt, 1) + ' m/s'; $('v-dz').textContent = NB(E.dz) + ' Hz';
   let st;
-  if (!R.n) st = 'Pompe arrêtée : pas de débit, donc pas de pression, même circuit fermé.';
+  if (ci) {
+    const m = [];
+    if (!R.n) m.push('Pompe arrêtée : le clapet antiretour se ferme, l\'huile ne redescend pas du filtre vers la pompe.');
+    else {
+      if (E.qb > 0.01 * E.qp) m.push(`Soupape de dérivation ouverte : le filtre résiste trop (${NB(E.dp / PSI)} psi de perte de charge, ${R.c > 50 ? 'filtre colmaté' : R.t < 20 ? 'huile froide et épaisse' : 'filtre chargé'}) et ${L(E.qb)} le contournent sans être filtrés.`);
+      if (E.qr > 0.01 * E.qp) m.push(`Soupape de surpression ouverte : la pression vers le moteur est limitée vers ${NB(R.ps)} psi, ${L(E.qr)} retournent à l'aspiration.`);
+      if (!m.length) m.push(`Toute l'huile traverse le filtre (${NB(E.dp / PSI, 1)} psi de perte de charge) et arrive au moteur à ${NB(E.p2 / PSI)} psi.`);
+    }
+    $('status').textContent = m.join(' ');
+  }
+  if (ci) st = '';
+  else if (!R.n) st = 'Pompe arrêtée : pas de débit, donc pas de pression, même circuit fermé.';
   else if (E.qr > 0.01 * E.qth) st = `Clapet de décharge ouvert : la pression est limitée vers ${NB(R.ps)} psi et ${L(E.qr)} retournent à l'aspiration.`
     + (R.t < 20 ? ' Huile froide et épaisse : le circuit résiste beaucoup, c\'est le cas typique d\'un démarrage à froid.' : R.s < 15 ? ' Circuit presque fermé (filtre colmaté, gicleurs bouchés) : le clapet protège la pompe et les tuyaux.' : '');
   else st = `Clapet fermé : toute l'huile refoulée traverse le circuit. Les ${NB(pp)} psi viennent de la résistance du circuit, pas de la pompe.`
     + (E.ev < 0.85 ? ` Huile très fluide : les fuites internes font perdre ${NB(100 * (1 - E.ev))} % du débit.` : '');
-  $('status').textContent = st;
-  $('repere').setAttribute('x1', 612 + 21 * Math.cos(GA(R.ps))); $('repere').setAttribute('y1', 150 + 21 * Math.sin(GA(R.ps)));
-  $('repere').setAttribute('x2', 612 + 31 * Math.cos(GA(R.ps))); $('repere').setAttribute('y2', 150 + 31 * Math.sin(GA(R.ps)));
+  if (!ci) $('status').textContent = st;
+  MANO.seule.repere(R.ps); MANO.circuit.repere(R.ps);
 }
 for (const k in R) $(k).addEventListener('input', e => { R[k] = parseFloat(e.target.value); maj(); });
 for (const b of document.querySelectorAll('[data-cas]')) b.addEventListener('click', () => {
   Object.assign(R, CAS[b.dataset.cas], { z: 12, m: 3, b: 20 }); for (const k in R) $(k).value = R[k]; maj(); });
+// vue : la pompe est déplacée et tournée d'un quart de tour (aspiration à gauche, refoulement à droite), comme sur le schéma
+function changerVue(v) {
+  vue = v; document.querySelector('.panel').classList.toggle('vue-circ', v === 'circuit');
+  for (const b of document.querySelectorAll('[data-vue]')) b.setAttribute('aria-pressed', b.dataset.vue === v);
+  $('pompe').setAttribute('transform', v === 'circuit' ? 'translate(260 330) scale(.62) rotate(90) translate(-360 -235)' : '');
+  if (v !== 'circuit' && R.c) { R.c = 0; $('c').value = 0; }
+  maj(); pAff = E.p; p2Aff = E.p2 || 0;
+}
+for (const b of document.querySelectorAll('[data-vue]')) b.addEventListener('click', () => changerVue(b.dataset.vue));
 
 /* ---------- animation ---------- */
 const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -391,7 +518,8 @@ function image(ts) {
   const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
   const k = fige ? 0 : dt;
   pAff += (E.p - pAff) * Math.min(1, dt * 6);
-  const cIn = couleur(0), cOut = couleur(pAff);
+  p2Aff += ((E.p2 || 0) - p2Aff) * Math.min(1, dt * 6);
+  const cIn = couleur(0), cOut = couleur(pAff), c2 = couleur(p2Aff);
   // pignons : le menant tourne en sens horaire (à l'écran), le mené en sens inverse ; dents décalées d'un demi-pas
   th += R.n / 60 * ralenti * TAU * k;
   $('pg-g').setAttribute('transform', `translate(${XG} ${CY}) rotate(${(th * 180 / Math.PI).toFixed(3)})`);
@@ -410,20 +538,39 @@ function image(ts) {
     q.w.setAttribute('fill', couleur(pAff * t * t)); q.w.setAttribute('opacity', dehors ? 1 : 0); q.c.setAttribute('opacity', dehors ? 1 : 0);
   }
   // clapet : la bille descend quand il s'ouvre ; ressort comprimé
-  const ouv = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0; clapAff += (ouv - clapAff) * Math.min(1, dt * 6);
+  const ouv = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0; if (vue !== 'circuit') clapAff += (ouv - clapAff) * Math.min(1, dt * 6);
   const yb = 216 + clapAff * 14; $('bille').setAttribute('cy', yb.toFixed(1));
   let rs = ''; const y0 = yb + 8, y1 = 268, nS = 7; for (let i = 0; i <= nS; i++) rs += `${i % 2 ? 96 : 84},${(y0 + (y1 - y0) * i / nS).toFixed(1)} `;
   $('ressort').setAttribute('points', rs);
   // circuit : ouverture de la restriction
   const g = 1 + 6 * R.s / 100; $('r-g').setAttribute('points', `673,262 673,278 ${680 - g / 2},270`); $('r-d').setAttribute('points', `687,262 687,278 ${680 + g / 2},270`);
-  // courants : vitesse proportionnelle au débit de chaque branche
+  // courants : vitesse proportionnelle au débit de chaque branche (signé : sens inverse si négatif)
+  const ci = vue === 'circuit';
   for (const c of COURANTS) {
-    const q = E[c.q] / LMIN; c.off -= q * ralenti * 100 * 2.4 * k;
-    c.e.setAttribute('stroke-dashoffset', (c.off % 22).toFixed(1)); c.e.setAttribute('opacity', q > 0.05 ? Math.min(1, 0.35 + q / 40) : 0);
+    if ((c.g === 'c-circ') !== ci && c.g !== 'c-pompe') continue;
+    const q = (E[c.q] || 0) / LMIN; c.off -= q * ralenti * 100 * 2.4 * (ci ? 0.62 : 1) * k;
+    c.e.setAttribute('stroke-dashoffset', (c.off % 22).toFixed(1)); c.e.setAttribute('opacity', Math.abs(q) > 0.05 ? Math.min(1, 0.35 + Math.abs(q) / 40) : 0);
   }
-  // manomètre
-  const a = GA(pAff / PSI); $('aiguille').setAttribute('x2', (612 + 25 * Math.cos(a)).toFixed(1)); $('aiguille').setAttribute('y2', (150 + 25 * Math.sin(a)).toFixed(1));
-  $('jauge-v').textContent = NB(pAff / PSI) + ' psi';
+  if (ci) {
+    // couleurs : aspiration, refoulement (avant le filtre), ligne du moteur (après le filtre)
+    $('k-asp').setAttribute('stroke', cIn); $('k-p1').setAttribute('stroke', cOut); $('k-p2').setAttribute('stroke', c2);
+    $('k-sale').setAttribute('fill', cOut); $('k-propre').setAttribute('fill', c2);
+    $('k-dv-b').setAttribute('fill', cOut); $('k-dv-h').setAttribute('fill', c2); $('k-sp-h').setAttribute('fill', c2); $('k-sp-b').setAttribute('fill', cIn);
+    // plis de l'élément : bruns quand le filtre est colmaté
+    const pc = R.c / 100, col = `rgb(${Math.round(180 - 70 * pc)},${Math.round(178 - 110 * pc)},${Math.round(169 - 140 * pc)})`;
+    for (const l of $('k-plis').children) l.setAttribute('stroke', col);
+    // soupapes : clapet conique repoussé contre le ressort ; antiretour ouvert dès que la pompe débite
+    const od = E.qth ? Math.min(1, E.qb / (0.3 * E.qth)) : 0, os = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0, oa = E.qp > 1e-6 ? 1 : 0;
+    derAff += (od - derAff) * Math.min(1, dt * 6); clapAff += (os - clapAff) * Math.min(1, dt * 6); arAff += (oa - arAff) * Math.min(1, dt * 5);
+    const yc = 236 - derAff * 16;
+    $('k-dv-c').setAttribute('points', `422,${yc - 6} 438,${yc - 6} 430,${yc + 4}`);
+    let r1 = ''; for (let i = 0; i <= 6; i++) r1 += `${i % 2 ? 436 : 424},${(204 + (yc - 6 - 204) * i / 6).toFixed(1)} `; $('k-dv-r').setAttribute('points', r1);
+    const xc = 150 - clapAff * 18;
+    $('k-sp-c').setAttribute('points', `${xc - 6},123 ${xc - 6},137 ${xc + 4},130`);
+    let r2 = ''; for (let i = 0; i <= 7; i++) r2 += `${(96 + (xc - 6 - 96) * i / 7).toFixed(1)},${i % 2 ? 136 : 124} `; $('k-sp-r').setAttribute('points', r2);
+    const an = arAff * 55 * Math.PI / 180; $('k-ar').setAttribute('x2', (532 + 24 * Math.sin(an)).toFixed(1)); $('k-ar').setAttribute('y2', (318 + 24 * Math.cos(an)).toFixed(1));
+    MANO.circuit.valeur(p2Aff / PSI);
+  } else MANO.seule.valeur(pAff / PSI);
   requestAnimationFrame(image);
 }
 maj(); majPP(); pAff = E.p;
