@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pompe à engrenages — Outils de Frank</title>
+<script>
+  const _pE = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pE.includes('pompe-engrenages') && !_pE.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* palette des pages moteurs (pt6a21, planetaire) */
+:root{
+  color-scheme: dark;
+  --bg:#0a0e11; --panel:#131a1f; --panel2:#18222a; --line:#24313b; --line2:#2f3f4b;
+  --text:#dde4e9; --muted:#8797a3;
+  --accent:#7cc4e4; --accent-d:#2d5c73; --on-accent:#e8f6fd;
+  /* pièces : acier des pignons, carter, tuyaux */
+  --acier:#b4b2a9; --acier-trait:#444441; --carter:#1d2830; --carter-trait:#3a4b58; --tuyau:#3a4b58;
+  --vert:#3fae6a; --rouge:#e05a4a;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+html.light{
+  color-scheme: light;
+  --bg:#eef2f5; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
+  --text:#15202a; --muted:#52626f;
+  --accent:#1d6f99; --accent-d:#d4e8f3; --on-accent:#0f4a6a;
+  --acier:#c9c7bf; --acier-trait:#5f5e5a; --carter:#dfe6eb; --carter-trait:#9fb0bd; --tuyau:#a9b8c4;
+  --vert:#2a8a50; --rouge:#c4402f;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 40px;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* en-tête */
+.toprow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
+.back:hover{border-color:var(--accent)}
+.top{padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.top h1{font-size:40px;line-height:1;font-weight:700}
+.top p{margin:8px 0 0;color:var(--muted);max-width:72ch}
+
+/* simulation */
+.panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.modes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.modes .lab{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted);margin-right:2px}
+.btn{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;cursor:pointer;color:var(--text)}
+.btn:hover{border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent-d);border-color:var(--accent);color:var(--on-accent)}
+svg.pompe{display:block;width:100%;height:auto;max-height:66vh}
+svg.pompe text{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;font-size:13px;fill:var(--muted);text-transform:uppercase}
+svg.pompe text.fin{font-family:var(--f-body);font-weight:400;letter-spacing:0;font-size:11.5px;text-transform:none}
+svg.pompe text.jauge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;fill:var(--text);letter-spacing:0;text-transform:none}
+.carter{fill:var(--carter);stroke:var(--carter-trait);stroke-width:1.5}
+.tuyau{fill:none;stroke:var(--tuyau);stroke-width:14;stroke-linejoin:round;stroke-linecap:round}
+.huile{fill:none;stroke-width:8;stroke-linejoin:round}
+.pignon{fill:var(--acier);stroke:var(--acier-trait);stroke-width:.8}
+.goutte{fill:rgba(255,255,255,.8)}
+.fuite{fill:var(--rouge)}
+#status{text-align:center;margin:8px 0 14px;font-size:14px;min-height:2.6em}
+.reglages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:4px}
+@media (max-width:760px){.reglages{grid-template-columns:1fr}}
+.reglages h3{grid-column:1/-1;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:10px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.ctrl{display:grid;grid-template-columns:minmax(150px,auto) minmax(0,1fr) 104px;align-items:center;gap:10px;color:var(--muted);font-size:13px;min-height:34px}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctrl output{text-align:right;font-family:var(--f-mono);color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:560px){.ctrl{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding-block:4px}.ctrl input[type=range]{grid-column:1/-1;grid-row:2}}
+.lecture{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;margin-top:-4px;color:var(--muted);font-size:13px}
+.lecture select{background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:5px 6px;font-family:var(--f-mono);font-size:12px}
+.vals{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (max-width:980px){.vals{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.vals{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.val{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:9px 12px;min-width:0}
+.val span{font-size:12px;color:var(--muted);display:block}
+.val b{display:block;font-family:var(--f-mono);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.val small{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.val.cle{border-color:var(--accent)}
+
+/* explications */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;margin-top:16px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.note h2{font-size:18px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.note p{margin:0 0 8px}
+.note p:last-child{margin-bottom:0}
+.formule{font-family:var(--f-mono);font-size:13px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:6px 10px;display:inline-block}
+.source{margin-top:16px;color:var(--muted);font-size:12.5px}
+
+/* interrupteur de thème (règles de style.css, la page ne la charge pas) */
+#theme-toggle{width:68px;height:26px;border-radius:13px;background:#2a3a2a;border:1.5px solid #3a5a3a;cursor:pointer;transition:background .35s ease,border-color .35s ease;display:inline-flex;align-items:center;justify-content:space-between;padding:0 5px;position:relative;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+#theme-toggle.theme-toggle--fixed{position:fixed;top:.75rem;right:.75rem;z-index:9999}
+.toprow #theme-toggle{margin-bottom:2px}
+.tg-icon{font-size:.62rem;line-height:1;pointer-events:none;flex-shrink:0;position:relative;z-index:2}
+#theme-toggle-knob{position:absolute;width:20px;height:20px;border-radius:50%;top:50%;transform:translateY(-50%);left:3px;background:#7ab880;box-shadow:0 1px 4px rgba(0,0,0,.55);transition:left .35s cubic-bezier(.4,0,.2,1),background .35s ease;pointer-events:none;z-index:3}
+html.light #theme-toggle{background:#34c759;border-color:#28a045}
+html.light #theme-toggle-knob{left:45px;background:#ffffff}
+@media (prefers-reduced-motion: reduce){#theme-toggle,#theme-toggle-knob{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="toprow"><a href="moteurs.html" class="back">&#8592; Moteurs</a><span id="tg-slot"></span></div>
+<header class="top">
+  <h1>Pompe à engrenages</h1>
+  <p>Deux pignons qui engrènent dans un carter : l'huile est emprisonnée entre les dents et la paroi, puis transportée de l'aspiration au refoulement. C'est le type de pompe qui alimente le circuit d'huile du <a href="pt6a21.html">PT6A-21</a>, avec sa soupape de régulation. Change le régime, la température de l'huile ou la résistance du circuit pour voir ce qui fixe le débit et la pression.</p>
+</header>
+
+<section class="panel" aria-labelledby="t-sim">
+  <h2 id="t-sim" class="sr-only">Simulation de la pompe</h2>
+  <div class="modes" role="group" aria-label="Situations">
+    <span class="lab">Situations</span>
+    <button class="btn" type="button" data-cas="normal">Fonctionnement normal</button>
+    <button class="btn" type="button" data-cas="froid">Démarrage à froid</button>
+    <button class="btn" type="button" data-cas="chaud">Huile très chaude</button>
+    <button class="btn" type="button" data-cas="bouche">Circuit obstrué</button>
+    <button class="btn" type="button" data-cas="arret">Pompe arrêtée</button>
+  </div>
+  <svg class="pompe" id="svg" viewBox="0 42 760 432" role="img" aria-labelledby="svg-t svg-d">
+    <title id="svg-t">Pompe à engrenages extérieurs et son circuit d'huile</title>
+    <desc id="svg-d">Deux pignons dans un carter ; l'huile monte du réservoir par l'aspiration, fait le tour des pignons par l'extérieur, sort au refoulement vers le circuit puis revient au réservoir. Un clapet de décharge relie le refoulement à l'aspiration. La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute).</desc>
+    <defs>
+      <linearGradient id="g-cav" x1="0" y1="1" x2="0" y2="0">
+        <stop id="s-c0" offset="0"/><stop id="s-c1" offset=".47"/><stop id="s-c2" offset=".53"/><stop id="s-c3" offset="1"/>
+      </linearGradient>
+    </defs>
+    <!-- réservoir -->
+    <rect x="250" y="400" width="490" height="66" rx="6" class="carter"/>
+    <rect id="niveau" x="254" y="420" width="482" height="42" rx="3" opacity=".55"/>
+    <text x="560" y="452" text-anchor="middle">Réservoir</text>
+    <!-- tuyaux : paroi, puis huile à la couleur de sa pression -->
+    <path class="tuyau" d="M360 452V349M360 121V60H680V412M360 90H90V380H360"/>
+    <path class="huile" id="h-asp" d="M360 452V349M90 258V380H360"/>
+    <path class="huile" id="h-ref" d="M360 121V60H680V262M360 90H90V212"/>
+    <path class="huile" id="h-ret" d="M680 278V412"/>
+    <!-- circuit (restriction) -->
+    <polygon id="r-g" points="673,262 673,278 676,270" fill="var(--text)"/><polygon id="r-d" points="687,262 687,278 684,270" fill="var(--text)"/>
+    <text x="664" y="262" text-anchor="end">Circuit</text>
+    <text x="664" y="278" text-anchor="end" class="fin">paliers, gicleurs</text>
+    <!-- clapet de décharge -->
+    <rect x="72" y="198" width="36" height="74" rx="4" class="carter"/>
+    <rect id="ch-h" x="80" y="200" width="20" height="10" /><rect id="ch-b" x="80" y="210" width="20" height="60"/>
+    <path d="M80 206H86M94 206H100" stroke="var(--text)" stroke-width="3"/>
+    <polyline id="ressort" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
+    <circle id="bille" cx="90" cy="216" r="8" fill="var(--acier)" stroke="var(--acier-trait)"/>
+    <text x="118" y="226" class="fin" style="fill:var(--text)">Clapet de</text>
+    <text x="118" y="240" class="fin" style="fill:var(--text)">décharge</text>
+    <!-- manomètre -->
+    <path d="M612 60V118" stroke="var(--tuyau)" stroke-width="4"/>
+    <circle cx="612" cy="150" r="33" class="carter"/>
+    <g id="cadran"></g>
+    <line id="aiguille" x1="612" y1="150" x2="612" y2="125" stroke="var(--rouge)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="612" cy="150" r="3" fill="var(--text)"/>
+    <text id="jauge-v" x="612" y="172" text-anchor="middle" class="jauge-v">0</text>
+    <!-- carter de la pompe et cavité (huile) -->
+    <rect x="176" y="121" width="368" height="228" rx="26" class="carter"/>
+    <path id="cavite" fill="url(#g-cav)"/>
+    <g id="poches"></g>
+    <g id="pg-g"></g><g id="pg-d"></g>
+    <g id="fuites"></g>
+    <g id="gouttes"></g>
+    <text x="372" y="84">Refoulement</text>
+    <text x="372" y="374">Aspiration</text>
+    <text x="290" y="114" text-anchor="middle" class="fin">pignon menant (arbre)</text>
+    <text x="430" y="114" text-anchor="middle" class="fin">pignon mené</text>
+  </svg>
+  <div class="lecture">
+    <button class="btn" id="pp" type="button">❚❚ Figer</button>
+    <label for="ralenti">Rotation affichée</label>
+    <select id="ralenti"><option value="0.0025">×1/400</option><option value="0.005">×1/200</option><option value="0.01" selected>×1/100</option><option value="0.02">×1/50</option></select>
+  </div>
+  <p id="status" aria-live="polite"></p>
+
+  <div class="reglages">
+    <h3>Fonctionnement</h3>
+    <div class="ctrl"><label for="n">Régime de la pompe</label><input type="range" id="n" min="0" max="6000" step="50" value="3000"><output id="o-n" for="n"></output></div>
+    <div class="ctrl"><label for="t">Température de l'huile</label><input type="range" id="t" min="-30" max="130" step="1" value="80"><output id="o-t" for="t"></output></div>
+    <div class="ctrl"><label for="s">Ouverture du circuit</label><input type="range" id="s" min="5" max="100" step="1" value="40"><output id="o-s" for="s"></output></div>
+    <div class="ctrl"><label for="ps">Tarage du clapet</label><input type="range" id="ps" min="40" max="150" step="1" value="100"><output id="o-ps" for="ps"></output></div>
+    <h3>Géométrie des pignons</h3>
+    <div class="ctrl"><label for="z">Nombre de dents</label><input type="range" id="z" min="8" max="20" step="1" value="12"><output id="o-z" for="z"></output></div>
+    <div class="ctrl"><label for="m">Module</label><input type="range" id="m" min="2" max="5" step="0.25" value="3"><output id="o-m" for="m"></output></div>
+    <div class="ctrl"><label for="b">Largeur des pignons</label><input type="range" id="b" min="10" max="40" step="1" value="20"><output id="o-b" for="b"></output></div>
+  </div>
+
+  <div class="vals">
+    <div class="val cle"><span>Pression de refoulement</span><b id="v-p">—</b><small id="v-pb"></small></div>
+    <div class="val cle"><span>Débit vers le circuit</span><b id="v-q">—</b><small id="v-qs"></small></div>
+    <div class="val"><span>Débit théorique</span><b id="v-qt">—</b><small id="v-cyl"></small></div>
+    <div class="val"><span>Fuites internes</span><b id="v-f">—</b><small id="v-ev"></small></div>
+    <div class="val"><span>Par le clapet</span><b id="v-r">—</b><small id="v-rs"></small></div>
+    <div class="val"><span>Couple à l'arbre</span><b id="v-c">—</b></div>
+    <div class="val"><span>Puissance absorbée</span><b id="v-w">—</b><small id="v-eg"></small></div>
+    <div class="val"><span>Viscosité de l'huile</span><b id="v-nu">—</b></div>
+    <div class="val"><span>Vitesse des dents</span><b id="v-vt">—</b><small>au cercle primitif</small></div>
+    <div class="val"><span>Dents par seconde</span><b id="v-dz">—</b><small>pulsation du débit</small></div>
+  </div>
+</section>
+
+<div class="notes">
+  <section class="note">
+    <h2>Le principe</h2>
+    <p>Les deux pignons tournent en sens contraires. À l'aspiration, les dents se dégagent : le volume libéré aspire l'huile. Chaque creux de dent emporte une petite poche d'huile le long de la paroi du carter, par l'extérieur, jusqu'au refoulement. Au milieu, les dents qui s'engrènent chassent l'huile et font l'étanchéité : elle ne peut pas revenir par le centre.</p>
+    <p>C'est une pompe volumétrique : chaque tour déplace un volume fixe, quelle que soit la pression (aux fuites près).</p>
+  </section>
+  <section class="note">
+    <h2>Cylindrée et débit</h2>
+    <p>Le volume déplacé par tour dépend de la taille des dents (module m), de leur nombre Z et de la largeur b des pignons. Le débit théorique est la cylindrée multipliée par le régime.</p>
+    <p><span class="formule">V ≈ 2π · m² · Z · b &nbsp;·&nbsp; Q = V · n</span></p>
+    <p>(Approximation usuelle pour deux pignons identiques à denture droite.)</p>
+  </section>
+  <section class="note">
+    <h2>La pompe ne fait pas la pression</h2>
+    <p>La pompe impose un débit ; la pression vient de la résistance que le circuit oppose à ce débit (paliers, gicleurs, filtre). Ferme le circuit : la pression monte. Ouvre-le : elle baisse, avec le même débit.</p>
+    <p>Une huile froide et visqueuse résiste beaucoup plus : au démarrage à froid, la pression grimpe jusqu'au tarage du clapet de décharge, qui renvoie le surplus à l'aspiration et protège le circuit.</p>
+  </section>
+  <section class="note">
+    <h2>Fuites et rendement volumétrique</h2>
+    <p>Un peu d'huile repasse du refoulement à l'aspiration par les jeux : en bout de dent, sur les flancs des pignons et à l'engrènement (points rouges). Ces fuites croissent avec la pression et diminuent quand l'huile est visqueuse.</p>
+    <p><span class="formule">Q<sub>fuites</sub> ∝ Δp ÷ μ &nbsp;·&nbsp; η<sub>v</sub> = Q ÷ Q<sub>th</sub></span></p>
+    <p>Une huile très chaude, donc très fluide, fuit davantage : le débit réel baisse.</p>
+  </section>
+  <section class="note">
+    <h2>Dans le PT6A-21</h2>
+    <p>La pompe de pression est une pompe à engrenages placée au fond du réservoir d'huile et entraînée par le boîtier d'accessoires. Une soupape règle la pression du circuit, qui doit rester entre 80 et 100 psi au-dessus de 28 000 tr/min Ng (bande verte du manomètre). D'autres pompes à engrenages, dites de récupération, ramènent l'huile des paliers et du réducteur au réservoir.</p>
+  </section>
+</div>
+<p class="source">Simulation pédagogique : géométrie et réglages génériques, pas ceux d'une pompe particulière. Huile de turbine de 5 cSt (type MIL-PRF-23699), environ 25 cSt à 40 °C et 5 cSt à 100 °C, viscosité selon la loi de Walther ; fuites laminaires ; circuit modélisé comme une résistance en partie laminaire, en partie turbulente ; clapet à ressort. Les chiffres du PT6A-21 viennent du manuel de maintenance P&amp;WC 3013242 (voir la <a href="pt6a21.html">page du moteur</a>).</p>
+</div>
+
+<script>
+/* Pompe à engrenages extérieurs : géométrie des dents (même tracé que planetaire.html), cinématique des deux pignons,
+   modèle hydraulique (débit, fuites, circuit, clapet) résolu à chaque changement de réglage. */
+const $ = id => document.getElementById(id), NS = 'http://www.w3.org/2000/svg', TAU = Math.PI * 2;
+const NB = (v, d = 0) => new Intl.NumberFormat('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+const PSI = 6894.76, LMIN = 1 / 60000;   // Pa par psi ; m³/s par L/min
+
+/* ---------- huile : viscosité (loi de Walther, 25 cSt à 40 °C et 5 cSt à 100 °C) ---------- */
+const RHO = 980;
+const W_B = (Math.log10(Math.log10(25.7)) - Math.log10(Math.log10(5.7))) / (Math.log10(373.15) - Math.log10(313.15));
+const W_A = Math.log10(Math.log10(25.7)) + W_B * Math.log10(313.15);
+const nu = T => Math.pow(10, Math.pow(10, W_A - W_B * Math.log10(T + 273.15))) - 0.7;   // cSt
+const mu = T => RHO * nu(T) * 1e-6;                                                       // Pa·s
+
+/* ---------- modèle hydraulique ----------
+   cylindrée V = 2π m² Z b ; débit théorique Qth = V n ; fuites laminaires Qf = CL Δp / μ (CL proportionnel à la largeur) ;
+   circuit : Δp = A (μ/μ80) Q / s + B Q² / s² (s : ouverture) ; clapet : Qr = Kr (p − tarage) au-delà du tarage.
+   Constantes calées sur le cas « normal » : 12 dents, module 3, largeur 20 mm, 3000 tr/min, 80 °C, ouverture 40 % :
+   rendement volumétrique de 92 % et 85 psi, moitié laminaire, moitié turbulente. */
+const cyl = (m, Z, b) => TAU * (m * 1e-3) ** 2 * Z * (b * 1e-3);   // m³/tr
+const MU80 = mu(80), P0 = 85 * PSI, S0 = 0.4, QTH0 = cyl(3, 12, 20) * 3000 / 60, Q0 = 0.92 * QTH0;
+const C0 = 0.08 * QTH0 * MU80 / P0, A0 = 0.5 * P0 * S0 / Q0, B0 = 0.5 * P0 * S0 * S0 / (Q0 * Q0), KV = 0.1 / (MU80 * 3000 / 60 * TAU);
+function resoudre(r) {
+  const V = cyl(r.m, r.z, r.b), w = r.n / 60 * TAU, qth = V * r.n / 60, u = mu(r.t), s = r.s / 100, pset = r.ps * PSI;
+  const CL = C0 * r.b / 20, A = A0 * (u / MU80) / s, B = B0 / (s * s), Kr = Math.max(qth, 1e-7) / (8 * PSI);
+  const qPompe = p => Math.max(0, qth - CL * p / u), qClapet = p => Kr * Math.max(0, p - pset);
+  const qCircuit = p => (-A + Math.sqrt(A * A + 4 * B * p)) / (2 * B);
+  // équilibre : ce que la pompe refoule = clapet + circuit (fonction décroissante de p : dichotomie)
+  let lo = 0, hi = 5000 * PSI;
+  for (let i = 0; i < 80; i++) { const p = (lo + hi) / 2; if (qPompe(p) - qClapet(p) - qCircuit(p) > 0) lo = p; else hi = p; }
+  const p = qth > 0 ? (lo + hi) / 2 : 0, qp = qPompe(p), qr = qClapet(p), qc = Math.max(0, qp - qr), qf = qth - qp;
+  const couple = V * p / (TAU * 0.9) + KV * u * w * r.b / 20, puis = couple * w;
+  return { V, qth, p, qp, qr, qc, qf, couple, puis, nu: nu(r.t), ev: qth ? qp / qth : 1, eg: puis ? qp * p / puis : 0,
+    vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z };
+}
+
+/* ---------- couleur de l'huile selon sa pression (bleu → ambre → rouge, 0 à 150 psi) ---------- */
+const STOPS = [[0, [59, 143, 217]], [0.55, [224, 160, 48]], [1, [217, 68, 59]]];
+function couleur(p) {
+  const x = Math.min(1, Math.max(0, p / (150 * PSI)));
+  let i = 0; while (i < STOPS.length - 2 && x > STOPS[i + 1][0]) i++;
+  const [x0, c0] = STOPS[i], [x1, c1] = STOPS[i + 1], k = (x - x0) / (x1 - x0);
+  return `rgb(${c0.map((c, j) => Math.round(c + (c1[j] - c) * k)).join(',')})`;
+}
+
+/* ---------- dessin : pignons, cavité, poches d'huile ---------- */
+const CX = 360, CY = 235, CD = 140, XG = CX - CD / 2, XD = CX + CD / 2, RP = CD / 2;   // entraxe fixe à l'écran
+function dents(Z, mp) {
+  const r = mp * Z / 2, hw = Math.PI / (2 * Z), rt = r + mp, rb = r - 1.25 * mp; let d = '';
+  for (let i = 0; i < Z; i++) { const c = TAU * i / Z;
+    [[c - 1.25 * hw, rb], [c - 0.55 * hw, rt], [c + 0.55 * hw, rt], [c + 1.25 * hw, rb]].forEach(([a, rr], j) => { d += (i || j ? 'L' : 'M') + (rr * Math.cos(a)).toFixed(2) + ' ' + (rr * Math.sin(a)).toFixed(2); }); }
+  return d + 'Z';
+}
+let geo = null;
+function construire(Z) {
+  const mp = CD / Z, rt = RP + mp, rc = rt + 2.5, pw = 24;
+  const d = dents(Z, mp);
+  for (const [id, men] of [['pg-g', true], ['pg-d', false]]) {
+    $(id).innerHTML = `<path class="pignon" d="${d}"/><circle r="${RP - 2.6 * mp}" fill="var(--carter)" stroke="var(--acier-trait)" stroke-width=".8"/>`
+      + `<circle r="9" fill="var(--acier-trait)"/>` + (men ? `<rect x="-2.5" y="-14" width="5" height="7" fill="var(--carter)"/>` : '');
+  }
+  // cavité : deux cercles autour des pignons, et les orifices d'aspiration (bas) et de refoulement (haut)
+  const yh = CY - Math.sqrt(rc * rc - (CD / 2) ** 2), yb = CY + Math.sqrt(rc * rc - (CD / 2) ** 2);
+  $('cavite').setAttribute('d', `M${CX - pw} 121V${(CY - Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}`
+    + `A${rc} ${rc} 0 1 0 ${CX - pw} ${(CY + Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}V349H${CX + pw}`
+    + `V${(CY + Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}A${rc} ${rc} 0 1 0 ${CX + pw} ${(CY - Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}V121Z`);
+  // poches d'huile : une goutte au creux de chaque dent, sur les deux pignons
+  const rg = RP - 0.15 * mp, rr = Math.min(6, mp * 0.38);
+  $('poches').innerHTML = '';
+  const poches = [];
+  for (const g of [0, 1]) for (let i = 0; i < Z; i++) {
+    const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', rr); $('poches').appendChild(c);
+    poches.push({ c, g, a0: TAU * i / Z + Math.PI / Z });
+  }
+  geo = { Z, mp, rg, poches, yh, yb, phiD: Math.PI + Math.PI / Z };
+}
+
+/* ---------- manomètre (0 à 150 psi, bande verte 80 à 100 psi du PT6A-21) ---------- */
+const GA = v => (135 + 270 * Math.min(1, Math.max(0, v / 150))) * Math.PI / 180;
+(function cadran() {
+  const g = $('cadran'), R = 27, arc = (v0, v1, cls) => { const a0 = GA(v0), a1 = GA(v1);
+    return `<path d="M${612 + R * Math.cos(a0)} ${150 + R * Math.sin(a0)}A${R} ${R} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${612 + R * Math.cos(a1)} ${150 + R * Math.sin(a1)}" fill="none" stroke="${cls}" stroke-width="4"/>`; };
+  let h = arc(0, 150, 'var(--line2)') + arc(80, 100, 'var(--vert)');
+  for (let v = 0; v <= 150; v += 25) { const a = GA(v);
+    h += `<line x1="${612 + 22 * Math.cos(a)}" y1="${150 + 22 * Math.sin(a)}" x2="${612 + 30 * Math.cos(a)}" y2="${150 + 30 * Math.sin(a)}" stroke="var(--muted)" stroke-width="1.2"/>`; }
+  h += `<line id="repere" stroke="var(--rouge)" stroke-width="2.5"/>`;
+  g.innerHTML = h;
+})();
+
+/* ---------- gouttes qui circulent dans les tuyaux ---------- */
+function chemin(pts) { const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return { pts, L, tot: L[L.length - 1] }; }
+function surChemin(c, d) { let i = 1; while (i < c.L.length - 1 && c.L[i] < d) i++; const k = (d - c.L[i - 1]) / (c.L[i] - c.L[i - 1] || 1), a = c.pts[i - 1], b = c.pts[i]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
+const FLUX = [
+  { c: chemin([[360, 452], [360, 300]]), q: 'qp', cls: 'goutte' },
+  { c: chemin([[360, 175], [360, 60], [680, 60], [680, 412]]), q: 'qc', cls: 'goutte' },
+  { c: chemin([[360, 90], [90, 90], [90, 380], [360, 380]]), q: 'qr', cls: 'goutte' },
+  { c: chemin([[360, 205], [360, 268]]), q: 'qf', cls: 'fuite', pas: 14, r: 2.2 },
+];
+for (const f of FLUX) {
+  f.pas = f.pas || 22; f.off = 0; f.els = [];
+  const g = $(f.cls === 'fuite' ? 'fuites' : 'gouttes');
+  for (let d = 0; d < f.c.tot; d += f.pas) { const e = document.createElementNS(NS, 'circle'); e.setAttribute('r', f.r || 3); e.setAttribute('class', f.cls); g.appendChild(e); f.els.push(e); }
+}
+
+/* ---------- réglages, situations ---------- */
+const R = { n: 3000, t: 80, s: 40, ps: 100, z: 12, m: 3, b: 20 };
+const FMT = { n: v => NB(v) + ' tr/min', t: v => NB(v) + ' °C', s: v => NB(v) + ' %', ps: v => NB(v) + ' psi', z: v => NB(v), m: v => NB(v, 2) + ' mm', b: v => NB(v) + ' mm' };
+const CAS = {
+  normal: { n: 3000, t: 80, s: 40, ps: 100 }, froid: { n: 3000, t: -20, s: 40, ps: 100 }, chaud: { n: 3000, t: 125, s: 40, ps: 100 },
+  bouche: { n: 3000, t: 80, s: 8, ps: 100 }, arret: { n: 0, t: 80, s: 40, ps: 100 },
+};
+let E = null, pAff = 0, clapAff = 0;
+function maj() {
+  for (const k in R) $('o-' + k).textContent = FMT[k](R[k]);
+  if (!geo || geo.Z !== R.z) construire(R.z);
+  E = resoudre(R);
+  for (const b of document.querySelectorAll('[data-cas]')) { const c = CAS[b.dataset.cas]; b.setAttribute('aria-pressed', Object.keys(c).every(k => R[k] === c[k]) && R.z === 12 && R.m === 3 && R.b === 20); }
+  const L = q => NB(q / LMIN, q / LMIN < 10 ? 1 : 0) + ' L/min', pp = E.p / PSI;
+  $('v-p').textContent = NB(pp) + ' psi'; $('v-pb').textContent = NB(E.p / 1e5, 1) + ' bar';
+  $('v-q').textContent = L(E.qc); $('v-qs').textContent = E.qth ? NB(100 * E.qc / E.qth) + ' % du théorique' : '';
+  $('v-qt').textContent = L(E.qth); $('v-cyl').textContent = 'cylindrée ' + NB(E.V * 1e6, 1) + ' cm³/tr';
+  $('v-f').textContent = L(E.qf); $('v-ev').textContent = 'rendement vol. ' + NB(100 * E.ev, 1) + ' %';
+  $('v-r').textContent = L(E.qr); $('v-rs').textContent = E.qr > 1e-7 ? 'clapet ouvert' : 'clapet fermé';
+  $('v-c').textContent = NB(E.couple, E.couple < 10 ? 2 : 1) + ' N·m';
+  $('v-w').textContent = E.puis < 1000 ? NB(E.puis) + ' W' : NB(E.puis / 1000, 2) + ' kW'; $('v-eg').textContent = E.puis ? 'rendement global ' + NB(100 * E.eg) + ' %' : '';
+  $('v-nu').textContent = NB(E.nu, E.nu < 10 ? 1 : 0) + ' cSt';
+  $('v-vt').textContent = NB(E.vt, 1) + ' m/s'; $('v-dz').textContent = NB(E.dz) + ' Hz';
+  let st;
+  if (!R.n) st = 'Pompe arrêtée : pas de débit, donc pas de pression, même circuit fermé.';
+  else if (E.qr > 0.01 * E.qth) st = `Clapet de décharge ouvert : la pression est limitée vers ${NB(R.ps)} psi et ${L(E.qr)} retournent à l'aspiration.`
+    + (R.t < 20 ? ' Huile froide et épaisse : le circuit résiste beaucoup, c\'est le cas typique d\'un démarrage à froid.' : R.s < 15 ? ' Circuit presque fermé (filtre colmaté, gicleurs bouchés) : le clapet protège la pompe et les tuyaux.' : '');
+  else st = `Clapet fermé : toute l'huile refoulée traverse le circuit. Les ${NB(pp)} psi viennent de la résistance du circuit, pas de la pompe.`
+    + (E.ev < 0.85 ? ` Huile très fluide : les fuites internes font perdre ${NB(100 * (1 - E.ev))} % du débit.` : '');
+  $('status').textContent = st;
+  $('repere').setAttribute('x1', 612 + 21 * Math.cos(GA(R.ps))); $('repere').setAttribute('y1', 150 + 21 * Math.sin(GA(R.ps)));
+  $('repere').setAttribute('x2', 612 + 31 * Math.cos(GA(R.ps))); $('repere').setAttribute('y2', 150 + 31 * Math.sin(GA(R.ps)));
+}
+for (const k in R) $(k).addEventListener('input', e => { R[k] = parseFloat(e.target.value); maj(); });
+for (const b of document.querySelectorAll('[data-cas]')) b.addEventListener('click', () => {
+  Object.assign(R, CAS[b.dataset.cas], { z: 12, m: 3, b: 20 }); for (const k in R) $(k).value = R[k]; maj(); });
+
+/* ---------- animation ---------- */
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let th = 0, fige = reduit, last = null, ralenti = 0.01;
+const majPP = () => { $('pp').textContent = fige ? '▶ Reprendre' : '❚❚ Figer'; };
+$('pp').addEventListener('click', () => { fige = !fige; majPP(); });
+$('ralenti').addEventListener('change', e => { ralenti = parseFloat(e.target.value); });
+function image(ts) {
+  const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+  const k = fige ? 0 : dt;
+  pAff += (E.p - pAff) * Math.min(1, dt * 6);
+  const cIn = couleur(0), cOut = couleur(pAff);
+  // pignons : le menant tourne en sens horaire (à l'écran), le mené en sens inverse ; dents décalées d'un demi-pas
+  th += R.n / 60 * ralenti * TAU * k;
+  $('pg-g').setAttribute('transform', `translate(${XG} ${CY}) rotate(${(th * 180 / Math.PI).toFixed(3)})`);
+  $('pg-d').setAttribute('transform', `translate(${XD} ${CY}) rotate(${((geo.phiD - th) * 180 / Math.PI).toFixed(3)})`);
+  // huile : couleur selon la pression (cavité, tuyaux, réservoir, chambre du clapet)
+  $('s-c0').setAttribute('stop-color', cIn); $('s-c1').setAttribute('stop-color', cIn); $('s-c2').setAttribute('stop-color', cOut); $('s-c3').setAttribute('stop-color', cOut);
+  $('h-asp').setAttribute('stroke', cIn); $('h-ret').setAttribute('stroke', cIn); $('h-ref').setAttribute('stroke', cOut);
+  $('niveau').setAttribute('fill', cIn); $('ch-h').setAttribute('fill', cOut); $('ch-b').setAttribute('fill', cIn);
+  // poches : la pression monte le long de la paroi, surtout à l'approche du refoulement
+  for (const q of geo.poches) {
+    const a = q.g ? geo.phiD - th + q.a0 : th + q.a0, cx = q.g ? XD : XG, x = Math.cos(a), y = Math.sin(a);
+    q.c.setAttribute('cx', (cx + geo.rg * x).toFixed(1)); q.c.setAttribute('cy', (CY + geo.rg * y).toFixed(1));
+    const dehors = q.g ? x > 0 : x < 0;
+    let t; if (dehors) { const ang = Math.atan2(y, q.g ? x : -x); t = (Math.PI / 2 - ang) / Math.PI; } else t = y < 0 ? 1 : 0;
+    q.c.setAttribute('fill', couleur(pAff * t * t));
+  }
+  // clapet : la bille descend quand il s'ouvre ; ressort comprimé
+  const ouv = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0; clapAff += (ouv - clapAff) * Math.min(1, dt * 6);
+  const yb = 216 + clapAff * 14; $('bille').setAttribute('cy', yb.toFixed(1));
+  let rs = ''; const y0 = yb + 8, y1 = 268, nS = 7; for (let i = 0; i <= nS; i++) rs += `${i % 2 ? 96 : 84},${(y0 + (y1 - y0) * i / nS).toFixed(1)} `;
+  $('ressort').setAttribute('points', rs);
+  // circuit : ouverture de la restriction
+  const g = 1 + 6 * R.s / 100; $('r-g').setAttribute('points', `673,262 673,278 ${680 - g / 2},270`); $('r-d').setAttribute('points', `687,262 687,278 ${680 + g / 2},270`);
+  // gouttes : vitesse proportionnelle au débit de chaque branche
+  for (const f of FLUX) {
+    const q = E[f.q] / LMIN, v = q * ralenti * 100 * 2.4 * (f.cls === 'fuite' ? 4 : 1);
+    f.off = (f.off + v * k) % f.pas;
+    const vis = q > 0.05;
+    f.els.forEach((e, i) => { const d = f.off + i * f.pas; if (!vis || d > f.c.tot) { e.setAttribute('opacity', 0); return; }
+      const [x, y] = surChemin(f.c, d); e.setAttribute('cx', x.toFixed(1)); e.setAttribute('cy', y.toFixed(1)); e.setAttribute('opacity', f.cls === 'fuite' ? Math.min(1, q / 3) : 1); });
+  }
+  // manomètre
+  const a = GA(pAff / PSI); $('aiguille').setAttribute('x2', (612 + 25 * Math.cos(a)).toFixed(1)); $('aiguille').setAttribute('y2', (150 + 25 * Math.sin(a)).toFixed(1));
+  $('jauge-v').textContent = NB(pAff / PSI) + ' psi';
+  requestAnimationFrame(image);
+}
+maj(); majPP(); pAff = E.p;
+requestAnimationFrame(image);
+</script>
+<script src="theme-toggle.js"></script>
+<script>
+(function () {
+  const t = document.getElementById('theme-toggle'), slot = document.getElementById('tg-slot');
+  if (t && slot) { t.classList.remove('theme-toggle--fixed'); slot.replaceWith(t); }
+})();
+</script>
+</body>
+</html>
