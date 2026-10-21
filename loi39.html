@@ -124,6 +124,10 @@
     .lv-head h2 { margin: 6px 0 4px; font-family: "Literata", Georgia, serif; font-size: clamp(1.4rem, 3vw, 2rem); text-wrap: balance; }
     .lv-etat { margin: 0; color: var(--muted); font-size: 0.88rem; }
     .lv-etat b { color: var(--ink); }
+    /* date et heure des données et des vérifications (en-direct/direct.js : dessinerVerifs) */
+    .lv-heures { margin: 4px 0 0; display: flex; flex-direction: column; gap: 1px; color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+    .lv-heures[hidden] { display: none; }
+    .lv-heures b { color: var(--ink); font-weight: 600; }
     .lv-btn, .lv-zoom button { font: inherit; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; }
     .lv-btn:hover, .lv-zoom button:hover { border-color: var(--ink); }
     /* « Mettre à jour » : décompte de la prochaine lecture + barre qui se remplit */

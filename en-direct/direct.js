@@ -21,6 +21,9 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
 const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
 const heureQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "America/Toronto" });
+const secQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Toronto" });
+const dateAb = d => d.toLocaleString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Edmonton" });
+const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}`; };
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
 const region = n => n <= 26 ? "Calgary" : n <= 46 ? "Edmonton" : "Reste de l'Alberta";
@@ -253,7 +256,7 @@ async function lireRelais() {
 }
 async function lireCopie() {
   const r = await fetch("en-direct/resultats.json", { cache: "no-cache" });
-  return r.ok ? r.json() : null;
+  return r.ok ? { ...(await r.json()), publie: r.headers.get("last-modified") } : null;   // (publie : mise en ligne de la copie)
 }
 async function lire() {
   if (DEMO !== null) { const r = await fetch("en-direct/demo.json", { cache: "no-cache" }); return { ...(await r.json()), via: "demo" }; }
@@ -270,7 +273,7 @@ async function actualiser() {
   prochaine = Date.now() + RAFRAICHIR * 1000;
   $("lvEtat").textContent = "Mise à jour…";
   try {
-    brut = await lire();
+    brut = await lire(); lu = new Date();
     RES = brut ? normaliser(brut) : null;
     if (RES && DEMO !== null) demoPartielle(RES, DEMO);
     surveiller(); dessiner();
@@ -281,6 +284,7 @@ function afficherDecompte() {
   $("lvDecompte").textContent = document.hidden ? "en pause" : reste + " s";
   $("lvMaj").style.setProperty("--fait", (1 - reste / RAFRAICHIR).toFixed(3));
   $("lvMaj").title = `Lecture automatique toutes les ${RAFRAICHIR} s · prochaine dans ${reste} s`;
+  if (lu) dessinerVerifs();
 }
 
 /* ---------- accès aux résultats ---------- */
@@ -317,8 +321,23 @@ function dessinerEtat() {
     DEMO !== null ? "<b>Démo · chiffres fictifs</b>" : "<b>Résultats non officiels</b>",
     `${RES.publiees - RES.inconnues} question${RES.publiees - RES.inconnues > 1 ? "s" : ""} sur 10 en dépouillement`,
     fracT(st) != null ? `question ${q} : sections ${nf(st.sec[0])} / ${nf(st.sec[1])} (${nf(100 * fracT(st), 1)} %)` : "",
-    maj ? `lu à ${heureQc(maj)} (heure du Québec)${RES.via === "copie" ? " · copie du pipeline" : ""}` : "",
   ].filter(Boolean).join(" · ");
+  dessinerVerifs();
+}
+// en haut (demande de l'utilisateur) : date et heure des données d'Élections Alberta, et des vérifications (par le relais
+// du site, ou copie de secours du pipeline, puis par cette page) ; « il y a » tenu à jour chaque seconde
+let lu = null;
+function dessinerVerifs() {
+  const el = $("lvHeures"), maj = RES?.maj && !isNaN(RES.maj) ? RES.maj : null;
+  el.hidden = DEMO !== null || !brut; if (el.hidden) return;
+  const m = Date.now(), verif = brut.via === "relais" && brut.ageCache != null ? new Date(lu - brut.ageCache * 1000) : null;
+  const publie = brut.via === "copie" && brut.publie ? new Date(brut.publie) : null;
+  el.innerHTML = [
+    `<span><b>Données</b> d'Élections Alberta : ${maj ? `${dateAb(maj)}, heure de l'Alberta (${heureQc(maj)} au Québec)` : "pas encore d'heure publiée"}</span>`,
+    `<span><b>Vérifiées</b> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
+      : `sur la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
+      + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heures du Québec</span>`,
+  ].join("");
 }
 
 const deux = n => String(n).padStart(2, "0");
