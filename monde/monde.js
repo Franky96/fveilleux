@@ -8,6 +8,8 @@ const $ = id => document.getElementById(id);
 const ESC = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const NOMS = new Intl.DisplayNames(["fr"], { type: "region" });
 const NB = new Intl.NumberFormat("fr-CA");
+// territoires réunis à leur pays sur le globe (nom anglais de Natural Earth)
+const FUSIONS = { SO: ["Somaliland"] };
 // entités sans code ISO dans Natural Earth
 const SANS_CODE = { "Somaliland": "Somaliland", "N. Cyprus": "Chypre du Nord", "Indian Ocean Ter.": "Territoires australiens de l'océan Indien", "Siachen Glacier": "Glacier de Siachen" };
 
@@ -837,8 +839,18 @@ async function preparerTout() {
   FICHES = fiches;
   STATS = await fetch("monde/stats.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
   REGLAGES = await fetch("monde/drapeaux-reglages.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
-  PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
-  FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
+  // territoires réunis à leur pays (demande de l'utilisateur : le Somaliland avec la Somalie) : une seule forme, sans
+  // frontière entre eux, avec le drapeau, la fiche et les statistiques du pays
+  const G = w.objects.countries.geometries, dans = g => FUSIONS[g.properties?.a2] || Object.values(FUSIONS).some(L => L.includes(g.properties?.en));
+  for (const [a2, L] of Object.entries(FUSIONS)) {
+    const P = G.find(g => g.properties?.a2 === a2), A = G.filter(g => L.includes(g.properties?.en)); if (!P || !A.length) continue;
+    w.objects.countries.geometries = G.filter(g => !A.includes(g));
+    P._fusion = topojson.merge(w, [P, ...A]);
+  }
+  PAYS = topojson.feature(w, w.objects.countries).features;
+  for (const f of PAYS) { const g = w.objects.countries.geometries.find(x => x.properties === f.properties); if (g?._fusion) f.geometry = g._fusion; }
+  PAYS.forEach(cercle);
+  FRONTIERES = topojson.mesh(w, { type: "GeometryCollection", geometries: G }, (a, b) => a !== b && !(dans(a) && dans(b)));
   for (const f of PAYS) f._a2 = f.properties.a2 || f.properties.en;
   if (lacs) { sensHoraire(lacs); LACS = lacs; lacs.features.forEach(cercle); BOITES_LACS = lacs.features.map(f => f._b); }
   taille();
