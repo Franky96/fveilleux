@@ -1,6 +1,6 @@
 /* Information Monde (information-monde.html) : globe des pays (projection orthographique, canvas), drapeau du lieu choisi
    à trois niveaux : pays → subdivision (province, État…) → ville. Les subdivisions et villes ne sont connues que pour les
-   pays de SOUS (Canada pour l'instant ; ajouter un pays = contours, noms, drapeaux et liste de villes).
+   pays de SOUS (Canada et États-Unis pour l'instant ; ajouter un pays = contours, noms, drapeaux et liste de villes).
    Données : monde/outils/donnees.py (contours, drapeaux des pays et provinces), monde/outils/fiches.py (villes, fiches).
    Sélecteur de niveau Pays · Province · Ville ; Échap ou clic sur l'océan = remonter d'un niveau.
    Sélection gardée dans l'adresse (#CA, #CA-QC, #Q141810 pour une ville). */
@@ -24,6 +24,26 @@ const SOUS = {
       "CA-ON": ["Ontario", "Province"], "CA-PE": ["Île-du-Prince-Édouard", "Province"], "CA-QC": ["Québec", "Province"],
       "CA-SK": ["Saskatchewan", "Province"], "CA-NT": ["Territoires du Nord-Ouest", "Territoire"], "CA-NU": ["Nunavut", "Territoire"],
       "CA-YT": ["Yukon", "Territoire"],
+    },
+  },
+  US: {
+    fichier: "monde/etats-unis.json", villes: "monde/villes-us.json", dossier: "monde/drapeaux/us/",
+    titre: "États", niveau: "État", federal: "Capitale fédérale",
+    noms: {
+      "US-AL": ["Alabama", "État"], "US-AK": ["Alaska", "État"], "US-AZ": ["Arizona", "État"], "US-AR": ["Arkansas", "État"],
+      "US-CA": ["Californie", "État"], "US-NC": ["Caroline du Nord", "État"], "US-SC": ["Caroline du Sud", "État"], "US-CO": ["Colorado", "État"],
+      "US-CT": ["Connecticut", "État"], "US-ND": ["Dakota du Nord", "État"], "US-SD": ["Dakota du Sud", "État"], "US-DE": ["Delaware", "État"],
+      "US-FL": ["Floride", "État"], "US-GA": ["Géorgie", "État"], "US-HI": ["Hawaï", "État"], "US-ID": ["Idaho", "État"],
+      "US-IL": ["Illinois", "État"], "US-IN": ["Indiana", "État"], "US-IA": ["Iowa", "État"], "US-KS": ["Kansas", "État"],
+      "US-KY": ["Kentucky", "État"], "US-LA": ["Louisiane", "État"], "US-ME": ["Maine", "État"], "US-MD": ["Maryland", "État"],
+      "US-MA": ["Massachusetts", "État"], "US-MI": ["Michigan", "État"], "US-MN": ["Minnesota", "État"], "US-MS": ["Mississippi", "État"],
+      "US-MO": ["Missouri", "État"], "US-MT": ["Montana", "État"], "US-NE": ["Nebraska", "État"], "US-NV": ["Nevada", "État"],
+      "US-NH": ["New Hampshire", "État"], "US-NJ": ["New Jersey", "État"], "US-NY": ["New York", "État"], "US-NM": ["Nouveau-Mexique", "État"],
+      "US-OH": ["Ohio", "État"], "US-OK": ["Oklahoma", "État"], "US-OR": ["Oregon", "État"], "US-PA": ["Pennsylvanie", "État"],
+      "US-RI": ["Rhode Island", "État"], "US-TN": ["Tennessee", "État"], "US-TX": ["Texas", "État"], "US-UT": ["Utah", "État"],
+      "US-VT": ["Vermont", "État"], "US-VA": ["Virginie", "État"], "US-WV": ["Virginie-Occidentale", "État"], "US-WA": ["Washington", "État"],
+      "US-WI": ["Wisconsin", "État"], "US-WY": ["Wyoming", "État"],
+      "US-DC": ["District de Columbia", "District fédéral"],
     },
   },
 };
@@ -590,7 +610,7 @@ function fiche() {
   let html = "";
   if (!sd) html = `<p class="vide">Les drapeaux des subdivisions de ce pays ne sont pas encore ajoutés.</p>`;
   else if (S) {
-    if (sous) {
+    if (sous && S.villes.length) {   // (pays sans liste de villes pour l'instant, ex. États-Unis : pas de section)
       const vs = villesDe(a2, sous.properties.code);
       html += `<h3>Villes · ${vs.length}</h3>` + (vs.length ? `<ul>${vs.map(v => `<li><button type="button" data-v="${v.q}"${v === ville ? ' aria-current="true"' : ""}>
         ${v.drapeau ? `<img src="${ESC(v.drapeau.src)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<i class="sans" aria-hidden="true"></i>`}<span>${ESC(v.nom)}</span></button></li>`).join("")}</ul>`

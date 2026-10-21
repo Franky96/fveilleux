@@ -2,10 +2,15 @@
 
 - monde/pays.json : contours des pays (world-atlas 2.0.2, Natural Earth 1:50 M, domaine public), code ISO 3166-1 alpha-2 ajouté (« a2 »).
 - monde/lacs.json : lacs (Natural Earth 1:50 M, domaine public), dessinés couleur de l'eau par-dessus les pays.
-- monde/canada.json : provinces et territoires (Natural Earth 1:50 M admin-1, domaine public), coordonnées arrondies.
+- monde/canada.json, monde/etats-unis.json : provinces et territoires, États (Natural Earth 1:50 M admin-1, domaine public),
+  coordonnées arrondies.
 - monde/drapeaux/<a2>.svg : drapeaux des pays (flagcdn.com, Flagpedia, proportions officielles).
 - monde/drapeaux/ca/<code>.svg : drapeaux des provinces et territoires (Wikimedia Commons, domaine public).
-Usage : python3 monde/outils/donnees.py
+- monde/drapeaux/us/<code>.svg : drapeaux des États (flagcdn.com, Flagpedia, domaine public ; Washington D.C. de Wikimedia Commons,
+  absent de flagcdn).
+Usage : python3 monde/outils/donnees.py            (tout)
+        python3 monde/outils/donnees.py lacs       (seulement les lacs)
+        python3 monde/outils/donnees.py etats-unis (seulement les États-Unis : contours et drapeaux)
 """
 import json, os, time, urllib.error, urllib.request, urllib.parse
 
@@ -38,12 +43,28 @@ def pays():
 def arrondir(c):
     return [arrondir(x) for x in c] if isinstance(c[0], list) else [round(c[0], 3), round(c[1], 3)]
 
-def canada():
-    d = json.loads(lire("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces_lakes.geojson"))
+ADMIN1 = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces_lakes.geojson"
+
+def subdivisions(adm0, fichier):
+    d = json.loads(lire(ADMIN1))
     f = [{"type": "Feature", "properties": {"code": x["properties"]["iso_3166_2"]},
           "geometry": {"type": x["geometry"]["type"], "coordinates": arrondir(x["geometry"]["coordinates"])}}
-         for x in d["features"] if x["properties"]["adm0_a3"] == "CAN"]
-    json.dump({"type": "FeatureCollection", "features": f}, open(os.path.join(MONDE, "canada.json"), "w"), separators=(",", ":"))
+         for x in d["features"] if x["properties"]["adm0_a3"] == adm0]
+    json.dump({"type": "FeatureCollection", "features": f}, open(os.path.join(MONDE, fichier), "w"), separators=(",", ":"))
+    return [x["properties"]["code"] for x in f]
+
+def canada():
+    subdivisions("CAN", "canada.json")
+
+def etats_unis():
+    codes = subdivisions("USA", "etats-unis.json")
+    os.makedirs(os.path.join(MONDE, "drapeaux", "us"), exist_ok=True)
+    for code in codes:
+        c = code[3:].lower()
+        url = (f"https://flagcdn.com/us-{c}.svg" if code != "US-DC"
+               else "https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Washington,_D.C..svg")
+        open(os.path.join(MONDE, "drapeaux", "us", c + ".svg"), "wb").write(lire(url))
+    print(len(codes), "États")
 
 def lacs():
     d = json.loads(lire("https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_lakes.geojson"))
@@ -72,5 +93,6 @@ def drapeaux(liste):
 if __name__ == "__main__":
     import sys
     if sys.argv[1:] == ["lacs"]: lacs(); sys.exit()   # seulement les lacs
-    liste = pays(); canada(); lacs(); drapeaux(liste)
+    if sys.argv[1:] == ["etats-unis"]: etats_unis(); sys.exit()
+    liste = pays(); canada(); etats_unis(); lacs(); drapeaux(liste)
     print(len(liste), "pays")
