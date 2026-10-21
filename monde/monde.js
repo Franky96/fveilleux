@@ -18,6 +18,7 @@ const SOUS = {
   CA: {
     fichier: "monde/canada.json", villes: "monde/villes-ca.json", dossier: "monde/drapeaux/ca/",
     titre: "Provinces et territoires", niveau: "Province", federal: "Capitale fédérale",
+    sourceVilles: "au recensement de 2021", popVille: v => "recensement de 2021",
     noms: {
       "CA-AB": ["Alberta", "Province"], "CA-BC": ["Colombie-Britannique", "Province"], "CA-MB": ["Manitoba", "Province"],
       "CA-NB": ["Nouveau-Brunswick", "Province"], "CA-NL": ["Terre-Neuve-et-Labrador", "Province"], "CA-NS": ["Nouvelle-Écosse", "Province"],
@@ -28,7 +29,9 @@ const SOUS = {
   },
   US: {
     fichier: "monde/etats-unis.json", villes: "monde/villes-us.json", dossier: "monde/drapeaux/us/",
-    titre: "États", niveau: "État", federal: "Capitale fédérale",
+    titre: "États", niveau: "État", federal: "Capitale fédérale", capitale: "Capitale de l'État",
+    sourceVilles: "selon les estimations du Census Bureau au 1er juillet 2025 (Hawaï, sans municipalités : recensement de 2020)",
+    popVille: v => v.an === 2020 ? "recensement de 2020" : "estimation au 1er juillet 2025",
     noms: {
       "US-AL": ["Alabama", "État"], "US-AK": ["Alaska", "État"], "US-AZ": ["Arizona", "État"], "US-AR": ["Arkansas", "État"],
       "US-CA": ["Californie", "État"], "US-NC": ["Caroline du Nord", "État"], "US-SC": ["Caroline du Sud", "État"], "US-CO": ["Colorado", "État"],
@@ -572,7 +575,7 @@ function ficheStats(a2) {
 }
 function capitale(a2, v) {
   if (!v.cap) return "";
-  return v.cap === a2 ? SOUS[a2].federal : `Capitale ${SOUS[a2].noms[v.cap]?.[1] === "Territoire" ? "territoriale" : "provinciale"}`;
+  return v.cap === a2 ? SOUS[a2].federal : SOUS[a2].capitale || `Capitale ${SOUS[a2].noms[v.cap]?.[1] === "Territoire" ? "territoriale" : "provinciale"}`;
 }
 function fiche() {
   const { pays, sous, ville } = sel, a2 = pays.properties.a2, np = nomPays(pays), S = charges[a2], sd = SOUS[a2];
@@ -588,7 +591,7 @@ function fiche() {
   if (ville) {
     nom = ville.nom; genre = ["Ville", capitale(a2, ville)].filter(Boolean).join(" · ");
     ({ img, credit } = imageVille(ville)); cle = ville.q;
-    extra = `<div class="code">${[ville.pop && `Population (recensement de 2021) : ${NB.format(ville.pop)}`].filter(Boolean).join("<br>")}</div>`;
+    extra = `<div class="code">${[ville.pop && `Population (${sd.popVille(ville)}) : ${NB.format(ville.pop)}`].filter(Boolean).join("<br>")}</div>`;
   } else if (sous) {
     nom = nomSous(a2, sous); genre = sd.noms[sous.properties.code]?.[1] || "Subdivision";
     img = `<img src="${drapeauSous(a2, sous)}" alt="Drapeau : ${ESC(nom)}">`; code = sous.properties.code; cle = code;
@@ -615,7 +618,7 @@ function fiche() {
       html += `<h3>Villes · ${vs.length}</h3>` + (vs.length ? `<ul>${vs.map(v => `<li><button type="button" data-v="${v.q}"${v === ville ? ' aria-current="true"' : ""}>
         ${v.drapeau ? `<img src="${ESC(v.drapeau.src)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<i class="sans" aria-hidden="true"></i>`}<span>${ESC(v.nom)}</span></button></li>`).join("")}</ul>`
         : `<p class="vide">Aucune ville connue.</p>`)
-        + `<p class="note">Les 5 villes les plus peuplées au recensement de 2021, et la capitale (carré sur le globe).</p>`;
+        + `<p class="note">Les 5 villes les plus peuplées ${sd.sourceVilles}, et la capitale (carré sur le globe).</p>`;
     }
     html += `<h3>${ESC(sd.titre)} · ${S.features.length}</h3><ul>${S.features.map((s, i) => `<li><button type="button" data-i="${i}"${s === sous ? ' aria-current="true"' : ""}>
       <img src="${drapeauSous(a2, s)}" alt="" loading="lazy"><span>${ESC(nomSous(a2, s))}</span></button></li>`).join("")}</ul>`;
