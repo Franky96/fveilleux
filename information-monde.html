@@ -202,6 +202,19 @@ body.plein-actif{overflow:hidden}
 .stats dd.nd{font-weight:400;color:var(--muted);font-style:italic}
 .stats .credit{margin-top:14px}
 .stats .vide{margin:12px 0 0;color:var(--muted);font-size:13px}
+/* panneau enrichi (DECOR de monde.js, Canada pour l'instant) : photo avec le drapeau en médaillon, couleur du pays,
+   jauges comparées au monde (barre du pays, repère du monde) */
+.hero{position:relative;margin:12px 0 0;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--panel2);border-bottom:4px solid var(--pays)}
+.hero>img{display:block;width:100%;height:100%;object-fit:cover}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.45))}
+.hero-drapeau{position:absolute;left:12px;bottom:12px;z-index:1;line-height:0;border-radius:3px;box-shadow:0 2px 10px rgba(0,0,0,.45),0 0 0 2px #fff}
+.hero-drapeau img{display:block;height:56px;width:auto;border-radius:3px}
+.stats.deco h3{color:var(--pays);border-bottom:2px solid var(--pays)}
+.stats.deco dl div{padding:6px 8px;border-radius:6px;background:var(--panel2);border-left:3px solid var(--pays)}
+.jauge{position:relative;display:block;height:6px;margin:6px 0 2px;border-radius:3px;background:var(--line)}
+.jauge i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--pays)}
+.jauge b{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--text);border-radius:1px}
+.j-txt{display:block;font-weight:400;font-size:11px;color:var(--muted)}
 .resume .lic{color:var(--muted);font-size:12px}
 .sous h3 + ul{margin-bottom:14px}
 .sous .note{margin:-6px 0 14px;font-size:12px;color:var(--muted)}

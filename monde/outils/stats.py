@@ -53,7 +53,9 @@ def banque_mondiale():
         n = 0
         for x in d[1] or []:
             a2, v = x["country"]["id"], x["value"]
-            if v is None or len(a2) != 2 or not a2.isalpha(): continue   # (agrégats régionaux : codes à chiffres)
+            if a2 == "1W": a2 = "monde"                                  # (moyenne ou total mondial : comparaison dans la fiche)
+            elif v is None or len(a2) != 2 or not a2.isalpha(): continue   # (agrégats régionaux : codes à chiffres)
+            if v is None: continue
             out.setdefault(a2, {})[cle] = [round(v, 4) if isinstance(v, float) else v, int(x["date"])]; n += 1
         print(f"{lib} : {n} pays")
     return out
@@ -113,6 +115,7 @@ def cldr():
 def main():
     bm, wd, cl = banque_mondiale(), wikidata(), cldr()
     pays = {}
+    monde = bm.pop("monde", {})
     for a2 in sorted(set(bm) | set(wd) | set(cl)):
         p = pays[a2] = {**{k: v for k, v in wd.get(a2, {}).items() if k in ("cap", "sup")}, **cl.get(a2, {}), **bm.get(a2, {})}
         if p.get("sup") and p.get("pop"): p["dens"] = [round(p["pop"][0] / p["sup"], 2), p["pop"][1]]   # (habitants par km² de superficie totale)
@@ -121,7 +124,7 @@ def main():
             "superficie": "Wikidata (P2046)", "densite": "population / superficie",
             "sources": "Banque mondiale, Indicateurs du développement dans le monde (CC BY 4.0) ; Unicode CLDR ; Wikidata (CC0)"}
     with open(SORTIE, "w", encoding="utf-8") as f:
-        json.dump({"meta": meta, "pays": pays}, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump({"meta": meta, "monde": monde, "pays": pays}, f, ensure_ascii=False, separators=(",", ":"))
     print(f"{SORTIE} : {len(pays)} pays")
 
 

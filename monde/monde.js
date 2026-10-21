@@ -516,15 +516,34 @@ const STATS_FICHE = [
   ["Société et environnement", [["net", "Internautes", v => `${nombre(v, 0)} % de la population`], ["sante", "Dépenses de santé", v => `${nombre(v)} % du PIB`],
     ["co2", "CO₂ par habitant", v => `${nombre(v)} t`], ["foret", "Forêts", v => `${nombre(v, v < 1 ? 2 : 0)} % du territoire`]]],
 ];
+// pays au panneau enrichi (demande de l'utilisateur : « dynamiser » le panneau, le Canada pour commencer) : couleur du
+// pays, photo libre de droits (copiée dans monde/images, Wikimedia limitant le débit) et jauges comparées au monde
+const DECOR = {
+  CA: { couleur: "#d52b1e", photo: { src: "monde/images/ca.jpg", legende: "Lac Moraine, parc national Banff (Alberta)",
+    auteur: "Gorgo", licence: "domaine public", page: "https://commons.wikimedia.org/wiki/File:Moraine_Lake_17092005.jpg" } },
+};
+// jauge d'une statistique : valeur du pays (couleur du pays) et repère du monde ; pourcentages sur 0-100, totaux en part
+// du monde, le reste sur une échelle qui contient les deux valeurs
+const POURCENT = new Set(["urb", "net", "foret"]), PART = { pop: "de la population mondiale", pib: "du PIB mondial" };
+function jauge(cle, v, f) {
+  const M = STATS.monde || {};
+  if (PART[cle]) { const w = M[cle]?.[0]; return w ? `<span class="j-txt">${nombre(100 * v / w, v / w < 0.01 ? 2 : 1)} % ${PART[cle]}</span>` : ""; }
+  let w = M[cle]?.[0];
+  if (cle === "dens") { const P = Object.entries(STATS.pays || {}).filter(([c, p]) => c !== "AQ" && p.sup && p.pop); w = P.reduce((a, [, p]) => a + p.pop[0], 0) / P.reduce((a, [, p]) => a + p.sup, 0); }
+  if (w == null) return "";
+  const bas = Math.min(0, v, w), haut = POURCENT.has(cle) ? 100 : Math.max(v, w) * 1.15, t = x => 100 * (x - bas) / (haut - bas || 1);
+  return `<span class="jauge" aria-hidden="true"><i style="left:${t(Math.min(0, v)).toFixed(1)}%;width:${Math.abs(t(v) - t(0)).toFixed(1)}%"></i><b style="left:${t(w).toFixed(1)}%"></b></span>
+    <span class="j-txt">Monde : ${ESC(f(w))}</span>`;
+}
 function ficheStats(a2) {
-  const x = STATS.pays?.[a2] || {};
+  const x = STATS.pays?.[a2] || {}, dec = DECOR[a2];
   // territoire absent de la Banque mondiale (Taïwan…) : seulement ce qui est connu, et une note plutôt que 17 « non disponible »
   const bm = ["pop", "pib", "vie"].some(c => x[c]);
   const val = (cle, f) => { const v = x[cle]; if (v == null || (Array.isArray(v) && !v.length)) return `<dd class="nd">non disponible</dd>`;
     const ann = Array.isArray(v) && typeof v[0] === "number" ? v[1] : null, brut = ann ? v[0] : v;
-    return `<dd>${ESC(f(brut))}${ann ? ` <small>${ann}</small>` : ""}</dd>`; };
+    return `<dd>${ESC(f(brut))}${ann ? ` <small>${ann}</small>` : ""}${dec && typeof brut === "number" ? jauge(cle, brut, f) : ""}</dd>`; };
   const groupes = STATS_FICHE.map(([t, L]) => [t, bm ? L : L.filter(([c]) => x[c] != null)]).filter(([, L]) => L.length);
-  return `<div class="stats">${groupes.map(([titre, L]) => `<h3>${titre}</h3><dl>${L.map(([cle, lib, f]) => `<div><dt>${lib}</dt>${val(cle, f)}</div>`).join("")}</dl>`).join("")}
+  return `<div class="stats${dec ? " deco" : ""}"${dec ? ` style="--pays:${dec.couleur}"` : ""}>${groupes.map(([titre, L]) => `<h3>${titre}</h3><dl>${L.map(([cle, lib, f]) => `<div><dt>${lib}</dt>${val(cle, f)}</div>`).join("")}</dl>`).join("")}
     ${bm ? "" : `<p class="vide">La Banque mondiale ne publie pas de statistiques pour ce territoire.</p>`}
     <p class="credit">Banque mondiale, Indicateurs du développement dans le monde (CC BY 4.0) : dernière valeur connue, année en petit ;
     langues et monnaie : Unicode CLDR ; capitale et superficie : Wikidata (CC0) ; densité : population / superficie${STATS.meta?.genere ? ` · compilé le ${new Date(STATS.meta.genere + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}` : ""}.</p></div>`;
@@ -557,9 +576,12 @@ function fiche() {
     code = a2 || "";
   }
   // mode normal, niveau Pays : fiche de statistiques ; rubrique Drapeaux (ou province, ville) : fiche du drapeau
-  const stats = !RUB.drapeaux && !sous && !ville && a2;
+  const stats = !RUB.drapeaux && !sous && !ville && a2, dec = stats && DECOR[a2];
+  // (panneau enrichi : photo du pays avec le drapeau en médaillon, à la place du cadre du drapeau)
+  if (dec) { const ph = dec.photo; img = `<figure class="hero" style="--pays:${dec.couleur}"><img src="${ph.src}" alt="${ESC(ph.legende)}"><span class="hero-drapeau">${img}</span></figure>`;
+    credit = `${ESC(ph.legende)} · photo : ${ESC(ph.auteur)}, ${ESC(ph.licence)} (<a href="${ph.page}" target="_blank" rel="noopener">Wikimedia Commons</a>)`; }
   $("fiche").innerHTML = `<div class="genre">${ESC(genre)}</div><h2>${ESC(nom)}</h2>
-    <div class="drapeau${stats ? " petit" : ""}">${img}</div>${credit ? `<p class="credit">${credit}</p>` : ""}
+    ${dec ? img : `<div class="drapeau${stats ? " petit" : ""}">${img}</div>`}${credit ? `<p class="credit">${credit}</p>` : ""}
     ${code ? `<div class="code">ISO 3166 : ${ESC(code)}</div>` : ""}${extra}${stats ? ficheStats(a2) : infos(cle)}`;
 
   // listes : villes de la subdivision, puis subdivisions du pays
