@@ -187,6 +187,18 @@ body.plein-actif{overflow:hidden}
 .infos dt{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:var(--muted)}
 .infos dd{margin:0;font-weight:600}
 .resume{margin:10px 0 0;font-size:14px;max-width:65ch}
+/* fiche de statistiques du pays (mode normal) : drapeau plus petit au-dessus, 20 valeurs en 4 groupes */
+.drapeau.petit{min-height:0;padding:12px}
+.drapeau.petit img{max-height:130px}
+.stats h3{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--accent);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.stats dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin:0}
+.stats dl div{display:grid;gap:1px;min-width:0}
+.stats dt{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:11px;color:var(--muted)}
+.stats dd{margin:0;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stats dd small{font-weight:400;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.stats dd.nd{font-weight:400;color:var(--muted);font-style:italic}
+.stats .credit{margin-top:14px}
+.stats .vide{margin:12px 0 0;color:var(--muted);font-size:13px}
 .resume .lic{color:var(--muted);font-size:12px}
 .sous h3 + ul{margin-bottom:14px}
 .sous .note{margin:-6px 0 14px;font-size:12px;color:var(--muted)}

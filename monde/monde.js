@@ -38,7 +38,7 @@ const drapeauSous = (a2, s) => SOUS[a2].dossier + s.properties.code.split("-")[1
 const RUB = (() => { try { return { drapeaux: true, aff: "pays", ...JSON.parse(localStorage.getItem("mondeRub") || "{}") }; } catch { return { drapeaux: true, aff: "pays" }; } })();
 const garderRub = () => { try { localStorage.setItem("mondeRub", JSON.stringify(RUB)); } catch {} };
 const modeEtats = () => RUB.drapeaux && RUB.aff === "etat";
-let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, charges = {}, sel = null, memo = {}, survol = null;
+let PAYS = [], FRONTIERES, LACS = { type: "FeatureCollection", features: [] }, BOITES_LACS = [], FICHES = {}, STATS = {}, charges = {}, sel = null, memo = {}, survol = null;
 const canvas = $("globe"), ctx = canvas.getContext("2d");
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.7);
 const chemin = d3.geoPath(proj, ctx), grille = d3.geoGraticule10();
@@ -496,6 +496,39 @@ function imageVille(v) {
   return { img: `<a href="${ESC(d.page)}" target="_blank" rel="noopener" title="Voir le fichier sur Wikipédia"><img src="${ESC(d.src)}" alt="${alt}" referrerpolicy="no-referrer"></a>`,
     credit: `Drapeau non libre (droit d'auteur de la ville) : vignette affichée depuis Wikipédia, <a href="${ESC(d.page)}" target="_blank" rel="noopener">voir le fichier</a>` };
 }
+// fiche du pays en mode normal (sans rubrique, demande de l'utilisateur) : 20 statistiques importantes, drapeau au-dessus
+// (monde/outils/stats.py → monde/stats.json : Banque mondiale, dernière valeur connue avec son année ; langues et monnaie
+// en codes ISO d'Unicode CLDR, nommées en français par le navigateur ; capitale de Wikidata)
+const LANGUE = new Intl.DisplayNames(["fr"], { type: "language" }), MONNAIE = new Intl.DisplayNames(["fr"], { type: "currency" });
+const nombre = (v, d = 1) => new Intl.NumberFormat("fr-CA", { maximumFractionDigits: d, minimumFractionDigits: d }).format(v);
+const argent = v => v >= 1e12 ? `${nombre(v / 1e12, 2)} billion${v >= 2e12 ? "s" : ""} $ US` : v >= 1e9 ? `${nombre(v / 1e9, 1)} milliard${v >= 2e9 ? "s" : ""} $ US`
+  : v >= 1e6 ? `${nombre(v / 1e6, 0)} millions $ US` : `${NB.format(Math.round(v))} $ US`;
+const STATS_FICHE = [
+  ["Identité", [["cap", "Capitale", x => x.join(" · ")], ["langues", "Langues officielles", x => x.map(l => { try { return LANGUE.of(l); } catch { return l; } }).join(", ")],
+    ["mon", "Monnaie", x => x.map(m => { try { return MONNAIE.of(m); } catch { return m; } }).join(", ")]]],
+  ["Population", [["pop", "Population", v => NB.format(v)], ["sup", "Superficie", v => `${v < 10 ? nombre(v) : NB.format(Math.round(v))} km²`],
+    ["dens", "Densité", v => `${nombre(v, v < 1 ? 2 : v < 10 ? 1 : 0)} hab./km²`], ["urb", "Population urbaine", v => `${nombre(v)} %`],
+    ["vie", "Espérance de vie", v => `${nombre(v)} ans`], ["fec", "Fécondité", v => `${nombre(v, 2)} enfant${v >= 2 ? "s" : ""} par femme`],
+    ["mort", "Mortalité infantile", v => `${nombre(v)} ‰`]]],
+  ["Économie", [["pib", "PIB", argent], ["pibh", "PIB par habitant", v => `${NB.format(Math.round(v))} $ US`],
+    ["croiss", "Croissance du PIB", v => `${v > 0 ? "+" : ""}${nombre(v)} %`], ["infl", "Inflation", v => `${nombre(v)} %`],
+    ["chom", "Chômage", v => `${nombre(v)} %`], ["expo", "Exportations", v => `${nombre(v, 0)} % du PIB`]]],
+  ["Société et environnement", [["net", "Internautes", v => `${nombre(v, 0)} % de la population`], ["sante", "Dépenses de santé", v => `${nombre(v)} % du PIB`],
+    ["co2", "CO₂ par habitant", v => `${nombre(v)} t`], ["foret", "Forêts", v => `${nombre(v, v < 1 ? 2 : 0)} % du territoire`]]],
+];
+function ficheStats(a2) {
+  const x = STATS.pays?.[a2] || {};
+  // territoire absent de la Banque mondiale (Taïwan…) : seulement ce qui est connu, et une note plutôt que 17 « non disponible »
+  const bm = ["pop", "pib", "vie"].some(c => x[c]);
+  const val = (cle, f) => { const v = x[cle]; if (v == null || (Array.isArray(v) && !v.length)) return `<dd class="nd">non disponible</dd>`;
+    const ann = Array.isArray(v) && typeof v[0] === "number" ? v[1] : null, brut = ann ? v[0] : v;
+    return `<dd>${ESC(f(brut))}${ann ? ` <small>${ann}</small>` : ""}</dd>`; };
+  const groupes = STATS_FICHE.map(([t, L]) => [t, bm ? L : L.filter(([c]) => x[c] != null)]).filter(([, L]) => L.length);
+  return `<div class="stats">${groupes.map(([titre, L]) => `<h3>${titre}</h3><dl>${L.map(([cle, lib, f]) => `<div><dt>${lib}</dt>${val(cle, f)}</div>`).join("")}</dl>`).join("")}
+    ${bm ? "" : `<p class="vide">La Banque mondiale ne publie pas de statistiques pour ce territoire.</p>`}
+    <p class="credit">Banque mondiale, Indicateurs du développement dans le monde (CC BY 4.0) : dernière valeur connue, année en petit ;
+    langues et monnaie : Unicode CLDR ; capitale et superficie : Wikidata (CC0) ; densité : population / superficie${STATS.meta?.genere ? ` · compilé le ${new Date(STATS.meta.genere + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}` : ""}.</p></div>`;
+}
 function capitale(a2, v) {
   if (!v.cap) return "";
   return v.cap === a2 ? SOUS[a2].federal : `Capitale ${SOUS[a2].noms[v.cap]?.[1] === "Territoire" ? "territoriale" : "provinciale"}`;
@@ -523,9 +556,11 @@ function fiche() {
     img = a2 ? `<img src="${drapeauPays(a2)}" alt="Drapeau : ${ESC(nom)}">` : `<p>Pas de drapeau dans cette collection : territoire sans code ISO 3166 (statut non reconnu ou contesté).</p>`;
     code = a2 || "";
   }
+  // mode normal, niveau Pays : fiche de statistiques ; rubrique Drapeaux (ou province, ville) : fiche du drapeau
+  const stats = !RUB.drapeaux && !sous && !ville && a2;
   $("fiche").innerHTML = `<div class="genre">${ESC(genre)}</div><h2>${ESC(nom)}</h2>
-    <div class="drapeau">${img}</div>${credit ? `<p class="credit">${credit}</p>` : ""}
-    ${code ? `<div class="code">ISO 3166 : ${ESC(code)}</div>` : ""}${extra}${infos(cle)}`;
+    <div class="drapeau${stats ? " petit" : ""}">${img}</div>${credit ? `<p class="credit">${credit}</p>` : ""}
+    ${code ? `<div class="code">ISO 3166 : ${ESC(code)}</div>` : ""}${extra}${stats ? ficheStats(a2) : infos(cle)}`;
 
   // listes : villes de la subdivision, puis subdivisions du pays
   let html = "";
@@ -679,7 +714,7 @@ function majRubriques() {
   $("affNiveau").querySelectorAll("[data-aff]").forEach(b => b.setAttribute("aria-pressed", b.dataset.aff === RUB.aff));
   $("affNote").hidden = !modeEtats();
 }
-$("rubDrapeaux").addEventListener("click", () => { RUB.drapeaux = !RUB.drapeaux; garderRub(); majRubriques(); dessiner(); });
+$("rubDrapeaux").addEventListener("click", () => { RUB.drapeaux = !RUB.drapeaux; garderRub(); majRubriques(); if (sel) fiche(); dessiner(); });
 $("affNiveau").addEventListener("click", e => { const b = e.target.closest("[data-aff]"); if (!b) return; RUB.aff = b.dataset.aff; garderRub(); majRubriques(); dessiner(); });
 majRubriques();
 
@@ -778,6 +813,7 @@ async function preparerTout() {
   const [w, fiches, lacs] = await Promise.all([fetch("monde/pays.json").then(r => r.json()), fetch("monde/fiches.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
     fetch("monde/lacs.json").then(r => r.json()).catch(() => null)]);
   FICHES = fiches;
+  STATS = await fetch("monde/stats.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
   REGLAGES = await fetch("monde/drapeaux-reglages.json").then(r => r.ok ? r.json() : {}).catch(() => ({}));
   PAYS = topojson.feature(w, w.objects.countries).features.map(cercle);
   FRONTIERES = topojson.mesh(w, w.objects.countries, (a, b) => a !== b);
