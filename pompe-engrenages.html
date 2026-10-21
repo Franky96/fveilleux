@@ -70,7 +70,9 @@ svg.pompe text.jauge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;
 .tuyau{fill:none;stroke:var(--tuyau);stroke-width:14;stroke-linejoin:round;stroke-linecap:round}
 .huile{fill:none;stroke-width:8;stroke-linejoin:round}
 .pignon{fill:var(--acier);stroke:var(--acier-trait);stroke-width:.8}
-.goutte{fill:rgba(255,255,255,.8)}
+.goutte{fill:rgba(255,255,255,.85)}
+.courant{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 15}
+.poche{stroke:rgba(0,0,0,.18);stroke-width:.6}
 .fuite{fill:var(--rouge)}
 #status{text-align:center;margin:8px 0 14px;font-size:14px;min-height:2.6em}
 .reglages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:4px}
@@ -307,13 +309,17 @@ function construire(Z) {
   $('cavite').setAttribute('d', `M${CX - pw} 121V${(CY - Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}`
     + `A${rc} ${rc} 0 1 0 ${CX - pw} ${(CY + Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}V349H${CX + pw}`
     + `V${(CY + Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}A${rc} ${rc} 0 1 0 ${CX + pw} ${(CY - Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}V121Z`);
-  // poches d'huile : une goutte au creux de chaque dent, sur les deux pignons
-  const rg = RP - 0.15 * mp, rr = Math.min(6, mp * 0.38);
+  // poches d'huile : le creux de chaque dent, rempli d'huile à la couleur de sa pression (secteur entre pied et tête de
+  // dent, les dents dessinées par-dessus en font le contour), avec une goutte claire qui montre le transport
+  const rg = RP - 0.15 * mp, rr = Math.min(4, mp * 0.28), rb = RP - 1.25 * mp, rh = rt + 1.5, da = Math.PI / Z;
+  const sect = `M${rb * Math.cos(-da)} ${rb * Math.sin(-da)}L${rh * Math.cos(-da)} ${rh * Math.sin(-da)}A${rh} ${rh} 0 0 1 ${rh * Math.cos(da)} ${rh * Math.sin(da)}`
+    + `L${rb * Math.cos(da)} ${rb * Math.sin(da)}A${rb} ${rb} 0 0 0 ${rb * Math.cos(-da)} ${rb * Math.sin(-da)}Z`;
   $('poches').innerHTML = '';
   const poches = [];
   for (const g of [0, 1]) for (let i = 0; i < Z; i++) {
-    const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', rr); $('poches').appendChild(c);
-    poches.push({ c, g, a0: TAU * i / Z + Math.PI / Z });
+    const w = document.createElementNS(NS, 'path'); w.setAttribute('d', sect); w.setAttribute('class', 'poche'); $('poches').appendChild(w);
+    const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', rr); c.setAttribute('class', 'goutte'); $('poches').appendChild(c);
+    poches.push({ w, c, g, a0: TAU * i / Z + Math.PI / Z });
   }
   geo = { Z, mp, rg, poches, yh, yb, phiD: Math.PI + Math.PI / Z };
 }
@@ -333,10 +339,14 @@ const GA = v => (135 + 270 * Math.min(1, Math.max(0, v / 150))) * Math.PI / 180;
 /* ---------- gouttes qui circulent dans les tuyaux ---------- */
 function chemin(pts) { const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); return { pts, L, tot: L[L.length - 1] }; }
 function surChemin(c, d) { let i = 1; while (i < c.L.length - 1 && c.L[i] < d) i++; const k = (d - c.L[i - 1]) / (c.L[i] - c.L[i - 1] || 1), a = c.pts[i - 1], b = c.pts[i]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; }
+// courants : traits qui défilent dans le sens de l'écoulement, à une vitesse proportionnelle au débit de la branche ;
+// dans les orifices, l'huile se partage entre les deux pignons (aspiration) et s'en rejoint (refoulement)
+const COURANTS = [
+  ['M360 452V300', 'qp'], ['M360 349C360 322 344 312 316 306', 'qp'], ['M360 349C360 322 376 312 404 306', 'qp'],
+  ['M316 164C342 158 356 148 359 121', 'qp'], ['M404 164C378 158 364 148 361 121', 'qp'],
+  ['M360 175V60H680V262', 'qc'], ['M680 278V412', 'qc'], ['M360 90H90V380H360', 'qr'],
+].map(([d, q]) => { const e = document.createElementNS(NS, 'path'); e.setAttribute('d', d); e.setAttribute('class', 'courant'); $('gouttes').appendChild(e); return { e, q, off: 0 }; });
 const FLUX = [
-  { c: chemin([[360, 452], [360, 300]]), q: 'qp', cls: 'goutte' },
-  { c: chemin([[360, 175], [360, 60], [680, 60], [680, 412]]), q: 'qc', cls: 'goutte' },
-  { c: chemin([[360, 90], [90, 90], [90, 380], [360, 380]]), q: 'qr', cls: 'goutte' },
   { c: chemin([[360, 205], [360, 268]]), q: 'qf', cls: 'fuite', pas: 14, r: 2.2 },
 ];
 for (const f of FLUX) {
@@ -407,7 +417,8 @@ function image(ts) {
     q.c.setAttribute('cx', (cx + geo.rg * x).toFixed(1)); q.c.setAttribute('cy', (CY + geo.rg * y).toFixed(1));
     const dehors = q.g ? x > 0 : x < 0;
     let t; if (dehors) { const ang = Math.atan2(y, q.g ? x : -x); t = (Math.PI / 2 - ang) / Math.PI; } else t = y < 0 ? 1 : 0;
-    q.c.setAttribute('fill', couleur(pAff * t * t));
+    q.w.setAttribute('transform', `translate(${cx} ${CY}) rotate(${(a * 180 / Math.PI).toFixed(2)})`);
+    q.w.setAttribute('fill', couleur(pAff * t * t)); q.w.setAttribute('opacity', dehors ? 1 : 0);
   }
   // clapet : la bille descend quand il s'ouvre ; ressort comprimé
   const ouv = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0; clapAff += (ouv - clapAff) * Math.min(1, dt * 6);
@@ -416,7 +427,11 @@ function image(ts) {
   $('ressort').setAttribute('points', rs);
   // circuit : ouverture de la restriction
   const g = 1 + 6 * R.s / 100; $('r-g').setAttribute('points', `673,262 673,278 ${680 - g / 2},270`); $('r-d').setAttribute('points', `687,262 687,278 ${680 + g / 2},270`);
-  // gouttes : vitesse proportionnelle au débit de chaque branche
+  // courants et fuites : vitesse proportionnelle au débit de chaque branche
+  for (const c of COURANTS) {
+    const q = E[c.q] / LMIN; c.off -= q * ralenti * 100 * 2.4 * k;
+    c.e.setAttribute('stroke-dashoffset', (c.off % 22).toFixed(1)); c.e.setAttribute('opacity', q > 0.05 ? Math.min(1, 0.35 + q / 40) : 0);
+  }
   for (const f of FLUX) {
     const q = E[f.q] / LMIN, v = q * ralenti * 100 * 2.4 * (f.cls === 'fuite' ? 4 : 1);
     f.off = (f.off + v * k) % f.pas;
