@@ -9,7 +9,7 @@ const ESC = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const NOMS = new Intl.DisplayNames(["fr"], { type: "region" });
 const NB = new Intl.NumberFormat("fr-CA");
 // territoires réunis à leur pays sur le globe (nom anglais de Natural Earth)
-const FUSIONS = { SO: ["Somaliland"] };
+const FUSIONS = { SO: ["Somaliland"], CY: ["N. Cyprus"] };
 // entités sans code ISO dans Natural Earth
 const SANS_CODE = { "Somaliland": "Somaliland", "N. Cyprus": "Chypre du Nord", "Indian Ocean Ter.": "Territoires australiens de l'océan Indien", "Siachen Glacier": "Glacier de Siachen" };
 
