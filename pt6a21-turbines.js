@@ -93,6 +93,37 @@ function sheet(pts, t) {
   });
   return pts.concat(inn.reverse());
 }
+// polyligne (r, z) redécoupée en pas d'au plus `pas` po (découpe fidèle des trous percés dans une révolution)
+function densifier(pts, pas) {
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const [r0, z0] = pts[i - 1], [r1, z1] = pts[i], n = Math.max(1, Math.ceil(Math.hypot(r1 - r0, z1 - z0) / pas));
+    for (let k = 1; k <= n; k++) out.push([lerp(r0, r1, k / n), lerp(z0, z1, k / n)]);
+  }
+  return out;
+}
+// perce une géométrie : garde ce qui est du côté f(p) >= 0, les triangles traversés étant recoupés le long de f = 0
+function percer(geo, f) {
+  const src = geo.index ? geo.toNonIndexed() : geo, P0 = src.attributes.position, N0 = src.attributes.normal;
+  const pos = [], nor = [];
+  const V = i => { const p = new THREE.Vector3().fromBufferAttribute(P0, i); return { p, n: new THREE.Vector3().fromBufferAttribute(N0, i), f: f(p) }; };
+  const push = v => { pos.push(v.p.x, v.p.y, v.p.z); nor.push(v.n.x, v.n.y, v.n.z); };
+  for (let i = 0; i < P0.count; i += 3) {
+    const tri = [V(i), V(i + 1), V(i + 2)], dedans = tri.filter(v => v.f >= 0).length;
+    if (dedans === 3) { tri.forEach(push); continue; }
+    if (dedans === 0) continue;
+    const poly = [];
+    for (let k = 0; k < 3; k++) {
+      const a = tri[k], b = tri[(k + 1) % 3];
+      if (a.f >= 0) poly.push(a);
+      if ((a.f >= 0) !== (b.f >= 0)) { const t = a.f / (a.f - b.f); poly.push({ p: a.p.clone().lerp(b.p, t), n: a.n.clone().lerp(b.n, t).normalize() }); }
+    }
+    for (let k = 1; k + 1 < poly.length; k++) { push(poly[0]); push(poly[k]); push(poly[k + 1]); }
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  return out;
+}
 // segment de révolution (talon, segment de virole) centré sur l'angle 0, à instancier
 function arcGeo(pts, frac, n, zc) {
   const d = TAU / n * frac;
@@ -309,10 +340,15 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   const g = PART.exh.g;
   const mE = M('exh', { color: 0xa5957f, metalness: 0.85, roughness: 0.38 });
   const mEi = M('exh', { color: 0x9a8a74, metalness: 0.8, roughness: 0.45 });
-  const mDark = M('exh', { color: 0x050505, roughness: 1, metalness: 0 });
+  // sorties jumelles opposées (3 h et 9 h) : axe un peu incliné vers l'avant, alésage Ø 6,4 po (estimé)
+  const RS = 3.2, SORTIES = [3, 9].map(h => ({ h, c: P(8.45, 18.3, h), n: RD(h).add(new THREE.Vector3(0, 0.17, 0)).normalize() }));
+  // > 0 hors des alésages des sorties (seulement du côté de chaque sortie)
+  const horsSorties = p => Math.min(...SORTIES.map(({ c, n }) => { const d = p.clone().sub(c), a = d.dot(n); return a < -3 * S ? 1 : d.addScaledVector(n, -a).length() / S - RS; }));
   // enveloppe : bride A -> tronc de cône -> bride C ; puis paroi arrière conique jusqu'à la bride D (fig. 1, OM réf. 238, 244)
   lathe('exh', ringPts(6.32, 6.92, 8.40, 8.48), mE, g, 120);                                    // bride A (Ø 12,62 sous le réducteur)
-  lathe('exh', sheet([[6.86, 8.48], [6.95, 8.9], [7.15, 10.2], [7.35, 11.8], [7.5, 13.0], [8.0, 15.3], [8.45, 17.5], [8.85, 20.0], [9.1, 22.0], [9.25, 23.2], [9.3, 23.95]], -0.07), mE, g, 140);
+  const COQUE = [[6.86, 8.48], [6.95, 8.9], [7.15, 10.2], [7.35, 11.8], [7.5, 13.0], [8.0, 15.3], [8.45, 17.5], [8.85, 20.0], [9.1, 22.0], [9.25, 23.2], [9.3, 23.95]];
+  const rCoque = z => { for (let i = 1; i < COQUE.length; i++) if (z <= COQUE[i][1]) { const [r0, z0] = COQUE[i - 1], [r1, z1] = COQUE[i]; return lerp(r0, r1, (z - z0) / (z1 - z0)); } return COQUE[COQUE.length - 1][0]; };
+  g.add(new THREE.Mesh(percer(revolve(sheet(densifier(COQUE, 0.3), -0.07), 200), horsSorties), mE));   // tôle percée aux deux sorties
   lathe('exh', [[9.24, 23.95], [9.95, 23.95], [9.95, 24.25], [9.2, 24.25]], mE, g, 140);     // bride C (raccord du modèle complet r 9,95)
   // paroi arrière (entrée annulaire) : de la bride C à la bride D, relevée sur la coupe AMM 72-50-00 fig. 1
   lathe('exh', sheet([[9.22, 24.25], [8.6, 25.0], [7.85, 25.8], [7.05, 26.65], [6.35, 27.45], [5.8, 28.25], [5.42, 29.0], [5.2, 29.38], [5.17, 29.5], [5.17, 30.42]], 0.06), mE, g, 140);
@@ -323,16 +359,17 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   lathe('exh', sheet([[6.4, 8.5], [5.65, 9.7], [5.05, 10.7], [4.8, 11.6], [4.15, 12.5], [3.35, 13.5], [3.12, 14.6], [3.12, 17.0], [3.4, 18.4], [4.2, 19.5],
     [5.2, 20.2], [5.7, 20.55], [5.2, 20.85], [4.45, 21.5], [4.0, 22.6], [3.75, 24.3], [3.45, 26.0], [3.0, 27.4], [2.62, 28.2], [2.42, 28.52]], 0.05), mEi, g, 120);
   lathe('exh', ringPts(2.3, 2.48, 28.48, 28.6), mEi, g, 72);                                  // anneau de support du couvercle n° 3
-  // sorties jumelles opposées (3 h et 9 h), brides des tuyères avion (Ø ≈ 6,5 po, 20 boulons — estimé)
-  for (const h of [3, 9]) {
-    const z = 18.3, rc = 8.45;
-    const n = RD(h).add(new THREE.Vector3(0, 0.17, 0)).normalize();
-    const hold = new THREE.Group(); hold.position.copy(P(rc, z, h)); hold.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n); g.add(hold);
-    const stub = new THREE.Mesh(new THREE.CylinderGeometry(3.2 * S, 3.2 * S, 1.3 * S, 56, 1, true), mE); stub.rotation.x = Math.PI / 2; stub.position.z = 0.05 * S; hold.add(stub);
+  // manchons des sorties, raccordés en selle sur la tôle (la partie sous la tôle est retirée), brides des tuyères
+  // avion (Ø ≈ 6,5 po, 20 boulons — estimé) ; par les alésages, on voit le cône intérieur
+  const horsCoque = p => Math.hypot(p.x, p.z) / S - (rCoque(Z0 - p.y / S) - 0.1);
+  for (const { c, n } of SORTIES) {
+    const hold = new THREE.Group(); hold.position.copy(c); hold.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n); g.add(hold);
+    const sg = new THREE.CylinderGeometry(RS * S, RS * S, 3.75 * S, 96, 40, true); sg.rotateX(Math.PI / 2); sg.translate(0, 0, (0.7 - 3.75 / 2) * S);
+    sg.applyMatrix4(new THREE.Matrix4().compose(c, hold.quaternion, new THREE.Vector3(1, 1, 1)));
+    g.add(new THREE.Mesh(percer(sg, horsCoque), mE));
     const pl = new THREE.Mesh(new THREE.RingGeometry(3.2 * S, 4.15 * S, 56), mE); pl.position.z = 0.7 * S; hold.add(pl);
     const pl2 = new THREE.Mesh(new THREE.RingGeometry(3.2 * S, 4.15 * S, 56), mE); pl2.position.z = 0.58 * S; hold.add(pl2);
     const rim = new THREE.Mesh(new THREE.CylinderGeometry(4.15 * S, 4.15 * S, 0.12 * S, 56, 1, true), mE); rim.rotation.x = Math.PI / 2; rim.position.z = 0.64 * S; hold.add(rim);
-    const hole = new THREE.Mesh(new THREE.CircleGeometry(3.18 * S, 48), mDark); hole.position.z = -0.45 * S; hold.add(hole);
     const bg = new THREE.CylinderGeometry(0.17 * S, 0.17 * S, 0.2 * S, 6); bg.rotateX(Math.PI / 2);
     const ms = []; for (let i = 0; i < 20; i++) { const a = i * TAU / 20; ms.push(new THREE.Matrix4().makeTranslation(3.7 * S * Math.cos(a), 3.7 * S * Math.sin(a), 0.8 * S)); }
     inst(bg, ms, boltMat('exh'), hold, 'bolt');
