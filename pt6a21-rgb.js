@@ -527,19 +527,25 @@ function lobedPlate(N, rc, lobeR, hubR, boreR, w) {
 { // porte-satellites du 2e étage + buses d'huile + écrou
   const s = spinner('carrier2'), mC = M('carrier2', { color: 0xa6aeb3, metalness: 0.85, roughness: 0.32 }), mN = M('carrier2', { color: 0xc8ccce, metalness: 0.9, roughness: 0.28 });
   lathe('carrier2', [[1.2, 6.12], [1.575, 6.12], [1.575, 7.12], [3.1, 7.12], [3.1, 7.4], [1.42, 7.4], [1.42, 7.0], [1.2, 7.0]], mC, s, 96);
-  // flasque arrière en étoile à cinq bras (photos) : bossage autour de chaque axe de satellite, bras minces courbés
-  // vers l'intérieur entre deux bossages ; grande ouverture centrale sur le planétaire. Les axes boulonnés relient
-  // les deux flasques (pas d'entretoises entre les satellites).
-  const ZS = 8.8, TS = 0.28, bossR = 0.6, bras = 0.34, creux = 0.68;
+  // flasque arrière (photos) : cadre pentagonal mince, côtés droits d'un axe de satellite au suivant, lobe autour de
+  // chaque axe, grande ouverture ronde au centre (bras plus larges près des axes, minces au milieu), un petit trou à
+  // côté de chaque axe. Les axes boulonnés relient les deux flasques (pas d'entretoises entre les satellites).
+  const ZS = 8.8, TS = 0.28, bossR = 0.6;
+  const D = G2.rc * Math.cos(TAU / 10) + 0.14, rOuv = 0.756 * G2.rc;       // côté droit à D du centre ; ouverture ronde
   const at = (r, a) => new THREE.Vector3(r * S * Math.cos(a), AY(ZS), -r * S * Math.sin(a));
-  { const bg = new THREE.CylinderGeometry(bossR * S, bossR * S, TS * S, 32), ms = []; for (let k = 0; k < 5; k++) ms.push(new THREE.Matrix4().setPosition(at(G2.rc, k * TAU / 5))); inst(bg, ms, mC, s); }
-  // section du bras : pour une courbe plane perpendiculaire à l'axe, la normale de Frenet de three.js est l'axe moteur (x de la forme)
-  const sec = new THREE.Shape(); sec.moveTo(-TS / 2 * S, -bras / 2 * S); sec.lineTo(TS / 2 * S, -bras / 2 * S); sec.lineTo(TS / 2 * S, bras / 2 * S); sec.lineTo(-TS / 2 * S, bras / 2 * S); sec.closePath();
-  for (let k = 0; k < 5; k++) {
-    const a0 = k * TAU / 5, a1 = a0 + TAU / 5, am = a0 + TAU / 10, rm = creux * G2.rc;
-    const ctl = at(2 * rm - G2.rc * Math.cos(TAU / 10), am);                 // la courbe passe à rm au milieu
-    const curve = new THREE.QuadraticBezierCurve3(at(G2.rc, a0), ctl, at(G2.rc, a1));
-    s.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sec, { steps: 28, bevelEnabled: false, extrudePath: curve }), mC));
+  {
+    const sh = new THREE.Shape(), n = 360;
+    for (let i = 0; i <= n; i++) {
+      const a = i / n * TAU, k = Math.round(a / (TAU / 5)), d = a - k * TAU / 5;  // écart à l'axe le plus proche
+      const pent = D / Math.cos(TAU / 10 - Math.abs(d));                          // côté du pentagone
+      const e = G2.rc * Math.sin(d), lobe = Math.abs(e) < bossR ? G2.rc * Math.cos(d) + Math.sqrt(bossR * bossR - e * e) : 0;
+      const r = Math.max(pent, lobe), x = r * S * Math.cos(a), y = r * S * Math.sin(a);
+      i ? sh.lineTo(x, y) : sh.moveTo(x, y);
+    }
+    const ho = new THREE.Path(); ho.absarc(0, 0, rOuv * S, 0, TAU, true); sh.holes.push(ho);
+    for (let k = 0; k < 5; k++) { const a = k * TAU / 5 - 0.27, h = new THREE.Path(); h.absarc(2.33 * S * Math.cos(a), 2.33 * S * Math.sin(a), 0.1 * S, 0, TAU, true); sh.holes.push(h); }
+    const pg = new THREE.ExtrudeGeometry(sh, { depth: TS * S, bevelEnabled: true, bevelSize: 0.02 * S, bevelThickness: 0.02 * S, bevelSegments: 1, curveSegments: 24 });
+    pg.rotateX(-Math.PI / 2); pg.translate(0, AY(ZS) - TS * S / 2, 0); s.add(new THREE.Mesh(pg, mC));
   }
   // grosses vis d'axes à tête hexagonale et rondelles (photos), côté arrière
   // (sous la flasque avant du porte-satellites du 1er étage, à z 9,15)
@@ -547,10 +553,10 @@ function lobedPlate(N, rc, lobeR, hubR, boreR, w) {
     for (let k = 0; k < 5; k++) { const p = at(G2.rc, k * TAU / 5); mw.push(new THREE.Matrix4().setPosition(p.x, AY(ZS + TS / 2 + 0.02), p.z)); mh.push(new THREE.Matrix4().setPosition(p.x, AY(ZS + TS / 2 + 0.12), p.z)); }
     inst(hg, mh, mN, s, 'bolt'); inst(wg, mw, mN, s); }
   // 5 buses d'huile (IPC fig. 3 rep. 260) au milieu des bras, l'ajutage tourné vers l'extérieur (engrènements)
-  { const mOz = M('carrier2', { color: 0xc9a85a, metalness: 0.9, roughness: 0.3 }), rb = creux * G2.rc;
+  { const mOz = M('carrier2', { color: 0xc9a85a, metalness: 0.9, roughness: 0.3 }), rb = (D + rOuv) / 2;
     for (let k = 0; k < 5; k++) { const a = k * TAU / 5 + Math.PI / 5;
-      const bs = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * S, 0.15 * S, 0.12 * S, 6), mN); bs.position.copy(at(rb, a)).setY(AY(ZS + TS / 2 + 0.06)); bs.userData.bolt = true; s.add(bs);
-      const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * S, 0.06 * S, 0.3 * S, 8), mOz); tb.position.copy(at(rb + bras / 2 + 0.13, a));
+      const bs = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * S, 0.12 * S, 0.1 * S, 6), mN); bs.position.copy(at(rb, a)).setY(AY(ZS + TS / 2 + 0.05)); bs.userData.bolt = true; s.add(bs);
+      const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * S, 0.06 * S, 0.3 * S, 8), mOz); tb.position.copy(at(D + 0.12, a));
       tb.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(a), 0, -Math.sin(a))); s.add(tb); } }
   { const ng = new THREE.CylinderGeometry(1.36 * S, 1.36 * S, 0.22 * S, 12); ng.translate(0, AY(7.12), 0); s.add(new THREE.Mesh(ng, mN)); }
 }
