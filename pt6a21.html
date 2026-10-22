@@ -82,6 +82,15 @@ button,input,select{font:inherit;color:inherit}
 .vmenu .dem-name b{font-family:var(--f-mono);color:var(--accent);margin-right:6px}
 .vmenu .dem-name small{display:block;color:var(--dim);font-family:var(--f-mono);font-size:10.5px}
 .vmenu .dem-name span{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+/* étapes de démontage sur la vue, menus fermés */
+.stepbar{pointer-events:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;max-width:min(470px,100%);background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:6px;padding:6px 10px 6px 6px;backdrop-filter:blur(4px)}
+.stepbar[hidden],.vmenu:not([hidden])~.stepbar{display:none}
+.stepbar .seg{flex:none;background:rgba(19,26,31,.9)}
+.stepbar .seg button{font-size:13px;padding:6px 11px}
+.stepbar p{margin:0;flex:1 1 200px;min-width:0;font-size:12px;line-height:1.35;color:var(--text)}
+.stepbar p b{font-family:var(--f-mono);color:var(--accent);margin-right:6px}
+.stepbar p small{display:block;color:var(--dim);font-family:var(--f-mono);font-size:10.5px}
+.stepbar p span{color:var(--muted)}
 .hint-touch{display:none}
 @media (pointer:coarse){.hint-mouse{display:none}.hint-touch{display:inline}}
 .seg{display:inline-flex;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;overflow:hidden;backdrop-filter:blur(4px)}
@@ -89,6 +98,7 @@ button,input,select{font:inherit;color:inherit}
 .seg button+button{border-left:1px solid var(--line2)}
 .seg button[aria-pressed="true"]{background:var(--accent-d);color:#e9f6fc}
 .seg button:hover{color:var(--text)}
+.seg button:disabled{opacity:.35;cursor:default;color:var(--muted)}
 .chipr{display:inline-flex;align-items:center;gap:8px;background:rgba(10,14,17,.82);border:1px solid var(--line2);border-radius:4px;padding:4px 10px;font-size:11px;color:var(--muted);font-family:var(--f-display);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
 .chipr input[type=range]{width:110px}
 .vfoot{position:absolute;left:10px;bottom:10px;right:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;pointer-events:none;font-family:var(--f-mono);font-size:11px;color:var(--dim)}
@@ -320,6 +330,8 @@ html.light .ctl-tab,html.light .menu-btn,html.light .seg,html.light .chipr,html.
 html.light .menu-btn,html.light .vbar-main .seg,html.light .chipr{box-shadow:0 1px 4px rgba(21,32,42,.08)}
 html.light .vmenu{background:var(--glass-hi);box-shadow:var(--shadow)}
 html.light .vmenu .seg{background:rgba(244,247,249,.95);box-shadow:none}
+html.light .stepbar{background:var(--glass-hi);box-shadow:var(--shadow)}
+html.light .stepbar .seg{background:rgba(244,247,249,.95);box-shadow:none}
 html.light .vmenu .chipr{background:none;box-shadow:none}
 html.light .menu-btn[aria-expanded="true"],html.light .seg button[aria-pressed="true"]{background:var(--accent-d);border-color:var(--accent-b);color:var(--on-accent)}
 html.light .vfoot span{background:rgba(255,255,255,.8)}
@@ -467,6 +479,14 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
           <h4>Outils</h4>
           <div class="seg"><button id="cal-on" aria-pressed="false" title="Superpose la coupe du manuel (AMM 72-00-00 fig. 3) pour valider le modèle">Calque AMM</button></div>
         </section>
+      </div>
+      <div class="stepbar" id="stepbar" hidden>
+        <div class="seg" role="group" aria-label="Étapes de démontage">
+          <button id="sb-prev" title="Étape précédente (←)">◀</button>
+          <button id="sb-play" title="Démonter étape par étape">▶ Pas à pas</button>
+          <button id="sb-next" title="Étape suivante (→)">▶▶</button>
+        </div>
+        <p id="sb-name" aria-live="polite"></p>
       </div>
     </div>
     <div class="vfoot"><span id="rot-note">Rotation affichée ×1/200 — Ng et Nf contrarotatifs</span><span class="hint-mouse">Glisser : orbite · Molette : zoom · Clic : identifier une pièce</span><span class="hint-touch">Glisser : orbite · Pincer : zoom · Toucher : identifier</span></div>
@@ -1956,7 +1976,7 @@ function demPrepare() {
   demT = demTarget = 0; demShown = -1;
   const rgb = !!PAS[isoPart];
   demMax = rgb ? PAS[isoPart].steps.length : 1;
-  $('dem').hidden = !isoPart; $('dem-btns').hidden = !rgb; $('dem-name').hidden = !rgb;
+  $('dem').hidden = !isoPart; $('dem-btns').hidden = !rgb; $('dem-name').hidden = !rgb; $('stepbar').hidden = !rgb;
   $('dem-lbl').textContent = rgb ? 'Démontage' : 'Vue éclatée';
   $('dem-t').max = demMax; $('dem-t').value = 0;
   if (isoPart && !rgb) {
@@ -1991,7 +2011,11 @@ function demUI() {
   const e = PAS[isoPart].steps[cur - 1];
   $('dem-name').innerHTML = cur <= 0 ? `<span>${PAS[isoPart].vide}</span>`
     : `<b>${cur}/${demMax}</b>${e.t}<small>${e.r}</small><span>${e.d}</span>`;
-  $('dem-play').textContent = demTimer ? '❚❚ Pause' : '▶ Pas à pas';
+  // barre de la vue (menus fermés) : titre et référence de l'étape, sans la description
+  $('sb-name').innerHTML = cur <= 0 ? `<b>0/${demMax}</b><span>Assemblé</span>` : `<b>${cur}/${demMax}</b>${e.t}<small>${e.r}</small>`;
+  $('dem-play').textContent = $('sb-play').textContent = demTimer ? '❚❚ Pause' : '▶ Pas à pas';
+  $('dem-prev').disabled = $('sb-prev').disabled = cur <= 0;
+  $('dem-next').disabled = $('sb-next').disabled = demTarget >= demMax;
 }
 function goDem(k, glow) {
   demTarget = clamp(k, 0, demMax); $('dem-t').value = demTarget;
@@ -2008,6 +2032,12 @@ $('dem-play').onclick = () => {
   const next = () => { if (demTarget >= demMax) { stopDem(); demUI(); return; } goDem(Math.floor(demTarget + 0.001) + 1, true); };
   next(); demTimer = setInterval(next, reduceMotion ? 1800 : 2600); demShown = -1; demUI();
 };
+for (const k of ['prev', 'next', 'play']) $('sb-' + k).onclick = () => $('dem-' + k).onclick();
+addEventListener('keydown', e => {
+  if (!PAS[isoPart] || e.ctrlKey || e.metaKey || e.altKey || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); $('dem-prev').onclick(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); $('dem-next').onclick(); }
+});
 function demTick(rdt) {
   if (Math.abs(demTarget - demT) > 1e-4) {
     const sp = reduceMotion ? 100 : Math.max(PAS[isoPart] ? 1.8 : 0.9, Math.abs(demTarget - demT) * 1.2);
