@@ -34,9 +34,14 @@ const fmt = (v, d = 0) => v.toLocaleString('fr-CA', { minimumFractionDigits: d, 
    2 200 tr/min au décollage (AMM 72-10), est publiée. Modifier ici seulement :
    les nombres de dents de la géométrie sont recalculés à partir de ces rapports
    (train épicycloïdal à couronne fixe : rapport = 1 + couronne / planétaire).
+   Proportions relevées sur des photos d'un réducteur réel (2e étage démonté, règle posée dessus) :
+   centres des satellites à 0,74 du rayon extérieur de la couronne, satellites d'environ 22 dents,
+   couronne d'environ 112 dents, d'où un grand planétaire d'environ 67 dents (rapport ≈ 2,7) ; le
+   1er étage complète le rapport total Nf 100 % / hélice (33 235 / 2 200 ≈ 15,1), avec un petit
+   planétaire d'environ 27 dents, comme sur la photo du 1er étage.
    ===================================================================== */
-const RAPPORT_ETAGE1 = 4.2;          // 1er étage (3 satellites) — à confirmer
-const RAPPORT_ETAGE2 = 3.6;          // 2e étage (5 satellites) — à confirmer
+const RAPPORT_ETAGE1 = 5.6;          // 1er étage (3 satellites) — à confirmer
+const RAPPORT_ETAGE2 = 2.69;         // 2e étage (5 satellites) — d'après photos, à confirmer
 const DENTS_PRISES = { roue: 46, pignon: 24 };   // couple conique des prises avant — à confirmer
 const HELICE_TR_MIN = 2200;          // AMM 72-10 : vitesse nominale au décollage
 
@@ -52,8 +57,11 @@ function dentsPour(rapport, N, Rmin, Rmax) {
   return best;
 }
 const G1 = Object.assign({ N: 3, rr: 3.45, W: 1.39, zc: 10.2 }, dentsPour(RAPPORT_ETAGE1, 3, 95, 130));
-const G2 = Object.assign({ N: 5, rr: 3.30, W: 1.185, zc: 8.05 }, dentsPour(RAPPORT_ETAGE2, 5, 60, 85));
-for (const g of [G1, G2]) { g.m = 2 * g.rr / g.R; g.rs = g.S * g.m / 2; g.rp = g.P * g.m / 2; g.rc = g.rs + g.rp; g.i = 1 + g.R / g.S; }
+const G2 = Object.assign({ N: 5, rr: 3.50, W: 1.185, zc: 8.05 }, dentsPour(RAPPORT_ETAGE2, 5, 100, 125));
+for (const g of [G1, G2]) {
+  g.m = 2 * g.rr / g.R; g.rs = g.S * g.m / 2; g.rp = g.P * g.m / 2; g.rc = g.rs + g.rp; g.i = 1 + g.R / g.S;
+  g.bore = Math.min(0.69, (g.rp - 1.25 * g.m) * 0.72);   // alésage du satellite (palier lisse), sous le pied de dent
+}
 const I_TOT = G1.i * G2.i;
 const BEV = { Ng: DENTS_PRISES.roue, Np: DENTS_PRISES.pignon, rg: 2.05, zg: 3.85 };
 BEV.gam = Math.atan(BEV.Ng / BEV.Np); BEV.L = BEV.rg / Math.sin(BEV.gam); BEV.za = BEV.zg + BEV.L * Math.cos(BEV.gam);
@@ -262,13 +270,13 @@ const INFO = {
     k: [['Vitesse', `${fmt(NF_RPM / G1.i)} tr/min${PROV}`], ['Joncs', '4 (+ butée de planétaire post-SB1367)']] },
 
   sun2: { g: 's2', n: 'Planétaire du 2e étage', ref: 'IPC 72-11 fig. 4 (rep. 10)',
-    d: 'Entraîné par l\'accouplement flexible, il attaque les cinq satellites du 2e étage. Le tube de transfert d\'huile de l\'arbre d\'hélice passe dans son alésage.',
-    k: [['Dents', `${G2.S} (à confirmer)`], ['Vitesse', `${fmt(NF_RPM / G1.i)} tr/min${PROV}`]] },
+    d: 'Entraîné par l\'accouplement flexible, il attaque les cinq satellites du 2e étage. Grand pignon à jante dentée et voile ajouré, qui occupe environ la moitié du diamètre de la couronne (proportions relevées sur photos). Le tube de transfert d\'huile de l\'arbre d\'hélice passe dans son alésage.',
+    k: [['Dents', `${G2.S} (à confirmer)`], ['Diamètre primitif', `${fmt(2 * G2.rs, 2)} po (modèle)`], ['Vitesse', `${fmt(NF_RPM / G1.i)} tr/min${PROV}`]] },
   planets2: { g: 's2', n: 'Satellites du 2e étage (× 5)', ref: 'IPC 72-11 fig. 3 (rep. 290 à 395) · OM tabl. 601',
     d: 'Cinq satellites sur paliers lisses, arbres et axes avec crépine d\'huile. On les monte par jeu de cinq de même classe (épaisseur cordale de dent) et l\'extrémité marquée « UP » du bon côté.',
     k: [['Nombre', '5'], ['Dents', `${G2.P} (à confirmer)`], ['Rapport du 2e étage', `${fmt(G2.i, 3)} (à confirmer)`], ['Largeur de denture', '1,182–1,188 po'], ['Classes', 'épaisseur cordale 0,1690–0,1710 po'], ['Vis d\'axe', '700–850 lb·po']] },
   carrier2: { g: 's2', n: 'Porte-satellites du 2e étage', ref: 'AMM 72-10-00 · IPC 72-11 fig. 3 (rep. 230 à 280)',
-    d: 'Cannelé sur l\'arrière de l\'arbre d\'hélice et serré par un écrou et une rondelle-frein. Son prolongement avant porte la bague intérieure du roulement à rouleaux ; cinq buses d\'huile arrosent les engrènements.',
+    d: 'Cannelé sur l\'arrière de l\'arbre d\'hélice et serré par un écrou et une rondelle-frein. Flasque avant pleine, d\'où part le prolongement qui porte la bague intérieure du roulement à rouleaux ; flasque arrière mince en étoile à cinq bras, reliée à l\'avant par les axes des satellites et leurs grosses vis à tête hexagonale ; cinq buses d\'huile sur les bras arrosent les engrènements. Forme d\'après photos.',
     k: [['Buses d\'huile', '5'], ['Portée de roulement', 'Ø 3,1482–3,1490 po'], ['Vitesse', `${fmt(NP_RPM)} tr/min (hélice, AMM 72-10)`]] },
   ring2: { g: 's2', n: 'Couronne du 2e étage', ref: 'AMM 72-10-00 · IPC 72-11 fig. 3 (rep. 400 à 430)',
     d: 'Couronne à denture intérieure, positionnée par des cannelures dans le carter avant et retenue par trois plaques boulonnées.',
@@ -421,17 +429,17 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
 const planets1 = [], planets2 = [];
 function buildPlanets(id, G, arr, color) {
   const mP = M(id, { color, metalness: 1, roughness: 0.24 }), mB = M(id, { color: 0xc89b4a, metalness: 0.85, roughness: 0.32 }), mPin = M(id, { color: 0xa9b0b5, metalness: 0.9, roughness: 0.3 });
-  const geo = gearGeo(G.P, G.rp, G.W, { bore: 0.69 });
+  const b = G.bore, geo = gearGeo(G.P, G.rp, G.W, { bore: b });
   const strainer = new THREE.MeshStandardMaterial({ color: 0xb8bfc4, metalness: 0.9, roughness: 0.35, alphaMap: perfTex, alphaTest: 0.5, side: THREE.DoubleSide });
   strainer.userData = { kind: 'int', part: id, baseOpacity: 1, baseTransparent: false, baseEmissive: strainer.emissive.clone() }; PART[id].mats.push(strainer);
   for (let i = 0; i < G.N; i++) {
     const hold = new THREE.Group(); PART[id].g.add(hold);
     const gm = new THREE.Mesh(geo, mP); hold.add(gm);
-    const brg = new THREE.Mesh(revolve([[0.52, -G.W / 2 + G.zc - 0.0], [0.69, -G.W / 2 + G.zc], [0.69, G.W / 2 + G.zc], [0.52, G.W / 2 + G.zc]].map(([r, z]) => [r, z]), 32), mB);
+    const brg = new THREE.Mesh(revolve([[b * 0.75, G.zc - G.W / 2], [b, G.zc - G.W / 2], [b, G.zc + G.W / 2], [b * 0.75, G.zc + G.W / 2]], 32), mB);
     brg.position.y = -AY(G.zc); hold.add(brg);
-    const pin = new THREE.Mesh(revolve([[0.2, G.zc - G.W / 2 - 0.3], [0.4, G.zc - G.W / 2 - 0.3], [0.4, G.zc + G.W / 2 + 0.3], [0.2, G.zc + G.W / 2 + 0.3]], 24), mPin);
+    const pin = new THREE.Mesh(revolve([[b * 0.29, G.zc - G.W / 2 - 0.3], [b * 0.58, G.zc - G.W / 2 - 0.3], [b * 0.58, G.zc + G.W / 2 + 0.3], [b * 0.29, G.zc + G.W / 2 + 0.3]], 24), mPin);
     pin.position.y = -AY(G.zc); hold.add(pin);
-    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.19 * S, 0.19 * S, (G.W + 0.4) * S, 16, 1, true), strainer); hold.add(st);
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(b * 0.275 * S, b * 0.275 * S, (G.W + 0.4) * S, 16, 1, true), strainer); hold.add(st);
     hold.userData.theta0 = i * TAU / G.N;
     arr.push(hold);
   }
@@ -439,6 +447,14 @@ function buildPlanets(id, G, arr, color) {
 buildPlanets('planets1', G1, planets1, 0xd0d4d6);
 buildPlanets('planets2', G2, planets2, 0xc3c8cb);
 
+// flasque annulaire plate d'épaisseur w (axe moteur), centrée en y = 0, percée de trous [rayon, angle, rayon du trou]
+function flasque(rIn, rOut, w, trous = []) {
+  const sh = new THREE.Shape(); sh.absarc(0, 0, rOut * S, 0, TAU, false);
+  const hi = new THREE.Path(); hi.absarc(0, 0, rIn * S, 0, TAU, true); sh.holes.push(hi);
+  for (const [r, a, rh] of trous) { const h = new THREE.Path(); h.absarc(r * S * Math.cos(a), r * S * Math.sin(a), rh * S, 0, TAU, true); sh.holes.push(h); }
+  const g = new THREE.ExtrudeGeometry(sh, { depth: w * S, bevelEnabled: false, curveSegments: 48 });
+  g.rotateX(-Math.PI / 2); g.translate(0, -w * S / 2, 0); return g;
+}
 /* ---------- porte-satellites (flasques, entretoises, axes) ---------- */
 function lobedPlate(N, rc, lobeR, hubR, boreR, w) {
   const sh = new THREE.Shape(), steps = 120;
@@ -474,8 +490,12 @@ function lobedPlate(N, rc, lobeR, hubR, boreR, w) {
 }
 { // planétaire du 2e étage
   const s = spinner('sun2'), mS = M('sun2', { color: 0xc9cdd0, metalness: 1, roughness: 0.24 });
-  const gm = new THREE.Mesh(gearGeo(G2.S, G2.rs, G2.W, { bore: 0.9 }), mS); gm.position.y = AY(G2.zc); s.add(gm);
-  lathe('sun2', [[0.9, G2.zc + G2.W / 2], [1.12, G2.zc + G2.W / 2], [1.12, 8.8], [0.9, 8.8]], mS, s, 48);
+  // grand planétaire : jante dentée, voile à l'arrière et moyeu cannelé sur l'accouplement flexible
+  const rim = G2.rs - 1.25 * G2.m - 0.32, z1 = G2.zc + G2.W / 2;
+  const gm = new THREE.Mesh(gearGeo(G2.S, G2.rs, G2.W, { bore: rim }), mS); gm.position.y = AY(G2.zc); s.add(gm);
+  const vo = new THREE.Mesh(flasque(1.0, rim + 0.02, 0.28, Array.from({ length: 6 }, (_, k) => [(1.12 + rim) / 2, (k + 0.5) * TAU / 6, 0.2])), mS);
+  vo.position.y = AY(z1 - 0.14); s.add(vo);                                                                // voile ajouré (6 trous d'allègement)
+  lathe('sun2', [[0.9, G2.zc - 0.1], [1.12, G2.zc - 0.1], [1.12, 8.8], [0.9, 8.8]], mS, s, 48);           // moyeu
 }
 { // couronne du 1er étage + cannelures hélicoïdales extérieures + plaques de retenue
   const g = PART.ring1.g, mR = M('ring1', { color: 0x9da4a9, metalness: 0.95, roughness: 0.32 });
@@ -507,14 +527,31 @@ function lobedPlate(N, rc, lobeR, hubR, boreR, w) {
 { // porte-satellites du 2e étage + buses d'huile + écrou
   const s = spinner('carrier2'), mC = M('carrier2', { color: 0xa6aeb3, metalness: 0.85, roughness: 0.32 }), mN = M('carrier2', { color: 0xc8ccce, metalness: 0.9, roughness: 0.28 });
   lathe('carrier2', [[1.2, 6.12], [1.575, 6.12], [1.575, 7.12], [3.1, 7.12], [3.1, 7.4], [1.42, 7.4], [1.42, 7.0], [1.2, 7.0]], mC, s, 96);
-  lathe('carrier2', [[1.52, 8.7], [3.1, 8.7], [3.1, 9.0], [1.52, 9.0]], mC, s, 96);
-  for (let k = 0; k < 5; k++) { const a = k * TAU / 5 + Math.PI / 5; const post = new THREE.Mesh(new THREE.BoxGeometry(0.62 * S, 1.3 * S, 0.5 * S), mC); post.position.set(2.78 * S * Math.cos(a), AY(8.05), -2.78 * S * Math.sin(a)); post.rotation.y = a; s.add(post); }
-  { const hg = new THREE.CylinderGeometry(0.33 * S, 0.33 * S, 0.18 * S, 6), ms = []; for (let k = 0; k < 5; k++) { const a = k * TAU / 5; ms.push(new THREE.Matrix4().makeTranslation(G2.rc * S * Math.cos(a), AY(9.1), -G2.rc * S * Math.sin(a))); } inst(hg, ms, mN, s, 'bolt'); }
-  // 5 buses d'huile (IPC fig. 3 rep. 260)
-  { const mOz = M('carrier2', { color: 0xc9a85a, metalness: 0.9, roughness: 0.3 });
-    for (let k = 0; k < 5; k++) { const a = k * TAU / 5 + Math.PI / 5, x = 1.78 * Math.cos(a), y = -1.78 * Math.sin(a);
-      const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * S, 0.06 * S, 0.55 * S, 8), mOz); tb.position.set(x * S, AY(8.82), y * S); s.add(tb);
-      const bs = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * S, 0.16 * S, 0.12 * S, 6), mN); bs.position.set(x * S, AY(9.06), y * S); bs.userData.bolt = true; s.add(bs); } }
+  // flasque arrière en étoile à cinq bras (photos) : bossage autour de chaque axe de satellite, bras minces courbés
+  // vers l'intérieur entre deux bossages ; grande ouverture centrale sur le planétaire. Les axes boulonnés relient
+  // les deux flasques (pas d'entretoises entre les satellites).
+  const ZS = 8.8, TS = 0.28, bossR = 0.6, bras = 0.34, creux = 0.68;
+  const at = (r, a) => new THREE.Vector3(r * S * Math.cos(a), AY(ZS), -r * S * Math.sin(a));
+  { const bg = new THREE.CylinderGeometry(bossR * S, bossR * S, TS * S, 32), ms = []; for (let k = 0; k < 5; k++) ms.push(new THREE.Matrix4().setPosition(at(G2.rc, k * TAU / 5))); inst(bg, ms, mC, s); }
+  // section du bras : pour une courbe plane perpendiculaire à l'axe, la normale de Frenet de three.js est l'axe moteur (x de la forme)
+  const sec = new THREE.Shape(); sec.moveTo(-TS / 2 * S, -bras / 2 * S); sec.lineTo(TS / 2 * S, -bras / 2 * S); sec.lineTo(TS / 2 * S, bras / 2 * S); sec.lineTo(-TS / 2 * S, bras / 2 * S); sec.closePath();
+  for (let k = 0; k < 5; k++) {
+    const a0 = k * TAU / 5, a1 = a0 + TAU / 5, am = a0 + TAU / 10, rm = creux * G2.rc;
+    const ctl = at(2 * rm - G2.rc * Math.cos(TAU / 10), am);                 // la courbe passe à rm au milieu
+    const curve = new THREE.QuadraticBezierCurve3(at(G2.rc, a0), ctl, at(G2.rc, a1));
+    s.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sec, { steps: 28, bevelEnabled: false, extrudePath: curve }), mC));
+  }
+  // grosses vis d'axes à tête hexagonale et rondelles (photos), côté arrière
+  // (sous la flasque avant du porte-satellites du 1er étage, à z 9,15)
+  { const hg = new THREE.CylinderGeometry(0.46 * S, 0.46 * S, 0.16 * S, 6), wg = new THREE.CylinderGeometry(0.5 * S, 0.5 * S, 0.04 * S, 32), mh = [], mw = [];
+    for (let k = 0; k < 5; k++) { const p = at(G2.rc, k * TAU / 5); mw.push(new THREE.Matrix4().setPosition(p.x, AY(ZS + TS / 2 + 0.02), p.z)); mh.push(new THREE.Matrix4().setPosition(p.x, AY(ZS + TS / 2 + 0.12), p.z)); }
+    inst(hg, mh, mN, s, 'bolt'); inst(wg, mw, mN, s); }
+  // 5 buses d'huile (IPC fig. 3 rep. 260) au milieu des bras, l'ajutage tourné vers l'extérieur (engrènements)
+  { const mOz = M('carrier2', { color: 0xc9a85a, metalness: 0.9, roughness: 0.3 }), rb = creux * G2.rc;
+    for (let k = 0; k < 5; k++) { const a = k * TAU / 5 + Math.PI / 5;
+      const bs = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * S, 0.15 * S, 0.12 * S, 6), mN); bs.position.copy(at(rb, a)).setY(AY(ZS + TS / 2 + 0.06)); bs.userData.bolt = true; s.add(bs);
+      const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * S, 0.06 * S, 0.3 * S, 8), mOz); tb.position.copy(at(rb + bras / 2 + 0.13, a));
+      tb.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(Math.cos(a), 0, -Math.sin(a))); s.add(tb); } }
   { const ng = new THREE.CylinderGeometry(1.36 * S, 1.36 * S, 0.22 * S, 12); ng.translate(0, AY(7.12), 0); s.add(new THREE.Mesh(ng, mN)); }
 }
 { // couronne du 2e étage + plaques de retenue
