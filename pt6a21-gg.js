@@ -210,9 +210,10 @@ const GROUPS = [
   ['stat', 'Stators et carter du rouet'], ['rotor', 'Rotor du compresseur']
 ];
 const INFO = {
-  fdv: { g: 'carb', n: 'Diviseur de débit et clapet de vidange', ref: 'OM 72-30-00 5.A, fig. 102 · AMM 73-10-04',
-    d: 'Monté sous l\'adaptateur d\'entrée du collecteur (6 h), sur le PT6A-21 seulement : il partage le carburant entre les collecteurs primaire et secondaire au démarrage et en marche, puis vidange (purge) le carburant resté dans les collecteurs à l\'arrêt.',
-    k: [['Fixation', '4 boulons freinés, joints toriques'], ['Position', '6 h, sur l\'adaptateur d\'entrée']] },
+  fdv: { g: 'carb', n: 'Diviseur de débit et clapet de vidange', ref: 'AMM 73-10-04 fig. 1, 201 · IPC 73-10-04 fig. 2 (rep. 10 à 70) · OM 73-10-04 fig. 101 · OM 72-30-00 5.A',
+    d: 'Boîtier d\'une pièce boulonné sous l\'adaptateur d\'entrée du collecteur (6 h), propre au PT6A-21. Une valve de transfert à ressort coulisse dans le piston du clapet de vidange, lui aussi à ressort, percé de lumières : au démarrage, le carburant dosé par le FCU passe d\'abord aux injecteurs primaires ; quand la pression primaire monte, la valve s\'ouvre et les secondaires s\'ajoutent (tous les injecteurs débitent au ralenti et au-dessus). À l\'arrêt, la soupape de coupure du FCU se ferme : le ressort repousse le piston, qui bouche l\'arrivée et relie les deux collecteurs à l\'orifice de vidange, et le carburant restant s\'écoule hors du moteur. Après le SB1406, il est remplacé par un diviseur à clapet de purge : de l\'air comprimé accumulé chasse le carburant des collecteurs dans la chambre, où il brûle. Cotes estimées d\'après les figures.',
+    k: [['Modèle', 'Lucas 25536-4 (pré-SB1406)'], ['Arrivée du FCU', 'coude à gauche, écrou de la conduite 90–100 lb·po'], ['Vidange', 'coude à droite, vers la conduite de l\'avion'],
+      ['Fixation', '4 boulons MS9565-05, 32–36 lb·po, freinés par paires'], ['Coudes', 'contre-écrous 38–42 lb·po, joint torique et bague d\'appui'], ['Face de montage', '2 joints toriques (orifices primaire et secondaire)']] },
   manif1: { g: 'carb', n: 'Adaptateur d\'entrée et adaptateurs voisins', ref: 'OM 72-30-00 5.B(1)–(4), fig. 103 · IPC 72-30-04 · AMM 73-10-05',
     d: 'L\'adaptateur d\'entrée du collecteur (6 h), qui reçoit le carburant du diviseur de débit, et les deux adaptateurs de part et d\'autre, réunis par quatre tubes de transfert : on les dépose ensemble, en les soutenant pendant qu\'on retire les tubes.',
     k: [['Adaptateurs', '3 (entrée + 2 voisins)'], ['Tubes de transfert', '4'], ['Fixation', 'plaque-frein et boulons par adaptateur']] },
@@ -449,7 +450,7 @@ function adaptateurs(id, list) {
   const g = PART[id].g, mF = M(id, { color: 0xbfae7f, metalness: 0.85, roughness: 0.35 }), mK = M(id, { color: 0xa9adb0, metalness: 0.85, roughness: 0.3 });
   const phis = list.map(i => nozPhi[i]);
   inst(new THREE.CylinderGeometry(0.42 * S, 0.42 * S, 1.4 * S, 12), phis.map(p => radM(10.6, 27.7, p)), mF, g);     // corps
-  inst(new THREE.CylinderGeometry(0.58 * S, 0.58 * S, 0.4 * S, 6), phis.map(p => radM(11.5, 27.7, p)), mF, g);      // six-pans
+  inst(new THREE.CylinderGeometry(0.58 * S, 0.58 * S, 0.4 * S, 6), list.filter(i => i !== 10).map(i => radM(11.5, 27.7, nozPhi[i])), mF, g);   // six-pans (l'adaptateur d'entrée a une semelle)
   inst(new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 1.4 * S, 8), phis.map(p => radM(8.8, 27.7, p)), mF, g);         // gaine et injecteur
   inst(new THREE.BoxGeometry(1.5 * S, 0.1 * S, 0.8 * S), phis.map(p => radM(9.95, 27.7, p)), mK, g);                // plaque-frein
   const bl = []; for (const p of phis) for (const d of [-0.62, 0.62]) bl.push(radM(10.05, 27.7, p + d / 10));
@@ -465,13 +466,80 @@ function adaptateurs(id, list) {
 }
 adaptateurs('manif1', INLET_AD);
 adaptateurs('manif2', [...Array(14).keys()].filter(i => !INLET_AD.includes(i)));
-{ // diviseur de débit et clapet de vidange, sous l'adaptateur d'entrée ; conduite d'arrivée du carburant
-  const g = PART.fdv.g, mF = M('fdv', { color: 0xa88f55, metalness: 0.65, roughness: 0.4 }), mT = M('fdv', { color: 0xa4906a, metalness: 0.8, roughness: 0.35 });
-  const ph = nozPhi[10];
-  const b = new THREE.Mesh(new THREE.BoxGeometry(1.8 * S, 1.3 * S, 1.9 * S), mF); b.applyMatrix4(radM(12.38, 27.7, ph)); g.add(b);
-  const bl = []; for (const [x, zz] of [[-0.7, -0.75], [0.7, -0.75], [-0.7, 0.75], [0.7, 0.75]]) bl.push(radM(13.06, 27.7 + zz, ph + x / 13));
-  inst(new THREE.CylinderGeometry(0.11 * S, 0.11 * S, 0.12 * S, 6), bl, boltMat('fdv'), g, 'bolt');
-  tubeMesh(g, mT, [[12.9, 27.0, 6], [13.6, 26.6, 6], [14.3, 25.8, 6]], 0.2, 24);
+{ // semelle de l'adaptateur d'entrée (6 h) qui reçoit le diviseur de débit (AMM 73-10-04 fig. 201, rep. 1)
+  const mF = PART.manif1.mats[0], g = new THREE.Group(); g.applyMatrix4(radM(0, 27.7, nozPhi[10])); PART.manif1.g.add(g);
+  const box = (w, r0, r1, d) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w * S, (r1 - r0) * S, d * S), mF); m.position.set(0, (r0 + r1) / 2 * S, 0); g.add(m); };
+  box(1.1, 11.0, 11.4, 1.1); box(2.4, 11.38, 11.75, 2.3);
+  // trous taraudés des 4 boulons et orifices primaire et secondaire de la face de montage
+  const mH = M('manif1', { color: 0x2a2620, metalness: 0.3, roughness: 0.8 });
+  for (const [x, z, r] of [[0.85, -0.82, 0.1], [0.85, 0.82, 0.1], [-0.85, -0.82, 0.1], [-0.85, 0.82, 0.1], [0.32, 0, 0.12], [-0.32, 0, 0.12]]) {
+    const h = new THREE.Mesh(new THREE.CylinderGeometry(r * S, r * S, 0.01 * S, 16), mH); h.position.set(x * S, 11.755 * S, z * S); g.add(h);
+  }
+}
+/* diviseur de débit et clapet de vidange (pré-SB1406, Lucas 25536-4) : AMM 73-10-04 fig. 1 et 201, IPC 73-10-04 fig. 2,
+   OM 73-10-04 fig. 101. Corps cylindrique tangentiel sous l'adaptateur d'entrée, semelle à 4 boulons freinés par paires,
+   deux joints toriques aux orifices primaire et secondaire de la face de montage ; coude d'arrivée du carburant du FCU
+   à gauche (vu de l'arrière), coude de vidange à droite, chacun avec contre-écrou, bague d'appui et joint torique.
+   Cotes estimées d'après les figures. Repère local : X vers la gauche, Y vers l'extérieur (le bas), Z vers l'arrière,
+   origine sur la face de montage (r 11,75). */
+const FDV = { r: 11.75, z: 27.7 };
+{
+  const g = new THREE.Group(); g.applyMatrix4(radM(FDV.r, FDV.z, nozPhi[10])); PART.fdv.g.add(g);
+  const mB = M('fdv', { color: 0xb59a5c, metalness: 0.6, roughness: 0.38 });               // corps cadmié
+  const mE = M('fdv', { color: 0xaeb4b8, metalness: 0.85, roughness: 0.3 });               // raccords en acier
+  const mK = M('fdv', { color: 0x9aa1a6, metalness: 0.85, roughness: 0.35 });
+  const mR = M('fdv', { color: 0x1e2224, metalness: 0, roughness: 0.75 });                 // joints toriques
+  const mW = M('fdv', { color: 0xd3d7da, metalness: 0.9, roughness: 0.25 });               // fil à freiner
+  const add = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x * S, y * S, z * S); g.add(m); return m; };
+  const alongX = geo => geo.rotateZ(-Math.PI / 2);                                         // axe Y -> axe X
+  const lath = pts => alongX(new THREE.LatheGeometry(pts.map(([r, x]) => new THREE.Vector2(Math.max(1e-4, r) * S, x * S)), 40));
+  const YB = 0.78, ZB = 0.05;                                                              // axe du corps
+  // semelle aux coins arrondis, percée de 4 trous
+  const sh = new THREE.Shape(), w = 1.15, d = 1.12, c = 0.3;
+  sh.moveTo(-w + c, -d); sh.lineTo(w - c, -d); sh.quadraticCurveTo(w, -d, w, -d + c); sh.lineTo(w, d - c); sh.quadraticCurveTo(w, d, w - c, d);
+  sh.lineTo(-w + c, d); sh.quadraticCurveTo(-w, d, -w, d - c); sh.lineTo(-w, -d + c); sh.quadraticCurveTo(-w, -d, -w + c, -d);
+  const BOLTS = [[0.85, -0.82], [0.85, 0.82], [-0.85, -0.82], [-0.85, 0.82]];
+  for (const [x, z] of BOLTS) { const h = new THREE.Path(); h.absarc(x, z, 0.1, 0, TAU, true); sh.holes.push(h); }
+  const pl = new THREE.ExtrudeGeometry(sh, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2, curveSegments: 6 });
+  pl.scale(S, S, S); pl.rotateX(Math.PI / 2); pl.translate(0, 0.2 * S, 0); add(pl, mB);
+  add(new THREE.BoxGeometry(1.3 * S, 0.5 * S, 1.0 * S), mB, 0, 0.42, ZB);                  // voile entre semelle et corps
+  // corps : bossage d'arrivée (gauche), corps du diviseur, logement du clapet de vidange, bague moletée, bouchon (droite)
+  add(lath([[0, 1.5], [0.3, 1.5], [0.3, 1.76], [0.44, 1.76], [0.5, 1.7], [0.5, 1.22], [0.46, 1.18], [0.46, 1.1], [0.55, 1.06],
+    [0.55, -0.95], [0.66, -1.0], [0.66, -1.9], [0.5, -1.9], [0.5, -2.1], [0.52, -2.12], [0.52, -2.46], [0.46, -2.52], [0.3, -2.52], [0.3, -2.3], [0, -2.3]]), mB, 0, YB, ZB);
+  const kn = new THREE.Shape(), NT = 30;                                                   // bague moletée
+  for (let i = 0; i <= NT * 2; i++) { const a = i / (NT * 2) * TAU, r = i % 2 ? 0.69 : 0.735; i ? kn.lineTo(r * Math.cos(a), r * Math.sin(a)) : kn.moveTo(r, 0); }
+  const kg = new THREE.ExtrudeGeometry(kn, { depth: 0.2, bevelEnabled: false }); kg.scale(S, S, S); kg.rotateY(-Math.PI / 2); kg.translate(-1.9 * S, 0, 0);
+  add(kg, mK, 0, YB, ZB);
+  add(alongX(new THREE.CylinderGeometry(0.57 * S, 0.57 * S, 1.0 * S, 10, 1, false, 1.5 * Math.PI - 0.5, 1.0)), mK, -0.2, YB, ZB);   // plaque d'identification
+  // boulons à double six-pans percés, freinés par paires (couple 32-36 lb·po)
+  for (const [x, z] of BOLTS) { add(new THREE.CylinderGeometry(0.16 * S, 0.17 * S, 0.17 * S, 12), mE, x, 0.32, z); add(new THREE.CylinderGeometry(0.19 * S, 0.19 * S, 0.03 * S, 16), mE, x, 0.24, z); }
+  const wire = pts => add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(([x, y, z]) => new THREE.Vector3(x * S, y * S, z * S))), 20, 0.018 * S, 5), mW);
+  for (const z of [0.82, -0.82]) wire([[0.85, 0.36, z], [0.3, 0.44, z + Math.sign(z) * 0.1], [-0.3, 0.44, z + Math.sign(z) * 0.1], [-0.85, 0.36, z]]);
+  // joints toriques des orifices primaire et secondaire, entre la semelle et l'adaptateur
+  for (const x of [0.32, -0.32]) add(new THREE.TorusGeometry(0.17 * S, 0.035 * S, 8, 24).rotateX(Math.PI / 2), mR, x, -0.02, 0);
+  // coudes : contre-écrou, bague d'appui et joint, filetage, coude forgé, six-pans et embout mâle évasé (AN)
+  function coude(s, out) {                                                                 // s = côté (+1 gauche, -1 droite), out = sortie
+    const x0 = s > 0 ? 1.76 : -2.52, P0 = new THREE.Vector3(x0, YB, ZB), ax = new THREE.Vector3(s, 0, 0);
+    const at = (v, k) => P0.clone().addScaledVector(ax, k).add(v || new THREE.Vector3());
+    const cyl = (r0, r1, len, seg, mat, p, dir) => { const m = add(new THREE.CylinderGeometry(r1 * S, r0 * S, len * S, seg), mat); m.position.copy(p).multiplyScalar(S); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); return m; };
+    add(new THREE.TorusGeometry(0.33 * S, 0.035 * S, 8, 24).rotateY(Math.PI / 2), mR).position.copy(at(null, 0.04)).multiplyScalar(S);
+    add(new THREE.TorusGeometry(0.34 * S, 0.03 * S, 6, 24).rotateY(Math.PI / 2), mK).position.copy(at(null, 0.11)).multiplyScalar(S);
+    cyl(0.44, 0.44, 0.26, 6, mE, at(null, 0.28), ax);                                      // contre-écrou
+    cyl(0.3, 0.3, 0.6, 16, mE, at(null, 0.3), ax);                                         // queue filetée
+    const A = at(null, 0.55), C = at(null, 1.0), B = C.clone().addScaledVector(out, 0.45);
+    const bend = new THREE.QuadraticBezierCurve3(A.clone().multiplyScalar(S), C.clone().multiplyScalar(S), B.clone().multiplyScalar(S));
+    add(new THREE.TubeGeometry(bend, 12, 0.31 * S, 14), mE);
+    add(new THREE.SphereGeometry(0.31 * S, 14, 10), mE).position.copy(A).multiplyScalar(S);
+    cyl(0.37, 0.37, 0.18, 6, mE, B.clone().addScaledVector(out, 0.09), out);               // six-pans
+    cyl(0.27, 0.27, 0.5, 16, mE, B.clone().addScaledVector(out, 0.43), out);               // filetage de l'embout
+    for (let k = 0; k < 4; k++) {                                                          // filets
+      const t = add(new THREE.TorusGeometry(0.27 * S, 0.018 * S, 5, 18), mE);
+      t.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), out); t.position.copy(B).addScaledVector(out, 0.26 + k * 0.11).multiplyScalar(S);
+    }
+    cyl(0.27, 0.18, 0.13, 16, mE, B.clone().addScaledVector(out, 0.745), out);             // portée conique (évasement 37°)
+  }
+  coude(1, new THREE.Vector3(0, 0, 1));                                                    // arrivée du FCU, vers l'arrière
+  coude(-1, new THREE.Vector3(0, 1, 0));                                                   // vidange vers la conduite de l'avion
 }
 { // vannes de vidange (bossages avant et arrière, 6 h) et support
   const g = PART.drains.g, mD = M('drains', { color: 0xb8bcbf, metalness: 0.85, roughness: 0.3 });
@@ -769,8 +837,8 @@ const STEPS = [
     d: 'Câbles blindés débranchés des deux bougies.' },
   { t: 'Retirer l\'arbre d\'accouplement des accessoires', r: 'AMM 72-30-05 · AMM 72-60', m: [[['cplshaft'], { dz: 4 }]],
     d: 'Il part avec le boîtier d\'accessoires, déposé à l\'arrière du carter d\'entrée ; avant tenu par un verrou à billes dans l\'accouplement court du moyeu arrière.' },
-  { t: 'Déposer le diviseur de débit et clapet de vidange', r: 'OM 72-30-00 5.A, fig. 102', m: [[['fdv'], { dr: 2 }]],
-    d: 'Défreiner et retirer les quatre boulons ; séparer l\'ensemble de l\'adaptateur d\'entrée du collecteur ; jeter les joints toriques. Révision : AMM 73-10-04.' },
+  { t: 'Déposer le diviseur de débit et clapet de vidange', r: 'OM 72-30-00 5.A, fig. 102 · AMM 73-10-04 5.A, fig. 201', m: [[['fdv'], { dr: 2 }]],
+    d: 'Débrancher la conduite de vidange du coude droit et la conduite d\'arrivée du coude gauche, boucher les raccords ; soutenir l\'ensemble, défreiner et retirer les quatre boulons, puis jeter les deux joints toriques de la face de montage. Pour un échange, noter l\'angle des coudes avant de les dévisser. Révision : constructeur (OM 73-10-04).' },
   { t: 'Déposer l\'adaptateur d\'entrée, ses deux voisins et leurs quatre tubes de transfert', r: 'OM 72-30-00 5.B(1)–(4), fig. 103', m: [[['manif1'], { dr: 2 }]],
     d: 'Défreiner les boulons et plaques-freins des trois adaptateurs, les soutenir, retirer les quatre tubes de transfert puis les trois adaptateurs.' },
   { t: 'Déposer les onze autres adaptateurs et tubes de transfert, un à un', r: 'OM 72-30-00 5.B(5), fig. 103', m: [[['manif2'], { dz: -3 }]],

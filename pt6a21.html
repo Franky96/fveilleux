@@ -1056,8 +1056,10 @@ const agbGears = [];
   axialPart(new THREE.CylinderGeometry(1.4 * S, 1.4 * S, 0.3 * S, 24), p5.x, p5.y, 62.35, 62.65, mAcc, 'accessories', modAGB);
   axialPart(new THREE.CylinderGeometry(1.5 * S, 1.5 * S, 5.0 * S, 24), p6.x, p6.y, 62.4, 67.4, mAcc, 'accessories', modAGB);
   axialPart(new THREE.CylinderGeometry(0.4 * S, 0.4 * S, 1.4 * S, 10), p6.x, p6.y + 1.7, 65.2, 66.6, mTubes, 'accessories', modAGB);
-  // conduite carburant FCU -> diviseur de débit (bas du moteur)
-  tube([[4.2, 66, 1.9], [7.4, 64.5, 2.6], [9.8, 60, 3.6], [10.9, 54, 4.6], [11.2, 45, 5.3], [11.4, 34, 5.8], [11.8, 29.4, 6]], 0.24, 'tubes', modGG, mFuelLine);
+  // conduite carburant FCU -> diviseur de débit (bas du moteur) : arrive par l'arrière sur le coude gauche du diviseur
+  // (AMM 73-10-04 fig. 201 ; embout du coude à r 12,83, z 28,5-29,0, 6,41 h, pt6a21-gg.js), écrou de raccord vissé dessus
+  tube([[4.2, 66, 1.9], [7.4, 64.5, 2.6], [9.8, 60, 3.6], [10.9, 54, 4.6], [11.2, 45, 5.3], [11.7, 38, 5.9], [12.6, 32.6, 6.33], [12.83, 30.4, 6.41], [12.83, 29.15, 6.414]], 0.2, 'tubes', modGG, mFuelLine);
+  add(modGG, 'tubes', new THREE.Mesh(new THREE.CylinderGeometry(0.4 * S, 0.4 * S, 0.7 * S, 6), mTubes)).position.copy(P(12.83, 28.8, clockPhi(6.414)));
 }
 // bouchon de remplissage et jauge d'huile (IPC 72-60 fig. 10)
 {
@@ -2527,7 +2529,7 @@ window.addEventListener('themechange', applyTheme);
 if (LIGHT) applyTheme();
 resize();
 requestAnimationFrame(frame);
-window.__pt6 = { RGB, pickables, secOf, setIso, eng };   // inspection depuis la console
+window.__pt6 = { RGB, GG, pickables, secOf, setIso, eng, scene, camera, controls };   // inspection depuis la console
 })();
 </script>
 <script src="theme-toggle.js"></script>
