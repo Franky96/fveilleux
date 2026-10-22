@@ -25,6 +25,7 @@
   /* pièces : acier des pignons, carter, tuyaux */
   --acier:#b4b2a9; --acier-trait:#444441; --carter:#1d2830; --carter-trait:#3a4b58; --tuyau:#3a4b58;
   --vert:#3fae6a; --rouge:#e05a4a;
+  --s-pompe:#3d9fd6; --s-circuit:#c97624;
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
@@ -36,6 +37,7 @@ html.light{
   --accent:#1d6f99; --accent-d:#d4e8f3; --on-accent:#0f4a6a;
   --acier:#c9c7bf; --acier-trait:#5f5e5a; --carter:#dfe6eb; --carter-trait:#9fb0bd; --tuyau:#a9b8c4;
   --vert:#2a8a50; --rouge:#c4402f;
+  --s-pompe:#1d6f99; --s-circuit:#c0611b;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--text)}
@@ -76,6 +78,29 @@ svg.pompe text.jauge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;
 /* vue « pompe seule » ou « dans un circuit » (d'après le schéma de l'utilisateur) */
 .panel:not(.vue-circ) .circ,.panel.vue-circ .seul{display:none}
 .plis{stroke-width:2.2}
+.fleche{fill:none;stroke:var(--rouge);stroke-width:3;stroke-linecap:round}
+.suivie{stroke:var(--text);stroke-width:2.4}
+svg.pompe text.etiq{font-family:var(--f-mono);font-weight:500;font-size:11px;letter-spacing:0;text-transform:none;fill:var(--text);paint-order:stroke;stroke:var(--panel);stroke-width:3px}
+/* point de fonctionnement : courbe de la pompe et courbe du circuit */
+.courbes{margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.courbes h3{font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.courbes p{margin:4px 0 8px;color:var(--muted);font-size:13px;max-width:80ch}
+.pq-boite{position:relative}
+svg.pq{display:block;width:100%;height:auto;touch-action:none}
+svg.pq text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+svg.pq text.lab{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;font-size:13px;text-transform:uppercase}
+svg.pq .grille{stroke:var(--line);stroke-width:1}
+svg.pq .axe{stroke:var(--line2);stroke-width:1}
+svg.pq .c-pompe{fill:none;stroke:var(--s-pompe);stroke-width:2;stroke-linejoin:round}
+svg.pq .c-circuit{fill:none;stroke:var(--s-circuit);stroke-width:2;stroke-linejoin:round}
+svg.pq .tarage{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+svg.pq .viseur{stroke:var(--muted);stroke-width:1}
+.pq-bulle{position:absolute;pointer-events:none;background:#0b1013ee;color:#e6edf2;border:1px solid var(--line2);border-radius:4px;padding:6px 9px;font-size:12px;line-height:1.45;white-space:nowrap;transform:translate(-50%,-110%)}
+.pq-bulle b{font-family:var(--f-mono);font-weight:500}
+.pq-legende{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--text);margin-top:4px}
+.pq-legende i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.pq-legende i.pt{width:9px;height:9px;border-radius:50%}
+.pq-legende i.tr{background:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px)}
 #status{text-align:center;margin:8px 0 14px;font-size:14px;min-height:2.6em}
 .reglages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:4px}
 @media (max-width:760px){.reglages{grid-template-columns:1fr}}
@@ -143,13 +168,14 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <title id="svg-t">Pompe à engrenages extérieurs et son circuit d'huile</title>
     <desc id="svg-d">Vue « pompe seule » : deux pignons dans un carter ; l'huile monte du réservoir par l'aspiration, fait le tour des pignons par l'extérieur, sort au refoulement vers le circuit puis revient au réservoir. Un clapet de décharge relie le refoulement à l'aspiration. La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute). Vue « dans un circuit » : la pompe refoule vers le filtre à huile puis le moteur, avec une soupape de dérivation autour du filtre, une soupape de surpression qui renvoie à l'aspiration et un clapet antiretour.</desc>
     <defs>
+      <linearGradient id="g-leg"><stop offset="0" stop-color="rgb(59,143,217)"/><stop offset=".55" stop-color="rgb(224,160,48)"/><stop offset="1" stop-color="rgb(217,68,59)"/></linearGradient>
       <linearGradient id="g-cav" x1="0" y1="1" x2="0" y2="0">
         <stop id="s-c0" offset="0"/><stop id="s-c1" offset=".47"/><stop id="s-c2" offset=".53"/><stop id="s-c3" offset="1"/>
       </linearGradient>
     </defs>
     <g class="seul">
     <!-- réservoir -->
-    <rect x="250" y="400" width="490" height="66" rx="6" class="carter"/>
+    <rect x="250" y="400" width="490" height="66" rx="6" class="carter"><title>Réservoir : l'huile y revient du circuit et y est aspirée par la pompe</title></rect>
     <rect id="niveau" x="254" y="420" width="482" height="42" rx="3" opacity=".55"/>
     <text x="560" y="452" text-anchor="middle">Réservoir</text>
     <!-- tuyaux : paroi, puis huile à la couleur de sa pression -->
@@ -162,7 +188,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="664" y="262" text-anchor="end">Circuit</text>
     <text x="664" y="278" text-anchor="end" class="fin">paliers, gicleurs</text>
     <!-- clapet de décharge -->
-    <rect x="72" y="198" width="36" height="74" rx="4" class="carter"/>
+    <rect x="72" y="198" width="36" height="74" rx="4" class="carter"><title>Clapet de décharge : un ressort tient la bille sur son siège ; au-delà du tarage, la pression la repousse et le surplus retourne à l'aspiration</title></rect>
     <rect id="ch-h" x="80" y="200" width="20" height="10" /><rect id="ch-b" x="80" y="210" width="20" height="60"/>
     <path d="M80 206H86M94 206H100" stroke="var(--text)" stroke-width="3"/>
     <polyline id="ressort" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
@@ -190,14 +216,14 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="74" y="352" class="fin">depuis le réservoir</text>
     <text x="260" y="466" text-anchor="middle">Pompe à engrenages</text>
     <!-- soupape de surpression (horizontale) : ressort à gauche, s'ouvre quand la ligne du moteur dépasse le tarage -->
-    <rect x="88" y="113" width="84" height="34" rx="6" class="carter"/>
+    <rect x="88" y="113" width="84" height="34" rx="6" class="carter"><title>Soupape de surpression : limite la pression envoyée au moteur et renvoie le surplus à l'aspiration</title></rect>
     <rect id="k-sp-b" x="94" y="122" width="56" height="16"/><rect id="k-sp-h" x="150" y="122" width="20" height="16"/>
     <path d="M150 122V126M150 134V138" stroke="var(--text)" stroke-width="3"/>
     <polyline id="k-sp-r" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
     <polygon id="k-sp-c" fill="var(--acier)" stroke="var(--acier-trait)"/>
     <text x="130" y="102" text-anchor="middle">Soupape de surpression</text>
     <!-- soupape de dérivation (verticale) : en parallèle du filtre, s'ouvre quand le filtre résiste trop -->
-    <rect x="413" y="198" width="34" height="66" rx="6" class="carter"/>
+    <rect x="413" y="198" width="34" height="66" rx="6" class="carter"><title>Soupape de dérivation : s'ouvre quand le filtre résiste trop ; l'huile le contourne sans être filtrée</title></rect>
     <rect id="k-dv-h" x="421" y="202" width="18" height="34"/><rect id="k-dv-b" x="421" y="236" width="18" height="26"/>
     <path d="M421 236H425M435 236H439" stroke="var(--text)" stroke-width="3"/>
     <polyline id="k-dv-r" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
@@ -205,7 +231,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="455" y="226" class="fin" style="fill:var(--text)">Soupape de</text>
     <text x="455" y="240" class="fin" style="fill:var(--text)">dérivation</text>
     <!-- filtre à huile : l'huile entoure l'élément, le traverse vers le tube central et sort par le haut -->
-    <rect x="520" y="165" width="180" height="285" rx="12" class="carter"/>
+    <rect x="520" y="165" width="180" height="285" rx="12" class="carter"><title>Filtre à huile : l'huile traverse l'élément plissé de l'extérieur vers le tube central</title></rect>
     <rect id="k-sale" x="530" y="176" width="160" height="264" rx="6"/>
     <rect x="550" y="196" width="120" height="228" rx="3" fill="var(--panel2)" stroke="var(--carter-trait)"/>
     <g id="k-plis"></g>
@@ -219,14 +245,22 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     </g>
     <!-- pompe : carter, cavité (huile), poches, pignons ; déplacée et tournée dans la vue « circuit » -->
     <g id="pompe">
-    <rect x="176" y="121" width="368" height="228" rx="26" class="carter"/>
+    <rect x="176" y="121" width="368" height="228" rx="26" class="carter"><title>Carter de la pompe : les pignons y tournent avec un jeu très faible en bout de dent</title></rect>
+    <g id="fleches"></g>
     <path id="cavite" fill="url(#g-cav)"/>
     <g id="poches"></g>
     <g id="pg-g"></g><g id="pg-d"></g>
     <g id="c-pompe"></g>
     </g>
+    <g aria-hidden="true">
+      <text x="16" y="428" class="fin">pression de l'huile</text>
+      <rect x="16" y="434" width="150" height="8" rx="4" fill="url(#g-leg)"/>
+      <text x="16" y="458" class="fin">0</text><text x="91" y="458" class="fin" text-anchor="middle">75</text><text x="166" y="458" class="fin" text-anchor="end">150 psi</text>
+    </g>
+    <text id="suivi-t" class="etiq" text-anchor="middle" display="none"></text>
   </svg>
   <div class="lecture">
+    <button class="btn" id="suivre" type="button" aria-pressed="false" title="Met en évidence une poche d'huile et affiche sa pression pendant son trajet">Suivre une poche</button>
     <button class="btn" id="pp" type="button">❚❚ Figer</button>
     <label for="ralenti">Rotation affichée</label>
     <select id="ralenti"><option value="0.0025">×1/400</option><option value="0.005">×1/200</option><option value="0.01" selected>×1/100</option><option value="0.02">×1/50</option></select>
@@ -262,6 +296,13 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <div class="val"><span>Vitesse des dents</span><b id="v-vt">—</b><small>au cercle primitif</small></div>
     <div class="val"><span>Dents par seconde</span><b id="v-dz">—</b><small>pulsation du débit</small></div>
   </div>
+
+  <section class="courbes" aria-labelledby="t-pq">
+    <h3 id="t-pq">Point de fonctionnement</h3>
+    <p id="pq-txt">La pompe impose presque son débit : sa courbe est presque verticale, à peine penchée par les fuites. Le circuit, lui, demande d'autant plus de pression qu'on lui envoie de débit. L'huile se stabilise au croisement des deux courbes ; s'il dépasse le tarage du clapet, le clapet s'ouvre et l'écart entre les deux points retourne à l'aspiration.</p>
+    <div class="pq-boite"><svg class="pq" id="pq" viewBox="0 0 960 330" role="img" aria-labelledby="t-pq pq-txt"></svg><div class="pq-bulle" id="pq-bulle" hidden></div></div>
+    <div class="pq-legende"><span><i style="background:var(--s-pompe)"></i>Pompe : débit qu'elle peut fournir à chaque pression</span><span><i style="background:var(--s-circuit)"></i><span id="pq-l-c">Circuit : pression qu'il faut pour faire passer un débit</span></span><span><i class="tr"></i>Tarage du clapet</span><span><i class="pt" style="background:var(--text)"></i>Points actuels</span></div>
+  </section>
 </section>
 
 <div class="notes">
@@ -332,8 +373,9 @@ function resoudre(r) {
   for (let i = 0; i < 80; i++) { const p = (lo + hi) / 2; if (qPompe(p) - qClapet(p) - qCircuit(p) > 0) lo = p; else hi = p; }
   const p = qth > 0 ? (lo + hi) / 2 : 0, qp = qPompe(p), qr = qClapet(p), qc = Math.max(0, qp - qr), qf = qth - qp;
   const couple = V * p / (TAU * 0.9) + KV * u * w * r.b / 20, puis = couple * w;
+  // (graphique : débit disponible à chaque pression, pression du circuit à chaque débit, point actuel)
   return { V, qth, p, qp, qr, qc, qf, couple, puis, nu: nu(r.t), ev: qth ? qp / qth : 1, eg: puis ? qp * p / puis : 0,
-    vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z };
+    vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z, dispo: qPompe, circ: Q => A * Q + B * Q * Q, pc: p, qd: qp };
 }
 
 // vue « dans un circuit » : pompe → filtre (résistance laminaire, plus forte s'il est colmaté ou si l'huile est froide),
@@ -354,7 +396,10 @@ function resoudreCircuit(r) {
   const qp = qPompe(p), qfi = qFiltre(dp), qb = qDer(dp), qf = qth - qp;
   const couple = V * p / (TAU * 0.9) + KV * u * w * r.b / 20, puis = couple * w;
   return { V, qth, p, p2, dp, qp, qr, qc, qfi, qb, qf, couple, puis, nu: nu(r.t), ev: qth ? qp / qth : 1, eg: puis ? qp * p / puis : 0,
-    vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z, net: qb - qr };
+    vt: w * (r.m * r.z / 2) * 1e-3, dz: r.n / 60 * r.z, net: qb - qr,
+    // (graphique, vu de la ligne du moteur : ce que la pompe peut y envoyer après le filtre, à chaque pression)
+    dispo: p2 => { let a = 0, b = qth; for (let i = 0; i < 40; i++) { const Q = (a + b) / 2; if (Q - qPompe(p2 + dpPour(Q)) < 0) a = Q; else b = Q; } return (a + b) / 2; },
+    circ: Q => A * Q + B * Q * Q, pc: p2, qd: qc + qr };
 }
 
 /* ---------- couleur de l'huile selon sa pression (bleu → ambre → rouge, 0 à 150 psi) ---------- */
@@ -399,6 +444,11 @@ function construire(Z) {
     const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', rr); c.setAttribute('class', 'goutte'); $('poches').appendChild(c);
     poches.push({ w, c, g, a0: TAU * i / Z + Math.PI / Z });
   }
+  // flèches du sens de rotation, sur le carter au-dessus des pignons (menant : sens horaire, mené : sens inverse)
+  const fl = (cx, a0, a1) => { const r = rc + 12, P = a => [cx + r * Math.cos(a), CY + r * Math.sin(a)], [x0, y0] = P(a0), [x1, y1] = P(a1), sw = a1 > a0 ? 1 : 0;
+    const t = a1 + (sw ? 1 : -1) * 0.001, d = [Math.cos(a1 + (sw ? Math.PI / 2 : -Math.PI / 2)), Math.sin(a1 + (sw ? Math.PI / 2 : -Math.PI / 2))], n = [Math.cos(a1), Math.sin(a1)];
+    return `<path class="fleche" d="M${x0} ${y0}A${r} ${r} 0 0 ${sw} ${x1} ${y1}"/><path class="fleche" d="M${x1 - 8 * d[0] + 5 * n[0]} ${y1 - 8 * d[1] + 5 * n[1]}L${x1} ${y1}L${x1 - 8 * d[0] - 5 * n[0]} ${y1 - 8 * d[1] - 5 * n[1]}"/>`; };
+  $('fleches').innerHTML = fl(XG, 3.55, 4.25) + fl(XD, 5.87, 5.17) + '<title>Sens de rotation : le pignon menant tourne en sens horaire, le mené en sens inverse</title>';
   geo = { Z, mp, rg, poches, yh, yb, phiD: Math.PI + Math.PI / Z };
 }
 
@@ -437,6 +487,70 @@ const COURANTS = [
   ['c-circ', 'M610 420V130', 'qfi'], ['c-circ', 'M610 130H740V58', 'qc'], ['c-circ', 'M430 130H610', 'net'],
   ['c-circ', 'M430 130H170', 'qr'], ['c-circ', 'M90 130H60V330', 'qr'],
 ].map(([g, d, q]) => { const e = document.createElementNS(NS, 'path'); e.setAttribute('d', d); e.setAttribute('class', 'courant'); $(g).appendChild(e); return { e, q, off: 0, g }; });
+
+/* ---------- graphique du point de fonctionnement ---------- */
+const PQ = { W: 960, H: 330, g: 56, d: 20, h: 30, b: 40 };
+const pas = v => { const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * e; };
+let pqEch = null;
+// (redessiné à la largeur réelle : le texte garde sa taille sur téléphone)
+function dessinerPQ() {
+  PQ.W = Math.round(Math.min(960, Math.max(320, $('pq').clientWidth || 960))); PQ.H = PQ.W < 600 ? 280 : 330; PQ.g = PQ.W < 600 ? 44 : 56;
+  $('pq').setAttribute('viewBox', `0 0 ${PQ.W} ${PQ.H}`);
+  const { W, H, g, d, h, b } = PQ, pw = W - g - d, ph = H - h - b;
+  const xmax = Math.max(5, Math.ceil(E.qth / LMIN * 1.15 / pas(E.qth / LMIN * 1.15 / 5 || 1)) * pas(E.qth / LMIN * 1.15 / 5 || 1));
+  const ymax = Math.ceil(Math.max(160, R.ps * 1.15, E.pc / PSI * 1.1) / 20) * 20;
+  const X = q => g + pw * q / xmax, Y = p => h + ph * (1 - p / ymax);
+  pqEch = { X, Y, xmax, ymax, g, pw, h, ph };
+  let o = '';
+  const sx = pas(xmax / (W < 600 ? 4 : 5));
+  for (let q = 0; q <= xmax + 1e-9; q += sx) o += `<line class="grille" x1="${X(q)}" y1="${h}" x2="${X(q)}" y2="${h + ph}"/><text x="${X(q)}" y="${h + ph + 16}" text-anchor="middle">${NB(q)}</text>`;
+  for (let p = 0; p <= ymax; p += 20) o += `<line class="grille" x1="${g}" y1="${Y(p)}" x2="${g + pw}" y2="${Y(p)}"/><text x="${g - 8}" y="${Y(p) + 4}" text-anchor="end">${p}</text>`;
+  o += `<line class="axe" x1="${g}" y1="${h + ph}" x2="${g + pw}" y2="${h + ph}"/><line class="axe" x1="${g}" y1="${h}" x2="${g}" y2="${h + ph}"/>`;
+  o += `<text x="${g + pw}" y="${H - 4}" text-anchor="end">débit (L/min)</text><text x="${g}" y="${h - 12}" text-anchor="middle">psi</text>`;
+  // tarage
+  o += `<line class="tarage" x1="${g}" y1="${Y(R.ps)}" x2="${g + pw}" y2="${Y(R.ps)}"/><text x="${g + pw - 6}" y="${Y(R.ps) - 6}" text-anchor="end">tarage ${NB(R.ps)} psi</text>`;
+  if (E.qth > 0) {
+    // pompe : débit disponible en fonction de la pression ; circuit : pression en fonction du débit
+    let cp = ''; for (let i = 0; i <= 50; i++) { const p = ymax * i / 50; cp += `${X(E.dispo(p * PSI) / LMIN).toFixed(1)},${Y(p).toFixed(1)} `; }
+    o += `<polyline class="c-pompe" points="${cp}"/>`;
+    const qh = E.dispo(ymax * PSI) / LMIN; o += `<text class="lab" x="${X(qh) - 6}" y="${h + 12}" text-anchor="end" style="fill:var(--text)">Pompe</text>`;
+  }
+  // (pas fin près de zéro : avec une huile froide, la courbe du circuit monte presque à la verticale)
+  let cc = '', fin = null, haut = false;
+  for (let i = 0; i <= 400; i++) { const q = xmax * Math.pow(i / 400, 2), p = E.circ(q * LMIN) / PSI;
+    if (p > ymax) { let a = fin ? fin[0] : 0, b2 = q; for (let j = 0; j < 30; j++) { const m = (a + b2) / 2; if (E.circ(m * LMIN) / PSI > ymax) b2 = m; else a = m; } cc += `${X(a).toFixed(1)},${Y(ymax).toFixed(1)}`; fin = [a, ymax]; haut = true; break; }
+    cc += `${X(q).toFixed(1)},${Y(p).toFixed(1)} `; fin = [q, p]; }
+  o += `<polyline class="c-circuit" points="${cc}"/>`;
+  if (fin) o += haut ? `<text class="lab" x="${X(fin[0]) + 8}" y="${h + 12}" style="fill:var(--text)">${vue === 'circuit' ? 'Moteur' : 'Circuit'}</text>`
+    : `<text class="lab" x="${X(fin[0]) - 8}" y="${Y(fin[1]) - 8}" text-anchor="end" style="fill:var(--text)">${vue === 'circuit' ? 'Moteur' : 'Circuit'}</text>`;
+  // points actuels : le circuit reçoit qc, la pompe fournit qd ; l'écart passe par le clapet
+  if (E.qth > 0) {
+    const pc = E.pc / PSI, xc = X(E.qc / LMIN), xd = X(E.qd / LMIN), y = Y(pc);
+    if (E.qr > 0.01 * E.qth) o += `<line x1="${xc + 6}" y1="${y}" x2="${xd - 6}" y2="${y}" stroke="var(--text)" stroke-width="1.4" marker-end=""/><text x="${(xc + xd) / 2}" y="${y - 8}" text-anchor="middle" style="fill:var(--text)">clapet ${NB(E.qr / LMIN, 1)} L/min</text>`;
+    o += `<circle cx="${xd}" cy="${y}" r="5" fill="var(--s-pompe)" stroke="var(--panel2)" stroke-width="2"/><circle cx="${xc}" cy="${y}" r="5" fill="var(--s-circuit)" stroke="var(--panel2)" stroke-width="2"/>`;
+    const xm = Math.max(xc, xd), lab = `${NB(pc)} psi · ${NB(E.qc / LMIN, 1)} L/min` + (W < 600 ? '' : ` vers le ${vue === 'circuit' ? 'moteur' : 'circuit'}`);
+    if (E.qr > 0.01 * E.qth) o += `<text x="${(xc + xd) / 2}" y="${y + 20}" text-anchor="middle" style="fill:var(--text)">${lab}</text>`;
+    else o += xm + (W < 600 ? 120 : 250) < PQ.W - PQ.d ? `<text x="${xm + 10}" y="${y + 18}" style="fill:var(--text)">${lab}</text>` : `<text x="${Math.min(xc, xd) - 10}" y="${y + 18}" text-anchor="end" style="fill:var(--text)">${lab}</text>`;
+  }
+  o += `<line id="pq-viseur" class="viseur" y1="${h}" y2="${h + ph}" display="none"/><rect id="pq-zone" x="${g}" y="${h}" width="${pw}" height="${ph}" fill="transparent"/>`;
+  $('pq').innerHTML = o;
+  $('pq-l-c').textContent = vue === 'circuit' ? 'Moteur : pression qu\'il faut pour faire passer un débit (axe : pression de la ligne du moteur)' : 'Circuit : pression qu\'il faut pour faire passer un débit';
+}
+// survol : à un débit donné, pression demandée par le circuit et pression à laquelle la pompe fournit ce débit
+function survolPQ(ev) {
+  if (!pqEch) return;
+  const r = $('pq').getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * PQ.W, q = (x - pqEch.g) / pqEch.pw * pqEch.xmax;
+  const bulle = $('pq-bulle'), vis = $('pq-viseur');
+  if (q < 0 || q > pqEch.xmax) { bulle.hidden = true; vis && vis.setAttribute('display', 'none'); return; }
+  vis.setAttribute('x1', x); vis.setAttribute('x2', x); vis.setAttribute('display', '');
+  const pC = E.circ(q * LMIN) / PSI;
+  let pP = null; if (E.qth && q * LMIN <= E.dispo(0)) { let a = 0, b = 3000 * PSI; for (let i = 0; i < 50; i++) { const m = (a + b) / 2; if (E.dispo(m) > q * LMIN) a = m; else b = m; } pP = a / PSI; }
+  bulle.innerHTML = `Débit <b>${NB(q, 1)} L/min</b><br>${vue === 'circuit' ? 'Moteur' : 'Circuit'} : <b>${NB(pC)} psi</b><br>Pompe : ${pP === null ? 'ne peut pas fournir ce débit' : pP > pqEch.ymax ? `<b>plus de ${pqEch.ymax} psi</b>` : `<b>jusqu'à ${NB(pP)} psi</b>`}`;
+  bulle.style.left = (ev.clientX - r.left) + 'px'; bulle.style.top = ((pqEch.h + 10) / PQ.H * r.height) + 'px'; bulle.hidden = false;
+}
+$('pq').addEventListener('pointermove', survolPQ);
+new ResizeObserver(() => { if (E) dessinerPQ(); }).observe($('pq'));
+$('pq').addEventListener('pointerleave', () => { $('pq-bulle').hidden = true; const v = $('pq-viseur'); v && v.setAttribute('display', 'none'); });
 
 /* ---------- réglages, situations ---------- */
 const R = { n: 3000, t: 80, s: 40, ps: 100, c: 0, z: 12, m: 3, b: 20 };
@@ -494,6 +608,7 @@ function maj() {
     + (E.ev < 0.85 ? ` Huile très fluide : les fuites internes font perdre ${NB(100 * (1 - E.ev))} % du débit.` : '');
   if (!ci) $('status').textContent = st;
   MANO.seule.repere(R.ps); MANO.circuit.repere(R.ps);
+  dessinerPQ();
 }
 for (const k in R) $(k).addEventListener('input', e => { R[k] = parseFloat(e.target.value); maj(); });
 for (const b of document.querySelectorAll('[data-cas]')) b.addEventListener('click', () => {
@@ -510,7 +625,8 @@ for (const b of document.querySelectorAll('[data-vue]')) b.addEventListener('cli
 
 /* ---------- animation ---------- */
 const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let th = 0, fige = reduit, last = null, ralenti = 0.01;
+let th = 0, fige = reduit, last = null, ralenti = 0.01, suivre = false;
+$('suivre').addEventListener('click', () => { suivre = !suivre; $('suivre').setAttribute('aria-pressed', suivre); if (!suivre) $('suivi-t').setAttribute('display', 'none'); });
 const majPP = () => { $('pp').textContent = fige ? '▶ Reprendre' : '❚❚ Figer'; };
 $('pp').addEventListener('click', () => { fige = !fige; majPP(); });
 $('ralenti').addEventListener('change', e => { ralenti = parseFloat(e.target.value); });
@@ -536,6 +652,16 @@ function image(ts) {
     let t; if (dehors) { const ang = Math.atan2(y, q.g ? x : -x); t = (Math.PI / 2 - ang) / Math.PI; } else t = y < 0 ? 1 : 0;
     q.w.setAttribute('transform', `translate(${cx} ${CY}) rotate(${(a * 180 / Math.PI).toFixed(2)})`);
     q.w.setAttribute('fill', couleur(pAff * t * t)); q.w.setAttribute('opacity', dehors ? 1 : 0); q.c.setAttribute('opacity', dehors ? 1 : 0);
+  }
+  // poche suivie : la première du pignon menant, entourée, avec sa pression (position ramenée hors du groupe tourné)
+  const q0 = geo.poches[0]; q0.w.classList.toggle('suivie', suivre);
+  if (suivre) {
+    const a = th + q0.a0, x = XG + (geo.rg + geo.mp * 2.2) * Math.cos(a), y = CY + (geo.rg + geo.mp * 2.2) * Math.sin(a), dehors = Math.cos(a) < 0;
+    const t = dehors ? (Math.PI / 2 - Math.atan2(Math.sin(a), -Math.cos(a))) / Math.PI : Math.sin(a) < 0 ? 1 : 0;
+    const [X, Y] = vue === 'circuit' ? [260 - 0.62 * (y - CY), 330 + 0.62 * (x - CX)] : [x, y];
+    const lab = $('suivi-t'); lab.setAttribute('x', X.toFixed(1)); lab.setAttribute('y', (Y + 4).toFixed(1)); lab.setAttribute('display', '');
+    lab.textContent = dehors ? NB(pAff * t * t / PSI) + ' psi' : (Math.sin(a) < 0 ? 'vidée au refoulement' : 'se remplit');
+    q0.w.setAttribute('opacity', 1);
   }
   // clapet : la bille descend quand il s'ouvre ; ressort comprimé
   const ouv = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0; if (vue !== 'circuit') clapAff += (ouv - clapAff) * Math.min(1, dt * 6);
