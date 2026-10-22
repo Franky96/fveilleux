@@ -1,0 +1,111 @@
+# Déploiement Hostinger de secours. Hostinger déploie master quand le webhook du dépôt l'avertit d'un envoi ; le
+# 22 octobre 2026, GitHub n'a livré aucun avis pendant un incident (déploiements manuels nécessaires). Ce workflow
+# vérifie après chaque envoi que fveilleux.com sert bien les fichiers modifiés ; sinon il appelle lui-même l'adresse
+# de déploiement automatique de Hostinger, puis revérifie (3 essais). Le webhook reste en place : en temps normal,
+# le site est déjà à jour à la première vérification et ce workflow ne fait rien d'autre.
+# Secret requis : HOSTINGER_DEPLOY_URL (Settings → Secrets and variables → Actions), l'adresse « Webhook URL » de
+# hPanel → Avancé → GIT → ⋮ → Auto Deployment. Sans ce secret, le workflow vérifie seulement.
+# Les commits des robots (poussés avec GITHUB_TOKEN) ne déclenchent pas « push » : workflow_run les couvre.
+name: Déploiement Hostinger (secours)
+
+on:
+  push:
+    branches: [master]
+  workflow_run:
+    workflows: ['Référendum Alberta · résultats', 'Votes Québec · données Qc125']
+    types: [completed]
+  workflow_dispatch:        # bouton « Run workflow » : vérifie le dernier commit et redéploie au besoin
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-hostinger
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Vérifier le site et déployer au besoin
+        env:
+          DEPLOY_URL: ${{ secrets.HOSTINGER_DEPLOY_URL }}
+          BEFORE: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: |
+          python3 - <<'EOF'
+          import hashlib, os, subprocess, sys, time, urllib.parse, urllib.request, random
+
+          SITE = 'https://fveilleux.com/'
+          STATIQUES = ('.html', '.js', '.css', '.json', '.svg', '.txt', '.csv', '.geojson')
+
+          def git(*a):
+              return subprocess.run(['git', *a], capture_output=True, text=True, check=True).stdout
+
+          # fichiers modifiés par l'envoi (ou par le dernier commit) que le serveur renvoie tels quels
+          avant = os.environ.get('BEFORE', '')
+          if not avant or set(avant) == {'0'}:
+              avant = 'HEAD~1'
+          try:
+              noms = git('diff', '--name-only', '--diff-filter=AM', avant, 'HEAD').split('\n')
+          except subprocess.CalledProcessError:
+              noms = git('diff', '--name-only', '--diff-filter=AM', 'HEAD~1', 'HEAD').split('\n')
+          noms = [n for n in noms if n.endswith(STATIQUES) and not n.startswith(('.', 'api/', 'research_notes/', 'reports/'))]
+          noms = noms[:6]
+          if not noms:
+              noms = ['version.js']
+          print('Fichiers vérifiés :', ', '.join(noms))
+
+          def a_jour():
+              retard = []
+              for n in noms:
+                  attendu = hashlib.sha256(open(n, 'rb').read()).hexdigest()
+                  url = SITE + urllib.parse.quote(n) + '?verif=' + str(random.randrange(10**9))
+                  try:
+                      req = urllib.request.Request(url, headers={'Cache-Control': 'no-cache', 'User-Agent': 'verif-deploiement'})
+                      recu = hashlib.sha256(urllib.request.urlopen(req, timeout=30).read()).hexdigest()
+                  except Exception as e:
+                      recu = 'erreur : ' + str(e)
+                  if recu != attendu:
+                      retard.append(n)
+              if retard:
+                  print('  pas encore à jour :', ', '.join(retard))
+              return not retard
+
+          def attendre(secondes):
+              fin = time.time() + secondes
+              while time.time() < fin:
+                  time.sleep(15)
+                  if a_jour():
+                      return True
+              return False
+
+          # le webhook déploie normalement en quelques secondes
+          if attendre(60):
+              print('Site à jour (déploiement par le webhook).')
+              sys.exit(0)
+
+          url = os.environ.get('DEPLOY_URL', '')
+          if not url:
+              print('::warning::Site pas à jour et secret HOSTINGER_DEPLOY_URL absent : déployer à la main dans hPanel.')
+              sys.exit(1)
+          for essai in range(1, 4):
+              print(f'Déploiement Hostinger, essai {essai}')
+              try:
+                  req = urllib.request.Request(url, data=b'{"ref":"refs/heads/master"}', method='POST',
+                                               headers={'Content-Type': 'application/json', 'X-GitHub-Event': 'push'})
+                  print('  réponse :', urllib.request.urlopen(req, timeout=60).status)
+              except Exception as e:
+                  print('  appel refusé :', e)
+              if attendre(120):
+                  print('Site à jour (déploiement par ce workflow).')
+                  sys.exit(0)
+          print('::error::Le site n\'est toujours pas à jour après 3 déploiements : vérifier le journal GIT de hPanel.')
+          sys.exit(1)
+          EOF
