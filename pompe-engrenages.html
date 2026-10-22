@@ -73,10 +73,15 @@ svg.pompe text.jauge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;
 .huile{fill:none;stroke-width:8;stroke-linejoin:round}
 .pignon{fill:var(--acier);stroke:var(--acier-trait);stroke-width:.8}
 .goutte{fill:rgba(255,255,255,.85)}
-.courant{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 15}
+.courant{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 14 3 9}
 .poche{stroke:rgba(0,0,0,.18);stroke-width:.6}
 /* vue « pompe seule » ou « dans un circuit » (d'après le schéma de l'utilisateur) */
 .panel:not(.vue-circ) .circ,.panel.vue-circ .seul{display:none}
+/* (schéma : les décors des deux vues se croisent en fondu pendant que la pompe se déplace) */
+svg.pompe .circ,svg.pompe .seul{transition:opacity .5s ease}
+.panel:not(.vue-circ) svg.pompe .circ,.panel.vue-circ svg.pompe .seul{display:inline;opacity:0;pointer-events:none}
+.alerte{fill:none;stroke:var(--rouge);stroke-width:2.5}
+@media (prefers-reduced-motion: reduce){svg.pompe .circ,svg.pompe .seul{transition:none}}
 .plis{stroke-width:2.2}
 .fleche{fill:none;stroke:var(--rouge);stroke-width:3;stroke-linecap:round}
 .suivie{stroke:var(--text);stroke-width:2.4}
@@ -176,7 +181,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <g class="seul">
     <!-- réservoir -->
     <rect x="250" y="400" width="490" height="66" rx="6" class="carter"><title>Réservoir : l'huile y revient du circuit et y est aspirée par la pompe</title></rect>
-    <rect id="niveau" x="254" y="420" width="482" height="42" rx="3" opacity=".55"/>
+    <path id="niveau" opacity=".55"/>
     <text x="560" y="452" text-anchor="middle">Réservoir</text>
     <!-- tuyaux : paroi, puis huile à la couleur de sa pression -->
     <path class="tuyau" d="M360 452V349M360 121V60H680V412M360 90H90V380H360"/>
@@ -188,6 +193,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="664" y="262" text-anchor="end">Circuit</text>
     <text x="664" y="278" text-anchor="end" class="fin">paliers, gicleurs</text>
     <!-- clapet de décharge -->
+    <rect id="al-clap" x="69" y="195" width="42" height="80" rx="6" class="alerte" opacity="0"/>
     <rect x="72" y="198" width="36" height="74" rx="4" class="carter"><title>Clapet de décharge : un ressort tient la bille sur son siège ; au-delà du tarage, la pression la repousse et le surplus retourne à l'aspiration</title></rect>
     <rect id="ch-h" x="80" y="200" width="20" height="10" /><rect id="ch-b" x="80" y="210" width="20" height="60"/>
     <path d="M80 206H86M94 206H100" stroke="var(--text)" stroke-width="3"/>
@@ -216,6 +222,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="74" y="352" class="fin">depuis le réservoir</text>
     <text x="260" y="466" text-anchor="middle">Pompe à engrenages</text>
     <!-- soupape de surpression (horizontale) : ressort à gauche, s'ouvre quand la ligne du moteur dépasse le tarage -->
+    <rect id="al-sp" x="85" y="110" width="90" height="40" rx="8" class="alerte" opacity="0"/>
     <rect x="88" y="113" width="84" height="34" rx="6" class="carter"><title>Soupape de surpression : limite la pression envoyée au moteur et renvoie le surplus à l'aspiration</title></rect>
     <rect id="k-sp-b" x="94" y="122" width="56" height="16"/><rect id="k-sp-h" x="150" y="122" width="20" height="16"/>
     <path d="M150 122V126M150 134V138" stroke="var(--text)" stroke-width="3"/>
@@ -223,6 +230,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <polygon id="k-sp-c" fill="var(--acier)" stroke="var(--acier-trait)"/>
     <text x="130" y="102" text-anchor="middle">Soupape de surpression</text>
     <!-- soupape de dérivation (verticale) : en parallèle du filtre, s'ouvre quand le filtre résiste trop -->
+    <rect id="al-dv" x="410" y="195" width="40" height="72" rx="8" class="alerte" opacity="0"/>
     <rect x="413" y="198" width="34" height="66" rx="6" class="carter"><title>Soupape de dérivation : s'ouvre quand le filtre résiste trop ; l'huile le contourne sans être filtrée</title></rect>
     <rect id="k-dv-h" x="421" y="202" width="18" height="34"/><rect id="k-dv-b" x="421" y="236" width="18" height="26"/>
     <path d="M421 236H425M435 236H439" stroke="var(--text)" stroke-width="3"/>
@@ -235,6 +243,7 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <rect id="k-sale" x="530" y="176" width="160" height="264" rx="6"/>
     <rect x="550" y="196" width="120" height="228" rx="3" fill="var(--panel2)" stroke="var(--carter-trait)"/>
     <g id="k-plis"></g>
+    <g id="k-boue"></g>
     <rect id="k-propre" x="600" y="190" width="20" height="236"/>
     <line id="k-ar" x1="532" y1="318" x2="532" y2="342" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>
     <text x="514" y="356" text-anchor="end" class="fin" style="fill:var(--text)">clapet antiretour</text>
@@ -562,7 +571,7 @@ const CAS = {
 };
 for (const c of Object.values(CAS)) c.c = 0;
 CAS.filtre = { n: 3000, t: 80, s: 40, ps: 100, c: 92 };
-let E = null, pAff = 0, p2Aff = 0, clapAff = 0, derAff = 0, arAff = 0;
+let E = null;
 function maj() {
   for (const k in R) $('o-' + k).textContent = FMT[k](R[k]);
   if (!geo || geo.Z !== R.z) construire(R.z);
@@ -617,89 +626,125 @@ for (const b of document.querySelectorAll('[data-cas]')) b.addEventListener('cli
 function changerVue(v) {
   vue = v; document.querySelector('.panel').classList.toggle('vue-circ', v === 'circuit');
   for (const b of document.querySelectorAll('[data-vue]')) b.setAttribute('aria-pressed', b.dataset.vue === v);
-  $('pompe').setAttribute('transform', v === 'circuit' ? 'translate(260 330) scale(.62) rotate(90) translate(-360 -235)' : '');
+  poseDe = [...pose]; poseT = reduit ? 1 : 0; if (reduit) pose = [...POSE[v]];
   if (v !== 'circuit' && R.c) { R.c = 0; $('c').value = 0; }
-  maj(); pAff = E.p; p2Aff = E.p2 || 0;
+  maj();
 }
 for (const b of document.querySelectorAll('[data-vue]')) b.addEventListener('click', () => changerVue(b.dataset.vue));
 
 /* ---------- animation ---------- */
 const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let th = 0, fige = reduit, last = null, ralenti = 0.01, suivre = false;
+let th = 0, fige = reduit, last = null, ralenti = 0.01, suivre = false, tps = 0;
 $('suivre').addEventListener('click', () => { suivre = !suivre; $('suivre').setAttribute('aria-pressed', suivre); if (!suivre) $('suivi-t').setAttribute('display', 'none'); });
 const majPP = () => { $('pp').textContent = fige ? '▶ Reprendre' : '❚❚ Figer'; };
 $('pp').addEventListener('click', () => { fige = !fige; majPP(); });
 $('ralenti').addEventListener('change', e => { ralenti = parseFloat(e.target.value); });
+// état affiché : rejoint en douceur l'état calculé (les pignons prennent environ une seconde pour démarrer ou s'arrêter,
+// débits et pressions suivent) ; au chargement, tout part du repos
+const CLES = ['p', 'p2', 'qp', 'qc', 'qr', 'qfi', 'qb', 'net', 'qth'], D = Object.fromEntries(CLES.map(c => [c, 0]));
+let nAff = 0;
+// ressorts amortis : aiguilles des manomètres et soupapes dépassent un peu leur position avant de s'y poser
+const ressort = (raid, amort) => ({ x: 0, v: 0, pas(cible, dt) { this.v += (raid * (cible - this.x) - amort * this.v) * dt; this.x += this.v * dt; return this.x; } });
+const AIG = ressort(70, 10), RS = { clap: ressort(110, 13), der: ressort(110, 13), sp: ressort(110, 13), ar: ressort(60, 9) };
+// position de la pompe dans chaque vue : centre, échelle, rotation ; passage animé d'une vue à l'autre
+const POSE = { seule: [360, 235, 1, 0], circuit: [260, 330, 0.62, 90] };
+let pose = [...POSE.seule], poseDe = [...pose], poseT = 1;
+const doux = u => u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+// saletés retenues par l'élément du filtre (plus nombreuses quand il se colmate)
+const BOUE = Array.from({ length: 90 }, (_, i) => { const r = (Math.sin(i * 12.9898) * 43758.5453) % 1, r2 = (Math.sin(i * 78.233) * 12345.678) % 1;
+  const e = document.createElementNS(NS, 'circle'), cote = i % 2; e.setAttribute('cx', (cote ? 668 : 552) + (cote ? 1 : -1) * Math.abs(r) * 4);
+  e.setAttribute('cy', 200 + Math.abs(r2) * 220); e.setAttribute('r', 1.2 + Math.abs(r) * 1.4); e.setAttribute('fill', '#5c3b1e'); $('k-boue').appendChild(e); return e; });
+let colmAff = 0;
 function image(ts) {
   const dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
-  const k = fige ? 0 : dt;
-  pAff += (E.p - pAff) * Math.min(1, dt * 6);
-  p2Aff += ((E.p2 || 0) - p2Aff) * Math.min(1, dt * 6);
-  const cIn = couleur(0), cOut = couleur(pAff), c2 = couleur(p2Aff);
+  const k = fige ? 0 : dt; tps += k;
+  for (const c of CLES) D[c] += ((E[c] || 0) - D[c]) * Math.min(1, dt * 3.5);
+  nAff += (R.n - nAff) * Math.min(1, dt * 2.2);
+  const cIn = couleur(0), cOut = couleur(D.p), c2 = couleur(D.p2);
   // pignons : le menant tourne en sens horaire (à l'écran), le mené en sens inverse ; dents décalées d'un demi-pas
-  th += R.n / 60 * ralenti * TAU * k;
+  th += nAff / 60 * ralenti * TAU * k;
   $('pg-g').setAttribute('transform', `translate(${XG} ${CY}) rotate(${(th * 180 / Math.PI).toFixed(3)})`);
   $('pg-d').setAttribute('transform', `translate(${XD} ${CY}) rotate(${((geo.phiD - th) * 180 / Math.PI).toFixed(3)})`);
+  // pulsation du débit : chaque dent qui s'engrène chasse une petite bouffée d'huile (fréquence des dents)
+  const puls = 1 + 0.18 * Math.cos(geo.Z * th);
+  // pompe : déplacée et tournée pendant le passage d'une vue à l'autre
+  if (poseT < 1) { poseT = Math.min(1, poseT + dt / 0.8); const u = doux(poseT); pose = poseDe.map((a, i) => a + (POSE[vue][i] - a) * u); }
+  const [tx, ty, sc, rot] = pose;
+  $('pompe').setAttribute('transform', `translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${sc.toFixed(4)}) rotate(${rot.toFixed(2)}) translate(-360 -235)`);
+  const ecran = (x, y) => { const r = rot * Math.PI / 180, dx = x - CX, dy = y - CY; return [tx + sc * (Math.cos(r) * dx - Math.sin(r) * dy), ty + sc * (Math.sin(r) * dx + Math.cos(r) * dy)]; };
   // huile : couleur selon la pression (cavité, tuyaux, réservoir, chambre du clapet)
   $('s-c0').setAttribute('stop-color', cIn); $('s-c1').setAttribute('stop-color', cIn); $('s-c2').setAttribute('stop-color', cOut); $('s-c3').setAttribute('stop-color', cOut);
   $('h-asp').setAttribute('stroke', cIn); $('h-ret').setAttribute('stroke', cIn); $('h-ref').setAttribute('stroke', cOut);
-  $('niveau').setAttribute('fill', cIn); $('ch-h').setAttribute('fill', cOut); $('ch-b').setAttribute('fill', cIn);
-  // poches : la pression monte le long de la paroi, surtout à l'approche du refoulement
+  $('ch-h').setAttribute('fill', cOut); $('ch-b').setAttribute('fill', cIn);
+  // réservoir : surface de l'huile qui ondule, agitée par le retour du circuit
+  let nv = 'M254 462V420'; const agit = 0.6 + 1.4 * Math.min(1, D.qc / LMIN / 30);
+  for (let x = 254; x <= 736; x += 8) nv += `L${x} ${(420 + agit * (Math.sin(x / 23 + tps * 1.7) + 0.6 * Math.sin(x / 9 - tps * 2.6) + (Math.abs(x - 680) < 30 ? 1.2 * Math.sin(tps * 9 + x) : 0))).toFixed(2)}`;
+  $('niveau').setAttribute('d', nv + 'L736 462Z'); $('niveau').setAttribute('fill', cIn);
+  // poches : se remplissent en quittant l'aspiration, la pression monte le long de la paroi, vidées au refoulement
   for (const q of geo.poches) {
     const a = q.g ? geo.phiD - th + q.a0 : th + q.a0, cx = q.g ? XD : XG, x = Math.cos(a), y = Math.sin(a);
     q.c.setAttribute('cx', (cx + geo.rg * x).toFixed(1)); q.c.setAttribute('cy', (CY + geo.rg * y).toFixed(1));
     const dehors = q.g ? x > 0 : x < 0;
     let t; if (dehors) { const ang = Math.atan2(y, q.g ? x : -x); t = (Math.PI / 2 - ang) / Math.PI; } else t = y < 0 ? 1 : 0;
+    const plein = dehors ? Math.min(1, t / 0.08) * (D.qth > 1e-7 ? 1 : 0.6) : 0;
     q.w.setAttribute('transform', `translate(${cx} ${CY}) rotate(${(a * 180 / Math.PI).toFixed(2)})`);
-    q.w.setAttribute('fill', couleur(pAff * t * t)); q.w.setAttribute('opacity', dehors ? 1 : 0); q.c.setAttribute('opacity', dehors ? 1 : 0);
+    q.w.setAttribute('fill', couleur(D.p * t * t)); q.w.setAttribute('opacity', plein.toFixed(2)); q.c.setAttribute('opacity', plein.toFixed(2));
   }
-  // poche suivie : la première du pignon menant, entourée, avec sa pression (position ramenée hors du groupe tourné)
+  // poche suivie : la première du pignon menant, entourée, avec sa pression
   const q0 = geo.poches[0]; q0.w.classList.toggle('suivie', suivre);
   if (suivre) {
     const a = th + q0.a0, x = XG + (geo.rg + geo.mp * 2.2) * Math.cos(a), y = CY + (geo.rg + geo.mp * 2.2) * Math.sin(a), dehors = Math.cos(a) < 0;
     const t = dehors ? (Math.PI / 2 - Math.atan2(Math.sin(a), -Math.cos(a))) / Math.PI : Math.sin(a) < 0 ? 1 : 0;
-    const [X, Y] = vue === 'circuit' ? [260 - 0.62 * (y - CY), 330 + 0.62 * (x - CX)] : [x, y];
+    const [X, Y] = ecran(x, y);
     const lab = $('suivi-t'); lab.setAttribute('x', X.toFixed(1)); lab.setAttribute('y', (Y + 4).toFixed(1)); lab.setAttribute('display', '');
-    lab.textContent = dehors ? NB(pAff * t * t / PSI) + ' psi' : (Math.sin(a) < 0 ? 'vidée au refoulement' : 'se remplit');
+    lab.textContent = dehors ? NB(D.p * t * t / PSI) + ' psi' : (Math.sin(a) < 0 ? 'vidée au refoulement' : 'se remplit');
     q0.w.setAttribute('opacity', 1);
   }
-  // clapet : la bille descend quand il s'ouvre ; ressort comprimé
-  const ouv = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0; if (vue !== 'circuit') clapAff += (ouv - clapAff) * Math.min(1, dt * 6);
-  const yb = 216 + clapAff * 14; $('bille').setAttribute('cy', yb.toFixed(1));
+  // soupapes et clapets : ressorts amortis ; contour rouge qui pulse tant qu'ils sont ouverts
+  const ouv = q => D.qth > 1e-7 ? Math.min(1, q / (0.3 * D.qth)) : 0, pulse = 0.45 + 0.35 * Math.sin(ts / 1000 * 7);
+  const oc = Math.max(-0.08, Math.min(1.1, RS.clap.pas(ouv(D.qr), dt)));
+  const yb = 216 + Math.max(0, oc) * 14; $('bille').setAttribute('cy', yb.toFixed(1));
   let rs = ''; const y0 = yb + 8, y1 = 268, nS = 7; for (let i = 0; i <= nS; i++) rs += `${i % 2 ? 96 : 84},${(y0 + (y1 - y0) * i / nS).toFixed(1)} `;
-  $('ressort').setAttribute('points', rs);
+  $('ressort').setAttribute('points', rs); $('al-clap').setAttribute('opacity', (Math.min(1, ouv(D.qr) * 4) * pulse).toFixed(2));
   // circuit : ouverture de la restriction
   const g = 1 + 6 * R.s / 100; $('r-g').setAttribute('points', `673,262 673,278 ${680 - g / 2},270`); $('r-d').setAttribute('points', `687,262 687,278 ${680 + g / 2},270`);
-  // courants : vitesse proportionnelle au débit de chaque branche (signé : sens inverse si négatif)
+  // courants : vitesse proportionnelle au débit de chaque branche (signé : sens inverse si négatif), avec la pulsation
   const ci = vue === 'circuit';
   for (const c of COURANTS) {
     if ((c.g === 'c-circ') !== ci && c.g !== 'c-pompe') continue;
-    const q = (E[c.q] || 0) / LMIN; c.off -= q * ralenti * 100 * 2.4 * (ci ? 0.62 : 1) * k;
-    c.e.setAttribute('stroke-dashoffset', (c.off % 22).toFixed(1)); c.e.setAttribute('opacity', Math.abs(q) > 0.05 ? Math.min(1, 0.35 + Math.abs(q) / 40) : 0);
+    const q = (D[c.q] || 0) / LMIN; c.off -= q * puls * ralenti * 100 * 2.4 * (c.g === 'c-pompe' ? 1 : c.g === 'c-circ' ? 0.62 : 1) * k;
+    c.e.setAttribute('stroke-dashoffset', (c.off % 34).toFixed(1)); c.e.setAttribute('opacity', Math.abs(q) > 0.05 ? Math.min(1, 0.35 + Math.abs(q) / 40).toFixed(2) : 0);
   }
+  // manomètre : aiguille amortie, qui frémit avec la pulsation du débit
+  const cible = (ci ? D.p2 : D.p) / PSI * (1 + 0.012 * Math.sin(geo.Z * th));
+  const v = Math.max(0, AIG.pas(cible, dt));
   if (ci) {
     // couleurs : aspiration, refoulement (avant le filtre), ligne du moteur (après le filtre)
     $('k-asp').setAttribute('stroke', cIn); $('k-p1').setAttribute('stroke', cOut); $('k-p2').setAttribute('stroke', c2);
     $('k-sale').setAttribute('fill', cOut); $('k-propre').setAttribute('fill', c2);
     $('k-dv-b').setAttribute('fill', cOut); $('k-dv-h').setAttribute('fill', c2); $('k-sp-h').setAttribute('fill', c2); $('k-sp-b').setAttribute('fill', cIn);
-    // plis de l'élément : bruns quand le filtre est colmaté
-    const pc = R.c / 100, col = `rgb(${Math.round(180 - 70 * pc)},${Math.round(178 - 110 * pc)},${Math.round(169 - 140 * pc)})`;
+    // filtre : les plis brunissent et les saletés s'accumulent à mesure qu'il se colmate
+    colmAff += (R.c / 100 - colmAff) * Math.min(1, dt * 1.5);
+    const pc = colmAff, col = `rgb(${Math.round(180 - 70 * pc)},${Math.round(178 - 110 * pc)},${Math.round(169 - 140 * pc)})`;
     for (const l of $('k-plis').children) l.setAttribute('stroke', col);
+    const nb = Math.round(pc * BOUE.length); BOUE.forEach((e, i) => e.setAttribute('opacity', i < nb ? 0.9 : 0));
     // soupapes : clapet conique repoussé contre le ressort ; antiretour ouvert dès que la pompe débite
-    const od = E.qth ? Math.min(1, E.qb / (0.3 * E.qth)) : 0, os = E.qth ? Math.min(1, E.qr / (0.3 * E.qth)) : 0, oa = E.qp > 1e-6 ? 1 : 0;
-    derAff += (od - derAff) * Math.min(1, dt * 6); clapAff += (os - clapAff) * Math.min(1, dt * 6); arAff += (oa - arAff) * Math.min(1, dt * 5);
-    const yc = 236 - derAff * 16;
+    const od = Math.max(-0.08, Math.min(1.1, RS.der.pas(ouv(D.qb), dt))), os = Math.max(-0.08, Math.min(1.1, RS.sp.pas(ouv(D.qr), dt)));
+    const oa = Math.max(0, Math.min(1.1, RS.ar.pas(D.qp > 1e-7 ? Math.min(1, D.qp / (0.15 * Math.max(E.qth, 1e-7))) : 0, dt)));
+    const yc = 236 - Math.max(0, od) * 16;
     $('k-dv-c').setAttribute('points', `422,${yc - 6} 438,${yc - 6} 430,${yc + 4}`);
     let r1 = ''; for (let i = 0; i <= 6; i++) r1 += `${i % 2 ? 436 : 424},${(204 + (yc - 6 - 204) * i / 6).toFixed(1)} `; $('k-dv-r').setAttribute('points', r1);
-    const xc = 150 - clapAff * 18;
+    const xc = 150 - Math.max(0, os) * 18;
     $('k-sp-c').setAttribute('points', `${xc - 6},123 ${xc - 6},137 ${xc + 4},130`);
     let r2 = ''; for (let i = 0; i <= 7; i++) r2 += `${(96 + (xc - 6 - 96) * i / 7).toFixed(1)},${i % 2 ? 136 : 124} `; $('k-sp-r').setAttribute('points', r2);
-    const an = arAff * 55 * Math.PI / 180; $('k-ar').setAttribute('x2', (532 + 24 * Math.sin(an)).toFixed(1)); $('k-ar').setAttribute('y2', (318 + 24 * Math.cos(an)).toFixed(1));
-    MANO.circuit.valeur(p2Aff / PSI);
-  } else MANO.seule.valeur(pAff / PSI);
+    const an = oa * 55 * Math.PI / 180; $('k-ar').setAttribute('x2', (532 + 24 * Math.sin(an)).toFixed(1)); $('k-ar').setAttribute('y2', (318 + 24 * Math.cos(an)).toFixed(1));
+    $('al-dv').setAttribute('opacity', (Math.min(1, ouv(D.qb) * 4) * pulse).toFixed(2)); $('al-sp').setAttribute('opacity', (Math.min(1, ouv(D.qr) * 4) * pulse).toFixed(2));
+    MANO.circuit.valeur(v);
+  } else MANO.seule.valeur(v);
   requestAnimationFrame(image);
 }
-maj(); majPP(); pAff = E.p;
+maj(); majPP();
+if (reduit) { for (const c of CLES) D[c] = E[c] || 0; nAff = R.n; AIG.x = E.p / PSI; }
 requestAnimationFrame(image);
 </script>
 <script src="theme-toggle.js"></script>
