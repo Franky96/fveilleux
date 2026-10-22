@@ -23,7 +23,7 @@
   --text:#dde4e9; --muted:#8797a3;
   --accent:#7cc4e4; --accent-d:#2d5c73; --on-accent:#e8f6fd;
   /* pièces : acier des pignons, carter, tuyaux */
-  --acier:#b4b2a9; --acier-trait:#444441; --carter:#1d2830; --carter-trait:#3a4b58; --tuyau:#3a4b58;
+  --acier:#b4b2a9; --acier-clair:#e4e2da; --acier-sombre:#7e7c74; --acier-trait:#444441; --carter:#1d2830; --carter-trait:#3a4b58; --tuyau:#3a4b58;
   --vert:#3fae6a; --rouge:#e05a4a;
   --s-pompe:#3d9fd6; --s-circuit:#c97624;
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
@@ -35,7 +35,7 @@ html.light{
   --bg:#eef2f5; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
   --text:#15202a; --muted:#52626f;
   --accent:#1d6f99; --accent-d:#d4e8f3; --on-accent:#0f4a6a;
-  --acier:#c9c7bf; --acier-trait:#5f5e5a; --carter:#dfe6eb; --carter-trait:#9fb0bd; --tuyau:#a9b8c4;
+  --acier:#c9c7bf; --acier-clair:#f2f1ec; --acier-sombre:#9c9a92; --acier-trait:#5f5e5a; --carter:#dfe6eb; --carter-trait:#9fb0bd; --tuyau:#a9b8c4;
   --vert:#2a8a50; --rouge:#c4402f;
   --s-pompe:#1d6f99; --s-circuit:#c0611b;
 }
@@ -71,9 +71,11 @@ svg.pompe text.jauge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;
 .carter{fill:var(--carter);stroke:var(--carter-trait);stroke-width:1.5}
 .tuyau{fill:none;stroke:var(--tuyau);stroke-width:14;stroke-linejoin:round;stroke-linecap:round}
 .huile{fill:none;stroke-width:8;stroke-linejoin:round}
-.pignon{fill:var(--acier);stroke:var(--acier-trait);stroke-width:.8}
+.pignon{fill:url(#g-acier);stroke:var(--acier-trait);stroke-width:.8}
+/* toile des particules d'huile, superposée au schéma (voir « particules d'huile » dans le script) */
+.schema{position:relative}
+.schema canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .goutte{fill:rgba(255,255,255,.85)}
-.courant{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 14 3 9}
 .poche{stroke:rgba(0,0,0,.18);stroke-width:.6}
 /* vue « pompe seule » ou « dans un circuit » (d'après le schéma de l'utilisateur) */
 .panel:not(.vue-circ) .circ,.panel.vue-circ .seul{display:none}
@@ -169,11 +171,14 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <button class="btn circ" type="button" data-cas="filtre">Filtre colmaté</button>
     <button class="btn" type="button" data-cas="arret">Pompe arrêtée</button>
   </div>
+  <div class="schema">
   <svg class="pompe" id="svg" viewBox="0 42 760 432" role="img" aria-labelledby="svg-t svg-d">
     <title id="svg-t">Pompe à engrenages extérieurs et son circuit d'huile</title>
     <desc id="svg-d">Vue « pompe seule » : deux pignons dans un carter ; l'huile monte du réservoir par l'aspiration, fait le tour des pignons par l'extérieur, sort au refoulement vers le circuit puis revient au réservoir. Un clapet de décharge relie le refoulement à l'aspiration. La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute). Vue « dans un circuit » : la pompe refoule vers le filtre à huile puis le moteur, avec une soupape de dérivation autour du filtre, une soupape de surpression qui renvoie à l'aspiration et un clapet antiretour.</desc>
     <defs>
       <linearGradient id="g-leg"><stop offset="0" stop-color="rgb(59,143,217)"/><stop offset=".55" stop-color="rgb(224,160,48)"/><stop offset="1" stop-color="rgb(217,68,59)"/></linearGradient>
+      <linearGradient id="g-acier" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acier-clair)"/><stop offset=".55" style="stop-color:var(--acier)"/><stop offset="1" style="stop-color:var(--acier-sombre)"/></linearGradient>
+      <radialGradient id="g-moyeu"><stop offset="0" style="stop-color:var(--acier-sombre)"/><stop offset="1" style="stop-color:var(--acier-trait)"/></radialGradient>
       <linearGradient id="g-cav" x1="0" y1="1" x2="0" y2="0">
         <stop id="s-c0" offset="0"/><stop id="s-c1" offset=".47"/><stop id="s-c2" offset=".53"/><stop id="s-c3" offset="1"/>
       </linearGradient>
@@ -255,8 +260,10 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <!-- pompe : carter, cavité (huile), poches, pignons ; déplacée et tournée dans la vue « circuit » -->
     <g id="pompe">
     <rect x="176" y="121" width="368" height="228" rx="26" class="carter"><title>Carter de la pompe : les pignons y tournent avec un jeu très faible en bout de dent</title></rect>
+    <g id="boulons" fill="var(--carter-trait)" stroke="var(--acier-trait)" stroke-width=".8"></g>
     <g id="fleches"></g>
     <path id="cavite" fill="url(#g-cav)"/>
+    <path id="cavite-ombre" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="3"/>
     <g id="poches"></g>
     <g id="pg-g"></g><g id="pg-d"></g>
     <g id="c-pompe"></g>
@@ -268,6 +275,8 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     </g>
     <text id="suivi-t" class="etiq" text-anchor="middle" display="none"></text>
   </svg>
+  <canvas id="toile" aria-hidden="true"></canvas>
+  </div>
   <div class="lecture">
     <button class="btn" id="suivre" type="button" aria-pressed="false" title="Met en évidence une poche d'huile et affiche sa pression pendant son trajet">Suivre une poche</button>
     <button class="btn" id="pp" type="button">❚❚ Figer</button>
@@ -434,15 +443,18 @@ function construire(Z) {
   const d = dents(Z, mp);
   for (const [id, men] of [['pg-g', true], ['pg-d', false]]) {
     $(id).innerHTML = `<path class="pignon" d="${d}"/><circle r="${RP - 2.6 * mp}" fill="var(--carter)" stroke="var(--acier-trait)" stroke-width=".8"/>`
-      + `<circle r="9" fill="var(--acier-trait)"/>` + (men ? `<rect x="-2.5" y="-14" width="5" height="7" fill="var(--carter)"/>` : '');
+      + `<circle r="${(RP - 2.6 * mp) * 0.55}" fill="url(#g-acier)" stroke="var(--acier-trait)" stroke-width=".8"/><circle r="9" fill="url(#g-moyeu)"/>` + (men ? `<rect x="-2.5" y="-14" width="5" height="7" fill="var(--carter)"/>` : '');
   }
   // cavité : deux cercles autour des pignons, et les orifices d'aspiration (bas) et de refoulement (haut)
   const yh = CY - Math.sqrt(rc * rc - (CD / 2) ** 2), yb = CY + Math.sqrt(rc * rc - (CD / 2) ** 2);
   $('cavite').setAttribute('d', `M${CX - pw} 121V${(CY - Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}`
     + `A${rc} ${rc} 0 1 0 ${CX - pw} ${(CY + Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}V349H${CX + pw}`
     + `V${(CY + Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}A${rc} ${rc} 0 1 0 ${CX + pw} ${(CY - Math.sqrt(rc * rc - (CD / 2 - pw) ** 2)).toFixed(1)}V121Z`);
+  $('cavite-ombre').setAttribute('d', $('cavite').getAttribute('d'));
+  $('boulons').innerHTML = [[196, 141], [524, 141], [196, 329], [524, 329], [250, 132], [470, 132], [250, 338], [470, 338]]
+    .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.5"/><circle cx="${x}" cy="${y}" r="1.6" fill="var(--acier-trait)" stroke="none"/>`).join('');
   // poches d'huile : le creux de chaque dent, rempli d'huile à la couleur de sa pression (secteur entre pied et tête de
-  // dent, les dents dessinées par-dessus en font le contour), avec une goutte claire qui montre le transport
+  // dent, les dents dessinées par-dessus en font le contour) ; l'huile emprisonnée y est dessinée en particules (toile)
   const rg = RP - 0.15 * mp, rr = Math.min(4, mp * 0.28), rb = RP - 1.25 * mp, rh = rt + 1.5, da = Math.PI / Z;
   const sect = `M${rb * Math.cos(-da)} ${rb * Math.sin(-da)}L${rh * Math.cos(-da)} ${rh * Math.sin(-da)}A${rh} ${rh} 0 0 1 ${rh * Math.cos(da)} ${rh * Math.sin(da)}`
     + `L${rb * Math.cos(da)} ${rb * Math.sin(da)}A${rb} ${rb} 0 0 0 ${rb * Math.cos(-da)} ${rb * Math.sin(-da)}Z`;
@@ -450,15 +462,16 @@ function construire(Z) {
   const poches = [];
   for (const g of [0, 1]) for (let i = 0; i < Z; i++) {
     const w = document.createElementNS(NS, 'path'); w.setAttribute('d', sect); w.setAttribute('class', 'poche'); $('poches').appendChild(w);
-    const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', rr); c.setAttribute('class', 'goutte'); $('poches').appendChild(c);
-    poches.push({ w, c, g, a0: TAU * i / Z + Math.PI / Z });
+    // trois particules par poche : rayon et angle dans le creux, phase du petit tourbillon
+    const pts = [0, 1, 2].map(j => ({ dr: rb + 1.5 + (rt - rb - 3) * (0.2 + 0.3 * j + 0.1 * Math.sin(i * 7 + j)), da: da * 0.55 * Math.sin(i * 3.1 + j * 2.4), ph: i + j * 2.1 }));
+    poches.push({ w, g, a0: TAU * i / Z + Math.PI / Z, pts, plein: 0 });
   }
   // flèches du sens de rotation, sur le carter au-dessus des pignons (menant : sens horaire, mené : sens inverse)
   const fl = (cx, a0, a1) => { const r = rc + 12, P = a => [cx + r * Math.cos(a), CY + r * Math.sin(a)], [x0, y0] = P(a0), [x1, y1] = P(a1), sw = a1 > a0 ? 1 : 0;
     const t = a1 + (sw ? 1 : -1) * 0.001, d = [Math.cos(a1 + (sw ? Math.PI / 2 : -Math.PI / 2)), Math.sin(a1 + (sw ? Math.PI / 2 : -Math.PI / 2))], n = [Math.cos(a1), Math.sin(a1)];
     return `<path class="fleche" d="M${x0} ${y0}A${r} ${r} 0 0 ${sw} ${x1} ${y1}"/><path class="fleche" d="M${x1 - 8 * d[0] + 5 * n[0]} ${y1 - 8 * d[1] + 5 * n[1]}L${x1} ${y1}L${x1 - 8 * d[0] - 5 * n[0]} ${y1 - 8 * d[1] - 5 * n[1]}"/>`; };
   $('fleches').innerHTML = fl(XG, 3.55, 4.25) + fl(XD, 5.87, 5.17) + '<title>Sens de rotation : le pignon menant tourne en sens horaire, le mené en sens inverse</title>';
-  geo = { Z, mp, rg, poches, yh, yb, phiD: Math.PI + Math.PI / Z };
+  geo = { Z, mp, rg, rb, rt, poches, yh, yb, phiD: Math.PI + Math.PI / Z };
 }
 
 /* ---------- manomètres (0 à 150 psi, bande verte 80 à 100 psi du PT6A-21) ---------- */
@@ -469,7 +482,8 @@ function manometre(g, cx, cy) {
   let h = `<circle cx="${cx}" cy="${cy}" r="33" class="carter"/>` + arc(0, 150, 'var(--line2)') + arc(80, 100, 'var(--vert)');
   for (let v = 0; v <= 150; v += 25) { const [x0, y0] = P(22, v), [x1, y1] = P(30, v); h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--muted)" stroke-width="1.2"/>`; }
   g.innerHTML = h + `<line class="rep" stroke="var(--rouge)" stroke-width="2.5"/><line class="aig" x1="${cx}" y1="${cy}" stroke="var(--rouge)" stroke-width="2.5" stroke-linecap="round"/>`
-    + `<circle cx="${cx}" cy="${cy}" r="3" fill="var(--text)"/><text x="${cx}" y="${cy + 22}" text-anchor="middle" class="jauge-v"></text>`;
+    + `<circle cx="${cx}" cy="${cy}" r="3" fill="var(--text)"/><text x="${cx}" y="${cy + 22}" text-anchor="middle" class="jauge-v"></text>`
+    + `<path d="M${cx - 24} ${cy - 10}A26 26 0 0 1 ${cx + 8} ${cy - 25}" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="5" stroke-linecap="round"/>`;
   const rep = g.querySelector('.rep'), aig = g.querySelector('.aig'), txt = g.querySelector('text');
   return {
     repere(v) { const [x0, y0] = P(21, v), [x1, y1] = P(31, v); rep.setAttribute('x1', x0); rep.setAttribute('y1', y0); rep.setAttribute('x2', x1); rep.setAttribute('y2', y1); },
@@ -480,22 +494,59 @@ const MANO = { seule: manometre($('mano-seul'), 612, 150), circuit: manometre($(
 // plis de l'élément filtrant
 $('k-plis').innerHTML = Array.from({ length: 15 }, (_, i) => `<line class="plis" x1="${556 + i * 8}" y1="199" x2="${556 + i * 8}" y2="421"/>`).join('');
 
-/* ---------- gouttes qui circulent dans les tuyaux ---------- */
-// courants : traits qui défilent dans le sens de l'écoulement, à une vitesse proportionnelle au débit de la branche ;
-// dans les orifices, l'huile se partage entre les creux des deux pignons (aspiration) et en sort vers le refoulement ;
-// rien ne traverse l'engrènement, qui fait l'étanchéité entre les deux orifices
-// (vue « circuit » : débit signé sur la ligne entre la dérivation et le filtre, « net » = dérivation − surpression)
-const COURANTS = [
-  ['c-pompe', 'M360 349V320', 'qp'], ['c-pompe', 'M357 349C352 326 342 312 326 303', 'qp'], ['c-pompe', 'M363 349C368 326 378 312 394 303', 'qp'],
-  ['c-pompe', 'M326 167C342 160 353 146 357 121', 'qp'], ['c-pompe', 'M394 167C378 160 367 146 363 121', 'qp'], ['c-pompe', 'M360 175V121', 'qp'],
-  ['c-seul', 'M360 452V349', 'qp'], ['c-seul', 'M360 121V60H680V262', 'qc'], ['c-seul', 'M680 278V412', 'qc'], ['c-seul', 'M360 90H90V380H360', 'qr'],
-  ['c-circ', 'M10 330H60', 'qc'], ['c-circ', 'M60 330H189', 'qp'], ['c-circ', 'M331 330H430', 'qp'], ['c-circ', 'M430 330H520', 'qfi'],
-  ['c-circ', 'M430 330V130', 'qb'], ['c-circ', 'M534 330V200', 'qfi'], ['c-circ', 'M534 330V430', 'qfi'],
-  ['c-circ', 'M552 262H600', 'qfi'], ['c-circ', 'M552 330H600', 'qfi'], ['c-circ', 'M552 398H600', 'qfi'],
-  ['c-circ', 'M686 330V200', 'qfi'], ['c-circ', 'M686 330V430', 'qfi'], ['c-circ', 'M668 262H620', 'qfi'], ['c-circ', 'M668 330H620', 'qfi'], ['c-circ', 'M668 398H620', 'qfi'],
-  ['c-circ', 'M610 420V130', 'qfi'], ['c-circ', 'M610 130H740V58', 'qc'], ['c-circ', 'M430 130H610', 'net'],
-  ['c-circ', 'M430 130H170', 'qr'], ['c-circ', 'M90 130H60V330', 'qr'],
-].map(([g, d, q]) => { const e = document.createElementNS(NS, 'path'); e.setAttribute('d', d); e.setAttribute('class', 'courant'); $(g).appendChild(e); return { e, q, off: 0, g }; });
+/* ---------- particules d'huile (toile superposée au schéma) ----------
+   Chaque branche du circuit est un chemin (coordonnées du schéma, ou de la pompe pour les orifices, ramenées à l'écran
+   par la pose de la pompe) avec sa demi-largeur et son débit. Les particules y avancent selon un profil laminaire :
+   plus vite au centre qu'aux parois (vitesse ∝ 1 − u², u = position dans la largeur) ; leur traînée suit la vitesse.
+   Dans les orifices, elles naissent ou s'éteignent en entrant dans les creux des dents ; rien ne traverse l'engrènement. */
+const bez = (a, c1, c2, b, n = 14) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n, u = 1 - t;
+  return [u * u * u * a[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * b[0], u * u * u * a[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * b[1]]; });
+function chemin(pts, o) {
+  const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  return { pts, L, tot: L[L.length - 1], w: 3, k: 1, ...o };
+}
+const CHEMINS = [
+  // pompe (repère de la pompe) : de l'orifice d'aspiration vers les creux des deux pignons, des creux vers le refoulement
+  chemin(bez([358, 349], [354, 326], [342, 312], [326, 302]), { q: 'qp', f: 0.5, loc: true, w: 6, fin: true }),
+  chemin(bez([362, 349], [366, 326], [378, 312], [394, 302]), { q: 'qp', f: 0.5, loc: true, w: 6, fin: true }),
+  chemin(bez([326, 168], [342, 160], [353, 146], [358, 121]), { q: 'qp', f: 0.5, loc: true, w: 6, debut: true }),
+  chemin(bez([394, 168], [378, 160], [367, 146], [362, 121]), { q: 'qp', f: 0.5, loc: true, w: 6, debut: true }),
+  // pompe seule : réservoir, aspiration, refoulement, circuit, retour, clapet de décharge
+  chemin([[360, 452], [360, 349]], { q: 'qp', vue: 'seule' }),
+  chemin([[360, 121], [360, 60], [680, 60], [680, 262]], { q: 'qc', vue: 'seule' }),
+  chemin([[680, 278], [680, 414]], { q: 'qc', vue: 'seule', fin: true }),
+  chemin([[360, 90], [90, 90], [90, 380], [360, 380]], { q: 'qr', vue: 'seule', debut: true }),
+  chemin(bez([680, 416], [640, 446], [470, 452], [362, 450], 20), { q: 'qc', vue: 'seule', w: 12, k: 0.45, debut: true, fin: true }),
+  // dans un circuit : aspiration, refoulement, filtre (autour de l'élément, à travers, tube central), moteur, soupapes
+  chemin([[10, 330], [60, 330]], { q: 'qc', vue: 'circuit', debut: true }), chemin([[60, 330], [190, 330]], { q: 'qp', vue: 'circuit' }),
+  chemin([[331, 330], [430, 330]], { q: 'qp', vue: 'circuit' }), chemin([[430, 330], [522, 330]], { q: 'qfi', vue: 'circuit' }),
+  chemin([[430, 330], [430, 130]], { q: 'qb', vue: 'circuit' }),
+  chemin([[524, 330], [538, 330], [538, 196]], { q: 'qfi', f: 0.25, vue: 'circuit', w: 4, fin: true }),
+  chemin([[524, 330], [538, 330], [538, 428]], { q: 'qfi', f: 0.25, vue: 'circuit', w: 4, fin: true }),
+  chemin([[686, 196], [686, 428]], { q: 'qfi', f: 0.2, vue: 'circuit', w: 4 }),
+  chemin([[544, 312], [600, 312]], { q: 'qfi', f: 0.5, vue: 'circuit', w: 104, k: 0.5, debut: true, fin: true }),
+  chemin([[676, 312], [620, 312]], { q: 'qfi', f: 0.5, vue: 'circuit', w: 104, k: 0.5, debut: true, fin: true }),
+  chemin([[610, 426], [610, 130]], { q: 'qfi', vue: 'circuit', w: 7 }),
+  chemin([[610, 130], [740, 130], [740, 58]], { q: 'qc', vue: 'circuit', fin: true }),
+  chemin([[610, 130], [430, 130]], { q: 'net', f: -1, vue: 'circuit' }),
+  chemin([[430, 130], [170, 130]], { q: 'qr', vue: 'circuit' }),
+  chemin([[90, 130], [60, 130], [60, 330]], { q: 'qr', vue: 'circuit' }),
+];
+// graine fixe : même dessin d'une visite à l'autre
+let graine = 7; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+const PARTS = [];
+for (const c of CHEMINS) {
+  const n = Math.min(70, Math.max(4, Math.round(c.tot * Math.pow(c.w / 3, 0.55) * 0.07)));
+  for (let i = 0; i < n; i++) PARTS.push({ c, s: alea() * c.tot, u: alea() * 2 - 1, sp: 0.8 + 0.4 * alea(), r: 0.75 + 0.5 * alea() });
+}
+const toile = $('toile'), tctx = toile.getContext('2d');
+function tailleToile() { const r = toile.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); toile.width = Math.round(r.width * dpr); toile.height = Math.round(r.height * dpr); }
+new ResizeObserver(tailleToile).observe(toile); tailleToile();
+function surChemin(c, s) {
+  let i = 1; while (i < c.L.length - 1 && c.L[i] < s) i++;
+  const a = c.pts[i - 1], b = c.pts[i], l = (c.L[i] - c.L[i - 1]) || 1, t = (s - c.L[i - 1]) / l;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, (b[0] - a[0]) / l, (b[1] - a[1]) / l];
+}
 
 /* ---------- graphique du point de fonctionnement ---------- */
 const PQ = { W: 960, H: 330, g: 56, d: 20, h: 30, b: 40 };
@@ -683,12 +734,11 @@ function image(ts) {
   // poches : se remplissent en quittant l'aspiration, la pression monte le long de la paroi, vidées au refoulement
   for (const q of geo.poches) {
     const a = q.g ? geo.phiD - th + q.a0 : th + q.a0, cx = q.g ? XD : XG, x = Math.cos(a), y = Math.sin(a);
-    q.c.setAttribute('cx', (cx + geo.rg * x).toFixed(1)); q.c.setAttribute('cy', (CY + geo.rg * y).toFixed(1));
     const dehors = q.g ? x > 0 : x < 0;
     let t; if (dehors) { const ang = Math.atan2(y, q.g ? x : -x); t = (Math.PI / 2 - ang) / Math.PI; } else t = y < 0 ? 1 : 0;
     const plein = dehors ? Math.min(1, t / 0.08) * (D.qth > 1e-7 ? 1 : 0.6) : 0;
     q.w.setAttribute('transform', `translate(${cx} ${CY}) rotate(${(a * 180 / Math.PI).toFixed(2)})`);
-    q.w.setAttribute('fill', couleur(D.p * t * t)); q.w.setAttribute('opacity', plein.toFixed(2)); q.c.setAttribute('opacity', plein.toFixed(2));
+    q.w.setAttribute('fill', couleur(D.p * t * t)); q.w.setAttribute('opacity', plein.toFixed(2)); q.plein = plein; q.a = a;
   }
   // poche suivie : la première du pignon menant, entourée, avec sa pression
   const q0 = geo.poches[0]; q0.w.classList.toggle('suivie', suivre);
@@ -708,13 +758,44 @@ function image(ts) {
   $('ressort').setAttribute('points', rs); $('al-clap').setAttribute('opacity', (Math.min(1, ouv(D.qr) * 4) * pulse).toFixed(2));
   // circuit : ouverture de la restriction
   const g = 1 + 6 * R.s / 100; $('r-g').setAttribute('points', `673,262 673,278 ${680 - g / 2},270`); $('r-d').setAttribute('points', `687,262 687,278 ${680 + g / 2},270`);
-  // courants : vitesse proportionnelle au débit de chaque branche (signé : sens inverse si négatif), avec la pulsation
-  const ci = vue === 'circuit';
-  for (const c of COURANTS) {
-    if ((c.g === 'c-circ') !== ci && c.g !== 'c-pompe') continue;
-    const q = (D[c.q] || 0) / LMIN; c.off -= q * puls * ralenti * 100 * 2.4 * (c.g === 'c-pompe' ? 1 : c.g === 'c-circ' ? 0.62 : 1) * k;
-    c.e.setAttribute('stroke-dashoffset', (c.off % 34).toFixed(1)); c.e.setAttribute('opacity', Math.abs(q) > 0.05 ? Math.min(1, 0.35 + Math.abs(q) / 40).toFixed(2) : 0);
+  // particules d'huile : avancent selon le débit de leur branche (profil laminaire, pulsation), dessinées en traînées
+  const ci = vue === 'circuit', m = $('svg').getScreenCTM(), tr = toile.getBoundingClientRect(), dpr = toile.width / (tr.width || 1);
+  const EC = (x, y) => [(m.a * x + m.c * y + m.e - tr.left) * dpr, (m.b * x + m.d * y + m.f - tr.top) * dpr], ech = m.a * dpr;
+  const fondu = doux(poseT), aVue = { seule: vue === 'seule' ? fondu : 1 - fondu, circuit: ci ? fondu : 1 - fondu };
+  tctx.clearRect(0, 0, toile.width, toile.height); tctx.lineCap = 'round';
+  // (trait clair sur un liseré sombre : lisible sur l'huile comme sur un fond pâle)
+  const trait = (x0, y0, x1, y1, w, a) => { tctx.globalAlpha = a * 0.45; tctx.strokeStyle = '#0a0e11'; tctx.lineWidth = w + 1.4 * dpr;
+    tctx.beginPath(); tctx.moveTo(x0, y0); tctx.lineTo(x1, y1); tctx.stroke(); tctx.globalAlpha = a; tctx.strokeStyle = '#fff'; tctx.lineWidth = w; tctx.stroke(); };
+  const vitesse = ralenti * 100 * 2.4 * puls;
+  for (const P of PARTS) {
+    const c = P.c, av = c.vue ? aVue[c.vue] : 1; if (av < 0.02) continue;
+    const q = (D[c.q] || 0) * (c.f ?? 1) / LMIN, prof = 1.5 * (1 - P.u * P.u) + 0.08;
+    const v = q * vitesse * c.k * prof * P.sp / Math.sqrt(c.w / 3);
+    P.s += v * k;
+    if (P.s > c.tot) { P.s -= c.tot; P.u = alea() * 2 - 1; } else if (P.s < 0) { P.s += c.tot; P.u = alea() * 2 - 1; }
+    let [x, y, ux, uy] = surChemin(c, P.s); x += -uy * P.u * c.w; y += ux * P.u * c.w;
+    // (orifices de la pompe : position et direction ramenées à l'écran par la pose de la pompe)
+    if (c.loc) { const [X0, Y0] = ecran(x, y), [X1, Y1] = ecran(x + ux, y + uy); x = X0; y = Y0; ux = X1 - X0; uy = Y1 - Y0; const n = Math.hypot(ux, uy) || 1; ux /= n; uy /= n; }
+    const [X, Y] = EC(x, y);
+    let a = av * (0.3 + 0.55 * Math.min(1, Math.abs(q) / 4)) * (0.7 + 0.3 * P.r);
+    if (c.debut) a *= Math.min(1, P.s / 14); if (c.fin) a *= Math.min(1, (c.tot - P.s) / 14);
+    const vs = Math.abs(v) * (c.loc ? sc : 1) * ech, lt = Math.min(16 * dpr, Math.max(0.5, vs * 0.06)) * Math.sign(v || 1);
+    trait(X - ux * lt, Y - uy * lt, X, Y, (1.3 + 1.1 * P.r) * Math.max(0.7, ech * 0.9) * (c.loc ? Math.max(0.75, sc) : 1), a);
   }
+  // huile emprisonnée dans les creux des dents : trois particules par poche, emportées avec le pignon, petit tourbillon
+  const wq = nAff / 60 * ralenti * TAU;
+  for (const q of geo.poches) {
+    if (q.plein < 0.03) continue;
+    const cx = q.g ? XD : XG, sens = q.g ? -1 : 1;
+    for (const pt of q.pts) {
+      const tour = 0.25 * Math.sin(tps * 2.2 + pt.ph), aa = q.a + pt.da * (1 + tour * 0.4), rr = pt.dr + 1.2 * Math.cos(tps * 1.7 + pt.ph);
+      const [x, y] = ecran(cx + rr * Math.cos(aa), CY + rr * Math.sin(aa)), [X, Y] = EC(x, y);
+      const vt = wq * rr * sc * ech, lt = Math.min(10 * dpr, Math.max(0.4, vt * 0.06));
+      const tx2 = -Math.sin(aa + rot * Math.PI / 180) * sens, ty2 = Math.cos(aa + rot * Math.PI / 180) * sens;
+      trait(X - tx2 * lt, Y - ty2 * lt, X, Y, 1.9 * Math.max(0.7, ech * 0.9) * Math.max(0.75, sc), 0.8 * q.plein);
+    }
+  }
+  tctx.globalAlpha = 1;
   // manomètre : aiguille amortie, qui frémit avec la pulsation du débit
   const cible = (ci ? D.p2 : D.p) / PSI * (1 + 0.012 * Math.sin(geo.Z * th));
   const v = Math.max(0, AIG.pas(cible, dt));
