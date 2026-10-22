@@ -282,7 +282,7 @@ const INFO = {
     k: [['Jeu avec disque TC (réf. 261)', '0,0225–0,0285 po radial'], ['Sur le carter GG (réf. 263)', '0,004 serré à 0,001 po'], ['Encoches', '8']] },
 
   ctdisk: { g: 'ct', n: 'Turbine compresseur', ref: 'AMM 72-50-02 · IPC 72-50-02 fig. 1 (rep. 10 à 70) · OM 72-50-02 tabl. 601',
-    d: 'Cinquante-huit aubes à bout aminci (« squealer ») dans des rainures en sapin, retenues par des rivets à tête fraisée ; disque équilibré en deux plans (masses rivetées sur les flasques avant et arrière). Cannelé, avec cannelure maîtresse, sur l\'arbre avant du compresseur (bout d\'arbre montré ici).',
+    d: 'Cinquante-huit aubes à bout aminci (« squealer ») dans des rainures en sapin, retenues par des rivets à tête fraisée ; disque équilibré en deux plans (masses rivetées sur les flasques avant et arrière). Cannelé, avec cannelure maîtresse, sur l\'arbre avant du compresseur (module du générateur de gaz).',
     k: [['Aubes', '58'], ['Ø du rotor', '8,546–8,556 po (rebut 8,512)'], ['Jeu radial en bout (réf. 318)', '0,011–0,018 po'], ['Masses d\'équilibrage', '14 (40 rivets)'], ['Sens', 'antihoraire vu de l\'arrière']] },
   ctbolt: { g: 'ct', n: 'Boulon central de la turbine compresseur', ref: 'AMM 72-50-02 fig. 201 à 204 · IPC 72-50-02 fig. 1 (rep. 80, 90)',
     d: 'Boulon de bout d\'arbre et rondelle-frein qui serrent le disque sur l\'arbre avant du compresseur. Clé PWC30331 sur le carter GG, protecteur PWC30336, écarteur PWC30335 ; au desserrage, ne pas dépasser 150 lb·pi.',
@@ -482,7 +482,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
 /* ---------- turbine compresseur : disque, 58 aubes, masses, bout d'arbre ---------- */
 {
   const s = spinner('ctdisk'), mD = M('ctdisk', { color: 0x9e958c, metalness: 0.9, roughness: 0.3 }), mBl = M('ctdisk', { color: 0x8f857a, metalness: 0.88, roughness: 0.34 });
-  const mSh = M('ctdisk', { color: 0x8d949a, metalness: 0.9, roughness: 0.3 }), mW = M('ctdisk', { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
+  const mW = M('ctdisk', { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
   lathe('ctdisk', [[0.56, 32.45], [0.62, 32.45], [0.62, 31.55], [0.705, 31.55], [0.705, 32.35], [1.15, 32.45], [1.6, 32.62], [2.0, 32.62], [2.0, 32.38], [2.15, 32.38], [2.15, 32.62],
     [2.35, 32.62], [2.45, 32.5], [3.14, 32.5], [3.14, 33.2], [2.45, 33.2], [2.35, 32.98], [2.15, 32.98], [2.15, 33.22], [2.0, 33.22], [2.0, 32.98], [1.62, 32.98],
     [1.62, 33.55], [1.5, 33.55], [1.5, 33.02], [1.15, 33.5], [0.65, 33.5], [0.65, 33.0], [0.56, 33.0]], mD, s, 96);
@@ -493,8 +493,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   { const pg = new THREE.BoxGeometry(0.08 * S, 0.68 * S, (TAU * 3.15 / 58) * 0.97 * S); pg.translate(3.18 * S, 0, 0); bladeRow(pg, 58, mD, s, 32.85); }
   { const rv = []; for (let i = 0; i < 58; i++) rv.push(axM(2.85, 32.48, i * TAU / 58)); inst(new THREE.CylinderGeometry(0.05 * S, 0.05 * S, 0.05 * S, 8), rv, mW, s); }
   { const wt = []; for (let i = 0; i < 7; i++) { wt.push(radM(2.2, 32.5, i * 0.9 + 0.2)); wt.push(radM(2.2, 33.1, i * 0.9 + 0.65)); } inst(new THREE.BoxGeometry(0.3 * S, 0.1 * S, 0.2 * S), wt, mW, s); }   // 14 masses
-  // bout de l'arbre avant du compresseur (cannelé dans le disque), raccord avec l'arbre Ng du modèle complet
-  lathe('ctdisk', [[0.33, 32.3], [0.56, 32.3], [0.56, 33.0], [0.65, 33.0], [0.65, 33.55], [0.95, 33.65], [0.95, 35.7], [0.6, 35.7], [0.6, 34.8], [0.33, 34.7]], mSh, s, 48);
+  // l'arbre avant du compresseur, sur lequel le disque est cannelé, est dans le module du générateur de gaz (pt6a21-gg.js)
 }
 { // boulon central et rondelle-frein
   const s = spinner('ctbolt'), mB = M('ctbolt', { color: 0xc8ccce, metalness: 0.9, roughness: 0.28 }), mK = M('ctbolt', { color: 0xb4b9bc, metalness: 0.85, roughness: 0.32 });

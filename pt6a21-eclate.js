@@ -92,7 +92,8 @@ function eclater(parts, o) {
 /* preparer({ PART, ORDER, STEPS, ORB, HOST, ORDRE, ANCRE, S }) -> { MOUV, essais }
    Les étapes du manuel amènent chaque pièce à sa place dans la vue éclatée sur l'axe (ANCRE fixe). À une étape où
    une pièce part avec d'autres sans être à sa dernière étape (ex. tout un carter avec son contenu), le bloc glisse
-   sur l'axe comme sa plus grosse pièce. Si une pièce posée croise une pièce encore en place, la ligne s'allonge à cet
+   sur l'axe comme sa plus grosse pièce (ou comme la pièce désignée par st.main : celle qui reste la plus proche de la
+   pièce fixe, pour que les pièces retirées ensuite du bloc se rangent au-delà de lui). Si une pièce posée croise une pièce encore en place, la ligne s'allonge à cet
    endroit (ou la pièce s'écarte un peu plus de l'axe) et on recommence. Pendant le mouvement, les pièces peuvent se
    traverser. À appeler l'ensemble assemblé, groupe racine sans transformation (repère de l'axe = repère du groupe).
    MOUV[id] = [[k, déplacement, dr (en pouces)]] : mouvement de la pièce pendant l'étape k. */
@@ -111,7 +112,9 @@ function preparer({ PART, ORDER, STEPS, ORB = {}, HOST = {}, ORDRE = [], ANCRE, 
     const tot = new Map();
     for (const [ids, v] of st.m) for (const id of ids) { const e = tot.get(id) || [0, 0, 0]; e[0] += v.dz || 0; e[1] += v.up || 0; e[2] += v.dr || 0; tot.set(id, e); }
     const g = new Map(); for (const [id, e] of tot) { const k = e.join('|'); if (!g.has(k)) g.set(k, []); g.get(k).push(id); }
-    return [...g.values()].map(ids => ({ ids, main: ids.filter(id => SH[id]).sort((a, b) => (kind[b] === 'axe') - (kind[a] === 'axe') || volume(SH[b].box) - volume(SH[a].box))[0] }));
+    // pièce qui guide le bloc : celle que l'étape désigne (st.main), sinon la plus grosse pièce de l'axe
+    return [...g.values()].map(ids => ({ ids, main: st.main && ids.includes(st.main) && SH[st.main] ? st.main
+      : ids.filter(id => SH[id]).sort((a, b) => (kind[b] === 'axe') - (kind[a] === 'axe') || volume(SH[b].box) - volume(SH[a].box))[0] }));
   });
   const forme = (id, c) => {
     const f = SH[id], y0 = f.box.min.y + c.v.y, y1 = f.box.max.y + c.v.y;
