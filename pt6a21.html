@@ -687,9 +687,9 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js" integrity="sha384-I0DMsfimAPIqWT8lF+oA997gRgdUi3jhidoTq3fN0zmn35smXZukD01FLnsPRU9i" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js" integrity="sha384-NG9Vjao8FDKsRPhzsQGvMRSCrkgzJlysZlYZ69P52mH1tEpkurCHq0M8jbSP7/gl" crossorigin="anonymous"></script>
 <script src="pt6a21-eclate.js?v=f222ff57"></script>
-<script src="pt6a21-rgb.js?v=01a6c098"></script>
-<script src="pt6a21-turbines.js?v=4d837c8f"></script>
-<script src="pt6a21-gg.js?v=eb2b91b0"></script>
+<script src="pt6a21-rgb.js?v=ff2cb9e2"></script>
+<script src="pt6a21-turbines.js?v=efcd6cdd"></script>
+<script src="pt6a21-gg.js?v=a13fb13e"></script>
 <script>
 window.addEventListener('error', e => {
   const v = document.getElementById('view');
@@ -2456,6 +2456,53 @@ function coupePleine(m) {
   m.needsUpdate = true;
 }
 for (const m of new Set([...rgbMats, ...cutMats])) coupePleine(m);
+/* Faces de coupe planes des pièces de révolution des modules (profil gardé par revolve() dans geometry.userData.profil) :
+   la section d'un volume de révolution par un plan passant par l'axe est exactement son profil. Posées sur le plan de
+   coupe, ces faces cachent ce qui est noyé dans la matière (tirants dans les disques…), ce que l'envers des faces, peint
+   au fond de la pièce, ne fait pas. Elles ne tournent pas avec la pièce (même section à tout angle) et sont recalées à
+   chaque image sur sa position le long de l'axe (vue éclatée, démontage). Une pièce dont l'axe n'est pas celui du moteur
+   (satellites, pignons…) garde la teinte de l'envers. */
+const capsRev = [];
+let capsOn = false;
+{
+  const capMat = new Map();
+  const plan = (Q, phis) => {                  // profil (r, y) posé sur les demi-plans d'angles phis, en une géométrie
+    const base = new THREE.ShapeGeometry(new THREE.Shape(Q.map(([r, y]) => new THREE.Vector2(r, y)))).toNonIndexed(), pos = [];
+    for (const phi of phis) { const g = base.clone(); g.rotateY(phi - Math.PI / 2); pos.push(...g.attributes.position.array); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); return g;
+  };
+  eng.traverse(o => {
+    const Q = o.isMesh && !o.isInstancedMesh && o.geometry.userData.profil, m = Q && [].concat(o.material)[0];
+    if (!m || !m.userData.coupePleine) return;
+    // même teinte que l'envers des faces (coupePleine)
+    if (!capMat.has(m)) capMat.set(m, new THREE.MeshBasicMaterial({ color: m.color.clone().lerp(new THREE.Color(0.74, 0.77, 0.80), 0.35).multiplyScalar(0.62), side: THREE.DoubleSide }));
+    const mk = phis => { const c = new THREE.Mesh(plan(Q, phis), capMat.get(m)); c.matrixAutoUpdate = false; c.visible = false; scene.add(c); return c; };
+    capsRev.push({ src: o, mat: m, q: mk([0, Math.PI / 2]), h: mk([Math.PI / 2, 3 * Math.PI / 2]) });   // Coupe ¼ · Moitié
+  });
+}
+const _capI = new THREE.Matrix4(), _capR = new THREE.Matrix4(), _capM = new THREE.Matrix4(), _capO = new THREE.Vector3();
+function majCaps() {
+  if (mode !== 'cut' && mode !== 'half') {
+    if (capsOn) { for (const c of capsRev) c.q.visible = c.h.visible = false; capsOn = false; }
+    return;
+  }
+  capsOn = true;
+  eng.updateMatrixWorld(true); _capI.copy(eng.matrixWorld).invert();
+  for (const c of capsRev) {
+    let vis = !!(c.mat.clippingPlanes && c.mat.clippingPlanes.length), e = null;
+    if (vis) for (let p = c.src; p; p = p.parent) if (!p.visible) { vis = false; break; }
+    if (vis) {                                   // pièce centrée sur l'axe du moteur, son axe parallèle à lui
+      _capR.multiplyMatrices(_capI, c.src.matrixWorld); e = _capR.elements; _capO.setFromMatrixPosition(_capR);
+      vis = Math.hypot(_capO.x, _capO.z) < 1e-4 && Math.hypot(e[4], e[6]) < 1e-4;
+    }
+    const show = vis ? (mode === 'cut' ? c.q : c.h) : null;
+    c.q.visible = show === c.q; c.h.visible = show === c.h;
+    if (!show) continue;
+    const sr = Math.hypot(e[0], e[1], e[2]);
+    _capM.makeScale(sr, e[5], sr).setPosition(0, _capO.y, 0);
+    show.matrix.multiplyMatrices(eng.matrixWorld, _capM); show.layers.mask = c.src.layers.mask;
+  }
+}
 {
   /* Faces de coupe des disques de turbine et de compresseur : tranchés par un plan passant par l'axe,
      un volume de révolution a pour section exactement son profil. Ces faces sont fixes (posées sur le
@@ -2529,6 +2576,7 @@ function frame(now) {
     if (camTween.k >= 1) camTween = null;
   }
   controls.update();
+  majCaps();
   renderer.render(scene, camera);
   for (const g of GAUGES) drawGauge(g, rdt);
   histT += dt; if (histT > 0.25) { histT = 0; hist.push({ ng: st.Ng, np: st.Np, trq: st.trq, itt: st.itt }); if (hist.length > 240) hist.shift(); drawTrend(); }

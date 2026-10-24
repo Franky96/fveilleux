@@ -90,6 +90,7 @@ function revolve(pts, segs = 96, closed = true) {
     v.fromBufferAttribute(nr, i0); w.fromBufferAttribute(nr, i1); v.add(w).normalize();
     nr.setXYZ(i0, v.x, v.y, v.z); nr.setXYZ(i1, v.x, v.y, v.z);
   }
+  if (closed) g.userData.profil = Q;                       // profil (r, y) : face de coupe plane en vue coupe (pt6a21.html)
   return g;
 }
 function lathe(id, pts, mat, parent, segs = 96, closed = true) {

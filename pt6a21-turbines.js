@@ -88,6 +88,7 @@ function revolve(pts, segs = 96, closed = true) {
     v.fromBufferAttribute(nr, i0); w.fromBufferAttribute(nr, i1); v.add(w).normalize();
     nr.setXYZ(i0, v.x, v.y, v.z); nr.setXYZ(i1, v.x, v.y, v.z);
   }
+  if (closed) g.userData.profil = Q;                       // profil (r, y) : face de coupe plane en vue coupe (pt6a21.html)
   return g;
 }
 function lathe(id, pts, mat, parent, segs = 96, closed = true) {
@@ -374,7 +375,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   // anneau plein (r0 à r1) le long de l'axe z local, de za à zb (po) ; `pas` redécoupe le profil pour le perçage
   const anneauZ = (r0, r1, za, zb, segs, pas) => {
     const q = ringPts(r0, r1, Z0 - zb, Z0 - za), geo = revolve(pas ? densifier(q.concat([q[0]]), pas) : q, segs);
-    geo.rotateX(Math.PI / 2); return geo;
+    geo.rotateX(Math.PI / 2); delete geo.userData.profil; return geo;      // hors de l'axe du moteur : pas de face de coupe plane
   };
   const horsCoque = p => Math.hypot(p.x, p.z) / S - (rCoque(Z0 - p.y / S) - 0.1);
   for (const { c, n } of SORTIES) {
