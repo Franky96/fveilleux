@@ -42,17 +42,22 @@ function lireUrl(string $url, string $accept): array {
   $c = curl_init($url);
   curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_FOLLOWLOCATION => false,
     CURLOPT_USERAGENT => 'fveilleux.com (resultats en direct)', CURLOPT_HTTPHEADER => ['Accept: ' . $accept]]);
-  $corps = (string)curl_exec($c); $code = (int)curl_getinfo($c, CURLINFO_RESPONSE_CODE); curl_close($c);
-  return [$code, $corps];
+  $corps = (string)curl_exec($c); $code = (int)curl_getinfo($c, CURLINFO_RESPONSE_CODE);
+  $vers = (string)curl_getinfo($c, CURLINFO_REDIRECT_URL); curl_close($c);
+  return [$code, $corps, $vers];
 }
 
 if ($age > TTL) {
   $verrou = fopen($cache . '.lock', 'c');
   if ($verrou && flock($verrou, LOCK_EX | LOCK_NB)) {          // un seul téléchargement à la fois
-    // code et version du tableau de bord (options de la page) ; valeurs du 19 octobre 2026 à défaut
-    [$code, $page] = lireUrl(BASE, 'text/html');
+    // code et version du tableau de bord (options de la page) ; depuis le 23 octobre 2026, la racine renvoie (302) vers
+    // /8400 : on suit ce renvoi s'il reste sur results.elections.ab.ca (sans quoi la version manquait, l'ancienne 3.0.0
+    // était demandée et Élections Alberta ne répondait que {"forceFullRefresh":true} : relais figé sur son dernier cache)
+    [$code, $page, $vers] = lireUrl(BASE, 'text/html');
+    if ($code >= 300 && $code < 400 && str_starts_with($vers, BASE) && preg_match('~^[\w/]*$~', substr($vers, strlen(BASE))))
+      [$code, $page] = lireUrl($vers, 'text/html');
     $mun = preg_match("/countyMun:\s*'(\d+)'/", $page, $m) ? $m[1] : '8400';
-    $ver = preg_match("/version:\s*'([\w.]+)'/", $page, $m) ? $m[1] : '3.0.0';
+    $ver = preg_match("/version:\s*'([\w.]+)'/", $page, $m) ? $m[1] : '3.3.3';
     [$code, $corps] = lireUrl(BASE . "data/$mun?version=" . rawurlencode($ver) . '&questions=' . QUESTIONS . '&wards=', 'application/json');
     $j = $code === 200 ? json_decode($corps, true) : null;
     if (is_array($j) && !empty($j['success']) && isset($j['referendumResults'])) {

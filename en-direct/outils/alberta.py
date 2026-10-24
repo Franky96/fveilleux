@@ -35,7 +35,7 @@ def main():
     try:
         page = lire(BASE, "text/html")
         mun = (re.search(r"countyMun:\s*'(\d+)'", page) or [None, "8400"])[1]
-        ver = (re.search(r"version:\s*'([\w.]+)'", page) or [None, "3.0.0"])[1]
+        ver = (re.search(r"version:\s*'([\w.]+)'", page) or [None, "3.3.3"])[1]
         j = json.loads(lire(f"{BASE}data/{mun}?version={ver}&questions={QUESTIONS}&wards=", "application/json"))
     except Exception as e:
         print("Élections Alberta ne répond pas :", e, "— fichier inchangé."); return
