@@ -96,8 +96,18 @@ const boltMat = id => boltMats[id] ||= M(id, { color: 0xc5c9cc, metalness: 0.9, 
 const darkMat = new THREE.MeshBasicMaterial({ color: 0x050607 });
 
 /* ---------- géométrie de révolution à arêtes vives ---------- */
+// aire signée d'un profil (r, y) : son signe donne le sens de parcours, donc le côté vers lequel les faces sont tournées
+function aire(Q) { let A = 0; for (let k = 0; k < Q.length; k++) { const a = Q[k], b = Q[(k + 1) % Q.length]; A += a[0] * b[1] - b[0] * a[1]; } return A; }
+// profil fermé d'une LatheGeometry (dernier point = premier, ou deux bouts sur l'axe) remis dans le sens qui tourne les
+// faces vers l'extérieur de la matière (vue en coupe : l'envers des faces est peint comme une section pleine)
+function profilLathe(v) {
+  const a = v[0], b = v[v.length - 1], ferme = a.distanceTo(b) < 1e-6 || (a.x < 1e-3 && b.x < 1e-3);
+  if (ferme && aire(v.map(p => [p.x, p.y])) < 0) v.reverse();
+  return v;
+}
 function revolve(pts, segs = 96, closed = true) {
   const Q = pts.map(([r, z]) => [Math.max(1e-4, r * S), AY(z)]);
+  if (closed && aire(Q) > 0) Q.reverse();                  // faces tournées vers l'extérieur de la matière
   const n = closed ? Q.length : Q.length - 1;
   const pos = [], idx = [], bands = [];
   let base = 0;
@@ -645,7 +655,7 @@ for (const [id, h, rTop] of [['drv_gov', 0, 3.95], ['drv_nf', 3, 3.8], ['drv_ovs
   lg(dist, dist + 0.25, rp * 1.02, 0.62);                  // dos du pignon
   lg(dist + 0.25, rTop - 0.1, 0.435, 0.435);              // arbre Ø 0,87
   const cp = new THREE.Mesh(new THREE.CylinderGeometry(0.45 * S, 0.45 * S, 0.7 * S, 20), mC); cp.position.y = (rTop - 0.45) * S; sp.add(cp);   // accouplement
-  const sv = new THREE.Mesh(new THREE.CylinderGeometry(0.52 * S, 0.52 * S, 0.5 * S, 20, 1, true), mBz); sv.position.y = (dist + 0.75) * S; hold.add(sv);   // palier lisse à collerette
+  const sv = new THREE.Mesh(revolve(ringPts(0.44, 0.52, Z0 - 0.25, Z0 + 0.25), 20), mBz); sv.position.y = (dist + 0.75) * S; hold.add(sv);   // palier lisse à collerette
   void rBack; void phi;
   pinions.push({ sp, id });
 }

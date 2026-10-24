@@ -55,8 +55,18 @@ const boltMats = {};
 const boltMat = id => boltMats[id] ||= M(id, { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
 
 /* ---------- géométrie de révolution à arêtes vives ---------- */
+// aire signée d'un profil (r, y) : son signe donne le sens de parcours, donc le côté vers lequel les faces sont tournées
+function aire(Q) { let A = 0; for (let k = 0; k < Q.length; k++) { const a = Q[k], b = Q[(k + 1) % Q.length]; A += a[0] * b[1] - b[0] * a[1]; } return A; }
+// profil fermé d'une LatheGeometry (dernier point = premier, ou deux bouts sur l'axe) remis dans le sens qui tourne les
+// faces vers l'extérieur de la matière (vue en coupe : l'envers des faces est peint comme une section pleine)
+function profilLathe(v) {
+  const a = v[0], b = v[v.length - 1], ferme = a.distanceTo(b) < 1e-6 || (a.x < 1e-3 && b.x < 1e-3);
+  if (ferme && aire(v.map(p => [p.x, p.y])) < 0) v.reverse();
+  return v;
+}
 function revolve(pts, segs = 96, closed = true) {
   const Q = pts.map(([r, z]) => [Math.max(1e-4, r * S), AY(z)]);
+  if (closed && aire(Q) > 0) Q.reverse();                  // faces tournées vers l'extérieur de la matière
   const n = closed ? Q.length : Q.length - 1;
   const pos = [], idx = [], bands = [];
   let base = 0;
@@ -127,7 +137,7 @@ function percer(geo, f) {
 // segment de révolution (talon, segment de virole) centré sur l'angle 0, à instancier
 function arcGeo(pts, frac, n, zc) {
   const d = TAU / n * frac;
-  return new THREE.LatheGeometry(pts.map(([r, z]) => new THREE.Vector2(r * S, AY(z) - AY(zc))), 4, -d / 2, d);
+  return new THREE.LatheGeometry(profilLathe(pts.map(([r, z]) => new THREE.Vector2(r * S, AY(z) - AY(zc)))), 4, -d / 2, d);
 }
 
 /* ---------- aides de placement ---------- */
@@ -361,15 +371,18 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
   lathe('exh', ringPts(2.3, 2.48, 28.48, 28.6), mEi, g, 72);                                  // anneau de support du couvercle n° 3
   // manchons des sorties, raccordés en selle sur la tôle (la partie sous la tôle est retirée), brides des tuyères
   // avion (Ø ≈ 6,5 po, 20 boulons — estimé) ; par les alésages, on voit le cône intérieur
+  // anneau plein (r0 à r1) le long de l'axe z local, de za à zb (po) ; `pas` redécoupe le profil pour le perçage
+  const anneauZ = (r0, r1, za, zb, segs, pas) => {
+    const q = ringPts(r0, r1, Z0 - zb, Z0 - za), geo = revolve(pas ? densifier(q.concat([q[0]]), pas) : q, segs);
+    geo.rotateX(Math.PI / 2); return geo;
+  };
   const horsCoque = p => Math.hypot(p.x, p.z) / S - (rCoque(Z0 - p.y / S) - 0.1);
   for (const { c, n } of SORTIES) {
     const hold = new THREE.Group(); hold.position.copy(c); hold.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n); g.add(hold);
-    const sg = new THREE.CylinderGeometry(RS * S, RS * S, 3.75 * S, 96, 40, true); sg.rotateX(Math.PI / 2); sg.translate(0, 0, (0.7 - 3.75 / 2) * S);
+    const sg = anneauZ(RS - 0.07, RS, 0.7 - 3.75, 0.7, 96, 0.1);                               // manchon en tôle de 0,07
     sg.applyMatrix4(new THREE.Matrix4().compose(c, hold.quaternion, new THREE.Vector3(1, 1, 1)));
     g.add(new THREE.Mesh(percer(sg, horsCoque), mE));
-    const pl = new THREE.Mesh(new THREE.RingGeometry(3.2 * S, 4.15 * S, 56), mE); pl.position.z = 0.7 * S; hold.add(pl);
-    const pl2 = new THREE.Mesh(new THREE.RingGeometry(3.2 * S, 4.15 * S, 56), mE); pl2.position.z = 0.58 * S; hold.add(pl2);
-    const rim = new THREE.Mesh(new THREE.CylinderGeometry(4.15 * S, 4.15 * S, 0.12 * S, 56, 1, true), mE); rim.rotation.x = Math.PI / 2; rim.position.z = 0.64 * S; hold.add(rim);
+    hold.add(new THREE.Mesh(anneauZ(3.2, 4.15, 0.58, 0.7, 56), mE));                             // bride de la tuyère
     const bg = new THREE.CylinderGeometry(0.17 * S, 0.17 * S, 0.2 * S, 6); bg.rotateX(Math.PI / 2);
     const ms = []; for (let i = 0; i < 20; i++) { const a = i * TAU / 20; ms.push(new THREE.Matrix4().makeTranslation(3.7 * S * Math.cos(a), 3.7 * S * Math.sin(a), 0.8 * S)); }
     inst(bg, ms, boltMat('exh'), hold, 'bolt');
@@ -404,7 +417,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
 {
   const g = PART.flangeD.g, mH = M('flangeD', { color: 0x938a7f, metalness: 0.75, roughness: 0.4 });
   for (const a0 of [0, Math.PI]) {
-    const geo = new THREE.LatheGeometry(ringPts(5.3, 5.82, 30.58, 30.7).concat([[5.3, 30.58]]).map(([r, z]) => new THREE.Vector2(r * S, AY(z))), 64, a0 + 0.03, Math.PI - 0.06);
+    const geo = new THREE.LatheGeometry(profilLathe(ringPts(5.3, 5.82, 30.58, 30.7).concat([[5.3, 30.58]]).map(([r, z]) => new THREE.Vector2(r * S, AY(z)))), 64, a0 + 0.03, Math.PI - 0.06);
     g.add(new THREE.Mesh(geo, mH));
   }
   boltRing('flangeD', g, 5.56, 30.77, 2, 0.16, { phi0: clockPhi(1), h: 0.14 });
@@ -421,7 +434,7 @@ function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (s
 { // segments d'étanchéité entre-étages (2)
   const g = PART.sealrings.g, mR = M('sealrings', { color: 0xb9b2a6, metalness: 0.85, roughness: 0.32 });
   for (const [z0, z1, a0] of [[32.16, 32.24, 0.3], [32.28, 32.36, 3.4]]) {
-    const geo = new THREE.LatheGeometry(ringPts(4.45, 4.62, z0, z1).concat([[4.45, z0]]).map(([r, z]) => new THREE.Vector2(r * S, AY(z))), 72, a0, TAU - 0.04);
+    const geo = new THREE.LatheGeometry(profilLathe(ringPts(4.45, 4.62, z0, z1).concat([[4.45, z0]]).map(([r, z]) => new THREE.Vector2(r * S, AY(z)))), 72, a0, TAU - 0.04);
     g.add(new THREE.Mesh(geo, mR));
   }
 }

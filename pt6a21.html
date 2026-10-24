@@ -2438,6 +2438,26 @@ refreshKeep();
   for (const o of pickables) if (o.isMesh) for (const m of [].concat(o.material)) { const g = keepGroup(o.userData.part); if (g) matGroup.set(m, g); }
 }
 cutMats = [...new Set(pickables.filter(o => o.isMesh && !o.userData.rgb).flatMap(o => [].concat(o.material)))];
+/* Faces de coupe pleines de toutes les pièces tranchées par les plans de coupe : à travers la coupe d'un volume fermé,
+   on ne voit que l'envers de ses faces. Dès qu'un matériau est coupé (NUM_CLIPPING_PLANES > 0), cet envers est peint
+   d'une teinte claire uniforme du métal, hachurée comme sur un dessin de coupe : la pièce paraît pleine au lieu de
+   montrer son intérieur creux. Matériaux transparents et surfaces ouvertes (userData.creux) exclus. */
+function coupePleine(m) {
+  if (!m || !m.isMeshStandardMaterial || m.transparent || m.userData.creux || m.userData.coupePleine) return;
+  m.userData.coupePleine = true;
+  m.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <tonemapping_fragment>', `#if NUM_CLIPPING_PLANES > 0
+      if (!gl_FrontFacing) {
+        vec3 cp = mix(diffuse, vec3(0.74, 0.77, 0.80), 0.35);
+        float h = step(mod(gl_FragCoord.x - gl_FragCoord.y, 9.0), 1.2);
+        gl_FragColor.rgb = cp * (0.62 - 0.12 * h);
+      }
+      #endif
+      #include <tonemapping_fragment>`);
+  };
+  m.needsUpdate = true;
+}
+for (const m of new Set([...rgbMats, ...cutMats])) coupePleine(m);
 {
   /* Faces de coupe des disques de turbine et de compresseur : tranchés par un plan passant par l'axe,
      un volume de révolution a pour section exactement son profil. Ces faces sont fixes (posées sur le

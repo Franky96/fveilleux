@@ -57,8 +57,18 @@ const boltMats = {};
 const boltMat = id => boltMats[id] ||= M(id, { color: 0xc5c9cc, metalness: 0.9, roughness: 0.3 });
 
 /* ---------- géométrie de révolution à arêtes vives ---------- */
+// aire signée d'un profil (r, y) : son signe donne le sens de parcours, donc le côté vers lequel les faces sont tournées
+function aire(Q) { let A = 0; for (let k = 0; k < Q.length; k++) { const a = Q[k], b = Q[(k + 1) % Q.length]; A += a[0] * b[1] - b[0] * a[1]; } return A; }
+// profil fermé d'une LatheGeometry (dernier point = premier, ou deux bouts sur l'axe) remis dans le sens qui tourne les
+// faces vers l'extérieur de la matière (vue en coupe : l'envers des faces est peint comme une section pleine)
+function profilLathe(v) {
+  const a = v[0], b = v[v.length - 1], ferme = a.distanceTo(b) < 1e-6 || (a.x < 1e-3 && b.x < 1e-3);
+  if (ferme && aire(v.map(p => [p.x, p.y])) < 0) v.reverse();
+  return v;
+}
 function revolve(pts, segs = 96, closed = true) {
   const Q = pts.map(([r, z]) => [Math.max(1e-4, r * S), AY(z)]);
+  if (closed && aire(Q) > 0) Q.reverse();                  // faces tournées vers l'extérieur de la matière
   const n = closed ? Q.length : Q.length - 1;
   const pos = [], idx = [], bands = [];
   let base = 0;
@@ -87,7 +97,7 @@ function lathe(id, pts, mat, parent, segs = 96, closed = true) {
 }
 // révolution avec coordonnées de texture (grille, perforations)
 function latheUV(pts, mat, parent, segs = 120, a0 = 0, da = TAU) {
-  const m = new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, z]) => new THREE.Vector2(Math.max(1e-4, r * S), AY(z))), segs, a0, da), mat);
+  const m = new THREE.Mesh(new THREE.LatheGeometry(profilLathe(pts.map(([r, z]) => new THREE.Vector2(Math.max(1e-4, r * S), AY(z)))), segs, a0, da), mat);
   parent.add(m); return m;
 }
 const ringPts = (r0, r1, z0, z1) => [[r0, z0], [r1, z0], [r1, z1], [r0, z1]];
@@ -431,7 +441,7 @@ const INLET_AD = [9, 10, 11];                                                // 
 /* ---------- chambre de combustion ---------- */
 {
   const g = PART.liner.g;
-  const mL = M('liner', { color: 0xb09c86, metalness: 0.8, roughness: 0.45, alphaMap: holeTex, alphaTest: 0.5 });
+  const mL = M('liner', { color: 0xb09c86, metalness: 0.8, roughness: 0.45, alphaMap: holeTex, alphaTest: 0.5 }); mL.userData.creux = true;   // tôle sans épaisseur
   const mB = M('liner', { color: 0xa38d76, metalness: 0.8, roughness: 0.42 });
   const pts = [[8.7, 36.4], [8.7, 28.4]];
   for (let i = 1; i < 18; i++) { const a = i / 18 * Math.PI; pts.push([7.85 + 0.85 * Math.cos(a), 28.4 - 0.85 * Math.sin(a)]); }
@@ -492,7 +502,7 @@ const FDV = { r: 11.75, z: 27.7 };
   const mW = M('fdv', { color: 0xd3d7da, metalness: 0.9, roughness: 0.25 });               // fil à freiner
   const add = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x * S, y * S, z * S); g.add(m); return m; };
   const alongX = geo => geo.rotateZ(-Math.PI / 2);                                         // axe Y -> axe X
-  const lath = pts => alongX(new THREE.LatheGeometry(pts.map(([r, x]) => new THREE.Vector2(Math.max(1e-4, r) * S, x * S)), 40));
+  const lath = pts => alongX(new THREE.LatheGeometry(profilLathe(pts.map(([r, x]) => new THREE.Vector2(Math.max(1e-4, r) * S, x * S))), 40));
   const YB = 0.78, ZB = 0.05;                                                              // axe du corps
   // semelle aux coins arrondis, percée de 4 trous
   const sh = new THREE.Shape(), w = 1.15, d = 1.12, c = 0.3;
@@ -618,7 +628,7 @@ const FDV = { r: 11.75, z: 27.7 };
 }
 { // grille d'entrée étroite, cadres, ferrure de fermeture (12 h)
   const g = PART.screen.g;
-  const mS = M('screen', { color: 0xb3bcc2, metalness: 0.9, roughness: 0.35, alphaMap: meshTex, transparent: true, alphaTest: 0.3 });
+  const mS = M('screen', { color: 0xb3bcc2, metalness: 0.9, roughness: 0.35, alphaMap: meshTex, transparent: true, alphaTest: 0.3 }); mS.userData.creux = true;
   const mF = M('screen', { color: 0x9aa3a9, metalness: 0.85, roughness: 0.35 });
   latheUV([[9.0, 47.32], [9.0, 51.05]], mS, g, 140);
   lathe('screen', ringPts(8.95, 9.15, 47.2, 47.42), mF, g, 120);
@@ -629,7 +639,7 @@ const FDV = { r: 11.75, z: 27.7 };
 }
 { // carénage d'entrée (2 moitiés) et 6 ferrures sur les goujons de la bride F
   const g = PART.fairing.g, mF = M('fairing', { color: 0x8a949a, metalness: 0.6, roughness: 0.42 });
-  for (const a0 of [0.02, Math.PI + 0.02]) latheUV([[9.02, 45.82], [9.1, 45.86], [9.1, 47.22], [9.02, 47.26]], mF, g, 64, a0, Math.PI - 0.04);
+  for (const a0 of [0.02, Math.PI + 0.02]) latheUV([[9.02, 45.82], [9.1, 45.86], [9.1, 47.22], [9.02, 47.26], [9.02, 45.82]], mF, g, 64, a0, Math.PI - 0.04);
   for (const h of [3, 9]) radialBox(g, mF, h, 9.1, 9.35, 45.9, 47.2, 0.2);                  // brides de jonction
   for (const h of [1, 3, 5, 7, 9, 11]) { radialBox(g, mF, h, 6.3, 9.0, 45.86, 45.92, 0.5); radialBox(g, mF, h, 8.95, 9.02, 45.9, 46.4, 0.5); }
 }
