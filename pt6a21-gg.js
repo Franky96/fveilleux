@@ -740,8 +740,9 @@ parefeu('fsr', 51.55, 9.3, 1);
 }
 
 /* ---------- rotor du compresseur ---------- */
-const diskProfile = (rb, zc, hubR, hubW, webR, webW, rimR, rimW) => [[rb, zc - hubW / 2], [hubR, zc - hubW / 2], [hubR + 0.25, zc - webW / 2], [webR, zc - webW / 2],
-  [webR + 0.2, zc - rimW / 2], [rimR, zc - rimW / 2], [rimR, zc + rimW / 2], [webR + 0.2, zc + rimW / 2], [webR, zc + webW / 2], [hubR + 0.25, zc + webW / 2], [hubR, zc + hubW / 2], [rb, zc + hubW / 2]];
+// disque plein (demande de l'utilisateur) : de l'alésage à la base de la jante à la largeur du moyeu, puis la jante
+const diskProfile = (rb, zc, hubR, hubW, webR, webW, rimR, rimW) => [[rb, zc - hubW / 2], [webR, zc - hubW / 2],
+  [webR + 0.2, zc - rimW / 2], [rimR, zc - rimW / 2], [rimR, zc + rimW / 2], [webR + 0.2, zc + rimW / 2], [webR, zc + hubW / 2], [rb, zc + hubW / 2]];
 const TIE = Array.from({ length: 6 }, (_, i) => TAU / 12 + i * TAU / 6), RT = 1.75;           // 6 tirants au rayon 1,75 (estimé)
 {
   const s = spinner('stubshaft'), mA = M('stubshaft', { color: 0x8d949a, metalness: 0.9, roughness: 0.3 });
@@ -815,8 +816,8 @@ const TIE = Array.from({ length: 6 }, (_, i) => TAU / 12 + i * TAU / 6), RT = 1.
 }
 { // moyeu arrière (disque du 1er étage), accouplement court goupillé
   const s = spinner('rearhub'), mH = M('rearhub', { color: 0xa9aeb8, metalness: 0.95, roughness: 0.28 }), mC = M('rearhub', { color: 0x8d949a, metalness: 0.9, roughness: 0.3 });
-  lathe('rearhub', [[0.42, 44.8], [1.4, 44.8], [1.65, 45.15], [1.9, 45.15], [2.1, 45.0], [2.4, 45.0], [2.4, 45.7], [2.1, 45.7], [1.9, 45.55], [1.65, 45.55],
-    [1.4, 45.9], [0.59, 45.98], [0.59, 47.65], [0.42, 47.65]], mH, s, 96);
+  lathe('rearhub', [[0.42, 44.8], [2.1, 44.8], [2.1, 45.0], [2.4, 45.0], [2.4, 45.7], [2.1, 45.7], [2.1, 45.9],
+    [1.4, 45.9], [0.59, 45.98], [0.59, 47.65], [0.42, 47.65]], mH, s, 96);                                         // disque plein
   lathe('rearhub', [[0.25, 46.6], [0.42, 46.6], [0.42, 47.65], [0.31, 47.65], [0.31, 48.3], [0.25, 48.3]], mC, s, 32);
   const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * S, 0.06 * S, 1.24 * S, 8), mC); pin.rotation.z = Math.PI / 2; pin.position.y = AY(47.52); s.add(pin);
 }
