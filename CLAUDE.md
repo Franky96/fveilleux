@@ -15,6 +15,10 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 - Ne jamais faire de push forcé sur `master` (ça casse le déploiement Hostinger) sans prévenir l'utilisateur au préalable.
 - Ne jamais committer de manuels (PDF P&WC, etc.) ni d'identifiants : le dépôt est public.
 
+## Simulateur PT6A-21
+
+`pt6a21.html` charge ses modules (`pt6a21-eclate.js`, `-rgb.js`, `-turbines.js`, `-gg.js`) avec `?v=<empreinte>` (8 premiers caractères du sha256 du fichier) : sans ça, le navigateur garde l'ancien module après une mise à jour. Après toute modification d'un module, remettre l'empreinte à jour : `for m in eclate rgb turbines gg; do h=$(sha256sum pt6a21-$m.js | cut -c1-8); sed -i -E "s#pt6a21-$m\.js(\?v=[0-9a-f]+)?\"#pt6a21-$m.js?v=$h\"#" pt6a21.html; done`.
+
 ## Sécurité — scripts externes (CDN)
 
 Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN porte un attribut `integrity="sha384-…"` et `crossorigin="anonymous"` (SRI). Pour changer de version d'une bibliothèque, recalculer l'empreinte :
