@@ -794,22 +794,21 @@ const TIE = Array.from({ length: 6 }, (_, i) => TAU / 12 + i * TAU / 6), RT = 1.
   bladeRow(vaneGeo(0), 13, mI, s, 40);
   bladeRow(vaneGeo(0.42), 13, mI, s, 40, TAU / 26);
 }
-// entretoises pleines jusqu'à l'alésage des disques (demande de l'utilisateur : plus de cavité entre les disques en coupe)
-{ const s = spinner('spacer3'), mS = M('spacer3', { color: 0xbfc5ca, metalness: 0.9, roughness: 0.28 }); lathe('spacer3', lechettes(0.95, 2.58, 41.15, 41.575, 2), mS, s, 96); }
+{ const s = spinner('spacer3'), mS = M('spacer3', { color: 0xbfc5ca, metalness: 0.9, roughness: 0.28 }); lathe('spacer3', lechettes(2.3, 2.58, 41.15, 41.575, 2), mS, s, 96); }
 {
   const s = spinner('disk3'), mD = M('disk3', { color: 0xbfc5ca, metalness: 0.95, roughness: 0.25 });
   lathe('disk3', diskProfile(0.95, 41.85, 1.4, 0.9, 2.1, 0.35, 2.7, 0.55), mD, s, 96);
   bladeRow(bladeGeo({ r0: 2.7, r1: 3.75, chord: 0.6, st0: 0.65, st1: 0.9, camber: 0.12 }), 32, mD, s, 41.85);
   platforms(2.72, 0.5, 32, 0.06, mD, s, 41.85);
 }
-{ const s = spinner('spacer2'), mS = M('spacer2', { color: 0xbfc5ca, metalness: 0.9, roughness: 0.28 }); lathe('spacer2', lechettes(0.95, 2.43, 42.125, 43.25, 3), mS, s, 96); }
+{ const s = spinner('spacer2'), mS = M('spacer2', { color: 0xbfc5ca, metalness: 0.9, roughness: 0.28 }); lathe('spacer2', lechettes(2.1, 2.43, 42.125, 43.25, 3), mS, s, 96); }
 { const s = spinner('disk2'), mD = M('disk2', { color: 0xbfc5ca, metalness: 0.95, roughness: 0.25 }); lathe('disk2', diskProfile(0.95, 43.55, 1.4, 0.9, 2.0, 0.35, 2.55, 0.6), mD, s, 96); }
 {
   const s = spinner('blades2'), mB = M('blades2', { color: 0xbfc5ca, metalness: 0.95, roughness: 0.25 });
   bladeRow(bladeGeo({ r0: 2.55, r1: 3.85, chord: 0.7, st0: 0.7, st1: 0.95, camber: 0.12 }), 32, mB, s, 43.55);
   platforms(2.57, 0.55, 32, 0.06, mB, s, 43.55);
 }
-{ const s = spinner('spacer1'), mS = M('spacer1', { color: 0xbfc5ca, metalness: 0.9, roughness: 0.28 }); lathe('spacer1', lechettes(0.95, 2.28, 43.85, 45.0, 3), mS, s, 96); }
+{ const s = spinner('spacer1'), mS = M('spacer1', { color: 0xbfc5ca, metalness: 0.9, roughness: 0.28 }); lathe('spacer1', lechettes(2.05, 2.28, 43.85, 45.0, 3), mS, s, 96); }
 {
   const s = spinner('blades1'), mB = M('blades1', { color: 0xa9aeb8, metalness: 0.95, roughness: 0.28 });
   bladeRow(bladeGeo({ r0: 2.4, r1: 3.95, chord: 1.15, tipChord: 1.25, st0: 0.75, st1: 1.05, camber: 0.14, thick: 0.08 }), 16, mB, s, 45.35);
