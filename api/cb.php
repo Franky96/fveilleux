@@ -73,8 +73,10 @@ if ($age > TTL) {
         $abs = preg_match('~^https?://~i', $l) ? $l : rtrim(dirname($accueil['url'] . 'x'), '/') . '/' . ltrim($l, '/');
         if (permis($abs) && $abs !== $accueil['url']) $liens[] = $abs;
       }
-      usort($liens, fn($a, $b) => (int)!preg_match('/candidat/i', $a) <=> (int)!preg_match('/candidat/i', $b));
-      foreach (array_slice($liens, 0, MAX_PAGES - 1) as $l) { $p = lire($l); if ($p) $pages[] = $p; }
+      // le rapport par candidat suffit (voix de chaque candidat, urnes, résumé) : la page d'accueil n'est alors pas renvoyée
+      $cand = array_values(array_filter($liens, fn($l) => preg_match('/candidat/i', $l)));
+      if ($cand) $pages = [];
+      foreach (array_slice($cand ?: $liens, 0, MAX_PAGES - 1) as $l) { $p = lire($l); if ($p) $pages[] = $p; }
     }
     $d = ['disponible' => count($pages) > 0, 'maj' => date('c'), 'source' => DEPART, 'pages' => $pages];
     if ($pages || !is_file($cache)) file_put_contents($cache, json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX);

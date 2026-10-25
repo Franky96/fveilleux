@@ -84,8 +84,38 @@ function sections(out, code, txt) {
   const m = /(\d[\d,]*)\s*(?:of|\/|sur|de)\s*(\d[\d,]*)/i.exec(txt);
   if (code && m && /poll|ballot|box|report|section|count|urne/i.test(txt)) out.circ[code] ||= { cands: {}, sec: null }, out.circ[code].sec = [+m[1].replace(/,/g, ""), +m[2].replace(/,/g, "")];
 }
+// rapport « Results by Candidate » d'Elections BC (results.elections.bc.ca, Results_<n>_GE-2026-10-24_Candidate.html) : une ligne
+// tr[data-ed] par candidat (td[data-canname], affiliation, voix, %), puis les totaux et deux lignes « … ballot boxes | a of b reported »
+const AFF = { "bc ndp": "ndp", "conservative party": "con", "bc green party": "grn", "centrebc": "ctr", "onebc": "one", "independent": "ind", "unaffiliated": "ind" };
+function lireRapportEbc(doc, out) {
+  const lignes = doc.querySelectorAll("#tblReport tr[data-ed]");
+  if (!lignes.length) return false;
+  const boites = {};
+  for (const tr of lignes) {
+    const code = trouverCirc(tr.dataset.ed); if (!code) continue;
+    const c = out.circ[code] ||= { cands: {}, sec: null };
+    const tds = [...tr.children].map(td => td.textContent.replace(/\s+/g, " ").trim());
+    const nomTd = tr.querySelector("td[data-canname]");
+    if (nomTd) {
+      const nom = (nomTd.dataset.canname || nomTd.textContent).trim();
+      const cand = trouverCand(nom, code)?.cand || { nom, parti: AFF[(tds[2] || "").toLowerCase()] || "aut", aff: tds[2] || "" };
+      ajouter(out, code, cand, entier(tds[3]) ?? 0, /elected|✓|✔/i.test(tr.textContent) || !!tr.querySelector(".elected, [class*=elect], img[alt*=lect i]"));
+      continue;
+    }
+    if (/^Rejected/i.test(tds[1] || "")) { c.rej = entier(tds[3]) ?? 0; continue; }
+    const m = /ballot boxes\s*\|\s*([\d,]+)\s+of\s+([\d,]+)/i.exec(tds.join(" "));
+    if (m) { const b = boites[code] ||= [0, 0]; b[0] += +m[1].replace(/,/g, ""); b[1] += +m[2].replace(/,/g, ""); c.sec = b.slice(); }
+  }
+  // résumé du haut : urnes dépouillées, participation préliminaire, électeurs inscrits
+  const t = doc.body.textContent.replace(/\s+/g, " ");
+  const num = re => { const m = re.exec(t); return m ? +m[1].replace(/,/g, "") : null; };
+  out.resume = { urnes: num(/([\d.]+)\s*%\s*Of ballot boxes reporting/i), part: num(/([\d.]+)\s*%\s*Preliminary Voter Turnout/i),
+    consid: num(/([\d,]+)\s*Total Votes Considered/i), inscrits: num(/([\d,]+)\s*Registered voters/i) };
+  return true;
+}
 function lireHtml(corps, out) {
   const doc = new DOMParser().parseFromString(corps, "text/html");
+  if (lireRapportEbc(doc, out)) return;
   let courant = null;
   for (const el of doc.querySelectorAll("h1,h2,h3,h4,h5,caption,tr,p,div.ed,span.ed")) {
     if (el.tagName !== "TR") { const c = trouverCirc(el.textContent) || trouverCirc(el.textContent.split(/[-–:(]/)[0]); if (c) courant = c; sections(out, courant, el.textContent); continue; }
@@ -200,7 +230,8 @@ function dessinerEtat() {
   if (!RES) { $("lvEtat").textContent = "Résultats indisponibles pour le moment · nouvel essai chaque minute"; return; }
   if (!auMoinsUn()) { $("lvEtat").textContent = "En attente des premiers résultats · vérification chaque minute"; dessinerVerifs(); return; }
   const fin = Object.values(RES.circ).filter(c => c.final).length;
-  $("lvEtat").innerHTML = ["<b>Résultats préliminaires</b>", `${RES.lus} circonscription${RES.lus > 1 ? "s" : ""} sur ${NB} avec des résultats`, fin ? `${fin} terminée${fin > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+  $("lvEtat").innerHTML = ["<b>Résultats préliminaires</b>", `${RES.lus} circonscription${RES.lus > 1 ? "s" : ""} sur ${NB} avec des résultats`, fin ? `${fin} entièrement dépouillée${fin > 1 ? "s" : ""}` : "",
+    RES.resume?.urnes != null ? `${nf(RES.resume.urnes, 1)} % des urnes` : ""].filter(Boolean).join(" · ");
   dessinerVerifs();
 }
 function dessinerVerifs() {
@@ -255,7 +286,10 @@ function dessinerSieges() {
       + `<span class="lv-pvote">${v != null ? nf(v, 1) + " %" : ""}</span></div>`;
   }).join("");
   const fin = Object.values(RES?.circ || {}).filter(c => c.final).length;
-  $("edKv").innerHTML = [[`${RES?.lus || 0} / ${NB}`, "circonscriptions avec des résultats"], [nf(fin), "circonscriptions terminées"], [voixT ? nf(voixT) : "—", "voix comptées (préliminaire)"]]
+  const R = RES?.resume || {};
+  $("edKv").innerHTML = [[`${RES?.lus || 0} / ${NB}`, "circonscriptions avec des résultats"], [nf(fin), "circonscriptions entièrement dépouillées"],
+    [R.urnes != null ? nf(R.urnes, 1) + " %" : "—", "des urnes dépouillées"], [R.part != null ? nf(R.part, 1) + " %" : "—", "participation préliminaire"],
+    [voixT ? nf(voixT) : "—", `voix valides comptées${R.inscrits ? ` · ${nf(R.inscrits)} inscrits` : ""}`]]
     .map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
   $("lvBarrePlein").innerHTML = `<div class="lv-bp-tete"><b>${lead ? (tot(lead) >= MAJ ? `${PARTIS[lead].court} majoritaire` : `${PARTIS[lead].court} en tête`) : "Sièges"}</b><span>majorité ${MAJ} · ${RES?.lus || 0}/${NB} circ.</span></div>`
     + `<div class="lv-bp-barre">${ordre.map(p => `<span style="width:${pct(tot(p))};--c:${coulP(p)}"><i style="width:${100 * s[p].elus / tot(p)}%"></i></span>`).join("")}<em style="left:${100 * MAJ / NB}%"></em></div>`
@@ -282,7 +316,7 @@ function dessinerCarte() {
 function dessinerLegende() {
   const s = sieges(), pres = ORDRE_P.filter(p => s[p].elus + s[p].avance > 0);
   $("edLegende").innerHTML = (pres.length ? pres : ["ndp", "con", "grn"]).map(p => `<span class="ed-legende-k" style="--c:${coulP(p)}"><i></i>${esc(PARTIS[p].court)} en tête</span>`).join("")
-    + `<span>${carteGains ? "· seulement les circonscriptions qui changent de parti par rapport à 2024" : carteMarge ? "· couleur d'autant plus foncée que l'écart est grand (pleine à 32 points et plus)" : "· plus la couleur est pâle, moins il y a de bureaux dépouillés"} · gris : aucun résultat</span>`;
+    + `<span>${carteGains ? "· seulement les circonscriptions qui changent de parti par rapport à 2024" : carteMarge ? "· couleur d'autant plus foncée que l'écart est grand (pleine à 32 points et plus)" : "· plus la couleur est pâle, moins il y a d'urnes dépouillées"} · gris : aucun résultat</span>`;
 }
 function dessinerContoursSuivis() {
   const b = $("lvCarteSuivis");
@@ -300,7 +334,7 @@ function infobulle(e, f) {
   tip.style.left = Math.min(e.clientX - box.left + 12, box.width - 240) + "px"; tip.style.top = Math.min(e.clientY - box.top + 12, box.height - 120) + "px";
   const nom = `<b>${suivies.has(code) ? "★ " : ""}${esc(PAR_CODE[code])}</b>`;
   tip.innerHTML = nom + (c ? c.cands.slice(0, 3).map(k => `<span class="ed-tip-l" style="--c:${coulP(k.parti)}"><span><i></i>${esc(k.nom)} (${esc(PARTIS[k.parti]?.court || k.aff)})</span><b>${nf(pctC(c, k), 1)} %</b></span>`).join("")
-    + `<small>${c.final ? "terminé" : c.frac != null ? nf(100 * c.frac, 0) + " % des bureaux" : "dépouillement en cours"}${gagnant24(code) ? ` · 2024 : ${esc(PARTIS[gagnant24(code)].court)}` : ""}</small>`
+    + `<small>${c.final ? "terminé" : c.frac != null ? nf(100 * c.frac, 0) + " % des urnes" : "dépouillement en cours"}${gagnant24(code) ? ` · 2024 : ${esc(PARTIS[gagnant24(code)].court)}` : ""}</small>`
     : `<br><small>Aucun résultat${gagnant24(code) ? ` · 2024 : ${esc(PARTIS[gagnant24(code)].court)}` : ""}</small>`);
 }
 function construireCarte() {
@@ -385,7 +419,7 @@ function dessinerPanneau() {
   const p = $("lvPanneau");
   if (sel == null) {
     p.innerHTML = `<span class="lv-eyebrow">Circonscriptions</span><h3>Clique sur une circonscription</h3>
-      <p class="lv-muted">Couleur : parti en tête. Plus la couleur est pâle, moins il y a de bureaux dépouillés ; gris : aucun résultat. « Gains » ne montre que les circonscriptions qui changent de parti par rapport à 2024 (mêmes limites).</p>
+      <p class="lv-muted">Couleur : parti en tête. Plus la couleur est pâle, moins il y a d'urnes dépouillées ; gris : aucun résultat. « Gains » ne montre que les circonscriptions qui changent de parti par rapport à 2024 (mêmes limites).</p>
       <div class="lv-kv"><div><b>${RES?.lus || 0}</b><span>avec résultats</span></div><div><b>${NB - (RES?.lus || 0)}</b><span>sans résultat</span></div><div><b>${MAJ}</b><span>majorité</span></div></div>`;
     return;
   }
@@ -394,7 +428,7 @@ function dessinerPanneau() {
     + `<div class="lv-suivre-pour"><button type="button" class="lv-suivre" data-suivre="${sel}" aria-pressed="${suivies.has(sel)}" style="--c:#B7860B">${suivies.has(sel) ? "★ Suivie" : "☆ Suivre"}</button></div>`;
   if (c) {
     const [a, b] = c.cands, ecart = b ? a.voix - b.voix : a.voix;
-    html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? "Dépouillement terminé" : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} bureaux (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
+    html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? "Dépouillement terminé" : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} urnes (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
       + (g24 && g24 !== a.parti ? `<span class="lv-chip" style="--c:${coulP(a.parti)}">Gain ${esc(PARTIS[a.parti].court)} (2024 : ${esc(PARTIS[g24].court)})</span>` : "") + `</div>`
       + `<p class="lv-tete" style="--c:${coulP(a.parti)}"><b>${esc(a.nom)}</b> (${esc(PARTIS[a.parti]?.court || a.aff)}) ${a.elu || c.final ? "élu·e" : "en tête"}${b ? ` par ${nf(ecart)} voix (${nf(pctC(c, a) - pctC(c, b), 1)} pt)` : ""}</p>`
       + `<table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${coulP(k.parti)}"><td><i class="lv-pt" style="background:${coulP(k.parti)}"></i></td>`
@@ -422,7 +456,7 @@ function ligne(code) {
   const c = enCirc(code), a = c && tete(c);
   return `<li class="lv-ligne" data-rid="${code}" tabindex="0"><button type="button" class="lv-etoile" data-suivre="${code}" aria-pressed="${suivies.has(code)}" aria-label="Suivre ${esc(PAR_CODE[code])}">${suivies.has(code) ? "★" : "☆"}</button>`
     + `<span class="lv-nom" style="--c:${a ? coulP(a.parti) : "var(--soft)"}"><i></i>${esc(PAR_CODE[code])}</span>`
-    + `<span class="lv-ecart">${a ? `${esc(PARTIS[a.parti].court)} +${nf(ecartPts(c), 1)} pt` : "—"}<small>${c ? (c.final ? "terminé" : c.frac != null ? nf(100 * c.frac, 0) + " % bur." : "") : ""}</small></span></li>`;
+    + `<span class="lv-ecart">${a ? `${esc(PARTIS[a.parti].court)} +${nf(ecartPts(c), 1)} pt` : "—"}<small>${c ? (c.final ? "terminé" : c.frac != null ? nf(100 * c.frac, 0) + " % urnes" : "") : ""}</small></span></li>`;
 }
 function dessinerSuivi() {
   $("lvSuivies").innerHTML = suivies.size ? `<ul class="lv-lignes">${[...suivies].filter(k => PAR_CODE[k]).sort((a, b) => PAR_CODE[a].localeCompare(PAR_CODE[b], "fr")).map(ligne).join("")}</ul>`

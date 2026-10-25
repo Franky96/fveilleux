@@ -45,8 +45,9 @@ def main():
         for l in dict.fromkeys(re.findall(r'(?:href|src)\s*=\s*["\']([^"\'#]+\.(?:html?|json)(?:\?[^"\']*)?)["\']', accueil["corps"], re.I)):
             a = urllib.parse.urljoin(accueil["url"], l)
             if urllib.parse.urlparse(a).hostname in PERMIS and a != accueil["url"]: liens.append(a)
-        liens.sort(key=lambda a: 0 if re.search("candidat", a, re.I) else 1)
-        for l in liens[:5]:
+        cand = [a for a in liens if re.search("candidat", a, re.I)]   # le rapport par candidat suffit (comme api/cb.php)
+        if cand: pages = []
+        for l in (cand or liens)[:5]:
             p = lire(l)
             if p: pages.append(p)
     if not pages: print("Elections BC ne répond pas : fichier inchangé."); return
