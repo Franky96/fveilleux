@@ -331,20 +331,20 @@ function infobulle(e, f) {
 function choisir(i) { sel = i; peindre(); dessinerPanneau(); if (i != null) infoPlein(); }
 // député de la circonscription : celui de la liste officielle de l'Assemblée nationale (deputes.json, suit les dépouillements
 // judiciaires, démissions, partielles et changements d'allégeance), avec son résultat du 5 octobre 2026 s'il y a été élu ;
-// absent de la liste = siège vacant ; sans la liste (fichier illisible) : le gagnant du résultat d'Élections Québec
+// absent de la liste : le gagnant du résultat d'Élections Québec, avec une note ; sans la liste (fichier illisible) : ce gagnant aussi
 const normNom = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
 function blocDepute(nomCirc) {
   const e = ELEC.circ[nomCirc], ce = e && { g: e.g, cands: e.c }, gagnant = ce ? deputeDe(ce) : null;
   const off = DEP?.deputes?.[nomCirc], vacant = DEP?.vacants?.includes(nomCirc);
   const resultat = k => k && e ? `Élu le 5 octobre 2026 avec ${nf(k.v)} voix (${nf(e.s[k.p] || 0, 1)} %)${ecartVoix(ce) != null ? ` · ${nf(ecartVoix(ce))} voix d'avance` : ""}${e.f ? "" : " · résultat préliminaire"}` : "";
-  if (vacant) return `<span class="lv-eyebrow">Député de la circonscription</span>
-    <p class="vi-elu vi-depute" style="--c:var(--muted)"><b>Siège vacant</b><span>selon la <a href="${esc(DEP.source)}" target="_blank" rel="noopener">liste de l'Assemblée nationale</a></span>
-      <small>${gagnant ? `Résultat d'Élections Québec : ${esc(gagnant.nom)} (${esc(NOMS[gagnant.p] || gagnant.sigle)}) en tête${ecartVoix(ce) != null ? ` de ${nf(ecartVoix(ce))} voix` : ""} · en attente (dépouillement judiciaire ou contestation possible)` : ""}</small></p>`;
+  // absent de la liste officielle (dépouillement judiciaire, assermentation à venir…) : le candidat élu le soir de l'élection,
+  // qui siège jusqu'à preuve du contraire (demande de l'utilisateur), avec une note
+  const note = vacant && gagnant ? `<small class="vi-note-dep" style="display:block;margin-top:4px;font-style:italic">Pas encore dans la <a href="${esc(DEP.source)}" target="_blank" rel="noopener">liste de l'Assemblée nationale</a> (dépouillement judiciaire, contestation ou assermentation en cours) : candidat élu selon Élections Québec.</small>` : "";
   const k = off || gagnant; if (!k) return "";
   const p = off ? off.p : gagnant.p, memeQueGagnant = off && gagnant && normNom(off.nom) === normNom(gagnant.nom);
   return `<span class="lv-eyebrow">Député de la circonscription</span>
     <p class="vi-elu vi-depute" style="--c:${COUL[p] || COUL.AUT}"><b>${off ? `<a href="${esc(off.url)}" target="_blank" rel="noopener">${esc(off.nom)}</a>` : esc(gagnant.nom)}</b><span>${esc(off ? (NOMS[p] || off.allegeance) : (NOMS[p] || gagnant.sigle))}</span>
-      <small>${!off ? resultat(gagnant) : memeQueGagnant ? resultat(gagnant) : "Député en poste selon l'Assemblée nationale"}</small></p>`;
+      <small>${!off ? resultat(gagnant) : memeQueGagnant ? resultat(gagnant) : "Député en poste selon l'Assemblée nationale"}</small>${note}</p>`;
 }
 function dessinerPanneau() {
   const z = $("viPanneau"), s = ETAT.sieges, nat = ETAT.national;
