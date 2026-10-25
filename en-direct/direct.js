@@ -453,8 +453,10 @@ function avatar(parti, code, nom) {
   const repli = `<span class="lv-ava lv-ini" style="--c:${coulP(parti)}" aria-hidden="true">${ini}</span>`;
   const url = PHOTOS[parti]?.[code];
   if (!url) return repli;
-  return `<img class="lv-ava" style="--c:${coulP(parti)}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-nom="${esc(nom)}" data-parti="${parti}"
-    onerror="this.outerHTML=this.dataset.repli" data-repli="${esc(repli)}">`;
+  const img = `<img class="lv-ava" style="--c:${coulP(parti)}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-nom="${esc(nom)}" data-parti="${parti}"
+    onerror="(this.closest('.cb-recadre') || this).outerHTML=this.dataset.repli" data-repli="${esc(repli)}">`;
+  // OneBC : affiches de campagne (nom écrit sur la moitié du bas) : vignette recadrée sur le visage, affiche entière au survol
+  return parti === "one" ? `<span class="cb-recadre" style="--c:${coulP(parti)}">${img}</span>` : img;
 }
 // survol d'une photo : la même photo en grand, à côté
 function grandePhoto(img) {
