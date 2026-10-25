@@ -14,7 +14,7 @@ on:
   push:
     branches: [master]
   workflow_run:
-    workflows: ['Référendum Alberta · résultats', 'Votes Québec · données Qc125']
+    workflows: ['Référendum Alberta · résultats', 'Votes Québec · données Qc125', 'Élection C.-B. · résultats']
     types: [completed]
   schedule:
     - cron: "11,41 * * * *"
