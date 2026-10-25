@@ -614,6 +614,17 @@
     /* Accueil de la section : une carte par page */
     /* accueil : une ligne de cartes par continent, avec son titre */
     .ac-groupes { display: grid; gap: 34px; }
+    /* « Anciennes élections » (accueil) : anciennes soirées En direct */
+    .ac-anciennes { position: relative; align-self: center; }
+    .ac-anciennes > summary { list-style: none; cursor: pointer; }
+    .ac-anciennes > summary::-webkit-details-marker { display: none; }
+    .ac-anciennes > summary::after { content: " ▾"; }
+    .ac-anciennes[open] > summary::after { content: " ▴"; }
+    .ac-anciennes ul { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 260px; margin: 0; padding: 6px; list-style: none;
+      background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .ac-anciennes a { display: grid; gap: 2px; padding: 8px 10px; border-radius: 7px; color: var(--ink); text-decoration: none; }
+    .ac-anciennes a:hover, .ac-anciennes a:focus-visible { background: var(--soft); }
+    .ac-anciennes small { color: var(--muted); }
     .ac-continent { display: grid; gap: 14px; }
     .ac-continent-titre { display: flex; align-items: baseline; gap: 12px; margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule); font-family: "Literata", Georgia, serif; font-size: clamp(1.15rem, 2vw, 1.45rem); }
     .ac-continent-titre small { font-family: inherit; font-size: 0.8rem; font-weight: 400; color: var(--muted); font-family: system-ui, sans-serif; }
@@ -1056,17 +1067,17 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes États-Unis · Chambre des représentants</span><span class="t-direct" hidden>En direct · référendum en Alberta du 19 octobre 2026</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes États-Unis · Chambre des représentants</span><span class="t-direct" hidden>En direct · élection générale en Colombie-Britannique du 24 octobre 2026</span><span class="t-ab2026" hidden>Anciennes élections · référendum en Alberta du 19 octobre 2026</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
-      <!-- « En direct » : soirée d'un vote (en ce moment : référendum en Alberta du 19 octobre 2026), à gauche de l'Accueil -->
+      <!-- « En direct » : soirée d'un vote (en ce moment : élection générale en Colombie-Britannique du 24 octobre 2026), à gauche de l'Accueil -->
       <div class="sc-groupe" role="presentation">
         <div class="sc-groupe-btns">
           <a class="sc-tab sc-live" href="en-direct.html">
-            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Référendum en Alberta · 19 octobre</small>
+            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Colombie-Britannique · 24 octobre</small>
           </a>
         </div>
       </div>
@@ -1142,6 +1153,7 @@
       }
     })();
   </script>
+
 
 
 

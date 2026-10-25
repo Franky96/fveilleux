@@ -1,6 +1,7 @@
 """Section « Intentions de vote et simulations » : une page par onglet, tirées d'un même gabarit (pages.src.html).
 
-    en-direct.html               soirée d'un vote, à gauche de l'Accueil (en ce moment : référendum en Alberta, en-direct/direct.js)
+    en-direct.html               soirée d'un vote, à gauche de l'Accueil (en ce moment : élection en Colombie-Britannique, en-direct/direct.js)
+    referendum-alberta-2026.html ancienne soirée (référendum en Alberta, en-direct/alberta-2026/direct.js), bouton « Anciennes élections » de l'Accueil
     intentions-simulations.html  accueil de la section (une carte par page)
     votes-quebec.html            intentions de vote (résultat de l'élection jusqu'au premier sondage)
     loi39.html                   simulation de la loi 39
@@ -25,12 +26,12 @@ ARRIVEE_EN_DIRECT = True
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
-FICHIER = {"direct": "en-direct.html", "live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
+FICHIER = {"direct": "en-direct.html", "ab2026": "referendum-alberta-2026.html", "live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
            "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html",
            "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html", "alberta": "votes-alberta.html"}
-PAGES = ["direct", "live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
-TITRE = {"direct": "En direct · référendum en Alberta", "live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
-SCRIPTS = {"direct": "en-direct/direct.js", "live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
+PAGES = ["direct", "ab2026", "live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
+TITRE = {"direct": "En direct · élection en Colombie-Britannique", "ab2026": "Référendum en Alberta (2026)", "live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
+SCRIPTS = {"direct": "en-direct/direct.js", "ab2026": "en-direct/alberta-2026/direct.js", "live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
 
 src = open(os.path.join(ICI, "pages.src.html"), encoding="utf-8").read()
 src = re.sub(r"<!-- GABARIT :.*?-->\n", "", src, count=1)
