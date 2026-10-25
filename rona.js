@@ -527,7 +527,7 @@ function sauvegarderLocation() {
 }
 
 // ── Page(s) « Dates d'expiration » ajoutée(s) à la fin du PDF ──────────
-// Par emplacement : les articles qui ont une date d'expiration saisie, du plus proche au plus lointain,
+// Par emplacement : les articles qui ont une date d'expiration saisie, dans l'ordre de la liste du site (ITEMS),
 // avec leur statut (expiré, expire dans moins de 2 mois). Plusieurs pages si la liste est longue.
 async function ajouterPagesDates(pdfDoc, locs, dateGen) {
   const { rgb, StandardFonts } = window.PDFLib;
@@ -564,8 +564,7 @@ async function ajouterPagesDates(pdfDoc, locs, dateGen) {
   for (const loc of locs) {
     const exp = loc.expirations || {};
     const lignes = ITEMS.filter(it => ITEMS_AVEC_EXPIRY.has(it.id) && exp[it.id])
-      .map(it => ({ it, d: exp[it.id], st: getExpirationStatus(exp[it.id]) }))
-      .sort((a, b) => a.d.localeCompare(b.d));
+      .map(it => ({ it, d: exp[it.id], st: getExpirationStatus(exp[it.id]) }));
     // chaque emplacement reste entier sur une page (s'il est plus long qu'une page, il continue avec « (suite) »)
     const hauteur = 20 + 16 * Math.max(1, lignes.length);
     if (y - hauteur < marge) nouvellePage(true);
