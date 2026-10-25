@@ -177,8 +177,8 @@ function dessinerTete() {
 }
 
 /* ---------- « Gouvernement actuel » (demande de l'utilisateur) ----------
-   Bouton dans le rectangle de l'Assemblée : grande fenêtre avec, à gauche, l'Assemblée nationale actuelle en plan vertical
-   (gouvernement à gauche, opposition à droite, présidence en haut ; un carré par député en poste, deputes.json) et, à droite,
+   Bouton dans le rectangle de l'Assemblée : grande fenêtre avec, à gauche, l'Assemblée nationale actuelle (même plan que le
+   rectangle de l'Assemblée, composition d'aujourd'hui d'après deputes.json) et, à droite,
    l'organigramme du Conseil des ministres (premier ministre, vice-premier ministre, ministres, ministres délégués) avec photos
    et fonctions (gouvernement.json, liste officielle de l'Assemblée nationale, outils/gouvernement.py). */
 function preparerGouvernement() {
@@ -187,7 +187,7 @@ function preparerGouvernement() {
   const dlg = document.createElement("dialog");
   dlg.id = "viGouvDlg"; dlg.className = "vi-gouv"; dlg.setAttribute("aria-labelledby", "viGouvTitre");
   $("viPlan").closest(".vue-live").appendChild(dlg);
-  $("viGouvBtn").addEventListener("click", () => { dlg.innerHTML = contenuGouvernement(); dlg.showModal(); });
+  $("viGouvBtn").addEventListener("click", () => { dlg.innerHTML = contenuGouvernement(); dlg.showModal(); chamber($("viGouvPlan"), compositionActuelle(), SIEGES); });
   dlg.addEventListener("click", e => { if (e.target === dlg || e.target.closest("[data-fermer]")) dlg.close(); });
 }
 const photoDe = circ => circ && DEP?.deputes?.[circ]?.photo ? `api/photo-depute.php?c=${encodeURIComponent(circ)}` : null;
@@ -208,7 +208,7 @@ function contenuGouvernement() {
   return `<header class="vi-gouv-tete"><div><span class="lv-eyebrow">Québec · aujourd'hui</span><h3 id="viGouvTitre">Gouvernement actuel</h3></div>
       <button type="button" class="lv-btn" data-fermer>Fermer ✕</button></header>
     <div class="vi-gouv-corps">
-      <section class="vi-gouv-ass" aria-label="Assemblée nationale actuelle">${planVertical()}</section>
+      <section class="vi-gouv-ass" aria-label="Assemblée nationale actuelle">${planActuel()}</section>
       <section class="vi-org" aria-label="Conseil des ministres">
         <span class="lv-eyebrow">Conseil des ministres · ${M.length} membres</span>
         ${pm ? `<div class="vi-org-niveau">${carteMembre(pm, true)}</div><i class="vi-org-lien" aria-hidden="true"></i>` : ""}
@@ -219,33 +219,16 @@ function contenuGouvernement() {
       </section>
     </div>`;
 }
-// Assemblée nationale actuelle, plan vertical : présidence en haut, gouvernement à gauche (premier ministre et ministres aux
-// premières banquettes, près de l'allée), opposition à droite (parti le plus nombreux d'abord) ; un carré par député
-function planVertical() {
-  const sieges = DATA.ridings.map(r => ({ circ: r.n, p: partiActuel(r.n) || "AUT", nom: DEP?.deputes?.[r.n]?.nom || deputeDe(ELEC.circ[r.n] && { g: ELEC.circ[r.n].g, cands: ELEC.circ[r.n].c })?.nom || "" }));
-  const pm = GOUV.membres.find(m => m.pm), gouv = (pm?.circ && partiActuel(pm.circ)) || "PQ";
-  const rang = s => { const m = GOUV.membres.find(x => x.circ === s.circ); return m ? (m.pm ? 0 : m.vpm ? 1 : 2) : 3; };
-  const G = sieges.filter(s => s.p === gouv).sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, "fr"));
-  const n = {}; for (const s of sieges) n[s.p] = (n[s.p] || 0) + 1;
-  const partisOpp = Object.keys(n).filter(p => p !== gouv).sort((a, b) => n[b] - n[a]);
-  const O = partisOpp.flatMap(p => sieges.filter(s => s.p === p).sort((a, b) => a.nom.localeCompare(b.nom, "fr")));
-  const COLS = 5, S = 15, PAS = 19, ALLEE = 34, X0 = 14, Y0 = 60;
-  const rangs = Math.max(Math.ceil(G.length / COLS), Math.ceil(O.length / COLS));
-  const W = X0 * 2 + COLS * PAS * 2 + ALLEE, H = Y0 + rangs * PAS + 6, cx = W / 2;
-  const carre = (s, x, y) => `<rect x="${x}" y="${y}" width="${S}" height="${S}" rx="3" style="fill:${COUL[s.p] || COUL.AUT}"><title>${esc(s.nom)} · ${esc(s.circ)} (${s.p})</title></rect>`;
-  // banquettes : première colonne contre l'allée centrale, rangées de haut en bas
-  const bloc = (L, gauche) => L.map((s, i) => { const r = Math.floor(i / COLS), c = i % COLS;
-    const x = gauche ? cx - ALLEE / 2 - (c + 1) * PAS + (PAS - S) : cx + ALLEE / 2 + c * PAS; return carre(s, x, Y0 + r * PAS); }).join("");
-  return `<span class="lv-eyebrow">Assemblée nationale aujourd'hui · ${sieges.length} sièges</span>
-    <svg class="vi-plan-vertical" viewBox="0 0 ${W} ${H}" role="img" aria-label="Plan vertical de l'Assemblée nationale actuelle">
-      <rect x="${cx - 26}" y="10" width="52" height="22" rx="4" class="vi-pres"></rect><text x="${cx}" y="25" text-anchor="middle" class="vi-plan-txt">Présidence</text>
-      <rect x="${cx - 8}" y="${Y0}" width="16" height="${rangs * PAS - (PAS - S)}" rx="3" class="vi-table"></rect>
-      <text x="${cx - ALLEE / 2 - COLS * PAS / 2}" y="${Y0 - 10}" text-anchor="middle" class="vi-plan-txt">Gouvernement</text>
-      <text x="${cx + ALLEE / 2 + COLS * PAS / 2}" y="${Y0 - 10}" text-anchor="middle" class="vi-plan-txt">Opposition</text>
-      ${bloc(G, true)}${bloc(O, false)}
-    </svg>
-    <div class="vf-legende">${[gouv, ...partisOpp].map(p => `<span style="--c:${COUL[p] || COUL.AUT}"><i></i>${NOMS[p] || p} <b>${n[p]}</b></span>`).join("")}</div>
-    <p class="lv-muted" style="font-size:0.8rem">Un carré par député en poste (liste de l'Assemblée nationale ; à défaut, élu du 5 octobre 2026). Survol : nom et circonscription. Majorité : ${MAJ}.</p>`;
+// Assemblée nationale actuelle : même plan que le rectangle de l'Assemblée (chamber()), avec la composition d'aujourd'hui
+// (parti de chaque député en poste ; à défaut, élu du 5 octobre 2026) — demande de l'utilisateur ; dessiné après l'ouverture
+function compositionActuelle() { const n = {}; for (const r of DATA.ridings) { const p = partiActuel(r.n) || "AUT"; n[p] = (n[p] || 0) + 1; } return n; }
+function planActuel() {
+  const n = compositionActuelle(), ordre = Object.keys(n).sort((a, b) => n[b] - n[a]);
+  return `<span class="lv-eyebrow">Assemblée nationale aujourd'hui · ${SIEGES} sièges · majorité ${MAJ}</span>
+    <h4 class="vi-gouv-sieges">${NOMS[ordre[0]] || ordre[0]} : ${n[ordre[0]]} sièges, gouvernement ${n[ordre[0]] >= MAJ ? "majoritaire" : "minoritaire"}</h4>
+    <svg id="viGouvPlan" class="vi-plan" role="img" aria-label="Plan de l'Assemblée nationale actuelle"></svg>
+    <div class="vf-legende">${ordre.map(p => `<span style="--c:${COUL[p] || COUL.AUT}"><i></i>${NOMS[p] || p} <b>${n[p]}</b></span>`).join("")}</div>
+    <p class="lv-muted" style="font-size:0.8rem">Composition actuelle d'après la liste des députés de l'Assemblée nationale (à défaut, élu du 5 octobre 2026).</p>`;
 }
 
 /* ---------- carte (fonctions de la « carte actuelle » de Loi 39) ---------- */
