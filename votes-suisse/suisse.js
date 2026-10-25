@@ -9,6 +9,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 import { anneaux, bandes, DESSOUS } from "../votes-quebec/anneau.js";
@@ -565,6 +566,7 @@ function dessinerEvolution() {
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   const der = tous[tous.length - 1], mois = Math.round((new Date() - t(der.d)) / (30.4 * 864e5));
+  majLissage({ sigma: SIGMA });
   $("viEvolNote").innerHTML = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (compilés par Wikipédia). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultat de l'élection de ${AN(2023)}.`
     + (mois >= 3 ? ` <b>Le dernier sondage date du ${dateFr(der.d)} (${der.f}), il y a environ ${mois} mois</b> : en Suisse, les baromètres sont rares entre deux élections.` : "");
 }

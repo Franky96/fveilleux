@@ -8,6 +8,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 
 const SIEGES = 343, MAJ = 172;
@@ -504,6 +505,7 @@ function dessinerEvolution() {
       placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  majLissage({ sigma: SIGMA, court: SIGMA === 18 ? 10 : null });
   $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultat de l'élection.`;
 }
 

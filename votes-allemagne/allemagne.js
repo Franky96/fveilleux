@@ -9,6 +9,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 import { anneaux, bandes, DESSOUS } from "../votes-quebec/anneau.js";
@@ -605,6 +606,7 @@ function dessinerEvolution() {
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
   const inst = new Set(sond.map(s => s.f)).size;
+  majLissage({ sigma: SIGMA, court: SIGMA === 14 ? 8 : null });
   $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} de ${inst} institut${inst > 1 ? "s" : ""} sur la période (wahlrecht.de), secondes voix. Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultat de l'élection. Le BSW n'est plus publié à part par certains instituts.`;
 }
 

@@ -11,6 +11,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
@@ -773,6 +774,8 @@ function dessinerEvolution() {
       placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  majLissage({ bouton: "Moyenne de Silver Bulletin", texte: `Les lignes sont la moyenne du vote générique (« pour quel parti voterez-vous au Congrès ? ») calculée par
+    Silver Bulletin, reprise telle quelle : le site ne la recalcule pas. Les points sont les sondages qu'elle résume ; les losanges, le vote populaire à la Chambre en 2024.` });
   $("viEvolNote").textContent = `${sond.length} sondages nationaux sur la période (« pour quel parti voterez-vous au Congrès ? »). Lignes : moyenne de Silver Bulletin · points : sondages · losanges : vote populaire à la Chambre en 2024.`;
 }
 
@@ -856,6 +859,7 @@ function dessinerEvolutionPres() {
       placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  majLissage({ sigma: S.sigma, longue: false });
   $("viEvolNote").textContent = S.note(sond.length) + (per !== periode ? ` Trop peu de sondages sur la période choisie : tout est affiché ${depuis}.` : "");
 }
 

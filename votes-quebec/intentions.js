@@ -8,6 +8,7 @@ import { domaineY, decouper, placerBulle } from "./zoom-y.js";
 import { preparerSysteme } from "./systeme.js";
 import { sectionPartis, PARTIS, AXES } from "./partis.js";
 import { equilibrerHaut } from "./equilibre.js";
+import { majLissage } from "./lissage.js";
 import { preparerPleinEcran, infoPlein } from "./plein.js";
 
 const SIEGES = 127, MAJ = 64;
@@ -426,26 +427,7 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- évolution des intentions de vote ---------- */
-// bouton « ⓘ Moyenne lissée » en bas à droite du graphique : ouvre un petit rectangle d'info sur le calcul de la courbe
-// (demande de l'utilisateur) ; se ferme au second clic, par Échap ou par un clic ailleurs
-function expliquerLissage() {
-  const note = $("viEvolNote"); if (!note || $("viLisseBtn")) return;
-  note.insertAdjacentHTML("afterend", `<div style="display:flex;justify-content:flex-end;position:relative">
-    <button type="button" class="vi-lien" id="viLisseBtn" aria-expanded="false" aria-controls="viLisseTxt" style="font-size:0.78rem;padding:2px 9px">ⓘ Moyenne lissée</button>
-    <div id="viLisseTxt" role="dialog" aria-label="Moyenne lissée" hidden style="position:absolute;right:0;bottom:calc(100% + 8px);z-index:30;width:min(380px,86vw);padding:12px 14px;
-      border-radius:10px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.35);font-size:0.84rem;line-height:1.45">
-      <b>Comment la courbe est calculée</b><br>
-      Chaque ligne est une moyenne lissée des sondages, pas le dernier sondage. Pour chaque semaine, on fait la moyenne de tous les
-      sondages, chacun pondéré selon son éloignement dans le temps : un sondage de la même semaine compte pleinement, un sondage d'il y a
-      trois semaines environ 60 %, un d'il y a six semaines à peine 15 % (courbe en cloche, écart-type de 21 jours ; 10 jours à 6 mois ou moins).
-      Ça atténue les écarts entre maisons de sondage, mais quand les sondages récents sont rares, la ligne garde la trace des plus anciens :
-      juste après une élection, elle peut encore refléter ceux d'avant le vote. Points : les sondages ; losanges : les élections.</div></div>`);
-  const btn = $("viLisseBtn"), boite = $("viLisseTxt");
-  const ouvrir = v => { boite.hidden = !v; btn.setAttribute("aria-expanded", v); };
-  btn.addEventListener("click", e => { e.stopPropagation(); ouvrir(boite.hidden); });
-  document.addEventListener("click", e => { if (!boite.hidden && !boite.contains(e.target)) ouvrir(false); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !boite.hidden) { ouvrir(false); btn.focus(); } });
-}
+
 
 // période affichée (mois ; 0 = depuis l'élection de 2022), gardée d'une visite à l'autre
 let periode = (() => { try { return +localStorage.getItem("viPeriode") || 0; } catch { return 0; } })();
@@ -515,6 +497,7 @@ function dessinerEvolution() {
       placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  majLissage({ sigma: SIGMA, court: SIGMA === 21 ? 10 : null });
   $("viEvolNote").textContent = `${sond.length} sondage${sond.length > 1 ? "s" : ""} nationa${sond.length > 1 ? "ux" : "l"} sur la période (Qc125${DEMO ? `, dont ${sond.filter(x => x.d > DATE_ELECTION).length} fictifs pour la démo` : ""}). Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultats des élections.`;
 }
 
@@ -661,7 +644,6 @@ async function demarrer() {
     [DATA, ELEC, SOND, , DEP] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec"),
       lireJ("votes-quebec/deputes.json").catch(() => null)]);
     ETAT = construireEtat();
-    expliquerLissage();
     dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;

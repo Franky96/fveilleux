@@ -10,6 +10,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 
 const SIEGES = 87, MAJ = 44;
@@ -515,6 +516,7 @@ function dessinerEvolution() {
       placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  majLissage({ sigma: SIGMA, court: SIGMA === 30 ? 14 : null });
   $("viEvolNote").innerHTML = `${sond.length} sondage${sond.length > 1 ? "s" : ""} provincia${sond.length > 1 ? "ux" : "l"} sur la période. Lignes : tendance (moyenne pondérée des sondages voisins) · points : sondages · losanges : résultat de l'élection.`
     + ` Janet Brown (septembre ${AN(2026)}) est compté à 45-45, sans les 9 % d'enclins « non précisés » (41-41 avec eux) ; Cardinal (septembre ${AN(2025)}) est gardé tel quel malgré un Parti républicain à 11 % ; Abacus (décembre ${AN(2025)}), non vérifiable, est écarté. PT : Parti albertain puis Progressive Tory (même parti). Depuis avril ${AN(2026)}, Léger ne publie plus les petits partis.`;
 }

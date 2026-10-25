@@ -8,6 +8,7 @@ import { domaineY, decouper, placerBulle } from "../votes-quebec/zoom-y.js";
 import { preparerSysteme } from "../votes-quebec/systeme.js";
 import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
+import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
@@ -519,6 +520,7 @@ function dessinerEvolution() {
       placerBulle(tipE, px, r.width);
     })
     .on("mouseleave", () => { repere.style("display", "none"); tipE.hidden = true; });
+  majLissage({ sigma: S.sigma });
   $("viEvolNote").textContent = S.note(sond.length);
   // législatives : moyenne des derniers sondages, sous le graphique (le panneau de droite reste consacré à la carte)
   let boite = $("vfSondMoy");
