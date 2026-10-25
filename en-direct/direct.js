@@ -345,8 +345,11 @@ function construireCarte() {
   svg = d3.select($("lvCarte")).attr("viewBox", `0 0 ${MW} ${MH}`);
   svg.selectAll("*").remove();
   // mer : fond bleuté sous les circonscriptions, découpées au littoral (les îles se voient)
-  svg.append("rect").attr("x", -2000).attr("y", -2000).attr("width", MW + 4000).attr("height", MH + 4000).style("fill", "rgba(45,120,200,0.30)").style("pointer-events", "none");
+  // (teinte du fond de la carte à peine bleutée, sombre en thème sombre ; terres opaques dessous : une circonscription pâle
+  // — peu d'urnes dépouillées — se mêle au fond des terres, pas au bleu de la mer)
+  svg.append("rect").attr("x", -2000).attr("y", -2000).attr("width", MW + 4000).attr("height", MH + 4000).style("fill", "color-mix(in srgb, var(--surface) 86%, #2a78c8)").style("pointer-events", "none");
   gZ = svg.append("g");
+  gZ.append("g").selectAll("path").data(GEO.features).join("path").attr("d", PATH).style("fill", "var(--surface)").style("stroke", "none").style("pointer-events", "none");
   gZ.append("g").selectAll("path").data(GEO.features).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => f.properties.nom)
     .on("click", (e, f) => choisir(f.properties.n))
