@@ -342,8 +342,10 @@ function blocDepute(nomCirc) {
   const note = vacant && gagnant ? `<small class="vi-note-dep" style="display:block;margin-top:4px;font-style:italic">Pas encore dans la <a href="${esc(DEP.source)}" target="_blank" rel="noopener">liste de l'Assemblée nationale</a> (dépouillement judiciaire, contestation ou assermentation en cours) : candidat élu selon Élections Québec.</small>` : "";
   const k = off || gagnant; if (!k) return "";
   const p = off ? off.p : gagnant.p, memeQueGagnant = off && gagnant && normNom(off.nom) === normNom(gagnant.nom);
+  // photo officielle, relayée par le serveur (api/photo-depute.php : Chrome bloque celles d'assnat.qc.ca, type invalide)
+  const photo = off?.photo ? `<img src="api/photo-depute.php?c=${encodeURIComponent(nomCirc)}" alt="" loading="lazy" onerror="this.closest('.vi-depute').classList.remove('avec-photo'); this.remove()">` : "";
   return `<span class="lv-eyebrow">Député de la circonscription</span>
-    <p class="vi-elu vi-depute" style="--c:${COUL[p] || COUL.AUT}"><b>${off ? `<a href="${esc(off.url)}" target="_blank" rel="noopener">${esc(off.nom)}</a>` : esc(gagnant.nom)}</b><span>${esc(off ? (NOMS[p] || off.allegeance) : (NOMS[p] || gagnant.sigle))}</span>
+    <p class="vi-elu vi-depute${photo ? " avec-photo" : ""}" style="--c:${COUL[p] || COUL.AUT}">${photo}<b>${off ? `<a href="${esc(off.url)}" target="_blank" rel="noopener">${esc(off.nom)}</a>` : esc(gagnant.nom)}</b><span>${esc(off ? (NOMS[p] || off.allegeance) : (NOMS[p] || gagnant.sigle))}</span>
       <small>${!off ? resultat(gagnant) : memeQueGagnant ? resultat(gagnant) : "Député en poste selon l'Assemblée nationale"}</small>${note}</p>`;
 }
 function dessinerPanneau() {
