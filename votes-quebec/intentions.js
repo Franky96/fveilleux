@@ -354,7 +354,13 @@ function dessinerPanneau() {
   const parts = Object.entries(c.parts).filter(([, v]) => v >= 0.5);
   // élection terminée : le gagnant est le député de la circonscription, mis en évidence en haut de la fiche
   const dep = MODE === "election" ? deputeDe(c) : null;
+  // intentions de vote : le député en poste (élu le 5 octobre 2026, election-2026.json) reste indiqué en haut de la fiche
+  const e26 = MODE === "election" ? null : ELEC.circ[r.n], c26 = e26 && { g: e26.g, cands: e26.c }, dep26 = c26 ? deputeDe(c26) : null;
+  const tot26 = e26 ? Object.values(e26.s).reduce((a, v) => a + v, 0) : 0;
   z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>
+    ${dep26 ? `<span class="lv-eyebrow">Député de la circonscription</span>
+    <p class="vi-elu vi-depute" style="--c:${COUL[dep26.p] || COUL.AUT}"><b>${esc(dep26.nom)}</b><span>${esc(NOMS[dep26.p] || dep26.sigle)}</span>
+      <small>Élu le 5 octobre 2026 avec ${nf(dep26.v)} voix (${nf(tot26 ? e26.s[dep26.p] || 0 : 0, 1)} %)${ecartVoix(c26) != null ? ` · ${nf(ecartVoix(c26))} voix d'avance` : ""}</small></p>` : ""}
     ${dep ? `<span class="lv-eyebrow">${c.final ? "Député de la circonscription" : "En avance · résultat préliminaire"}</span>
     <p class="vi-elu vi-depute" style="--c:${COUL[dep.p] || COUL.AUT}"><b>${esc(dep.nom)}</b><span>${esc(NOMS[dep.p] || dep.sigle)}</span>
       <small>Victoire avec ${nf(dep.v)} voix (${nf(c.parts[dep.p] || 0, 1)} %)${ecartVoix(c) != null ? ` · ${nf(ecartVoix(c))} voix d'avance (${nf(c.marge, 1)} point${c.marge >= 2 ? "s" : ""})` : ""}</small></p>` : ""}
