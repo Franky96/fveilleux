@@ -35,8 +35,9 @@ export function trierAxe(dico, cles, extra = {}) {
 }
 export const PARTIS = {
   quebec: {
-    PQ: P("Parti québécois", "Parti souverainiste de centre gauche, social-démocrate, fondé en 1968 par René Lévesque.", "cg"),
-    PLQ: P("Parti libéral du Québec", "Parti fédéraliste de centre, le plus ancien parti du Québec (1867).", "c"),
+    // PQ au centre et PLQ au centre droit (demande de l'utilisateur, 25 octobre 2026)
+    PQ: P("Parti québécois", "Parti souverainiste du centre, d'inspiration sociale-démocrate, fondé en 1968 par René Lévesque.", "c"),
+    PLQ: P("Parti libéral du Québec", "Parti fédéraliste de centre droit, le plus ancien parti du Québec (1867).", "cd"),
     CAQ: P("Coalition avenir Québec", "Parti nationaliste de centre droit fondé en 2011 ; il a gouverné de 2018 à 2026.", "cd"),
     PCQ: P("Parti conservateur du Québec", "Parti de droite conservatrice, relancé en 2009.", "d"),
     QS: P("Québec solidaire", "Parti de gauche, souverainiste et écologiste, fondé en 2006.", "g"),
