@@ -433,17 +433,43 @@ function dessinerPanneau() {
     html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? "Dépouillement terminé" : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} urnes (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
       + (g24 && g24 !== a.parti ? `<span class="lv-chip" style="--c:${coulP(a.parti)}">Gain ${esc(PARTIS[a.parti].court)} (2024 : ${esc(PARTIS[g24].court)})</span>` : "") + `</div>`
       + `<p class="lv-tete" style="--c:${coulP(a.parti)}"><b>${esc(a.nom)}</b> (${esc(PARTIS[a.parti]?.court || a.aff)}) ${a.elu || c.final ? "élu·e" : "en tête"}${b ? ` par ${nf(ecart)} voix (${nf(pctC(c, a) - pctC(c, b), 1)} pt)` : ""}</p>`
-      + `<table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${coulP(k.parti)}"><td><i class="lv-pt" style="background:${coulP(k.parti)}"></i></td>`
+      + `<table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${coulP(k.parti)}"><td>${avatar(k.parti, sel, k.nom)}</td>`
         + `<td><b>${esc(k.nom)}</b>${k.elu ? ' <span class="lv-sortant">élu·e</span>' : ""}<small>${esc(k.aff || PARTIS[k.parti]?.nom)}</small><span class="lv-jauge"><i style="width:${Math.min(100, pctC(c, k))}%"></i></span></td>`
         + `<td class="lv-num"><b>${nf(pctC(c, k), 1)} %</b><small>${nf(k.voix)}</small></td></tr>`).join("")}</tbody></table>`;
   } else {
     html += `<div class="lv-chips"><span class="lv-chip">Aucun résultat pour l'instant</span></div>`;
     const L = (CANDS[sel] || []).slice().sort((x, y) => ORDRE_P.indexOf(x.parti) - ORDRE_P.indexOf(y.parti) || x.nom.localeCompare(y.nom, "fr"));
-    if (L.length) html += `<span class="lv-eyebrow">Candidatures (${L.length})</span><ul class="lv-liste">${L.map(k => `<li style="--c:${coulP(k.parti)}"><i class="lv-pt" style="background:${coulP(k.parti)}"></i><span><b>${esc(k.nom)}</b><small>${esc(k.aff)}</small></span></li>`).join("")}</ul>`;
+    if (L.length) html += `<span class="lv-eyebrow">Candidatures (${L.length})</span><ul class="lv-liste">${L.map(k => `<li style="--c:${coulP(k.parti)}">${avatar(k.parti, sel, k.nom)}<span><b>${esc(k.nom)}</b><small>${esc(k.aff)}</small></span></li>`).join("")}</ul>`;
   }
   if (r24?.cands?.length) html += `<p class="lv-muted lv-proj">En 2024 : ${r24.cands.slice(0, 3).map(k => `<b style="color:${coulP(k.parti)}">${esc(PARTIS[k.parti]?.court || k.parti)}</b> ${nf(k.pct, 1)} %`).join(" · ")} (${esc(r24.cands[0].nom)} élu·e)</p>`;
   p.innerHTML = html;
 }
+
+/* ---------- photos des candidats (sites des partis, affichées depuis ces sites : en-direct/photos.json) ---------- */
+let PHOTOS = {};
+// photo ronde cerclée de la couleur du parti ; initiales si pas de photo ou si l'image ne se charge pas
+function avatar(parti, code, nom) {
+  const mots = String(nom || "").trim().split(/\s+/), ini = esc(((mots[0] || "")[0] || "") + ((mots.length > 1 ? mots[mots.length - 1] : "")[0] || "")).toUpperCase();
+  const repli = `<span class="lv-ava lv-ini" style="--c:${coulP(parti)}" aria-hidden="true">${ini}</span>`;
+  const url = PHOTOS[parti]?.[code];
+  if (!url) return repli;
+  return `<img class="lv-ava" style="--c:${coulP(parti)}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-nom="${esc(nom)}" data-parti="${parti}"
+    onerror="this.outerHTML=this.dataset.repli" data-repli="${esc(repli)}">`;
+}
+// survol d'une photo : la même photo en grand, à côté
+function grandePhoto(img) {
+  const z = $("lvPhoto"); if (!z) return;
+  if (!img) { z.hidden = true; return; }
+  z.style.setProperty("--c", coulP(img.dataset.parti));
+  z.innerHTML = `<img src="${esc(img.currentSrc || img.src)}" alt="" referrerpolicy="no-referrer"><span>${esc(img.dataset.nom || "")}</span>`;
+  z.hidden = false;
+  const r = img.getBoundingClientRect(), w = z.offsetWidth, h = z.offsetHeight;
+  let x = r.left - w - 12; if (x < 8) x = r.right + 12;
+  z.style.left = Math.min(innerWidth - w - 8, x) + "px";
+  z.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + "px";
+}
+document.addEventListener("mouseover", e => { const im = e.target.closest?.("img.lv-ava"); if (im) grandePhoto(im); });
+document.addEventListener("mouseout", e => { if (e.target.closest?.("img.lv-ava")) grandePhoto(null); });
 
 /* ---------- circonscriptions suivies, alertes, classement ---------- */
 let suivies = new Set(lireLS(localStorage, "cbSuivies", []));
@@ -492,7 +518,7 @@ function dessinerTextes() {
     <div class="lv-partis">${ORDRE_P.filter(p => PARTIS[p].chef).map(p => { const n = Object.values(CANDS).flat().filter(k => k.parti === p).length;
       return `<div class="lv-parti" style="--c:${PARTIS[p].c}"><i></i><span class="lv-pnom">${esc(PARTIS[p].nom)}</span><b>${n}</b><small>candidat·e·s · chef : ${esc(PARTIS[p].chef)}${PARTIS[p].s24 ? ` · ${PARTIS[p].s24} sièges en 2024` : ""}</small></div>`; }).join("")}</div>`;
   $("edSource").innerHTML = `Sources : résultats préliminaires d'<a href="${SITE_RES}" target="_blank" rel="noopener">Elections BC</a> (non officiels jusqu'au dépouillement final du 6 au 10 novembre) ;
-    liste des candidats d'Elections BC (3 octobre 2026) ; circonscriptions de 2023, BC Data Catalogue (Open Government Licence – British Columbia), découpées au littoral d'OpenStreetMap (© contributeurs d'OpenStreetMap, ODbL) ; élection de 2024 : Elections BC.`;
+    liste des candidats d'Elections BC (3 octobre 2026) ; circonscriptions de 2023, BC Data Catalogue (Open Government Licence – British Columbia), découpées au littoral d'OpenStreetMap (© contributeurs d'OpenStreetMap, ODbL) ; élection de 2024 : Elections BC ; photos des candidats : sites des partis (affichées depuis ces sites).`;
 }
 
 function dessiner() { dessinerEtat(); dessinerSieges(); dessinerCarte(); dessinerPanneau(); dessinerSuivi(); }
@@ -510,6 +536,7 @@ async function demarrer() {
   GEO = geo; CANDS = cands.circ; R24 = r24.circ || {};
   for (const f of GEO.features) PAR_CODE[f.properties.n] = f.properties.nom;
   dessinerHeures(); dessinerTextes(); preparerCarte(); construireCarte();
+  fetch("en-direct/photos.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).then(d => { PHOTOS = d || {}; dessinerPanneau(); }).catch(() => {});
   document.addEventListener("click", e => {
     const s = e.target.closest("[data-suivre]"); if (s) { e.stopPropagation(); basculerSuivie(s.dataset.suivre); return; }
     const t = e.target.closest("[data-tri]"); if (t) { triClassement = t.dataset.tri; ecrireLS(localStorage, "cbTri", triClassement); dessinerSuivi(); return; }
