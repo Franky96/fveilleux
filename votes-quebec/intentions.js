@@ -29,7 +29,7 @@ function majBarre(nom, donnees) {
   t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
 }
 
-let DATA, ELEC, SOND, DEP = null, MODE, ETAT, sel = null, demarre = false;   // DEP : députés en poste (liste officielle, deputes.json)
+let DATA, ELEC, SOND, DEP = null, GOUV = null, MODE, ETAT, sel = null, demarre = false;   // DEP : députés en poste (liste officielle, deputes.json)
 const etat = { mode: "lead", parti: null, pct: (() => { try { return localStorage.getItem("viPct") !== "0"; } catch { return true; } })() };                   // mode de la carte (comme la carte actuelle de Loi 39)
 const SEAT_ORDER = ["QS", "PQ", "PLQ", "CAQ", "PCQ"];      // départage à égalité de sièges (plan de l'Assemblée)
 
@@ -174,6 +174,78 @@ function dessinerTete() {
   // sous le plan, en petit : sièges de chaque parti (comme Votes France)
   $("viLegende").innerHTML = [...P5, "AUT"].filter(p => s[p]).sort((a, b) => s[b] - s[a])
     .map(p => `<span style="--c:${COUL[p]}"><i></i>${NOMS[p]} <b>${s[p]}</b></span>`).join("");
+}
+
+/* ---------- « Gouvernement actuel » (demande de l'utilisateur) ----------
+   Bouton dans le rectangle de l'Assemblée : grande fenêtre avec, à gauche, l'Assemblée nationale actuelle en plan vertical
+   (gouvernement à gauche, opposition à droite, présidence en haut ; un carré par député en poste, deputes.json) et, à droite,
+   l'organigramme du Conseil des ministres (premier ministre, vice-premier ministre, ministres, ministres délégués) avec photos
+   et fonctions (gouvernement.json, liste officielle de l'Assemblée nationale, outils/gouvernement.py). */
+function preparerGouvernement() {
+  if (!GOUV?.membres?.length || $("viGouvBtn")) return;
+  $("viLegende").insertAdjacentHTML("afterend", `<div class="vi-gouv-ouvrir"><button type="button" class="vi-lien" id="viGouvBtn" aria-haspopup="dialog">Gouvernement actuel →</button></div>`);
+  const dlg = document.createElement("dialog");
+  dlg.id = "viGouvDlg"; dlg.className = "vi-gouv"; dlg.setAttribute("aria-labelledby", "viGouvTitre");
+  $("viPlan").closest(".vue-live").appendChild(dlg);
+  $("viGouvBtn").addEventListener("click", () => { dlg.innerHTML = contenuGouvernement(); dlg.showModal(); });
+  dlg.addEventListener("click", e => { if (e.target === dlg || e.target.closest("[data-fermer]")) dlg.close(); });
+}
+const photoDe = circ => circ && DEP?.deputes?.[circ]?.photo ? `api/photo-depute.php?c=${encodeURIComponent(circ)}` : null;
+function carteMembre(m, grand) {
+  const p = (m.circ && partiActuel(m.circ)) || "PQ", ph = photoDe(m.circ);
+  const ini = esc(m.nom.split(/\s+/).map(x => x[0]).filter(Boolean).slice(0, 2).join(""));
+  const roles = m.roles.filter(r => !/^Vice-premi|^Premi[eè]re? ministre$/.test(r));
+  return `<article class="vi-org-carte${grand ? " grand" : ""}" style="--c:${COUL[p] || COUL.AUT}">
+    ${ph ? `<img src="${ph}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;vi-org-ini&quot;>${ini}</span>'">` : `<span class="vi-org-ini">${ini}</span>`}
+    <div><b><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.nom)}</a></b><small>${m.pm ? "Premier ministre · " : m.vpm ? "Vice-première ministre · " : ""}${esc(m.circ || "")}</small>
+      <ul>${roles.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div></article>`;
+}
+function contenuGouvernement() {
+  const M = GOUV.membres, pm = M.find(m => m.pm), vpm = M.filter(m => m.vpm && !m.pm);
+  const autres = M.filter(m => !m.pm && !m.vpm), delegue = m => m.roles.some(r => /^Ministre délégu/.test(r)) && !m.roles.some(r => /^Ministre (de|des|du) /.test(r));
+  const titulaires = autres.filter(m => !delegue(m)), delegues = autres.filter(delegue);
+  const tri = (a, b) => a.nom.split(" ").pop().localeCompare(b.nom.split(" ").pop(), "fr");
+  return `<header class="vi-gouv-tete"><div><span class="lv-eyebrow">Québec · aujourd'hui</span><h3 id="viGouvTitre">Gouvernement actuel</h3></div>
+      <button type="button" class="lv-btn" data-fermer>Fermer ✕</button></header>
+    <div class="vi-gouv-corps">
+      <section class="vi-gouv-ass" aria-label="Assemblée nationale actuelle">${planVertical()}</section>
+      <section class="vi-org" aria-label="Conseil des ministres">
+        <span class="lv-eyebrow">Conseil des ministres · ${M.length} membres</span>
+        ${pm ? `<div class="vi-org-niveau">${carteMembre(pm, true)}</div><i class="vi-org-lien" aria-hidden="true"></i>` : ""}
+        ${vpm.length ? `<div class="vi-org-niveau">${vpm.map(m => carteMembre(m, true)).join("")}</div><i class="vi-org-lien" aria-hidden="true"></i>` : ""}
+        <h4>Ministres (${titulaires.length})</h4><div class="vi-org-grille">${titulaires.sort(tri).map(m => carteMembre(m)).join("")}</div>
+        ${delegues.length ? `<h4>Ministres délégués (${delegues.length})</h4><div class="vi-org-grille">${delegues.sort(tri).map(m => carteMembre(m)).join("")}</div>` : ""}
+        <p class="lv-muted lv-source">Source : <a href="${esc(GOUV.source)}" target="_blank" rel="noopener">Assemblée nationale du Québec, Conseil des ministres</a> et liste des députés ; photos officielles de l'Assemblée nationale.</p>
+      </section>
+    </div>`;
+}
+// Assemblée nationale actuelle, plan vertical : présidence en haut, gouvernement à gauche (premier ministre et ministres aux
+// premières banquettes, près de l'allée), opposition à droite (parti le plus nombreux d'abord) ; un carré par député
+function planVertical() {
+  const sieges = DATA.ridings.map(r => ({ circ: r.n, p: partiActuel(r.n) || "AUT", nom: DEP?.deputes?.[r.n]?.nom || deputeDe(ELEC.circ[r.n] && { g: ELEC.circ[r.n].g, cands: ELEC.circ[r.n].c })?.nom || "" }));
+  const pm = GOUV.membres.find(m => m.pm), gouv = (pm?.circ && partiActuel(pm.circ)) || "PQ";
+  const rang = s => { const m = GOUV.membres.find(x => x.circ === s.circ); return m ? (m.pm ? 0 : m.vpm ? 1 : 2) : 3; };
+  const G = sieges.filter(s => s.p === gouv).sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, "fr"));
+  const n = {}; for (const s of sieges) n[s.p] = (n[s.p] || 0) + 1;
+  const partisOpp = Object.keys(n).filter(p => p !== gouv).sort((a, b) => n[b] - n[a]);
+  const O = partisOpp.flatMap(p => sieges.filter(s => s.p === p).sort((a, b) => a.nom.localeCompare(b.nom, "fr")));
+  const COLS = 5, S = 15, PAS = 19, ALLEE = 34, X0 = 14, Y0 = 60;
+  const rangs = Math.max(Math.ceil(G.length / COLS), Math.ceil(O.length / COLS));
+  const W = X0 * 2 + COLS * PAS * 2 + ALLEE, H = Y0 + rangs * PAS + 6, cx = W / 2;
+  const carre = (s, x, y) => `<rect x="${x}" y="${y}" width="${S}" height="${S}" rx="3" style="fill:${COUL[s.p] || COUL.AUT}"><title>${esc(s.nom)} · ${esc(s.circ)} (${s.p})</title></rect>`;
+  // banquettes : première colonne contre l'allée centrale, rangées de haut en bas
+  const bloc = (L, gauche) => L.map((s, i) => { const r = Math.floor(i / COLS), c = i % COLS;
+    const x = gauche ? cx - ALLEE / 2 - (c + 1) * PAS + (PAS - S) : cx + ALLEE / 2 + c * PAS; return carre(s, x, Y0 + r * PAS); }).join("");
+  return `<span class="lv-eyebrow">Assemblée nationale aujourd'hui · ${sieges.length} sièges</span>
+    <svg class="vi-plan-vertical" viewBox="0 0 ${W} ${H}" role="img" aria-label="Plan vertical de l'Assemblée nationale actuelle">
+      <rect x="${cx - 26}" y="10" width="52" height="22" rx="4" class="vi-pres"></rect><text x="${cx}" y="25" text-anchor="middle" class="vi-plan-txt">Présidence</text>
+      <rect x="${cx - 8}" y="${Y0}" width="16" height="${rangs * PAS - (PAS - S)}" rx="3" class="vi-table"></rect>
+      <text x="${cx - ALLEE / 2 - COLS * PAS / 2}" y="${Y0 - 10}" text-anchor="middle" class="vi-plan-txt">Gouvernement</text>
+      <text x="${cx + ALLEE / 2 + COLS * PAS / 2}" y="${Y0 - 10}" text-anchor="middle" class="vi-plan-txt">Opposition</text>
+      ${bloc(G, true)}${bloc(O, false)}
+    </svg>
+    <div class="vf-legende">${[gouv, ...partisOpp].map(p => `<span style="--c:${COUL[p] || COUL.AUT}"><i></i>${NOMS[p] || p} <b>${n[p]}</b></span>`).join("")}</div>
+    <p class="lv-muted" style="font-size:0.8rem">Un carré par député en poste (liste de l'Assemblée nationale ; à défaut, élu du 5 octobre 2026). Survol : nom et circonscription. Majorité : ${MAJ}.</p>`;
 }
 
 /* ---------- carte (fonctions de la « carte actuelle » de Loi 39) ---------- */
@@ -641,10 +713,10 @@ async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
-    [DATA, ELEC, SOND, , DEP] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec"),
-      lireJ("votes-quebec/deputes.json").catch(() => null)]);
+    [DATA, ELEC, SOND, , DEP, GOUV] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec"),
+      lireJ("votes-quebec/deputes.json").catch(() => null), lireJ("votes-quebec/gouvernement.json").catch(() => null)]);
     ETAT = construireEtat();
-    dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    dessinerTete(); preparerGouvernement(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; try { localStorage.setItem("viPeriode", periode); } catch {} dessinerEvolution(); });
