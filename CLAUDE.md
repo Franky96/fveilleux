@@ -42,6 +42,7 @@ fiche, participation, circonscriptions suivies (alertes, `api/suivis.php?ens=alb
 Démo de l'archive (admin) : `referendum-alberta-2026.html?demo=40` (résultats FICTIFS `en-direct/alberta-2026/demo.json`, `en-direct/alberta-2026/outils/demo.py`).
 **Page d'arrivée temporaire** : `ARRIVEE_EN_DIRECT = True` en tête de `votes-quebec/outils/pages.py` → `intentions-simulations.html` (cible du menu du
 site) renvoie vers `en-direct.html`, sauf avec `#accueil` (adresse de l'onglet Accueil) ; remettre `False` et relancer pages.py pour revenir à l'Accueil.
+Votes Québec, fiche d'une circonscription : **député de la circonscription d'après la liste officielle de l'Assemblée nationale** (demande de l'utilisateur : suit les dépouillements judiciaires, démissions, partielles et changements d'allégeance ; `votes-quebec/outils/deputes.py` → `votes-quebec/deputes.json`, relancé chaque jour par le pipeline ; absent de la liste = « Siège vacant », avec le résultat d'Élections Québec en attente, ex. Champlain après le 20 octobre 2026), avec son résultat du 5 octobre 2026 s'il y a été élu (`blocDepute()` d'intentions.js) ; `election.py` relit le résultat d'Élections Québec même une fois final (Vachon : PQ par 3 voix après le dépouillement judiciaire du 23 octobre 2026).
 Cadre d'une page d'intentions de vote (modèle : Votes Québec, `votes-quebec/intentions.js`) :
 1. en haut, côte à côte : l'Assemblée (plan ou hémicycle) dans son rectangle, et l'évolution des intentions de vote
    (graphique avec choix de période, tendance + points des sondages + losanges des élections) ;

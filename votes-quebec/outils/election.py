@@ -1,7 +1,7 @@
 """Résultat de l'élection générale du 5 octobre 2026 (Élections Québec) → ../election-2026.json
 
 Sert à l'onglet « Votes Québec » (intentions de vote) tant que Qc125 n'a pas publié de sondage postérieur
-à l'élection. Relancé par le pipeline jusqu'à ce que les résultats soient finaux, puis le fichier ne bouge plus.
+à l'élection. Relancé chaque jour par le pipeline, même après les résultats finaux (dépouillements judiciaires).
 Usage : /usr/bin/python3 election.py   (dans le dossier outils/)
 """
 import json, re, os, unicodedata, urllib.request
@@ -32,9 +32,9 @@ def parti(abrev):  # mêmes règles que partiDe() dans live.js (« PCQ/CPQ » = 
     return "AUT"
 
 
-# déjà final : rien à refaire
-if os.path.exists(SORTIE) and json.load(open(SORTIE, encoding="utf-8")).get("final"):
-    print("Résultats déjà finaux, election-2026.json inchangé."); raise SystemExit(0)
+# relu même une fois les résultats finaux : un dépouillement judiciaire peut encore changer une circonscription (Vachon,
+# 23 octobre 2026 : le PQ l'emporte par 3 voix après le nouveau dépouillement de la Cour du Québec) ; le fichier ne
+# change que si Élections Québec publie autre chose
 
 d = get(URL)
 data = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data.json"), encoding="utf-8"))

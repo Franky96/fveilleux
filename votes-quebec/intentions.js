@@ -28,7 +28,7 @@ function majBarre(nom, donnees) {
   t.innerHTML = `${esc(nom)} · ${donnees}${VERIF ? ` · vérifiées le ${esc(VERIF.texte)}` : ""}`;
 }
 
-let DATA, ELEC, SOND, MODE, ETAT, sel = null, demarre = false;
+let DATA, ELEC, SOND, DEP = null, MODE, ETAT, sel = null, demarre = false;   // DEP : députés en poste (liste officielle, deputes.json)
 const etat = { mode: "lead", parti: null, pct: (() => { try { return localStorage.getItem("viPct") !== "0"; } catch { return true; } })() };                   // mode de la carte (comme la carte actuelle de Loi 39)
 const SEAT_ORDER = ["QS", "PQ", "PLQ", "CAQ", "PCQ"];      // départage à égalité de sièges (plan de l'Assemblée)
 
@@ -329,6 +329,23 @@ function infobulle(e, f) {
 
 /* ---------- panneau : tout le Québec, ou une circonscription ---------- */
 function choisir(i) { sel = i; peindre(); dessinerPanneau(); if (i != null) infoPlein(); }
+// député de la circonscription : celui de la liste officielle de l'Assemblée nationale (deputes.json, suit les dépouillements
+// judiciaires, démissions, partielles et changements d'allégeance), avec son résultat du 5 octobre 2026 s'il y a été élu ;
+// absent de la liste = siège vacant ; sans la liste (fichier illisible) : le gagnant du résultat d'Élections Québec
+const normNom = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+function blocDepute(nomCirc) {
+  const e = ELEC.circ[nomCirc], ce = e && { g: e.g, cands: e.c }, gagnant = ce ? deputeDe(ce) : null;
+  const off = DEP?.deputes?.[nomCirc], vacant = DEP?.vacants?.includes(nomCirc);
+  const resultat = k => k && e ? `Élu le 5 octobre 2026 avec ${nf(k.v)} voix (${nf(e.s[k.p] || 0, 1)} %)${ecartVoix(ce) != null ? ` · ${nf(ecartVoix(ce))} voix d'avance` : ""}${e.f ? "" : " · résultat préliminaire"}` : "";
+  if (vacant) return `<span class="lv-eyebrow">Député de la circonscription</span>
+    <p class="vi-elu vi-depute" style="--c:var(--muted)"><b>Siège vacant</b><span>selon la <a href="${esc(DEP.source)}" target="_blank" rel="noopener">liste de l'Assemblée nationale</a></span>
+      <small>${gagnant ? `Résultat d'Élections Québec : ${esc(gagnant.nom)} (${esc(NOMS[gagnant.p] || gagnant.sigle)}) en tête${ecartVoix(ce) != null ? ` de ${nf(ecartVoix(ce))} voix` : ""} · en attente (dépouillement judiciaire ou contestation possible)` : ""}</small></p>`;
+  const k = off || gagnant; if (!k) return "";
+  const p = off ? off.p : gagnant.p, memeQueGagnant = off && gagnant && normNom(off.nom) === normNom(gagnant.nom);
+  return `<span class="lv-eyebrow">Député de la circonscription</span>
+    <p class="vi-elu vi-depute" style="--c:${COUL[p] || COUL.AUT}"><b>${off ? `<a href="${esc(off.url)}" target="_blank" rel="noopener">${esc(off.nom)}</a>` : esc(gagnant.nom)}</b><span>${esc(off ? (NOMS[p] || off.allegeance) : (NOMS[p] || gagnant.sigle))}</span>
+      <small>${!off ? resultat(gagnant) : memeQueGagnant ? resultat(gagnant) : "Député en poste selon l'Assemblée nationale"}</small></p>`;
+}
 function dessinerPanneau() {
   const z = $("viPanneau"), s = ETAT.sieges, nat = ETAT.national;
   if (sel == null) {
@@ -352,20 +369,11 @@ function dessinerPanneau() {
   const r = DATA.ridings[sel], c = ETAT.circ[sel], reg = DATA.regions.find(x => x.code === r.r)?.name || "";
   if (!c) { z.innerHTML = `<span class="lv-eyebrow">${esc(reg)}</span><h3>${esc(r.n)}</h3><p class="lv-muted">Aucune donnée.</p>`; return; }
   const parts = Object.entries(c.parts).filter(([, v]) => v >= 0.5);
-  // élection terminée : le gagnant est le député de la circonscription, mis en évidence en haut de la fiche
+  // élection terminée : le gagnant est le député de la circonscription (surligné dans la liste des candidats)
   const dep = MODE === "election" ? deputeDe(c) : null;
-  // intentions de vote : le député en poste (élu le 5 octobre 2026, election-2026.json) reste indiqué en haut de la fiche
-  const e26 = MODE === "election" ? null : ELEC.circ[r.n], c26 = e26 && { g: e26.g, cands: e26.c }, dep26 = c26 ? deputeDe(c26) : null;
-  const tot26 = e26 ? Object.values(e26.s).reduce((a, v) => a + v, 0) : 0;
-  z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>
-    ${dep26 ? `<span class="lv-eyebrow">Député de la circonscription</span>
-    <p class="vi-elu vi-depute" style="--c:${COUL[dep26.p] || COUL.AUT}"><b>${esc(dep26.nom)}</b><span>${esc(NOMS[dep26.p] || dep26.sigle)}</span>
-      <small>Élu le 5 octobre 2026 avec ${nf(dep26.v)} voix (${nf(tot26 ? e26.s[dep26.p] || 0 : 0, 1)} %)${ecartVoix(c26) != null ? ` · ${nf(ecartVoix(c26))} voix d'avance` : ""}</small></p>` : ""}
-    ${dep ? `<span class="lv-eyebrow">${c.final ? "Député de la circonscription" : "En avance · résultat préliminaire"}</span>
-    <p class="vi-elu vi-depute" style="--c:${COUL[dep.p] || COUL.AUT}"><b>${esc(dep.nom)}</b><span>${esc(NOMS[dep.p] || dep.sigle)}</span>
-      <small>Victoire avec ${nf(dep.v)} voix (${nf(c.parts[dep.p] || 0, 1)} %)${ecartVoix(c) != null ? ` · ${nf(ecartVoix(c))} voix d'avance (${nf(c.marge, 1)} point${c.marge >= 2 ? "s" : ""})` : ""}</small></p>` : ""}
-    <div class="vi-pills">${dep ? "" : `<span class="vi-pill"><i style="background:${COUL[c.g]}"></i>${MODE === "election" ? "Élu" : "En tête"} : ${c.g}</span>`}
-      ${dep ? "" : `<span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span>`}<span class="vi-pill">${nf(r.e)} électeurs</span></div>
+  z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>${blocDepute(r.n)}
+    <div class="vi-pills">${MODE === "election" ? "" : `<span class="vi-pill"><i style="background:${COUL[c.g]}"></i>En tête : ${c.g}</span>`}
+      ${MODE === "election" ? "" : `<span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span>`}<span class="vi-pill">${nf(r.e)} électeurs</span></div>
     <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tout le Québec</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
       ${r.id ? `<a class="vi-lien" href="https://qc125.com/${r.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>` : ""}</div>
     <span class="lv-eyebrow">${MODE === "election" ? "Résultat" : ETAT.libProj}</span>
@@ -595,7 +603,8 @@ async function demarrer() {
   if (demarre) return; demarre = true;
   try {
     const lireJ = u => fetch(u, { cache: "no-cache" }).then(r => { if (!r.ok) throw new Error(u + " : " + r.status); return r.json(); });
-    [DATA, ELEC, SOND] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec")]);
+    [DATA, ELEC, SOND, , DEP] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec"),
+      lireJ("votes-quebec/deputes.json").catch(() => null)]);
     ETAT = construireEtat();
     dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
