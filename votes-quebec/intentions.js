@@ -182,7 +182,10 @@ const PRESETS = {};
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const partDe = (c, p) => (c && c.parts[p]) || 0;
 const deuxieme = c => Object.entries(c.parts).filter(([p]) => p !== "AUT").sort((a, b) => b[1] - a[1])[1];
+// carte actuelle : parti du député en poste (liste officielle ; sinon le gagnant du 5 octobre 2026)
+const partiActuel = nomCirc => DEP?.deputes?.[nomCirc]?.p || ELEC.circ[nomCirc]?.g || null;
 function remplir(i) {
+  if (etat.mode === "act") { const p = partiActuel(DATA.ridings[i].n); return p ? [COUL[p] || COUL.AUT, 0.85] : ["var(--soft)", 1]; }
   const c = ETAT.circ[i];
   if (!c) return ["var(--soft)", 1];
   if (etat.mode === "second") { const [p, v] = deuxieme(c); return [COUL[p], Math.max(0.3, Math.min(1, (v - 10) / 30))]; }
@@ -279,7 +282,10 @@ function construireCarte() {
   // ordre commun aux pages d'intentions : futur (projection) · présent · passé ; juste après l'élection, seule l'élection existe
   $("viModes").className = "vf-modes";
   $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">${MODE === "election" ? "Élection 2026" : esc(ETAT.libProj)}</span><span class="lv-groupe">`
-    + [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`).join("") + "</span></span>";
+    + [["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(([m, t]) => `<button type="button" data-m="${m}" aria-pressed="${m === etat.mode}">${t}</button>`).join("") + "</span></span>"
+    // carte actuelle (présent) : député en poste, sa photo et son résultat du 5 octobre 2026 (demande de l'utilisateur :
+    // la projection ne montre que les pourcentages)
+    + `<span class="vf-mode-grp"><span class="vf-mode-lab">Carte actuelle</span><span class="lv-groupe"><button type="button" data-m="act" aria-pressed="${etat.mode === "act"}">Députés</button></span></span>`;
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m); });
   $("viChips").innerHTML = P5.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${p}</button>`).join("");
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return; etat.parti = b.dataset.p; if (etat.mode !== "vote") etat.mode = "vote"; peindre(); });
@@ -288,7 +294,7 @@ function changerMode(m) {
   etat.mode = m;
   // parti par défaut pour le vote : celui qui a le plus de sièges
   if (m === "vote" && !etat.parti) etat.parti = Object.keys(ETAT.sieges).sort((a, b) => ETAT.sieges[b] - ETAT.sieges[a])[0];
-  peindre();
+  peindre(); dessinerPanneau();
 }
 function peindre() {
   document.querySelectorAll("#viModes button[data-m]").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === etat.mode));
@@ -308,7 +314,9 @@ function peindre() {
   placerEtiquettes();
   const p = etat.parti, ramp = p ? `<span class="vi-ramp" style="background:linear-gradient(90deg, color-mix(in srgb, ${COUL[p]} 6%, var(--surface)), ${COUL[p]})"></span>` : "";
   const quoi = MODE === "election" ? "résultat de l'élection" : ETAT.libProj.toLowerCase();
-  $("viEchelle").innerHTML = etat.mode === "vote"
+  $("viEchelle").innerHTML = etat.mode === "act"
+    ? `<span class="vf-legende">${[...P5, "AUT"].filter(p => DATA.ridings.some(r => partiActuel(r.n) === p)).map(p => `<span style="--c:${COUL[p]}"><i></i>${p === "AUT" ? "Autres" : p}</span>`).join("")}</span><span>· parti du député en poste (liste de l'Assemblée nationale ; à défaut, élu du 5 octobre 2026). Clique sur une circonscription pour le député et sa photo.</span>`
+    : etat.mode === "vote"
     ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· vote ${p} dans chaque circonscription${etat.pct ? ` (chiffre = % du ${p}, plus de circonscriptions en zoomant)` : ""}</span>`
     : etat.mode === "second" ? `Couleur : parti arrivé deuxième dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé. Le survol donne les trois premiers.`
     : `Couleur : parti en tête dans chaque circonscription (${quoi}). Plus la couleur est foncée, plus son score est élevé.`;
@@ -324,7 +332,8 @@ function infobulle(e, f) {
   const reg = DATA.regions.find(x => x.code === r.r)?.name || "";
   t.innerHTML = `<b>${esc(r.n)}</b><small>${esc(reg)} · ${nf(r.e)} électeurs</small><br>`
     + (c ? Object.entries(c.parts).filter(([p]) => p !== "AUT").slice(0, 3).map(([p, v]) => `${p} ${nf(v, MODE === "election" ? 1 : 0)} %`).join(" · ") : "Aucune donnée")
-    + (MODE === "election" && deputeDe(c) ? `<br><small>${c.final ? "Député" : "En avance"} : ${esc(deputeDe(c).nom)} (${deputeDe(c).p})</small>` : "");
+    + (etat.mode === "act" ? (() => { const d = DEP?.deputes?.[r.n], g = deputeDe(ELEC.circ[r.n] && { g: ELEC.circ[r.n].g, cands: ELEC.circ[r.n].c });
+        return (d || g) ? `<br><small>Député : ${esc((d || g).nom)} (${d ? d.p : g.p})</small>` : ""; })() : "");
 }
 
 /* ---------- panneau : tout le Québec, ou une circonscription ---------- */
@@ -350,6 +359,15 @@ function blocDepute(nomCirc) {
 }
 function dessinerPanneau() {
   const z = $("viPanneau"), s = ETAT.sieges, nat = ETAT.national;
+  if (sel == null && etat.mode === "act") {
+    const n = {}; for (const r of DATA.ridings) { const p = partiActuel(r.n); if (p) n[p] = (n[p] || 0) + 1; }
+    const ordre = Object.keys(n).sort((a, b) => n[b] - n[a]), lead = ordre[0];
+    z.innerHTML = `<span class="lv-eyebrow">Carte actuelle · 127 circonscriptions</span><h3>Assemblée nationale aujourd'hui</h3>
+      <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[lead]}"></i>${lead} ${n[lead] >= MAJ ? "majoritaire" : "minoritaire"} : ${n[lead]} / 127</span><span class="vi-pill">Majorité : ${MAJ}</span></div>
+      <p class="lv-muted">Parti du député en poste dans chaque circonscription, d'après la <a href="${esc(DEP?.source || "https://www.assnat.qc.ca/fr/deputes/index.html")}" target="_blank" rel="noopener">liste de l'Assemblée nationale</a>${DEP?.vacants?.length ? ` ; ${DEP.vacants.map(esc).join(", ")} : candidat élu le 5 octobre 2026 selon Élections Québec, pas encore sur la liste` : ""}. Clique sur une circonscription pour le député, sa photo et son résultat.</p>
+      <div class="vi-vrows">${ordre.map(p => `<div class="vi-vrow"><b style="color:${COUL[p]}">${p === "AUT" ? "Autres" : p}</b><span class="vi-jauge"><i style="width:${100 * n[p] / 127}%;background:${COUL[p]}"></i></span><span class="vi-num"><b>${n[p]}</b> <small>sièges</small></span><span></span></div>`).join("")}</div>`;
+    return;
+  }
   if (sel == null) {
     const ordre = [...P5].sort((a, b) => (s[b] || 0) - (s[a] || 0) || nat[b] - nat[a]), lead = ordre[0];
     const lignes = ordre.map(p => `<div class="vi-vrow"><b style="color:${COUL[p]}">${p}</b><span class="vi-jauge"><i style="width:${Math.min(100, nat[p] * 2)}%;background:${COUL[p]}"></i></span>`
@@ -369,20 +387,34 @@ function dessinerPanneau() {
     return;
   }
   const r = DATA.ridings[sel], c = ETAT.circ[sel], reg = DATA.regions.find(x => x.code === r.r)?.name || "";
+  const liens = `<div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tout le Québec</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
+      ${r.id ? `<a class="vi-lien" href="https://qc125.com/${r.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>` : ""}</div>`;
+  // carte actuelle : député en poste (photo), puis le résultat de l'élection du 5 octobre 2026 dans la circonscription
+  if (etat.mode === "act") {
+    const e = ELEC.circ[r.n], ce = e && { g: e.g, cands: e.c }, gagnant = ce ? deputeDe(ce) : null;
+    const res = e ? Object.entries(e.s).filter(([, v]) => v >= 0.5).sort((a, b) => b[1] - a[1]) : [];
+    z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>${blocDepute(r.n)}
+      <div class="vi-pills"><span class="vi-pill">${nf(r.e)} électeurs</span></div>${liens}`
+      + (e ? `<span class="lv-eyebrow">Élection du 5 octobre 2026</span>
+      <div class="vi-vrows">${res.map(([p, v]) => `<div class="vi-vrow${p === e.g ? " win" : ""}"><b style="color:${COUL[p]}">${p === "AUT" ? "Autres" : p}</b>`
+        + `<span class="vi-jauge"><i style="width:${Math.min(100, v * 2)}%;background:${COUL[p]}"></i></span><span class="vi-num">${nf(v, 1)} %</span><span></span></div>`).join("")}</div>
+      <span class="lv-eyebrow">Candidats en tête</span><ul class="vi-cands">${e.c.map(k => `<li class="${k === gagnant ? "vi-cand-elu" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}${k === gagnant ? " <small>élu</small>" : ""}</span><em>${esc(k.sigle)}</em><b>${nf(k.v)}</b></li>`).join("")}</ul>`
+        + (e.part ? `<p class="lv-muted">Participation : ${nf(e.part, 1)} %${e.f ? "" : " · résultat préliminaire"}</p>` : "") : "");
+    return;
+  }
   if (!c) { z.innerHTML = `<span class="lv-eyebrow">${esc(reg)}</span><h3>${esc(r.n)}</h3><p class="lv-muted">Aucune donnée.</p>`; return; }
   const parts = Object.entries(c.parts).filter(([, v]) => v >= 0.5);
-  // élection terminée : le gagnant est le député de la circonscription (surligné dans la liste des candidats)
+  // projection : seulement les pourcentages ; juste après l'élection (pas encore de sondage), son résultat avec les candidats
   const dep = MODE === "election" ? deputeDe(c) : null;
-  z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>${blocDepute(r.n)}
-    <div class="vi-pills">${MODE === "election" ? "" : `<span class="vi-pill"><i style="background:${COUL[c.g]}"></i>En tête : ${c.g}</span>`}
-      ${MODE === "election" ? "" : `<span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span>`}<span class="vi-pill">${nf(r.e)} électeurs</span></div>
-    <div class="vi-liens"><button type="button" class="vi-lien" data-tout>← Tout le Québec</button><button type="button" class="vi-lien" data-zoomsel>Zoomer ici</button>
-      ${r.id ? `<a class="vi-lien" href="https://qc125.com/${r.id}f.htm" target="_blank" rel="noopener">Fiche Qc125 ↗</a>` : ""}</div>
+  z.innerHTML = `<span class="lv-eyebrow">Circonscription · ${esc(reg)}</span><h3>${esc(r.n)}</h3>
+    <div class="vi-pills"><span class="vi-pill"><i style="background:${COUL[c.g]}"></i>${MODE === "election" ? "Élu" : "En tête"} : ${c.g}</span>
+      <span class="vi-pill">Avance : ${nf(c.marge, 1)} pts</span><span class="vi-pill">${nf(r.e)} électeurs</span></div>${liens}
     <span class="lv-eyebrow">${MODE === "election" ? "Résultat" : ETAT.libProj}</span>
     <div class="vi-vrows">${parts.map(([p, v]) => `<div class="vi-vrow${p === c.g ? " win" : ""}"><b style="color:${COUL[p]}">${p === "AUT" ? "Autres" : p}</b>`
       + `<span class="vi-jauge"><i style="width:${Math.min(100, v * 2)}%;background:${COUL[p]}"></i></span><span class="vi-num">${nf(v, MODE === "election" ? 1 : 0)} %</span><span></span></div>`).join("")}</div>`
     + (c.cands ? `<span class="lv-eyebrow">Candidats en tête</span><ul class="vi-cands">${c.cands.map(k => `<li class="${k === dep ? "vi-cand-elu" : ""}" style="--c:${COUL[k.p]}"><i></i><span>${esc(k.nom)}${k === dep ? ` <small>${c.final ? "député" : "en avance"}</small>` : ""}</span><em>${esc(k.sigle)}</em><b>${nf(k.v)}</b></li>`).join("")}</ul>` : "")
-    + (c.part ? `<p class="lv-muted">Participation : ${nf(c.part, 1)} %${c.final ? "" : " · résultat préliminaire"}</p>` : "");
+    + (c.part ? `<p class="lv-muted">Participation : ${nf(c.part, 1)} %${c.final ? "" : " · résultat préliminaire"}</p>` : "")
+    + (MODE === "election" ? "" : `<p class="lv-muted">Pour le député en poste et sa photo : « Carte actuelle · Députés » au-dessus de la carte.</p>`);
 }
 document.addEventListener("click", e => {
   if (!e.target.closest("#viPanneau")) return;
