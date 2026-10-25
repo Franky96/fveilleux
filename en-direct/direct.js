@@ -6,7 +6,8 @@
    Données : api/cb.php (relais des pages de résultats d'Elections BC, cache 45 s : pas d'en-tête CORS) ; à défaut,
    en-direct/resultats.json (copie du pipeline GitHub, en-direct/outils/cb.py). Les deux rendent les pages brutes ; on les lit ici
    en reconnaissant les candidats de la liste officielle (en-direct/candidats.json) : l'ordre des colonnes importe peu.
-   Carte : en-direct/circonscriptions.json (93 circonscriptions de 2023, BC Data Catalogue, Open Government Licence – British Columbia).
+   Carte : en-direct/circonscriptions.json (93 circonscriptions de 2023, BC Data Catalogue, Open Government Licence – British Columbia),
+   découpées au littoral (terres d'OpenStreetMap simplifiées, osmdata.openstreetmap.de, ODbL) : la mer et les îles se voient.
    Élection de 2024 (mêmes circonscriptions) : en-direct/resultats-2024.json (gains, comparaison). */
 
 const RAFRAICHIR = 60;                                         // secondes entre deux lectures
@@ -46,7 +47,7 @@ const ZONES = {
   sur: n => /^Surrey/.test(n),
   vic: n => /^(Victoria|Saanich|Oak Bay|Esquimalt|Langford)/.test(n),
   ok: n => /^(Kelowna|Penticton|Vernon|West Kelowna)/.test(n),
-  gv: n => /^(Vancouver|Burnaby|Surrey|Richmond|Delta|Coquitlam|Port Coquitlam|Port Moody|New Westminster|North Vancouver|West Vancouver|Langley|Maple Ridge|Pitt Meadows)/.test(n),
+  gv: n => !/Sea to Sky/.test(n) && /^(Vancouver|Burnaby|Surrey|Richmond|Delta|Coquitlam|Port Coquitlam|Port Moody|New Westminster|North Vancouver|West Vancouver|Langley|Maple Ridge|Pitt Meadows)/.test(n),
 };
 
 let GEO = null, PAR_CODE = {}, CANDS = {}, R24 = {}, RES = null, brut = null, lu = null;
@@ -343,6 +344,8 @@ function construireCarte() {
   PATH = d3.geoPath(proj);
   svg = d3.select($("lvCarte")).attr("viewBox", `0 0 ${MW} ${MH}`);
   svg.selectAll("*").remove();
+  // mer : fond bleuté sous les circonscriptions, découpées au littoral (les îles se voient)
+  svg.append("rect").attr("x", -2000).attr("y", -2000).attr("width", MW + 4000).attr("height", MH + 4000).style("fill", "rgba(45,120,200,0.30)").style("pointer-events", "none");
   gZ = svg.append("g");
   gZ.append("g").selectAll("path").data(GEO.features).join("path").attr("class", "lv-rid").attr("d", PATH)
     .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => f.properties.nom)
@@ -490,7 +493,7 @@ function dessinerTextes() {
     <div class="lv-partis">${ORDRE_P.filter(p => PARTIS[p].chef).map(p => { const n = Object.values(CANDS).flat().filter(k => k.parti === p).length;
       return `<div class="lv-parti" style="--c:${PARTIS[p].c}"><i></i><span class="lv-pnom">${esc(PARTIS[p].nom)}</span><b>${n}</b><small>candidat·e·s · chef : ${esc(PARTIS[p].chef)}${PARTIS[p].s24 ? ` · ${PARTIS[p].s24} sièges en 2024` : ""}</small></div>`; }).join("")}</div>`;
   $("edSource").innerHTML = `Sources : résultats préliminaires d'<a href="${SITE_RES}" target="_blank" rel="noopener">Elections BC</a> (non officiels jusqu'au dépouillement final du 6 au 10 novembre) ;
-    liste des candidats d'Elections BC (3 octobre 2026) ; circonscriptions de 2023, BC Data Catalogue (Open Government Licence – British Columbia) ; élection de 2024 : Elections BC.`;
+    liste des candidats d'Elections BC (3 octobre 2026) ; circonscriptions de 2023, BC Data Catalogue (Open Government Licence – British Columbia), découpées au littoral d'OpenStreetMap (© contributeurs d'OpenStreetMap, ODbL) ; élection de 2024 : Elections BC.`;
 }
 
 function dessiner() { dessinerEtat(); dessinerSieges(); dessinerCarte(); dessinerPanneau(); dessinerSuivi(); }
