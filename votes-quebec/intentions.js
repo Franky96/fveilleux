@@ -426,6 +426,22 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- évolution des intentions de vote ---------- */
+// petit bouton « ⓘ » à côté du titre du graphique : comment la courbe (moyenne lissée) est calculée (demande de l'utilisateur)
+function expliquerLissage() {
+  const h = $("viEvolTitre"); if (!h || $("viLisseBtn")) return;
+  h.insertAdjacentHTML("beforeend", ` <button type="button" class="vi-lien" id="viLisseBtn" aria-expanded="false" aria-controls="viLisseTxt" title="Comment la courbe est calculée"
+    style="font-size:0.78rem;padding:1px 7px;vertical-align:middle">ⓘ Moyenne lissée</button>`);
+  $("viEvolNote").insertAdjacentHTML("beforebegin", `<p class="lv-muted" id="viLisseTxt" hidden style="margin:6px 0 0;font-size:0.84rem;line-height:1.45">
+    Chaque ligne est une <b>moyenne lissée</b> des sondages, pas le dernier sondage. Pour chaque semaine, on fait la moyenne de tous les
+    sondages, chacun pondéré selon son éloignement dans le temps : un sondage de la même semaine compte pleinement, un sondage
+    d'il y a trois semaines compte environ 60 %, un d'il y a six semaines à peine 15 % (courbe en cloche, écart-type de 21 jours ;
+    10 jours quand on affiche 6 mois ou moins). Ça atténue les écarts entre maisons de sondage, mais quand les sondages récents sont
+    rares, la ligne garde la trace des plus anciens : juste après une élection, elle peut encore refléter ceux d'avant le vote.
+    Les points sont les sondages eux-mêmes ; les losanges, les résultats des élections.</p>`);
+  $("viLisseBtn").addEventListener("click", () => {
+    const t = $("viLisseTxt"), ouvert = t.hidden; t.hidden = !ouvert; $("viLisseBtn").setAttribute("aria-expanded", ouvert);
+  });
+}
 // période affichée (mois ; 0 = depuis l'élection de 2022), gardée d'une visite à l'autre
 let periode = (() => { try { return +localStorage.getItem("viPeriode") || 0; } catch { return 0; } })();
 function dessinerEvolution() {
@@ -640,6 +656,7 @@ async function demarrer() {
     [DATA, ELEC, SOND, , DEP] = await Promise.all([lireJ("votes-quebec/data.json"), lireJ("votes-quebec/election-2026.json"), lireJ("votes-quebec/sondages.json"), lireVerif("quebec"),
       lireJ("votes-quebec/deputes.json").catch(() => null)]);
     ETAT = construireEtat();
+    expliquerLissage();
     dessinerTete(); construireCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
