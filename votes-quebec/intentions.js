@@ -187,7 +187,7 @@ function preparerGouvernement() {
   const dlg = document.createElement("dialog");
   dlg.id = "viGouvDlg"; dlg.className = "vi-gouv"; dlg.setAttribute("aria-labelledby", "viGouvTitre");
   $("viPlan").closest(".vue-live").appendChild(dlg);
-  $("viGouvBtn").addEventListener("click", () => { dlg.innerHTML = contenuGouvernement(); dlg.showModal(); chamber($("viGouvPlan"), compositionActuelle(), SIEGES); });
+  $("viGouvBtn").addEventListener("click", () => { dlg.innerHTML = contenuGouvernement(); dlg.showModal(); chamber($("viGouvPlan"), compositionActuelle(), SIEGES); tournerPlan($("viGouvPlan")); });
   dlg.addEventListener("click", e => { if (e.target === dlg || e.target.closest("[data-fermer]")) dlg.close(); });
 }
 const photoDe = circ => circ && DEP?.deputes?.[circ]?.photo ? `api/photo-depute.php?c=${encodeURIComponent(circ)}` : null;
@@ -221,6 +221,30 @@ function contenuGouvernement() {
 }
 // Assemblée nationale actuelle : même plan que le rectangle de l'Assemblée (chamber()), avec la composition d'aujourd'hui
 // (parti de chaque député en poste ; à défaut, élu du 5 octobre 2026) — demande de l'utilisateur ; dessiné après l'ouverture
+// même plan tourné de 90° (demande de l'utilisateur) : présidence en haut, gouvernement à gauche, opposition à droite ;
+// les textes restent à l'endroit, sauf « majorité » qui suit l'allée centrale
+function tournerPlan(svgEl) {
+  const [, , W, H] = svgEl.getAttribute("viewBox").split(/\s+/).map(Number), NS = "http://www.w3.org/2000/svg";
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("transform", `translate(${H} 0) rotate(90)`);
+  while (svgEl.firstChild) g.appendChild(svgEl.firstChild);
+  svgEl.appendChild(g); svgEl.setAttribute("viewBox", `0 -4 ${H} ${W + 18}`);
+  svgEl.style.cssText = "display:block;width:100%;max-width:290px;height:auto;margin:0 auto";
+  for (const t of [...g.querySelectorAll("text")]) {
+    const txt = t.textContent;
+    if (/^(Présidence|Gouvernement|Opposition)$/.test(txt)) { t.remove(); continue; }   // replacés à l'endroit plus bas
+    if (/^majorité/.test(txt)) continue;                                                // suit l'allée centrale
+    const x = +t.getAttribute("x"), y = +t.getAttribute("y") - 2.3;                     // PM, C : centrés dans leur siège
+    t.setAttribute("y", y); t.setAttribute("dominant-baseline", "central");
+    t.setAttribute("transform", `rotate(-90 ${x} ${y})`);
+  }
+  const etiquette = (x, y, texte, ancre) => { const t = document.createElementNS(NS, "text");
+    Object.entries({ x, y, "text-anchor": ancre }).forEach(([k, v]) => t.setAttribute(k, v));
+    t.setAttribute("style", 'fill:var(--muted);font:600 7px "Public Sans",system-ui,sans-serif;letter-spacing:.04em'); t.textContent = texte; svgEl.appendChild(t); };
+  etiquette(H / 2 + 14, 33, "Présidence", "start");                                    // à droite du fauteuil, en haut
+  etiquette(4, W + 10, "Gouvernement", "start");
+  etiquette(H - 4, W + 10, "Opposition", "end");
+}
 function compositionActuelle() { const n = {}; for (const r of DATA.ridings) { const p = partiActuel(r.n) || "AUT"; n[p] = (n[p] || 0) + 1; } return n; }
 function planActuel() {
   const n = compositionActuelle(), ordre = Object.keys(n).sort((a, b) => n[b] - n[a]);
