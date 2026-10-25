@@ -426,22 +426,27 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- évolution des intentions de vote ---------- */
-// petit bouton « ⓘ » à côté du titre du graphique : comment la courbe (moyenne lissée) est calculée (demande de l'utilisateur)
+// bouton « ⓘ Moyenne lissée » en bas à droite du graphique : ouvre un petit rectangle d'info sur le calcul de la courbe
+// (demande de l'utilisateur) ; se ferme au second clic, par Échap ou par un clic ailleurs
 function expliquerLissage() {
-  const h = $("viEvolTitre"); if (!h || $("viLisseBtn")) return;
-  h.insertAdjacentHTML("beforeend", ` <button type="button" class="vi-lien" id="viLisseBtn" aria-expanded="false" aria-controls="viLisseTxt" title="Comment la courbe est calculée"
-    style="font-size:0.78rem;padding:1px 7px;vertical-align:middle">ⓘ Moyenne lissée</button>`);
-  $("viEvolNote").insertAdjacentHTML("beforebegin", `<p class="lv-muted" id="viLisseTxt" hidden style="margin:6px 0 0;font-size:0.84rem;line-height:1.45">
-    Chaque ligne est une <b>moyenne lissée</b> des sondages, pas le dernier sondage. Pour chaque semaine, on fait la moyenne de tous les
-    sondages, chacun pondéré selon son éloignement dans le temps : un sondage de la même semaine compte pleinement, un sondage
-    d'il y a trois semaines compte environ 60 %, un d'il y a six semaines à peine 15 % (courbe en cloche, écart-type de 21 jours ;
-    10 jours quand on affiche 6 mois ou moins). Ça atténue les écarts entre maisons de sondage, mais quand les sondages récents sont
-    rares, la ligne garde la trace des plus anciens : juste après une élection, elle peut encore refléter ceux d'avant le vote.
-    Les points sont les sondages eux-mêmes ; les losanges, les résultats des élections.</p>`);
-  $("viLisseBtn").addEventListener("click", () => {
-    const t = $("viLisseTxt"), ouvert = t.hidden; t.hidden = !ouvert; $("viLisseBtn").setAttribute("aria-expanded", ouvert);
-  });
+  const note = $("viEvolNote"); if (!note || $("viLisseBtn")) return;
+  note.insertAdjacentHTML("afterend", `<div style="display:flex;justify-content:flex-end;position:relative">
+    <button type="button" class="vi-lien" id="viLisseBtn" aria-expanded="false" aria-controls="viLisseTxt" style="font-size:0.78rem;padding:2px 9px">ⓘ Moyenne lissée</button>
+    <div id="viLisseTxt" role="dialog" aria-label="Moyenne lissée" hidden style="position:absolute;right:0;bottom:calc(100% + 8px);z-index:30;width:min(380px,86vw);padding:12px 14px;
+      border-radius:10px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);box-shadow:0 12px 32px rgba(0,0,0,.35);font-size:0.84rem;line-height:1.45">
+      <b>Comment la courbe est calculée</b><br>
+      Chaque ligne est une moyenne lissée des sondages, pas le dernier sondage. Pour chaque semaine, on fait la moyenne de tous les
+      sondages, chacun pondéré selon son éloignement dans le temps : un sondage de la même semaine compte pleinement, un sondage d'il y a
+      trois semaines environ 60 %, un d'il y a six semaines à peine 15 % (courbe en cloche, écart-type de 21 jours ; 10 jours à 6 mois ou moins).
+      Ça atténue les écarts entre maisons de sondage, mais quand les sondages récents sont rares, la ligne garde la trace des plus anciens :
+      juste après une élection, elle peut encore refléter ceux d'avant le vote. Points : les sondages ; losanges : les élections.</div></div>`);
+  const btn = $("viLisseBtn"), boite = $("viLisseTxt");
+  const ouvrir = v => { boite.hidden = !v; btn.setAttribute("aria-expanded", v); };
+  btn.addEventListener("click", e => { e.stopPropagation(); ouvrir(boite.hidden); });
+  document.addEventListener("click", e => { if (!boite.hidden && !boite.contains(e.target)) ouvrir(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !boite.hidden) { ouvrir(false); btn.focus(); } });
 }
+
 // période affichée (mois ; 0 = depuis l'élection de 2022), gardée d'une visite à l'autre
 let periode = (() => { try { return +localStorage.getItem("viPeriode") || 0; } catch { return 0; } })();
 function dessinerEvolution() {
