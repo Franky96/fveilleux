@@ -231,7 +231,7 @@ function dessinerEtat() {
   if (!auMoinsUn()) { $("lvEtat").textContent = "En attente des premiers résultats · vérification chaque minute"; dessinerVerifs(); return; }
   const fin = Object.values(RES.circ).filter(c => c.final).length;
   $("lvEtat").innerHTML = ["<b>Résultats préliminaires</b>", `${RES.lus} circonscription${RES.lus > 1 ? "s" : ""} sur ${NB} avec des résultats`, fin ? `${fin} entièrement dépouillée${fin > 1 ? "s" : ""}` : "",
-    RES.resume?.urnes != null ? `${nf(RES.resume.urnes, 1)} % des urnes` : ""].filter(Boolean).join(" · ");
+    RES.resume?.urnes != null ? `${nf(RES.resume.urnes, RES.resume.urnes < 1 ? 2 : 1)} % des urnes` : ""].filter(Boolean).join(" · ");
   dessinerVerifs();
 }
 function dessinerVerifs() {
@@ -277,7 +277,7 @@ function dessinerSieges() {
   }
   const lead = ordre[0];
   $("lvSiegesTitre").textContent = !lead ? (new Date() < FERMETURE ? "Sièges : les résultats commencent à la fermeture des bureaux" : "Aucune circonscription dépouillée pour l'instant")
-    : tot(lead) >= MAJ ? `${PARTIS[lead].nom} : ${tot(lead)} sièges, au-delà de la majorité (${MAJ})` : `${PARTIS[lead].nom} en tête avec ${tot(lead)} sièges (majorité : ${MAJ})`;
+    : tot(lead) >= MAJ ? `${PARTIS[lead].nom} : ${tot(lead)} sièges, au-delà de la majorité (${MAJ})` : `${PARTIS[lead].nom} en tête avec ${tot(lead)} siège${tot(lead) > 1 ? "s" : ""} (majorité : ${MAJ})`;
   const montres = ORDRE_P.filter(p => tot(p) > 0 || s[p].voix > 0 || PARTIS[p].s24 > 0 || ["ctr", "one"].includes(p));
   $("lvPartis").innerHTML = montres.sort((a, b) => tot(b) - tot(a) || s[b].voix - s[a].voix || ORDRE_P.indexOf(a) - ORDRE_P.indexOf(b)).map(p => {
     const v = voixT ? 100 * s[p].voix / voixT : null, P = PARTIS[p];
@@ -288,7 +288,7 @@ function dessinerSieges() {
   const fin = Object.values(RES?.circ || {}).filter(c => c.final).length;
   const R = RES?.resume || {};
   $("edKv").innerHTML = [[`${RES?.lus || 0} / ${NB}`, "circonscriptions avec des résultats"], [nf(fin), "circonscriptions entièrement dépouillées"],
-    [R.urnes != null ? nf(R.urnes, 1) + " %" : "—", "des urnes dépouillées"], [R.part != null ? nf(R.part, 1) + " %" : "—", "participation préliminaire"],
+    [R.urnes != null ? nf(R.urnes, R.urnes < 1 ? 2 : 1) + " %" : "—", "des urnes dépouillées"], [R.part != null ? nf(R.part, 1) + " %" : "—", "participation préliminaire"],
     [voixT ? nf(voixT) : "—", `voix valides comptées${R.inscrits ? ` · ${nf(R.inscrits)} inscrits` : ""}`]]
     .map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
   $("lvBarrePlein").innerHTML = `<div class="lv-bp-tete"><b>${lead ? (tot(lead) >= MAJ ? `${PARTIS[lead].court} majoritaire` : `${PARTIS[lead].court} en tête`) : "Sièges"}</b><span>majorité ${MAJ} · ${RES?.lus || 0}/${NB} circ.</span></div>`
