@@ -1,0 +1,49 @@
+# Élections générales en Nouvelle-Zélande du 7 novembre 2026 (page « En direct ») : copie de secours des résultats de la Commission électorale.
+# La page lit d'abord le relais du site (api/direct-nz.php, cache 45 s) ; si le relais ne répond pas, elle lit en-direct/nouvelle-zelande/resultats.json,
+# écrit ici par en-direct/nouvelle-zelande/outils/nz.py et poussé sur master (Hostinger le déploie). Toutes les 5 minutes de la fermeture des
+# bureaux (19 h NZDT = 6 h UTC le 7 novembre, 1 h du matin au Québec) jusqu'à 23 h UTC, puis toutes les 30 minutes jusqu'au 9 novembre, puis
+# chaque heure jusqu'aux résultats officiels du 27 novembre ; le script ne fait rien hors de cette fenêtre. GitHub peut retarder les
+# déclenchements programmés : le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite.
+name: Élection N.-Z. · résultats
+
+on:
+  schedule:
+    - cron: "*/5 6-23 7 11 *"
+    - cron: "17,47 * 8-9 11 *"
+    - cron: "37 * 10-28 11 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nz-election
+  cancel-in-progress: false
+
+jobs:
+  lire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Résultats de la Commission électorale
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/nouvelle-zelande/outils/nz.py --force; else python3 en-direct/nouvelle-zelande/outils/nz.py; fi
+
+      - name: Publier si les résultats ont changé
+        run: |
+          [ -f en-direct/nouvelle-zelande/resultats.json ] || { echo "Pas encore de résultats."; exit 0; }
+          git add en-direct/nouvelle-zelande/resultats.json
+          if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
+          H=$(TZ=Pacific/Auckland date +"%H h %M")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Élection N.-Z. : résultats préliminaires de $H, heure de la Nouvelle-Zélande"
+          for essai in 1 2 3 4; do
+            git push origin HEAD:master && exit 0
+            sleep $((2 ** essai)); git pull --rebase origin master
+          done
+          exit 1

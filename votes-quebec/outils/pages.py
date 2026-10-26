@@ -47,7 +47,7 @@ DIRECTS = {
            "CHOIX": "Chambre affichée", "CARTE": "Carte des 52 circonscriptions (provinces) de l'Espagne, colorées selon le parti en tête", "CLASSEMENT": "Les 52 circonscriptions"},
 }
 # soirées déjà prêtes (module écrit et vérifié) : les autres ne sont ni générées ni dans le sous-menu
-PRETES = {"direct"}
+PRETES = {"direct", "nz"}
 BLOCS = ["cb2026", "ab2026", "live", "votes", "loi39"]          # vues qui ont leur propre bloc dans le gabarit (les soirées de DIRECTS prennent « gen »)
 PAGES = list(DIRECTS) + BLOCS          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"direct": "En direct · mi-mandat aux États-Unis", "bg": "En direct · présidentielle en Bulgarie", "nz": "En direct · élections en Nouvelle-Zélande",
