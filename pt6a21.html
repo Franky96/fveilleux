@@ -689,7 +689,7 @@ html.light .card{box-shadow:0 1px 2px rgba(21,32,42,.05)}
 <script src="pt6a21-eclate.js?v=f222ff57"></script>
 <script src="pt6a21-rgb.js?v=ff2cb9e2"></script>
 <script src="pt6a21-turbines.js?v=efcd6cdd"></script>
-<script src="pt6a21-gg.js?v=a13fb13e"></script>
+<script src="pt6a21-gg.js?v=c6f68754"></script>
 <script>
 window.addEventListener('error', e => {
   const v = document.getElementById('view');
@@ -2559,6 +2559,10 @@ function frame(now) {
   // flamme
   const fl = st.lit ? clamp(0.25 + st.wf / 420, 0, 1) * (0.85 + 0.15 * Math.sin(simClock * 0.037) * Math.sin(simClock * 0.011)) : 0;
   const flv = oilMode === 'iso' ? 0 : 1; flameMat.opacity = fl * 0.55 * flv; flameMat2.opacity = fl * 0.4 * flv; flameLights.forEach(l => l.intensity = fl * (mode === 'ext' ? 0 : 1.6));
+  // jets des injecteurs : carburant dès qu'il arrive (même avant l'allumage), primaires d'abord ; la valve de transfert du diviseur de débit
+  // ouvre les secondaires quand la pression primaire monte (Ng 28 à 40 %) ; coupure : le clapet de vidange vide les collecteurs
+  const prim = clamp(st.wf / 50, 0, 1) * flv, sec = st.wf > 1 ? prim * clamp((st.Ng - 28) / 12, 0, 1) : 0;
+  GG.carburant(prim * (0.9 + 0.1 * Math.sin(simClock * 0.05)), sec);
   // particules
   const T = temps();
   // vitesse du flux réglée par le curseur « Vitesse flux »

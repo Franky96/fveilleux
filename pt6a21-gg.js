@@ -225,12 +225,12 @@ const INFO = {
     d: 'Boîtier d\'une pièce boulonné sous l\'adaptateur d\'entrée du collecteur (6 h), propre au PT6A-21. Une valve de transfert à ressort coulisse dans le piston du clapet de vidange, lui aussi à ressort, percé de lumières : au démarrage, le carburant dosé par le FCU passe d\'abord aux injecteurs primaires ; quand la pression primaire monte, la valve s\'ouvre et les secondaires s\'ajoutent (tous les injecteurs débitent au ralenti et au-dessus). À l\'arrêt, la soupape de coupure du FCU se ferme : le ressort repousse le piston, qui bouche l\'arrivée et relie les deux collecteurs à l\'orifice de vidange, et le carburant restant s\'écoule hors du moteur. Après le SB1406, il est remplacé par un diviseur à clapet de purge : de l\'air comprimé accumulé chasse le carburant des collecteurs dans la chambre, où il brûle. Cotes estimées d\'après les figures.',
     k: [['Modèle', 'Lucas 25536-4 (pré-SB1406)'], ['Arrivée du FCU', 'coude à gauche, écrou de la conduite 90–100 lb·po'], ['Vidange', 'coude à droite, vers la conduite de l\'avion'],
       ['Fixation', '4 boulons MS9565-05, 32–36 lb·po, freinés par paires'], ['Coudes', 'contre-écrous 38–42 lb·po, joint torique et bague d\'appui'], ['Face de montage', '2 joints toriques (orifices primaire et secondaire)']] },
-  manif1: { g: 'carb', n: 'Adaptateur d\'entrée et adaptateurs voisins', ref: 'OM 72-30-00 5.B(1)–(4), fig. 103 · IPC 72-30-04 · AMM 73-10-05',
-    d: 'L\'adaptateur d\'entrée du collecteur (6 h), qui reçoit le carburant du diviseur de débit, et les deux adaptateurs de part et d\'autre, réunis par quatre tubes de transfert : on les dépose ensemble, en les soutenant pendant qu\'on retire les tubes.',
-    k: [['Adaptateurs', '3 (entrée + 2 voisins)'], ['Tubes de transfert', '4'], ['Fixation', 'plaque-frein et boulons par adaptateur']] },
-  manif2: { g: 'carb', n: 'Collecteur et adaptateurs d\'injecteurs', ref: 'OM 72-30-00 5.B(5), fig. 103 · AMM 72-30-00 · AMM 73-10-05',
-    d: 'Quatorze adaptateurs d\'injecteurs, primaires et secondaires en alternance, reliés par des tubes de transfert appariés, forment autour du carter un double collecteur. Chaque adaptateur porte un injecteur dans une gaine qui traverse le carter et l\'enveloppe extérieure de la chambre et soutient l\'avant de celle-ci. Les onze autres adaptateurs se déposent un à un.',
-    k: [['Adaptateurs', '14 (primaires et secondaires)'], ['Joints', 'joint ondulé en acier (post-SB1276)'], ['Rôle des gaines', 'soutien avant de la chambre']] },
+  manif1: { g: 'carb', n: 'Adaptateur d\'entrée et adaptateurs voisins (n° 7, 8, 9)', ref: 'OM 72-30-00 5.B(1)–(4), fig. 103 · AMM 73-10-05 fig. 201, 202 · IPC 73-10-05 fig. 2',
+    d: 'L\'adaptateur d\'entrée (n° 8, 6 h), un adaptateur secondaire dont la base reçoit le diviseur de débit, et ses deux voisins : le n° 7 (secondaire) et le n° 9 (primaire), réunis par quatre tubes de transfert. On les dépose ensemble : défreiner et retirer les boulons et les plaques de verrouillage, soutenir les trois adaptateurs, puis pousser les tubes dans les alésages des voisins (sens horaire, poussoir PWC32366) avant de les dégager. Chaque adaptateur porte son injecteur et sa gaine.',
+    k: [['Emplacements', 'n° 7 (S), 8 entrée (S), 9 (P)'], ['Tubes de transfert', '4, avec 8 joints toriques'], ['Fixation', '2 boulons à double six-pans par adaptateur'], ['Outil', 'poussoir de tubes PWC32366']] },
+  manif2: { g: 'carb', n: 'Collecteur double, adaptateurs et injecteurs', ref: 'AMM 73-10-05 (description, fig. 1, fig. 201) · IPC 73-10-05 fig. 2 · OM 73-10-05 fig. 101 à 103, 302, tabl. 701 · OM 72-30-00 5.B(5)',
+    d: 'Quatorze adaptateurs reliés par des paires de tubes de transfert forment deux collecteurs, primaire et secondaire, autour du carter. Post-SB1372 : 10 adaptateurs primaires et 4 secondaires (n° 6, 7, 8 entrée et 14, numéros marqués sur le carter, n° 1 à 12 h, sens horaire vu de l\'arrière). Chaque adaptateur a deux alésages côte à côte, un par collecteur ; un passage interne relie son injecteur à l\'un des deux (adaptateur primaire repérable à un point de soudure). Les deux boulons qui le fixent tiennent aussi la plaque de verrouillage qui garde les tubes en place. L\'injecteur simplex à tourbillon, avec crépine fine près de l\'embout, est vissé dans la partie interne de l\'adaptateur et freiné par une rondelle à languette ; la gaine le recouvre, traverse le carter et entre dans un support soudé sur la chambre : les 14 gaines tiennent l\'avant de la chambre. Le jet sort par l\'ouverture de la gaine, tangentiellement, vers l\'injecteur suivant ; l\'air qui passe par les trous de la gaine refroidit l\'embout et aide la pulvérisation. Les onze autres adaptateurs se déposent un à un ; gaine à l\'extracteur PWC30416 avant de dévisser l\'injecteur. En coupe ou aux rayons X, les jets s\'affichent quand le carburant arrive : primaires seulement au démarrage, secondaires ensuite.',
+    k: [['Adaptateurs', '14 : 10 primaires, 4 secondaires (post-SB1372)'], ['Tubes de transfert', '28 (56 joints toriques)'], ['Injecteur au banc (125 psig)', '14,5–16,3 lb/h, cône 39–46°'], ['Gaine', 'Ø int. 0,572 min., dôme 0,040 min.'], ['Joint de gaine', 'compris dans la trousse d\'inspection des parties chaudes']] },
   drains: { g: 'carb', n: 'Vannes de vidange du carter', ref: 'OM 72-30-00 5.C, fig. 104 · AMM 72-30-00 · AMM 73-10-06',
     d: 'Deux vannes à ressort aux bossages avant et arrière du bas du carter (6 h) : à l\'arrêt, elles évacuent le carburant résiduel ; en marche, P3 les tient fermées. Un support les relie.',
     k: [['Nombre', '2 (bossages avant et arrière)'], ['Position', '6 h'], ['Joints', 'plats, à remplacer']] },
@@ -383,6 +383,11 @@ const spin = {};                                         // groupes tournants
 function spinner(id) { const s = new THREE.Group(); PART[id].g.add(s); return (spin[id] = s); }
 const nozPhi = Array.from({ length: 14 }, (_, i) => (i + 0.5) * TAU / 14);   // 14 adaptateurs ; 12 h et 6 h (n° 3 et 10)
 const INLET_AD = [9, 10, 11];                                                // adaptateur d'entrée (6 h) et ses voisins
+// numéros d'emplacement marqués sur le carter (AMM 73-10-05 fig. 201, vus de l'arrière) : n° 1 à 12 h, sens horaire, n° 8 = entrée (6 h) ;
+// indice i du modèle = n° + 2 (modulo 14). Post-SB1372 : 10 primaires, 3 secondaires et l'adaptateur d'entrée (secondaire) aux n° 6, 7, 8 et 14
+const NUM_AD = i => (i + 12) % 14 + 1;
+const SECOND = new Set([6, 7, 8, 14].map(n => (n + 2) % 14));
+const NOZ_Z = 27.7;                                                          // plan des adaptateurs et des injecteurs
 
 /* ---------- carter du générateur de gaz ---------- */
 {
@@ -409,7 +414,7 @@ const INLET_AD = [9, 10, 11];                                                // 
   lathe('ggcase', ringPts(1.366, 1.6, 37.05, 37.75), mGi, g, 96);                            // logement du joint fixe (Ø 2,730)
   lathe('ggcase', ringPts(1.6, 2.66, 37.6, 37.75), mGi, g, 96);
   // bossages : 14 adaptateurs (ovales), bougies (4 h, 9 h), vannes de vidange (6 h), prise P3 (5 h), mise à l'air de la vanne (8 h), huile (5 h)
-  inst(new THREE.CylinderGeometry(0.95 * S, 0.95 * S, 0.3 * S, 24).scale(1.55, 1, 1), nozPhi.map(p => radM(9.8, 27.7, p)), mG, g);
+  inst(new THREE.CylinderGeometry(0.55 * S, 0.55 * S, 0.3 * S, 24).scale(1, 1, 1.85), nozPhi.map(p => radM(9.8, 27.7, p)), mG, g);   // allongés vers l'avant et l'arrière (oreilles des adaptateurs)
   for (const h of [4, 9]) radialCyl(g, mG, h, 9.45, 9.75, 29.2, 0.75, 16);
   for (const z of [30.5, 36.5]) radialCyl(g, mG, 6, 9.45, 9.75, z, 0.55, 16);
   radialCyl(g, mG, 5, 9.3, 9.8, 38.1, 0.35, 12); radialCyl(g, mG, 8, 9.2, 9.7, 38.7, 0.3, 12); radialCyl(g, mG, 5, 9.4, 9.9, 36.9, 0.4, 12);
@@ -452,35 +457,130 @@ const INLET_AD = [9, 10, 11];                                                // 
     lathe('liner', [[8.7, z], [8.82, z + 0.08], [8.82, z + 0.42], [8.7, z + 0.5]], mB, g, 120);
     if (z < 35) lathe('liner', [[7.0, z], [7.12, z + 0.08], [7.12, z + 0.42], [7.0, z + 0.5]], mB, g, 120);
   }
-  inst(new THREE.CylinderGeometry(0.42 * S, 0.5 * S, 0.35 * S, 16), nozPhi.map(p => radM(8.45, 28.1, p)), mB, g);   // passages des injecteurs
+  // supports de suspension soudés sur la paroi extérieure : les gaines des injecteurs y passent et portent l'avant de la chambre (AMM 73-10-05)
+  const sup = new THREE.LatheGeometry(profilLathe([[0.36, 8.2], [0.52, 8.2], [0.52, 8.55], [0.44, 8.72], [0.36, 8.72], [0.36, 8.2]].map(([r, y]) => new THREE.Vector2(r * S, y * S))), 20);
+  inst(sup, nozPhi.map(p => radM(0, NOZ_Z, p)), mB, g);
   for (const h of [4, 9]) radialCyl(g, mB, h, 8.55, 8.85, 29.2, 0.45, 16);                 // bossages des bougies
 }
 
-/* ---------- collecteur carburant : 14 adaptateurs, tubes de transfert appariés, plaques-freins ---------- */
+/* ---------- collecteur carburant : 14 adaptateurs, gaines, injecteurs, tubes de transfert appariés, plaques de verrouillage ----------
+   AMM 73-10-05 (description, fig. 1 coupe, fig. 201 emplacements, fig. 202), IPC 73-10-05 fig. 2 (PT6A-21), OM 73-10-05 fig. 101 à 103 et 302.
+   Chaque adaptateur : semelle à deux oreilles (avant/arrière) posée sur le bossage du carter avec, dessous, la bride de la gaine et le joint ;
+   corps à deux alésages côte à côte (collecteur primaire à l'avant, secondaire à l'arrière, estimé), dont les bossages s'alignent sur la corde
+   vers l'adaptateur voisin ; partie interne (queue) qui traverse le carter dans la gaine ; injecteur simplex vissé de côté dans la queue,
+   jet tangentiel vers l'injecteur suivant (sens antihoraire vu de l'arrière, d'après la coupe AMM fig. 1) par l'ouverture de la gaine ;
+   plaque de verrouillage en pont tenue par les deux mêmes boulons à double six-pans (28 boulons). Tubes de transfert droits entre deux
+   adaptateurs (28 tubes, 56 joints toriques). Repère local : X tangentiel (sens horaire vu de l'arrière), Y = rayon, Z vers l'arrière ;
+   cotes estimées d'après les figures, sauf la gaine (OM fig. 302 : Ø int. 0,572 min., Ø 0,625 au dôme, dôme 0,040 min.). */
+const AD = { r0: 9.95, rt: 10.62, dz: 0.27, L: 0.55, del: Math.PI / 14, rb: 0.2, rTube: 0.155 };
+const NOZ_DIR = new THREE.Vector3(-Math.cos(0.5), -Math.sin(0.5), 0);       // axe du jet : tangentiel, un peu vers l'intérieur
+const NOZ_TIP = new THREE.Vector3(-0.17, 8.31, 0);                          // embout de l'injecteur, face à l'ouverture de la gaine (dans le dôme)
+function oblong(len, wid, holes, rHole = 0.09) {                            // contour à bouts ronds le long de Z, trous des boulons
+  const sh = new THREE.Shape(), a = wid / 2, h = len / 2 - a;
+  sh.moveTo(-a, -h); sh.lineTo(-a, h); sh.absarc(0, h, a, Math.PI, 0, true); sh.lineTo(a, -h); sh.absarc(0, -h, a, 0, Math.PI, true);
+  for (const z of holes) { const p = new THREE.Path(); p.absarc(0, z, rHole, 0, TAU, true); sh.holes.push(p); }
+  return sh;
+}
+// plaque plane au contour oblong (forme dans le plan X-Z), du rayon y0 au rayon y1
+function plaque(sh, y0, y1) {
+  const g = new THREE.ExtrudeGeometry(sh, { depth: (y1 - y0), bevelEnabled: false, curveSegments: 10 });
+  g.scale(S, S, S); g.rotateX(Math.PI / 2); g.translate(0, y1 * S, 0); return g;
+}
+const BOLT_Z = [-0.68, 0.68];
 function adaptateurs(id, list) {
-  const g = PART[id].g, mF = M(id, { color: 0xbfae7f, metalness: 0.85, roughness: 0.35 }), mK = M(id, { color: 0xa9adb0, metalness: 0.85, roughness: 0.3 });
-  const phis = list.map(i => nozPhi[i]);
-  inst(new THREE.CylinderGeometry(0.42 * S, 0.42 * S, 1.4 * S, 12), phis.map(p => radM(10.6, 27.7, p)), mF, g);     // corps
-  inst(new THREE.CylinderGeometry(0.58 * S, 0.58 * S, 0.4 * S, 6), list.filter(i => i !== 10).map(i => radM(11.5, 27.7, nozPhi[i])), mF, g);   // six-pans (l'adaptateur d'entrée a une semelle)
-  inst(new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 1.4 * S, 8), phis.map(p => radM(8.8, 27.7, p)), mF, g);         // gaine et injecteur
-  inst(new THREE.BoxGeometry(1.5 * S, 0.1 * S, 0.8 * S), phis.map(p => radM(9.95, 27.7, p)), mK, g);                // plaque-frein
-  const bl = []; for (const p of phis) for (const d of [-0.62, 0.62]) bl.push(radM(10.05, 27.7, p + d / 10));
-  inst(new THREE.CylinderGeometry(0.1 * S, 0.1 * S, 0.14 * S, 6), bl, boltMat(id), g, 'bolt');
-  // tubes de transfert : une paire entre chaque adaptateur et le suivant
-  const d = TAU / 14;
-  for (const [dz, dr] of [[-0.35, 0.25], [0.35, 0.05]]) {
-    const pts = []; for (let k = 0; k <= 16; k++) { const a = lerp(0.06, d - 0.06, k / 16); pts.push(Pf(10.55 + dr + Math.sin(k / 16 * Math.PI) * 0.35, 27.7 + dz, a)); }
-    const tg = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.14 * S, 6);
-    const own = id === 'manif1' ? [9, 10] : [...Array(14).keys()].filter(i => i !== 9 && i !== 10);
-    inst(tg, own.map(i => new THREE.Matrix4().makeRotationY(nozPhi[i])), mF, g);
+  const g = PART[id].g;
+  const mF = M(id, { color: 0xbfae7f, metalness: 0.85, roughness: 0.35 });   // adaptateurs (acier, teinte de chaleur)
+  const mK = M(id, { color: 0xa9adb0, metalness: 0.85, roughness: 0.3 });    // plaques de verrouillage
+  const mG = M(id, { color: 0x8e9498, metalness: 0.8, roughness: 0.45 });    // gaines
+  const mJ = M(id, { color: 0x5d6266, metalness: 0.5, roughness: 0.7 });     // joints de gaine
+  const mN = M(id, { color: 0xc8ccd0, metalness: 0.9, roughness: 0.22 });    // injecteurs
+  const mR = M(id, { color: 0x1e2224, metalness: 0, roughness: 0.75 });      // joints toriques, trous
+  const mT = M(id, { color: 0xb8a776, metalness: 0.85, roughness: 0.32 });   // tubes de transfert
+  const at = list.map(i => radM(0, NOZ_Z, nozPhi[i]));
+  const geo = (geom, mat, mats = at) => inst(geom, mats, mat, g);
+  // joint, bride de la gaine, semelle de l'adaptateur
+  geo(plaque(oblong(1.86, 0.84, BOLT_Z, 0.1), AD.r0, AD.r0 + 0.03), mJ);
+  geo(plaque(oblong(1.82, 0.8, BOLT_Z), AD.r0 + 0.03, AD.r0 + 0.09), mG);
+  geo(plaque(oblong(1.78, 0.74, BOLT_Z), AD.r0 + 0.09, AD.r0 + 0.23), mF);
+  // gaine : coupe à dôme qui traverse le carter et entre dans le support de la chambre
+  const gp = [[0.0, 8.05], [0.17, 8.08], [0.27, 8.16], [0.33, 8.27], [0.345, 8.41], [0.345, 10.04], [0.31, 10.04], [0.31, 8.41], [0.295, 8.29], [0.24, 8.21], [0.15, 8.13], [0.0, 8.11]];
+  geo(new THREE.LatheGeometry(profilLathe(gp.map(([r, y]) => new THREE.Vector2(Math.max(1e-4, r) * S, y * S))), 24), mG);
+  // ouverture du jet et trous d'air de refroidissement de la gaine
+  const trou = (r, y, phiL) => new THREE.Matrix4().makeRotationY(phiL).multiply(new THREE.Matrix4().makeTranslation(0, y * S, r * S));   // disque tangent à la gaine
+  const trous = [trou(0.35, 8.33, -Math.PI / 2)]; for (let k = 0; k < 6; k++) trous.push(trou(0.35, 9.1, k * TAU / 6 + 0.3));
+  const tGeo = [new THREE.CircleGeometry(0.12 * S, 16), new THREE.CircleGeometry(0.045 * S, 10)];
+  inst(tGeo[0], at.map(m => m.clone().multiply(trous[0])), mR, g);
+  inst(tGeo[1], at.flatMap(m => trous.slice(1).map(t => m.clone().multiply(t))), mR, g);
+  // queue interne de l'adaptateur (dans la gaine) et injecteur vissé de côté, frein à languette
+  geo(new THREE.CylinderGeometry(0.25 * S, 0.25 * S, 1.6 * S, 16).translate(0, 9.25 * S, 0), mF);
+  const nz = new THREE.Group();
+  const cyl = (r0, r1, len, seg, off) => { const c = new THREE.CylinderGeometry(r1 * S, r0 * S, len * S, seg); c.translate(0, off * S, 0); return c; };
+  const axe = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), NOZ_DIR));
+  const pose = (c, o) => c.applyMatrix4(axe).translate((NOZ_TIP.x - NOZ_DIR.x * o) * S, (NOZ_TIP.y - NOZ_DIR.y * o) * S, 0);
+  geo(pose(cyl(0.15, 0.15, 0.12, 6, 0), 0.36), mN);                                        // six-pans du corps
+  geo(pose(cyl(0.12, 0.1, 0.24, 18, 0), 0.18), mN);                                         // corps (crépine à l'intérieur)
+  geo(pose(cyl(0.1, 0.035, 0.06, 18, 0), 0.03), mN);                                        // embout à tourbillon
+  geo(pose(cyl(0.17, 0.17, 0.02, 12, 0), 0.44), mK);                                        // rondelle-frein à languette
+  // corps : bloc et deux bossages par côté, alignés sur la corde vers l'adaptateur voisin
+  geo(new THREE.BoxGeometry(0.6 * S, (AD.rt - AD.r0 - 0.23) * S, 1.0 * S).translate(0, (AD.r0 + 0.23 + AD.rt) / 2 * S, 0), mF);
+  for (const dz of [-AD.dz, AD.dz]) geo(new THREE.CylinderGeometry(AD.rb * S, AD.rb * S, 0.62 * S, 16).rotateX(Math.PI / 2).translate(0, AD.rt * S, dz * S), mF);
+  for (const s of [-1, 1]) for (const dz of [-AD.dz, AD.dz]) {
+    const b = new THREE.CylinderGeometry(AD.rb * S, AD.rb * S, AD.L * S, 16); b.translate(0, AD.L / 2 * S, 0);
+    b.applyMatrix4(new THREE.Matrix4().makeRotationZ(-s * (Math.PI / 2 + AD.del))).translate(0, AD.rt * S, dz * S);   // direction (s·cos δ, −sin δ)
+    geo(b, mF);
+    // embouchure de l'alésage (joint torique du tube)
+    const e = new THREE.TorusGeometry(0.17 * S, 0.03 * S, 6, 16).rotateY(Math.PI / 2);
+    e.translate(s * AD.L * Math.cos(AD.del) * S, (AD.rt - AD.L * Math.sin(AD.del)) * S, dz * S); geo(e, mR);
   }
+  // plaque de verrouillage en pont par-dessus les alésages (pas sur l'adaptateur d'entrée, qui porte le diviseur de débit)
+  const ponts = at.filter((_, k) => list[k] !== 10);
+  const pz = [[-0.92, 0], [-0.5, 0], [-0.47, 0.68], [0.47, 0.68], [0.5, 0], [0.92, 0]], ep = 0.05, yb = AD.r0 + 0.23;
+  const ps = new THREE.Shape(); ps.moveTo(pz[0][0], yb);
+  for (const [z, y] of pz.slice(1)) ps.lineTo(z, yb + y);
+  for (const [z, y] of pz.slice().reverse()) ps.lineTo(z, yb + y + ep);
+  const pg = new THREE.ExtrudeGeometry(ps, { depth: 0.36, bevelEnabled: false }); pg.translate(0, 0, -0.18); pg.scale(S, S, S); pg.rotateY(-Math.PI / 2);
+  inst(pg, ponts, mK, g);
+  // boulons à double six-pans (deux têtes décalées de 30°), sur les oreilles
+  const bt = []; for (const m of at) for (const z of BOLT_Z) bt.push(m.clone().multiply(new THREE.Matrix4().makeTranslation(0, (AD.r0 + 0.37) * S, z * S)));
+  for (const a of [0, Math.PI / 6]) inst(new THREE.CylinderGeometry(0.13 * S, 0.13 * S, 0.14 * S, 6).rotateY(a), bt, boltMat(id), g, 'bolt');
+  // tubes de transfert droits (avec deux collets) : deux par intervalle, sur la corde entre deux adaptateurs voisins
+  const half = AD.rt * Math.sin(AD.del) - AD.L + 0.12;
+  const tb = [new THREE.CylinderGeometry(AD.rTube * S, AD.rTube * S, 2 * half * S, 12)];
+  for (const x of [-half + 0.32, half - 0.32]) tb.push(new THREE.CylinderGeometry(0.19 * S, 0.19 * S, 0.14 * S, 14).translate(0, x * S, 0));
+  const gaps = id === 'manif1' ? [9, 10] : [...Array(14).keys()].filter(i => i !== 9 && i !== 10);
+  const tm = []; for (const k of gaps) for (const dz of [-AD.dz, AD.dz])
+    tm.push(radM(0, NOZ_Z, nozPhi[k] + AD.del).multiply(new THREE.Matrix4().makeTranslation(0, AD.rt * Math.cos(AD.del) * S, dz * S)).multiply(new THREE.Matrix4().makeRotationZ(Math.PI / 2)));
+  for (const t of tb) inst(t, tm, mT, g);
 }
 adaptateurs('manif1', INLET_AD);
 adaptateurs('manif2', [...Array(14).keys()].filter(i => !INLET_AD.includes(i)));
+/* jets de carburant (visibles en coupe et aux rayons X) : un cône par injecteur, ouvert à 42° (39 à 46° au banc, OM 73-10-05 tabl. 701) ;
+   primaires d'abord, secondaires quand la valve de transfert du diviseur de débit s'ouvre (carburant(prim, sec) depuis pt6a21.html) */
+const jetMat = [0, 1].map(() => new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+const jets = [];
+{
+  // brouillard qui s'estompe vers le bout (couleur → noir = transparent en mélange additif), cœur plus dense et plus étroit
+  const cone = (len, deg, c0) => {
+    const g = new THREE.ConeGeometry(len * Math.tan(deg * Math.PI / 180) * S, len * S, 24, 6, true); g.translate(0, -len / 2 * S, 0);   // sommet à l'origine
+    const pos = g.attributes.position, col = [];
+    for (let i = 0; i < pos.count; i++) { const t = Math.min(1, -pos.getY(i) / (len * S)), k = c0 * Math.pow(1 - t, 1.6) * Math.min(1, t * 6 + 0.25); col.push(0.85 * k, 0.93 * k, k); }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); return g;
+  };
+  const geos = [cone(1.4, 21, 1), cone(0.9, 9, 0.6)];
+  for (const g of geos) {
+    g.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), NOZ_DIR)));
+    g.translate(NOZ_TIP.x * S, NOZ_TIP.y * S, 0);
+  }
+  for (const sec of [false, true]) {
+    const ms = [...Array(14).keys()].filter(i => SECOND.has(i) === sec).map(i => radM(0, NOZ_Z, nozPhi[i]));
+    for (const g of geos) { const im = inst(g, ms, jetMat[+sec], PART.liner.g); im.raycast = () => {}; im.renderOrder = 2; im.userData.sec = sec; jets.push(im); }
+  }
+}
+function carburant(prim, sec) { jetMat[0].opacity = 0.42 * prim; jetMat[1].opacity = 0.42 * sec; for (const j of jets) j.visible = (j.userData.sec ? sec : prim) > 0.01; }
 { // semelle de l'adaptateur d'entrée (6 h) qui reçoit le diviseur de débit (AMM 73-10-04 fig. 201, rep. 1)
   const mF = PART.manif1.mats[0], g = new THREE.Group(); g.applyMatrix4(radM(0, 27.7, nozPhi[10])); PART.manif1.g.add(g);
   const box = (w, r0, r1, d) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w * S, (r1 - r0) * S, d * S), mF); m.position.set(0, (r0 + r1) / 2 * S, 0); g.add(m); };
-  box(1.1, 11.0, 11.4, 1.1); box(2.4, 11.38, 11.75, 2.3);
+  box(1.0, 10.7, 11.4, 1.3); box(2.4, 11.38, 11.75, 2.3);                                // prolonge le corps de l'adaptateur jusqu'à la face du diviseur
   // trous taraudés des 4 boulons et orifices primaire et secondaire de la face de montage
   const mH = M('manif1', { color: 0x2a2620, metalness: 0.3, roughness: 0.8 });
   for (const [x, z, r] of [[0.85, -0.82, 0.1], [0.85, 0.82, 0.1], [-0.85, -0.82, 0.1], [-0.85, 0.82, 0.1], [0.32, 0, 0.12], [-0.32, 0, 0.12]]) {
@@ -946,5 +1046,5 @@ const ORDRE = ['igniters', 'exciter', 'ctbolt', 'ctdisk', 'ctshroud', 'ctvane', 
 const ORB = {}, HOST = { fdv: 'ggcase', manif1: 'ggcase', drains: 'ggcase', oilnoz2: 'ggcase', bleed: 'ggcase' };
 
 update(0);
-return { root, Z0, S, PART, ORDER, INFO, GROUPS, STEPS, ORDRE, ANCRE, ORB, HOST, TB_IDS, P, update, rotNg };
+return { root, Z0, S, PART, ORDER, INFO, GROUPS, STEPS, ORDRE, ANCRE, ORB, HOST, TB_IDS, P, update, rotNg, carburant, NUM_AD, SECOND };
 };
