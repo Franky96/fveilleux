@@ -1,0 +1,52 @@
+# Élections générales en Espagne du 29 novembre 2026 (page « En direct », en-direct-espagne.html) : copie de secours des résultats
+# provisoires du ministère de l'Intérieur. La page lit d'abord le relais du site (api/direct-es.php, cache 45 s) ; s'il ne répond pas,
+# elle lit en-direct/espagne/resultats.json, écrit ici par en-direct/espagne/outils/es.py et poussé sur master (Hostinger le déploie).
+# Toutes les 5 minutes de la fermeture des bureaux (20 h heure de la péninsule = 19 h UTC) jusqu'à 1 h UTC, toutes les 15 minutes
+# jusqu'au lendemain midi, puis toutes les 30 minutes jusqu'au 1er décembre et toutes les 2 heures jusqu'à la fin du recensement
+# général (7 décembre) ; le script ne fait rien hors de cette fenêtre. GitHub peut retarder les déclenchements programmés :
+# le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite (--force).
+name: Élection Espagne · résultats
+
+on:
+  schedule:
+    - cron: "*/5 19-23 29 11 *"
+    - cron: "*/5 0 30 11 *"
+    - cron: "*/15 1-12 30 11 *"
+    - cron: "17,47 13-23 30 11 *"
+    - cron: "17,47 * 1 12 *"
+    - cron: "17 */2 2-7 12 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: es-election
+  cancel-in-progress: false
+
+jobs:
+  lire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Résultats du ministère de l'Intérieur
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/espagne/outils/es.py --force; else python3 en-direct/espagne/outils/es.py; fi
+
+      - name: Publier si les résultats ont changé
+        run: |
+          git add en-direct/espagne/resultats.json
+          if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
+          H=$(TZ=Europe/Madrid date +"%H h %M")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Élection Espagne : résultats provisoires de $H, heure de Madrid"
+          for essai in 1 2 3 4; do
+            git push origin HEAD:master && exit 0
+            sleep $((2 ** essai)); git pull --rebase origin master
+          done
+          exit 1

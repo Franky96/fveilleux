@@ -1,0 +1,63 @@
+"""Les 52 circonscriptions du Congrès des députés (50 provinces, Ceuta et Melilla) : code INE, nom français, noms officiels
+(et formes employées par le ministère de l'Intérieur), communauté autonome et sièges de 2026.
+
+Sièges : décret royal 806/2026 de dissolution et de convocation (BOE du 6 octobre 2026), annexe : comme en 2023, sauf Madrid
+(37 → 38) et Cadix (9 → 8). Total 350. Module commun à carte.py et resultats2023.py.
+"""
+
+# code: (nom français, [noms officiels et variantes], communauté autonome, sièges 2026)
+PROVINCES = {
+    "01": ("Alava", ["Araba/Álava", "Araba - Álava", "Álava", "Araba"], "PV", 4),
+    "02": ("Albacete", ["Albacete"], "CM", 4),
+    "03": ("Alicante", ["Alicante/Alacant", "Alicante", "Alacant"], "VC", 12),
+    "04": ("Almería", ["Almería"], "AN", 6),
+    "05": ("Ávila", ["Ávila"], "CL", 3),
+    "06": ("Badajoz", ["Badajoz"], "EX", 5),
+    "07": ("Baléares", ["Illes Balears", "Islas Baleares", "Baleares", "Balears"], "IB", 8),
+    "08": ("Barcelone", ["Barcelona"], "CT", 32),
+    "09": ("Burgos", ["Burgos"], "CL", 4),
+    "10": ("Cáceres", ["Cáceres"], "EX", 4),
+    "11": ("Cadix", ["Cádiz"], "AN", 8),
+    "12": ("Castellón", ["Castellón/Castelló", "Castellón", "Castelló"], "VC", 5),
+    "13": ("Ciudad Real", ["Ciudad Real"], "CM", 5),
+    "14": ("Cordoue", ["Córdoba"], "AN", 6),
+    "15": ("La Corogne", ["A Coruña", "La Coruña", "Coruña, A"], "GA", 8),
+    "16": ("Cuenca", ["Cuenca"], "CM", 3),
+    "17": ("Gérone", ["Girona", "Gerona"], "CT", 6),
+    "18": ("Grenade", ["Granada"], "AN", 7),
+    "19": ("Guadalajara", ["Guadalajara"], "CM", 3),
+    "20": ("Guipuscoa", ["Gipuzkoa", "Guipúzcoa"], "PV", 6),
+    "21": ("Huelva", ["Huelva"], "AN", 5),
+    "22": ("Huesca", ["Huesca"], "AR", 3),
+    "23": ("Jaén", ["Jaén"], "AN", 5),
+    "24": ("León", ["León"], "CL", 4),
+    "25": ("Lérida", ["Lleida", "Lérida"], "CT", 4),
+    "26": ("La Rioja", ["La Rioja", "Rioja, La"], "RI", 4),
+    "27": ("Lugo", ["Lugo"], "GA", 4),
+    "28": ("Madrid", ["Madrid"], "MD", 38),
+    "29": ("Malaga", ["Málaga"], "AN", 11),
+    "30": ("Murcie", ["Murcia"], "MC", 10),
+    "31": ("Navarre", ["Navarra", "Nafarroa"], "NC", 5),
+    "32": ("Ourense", ["Ourense", "Orense"], "GA", 4),
+    "33": ("Asturies", ["Asturias"], "AS", 7),
+    "34": ("Palencia", ["Palencia"], "CL", 3),
+    "35": ("Las Palmas", ["Las Palmas", "Palmas, Las"], "CN", 8),
+    "36": ("Pontevedra", ["Pontevedra"], "GA", 7),
+    "37": ("Salamanque", ["Salamanca"], "CL", 4),
+    "38": ("Santa Cruz de Ténérife", ["Santa Cruz de Tenerife", "S.C. Tenerife", "Tenerife"], "CN", 7),
+    "39": ("Cantabrie", ["Cantabria"], "CB", 5),
+    "40": ("Ségovie", ["Segovia"], "CL", 3),
+    "41": ("Séville", ["Sevilla"], "AN", 12),
+    "42": ("Soria", ["Soria"], "CL", 2),
+    "43": ("Tarragone", ["Tarragona"], "CT", 6),
+    "44": ("Teruel", ["Teruel"], "AR", 3),
+    "45": ("Tolède", ["Toledo"], "CM", 6),
+    "46": ("Valence", ["Valencia/València", "Valencia", "València"], "VC", 16),
+    "47": ("Valladolid", ["Valladolid"], "CL", 5),
+    "48": ("Biscaye", ["Bizkaia", "Vizcaya"], "PV", 8),
+    "49": ("Zamora", ["Zamora"], "CL", 3),
+    "50": ("Saragosse", ["Zaragoza"], "AR", 7),
+    "51": ("Ceuta", ["Ceuta"], "CE", 1),
+    "52": ("Melilla", ["Melilla"], "ML", 1),
+}
+assert sum(p[3] for p in PROVINCES.values()) == 350, sum(p[3] for p in PROVINCES.values())
