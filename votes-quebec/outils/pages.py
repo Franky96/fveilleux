@@ -1,7 +1,10 @@
 """Section « Intentions de vote et simulations » : une page par onglet, tirées d'un même gabarit (pages.src.html).
 
-    en-direct.html               soirée d'un vote, à gauche de l'Accueil (en ce moment : élection en Colombie-Britannique, en-direct/direct.js)
-    referendum-alberta-2026.html ancienne soirée (référendum en Alberta, en-direct/alberta-2026/direct.js), bouton « Anciennes élections » de l'Accueil
+    en-direct.html               soirée d'un vote, à gauche de l'Accueil (en ce moment : mi-mandat aux États-Unis, en-direct/direct.js),
+                                 avec un sous-menu des autres soirées (DIRECTS : en-direct-bulgarie.html, -nouvelle-zelande, -taiwan, -espagne),
+                                 toutes dans le même cadre (bloc « gen » du gabarit, {{…}} remplacés ici)
+    election-cb-2026.html        ancienne soirée (élection en Colombie-Britannique, en-direct/cb-2026/direct.js), bouton « Anciennes élections » de l'Accueil
+    referendum-alberta-2026.html ancienne soirée (référendum en Alberta, en-direct/alberta-2026/direct.js), idem
     intentions-simulations.html  accueil de la section (une carte par page)
     votes-quebec.html            intentions de vote (résultat de l'élection jusqu'au premier sondage)
     loi39.html                   simulation de la loi 39
@@ -26,12 +29,32 @@ ARRIVEE_EN_DIRECT = True
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
-FICHIER = {"direct": "en-direct.html", "ab2026": "referendum-alberta-2026.html", "live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
+FICHIER = {"direct": "en-direct.html", "bg": "en-direct-bulgarie.html", "nz": "en-direct-nouvelle-zelande.html", "tw": "en-direct-taiwan.html", "es": "en-direct-espagne.html",
+           "cb2026": "election-cb-2026.html", "ab2026": "referendum-alberta-2026.html", "live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
            "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html",
            "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html", "alberta": "votes-alberta.html"}
-PAGES = ["direct", "ab2026", "live", "votes", "loi39"]          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
-TITRE = {"direct": "En direct · élection en Colombie-Britannique", "ab2026": "Référendum en Alberta (2026)", "live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
-SCRIPTS = {"direct": "en-direct/direct.js", "ab2026": "en-direct/alberta-2026/direct.js", "live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
+# soirées « En direct » (sous-menu de l'onglet) : même cadre, le bloc « gen » du gabarit, avec ces textes
+DIRECTS = {
+    "direct": {"H2": "Élections de mi-mandat aux États-Unis · 3 novembre 2026", "SUR": "Chambre des représentants · 435 sièges · majorité 218",
+               "CHOIX": "Élection affichée", "CARTE": "Carte des résultats, colorée selon le parti en tête", "CLASSEMENT": "Toutes les courses"},
+    "bg": {"H2": "Présidentielle en Bulgarie · 2e tour · 1er novembre 2026", "SUR": "Ensemble de la Bulgarie",
+           "CHOIX": "Tour affiché", "CARTE": "Carte des circonscriptions électorales de la Bulgarie, colorées selon le candidat en tête", "CLASSEMENT": "Les circonscriptions"},
+    "nz": {"H2": "Élections générales en Nouvelle-Zélande · 7 novembre 2026", "SUR": "Chambre des représentants · 120 sièges environ · majorité 61",
+           "CHOIX": "Vote affiché", "CARTE": "Carte des circonscriptions de la Nouvelle-Zélande, colorées selon le parti en tête", "CLASSEMENT": "Les circonscriptions"},
+    "tw": {"H2": "Élections locales à Taïwan · 28 novembre 2026", "SUR": "22 maires et chefs de comté",
+           "CHOIX": "Élection affichée", "CARTE": "Carte des municipalités et comtés de Taïwan, colorés selon le parti en tête", "CLASSEMENT": "Les 22 municipalités et comtés"},
+    "es": {"H2": "Élections générales en Espagne · 29 novembre 2026", "SUR": "Congrès des députés · 350 sièges · majorité 176",
+           "CHOIX": "Chambre affichée", "CARTE": "Carte des 52 circonscriptions (provinces) de l'Espagne, colorées selon le parti en tête", "CLASSEMENT": "Les 52 circonscriptions"},
+}
+# soirées déjà prêtes (module écrit et vérifié) : les autres ne sont ni générées ni dans le sous-menu
+PRETES = {"direct"}
+BLOCS = ["cb2026", "ab2026", "live", "votes", "loi39"]          # vues qui ont leur propre bloc dans le gabarit (les soirées de DIRECTS prennent « gen »)
+PAGES = list(DIRECTS) + BLOCS          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
+TITRE = {"direct": "En direct · mi-mandat aux États-Unis", "bg": "En direct · présidentielle en Bulgarie", "nz": "En direct · élections en Nouvelle-Zélande",
+         "tw": "En direct · élections locales à Taïwan", "es": "En direct · élections en Espagne",
+         "cb2026": "Élection en Colombie-Britannique (2026)", "ab2026": "Référendum en Alberta (2026)", "live": "Intentions de vote et simulations", "votes": "Votes Québec", "loi39": "Loi 39"}
+SCRIPTS = {"direct": "en-direct/direct.js", "bg": "en-direct/bulgarie/direct.js", "nz": "en-direct/nouvelle-zelande/direct.js", "tw": "en-direct/taiwan/direct.js",
+           "es": "en-direct/espagne/direct.js", "cb2026": "en-direct/cb-2026/direct.js", "ab2026": "en-direct/alberta-2026/direct.js", "live": "votes-quebec/accueil.js", "votes": "votes-quebec/intentions.js", "loi39": "votes-quebec/loi39.js"}
 
 src = open(os.path.join(ICI, "pages.src.html"), encoding="utf-8").read()
 src = re.sub(r"<!-- GABARIT :.*?-->\n", "", src, count=1)
@@ -40,9 +63,12 @@ src = re.sub(r"<!-- GABARIT :.*?-->\n", "", src, count=1)
 def page(vue):
     s = src
     # une seule vue : on retire les deux autres, et la nôtre n'est plus cachée
-    for v in PAGES:
+    for v in BLOCS + ["gen"]:
         bloc = re.compile(rf"<!-- DEBUT:{v} -->\n(.*?)<!-- FIN:{v} -->\n", re.S)
-        s = bloc.sub((lambda m: m.group(1)) if v == vue else "", s)
+        s = bloc.sub((lambda m: m.group(1)) if v == vue or (v == "gen" and vue in DIRECTS) else "", s)
+    if vue in DIRECTS:
+        for k, t in DIRECTS[vue].items(): s = s.replace("{{" + k + "}}", t.replace("&", "&amp;").replace('"', "&quot;"))
+        assert "{{" not in s, "texte {{…}} non remplacé dans " + vue
     s = s.replace(' role="tabpanel" aria-labelledby="tab-live" hidden>', ">").replace(' role="tabpanel" aria-labelledby="tab-votes" aria-busy="true" hidden>', ' aria-busy="true">')
     s = s.replace(' role="tabpanel" aria-labelledby="tab-loi39"', "")
     s = s.replace(' role="tabpanel" aria-labelledby="tab-direct" hidden>', ">")
@@ -53,7 +79,7 @@ def page(vue):
         v = re.search(r'data-vue="(\w+)"', attrs).group(1)
         classe = re.search(r'class="([^"]+)"', attrs).group(1)
         # « Votes Québec » (ligne du haut) reste la page courante sur ses simulations (loi 39)
-        courant = ' aria-current="page"' if v == vue or (vue == "loi39" and v == "votes" and "sc-sous-tab" not in classe) else ""
+        courant = ' aria-current="page"' if v == vue or ("sc-sous-tab" not in classe and ((vue == "loi39" and v == "votes") or (vue in DIRECTS and v == "direct"))) else ""
         # page d'arrivée temporaire : l'onglet Accueil garde son adresse propre (#accueil), qui ne renvoie pas vers En direct
         href = FICHIER[v] + ("#accueil" if v == "live" and ARRIVEE_EN_DIRECT else "")
         return f'<a class="{classe}" href="{href}"{courant}>{contenu}</a>'
@@ -61,6 +87,10 @@ def page(vue):
     s = s.replace('<div class="sc-tabs" role="tablist">', '<div class="sc-tabs">').replace('<div class="sc-sous" role="tablist"', '<div class="sc-sous"')
     # sous-menu du Québec : seulement sur ses pages (intentions de vote, simulations)
     s = re.sub(r"<!-- DEBUT:sous-quebec -->\n(.*?)<!-- FIN:sous-quebec -->\n", (lambda m: m.group(1)) if vue in ("votes", "loi39") else "", s, flags=re.S)
+    # sous-menu « En direct » : seulement sur les soirées
+    s = re.sub(r"<!-- DEBUT:sous-direct -->\n(.*?)<!-- FIN:sous-direct -->\n", (lambda m: m.group(1)) if vue in DIRECTS else "", s, flags=re.S)
+    pas_pretes = {FICHIER[v] for v in DIRECTS if v not in PRETES}
+    s = re.sub(r'      <a class="sc-tab sc-sous-tab" href="([^"]+)".*?</a>\n', lambda m: "" if m.group(1) in pas_pretes else m.group(0), s)
     # barre du haut : seulement le titre de cette page
     for v in PAGES:
         s = re.sub(rf'<span class="t-{v}"( hidden)?>', f'<span class="t-{v}"{"" if v == vue else " hidden"}>', s)
@@ -83,7 +113,9 @@ def page(vue):
     print(f"{FICHIER[vue]:30} {len(s):7} octets")
 
 
-for v in PAGES: page(v)
+for v in PAGES:
+    if v in DIRECTS and v not in PRETES: continue
+    page(v)
 
 # démo de la page des intentions de vote (sondages fictifs) : pas dans les onglets, adresse directe seulement
 demo = open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read()

@@ -1,187 +1,141 @@
-/* Page « En direct » (en-direct.html) : élection générale en Colombie-Britannique du samedi 24 octobre 2026 (élection anticipée,
-   93 circonscriptions, majorité 47). Reprend les blocs de l'ancien direct de l'élection québécoise (votes-quebec/live.js) et du
-   référendum en Alberta (archivé : en-direct/alberta-2026/) : lecture chaque minute avec décompte, sièges et voix par parti, carte
-   des circonscriptions avec zooms et plein écran, fiche, circonscriptions suivies avec alertes, classement.
+/* Page « En direct » (en-direct.html) : élections de mi-mandat aux États-Unis du mardi 3 novembre 2026. Les 435 sièges de la Chambre
+   des représentants (majorité 218), 35 sièges du Sénat (33 de la classe 2, et deux élections spéciales : Ohio et Floride) et 36 gouverneurs.
+   Même cadre que les autres soirées de novembre (bloc « gen » du gabarit) et mêmes blocs que la soirée de la Colombie-Britannique
+   (archivée : en-direct/cb-2026/) : lecture chaque minute avec décompte, sièges par parti, carte avec zooms et plein écran, fiche,
+   courses suivies avec alertes, classement ; choix Chambre · Sénat · Gouverneurs.
 
-   Données : api/cb.php (relais des pages de résultats d'Elections BC, cache 45 s : pas d'en-tête CORS) ; à défaut,
-   en-direct/resultats.json (copie du pipeline GitHub, en-direct/outils/cb.py). Les deux rendent les pages brutes ; on les lit ici
-   en reconnaissant les candidats de la liste officielle (en-direct/candidats.json) : l'ordre des colonnes importe peu.
-   Carte : en-direct/circonscriptions.json (93 circonscriptions de 2023, BC Data Catalogue, Open Government Licence – British Columbia),
-   découpées au littoral (terres d'OpenStreetMap simplifiées, osmdata.openstreetmap.de, ODbL) : la mer et les îles se voient.
-   Élection de 2024 (mêmes circonscriptions) : en-direct/resultats-2024.json (gains, comparaison). */
+   Résultats : api/usa.php (relais des flux de CNN, cache 30 s) ; sinon les flux de CNN lus directement (ils permettent la lecture
+   depuis un autre site) ; sinon en-direct/etats-unis/resultats.json (copie du pipeline GitHub, en-direct/etats-unis/outils/usa.py).
+   Avant les résultats : cotes du consensus de 270toWin, sortants et candidats (votes-usa/projection.json, pipeline de Votes États-Unis ;
+   gouverneurs : en-direct/etats-unis/gouverneurs.json), carte en-direct/etats-unis/carte.json (Census, comme Votes États-Unis).
+   Démo (admin) : en-direct.html?demo=2024 (résultats de 2024, même format ; districts de 2026 : quelques États redécoupés ne correspondent pas). */
 
 const RAFRAICHIR = 60;                                         // secondes entre deux lectures
-const NB = 93, MAJ = 47;
-const OUVERTURE = new Date("2026-10-24T08:00:00-07:00"), FERMETURE = new Date("2026-10-24T20:00:00-07:00");   // heure avancée du Pacifique
-const SITE_RES = "https://elections.bc.ca/resources/results/provincial-election-results/";
+const PARAMS = new URLSearchParams(location.search), DEMO = PARAMS.get("demo") === "2024" ? "2024" : null;
+const ANNEE = DEMO || "2026";
 const SERRE = 5;                                               // lutte serrée : moins de 5 points d'écart
+const SITE_RES = "https://www.cnn.com/election/2026/results";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const nf = (x, d = 0) => (x ?? 0).toLocaleString("fr-CA", { minimumFractionDigits: d, maximumFractionDigits: d });
-const norm = s => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
 const heureQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "America/Toronto" });
 const secQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Toronto" });
-const heureCb = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "America/Vancouver" });
 const deux = n => String(n).padStart(2, "0");
 const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}`; };
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
+const h = t => t.replace(":", " h ").replace(/ h 00$/, " h");   // « 19:30 » → « 19 h 30 »
 
-/* ---------- partis (liste officielle des candidats d'Elections BC, 3 octobre 2026) ---------- */
+/* ---------- partis, cotes ---------- */
 const PARTIS = {
-  ndp: { court: "NPD", nom: "Nouveau Parti démocratique de la C.-B.", chef: "David Eby (premier ministre sortant)", c: "#F37021", s24: 47, v24: 44.86 },
-  con: { court: "PCCB", nom: "Parti conservateur de la C.-B.", chef: "Lorne Doerkson (chef par intérim)", c: "#1A4E8C", s24: 44, v24: 43.28 },
-  grn: { court: "Verts", nom: "Parti vert de la C.-B.", chef: "Emily Lowan", c: "#3A9A3E", s24: 2, v24: 8.24 },
-  ctr: { court: "CentreBC", nom: "CentreBC", chef: "Elenore Sturko", c: "#8E5BB5", s24: 0 },
-  one: { court: "OneBC", nom: "OneBC", chef: "Dallas Brodie (cheffe par intérim)", c: "#9B2335", s24: 0 },
-  ind: { court: "Ind.", nom: "Indépendants", c: "#6B7280", s24: 0 },
-  aut: { court: "Autres", nom: "Autres partis", c: "#A3A8B1", s24: 0 },
+  D: { court: "D", nom: "Parti démocrate", pl: "démocrates", c: "#2F6BD8" },
+  R: { court: "R", nom: "Parti républicain", pl: "républicains", c: "#D63A3A" },
+  I: { court: "Ind.", nom: "Indépendants", pl: "indépendants", c: "#8A6FD1" },
+  A: { court: "Autres", nom: "Autres partis", pl: "autres", c: "#8D949A" },
 };
-const ORDRE_P = ["ndp", "con", "grn", "ctr", "one", "ind", "aut"];
-const coulP = p => PARTIS[p]?.c || PARTIS.aut.c;
+const groupe = p => p === "D" || p === "R" || p === "I" ? p : "A";
+const coulP = p => PARTIS[groupe(p)].c;
+const nomParti = p => ({ D: "démocrate", R: "républicain", I: "indépendant", L: "libertarien", G: "vert", C: "Constitution" }[p] || p || "autre");
+const COTES = ["D3", "D2", "D1", "T", "R1", "R2", "R3"];
+const COTE = { D3: ["#1E4CA6", "Sûr D"], D2: ["#4F82DE", "Probable D"], D1: ["#93B5EE", "Penché D"], T: ["#C9A93A", "À égalité"],
+  R1: ["#F2A0A0", "Penché R"], R2: ["#E05A5A", "Probable R"], R3: ["#A81E1E", "Sûr R"], N: ["#8D949A", "Non coté"] };
 
-// grandes régions (pour les zooms) : préfixes des codes ou noms
-const ZONES = {
-  van: n => /^Vancouver/.test(n),
-  sur: n => /^Surrey/.test(n),
-  vic: n => /^(Victoria|Saanich|Oak Bay|Esquimalt|Langford)/.test(n),
-  ok: n => /^(Kelowna|Penticton|Vernon|West Kelowna)/.test(n),
-  gv: n => !/Sea to Sky/.test(n) && /^(Vancouver|Burnaby|Surrey|Richmond|Delta|Coquitlam|Port Coquitlam|Port Moody|New Westminster|North Vancouver|West Vancouver|Langley|Maple Ridge|Pitt Meadows)/.test(n),
-};
+/* ---------- heures de fermeture (dernière fermeture dans l'État, heure de l'Est = heure du Québec, mardi 3 novembre) ----------
+   270toWin, « 2026 Poll Closing Times » (d'après The Green Papers) ; un État sur deux fuseaux est classé à sa dernière fermeture. */
+const FERMETURES = [
+  ["19:00", "GA IN KY SC VA VT"], ["19:30", "NC OH WV"], ["20:00", "AL CT DE DC FL IL ME MD MA MS MO NH NJ OK PA RI TN"], ["20:30", "AR"],
+  ["21:00", "AZ CO IA KS LA MI MN NE NM NY ND SD TX WI WY"], ["22:00", "MT NV UT"], ["23:00", "CA ID OR WA"], ["00:00", "HI"], ["01:00", "AK"],
+];
+const quand = hh => new Date(`2026-11-0${hh < "12" ? 4 : 3}T${hh}:00-05:00`);
+const PREMIERE = new Date("2026-11-03T18:00:00-05:00");          // premières fermetures : est de l'Indiana et du Kentucky
+const DERNIERE = quand("01:00");
+const FERME_ETAT = {}; for (const [hh, L] of FERMETURES) for (const ab of L.split(" ")) FERME_ETAT[ab] = hh;
+const etatFerme = ab => DEMO || new Date() >= quand(FERME_ETAT[ab] || "01:00");
 
-let GEO = null, PAR_CODE = {}, CANDS = {}, R24 = {}, RES = null, brut = null, lu = null;
-let sel = null, carteMarge = false, carteGains = false, prochaine = 0;
+/* ---------- données ---------- */
+let CARTE = null, PROJ = null, GOUV = null, ETATS = {}, AB = {}, RES = null, brut = null, lu = null, prochaine = 0;
+let vue = lireLS(localStorage, "usVue", "H"); if (!["H", "S", "G"].includes(vue)) vue = "H";
+let mode = null;                                                // res · prev · gains (null : selon qu'il y a des résultats)
+let sel = null;
+const VUES = { H: { nom: "Chambre", long: "Chambre des représentants", n: 435, maj: 218, unite: "siège" }, S: { nom: "Sénat", long: "Sénat", n: 100, maj: 51, unite: "siège" },
+  G: { nom: "Gouverneurs", long: "Gouverneurs", n: 50, maj: 26, unite: "gouverneur" } };
+const nomEtat = fips => ETATS[fips]?.nom || fips;
 
-/* ---------- lecture des pages d'Elections BC ----------
-   On ne suppose pas l'ordre des colonnes : dans chaque ligne de tableau (ou objet JSON), un nom de candidat de la liste officielle
-   donne la circonscription et le parti ; le plus grand nombre entier de la ligne (hors pourcentages) donne les voix. */
-let INDEX = null;                                        // nom normalisé → [{ code, cand }]
-function indexer() {
-  INDEX = new Map();
-  for (const [code, L] of Object.entries(CANDS)) for (const c of L) {
-    const k = norm(c.nom); if (!INDEX.has(k)) INDEX.set(k, []); INDEX.get(k).push({ code, cand: c });
+// courses de chaque vue : identifiant → { nom, etat, cote, sortant, held, cands }
+const COURSES = { H: {}, S: {}, G: {} };
+function preparerCourses() {
+  for (const f of CARTE.districts.features) {
+    const id = f.properties.id, c = PROJ.circ?.[id] || {}, act = PROJ.actuel?.[id];
+    COURSES.H[id] = { id, nom: f.properties.n, etat: id.slice(0, 2), cote: c.r || "N", held: c.held || act?.p || "", sortant: c.rep || act?.nom || "",
+      ret: !!c.ret, cands: c.cands || [], mc: c.mc, mp: c.mp };
   }
-}
-const entier = t => { const s = String(t).trim(); return /^\d{1,3}([ ,  ]?\d{3})*$|^\d+$/.test(s) ? +s.replace(/\D/g, "") : null; };
-function trouverCand(texte, code) {
-  const k = norm(texte); if (k.length < 4) return null;
-  let L = INDEX.get(k);
-  if (!L) for (const [nom, l] of INDEX) if (k.includes(nom) && nom.length >= 6) { L = l; break; }   // « Pam Alexis (BC NDP) », « ✔ Pam Alexis »
-  if (!L) return null;
-  return (code && L.find(x => x.code === code)) || (L.length === 1 ? L[0] : null);
-}
-function trouverCirc(texte) {
-  const k = norm(texte); if (!k) return null;
-  for (const [code, nom] of Object.entries(PAR_CODE)) if (norm(nom) === k || norm(code) === k) return code;
-  return null;
-}
-function ajouter(out, code, cand, voix, elu) {
-  const c = out.circ[code] ||= { cands: {}, sec: null };
-  const prev = c.cands[cand.nom];
-  if (!prev || voix > prev.voix) c.cands[cand.nom] = { nom: cand.nom, parti: cand.parti, aff: cand.aff, voix, elu: !!elu || !!prev?.elu };
-}
-function sections(out, code, txt) {
-  const m = /(\d[\d,]*)\s*(?:of|\/|sur|de)\s*(\d[\d,]*)/i.exec(txt);
-  if (code && m && /poll|ballot|box|report|section|count|urne/i.test(txt)) out.circ[code] ||= { cands: {}, sec: null }, out.circ[code].sec = [+m[1].replace(/,/g, ""), +m[2].replace(/,/g, "")];
-}
-// rapport « Results by Candidate » d'Elections BC (results.elections.bc.ca, Results_<n>_GE-2026-10-24_Candidate.html) : une ligne
-// tr[data-ed] par candidat (td[data-canname], affiliation, voix, %), puis les totaux et deux lignes « … ballot boxes | a of b reported »
-const AFF = { "bc ndp": "ndp", "conservative party": "con", "bc green party": "grn", "centrebc": "ctr", "onebc": "one", "independent": "ind", "unaffiliated": "ind" };
-function lireRapportEbc(doc, out) {
-  const lignes = doc.querySelectorAll("#tblReport tr[data-ed]");
-  if (!lignes.length) return false;
-  const boites = {};
-  for (const tr of lignes) {
-    const code = trouverCirc(tr.dataset.ed); if (!code) continue;
-    const c = out.circ[code] ||= { cands: {}, sec: null };
-    const tds = [...tr.children].map(td => td.textContent.replace(/\s+/g, " ").trim());
-    const nomTd = tr.querySelector("td[data-canname]");
-    if (nomTd) {
-      const nom = (nomTd.dataset.canname || nomTd.textContent).trim();
-      const cand = trouverCand(nom, code)?.cand || { nom, parti: AFF[(tds[2] || "").toLowerCase()] || "aut", aff: tds[2] || "" };
-      ajouter(out, code, cand, entier(tds[3]) ?? 0, /elected|✓|✔/i.test(tr.textContent) || !!tr.querySelector(".elected, [class*=elect], img[alt*=lect i]"));
-      continue;
-    }
-    if (/^Rejected/i.test(tds[1] || "")) { c.rej = entier(tds[3]) ?? 0; continue; }
-    const m = /ballot boxes\s*\|\s*([\d,]+)\s+of\s+([\d,]+)/i.exec(tds.join(" "));
-    if (m) { const b = boites[code] ||= [0, 0]; b[0] += +m[1].replace(/,/g, ""); b[1] += +m[2].replace(/,/g, ""); c.sec = b.slice(); }
+  for (const [fips, e] of Object.entries(PROJ.senat?.etats || {})) for (const c of e.courses || []) {
+    const sortant = e.senateurs.find(s => s.fin === 2026) || {};
+    COURSES.S[fips] = { id: fips, nom: nomEtat(fips), etat: fips, cote: c.r || "N", held: c.held || sortant.p || "", sortant: sortant.nom || "", special: !!c.special,
+      ret: !!c.ret, cands: c.cands || [], autre: e.senateurs.find(s => s !== sortant) };
   }
-  // résumé du haut : urnes dépouillées, participation préliminaire, électeurs inscrits
-  const t = doc.body.textContent.replace(/\s+/g, " ");
-  const num = re => { const m = re.exec(t); return m ? +m[1].replace(/,/g, "") : null; };
-  out.resume = { urnes: num(/([\d.]+)\s*%\s*Of ballot boxes reporting/i), part: num(/([\d.]+)\s*%\s*Preliminary Voter Turnout/i),
-    consid: num(/([\d,]+)\s*Total Votes Considered/i), inscrits: num(/([\d,]+)\s*Registered voters/i) };
-  return true;
+  for (const [fips, e] of Object.entries(GOUV.etats)) if (e.course)
+    COURSES.G[fips] = { id: fips, nom: nomEtat(fips), etat: fips, cote: e.r || "N", held: e.p, sortant: e.gov, ret: !!e.ret, limite: !!e.limite, cands: e.cands || [] };
 }
-function lireHtml(corps, out) {
-  const doc = new DOMParser().parseFromString(corps, "text/html");
-  if (lireRapportEbc(doc, out)) return;
-  let courant = null;
-  for (const el of doc.querySelectorAll("h1,h2,h3,h4,h5,caption,tr,p,div.ed,span.ed")) {
-    if (el.tagName !== "TR") { const c = trouverCirc(el.textContent) || trouverCirc(el.textContent.split(/[-–:(]/)[0]); if (c) courant = c; sections(out, courant, el.textContent); continue; }
-    const cells = [...el.children].map(td => td.textContent.replace(/\s+/g, " ").trim());
-    for (const t of cells) { const c = trouverCirc(t); if (c) { courant = c; break; } }
-    let cand = null; for (const t of cells) { cand = trouverCand(t, courant); if (cand) break; }
-    if (!cand) { sections(out, courant, cells.join(" ")); continue; }
-    courant = cand.code;
-    const nombres = cells.filter(t => !/%/.test(t)).map(entier).filter(v => v != null);
-    const elu = cells.some(t => /^(elected|élu|élue|✓|✔|y|yes)$/i.test(t)) || !!el.querySelector("img[alt*=lect i], .elected, [class*=elected]");
-    if (nombres.length) ajouter(out, cand.code, cand.cand, Math.max(...nombres), elu);
-  }
+// sièges qui ne sont pas en élection (Sénat : classes 1 et 3 ; gouverneurs : 14 États)
+function horsCourse(v) {
+  const n = { D: 0, R: 0, I: 0, A: 0 };
+  if (v === "S") for (const [fips, e] of Object.entries(PROJ.senat?.etats || {})) for (const s of e.senateurs) { if (!(COURSES.S[fips] && s.fin === 2026)) n[groupe(s.p)]++; }
+  if (v === "G") for (const e of Object.values(GOUV.etats)) if (!e.course) n[groupe(e.p)]++;
+  return n;
 }
-function lireJson(o, out, cle = "", circ = null) {
-  if (Array.isArray(o)) { for (const x of o) lireJson(x, out, cle, circ); return; }
-  if (!o || typeof o !== "object") return;
-  const vals = Object.entries(o);
-  for (const [, v] of vals) if (typeof v === "string") { const c = trouverCirc(v); if (c) { circ = c; break; } }
-  let cand = null;
-  for (const [, v] of vals) if (typeof v === "string") { cand = trouverCand(v, circ); if (cand) break; }
-  if (cand) {
-    const num = vals.filter(([k, v]) => typeof v === "number" || (typeof v === "string" && entier(v) != null)).map(([k, v]) => [k, typeof v === "number" ? v : entier(v)]);
-    const voix = num.find(([k]) => /vote/i.test(k) && !/pct|percent|%/i.test(k)) || num.filter(([k, v]) => Number.isInteger(v)).sort((a, b) => b[1] - a[1])[0];
-    const elu = vals.some(([k, v]) => /elect|winner|elu/i.test(k) && (v === true || /^(y|yes|true|elected)$/i.test(String(v))));
-    if (voix) ajouter(out, cand.code, cand.cand, voix[1], elu);
-  } else if (circ) {
-    const rep = vals.find(([k]) => /report|counted|complete/i.test(k)), tot = vals.find(([k]) => /total.*(poll|box)|(poll|box).*total|expected/i.test(k));
-    if (rep && tot && +rep[1] >= 0 && +tot[1] > 0) { out.circ[circ] ||= { cands: {}, sec: null }; out.circ[circ].sec = [+rep[1], +tot[1]]; }
-  }
-  for (const [k, v] of vals) if (v && typeof v === "object") lireJson(v, out, k, circ);
-}
+
+/* ---------- lecture des flux de CNN : clé « 2026-HG-CA-13 », « 2026-SG-OH », « 2026-S2G-OH » (spéciale), « 2026-GG-AZ » ---------- */
 function normaliser(d) {
-  if (!INDEX) indexer();
-  const out = { maj: d.maj ? new Date(d.maj) : null, circ: {}, pages: 0 };
-  for (const p of d.pages || []) {
-    out.pages++;
-    try { if (p.type === "json" || /^\s*[[{]/.test(p.corps)) lireJson(JSON.parse(p.corps), out); else lireHtml(p.corps, out); } catch { /* page illisible */ }
+  const out = { maj: d.maj ? new Date(d.maj) : null, H: {}, S: {}, G: {}, lus: 0 };
+  for (const [t, L] of Object.entries(d.courses || {})) for (const r of L || []) {
+    const m = /^\d{4}-(H|S2?|G)G-([A-Z]{2})(?:-(\d+))?$/.exec(r.k || ""); if (!m) continue;
+    const fips = AB[m[2]]; if (!fips) continue;
+    const v = m[1] === "H" ? "H" : m[1] === "G" ? "G" : "S";
+    let id = fips;
+    if (v === "H") { id = fips + deux(+m[3] || 0); if (!COURSES.H[id] && COURSES.H[fips + "00"]) id = fips + "00"; }   // district unique : « -1 » chez CNN, « 00 » ici
+    if (!COURSES[v][id] && !DEMO) continue;
+    const cands = (r.cands || []).map(c => ({ nom: c.nom, p: c.p, v: c.v || 0, g: !!c.g, sortant: !!c.sortant, tour2: !!c.tour2 })).sort((a, b) => b.v - a.v || b.g - a.g);
+    const total = cands.reduce((s, c) => s + c.v, 0);
+    const gagnant = cands.find(c => c.g);
+    out[v][id] = { cands, total, pct: r.pct, appel: !!gagnant, gagnant, tour2: cands.some(c => c.tour2), ferme: r.ferme, maj: r.maj ? new Date(r.maj) : null };
   }
-  for (const c of Object.values(out.circ)) {
-    c.cands = Object.values(c.cands).sort((a, b) => b.voix - a.voix);
-    c.total = c.cands.reduce((s, k) => s + k.voix, 0);
-    c.final = c.cands.some(k => k.elu) || (c.sec && c.sec[1] && c.sec[0] >= c.sec[1]);
-    c.frac = c.sec && c.sec[1] ? Math.min(1, c.sec[0] / c.sec[1]) : null;
-  }
-  out.lus = Object.values(out.circ).filter(c => c.total > 0).length;
+  for (const v of ["H", "S", "G"]) out.lus += Object.values(out[v]).filter(a => a.total > 0 || a.appel).length;
   return out;
 }
 
-/* ---------- lecture : relais du site, sinon copie du pipeline ---------- */
+/* ---------- lecture : relais du site, puis flux de CNN directement, puis copie du pipeline ---------- */
 async function lireRelais() {
-  const r = await fetch("api/cb.php?type=resultats", { credentials: "include", cache: "no-store" });
+  const r = await fetch(`api/usa.php?annee=${ANNEE}`, { credentials: "include", cache: "no-store" });
   if (r.status === 401) throw new Error("Session expirée : reconnecte-toi.");
-  try { const d = await r.json(); return d && d.pages ? d : null; } catch { return null; }   // pas de PHP (serveur local) : copie du pipeline
+  try { const d = await r.json(); return d && d.courses ? d : null; } catch { return null; }   // pas de PHP (serveur local)
+}
+async function lireCnn() {
+  const courses = {};
+  await Promise.all(["HG", "SG", "GG"].map(async t => {
+    const r = await fetch(`https://politics.api.cnn.io/results/national-races/${ANNEE}-${t}.json`, { cache: "no-store" }).catch(() => null);
+    if (!r?.ok) return;
+    const d = await r.json().catch(() => null); if (!Array.isArray(d)) return;
+    courses[t] = d.filter(x => (x.electionType || "G") === "G").map(x => ({ k: x.ecKey, st: x.stateAbbreviation, pct: x.percentReporting, ferme: x.raceEmbargo?.pollsClosed,
+      maj: x.voteTimestamp, cands: (x.candidates || []).map(c => ({ nom: c.fullName, p: c.candidatePartyCode, v: c.voteNum || 0, g: !!c.winner, sortant: !!c.isIncumbent, tour2: !!c.runoffCandidate })) }));
+  }));
+  return Object.keys(courses).length ? { disponible: true, maj: new Date().toISOString(), courses } : null;
 }
 async function lireCopie() {
-  const r = await fetch("en-direct/resultats.json", { cache: "no-cache" });
+  if (DEMO) return null;
+  const r = await fetch("en-direct/etats-unis/resultats.json", { cache: "no-cache" });
   return r.ok ? { ...(await r.json()), publie: r.headers.get("last-modified") } : null;
 }
 async function lire() {
-  let relais = null, copie = null;
-  try { relais = await lireRelais(); } catch (e) { if (/Session/.test(e.message)) throw e; }
-  if (!relais?.disponible) copie = await lireCopie().catch(() => null);
-  if (relais?.disponible) return { ...relais, via: "relais" };
+  let d = null;
+  try { d = await lireRelais(); } catch (e) { if (/Session/.test(e.message)) throw e; }
+  if (d?.disponible) return { ...d, via: "relais" };
+  const cnn = await lireCnn().catch(() => null);
+  if (cnn) return { ...cnn, via: "cnn" };
+  const copie = await lireCopie().catch(() => null);
   if (copie?.disponible) return { ...copie, via: "copie" };
-  return relais ? { ...relais, via: "relais" } : copie ? { ...copie, via: "copie" } : null;
+  return d ? { ...d, via: "relais" } : null;
 }
 async function actualiser() {
   prochaine = Date.now() + RAFRAICHIR * 1000;
@@ -189,6 +143,7 @@ async function actualiser() {
   try {
     brut = await lire(); lu = new Date();
     RES = brut ? normaliser(brut) : null;
+    if (mode === null && RES?.lus) mode = "res";
     surveiller(); dessiner();
   } catch (e) { $("lvEtat").textContent = e.message; }
 }
@@ -202,168 +157,215 @@ function afficherDecompte() {
 }
 
 /* ---------- accès aux résultats ---------- */
-const enCirc = code => { const c = RES?.circ?.[code]; return c && c.total > 0 ? c : null; };
-const pctC = (c, k) => c.total ? 100 * k.voix / c.total : 0;
-const tete = c => c?.cands?.[0] || null;
-const ecartPts = c => c.cands.length > 1 ? pctC(c, c.cands[0]) - pctC(c, c.cands[1]) : 100;
-const auMoinsUn = () => !!RES?.lus;
-function sieges() {
-  const s = Object.fromEntries(ORDRE_P.map(p => [p, { elus: 0, avance: 0, voix: 0 }]));
-  for (const c of Object.values(RES?.circ || {})) {
-    if (!(c.total > 0)) continue;
-    s[tete(c).parti][c.final ? "elus" : "avance"]++;
-    for (const k of c.cands) s[k.parti].voix += k.voix;
+const res = (v, id) => { const a = RES?.[v]?.[id]; return a && (a.total > 0 || a.appel) ? a : null; };
+const pctC = (a, c) => a.total ? 100 * c.v / a.total : 0;
+const tete = a => a?.gagnant || a?.cands?.[0] || null;
+const ecartPts = a => a.cands.length > 1 && a.total ? pctC(a, a.cands[0]) - pctC(a, a.cands[1]) : 100;
+const modeCarte = () => mode || (RES?.lus ? "res" : "prev");
+function sieges(v) {
+  const s = { D: { elus: 0, avance: 0, voix: 0, hors: 0, gains: 0 }, R: { elus: 0, avance: 0, voix: 0, hors: 0, gains: 0 }, I: { elus: 0, avance: 0, voix: 0, hors: 0, gains: 0 }, A: { elus: 0, avance: 0, voix: 0, hors: 0, gains: 0 } };
+  const hc = horsCourse(v); for (const p in hc) s[p].hors = hc[p];
+  let avec = 0, appels = 0;
+  for (const [id, c] of Object.entries(COURSES[v])) {
+    const a = res(v, id); if (!a) continue;
+    avec++; const t = tete(a), p = groupe(t.p);
+    if (a.appel) { s[p].elus++; appels++; } else s[p].avance++;
+    if (c.held && groupe(c.held) !== p) s[p].gains++;
+    for (const k of a.cands) s[groupe(k.p)].voix += k.v;
   }
-  return s;
+  return { s, avec, appels };
 }
+const tot = (s, p) => s[p].elus + s[p].avance + s[p].hors;
 
 /* ---------- état, heures ---------- */
 function dessinerEtat() {
-  const b = $("lvBanniere"), ferme = new Date() >= FERMETURE;
-  $("edAvant").hidden = ferme;
-  const lien = `<a href="${SITE_RES}" target="_blank" rel="noopener">site d'Elections BC</a>`;
+  const b = $("lvBanniere"), m = new Date();
+  $("edAvant").hidden = !!DEMO || m >= DERNIERE;
+  const lien = `<a href="${SITE_RES}" target="_blank" rel="noopener">site de CNN</a>`;
   b.hidden = false;
-  if (RES?.pages && !auMoinsUn() && ferme && brut?.disponible) b.innerHTML = `Elections BC publie des résultats, mais leur présentation n'a pas pu être lue ici. En attendant une correction, voir le ${lien}.`;
-  else if (!auMoinsUn()) b.innerHTML = ferme
-    ? `<b>Bureaux fermés</b> : en attente des premiers résultats d'Elections BC (vérification chaque minute). Pour cette élection anticipée, le dépouillement se fait à la main : les premiers chiffres peuvent tarder.`
-    : `Les résultats préliminaires s'afficheront ici après la fermeture des bureaux, ce <b>samedi 24 octobre à 20 h, heure du Pacifique (23 h, heure du Québec)</b>.`;
+  if (DEMO) b.innerHTML = `<b>DÉMO · résultats de 2024</b> : élection de 2024 lue au même format que le soir du 3 novembre, pour vérifier la page (districts de 2026 : quelques États redécoupés ne correspondent pas ; Sénat : sièges de la classe 1).`;
+  else if (!RES?.lus) b.innerHTML = m >= PREMIERE
+    ? `<b>Premiers bureaux fermés</b> : en attente des premiers résultats (vérification chaque minute). Les votes par correspondance sont comptés plus tôt dans certains États, plus tard dans d'autres : les premiers chiffres peuvent pencher d'un côté puis de l'autre.`
+    : `Les résultats s'afficheront ici dès la fermeture des premiers bureaux, ce <b>mardi 3 novembre à 18 h, heure du Québec</b> (même heure qu'à New York). Les derniers ferment à 1 h (Alaska).`;
   else b.hidden = true;
   if (!RES) { $("lvEtat").textContent = "Résultats indisponibles pour le moment · nouvel essai chaque minute"; return; }
-  if (!auMoinsUn()) { $("lvEtat").textContent = "En attente des premiers résultats · vérification chaque minute"; dessinerVerifs(); return; }
-  const fin = Object.values(RES.circ).filter(c => c.final).length;
-  $("lvEtat").innerHTML = ["<b>Résultats préliminaires</b>", `${RES.lus} circonscription${RES.lus > 1 ? "s" : ""} sur ${NB} avec des résultats`, fin ? `${fin} entièrement dépouillée${fin > 1 ? "s" : ""}` : "",
-    RES.resume?.urnes != null ? `${nf(RES.resume.urnes, RES.resume.urnes < 1 ? 2 : 1)} % des urnes` : ""].filter(Boolean).join(" · ");
+  if (!RES.lus) { $("lvEtat").textContent = "En attente des premiers résultats · vérification chaque minute"; dessinerVerifs(); return; }
+  const { avec, appels } = sieges(vue), n = Object.keys(COURSES[vue]).length;
+  $("lvEtat").innerHTML = [`<b>${DEMO ? "Démo · 2024" : "Résultats non officiels"}</b>`, `${VUES[vue].nom} : ${avec} course${avec > 1 ? "s" : ""} sur ${n} avec des résultats`,
+    appels ? `${appels} appelée${appels > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
   dessinerVerifs();
 }
 function dessinerVerifs() {
   const el = $("lvHeures"); el.hidden = !brut; if (el.hidden) return;
   const m = Date.now(), verif = brut.via === "relais" && brut.ageCache != null ? new Date(lu - brut.ageCache * 1000) : null;
   const publie = brut.via === "copie" && brut.publie ? new Date(brut.publie) : null;
-  el.innerHTML = `<span><b>Vérifiées</b> sur le <a href="${SITE_RES}" target="_blank" rel="noopener">site d'Elections BC</a> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
+  el.innerHTML = `<span><b>Vérifiées</b> dans les résultats de CNN ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})` : brut.via === "cnn" ? "directement par cette page"
     : `par la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
-    + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heures du Québec</span>`;
+    + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heure du Québec (= heure de l'Est)</span>`;
 }
 function dessinerCompte() {
   if ($("edAvant").hidden) return;
-  const m = new Date(), cible = m < OUVERTURE ? OUVERTURE : FERMETURE, ms = Math.max(0, cible - m);
-  const h = Math.floor(ms / 36e5), mi = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60;
-  $("edCompte").innerHTML = `<span class="lv-eyebrow">${m < OUVERTURE ? "Ouverture des bureaux" : "Fermeture des bureaux"}</span>
-    <h3>${m < OUVERTURE ? "Les bureaux ouvrent dans" : "Les bureaux ferment dans"}</h3>
-    <div class="ed-compte-n" role="timer" aria-live="off">${[[deux(h), "heures"], [deux(mi), "minutes"], [deux(s), "secondes"]].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("")}</div>
-    <p>Samedi 24 octobre à <b>${m < OUVERTURE ? "8 h" : "20 h"}, heure du Pacifique</b> (${m < OUVERTURE ? "11 h" : "23 h"}, heure du Québec). La Colombie-Britannique a trois heures de moins que le Québec.</p>`;
+  const m = new Date();
+  const prochaineF = m < PREMIERE ? ["18:00", "est de l'Indiana et du Kentucky"] : FERMETURES.find(([hh]) => quand(hh) > m);
+  if (!prochaineF) return;
+  const cible = m < PREMIERE ? PREMIERE : quand(prochaineF[0]), ms = Math.max(0, cible - m);
+  const j = Math.floor(ms / 864e5), hh = Math.floor(ms / 36e5) % (j ? 24 : 1e9), mi = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60;
+  const cases = j ? [[j, j > 1 ? "jours" : "jour"], [deux(hh), "heures"], [deux(mi), "minutes"]] : [[deux(hh), "heures"], [deux(mi), "minutes"], [deux(s), "secondes"]];
+  const qui = m < PREMIERE ? prochaineF[1] : prochaineF[1].split(" ").map(ab => nomEtat(AB[ab]) || ab).join(", ");
+  $("edCompte").innerHTML = `<span class="lv-eyebrow">${m < PREMIERE ? "Premières fermetures des bureaux" : "Prochaine fermeture des bureaux"}</span>
+    <h3>${m < PREMIERE ? "Les premiers bureaux ferment dans" : `${h(prochaineF[0])} : fermeture dans`}</h3>
+    <div class="ed-compte-n" role="timer" aria-live="off">${cases.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("")}</div>
+    <p>${m < PREMIERE ? "Mardi 3 novembre à <b>18 h, heure du Québec</b> : " : ""}${esc(qui)}. Le Québec est à l'heure de l'Est, comme New York : toutes les heures de cette page sont aussi celles du Québec.</p>`;
 }
 function dessinerHeures() {
-  const m = new Date();
-  const L = [
-    ["Vote par anticipation", "Du vendredi 16 au mercredi 21 octobre", "Dans n'importe quel bureau d'anticipation de la province", new Date("2026-10-21T20:00:00-07:00")],
-    ["Jour du vote", "Samedi 24 octobre, de 8 h à 20 h (heure du Pacifique)", "De 11 h à 23 h, heure du Québec", FERMETURE],
-    ["Dépouillement préliminaire", "Dès 20 h (23 h au Québec)", "Comptage à la main pour cette élection anticipée : les résultats arrivent au fil de la soirée", FERMETURE],
-    ["Dépouillement final", "Du 6 au 10 novembre (prévu)", "Votes par correspondance et bulletins non comptés le soir du vote ; recomptages judiciaires possibles dans les luttes très serrées", new Date("2026-11-10T20:00:00-08:00")],
-    ["Jour du rapport des brefs", "Mercredi 18 novembre", "Résultats officiels", new Date("2026-11-18T20:00:00-08:00")],
-  ];
-  $("edHeures").innerHTML = L.map(([t, a, b, fin]) => `<li class="${m > fin ? "ed-passe" : ""}"><b>${t}</b><span>${a}<small>${b}</small></span></li>`).join("");
+  const m = new Date(), n = (L, v) => L.split(" ").filter(ab => COURSES[v][AB[ab]]).length;
+  $("edHeures").innerHTML = FERMETURES.map(([hh, L]) => `<li class="${!DEMO && m > quand(hh) ? "ed-passe" : ""}"><b>${h(hh)}</b><span>${L.split(" ").map(ab => esc(ab === "DC" ? "D.C." : nomEtat(AB[ab]) || ab)).join(", ")}`
+    + `<small>${[[n(L, "S"), "Sénat"], [n(L, "G"), "gouverneur"]].filter(([k]) => k).map(([k, t]) => `${k} course${k > 1 ? "s" : ""} au ${t === "Sénat" ? "Sénat" : t === "gouverneur" ? "poste de gouverneur" : t}`).join(" · ") || "Chambre seulement"}</small></span></li>`).join("");
 }
 
-/* ---------- sièges et voix par parti ---------- */
+/* ---------- sièges et voix ---------- */
+function dessinerChoix() {
+  const el = $("edChoix"); el.hidden = false;
+  el.innerHTML = Object.entries(VUES).map(([k, V]) => `<button type="button" data-vue="${k}" aria-pressed="${vue === k}">${V.nom} <small>${k === "H" ? "435 sièges" : k === "S" ? `${Object.keys(COURSES.S).length} courses` : `${Object.keys(COURSES.G).length} courses`}</small></button>`).join("");
+}
 function dessinerSieges() {
-  const s = sieges(), tot = p => s[p].elus + s[p].avance, voixT = ORDRE_P.reduce((x, p) => x + s[p].voix, 0);
-  const ordre = ORDRE_P.filter(p => tot(p) > 0).sort((a, b) => tot(b) - tot(a) || ORDRE_P.indexOf(a) - ORDRE_P.indexOf(b));
-  const pct = n => (100 * n / NB) + "%";
-  $("lvBarre").innerHTML = ordre.map(p => `<span class="lv-seg" style="width:${pct(tot(p))};--c:${coulP(p)}" title="${esc(PARTIS[p].nom)} : ${tot(p)} siège${tot(p) > 1 ? "s" : ""} (${s[p].elus} élu${s[p].elus > 1 ? "s" : ""}, ${s[p].avance} en tête)">`
-    + `<i class="lv-elus" style="width:${100 * s[p].elus / tot(p)}%"></i><b>${esc(PARTIS[p].court)} ${tot(p)}</b></span>`).join("");
+  const V = VUES[vue], { s, avec } = sieges(vue), voixT = ["D", "R", "I", "A"].reduce((x, p) => x + s[p].voix, 0);
+  $("edProvSur").textContent = vue === "H" ? "Chambre des représentants · 435 sièges · majorité 218" : vue === "S" ? "Sénat · 100 sièges · majorité 51 (50 avec le vice-président, républicain)"
+    : "Gouverneurs · 50 États · 36 en élection";
+  const ordre = ["D", "I", "A", "R"], pct = n => (100 * n / V.n) + "%";
+  const reste = V.n - ordre.reduce((x, p) => x + tot(s, p), 0);
+  const segs = ordre.filter(p => tot(s, p) > 0).map(p => ({ p, n: tot(s, p) }));
+  if (!avec && vue !== "G" && !RES?.lus) {
+    // avant les résultats : prévisions des analystes (sièges hors élection compris)
+    const n = {}; for (const c of Object.values(COURSES[vue])) n[c.cote] = (n[c.cote] || 0) + 1;
+    const hors = horsCourse(vue);
+    $("lvBarre").innerHTML = [["hD", hors.D + hors.I, "#7E98CC", "D hors élection"], ...COTES.map(k => [k, n[k] || 0, COTE[k][0], COTE[k][1]]), ["hR", hors.R, "#D88F8F", "R hors élection"]]
+      .filter(([, k]) => k).map(([k, x, c, l]) => `<span class="lv-seg" style="width:${pct(x)};--c:${c}" title="${esc(l)} : ${x}"><b>${x}</b></span>`).join("");
+  } else {
+    $("lvBarre").innerHTML = [...segs.filter(x => x.p !== "R"), ...(reste > 0 ? [{ p: null, n: reste }] : []), ...segs.filter(x => x.p === "R")].map(({ p, n }) => p === null
+      ? `<span class="lv-seg" style="width:${pct(n)};--c:var(--soft)" title="${n} à venir"><b>${n}</b></span>`
+      : `<span class="lv-seg" style="width:${pct(n)};--c:${coulP(p)}" title="${esc(PARTIS[p].nom)} : ${n} (${s[p].elus} élus, ${s[p].avance} en tête${s[p].hors ? `, ${s[p].hors} hors élection` : ""})">`
+        + `<i class="lv-elus" style="width:${100 * (s[p].elus + s[p].hors) / n}%"></i><b>${esc(PARTIS[p].court)} ${n}</b></span>`).join("");
+  }
   for (const seg of $("lvBarre").querySelectorAll(".lv-seg")) {
     const b = seg.querySelector("b"); if (!b) continue;
     if (b.offsetWidth > seg.clientWidth - 6) b.textContent = b.textContent.split(" ").pop();
     if (b.offsetWidth > seg.clientWidth - 4) b.remove();
   }
-  const lead = ordre[0];
-  $("lvSiegesTitre").textContent = !lead ? (new Date() < FERMETURE ? "Sièges : les résultats commencent à la fermeture des bureaux" : "Aucune circonscription dépouillée pour l'instant")
-    : tot(lead) >= MAJ ? `${PARTIS[lead].nom} : ${tot(lead)} sièges, au-delà de la majorité (${MAJ})` : `${PARTIS[lead].nom} en tête avec ${tot(lead)} siège${tot(lead) > 1 ? "s" : ""} (majorité : ${MAJ})`;
-  const montres = ORDRE_P.filter(p => tot(p) > 0 || s[p].voix > 0 || PARTIS[p].s24 > 0 || ["ctr", "one"].includes(p));
-  $("lvPartis").innerHTML = montres.sort((a, b) => tot(b) - tot(a) || s[b].voix - s[a].voix || ORDRE_P.indexOf(a) - ORDRE_P.indexOf(b)).map(p => {
+  const mq = $("edMajMarque"); mq.hidden = false; mq.style.left = (100 * (vue === "S" ? 50 : V.maj - 0.5) / V.n) + "%";
+  mq.querySelector("span").textContent = vue === "S" ? "Contrôle : 51 (50 + VP)" : vue === "G" ? "Majorité des États : 26" : "Majorité 218";
+  const D = tot(s, "D") + (vue === "S" ? tot(s, "I") : 0), R = tot(s, "R");
+  $("lvSiegesTitre").textContent = !avec ? (DEMO ? "Démo" : new Date() < PREMIERE ? `${V.long} : les résultats commencent à 18 h, heure du Québec` : `${V.long} : en attente des premiers résultats`)
+    : vue === "H" ? (D >= 218 ? `Les démocrates atteignent la majorité : ${D} sièges` : R >= 218 ? `Les républicains gardent la majorité : ${R} sièges` : `Chambre : D ${D} · R ${R} (majorité : 218)`)
+    : vue === "S" ? (D >= 51 ? `Les démocrates prennent le Sénat : ${D} sièges (indépendants compris)` : R >= 50 ? `Les républicains gardent le Sénat : ${R} sièges` : `Sénat : D ${D} (avec les indépendants) · R ${R}`)
+    : `Gouverneurs : D ${tot(s, "D")} · R ${R}`;
+  const act = { D: 0, R: 0, I: 0, A: 0, V: 0 };
+  if (vue === "H") for (const id of Object.keys(COURSES.H)) { const a = PROJ.actuel?.[id]; a?.p ? act[groupe(a.p)]++ : act.V++; }
+  if (vue === "S") for (const e of Object.values(PROJ.senat?.etats || {})) for (const x of e.senateurs) act[groupe(x.p)]++;
+  if (vue === "G") for (const e of Object.values(GOUV.etats)) act[groupe(e.p)]++;
+  const prev = p => { let n = 0; for (const c of Object.values(COURSES[vue])) if (c.cote[0] === p) n++; return n; };
+  $("lvPartis").innerHTML = ["D", "R", "I", "A"].filter(p => p === "D" || p === "R" || tot(s, p) || act[p]).map(p => {
     const v = voixT ? 100 * s[p].voix / voixT : null, P = PARTIS[p];
-    return `<div class="lv-parti" style="--c:${P.c}" title="${esc(P.nom)}${P.chef ? " · " + esc(P.chef) : ""}"><i></i><span class="lv-pnom">${esc(P.court)}</span>`
-      + `<b>${auMoinsUn() ? tot(p) : "—"}</b><small>${auMoinsUn() ? `${s[p].elus} élu${s[p].elus > 1 ? "s" : ""} · ${s[p].avance} en tête · ` : ""}2024 : ${P.s24} siège${P.s24 > 1 ? "s" : ""}${P.v24 ? `, ${nf(P.v24, 1)} %` : ""}</small>`
-      + `<span class="lv-pvote">${v != null ? nf(v, 1) + " %" : ""}</span></div>`;
+    return `<div class="lv-parti" style="--c:${P.c}" title="${esc(P.nom)}"><i></i><span class="lv-pnom">${esc(P.nom)}</span>`
+      + `<b>${avec ? tot(s, p) : act[p]}</b><small>${avec ? `${s[p].elus} élu${s[p].elus > 1 ? "s" : ""} · ${s[p].avance} en tête${s[p].hors ? ` · ${s[p].hors} hors élection` : ""}${s[p].gains ? ` · ${s[p].gains} gain${s[p].gains > 1 ? "s" : ""}` : ""}`
+        : `en poste aujourd'hui${(p === "D" || p === "R") && vue !== "G" ? ` · prévisions : ${prev(p)} course${prev(p) > 1 ? "s" : ""} penchant de ce côté` : ""}`}</small>`
+      + `<span class="lv-pvote">${v != null && v > 0 ? nf(v, 1) + " %" : ""}</span></div>`;
   }).join("");
-  const fin = Object.values(RES?.circ || {}).filter(c => c.final).length;
-  const R = RES?.resume || {};
-  $("edKv").innerHTML = [[`${RES?.lus || 0} / ${NB}`, "circonscriptions avec des résultats"], [nf(fin), "circonscriptions entièrement dépouillées"],
-    [R.urnes != null ? nf(R.urnes, R.urnes < 1 ? 2 : 1) + " %" : "—", "des urnes dépouillées"], [R.part != null ? nf(R.part, 1) + " %" : "—", "participation préliminaire"],
-    [voixT ? nf(voixT) : "—", `voix valides comptées${R.inscrits ? ` · ${nf(R.inscrits)} inscrits` : ""}`]]
+  const n = Object.keys(COURSES[vue]).length, toss = Object.values(COURSES[vue]).filter(c => c.cote === "T").length;
+  $("edKv").innerHTML = [[`${avec} / ${n}`, "courses avec des résultats"], [nf(sieges(vue).appels), "courses appelées"],
+    [s.D.gains || s.R.gains ? `D ${s.D.gains} · R ${s.R.gains}` : "—", "sièges gagnés sur l'autre parti"], [nf(toss), "courses à égalité selon les prévisions"],
+    [voixT ? `D ${nf(100 * s.D.voix / voixT, 1)} · R ${nf(100 * s.R.voix / voixT, 1)}` : "—", vue === "H" ? "vote populaire de la Chambre (%)" : "voix des courses dépouillées (%)"]]
     .map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
-  $("lvBarrePlein").innerHTML = `<div class="lv-bp-tete"><b>${lead ? (tot(lead) >= MAJ ? `${PARTIS[lead].court} majoritaire` : `${PARTIS[lead].court} en tête`) : "Sièges"}</b><span>majorité ${MAJ} · ${RES?.lus || 0}/${NB} circ.</span></div>`
-    + `<div class="lv-bp-barre">${ordre.map(p => `<span style="width:${pct(tot(p))};--c:${coulP(p)}"><i style="width:${100 * s[p].elus / tot(p)}%"></i></span>`).join("")}<em style="left:${100 * MAJ / NB}%"></em></div>`
-    + `<div class="lv-bp-partis">${lead ? ordre.map(p => `<span style="--c:${coulP(p)}"><i></i>${esc(PARTIS[p].court)} <b>${tot(p)}</b></span>`).join("") : `<span>En attente des premiers résultats</span>`}</div>`;
+  $("lvBarrePlein").innerHTML = `<div class="lv-bp-tete"><b>${V.nom}</b><span>${vue === "S" ? "contrôle 51 (50 + VP)" : `majorité ${V.maj}`} · ${avec}/${n} courses</span></div>`
+    + `<div class="lv-bp-barre">${[...segs.filter(x => x.p !== "R"), ...(reste > 0 ? [{ p: null, n: reste }] : []), ...segs.filter(x => x.p === "R")].map(({ p, n: k }) => `<span style="width:${pct(k)};--c:${p ? coulP(p) : "var(--soft)"}"><i style="width:${p ? 100 * (s[p].elus + s[p].hors) / k : 0}%"></i></span>`).join("")}<em style="left:${100 * (vue === "S" ? 50 : V.maj - 0.5) / V.n}%"></em></div>`
+    + `<div class="lv-bp-partis">${["D", "R"].map(p => `<span style="--c:${coulP(p)}"><i></i>${p} <b>${avec ? tot(s, p) : act[p]}</b></span>`).join("")}</div>`;
 }
 
 /* ---------- carte ---------- */
-let svg, gZ, ZOOM, PATH, MW = 560, MH = 640, tip, gSuiv, gSel;
-const gagnant24 = code => R24[code]?.gagnant || null;
-function remplir(code) {
-  const c = enCirc(code);
-  if (!c) return ["var(--soft)", 1];
-  const p = tete(c).parti;
-  if (carteGains) return gagnant24(code) && gagnant24(code) !== p ? [coulP(p), 1] : ["var(--soft)", 1];
-  if (carteMarge) return [coulP(p), Math.max(0.2, Math.min(1, 0.2 + ecartPts(c) / 40))];
-  return [coulP(p), c.final || c.frac == null ? 1 : 0.35 + 0.6 * c.frac];
+let svg, gZ, gD, gE, gSuiv, gSel, ZOOM, PATH, MW = 960, MH = 600, tip;
+const ZONES = { ne: [[-80.5, 38.6], [-69.8, 43.5]], nyc: [[-74.3, 40.48], [-73.65, 40.95]], gl: [[-92.5, 39.5], [-78.5, 46.8]], ca: [[-124.4, 32.5], [-114.1, 42.0]],
+  tx: [[-106.6, 25.8], [-93.5, 36.5]], fl: [[-87.6, 24.5], [-80.0, 31.0]] };
+const featsVue = () => vue === "H" ? CARTE.districts.features : CARTE.etats.features;
+const idDe = f => vue === "H" ? f.properties.id : f.properties.fips;
+function remplir(id) {
+  const c = COURSES[vue][id];
+  if (!c) return ["var(--soft)", 0.25];                         // pas d'élection dans cet État
+  const md = modeCarte(), a = res(vue, id);
+  if (md === "prev") return [COTE[c.cote]?.[0] || COTE.N[0], 1];
+  if (!a) return ["var(--soft)", 1];
+  const p = tete(a).p;
+  if (md === "gains") return c.held && groupe(c.held) !== groupe(p) ? [coulP(p), a.appel ? 1 : 0.55] : ["var(--soft)", 1];
+  return [coulP(p), a.appel ? 1 : a.pct == null ? 0.6 : 0.3 + 0.55 * Math.min(1, a.pct / 100)];
 }
 function dessinerCarte() {
   if (!gZ) return;
-  gZ.selectAll("path.lv-rid").each(function (f) { const [col, op] = remplir(f.properties.n); this.style.fill = col; this.style.fillOpacity = op; });
-  gSel.selectAll("path").data(sel == null ? [] : GEO.features.filter(f => f.properties.n === sel)).join("path").attr("class", "lv-selline").attr("d", PATH);
+  gD.selectAll("path").each(function (f) { const [col, op] = remplir(idDe(f)); this.style.fill = col; this.style.fillOpacity = op; });
+  gSel.selectAll("path").data(sel == null ? [] : featsVue().filter(f => idDe(f) === sel)).join("path").attr("class", "lv-selline").attr("d", PATH);
   dessinerContoursSuivis(); dessinerLegende();
 }
 function dessinerLegende() {
-  const s = sieges(), pres = ORDRE_P.filter(p => s[p].elus + s[p].avance > 0);
-  $("edLegende").innerHTML = (pres.length ? pres : ["ndp", "con", "grn"]).map(p => `<span class="ed-legende-k" style="--c:${coulP(p)}"><i></i>${esc(PARTIS[p].court)} en tête</span>`).join("")
-    + `<span>${carteGains ? "· seulement les circonscriptions qui changent de parti par rapport à 2024" : carteMarge ? "· couleur d'autant plus foncée que l'écart est grand (pleine à 32 points et plus)" : "· plus la couleur est pâle, moins il y a d'urnes dépouillées"} · gris : aucun résultat</span>`;
+  const md = modeCarte();
+  $("edLegende").innerHTML = md === "prev"
+    ? COTES.map(k => `<span class="ed-legende-k" style="--c:${COTE[k][0]}"><i></i>${COTE[k][1]}</span>`).join("") + `<span>· prévisions des analystes (consensus de 270toWin)${vue !== "H" ? " · gris pâle : pas d'élection" : ""}</span>`
+    : ["D", "R", "I"].map(p => `<span class="ed-legende-k" style="--c:${coulP(p)}"><i></i>${PARTIS[p].court === "Ind." ? "Indépendant" : p === "D" ? "Démocrate" : "Républicain"} en tête</span>`).join("")
+      + `<span>${md === "gains" ? "· seulement les sièges qui changent de parti" : "· plus la couleur est pâle, moins le vote est dépouillé ; pleine : course appelée"} · gris : aucun résultat${vue !== "H" ? " · gris pâle : pas d'élection" : ""}</span>`;
+}
+function dessinerZooms() {
+  $("lvZoom").innerHTML = `<button type="button" data-z="tout">États-Unis</button><button type="button" data-z="ne">Nord-Est</button><button type="button" data-z="nyc">New York</button>`
+    + `<button type="button" data-z="gl">Grands Lacs</button><button type="button" data-z="ca">Californie</button><button type="button" data-z="tx">Texas</button><button type="button" data-z="fl">Floride</button>`
+    + `<button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>`
+    + `<span class="lv-groupe" role="group" aria-label="Affichage de la carte">${[["res", "Résultats", "Couleur du parti en tête"], ["prev", "Prévisions", "Cote de chaque course selon les analystes (consensus de 270toWin)"], ["gains", "Gains", "Seulement les sièges qui changent de parti"]]
+      .map(([k, l, t]) => `<button type="button" data-z="m-${k}" aria-pressed="${modeCarte() === k}" title="${t}">${l}</button>`).join("")}</span>`;
 }
 function dessinerContoursSuivis() {
-  const b = $("lvCarteSuivis");
-  b.setAttribute("aria-pressed", carteSuivis); b.textContent = carteSuivis ? `★ Suivies (${suivies.size})` : "★ Suivies";
+  const b = $("lvCarteSuivis"), ici = [...suivies].filter(k => k.startsWith(vue + ":")).map(k => k.slice(2));
+  b.setAttribute("aria-pressed", carteSuivis); b.textContent = carteSuivis ? `★ Suivies (${ici.length})` : "★ Suivies";
   if (!gSuiv) return;
-  const d = carteSuivis ? GEO.features.filter(f => suivies.has(f.properties.n)) : [];
-  gSuiv.selectAll("path.lv-suivi-halo").data(d, f => f.properties.n).join("path").attr("class", "lv-suivi-halo").attr("d", PATH);
-  gSuiv.selectAll("path.lv-suivi-ligne").data(d, f => f.properties.n).join("path").attr("class", "lv-suivi-ligne").attr("d", PATH).style("stroke", "#F5B83D");
+  const d = carteSuivis ? featsVue().filter(f => ici.includes(idDe(f))) : [];
+  gSuiv.selectAll("path.lv-suivi-halo").data(d, idDe).join("path").attr("class", "lv-suivi-halo").attr("d", PATH);
+  gSuiv.selectAll("path.lv-suivi-ligne").data(d, idDe).join("path").attr("class", "lv-suivi-ligne").attr("d", PATH).style("stroke", "#F5B83D");
   gSuiv.selectAll("path.lv-suivi-ligne").raise();
 }
 function infobulle(e, f) {
-  const code = f.properties.n, c = enCirc(code);
+  const id = idDe(f), c = COURSES[vue][id], a = res(vue, id);
   tip.hidden = false;
   const box = svg.node().parentNode.getBoundingClientRect();
-  tip.style.left = Math.min(e.clientX - box.left + 12, box.width - 240) + "px"; tip.style.top = Math.min(e.clientY - box.top + 12, box.height - 120) + "px";
-  const nom = `<b>${suivies.has(code) ? "★ " : ""}${esc(PAR_CODE[code])}</b>`;
-  tip.innerHTML = nom + (c ? c.cands.slice(0, 3).map(k => `<span class="ed-tip-l" style="--c:${coulP(k.parti)}"><span><i></i>${esc(k.nom)} (${esc(PARTIS[k.parti]?.court || k.aff)})</span><b>${nf(pctC(c, k), 1)} %</b></span>`).join("")
-    + `<small>${c.final ? "terminé" : c.frac != null ? nf(100 * c.frac, 0) + " % des urnes" : "dépouillement en cours"}${gagnant24(code) ? ` · 2024 : ${esc(PARTIS[gagnant24(code)].court)}` : ""}</small>`
-    : `<br><small>Aucun résultat${gagnant24(code) ? ` · 2024 : ${esc(PARTIS[gagnant24(code)].court)}` : ""}</small>`);
+  tip.style.left = Math.min(e.clientX - box.left + 12, box.width - 250) + "px"; tip.style.top = Math.min(e.clientY - box.top + 12, box.height - 130) + "px";
+  const nom = `<b>${suivies.has(vue + ":" + id) ? "★ " : ""}${esc(c?.nom || f.properties.nom || id)}</b>`;
+  if (!c) { tip.innerHTML = nom + `<br><small>Pas d'élection ${vue === "S" ? "au Sénat" : "au poste de gouverneur"} cette année</small>`; return; }
+  tip.innerHTML = nom + (a ? a.cands.slice(0, 3).map(k => `<span class="ed-tip-l" style="--c:${coulP(k.p)}"><span><i></i>${esc(k.nom)} (${esc(k.p)})${k.g ? " ✓" : ""}</span><b>${nf(pctC(a, k), 1)} %</b></span>`).join("")
+    + `<small>${a.appel ? "course appelée" : a.pct != null ? `${nf(a.pct)} % du vote dépouillé (estimation)` : "dépouillement en cours"} · sortant : ${esc(c.held || "?")}</small>`
+    : `<br><small>${COTE[c.cote]?.[1] || "Non coté"} · sortant : ${esc(c.sortant)} (${esc(c.held)})${etatFerme(ETATS[c.etat]?.ab) ? " · aucun résultat" : ` · bureaux fermés à ${h(FERME_ETAT[ETATS[c.etat]?.ab] || "01:00")}`}</small>`);
 }
 function construireCarte() {
-  if (svg) return;
-  const proj = d3.geoConicConformal().rotate([126, 0]).parallels([49, 58]).fitExtent([[10, 10], [MW - 10, MH - 10]], GEO);
+  const proj = d3.geoAlbersUsa().fitExtent([[10, 10], [MW - 10, MH - 10]], CARTE.etats);
   PATH = d3.geoPath(proj);
   svg = d3.select($("lvCarte")).attr("viewBox", `0 0 ${MW} ${MH}`);
   svg.selectAll("*").remove();
-  // mer : le fond de la carte (circonscriptions découpées au littoral : les îles se voient)
-  gZ = svg.append("g");
-  gZ.append("g").selectAll("path").data(GEO.features).join("path").attr("class", "lv-rid").attr("d", PATH)
-    .attr("tabindex", 0).attr("role", "button").attr("aria-label", f => f.properties.nom)
-    .on("click", (e, f) => choisir(f.properties.n))
-    .on("keydown", (e, f) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choisir(f.properties.n); } })
-    .on("mousemove", infobulle).on("mouseleave", () => { tip.hidden = true; });
-  gSuiv = gZ.append("g"); gSel = gZ.append("g");
-  ZOOM = d3.zoom().scaleExtent([1, 80]).translateExtent([[-100, -100], [MW + 100, MH + 100]]).on("zoom", e => gZ.attr("transform", e.transform));
+  gZ = svg.append("g"); gD = gZ.append("g"); gE = gZ.append("g"); gSuiv = gZ.append("g"); gSel = gZ.append("g");
+  ZOOM = d3.zoom().scaleExtent([1, 120]).translateExtent([[-60, -60], [MW + 60, MH + 60]]).on("zoom", e => gZ.attr("transform", e.transform));
   svg.call(ZOOM).on("dblclick.zoom", null);
   svg.on("click", e => { if (e.target === svg.node()) { sel = null; dessinerCarte(); dessinerPanneau(); } });
+  tracer();
+}
+// districts (Chambre) ou États (Sénat, gouverneurs), frontières des États par-dessus
+function tracer() {
+  gD.selectAll("path").remove();
+  gD.selectAll("path").data(featsVue(), idDe).join("path").attr("class", "lv-rid").attr("d", PATH)
+    .attr("tabindex", f => COURSES[vue][idDe(f)] ? 0 : -1).attr("role", "button").attr("aria-label", f => COURSES[vue][idDe(f)]?.nom || f.properties.nom)
+    .on("click", (e, f) => { if (COURSES[vue][idDe(f)]) choisir(idDe(f)); })
+    .on("keydown", (e, f) => { if ((e.key === "Enter" || e.key === " ") && COURSES[vue][idDe(f)]) { e.preventDefault(); choisir(idDe(f)); } })
+    .on("mousemove", infobulle).on("mouseleave", () => { tip.hidden = true; });
+  gE.selectAll("path").data(vue === "H" ? CARTE.etats.features : []).join("path").attr("class", "lv-reg").attr("d", PATH);
   dessinerCarte();
 }
 function zoomer(z) {
   const vers = ([[x0, y0], [x1, y1]]) => {
-    const k = Math.min(80, 0.9 / Math.max((x1 - x0) / MW, (y1 - y0) / MH));
+    const k = Math.min(120, 0.9 / Math.max((x1 - x0) / MW, (y1 - y0) / MH));
     svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity.translate(MW / 2, MH / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
   };
   if (z === "tout") svg.transition().duration(600).call(ZOOM.transform, d3.zoomIdentity);
-  else if (ZONES[z]) vers(PATH.bounds({ type: "FeatureCollection", features: GEO.features.filter(f => ZONES[z](f.properties.nom)) }));
+  else if (ZONES[z]) vers(PATH.bounds({ type: "Feature", geometry: { type: "MultiPoint", coordinates: ZONES[z] } }));
   else if (z === "plus") svg.transition().duration(250).call(ZOOM.scaleBy, 1.6);
   else if (z === "moins") svg.transition().duration(250).call(ZOOM.scaleBy, 1 / 1.6);
 }
@@ -375,10 +377,10 @@ function preparerCarte() {
   carte.addEventListener("click", e => {
     const z = e.target.closest(".lv-zoom button")?.dataset.z; if (!z) return;
     if (z === "plein") pleinEcran();
-    else if (z === "marge" || z === "gains") basculer(z);
+    else if (z.startsWith("m-")) { mode = z.slice(2); dessinerZooms(); dessinerCarte(); }
     else zoomer(z);
   });
-  $("lvCarteSuivis").addEventListener("click", () => { carteSuivis = !carteSuivis; ecrireLS(localStorage, "cbCarteSuivies", carteSuivis); dessinerContoursSuivis(); });
+  $("lvCarteSuivis").addEventListener("click", () => { carteSuivis = !carteSuivis; ecrireLS(localStorage, "usCarteSuivies", carteSuivis); dessinerContoursSuivis(); });
   const ecran = () => document.fullscreenElement || document.webkitFullscreenElement;
   const repere = document.createComment("place de la fiche");
   info = ouvrir => {
@@ -408,104 +410,92 @@ function preparerCarte() {
   document.addEventListener("webkitfullscreenchange", etatPlein);
   document.addEventListener("keydown", e => { if (e.key === "Escape" && carte.classList.contains("lv-plein")) pleinEcran(); });
 }
-// Écart / Gains : un seul à la fois, ou aucun
-function basculer(z) {
-  carteMarge = z === "marge" && !carteMarge;
-  carteGains = z === "gains" && !carteGains;
-  $("edMarge").setAttribute("aria-pressed", carteMarge); $("edGains").setAttribute("aria-pressed", carteGains);
-  dessinerCarte();
-}
 
 /* ---------- fiche (panneau de droite) ---------- */
+const avatar = (p, nom) => {
+  const mots = String(nom || "").trim().split(/\s+/), ini = esc(((mots[0] || "")[0] || "") + ((mots.length > 1 ? mots[mots.length - 1] : "")[0] || "")).toUpperCase();
+  return `<span class="lv-ava lv-ini" style="--c:${coulP(p)}" aria-hidden="true">${ini}</span>`;
+};
+const marge = x => x == null ? "—" : x < 0 ? `R +${nf(-x, 1)}` : x > 0 ? `D +${nf(x, 1)}` : "égalité";
 function dessinerPanneau() {
-  const p = $("lvPanneau");
-  if (sel == null) {
-    p.innerHTML = `<span class="lv-eyebrow">Circonscriptions</span><h3>Clique sur une circonscription</h3>
-      <p class="lv-muted">Couleur : parti en tête. Plus la couleur est pâle, moins il y a d'urnes dépouillées ; gris : aucun résultat. « Gains » ne montre que les circonscriptions qui changent de parti par rapport à 2024 (mêmes limites).</p>
-      <div class="lv-kv"><div><b>${RES?.lus || 0}</b><span>avec résultats</span></div><div><b>${NB - (RES?.lus || 0)}</b><span>sans résultat</span></div><div><b>${MAJ}</b><span>majorité</span></div></div>`;
+  const el = $("lvPanneau");
+  if (sel == null || !COURSES[vue][sel]) {
+    const n = Object.keys(COURSES[vue]).length;
+    el.innerHTML = `<span class="lv-eyebrow">${VUES[vue].long}</span><h3>Clique sur ${vue === "H" ? "un district" : "un État"}</h3>
+      <p class="lv-muted">${vue === "H" ? "Les 435 districts sont en élection (mandats de deux ans)." : vue === "S" ? `${n} sièges sur 100 sont en élection : la classe 2 et deux élections spéciales (Ohio, Floride).` : `${n} États élisent leur gouverneur.`}
+      Avant les résultats, « Prévisions » colore chaque course selon le consensus des analystes ; ensuite, « Résultats » montre le parti en tête (plus pâle tant que le dépouillement avance, pleine quand la course est appelée), et « Gains » seulement les sièges qui changent de parti.</p>
+      <div class="lv-kv"><div><b>${Object.keys(RES?.[vue] || {}).filter(id => res(vue, id)).length}</b><span>avec résultats</span></div><div><b>${n}</b><span>courses</span></div><div><b>${VUES[vue].maj}</b><span>${vue === "S" ? "contrôle (51, ou 50 + VP)" : "majorité"}</span></div></div>`;
     return;
   }
-  const c = enCirc(sel), g24 = gagnant24(sel), r24 = R24[sel];
-  let html = `<span class="lv-eyebrow">Circonscription · ${esc(sel)}</span><h3>${esc(PAR_CODE[sel])}</h3>`
-    + `<div class="lv-suivre-pour"><button type="button" class="lv-suivre" data-suivre="${sel}" aria-pressed="${suivies.has(sel)}" style="--c:#B7860B">${suivies.has(sel) ? "★ Suivie" : "☆ Suivre"}</button></div>`;
-  if (c) {
-    const [a, b] = c.cands, ecart = b ? a.voix - b.voix : a.voix;
-    html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? "Dépouillement terminé" : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} urnes (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
-      + (g24 && g24 !== a.parti ? `<span class="lv-chip" style="--c:${coulP(a.parti)}">Gain ${esc(PARTIS[a.parti].court)} (2024 : ${esc(PARTIS[g24].court)})</span>` : "") + `</div>`
-      + `<p class="lv-tete" style="--c:${coulP(a.parti)}"><b>${esc(a.nom)}</b> (${esc(PARTIS[a.parti]?.court || a.aff)}) ${a.elu || c.final ? "élu·e" : "en tête"}${b ? ` par ${nf(ecart)} voix (${nf(pctC(c, a) - pctC(c, b), 1)} pt)` : ""}</p>`
-      + `<table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${coulP(k.parti)}"><td>${avatar(k.parti, sel, k.nom)}</td>`
-        + `<td><b>${esc(k.nom)}</b>${k.elu ? ' <span class="lv-sortant">élu·e</span>' : ""}<small>${esc(k.aff || PARTIS[k.parti]?.nom)}</small><span class="lv-jauge"><i style="width:${Math.min(100, pctC(c, k))}%"></i></span></td>`
-        + `<td class="lv-num"><b>${nf(pctC(c, k), 1)} %</b><small>${nf(k.voix)}</small></td></tr>`).join("")}</tbody></table>`;
+  const c = COURSES[vue][sel], a = res(vue, sel), cle = vue + ":" + sel, ab = ETATS[c.etat]?.ab;
+  let html = `<span class="lv-eyebrow">${vue === "H" ? `District · ${ab}-${sel.slice(2) === "00" ? "unique" : +sel.slice(2)}` : vue === "S" ? `Sénat${c.special ? " · élection spéciale" : ""}` : "Gouverneur"}</span><h3>${esc(c.nom)}</h3>`
+    + `<div class="lv-suivre-pour"><button type="button" class="lv-suivre" data-suivre="${cle}" aria-pressed="${suivies.has(cle)}" style="--c:#B7860B">${suivies.has(cle) ? "★ Suivie" : "☆ Suivre"}</button></div>`;
+  if (a) {
+    const t = tete(a), b = a.cands.find(k => k !== t), gain = c.held && groupe(c.held) !== groupe(t.p);
+    html += `<div class="lv-chips"><span class="lv-chip ${a.appel ? "fin" : ""}">${a.appel ? `Appelée : ${esc(t.nom)}` : a.pct != null ? `${nf(a.pct)} % du vote dépouillé (estimation)` : "Dépouillement en cours"}</span>`
+      + (gain ? `<span class="lv-chip" style="--c:${coulP(t.p)}">Gain ${esc(t.p)} (sortant : ${esc(c.held)})</span>` : "") + (a.tour2 ? `<span class="lv-chip">2e tour</span>` : "") + `</div>`
+      + `<p class="lv-tete" style="--c:${coulP(t.p)}"><b>${esc(t.nom)}</b> (${esc(t.p)}) ${a.appel ? "élu·e" : "en tête"}${b && a.total ? ` par ${nf(t.v - b.v)} voix (${nf(pctC(a, t) - pctC(a, b), 1)} pt)` : ""}</p>`
+      + `<table class="lv-cands"><tbody>${a.cands.map(k => `<tr style="--c:${coulP(k.p)}"><td>${avatar(k.p, k.nom)}</td>`
+        + `<td><b>${esc(k.nom)}</b>${k.g ? ' <span class="lv-sortant">élu·e</span>' : ""}${k.sortant ? ' <span class="lv-sortant">sortant·e</span>' : ""}<small>${esc(nomParti(k.p))}</small><span class="lv-jauge"><i style="width:${Math.min(100, pctC(a, k))}%"></i></span></td>`
+        + `<td class="lv-num"><b>${a.total ? nf(pctC(a, k), 1) + " %" : "—"}</b><small>${nf(k.v)}</small></td></tr>`).join("")}</tbody></table>`;
   } else {
-    html += `<div class="lv-chips"><span class="lv-chip">Aucun résultat pour l'instant</span></div>`;
-    const L = (CANDS[sel] || []).slice().sort((x, y) => ORDRE_P.indexOf(x.parti) - ORDRE_P.indexOf(y.parti) || x.nom.localeCompare(y.nom, "fr"));
-    if (L.length) html += `<span class="lv-eyebrow">Candidatures (${L.length})</span><ul class="lv-liste">${L.map(k => `<li style="--c:${coulP(k.parti)}">${avatar(k.parti, sel, k.nom)}<span><b>${esc(k.nom)}</b><small>${esc(k.aff)}</small></span></li>`).join("")}</ul>`;
+    html += `<div class="lv-chips"><span class="lv-chip">${etatFerme(ab) ? "Aucun résultat pour l'instant" : `Bureaux fermés à ${h(FERME_ETAT[ab] || "01:00")} (heure du Québec)`}</span></div>`;
+    if (c.cands.length) html += `<span class="lv-eyebrow">Candidatures (${c.cands.length})</span><ul class="lv-liste">${c.cands.slice().sort((x, y) => "DRIL".indexOf(x.p) - "DRIL".indexOf(y.p)).map(k => `<li style="--c:${coulP(k.p)}">${avatar(k.p, k.nom)}<span><b>${esc(k.nom)}</b><small>${esc(nomParti(k.p))}${k.inc ? " · sortant·e" : ""}</small></span></li>`).join("")}</ul>`;
   }
-  if (r24?.cands?.length) html += `<p class="lv-muted lv-proj">En 2024 : ${r24.cands.slice(0, 3).map(k => `<b style="color:${coulP(k.parti)}">${esc(PARTIS[k.parti]?.court || k.parti)}</b> ${nf(k.pct, 1)} %`).join(" · ")} (${esc(r24.cands[0].nom)} élu·e)</p>`;
-  p.innerHTML = html;
+  html += `<p class="lv-muted lv-proj">Prévisions : <b style="color:${COTE[c.cote]?.[0]}">${COTE[c.cote]?.[1] || "Non coté"}</b> (consensus de 270toWin) · sortant : ${esc(c.sortant || "siège vacant")} (${esc(c.held || "—")})${c.limite ? ", limite de mandats" : c.ret ? ", ne se représente pas" : ""}`
+    + (vue === "H" && (c.mc != null || c.mp != null) ? `<br>En 2024 : Chambre ${marge(c.mc)} · présidentielle ${c.mp == null ? "—" : c.mp < 0 ? `Trump +${nf(-c.mp, 1)}` : `Harris +${nf(c.mp, 1)}`}` : "")
+    + (vue === "S" && c.autre ? `<br>Autre sénateur (pas en élection) : ${esc(c.autre.nom)} (${esc(c.autre.p)}), jusqu'en ${c.autre.fin + 1}` : "") + `</p>`;
+  el.innerHTML = html;
 }
 
-/* ---------- photos des candidats (sites des partis, affichées depuis ces sites : en-direct/photos.json) ---------- */
-let PHOTOS = {};
-// photo ronde cerclée de la couleur du parti ; initiales si pas de photo ou si l'image ne se charge pas
-function avatar(parti, code, nom) {
-  const mots = String(nom || "").trim().split(/\s+/), ini = esc(((mots[0] || "")[0] || "") + ((mots.length > 1 ? mots[mots.length - 1] : "")[0] || "")).toUpperCase();
-  const repli = `<span class="lv-ava lv-ini" style="--c:${coulP(parti)}" aria-hidden="true">${ini}</span>`;
-  const url = PHOTOS[parti]?.[code];
-  if (!url) return repli;
-  const img = `<img class="lv-ava" style="--c:${coulP(parti)}" src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-nom="${esc(nom)}" data-parti="${parti}"
-    onerror="(this.closest('.cb-recadre') || this).outerHTML=this.dataset.repli" data-repli="${esc(repli)}">`;
-  // OneBC : affiches de campagne (nom écrit sur la moitié du bas) : vignette recadrée sur le visage, affiche entière au survol
-  return parti === "one" ? `<span class="cb-recadre" style="--c:${coulP(parti)}">${img}</span>` : img;
-}
-// survol d'une photo : la même photo en grand, à côté
-function grandePhoto(img) {
-  const z = $("lvPhoto"); if (!z) return;
-  if (!img) { z.hidden = true; return; }
-  z.style.setProperty("--c", coulP(img.dataset.parti));
-  z.innerHTML = `<img src="${esc(img.currentSrc || img.src)}" alt="" referrerpolicy="no-referrer"><span>${esc(img.dataset.nom || "")}</span>`;
-  z.hidden = false;
-  const r = img.getBoundingClientRect(), w = z.offsetWidth, h = z.offsetHeight;
-  let x = r.left - w - 12; if (x < 8) x = r.right + 12;
-  z.style.left = Math.min(innerWidth - w - 8, x) + "px";
-  z.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + r.height / 2 - h / 2)) + "px";
-}
-document.addEventListener("mouseover", e => { const im = e.target.closest?.("img.lv-ava"); if (im) grandePhoto(im); });
-document.addEventListener("mouseout", e => { if (e.target.closest?.("img.lv-ava")) grandePhoto(null); });
-
-/* ---------- circonscriptions suivies, alertes, classement ---------- */
-let suivies = new Set(lireLS(localStorage, "cbSuivies", []));
-let carteSuivis = lireLS(localStorage, "cbCarteSuivies", false), triClassement = lireLS(localStorage, "cbTri", "serre");
-let connus = lireLS(sessionStorage, "cbConnus", null);
-function basculerSuivie(code) {
-  suivies.has(code) ? suivies.delete(code) : suivies.add(code);
-  ecrireLS(localStorage, "cbSuivies", [...suivies]);
+/* ---------- courses suivies, alertes, classement ---------- */
+let suivies = new Set(lireLS(localStorage, "usSuivies", []));
+let carteSuivis = lireLS(localStorage, "usCarteSuivies", false), triClassement = lireLS(localStorage, "usTri", "serre");
+let connus = lireLS(sessionStorage, "usConnus", null);
+function basculerSuivie(cle) {
+  suivies.has(cle) ? suivies.delete(cle) : suivies.add(cle);
+  ecrireLS(localStorage, "usSuivies", [...suivies]);
   dessinerSuivi(); dessinerPanneau(); dessinerContoursSuivis();
 }
-function ligne(code) {
-  const c = enCirc(code), a = c && tete(c);
-  return `<li class="lv-ligne" data-rid="${code}" tabindex="0"><button type="button" class="lv-etoile" data-suivre="${code}" aria-pressed="${suivies.has(code)}" aria-label="Suivre ${esc(PAR_CODE[code])}">${suivies.has(code) ? "★" : "☆"}</button>`
-    + `<span class="lv-nom" style="--c:${a ? coulP(a.parti) : "var(--soft)"}"><i></i>${esc(PAR_CODE[code])}</span>`
-    + `<span class="lv-ecart">${a ? `${esc(PARTIS[a.parti].court)} +${nf(ecartPts(c), 1)} pt` : "—"}<small>${c ? (c.final ? "terminé" : c.frac != null ? nf(100 * c.frac, 0) + " % urnes" : "") : ""}</small></span></li>`;
+const nomCle = cle => { const [v, id] = cle.split(":"), c = COURSES[v]?.[id]; return c ? (v === "H" ? c.nom : `${c.nom} · ${v === "S" ? "Sénat" : "gouverneur"}`) : cle; };
+function ligne(cle) {
+  const [v, id] = cle.split(":"), c = COURSES[v]?.[id], a = res(v, id), t = a && tete(a);
+  return `<li class="lv-ligne" data-cle="${cle}" tabindex="0"><button type="button" class="lv-etoile" data-suivre="${cle}" aria-pressed="${suivies.has(cle)}" aria-label="Suivre ${esc(nomCle(cle))}">${suivies.has(cle) ? "★" : "☆"}</button>`
+    + `<span class="lv-nom" style="--c:${t ? coulP(t.p) : COTE[c?.cote]?.[0] || "var(--soft)"}"><i></i>${esc(nomCle(cle))}</span>`
+    + `<span class="lv-ecart">${t ? `${esc(t.p)} ${a.total ? "+" + nf(ecartPts(a), 1) + " pt" : ""}${a.appel ? " ✓" : ""}` : esc(COTE[c?.cote]?.[1] || "—")}<small>${a ? (a.appel ? "appelée" : a.pct != null ? nf(a.pct) + " % dépouillé" : "") : ""}</small></span></li>`;
 }
 function dessinerSuivi() {
-  $("lvSuivies").innerHTML = suivies.size ? `<ul class="lv-lignes">${[...suivies].filter(k => PAR_CODE[k]).sort((a, b) => PAR_CODE[a].localeCompare(PAR_CODE[b], "fr")).map(ligne).join("")}</ul>`
-    : `<p class="lv-muted">Clique sur ☆ dans la fiche ou le classement pour suivre une circonscription : elle s'affiche ici, et une alerte apparaît quand le parti en tête change.</p>`;
-  const TRIS = [["serre", "Plus serrées"], ["nom", "Par nom"]];
+  $("lvSuiviesTitre").textContent = "Suivies"; $("lvCarteSuivis").title = "Entourer sur la carte les courses suivies";
+  $("lvSuivies").innerHTML = suivies.size ? `<ul class="lv-lignes">${[...suivies].filter(k => COURSES[k[0]]?.[k.slice(2)]).sort((x, y) => nomCle(x).localeCompare(nomCle(y), "fr")).map(ligne).join("")}</ul>`
+    : `<p class="lv-muted">Clique sur ☆ dans la fiche ou le classement pour suivre une course (Chambre, Sénat ou gouverneur) : elle s'affiche ici, et une alerte apparaît quand le parti en tête change ou que la course est appelée.</p>`;
+  const TRIS = [["serre", "Plus serrées"], ["cote", "Prévisions"], ["nom", "Par nom"]];
   $("lvPPChoix").innerHTML = TRIS.map(([k, l]) => `<button type="button" data-tri="${k}" aria-pressed="${triClassement === k}">${l}</button>`).join("");
-  const codes = Object.keys(PAR_CODE).sort((a, b) => {
-    if (triClassement === "nom") return PAR_CODE[a].localeCompare(PAR_CODE[b], "fr");
-    const ca = enCirc(a), cb = enCirc(b);
-    return (ca ? ecartPts(ca) : 999) - (cb ? ecartPts(cb) : 999) || PAR_CODE[a].localeCompare(PAR_CODE[b], "fr");
+  $("edClassSur").textContent = `${VUES[vue].long} · ${Object.keys(COURSES[vue]).length} courses`;
+  const ids = Object.keys(COURSES[vue]).sort((x, y) => {
+    const cx = COURSES[vue][x], cy = COURSES[vue][y];
+    if (triClassement === "nom") return cx.nom.localeCompare(cy.nom, "fr", { numeric: true });
+    if (triClassement === "cote") return Math.abs(COTES.indexOf(cx.cote) - 3) - Math.abs(COTES.indexOf(cy.cote) - 3) || cx.nom.localeCompare(cy.nom, "fr", { numeric: true });
+    const ax = res(vue, x), ay = res(vue, y);
+    return (ax && !ax.appel ? ecartPts(ax) : ax ? 500 + ecartPts(ax) : 999) - (ay && !ay.appel ? ecartPts(ay) : ay ? 500 + ecartPts(ay) : 999) || cx.nom.localeCompare(cy.nom, "fr", { numeric: true });
   });
-  $("lvParParti").innerHTML = `<ul class="lv-lignes">${codes.map(ligne).join("")}</ul>`;
+  $("lvParParti").innerHTML = `<ul class="lv-lignes">${ids.map(id => ligne(vue + ":" + id)).join("")}</ul>`;
 }
 function surveiller() {
   const now = {};
-  for (const code of Object.keys(PAR_CODE)) { const c = enCirc(code); if (c) now[code] = tete(c).parti; }
-  if (connus) for (const code of suivies) if (now[code] && connus[code] && now[code] !== connus[code])
-    alerter(`${PAR_CODE[code]} : ${PARTIS[now[code]].court} passe en tête devant ${PARTIS[connus[code]].court}`, coulP(now[code]));
-  connus = now; ecrireLS(sessionStorage, "cbConnus", connus);
+  for (const v of ["H", "S", "G"]) for (const id of Object.keys(COURSES[v])) { const a = res(v, id); if (a) now[v + ":" + id] = [tete(a).p, a.appel]; }
+  if (connus) for (const cle of suivies) {
+    const n = now[cle], o = connus[cle]; if (!n || !o) continue;
+    if (n[1] && !o[1]) alerter(`${nomCle(cle)} : course appelée pour ${tete(res(cle[0], cle.slice(2))).nom} (${n[0]})`, coulP(n[0]));
+    else if (n[0] !== o[0]) alerter(`${nomCle(cle)} : ${n[0]} passe en tête devant ${o[0]}`, coulP(n[0]));
+  }
+  // seuils de contrôle (Chambre, Sénat), annoncés une fois
+  if (connus && RES?.lus) for (const v of ["H", "S"]) {
+    const { s } = sieges(v), D = tot(s, "D") + (v === "S" ? tot(s, "I") : 0) - s.D.avance - (v === "S" ? s.I.avance : 0), R = tot(s, "R") - s.R.avance;
+    const cle = `ctl-${v}`, qui = v === "H" ? (D >= 218 ? "D" : R >= 218 ? "R" : null) : (D >= 51 ? "D" : R >= 50 ? "R" : null);
+    if (qui && connus[cle] !== qui) alerter(`${v === "H" ? "Chambre" : "Sénat"} : contrôle ${qui === "D" ? "démocrate" : "républicain"} assuré par les courses appelées`, coulP(qui));
+    if (qui) now[cle] = qui;
+  }
+  connus = now; ecrireLS(sessionStorage, "usConnus", connus);
 }
 function alerter(txt, c) {
   const el = document.createElement("div");
@@ -513,36 +503,79 @@ function alerter(txt, c) {
   $("lvAlertes").appendChild(el); setTimeout(() => el.remove(), 12000);
 }
 
-/* ---------- textes fixes ---------- */
-function dessinerTextes() {
-  $("edPartis").innerHTML = `<span class="lv-eyebrow">Les partis</span><h3 id="edPartisTitre">Qui se présente</h3>
-    <p class="lv-muted">Élection anticipée déclenchée par le premier ministre David Eby le 22 septembre 2026 (la prochaine élection à date fixe aurait eu lieu en octobre 2028). 353 candidatures dans les 93 circonscriptions ; BC United, deuxième parti en 2020, a été radié de la liste des partis enregistrés.</p>
-    <div class="lv-partis">${ORDRE_P.filter(p => PARTIS[p].chef).map(p => { const n = Object.values(CANDS).flat().filter(k => k.parti === p).length;
-      return `<div class="lv-parti" style="--c:${PARTIS[p].c}"><i></i><span class="lv-pnom">${esc(PARTIS[p].nom)}</span><b>${n}</b><small>candidat·e·s · chef : ${esc(PARTIS[p].chef)}${PARTIS[p].s24 ? ` · ${PARTIS[p].s24} sièges en 2024` : ""}</small></div>`; }).join("")}</div>`;
-  $("edSource").innerHTML = `Sources : résultats préliminaires d'<a href="${SITE_RES}" target="_blank" rel="noopener">Elections BC</a> (non officiels jusqu'au dépouillement final du 6 au 10 novembre) ;
-    liste des candidats d'Elections BC (3 octobre 2026) ; circonscriptions de 2023, BC Data Catalogue (Open Government Licence – British Columbia), découpées au littoral d'OpenStreetMap (© contributeurs d'OpenStreetMap, ODbL) ; élection de 2024 : Elections BC ; photos des candidats : sites des partis (affichées depuis ces sites).`;
+/* ---------- blocs du bas : enjeux, courses à surveiller, vote générique, comment ça marche ---------- */
+function dessinerBlocs(sond) {
+  const act = { D: 0, R: 0, V: 0 }; for (const id of Object.keys(COURSES.H)) { const a = PROJ.actuel?.[id]; a?.p ? (act[a.p === "R" ? "R" : "D"]++) : act.V++; }
+  const sen = { D: 0, R: 0, I: 0 }; for (const e of Object.values(PROJ.senat?.etats || {})) for (const x of e.senateurs) sen[groupe(x.p)]++;
+  const gv = { D: 0, R: 0 }; for (const e of Object.values(GOUV.etats)) gv[e.p === "R" ? "R" : "D"]++;
+  const serrees = v => Object.values(COURSES[v]).filter(c => ["T", "D1", "R1"].includes(c.cote)).sort((a, b) => Math.abs(COTES.indexOf(a.cote) - 3) - Math.abs(COTES.indexOf(b.cote) - 3) || a.nom.localeCompare(b.nom, "fr"));
+  const puce = (v, c) => `<li><button type="button" class="vi-lien" data-aller="${v}:${c.id}" style="color:${COTE[c.cote][0]}">${esc(c.nom)}</button> <small>${COTE[c.cote][1]} · ${c.held === "D" || c.held === "R" ? "sortant " + c.held : "nouveau siège ou vacant"}</small></li>`;
+  const moy = sond?.moyenne?.at(-1), L = (sond?.sondages || []).slice(-8).reverse();
+  $("edBlocs").innerHTML = `
+    <section class="ed-bloc" aria-labelledby="usEnjeuxTitre"><span class="lv-eyebrow">Les enjeux</span><h3 id="usEnjeuxTitre">Ce qui se joue</h3>
+      <div class="ed-voter">
+        <div><h4>Chambre des représentants</h4><p>Aujourd'hui : <b style="color:${coulP("R")}">${act.R} républicains</b>, <b style="color:${coulP("D")}">${act.D} démocrates</b>${act.V ? `, ${act.V} siège${act.V > 1 ? "s" : ""} vacant${act.V > 1 ? "s" : ""}` : ""}. Il faut 218 sièges : les démocrates doivent en gagner environ ${Math.max(0, 218 - act.D)} de plus qu'aujourd'hui.</p></div>
+        <div><h4>Sénat</h4><p>Aujourd'hui : <b style="color:${coulP("R")}">${sen.R} républicains</b>, <b style="color:${coulP("D")}">${sen.D} démocrates</b> et ${sen.I} indépendants qui votent avec eux. Le vice-président J. D. Vance départage une égalité : les démocrates doivent arriver à 51, soit un gain net de ${Math.max(0, 51 - sen.D - sen.I)} sièges.</p></div>
+        <div><h4>Gouverneurs</h4><p>Aujourd'hui : <b style="color:${coulP("R")}">${gv.R} républicains</b>, <b style="color:${coulP("D")}">${gv.D} démocrates</b>. ${Object.keys(COURSES.G).length} États élisent leur gouverneur, dont plusieurs postes laissés libres par la limite de mandats.</p></div>
+      </div></section>
+    <section class="ed-bloc" aria-labelledby="usSurvTitre"><span class="lv-eyebrow">Prévisions des analystes · consensus de 270toWin${PROJ.senat?.maj ? ` au ${new Date(PROJ.senat.maj + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long" })}` : ""}</span><h3 id="usSurvTitre">Les courses à surveiller</h3>
+      <div class="ed-voter">
+        <div><h4>Sénat</h4><ul>${serrees("S").map(c => puce("S", c)).join("") || "<li>Aucune course serrée</li>"}</ul></div>
+        <div><h4>Gouverneurs</h4><ul>${serrees("G").map(c => puce("G", c)).join("") || "<li>Aucune course serrée</li>"}</ul></div>
+        <div><h4>Chambre : ${serrees("H").filter(c => c.cote === "T").length} districts à égalité</h4><ul>${serrees("H").filter(c => c.cote === "T").map(c => puce("H", c)).join("")}</ul></div>
+      </div></section>
+    ${moy ? `<section class="ed-bloc" aria-labelledby="usGenTitre"><span class="lv-eyebrow">Sondages · ${esc(sond.source || "")}</span><h3 id="usGenTitre">Vote générique pour le Congrès</h3>
+      <p>Moyenne au ${new Date(moy.d + "T12:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })} : <b style="color:${coulP("D")}">démocrates ${nf(moy.D, 1)} %</b> · <b style="color:${coulP("R")}">républicains ${nf(moy.R, 1)} %</b> (écart ${marge(moy.D - moy.R)}). Évolution complète dans l'onglet États-Unis.</p>
+      <div class="ed-sond"><table><thead><tr><th>Sondeur</th><th>Date</th><th>D</th><th>R</th><th>Écart</th></tr></thead><tbody>${L.map(x => `<tr><td>${esc(String(x.f).replace(/\^.*$/, ""))}<small>${esc(x.n || "")}</small></td><td>${esc(x.d)}</td><td>${nf(x.D, 1)}</td><td>${nf(x.R, 1)}</td><td>${marge(x.D - x.R)}</td></tr>`).join("")}</tbody></table></div></section>` : ""}
+    <section class="ed-bloc" aria-labelledby="usCommentTitre"><span class="lv-eyebrow">Comment ça marche</span><h3 id="usCommentTitre">Le soir du vote et après</h3>
+      <div class="ed-voter">
+        <div><h4>Qui annonce les gagnants</h4><p>Il n'y a pas de résultat national officiel le soir même : chaque État compte ses votes, et les médias « appellent » une course quand l'issue ne fait plus de doute. Les résultats officiels viennent des certifications des États, en novembre et décembre.</p></div>
+        <div><h4>Des comptes qui changent</h4><p>Selon l'État, les votes par correspondance sont comptés avant ou après ceux du jour du vote : les premiers chiffres peuvent pencher d'un côté puis de l'autre. La Californie, l'Arizona et le Nevada mettent souvent plusieurs jours à finir.</p></div>
+        <div><h4>Règles particulières</h4><ul><li>Géorgie : 2e tour le 1er décembre si personne n'a 50 %.</li><li>Maine et Alaska : vote préférentiel (classement des candidats).</li><li>Californie et Washington : deux candidats du même parti peuvent s'affronter.</li><li>Louisiane : nouvelles primaires fermées pour le Congrès en 2026.</li></ul></div>
+        <div><h4>Et ensuite</h4><p>Le nouveau Congrès entre en fonction le 3 janvier 2027 ; la plupart des gouverneurs élus, en janvier. Les représentants ont des mandats de deux ans, les sénateurs de six ans (un tiers du Sénat à chaque élection), les gouverneurs de quatre ans (deux au New Hampshire et au Vermont).</p></div>
+      </div></section>`;
+  $("edSource").innerHTML = `Sources : résultats non officiels et appels des courses compilés par <a href="${SITE_RES}" target="_blank" rel="noopener">CNN</a> (flux publics de résultats) ;
+    prévisions : consensus de <a href="https://www.270towin.com/2026-house-election/consensus-2026-house-forecast" target="_blank" rel="noopener">270toWin</a> (Cook Political Report, Sabato's Crystal Ball, Inside Elections, etc.), avec les candidats et les sortants ;
+    Chambre actuelle : Clerk de la Chambre des représentants ; heures de fermeture : 270toWin d'après The Green Papers ; districts et États : Census Bureau (comme Votes États-Unis) ; vote générique : ${esc(sond?.source || "Silver Bulletin")}.`;
 }
 
-function dessiner() { dessinerEtat(); dessinerSieges(); dessinerCarte(); dessinerPanneau(); dessinerSuivi(); }
-function choisir(code, defiler = true) {
-  sel = code; dessinerCarte(); dessinerPanneau(); info($("lvInfo").getAttribute("aria-pressed") === "true" || false);
+function dessiner() { dessinerEtat(); dessinerChoix(); dessinerSieges(); dessinerZooms(); dessinerCarte(); dessinerPanneau(); dessinerSuivi(); }
+function changerVue(v) {
+  if (v === vue) return;
+  vue = v; ecrireLS(localStorage, "usVue", vue); sel = null;
+  tracer(); dessiner();
+}
+function choisir(id, defiler = true) {
+  sel = id; dessinerCarte(); dessinerPanneau(); info($("lvInfo").getAttribute("aria-pressed") === "true" || false);
   if (defiler && innerWidth <= 900 && !document.querySelector(".lv-cartecard.lv-plein, .lv-cartecard:fullscreen")) $("lvPanneau").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function aller(cle) {
+  const [v, id] = cle.split(":"); changerVue(v); choisir(id, false);
+  $("lvCarte").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 async function demarrer() {
-  const [geo, cands, r24] = await Promise.all([
-    fetch("en-direct/circonscriptions.json", { cache: "no-cache" }).then(r => r.json()),
-    fetch("en-direct/candidats.json", { cache: "no-cache" }).then(r => r.json()),
-    fetch("en-direct/resultats-2024.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : { circ: {} }).catch(() => ({ circ: {} })),
+  const [carte, proj, gouv, sond] = await Promise.all([
+    fetch("en-direct/etats-unis/carte.json", { cache: "no-cache" }).then(r => r.json()),
+    fetch("votes-usa/projection.json", { cache: "no-cache" }).then(r => r.json()),
+    fetch("en-direct/etats-unis/gouverneurs.json", { cache: "no-cache" }).then(r => r.json()),
+    fetch("votes-usa/sondages.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
-  GEO = geo; CANDS = cands.circ; R24 = r24.circ || {};
-  for (const f of GEO.features) PAR_CODE[f.properties.n] = f.properties.nom;
-  dessinerHeures(); dessinerTextes(); preparerCarte(); construireCarte();
-  fetch("en-direct/photos.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : {}).then(d => { PHOTOS = d || {}; dessinerPanneau(); }).catch(() => {});
+  CARTE = carte; PROJ = proj; GOUV = gouv;
+  // anneaux dans le sens de d3, polygone par polygone (un îlot à l'envers peindrait tout le globe)
+  const sens = q => d3.geoArea({ type: "Polygon", coordinates: q }) > 2 * Math.PI ? q.map(x => x.slice().reverse()) : q;
+  for (const f of [...CARTE.districts.features, ...CARTE.etats.features])
+    f.geometry.coordinates = f.geometry.type === "Polygon" ? sens(f.geometry.coordinates) : f.geometry.coordinates.map(sens);
+  for (const f of CARTE.etats.features) { ETATS[f.properties.fips] = f.properties; AB[f.properties.ab] = f.properties.fips; }
+  AB.DC = AB.DC || "11";
+  preparerCourses();
+  dessinerHeures(); dessinerBlocs(sond); preparerCarte(); construireCarte();
   document.addEventListener("click", e => {
     const s = e.target.closest("[data-suivre]"); if (s) { e.stopPropagation(); basculerSuivie(s.dataset.suivre); return; }
-    const t = e.target.closest("[data-tri]"); if (t) { triClassement = t.dataset.tri; ecrireLS(localStorage, "cbTri", triClassement); dessinerSuivi(); return; }
-    const l = e.target.closest(".lv-ligne"); if (l) choisir(l.dataset.rid);
+    const t = e.target.closest("[data-tri]"); if (t) { triClassement = t.dataset.tri; ecrireLS(localStorage, "usTri", triClassement); dessinerSuivi(); return; }
+    const v = e.target.closest("#edChoix [data-vue]"); if (v) { changerVue(v.dataset.vue); return; }
+    const a = e.target.closest("[data-aller]"); if (a) { aller(a.dataset.aller); return; }
+    const l = e.target.closest(".lv-ligne"); if (l) { const [lv, id] = l.dataset.cle.split(":"); if (lv !== vue) changerVue(lv); choisir(id); }
   });
   $("lvPPReplier").addEventListener("click", () => { const ouvert = $("lvPPSection").hasAttribute("data-ferme"); $("lvPPSection").toggleAttribute("data-ferme", !ouvert); $("lvPPReplier").setAttribute("aria-expanded", ouvert); });
   $("lvMaj").addEventListener("click", actualiser);

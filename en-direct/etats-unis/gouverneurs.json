@@ -1,0 +1,816 @@
+{
+"source": "Consensus de 270toWin (Cook Political Report, Sabato's Crystal Ball, Inside Elections, etc.)",
+"maj": "2026-10-23",
+"etats": {
+"02": {
+"gov": "Mike Dunleavy",
+"p": "R",
+"course": true,
+"r": "T",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Dave Bronson",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Jonathan Kreiss-Tomkins",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Treg Taylor",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Bernadette Wilson",
+"p": "R",
+"inc": 0
+}
+]
+},
+"01": {
+"gov": "Kay Ivey",
+"p": "R",
+"course": true,
+"r": "R2",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Doug Jones",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Tommy Tuberville",
+"p": "R",
+"inc": 0
+}
+]
+},
+"05": {
+"gov": "Sarah Huckabee Sanders",
+"p": "R",
+"course": true,
+"r": "R3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Sarah Huckabee Sanders",
+"p": "R",
+"inc": 1
+},
+{
+"nom": "Fred Love",
+"p": "D",
+"inc": 0
+}
+]
+},
+"04": {
+"gov": "Katie Hobbs",
+"p": "D",
+"course": true,
+"r": "D1",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Andy Biggs",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Katie Hobbs",
+"p": "D",
+"inc": 1
+}
+]
+},
+"06": {
+"gov": "Gavin Newsom",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Xavier Becerra",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Steve Hilton",
+"p": "R",
+"inc": 0
+}
+]
+},
+"08": {
+"gov": "Jared Polis",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Victor Marx",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Phil Weiser",
+"p": "D",
+"inc": 0
+}
+]
+},
+"09": {
+"gov": "Ned Lamont",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Ryan Fazio",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Ned Lamont",
+"p": "D",
+"inc": 1
+}
+]
+},
+"10": {
+"gov": "Matt Meyer",
+"p": "D",
+"course": false
+},
+"12": {
+"gov": "Ron DeSantis",
+"p": "R",
+"course": true,
+"r": "R1",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Byron Donalds",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "David Jolly",
+"p": "D",
+"inc": 0
+}
+]
+},
+"13": {
+"gov": "Brian Kemp",
+"p": "R",
+"course": true,
+"r": "T",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Keisha Lance Bottoms",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Rick Jackson",
+"p": "R",
+"inc": 0
+}
+]
+},
+"15": {
+"gov": "Josh Green",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Gary Cordery",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Josh Green",
+"p": "D",
+"inc": 1
+}
+]
+},
+"19": {
+"gov": "Kim Reynolds",
+"p": "R",
+"course": true,
+"r": "D1",
+"limite": false,
+"ret": true,
+"cands": [
+{
+"nom": "Zach Lahn",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Rob Sand",
+"p": "D",
+"inc": 0
+}
+]
+},
+"16": {
+"gov": "Brad Little",
+"p": "R",
+"course": true,
+"r": "R3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Brad Little",
+"p": "R",
+"inc": 1
+},
+{
+"nom": "Terri Pickens",
+"p": "D",
+"inc": 0
+}
+]
+},
+"17": {
+"gov": "J.B. Pritzker",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Darren Bailey",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "JB Pritzker",
+"p": "D",
+"inc": 1
+}
+]
+},
+"18": {
+"gov": "Mike Braun",
+"p": "R",
+"course": false
+},
+"20": {
+"gov": "Laura Kelly",
+"p": "D",
+"course": true,
+"r": "R1",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Cindy Holscher",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Ty Masterson",
+"p": "R",
+"inc": 0
+}
+]
+},
+"21": {
+"gov": "Andy Beshear",
+"p": "D",
+"course": false
+},
+"22": {
+"gov": "Jeff Landry",
+"p": "R",
+"course": false
+},
+"25": {
+"gov": "Maura Healey",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Maura Healey",
+"p": "D",
+"inc": 1
+},
+{
+"nom": "Michael Minogue",
+"p": "R",
+"inc": 0
+}
+]
+},
+"24": {
+"gov": "Wes Moore",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Dan Cox",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Wes Moore",
+"p": "D",
+"inc": 1
+}
+]
+},
+"23": {
+"gov": "Janet Mills",
+"p": "D",
+"course": true,
+"r": "D2",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Rick Bennett",
+"p": "I",
+"inc": 0
+},
+{
+"nom": "Robert Charles",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Hannah Pingree",
+"p": "D",
+"inc": 0
+}
+]
+},
+"26": {
+"gov": "Gretchen Whitmer",
+"p": "D",
+"course": true,
+"r": "D1",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Jocelyn Benson",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "John James",
+"p": "R",
+"inc": 0
+}
+]
+},
+"27": {
+"gov": "Tim Walz",
+"p": "D",
+"course": true,
+"r": "D2",
+"limite": false,
+"ret": true,
+"cands": [
+{
+"nom": "Lisa Demuth",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Amy Klobuchar",
+"p": "D",
+"inc": 0
+}
+]
+},
+"29": {
+"gov": "Mike Kehoe",
+"p": "R",
+"course": false
+},
+"28": {
+"gov": "Tate Reeves",
+"p": "R",
+"course": false
+},
+"30": {
+"gov": "Greg Gianforte",
+"p": "R",
+"course": false
+},
+"37": {
+"gov": "Josh Stein",
+"p": "D",
+"course": false
+},
+"38": {
+"gov": "Kelly Armstrong",
+"p": "R",
+"course": false
+},
+"31": {
+"gov": "Jim Pillen",
+"p": "R",
+"course": true,
+"r": "R2",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Jim Pillen",
+"p": "R",
+"inc": 1
+},
+{
+"nom": "Lynne Walz",
+"p": "D",
+"inc": 0
+}
+]
+},
+"33": {
+"gov": "Kelly Ayotte",
+"p": "R",
+"course": true,
+"r": "R2",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Kelly Ayotte",
+"p": "R",
+"inc": 1
+},
+{
+"nom": "Cinde Warmington",
+"p": "D",
+"inc": 0
+}
+]
+},
+"34": {
+"gov": "Mikie Sherrill",
+"p": "D",
+"course": false
+},
+"35": {
+"gov": "Michelle Lujan Grisham",
+"p": "D",
+"course": true,
+"r": "D2",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Deb Haaland",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Greggory Hull",
+"p": "R",
+"inc": 0
+}
+]
+},
+"32": {
+"gov": "Joe Lombardo",
+"p": "R",
+"course": true,
+"r": "T",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Aaron Ford",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Joe Lombardo",
+"p": "R",
+"inc": 1
+}
+]
+},
+"36": {
+"gov": "Kathy Hochul",
+"p": "D",
+"course": true,
+"r": "D2",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Bruce Blakeman",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Kathy Hochul",
+"p": "D",
+"inc": 1
+}
+]
+},
+"39": {
+"gov": "Mike DeWine",
+"p": "R",
+"course": true,
+"r": "T",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Amy Acton",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Vivek Ramaswamy",
+"p": "R",
+"inc": 0
+}
+]
+},
+"40": {
+"gov": "Kevin Stitt",
+"p": "R",
+"course": true,
+"r": "R2",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Mike Mazzei",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Cyndi Munson",
+"p": "D",
+"inc": 0
+}
+]
+},
+"41": {
+"gov": "Tina Kotek",
+"p": "D",
+"course": true,
+"r": "D1",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Christine Drazan",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Tina Kotek",
+"p": "D",
+"inc": 1
+}
+]
+},
+"42": {
+"gov": "Josh Shapiro",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Stacy Garrity",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Josh Shapiro",
+"p": "D",
+"inc": 1
+}
+]
+},
+"44": {
+"gov": "Daniel McKee",
+"p": "D",
+"course": true,
+"r": "D3",
+"limite": false,
+"ret": true,
+"cands": [
+{
+"nom": "Ken Block",
+"p": "I",
+"inc": 0
+},
+{
+"nom": "Helena Foulkes",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Aaron Guckian",
+"p": "R",
+"inc": 0
+}
+]
+},
+"45": {
+"gov": "Henry McMaster",
+"p": "R",
+"course": true,
+"r": "R2",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Jermaine Johnson",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Alan Wilson",
+"p": "R",
+"inc": 0
+}
+]
+},
+"46": {
+"gov": "Larry Rhoden",
+"p": "R",
+"course": true,
+"r": "R3",
+"limite": false,
+"ret": true,
+"cands": [
+{
+"nom": "Dan Ahlers",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Larry Rhoden",
+"p": "R",
+"inc": 1
+}
+]
+},
+"47": {
+"gov": "Bill Lee",
+"p": "R",
+"course": true,
+"r": "R3",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Marsha Blackburn",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Jerri Green",
+"p": "D",
+"inc": 0
+}
+]
+},
+"48": {
+"gov": "Greg Abbott",
+"p": "R",
+"course": true,
+"r": "R1",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Greg Abbott",
+"p": "R",
+"inc": 1
+},
+{
+"nom": "Gina Hinojosa",
+"p": "D",
+"inc": 0
+}
+]
+},
+"49": {
+"gov": "Spencer Cox",
+"p": "R",
+"course": false
+},
+"51": {
+"gov": "Abigail Spanberger",
+"p": "D",
+"course": false
+},
+"50": {
+"gov": "Phil Scott",
+"p": "R",
+"course": true,
+"r": "R2",
+"limite": false,
+"ret": false,
+"cands": [
+{
+"nom": "Amanda Janoo",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Phil Scott",
+"p": "R",
+"inc": 1
+}
+]
+},
+"53": {
+"gov": "Bob Ferguson",
+"p": "D",
+"course": false
+},
+"55": {
+"gov": "Tony Evers",
+"p": "D",
+"course": true,
+"r": "T",
+"limite": false,
+"ret": true,
+"cands": [
+{
+"nom": "David Crowley",
+"p": "D",
+"inc": 0
+},
+{
+"nom": "Tom Tiffany",
+"p": "R",
+"inc": 0
+}
+]
+},
+"54": {
+"gov": "Patrick Morrisey",
+"p": "R",
+"course": false
+},
+"56": {
+"gov": "Mark Gordon",
+"p": "R",
+"course": true,
+"r": "R3",
+"limite": true,
+"ret": true,
+"cands": [
+{
+"nom": "Eric Barlow",
+"p": "R",
+"inc": 0
+},
+{
+"nom": "Ken Casner",
+"p": "D",
+"inc": 0
+}
+]
+}
+}
+}

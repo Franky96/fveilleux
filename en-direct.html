@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Outils de Frank — En direct · élection en Colombie-Britannique</title>
+  <title>Outils de Frank — En direct · mi-mandat aux États-Unis</title>
   <script>
     const _pL = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
@@ -534,6 +534,8 @@
     /* blocs du bas : les 10 questions, sondages, comment voter */
     .ed-bloc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; }
     .ed-bloc:empty { display: none; }
+    .ed-blocs { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }   /* blocs du bas des soirées de novembre 2026 (cadre « gen ») */
+    .ed-blocs:empty { display: none; }
     .ed-bloc h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.25rem; }
     .ed-bloc > p { margin: 0; font-size: 0.88rem; color: var(--muted); max-width: 100ch; }
     .ed-qs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 10px; }
@@ -1099,17 +1101,17 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes" hidden>Votes Québec · intentions de vote</span><span class="t-direct">En direct · élection générale en Colombie-Britannique du 24 octobre 2026</span><span class="t-ab2026" hidden>Anciennes élections · référendum en Alberta du 19 octobre 2026</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes" hidden>Votes Québec · intentions de vote</span><span class="t-direct">En direct · élections de mi-mandat aux États-Unis du 3 novembre 2026</span><span class="t-bg" hidden>En direct · présidentielle en Bulgarie, 2e tour du 1er novembre 2026</span><span class="t-nz" hidden>En direct · élections générales en Nouvelle-Zélande du 7 novembre 2026</span><span class="t-tw" hidden>En direct · élections locales à Taïwan du 28 novembre 2026</span><span class="t-es" hidden>En direct · élections générales en Espagne du 29 novembre 2026</span><span class="t-cb2026" hidden>Anciennes élections · élection générale en Colombie-Britannique du 24 octobre 2026</span><span class="t-ab2026" hidden>Anciennes élections · référendum en Alberta du 19 octobre 2026</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
-      <!-- « En direct » : soirée d'un vote (en ce moment : élection générale en Colombie-Britannique du 24 octobre 2026), à gauche de l'Accueil -->
+      <!-- « En direct » : soirées de vote (en ce moment : les élections de novembre 2026, une page par vote dans le sous-menu « sous-direct »), à gauche de l'Accueil -->
       <div class="sc-groupe" role="presentation">
         <div class="sc-groupe-btns">
           <a class="sc-tab sc-live" href="en-direct.html" aria-current="page">
-            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Colombie-Britannique · 24 octobre</small>
+            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Élections de novembre 2026</small>
           </a>
         </div>
       </div>
@@ -1155,6 +1157,11 @@
         </div>
       </div>
     </div>
+    <!-- sous-menu « En direct » : une page par soirée, dans l'ordre des dates (en-direct.html = États-Unis) -->
+    <div class="sc-sous" aria-label="En direct">
+      <span class="sc-sous-titre">Novembre 2026</span>
+      <a class="sc-tab sc-sous-tab" href="en-direct.html" aria-current="page"><b>États-Unis</b><small>3 nov. · mi-mandat</small></a>
+    </div>
   </nav>
   <script>
     // bandes d'onglets : quand les onglets dépassent, défilement à la molette et en glissant à la souris (au doigt, c'est natif),
@@ -1186,14 +1193,16 @@
     })();
   </script>
 
-  <!-- « En direct » : élection générale en Colombie-Britannique du 24 octobre 2026 (en-direct/direct.js), sur le modèle de
-       l'ancien direct de l'élection québécoise du 5 octobre 2026 (votes-quebec/live.js) et du référendum en Alberta : classes lv-* -->
+
+  <!-- Soirées « En direct » de novembre 2026 (États-Unis, Bulgarie, Nouvelle-Zélande, Taïwan, Espagne) : un même cadre, rempli par le
+       module de chaque page (en-direct/direct.js pour les États-Unis, en-direct/<endroit>/direct.js pour les autres) ; textes entre doubles accolades remplacés par pages.py
+       (DIRECTS). Classes lv-* de l'ancien direct de l'élection québécoise ; zooms, choix (chambre, scrutin…) et blocs du bas faits par le module. -->
   <section class="vue-live vue-direct" id="vue-direct">
     <div class="lv-wrap">
       <header class="lv-head">
         <div>
           <span class="live-badge"><i class="sc-dot" aria-hidden="true"></i>En direct</span>
-          <h2>Élection générale en Colombie-Britannique · 24 octobre 2026</h2>
+          <h2>Élections de mi-mandat aux États-Unis · 3 novembre 2026</h2>
           <p class="lv-etat" id="lvEtat" aria-live="polite">Chargement…</p>
           <p class="lv-heures" id="lvHeures" hidden></p>
         </div>
@@ -1203,18 +1212,20 @@
       </header>
       <p class="lv-banniere" id="lvBanniere" hidden></p>
 
-      <!-- avant la fermeture des bureaux : compte à rebours et heures (heure du Pacifique et du Québec) -->
+      <!-- avant la fermeture des bureaux : compte à rebours et heures -->
       <section class="ed-avant" id="edAvant" aria-label="Avant la fermeture des bureaux de vote" hidden>
         <div class="ed-compte" id="edCompte"></div>
         <ul class="ed-heures" id="edHeures"></ul>
       </section>
 
-      <section class="lv-sieges" aria-labelledby="lvSiegesTitre">
-        <span class="lv-eyebrow" id="edProvSur">Assemblée législative · 93 sièges · majorité 47</span>
+      <section class="lv-sieges ed-prov" aria-labelledby="lvSiegesTitre">
+        <div class="ed-choix" id="edChoix" role="group" aria-label="Élection affichée" hidden></div>
+        <span class="lv-eyebrow" id="edProvSur">Chambre des représentants · 435 sièges · majorité 218</span>
         <h3 id="lvSiegesTitre">Chargement…</h3>
+        <p class="ed-qtexte" id="edQTexte" hidden></p>
         <div class="lv-barre-zone">
           <div class="lv-barre" id="lvBarre"></div>
-          <div class="lv-maj" style="left:50.54%"><span>Majorité 47</span></div>
+          <div class="lv-maj" id="edMajMarque" hidden><span></span></div>
         </div>
         <div class="lv-partis" id="lvPartis"></div>
         <div class="lv-kv" id="edKv"></div>
@@ -1223,35 +1234,31 @@
       <div class="lv-grid">
         <div class="lv-cartebloc ed-cartebloc">
           <div class="lv-cartecard">
-            <div class="lv-zoom" id="lvZoom">
-              <button type="button" data-z="tout">Toute la C.-B.</button><button type="button" data-z="gv">Grand Vancouver</button><button type="button" data-z="van">Vancouver</button><button type="button" data-z="sur">Surrey</button><button type="button" data-z="vic">Victoria</button><button type="button" data-z="ok">Okanagan</button>
-              <button type="button" data-z="plus" aria-label="Zoomer">+</button><button type="button" data-z="moins" aria-label="Dézoomer">−</button>
-              <span class="lv-groupe" role="group" aria-label="Affichage de la carte (un seul à la fois, ou aucun)"><button type="button" data-z="marge" id="edMarge" aria-pressed="false" title="Couleur du parti en tête, d'autant plus foncée que l'écart est grand">Écart</button><button type="button" data-z="gains" id="edGains" aria-pressed="false" title="Seulement les circonscriptions qui changent de parti par rapport à 2024">Gains</button></span>
-            </div>
-            <div class="lv-barre-plein" id="lvBarrePlein" aria-label="Sièges de l'ensemble de la Colombie-Britannique"></div>
+            <div class="lv-zoom" id="lvZoom"></div>
+            <div class="lv-barre-plein" id="lvBarrePlein" aria-label="Résultat d'ensemble"></div>
             <div class="lv-zoom lv-zoom-bas" id="lvZoomBas">
-              <button type="button" id="lvCarteSuivis" aria-pressed="false" title="Entourer sur la carte les circonscriptions suivies">★ Suivies</button>
-              <button type="button" id="lvInfo" class="lv-info-btn" aria-pressed="false" title="Afficher la fiche de la circonscription par-dessus la carte">ⓘ Info</button>
+              <button type="button" id="lvCarteSuivis" aria-pressed="false" title="Entourer sur la carte les endroits suivis">★ Suivis</button>
+              <button type="button" id="lvInfo" class="lv-info-btn" aria-pressed="false" title="Afficher la fiche par-dessus la carte">ⓘ Info</button>
               <button type="button" data-z="plein" id="lvPlein" class="lv-plein-btn" aria-pressed="false" title="Afficher la carte en plein écran (Échap pour quitter)">⛶ Plein écran</button>
             </div>
-            <svg id="lvCarte" role="img" aria-label="Carte des 93 circonscriptions de la Colombie-Britannique, colorées selon le parti en tête"></svg>
+            <svg id="lvCarte" role="img" aria-label="Carte des résultats, colorée selon le parti en tête"></svg>
             <div class="lv-tip" id="lvTip" hidden></div>
           </div>
           <div class="vi-echelle" id="edLegende"></div>
         </div>
         <aside class="lv-panneau" id="lvPanneau" aria-live="polite"></aside>
 
-        <!-- suivi : circonscriptions suivies (étoiles, alertes) et classement des 93 circonscriptions -->
+        <!-- suivi : endroits suivis (étoiles, alertes) et classement -->
         <div class="lv-suivi">
           <section class="lv-carteS" aria-labelledby="lvSuiviesTitre">
-            <span class="lv-eyebrow">Mes circonscriptions</span>
+            <span class="lv-eyebrow">Mes endroits</span>
             <div class="lv-pp-tete">
-              <h3 id="lvSuiviesTitre">Suivies</h3>
+              <h3 id="lvSuiviesTitre">Suivis</h3>
             </div>
             <div id="lvSuivies"></div>
           </section>
           <section class="lv-carteS lv-repli" id="lvPPSection" aria-labelledby="lvParPartiTitre" data-ferme>
-            <span class="lv-eyebrow">Les 93 circonscriptions</span>
+            <span class="lv-eyebrow" id="edClassSur">Toutes les courses</span>
             <div class="lv-pp-tete">
               <h3 id="lvParPartiTitre"><button type="button" class="lv-replier" id="lvPPReplier" aria-expanded="false" aria-controls="lvPPCorps">
                 <span class="lv-fleche" aria-hidden="true">▸</span>Classement</button></h3>
@@ -1264,7 +1271,7 @@
       <div class="lv-alertes" id="lvAlertes" aria-live="assertive"></div>
       <div class="lv-photo" id="lvPhoto" aria-hidden="true" hidden></div>
 
-      <section class="ed-bloc" id="edPartis" aria-labelledby="edPartisTitre"></section>
+      <div class="ed-blocs" id="edBlocs"></div>
       <p class="lv-muted lv-source" id="edSource"></p>
     </div>
   </section>

@@ -1,11 +1,11 @@
 """Élection générale en Colombie-Britannique du 24 octobre 2026 : copie de secours des résultats préliminaires d'Elections BC.
 
 Même travail que le relais du site (api/cb.php) : lit la page d'accueil des résultats (results.elections.bc.ca) et les rapports
-qu'elle relie (HTML ou JSON), seulement sur les hôtes d'Elections BC, et les écrit tels quels dans en-direct/resultats.json
+qu'elle relie (HTML ou JSON), seulement sur les hôtes d'Elections BC, et les écrit tels quels dans en-direct/cb-2026/resultats.json
 (« pages ») ; l'interprétation se fait dans en-direct/direct.js. Le workflow .github/workflows/cb-election.yml lance ce script
 toutes les 5 minutes le soir du vote et pousse le fichier quand il change.
 
-Usage : python3 en-direct/outils/cb.py [--force]   (--force : hors de la fenêtre des résultats)
+Usage : python3 en-direct/cb-2026/outils/cb.py [--force]   (--force : hors de la fenêtre des résultats)
 """
 import datetime as dt, json, os, re, sys, urllib.parse, urllib.request
 

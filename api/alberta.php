@@ -7,7 +7,7 @@
  * pas les lire directement. Le serveur lit la page (code et version du tableau de bord), puis les données des 10 questions
  * avec le détail par circonscription (identifiants 1 à 9 et 11 pour la question 10), les garde en cache 45 s et les rend
  * telles quelles dans « eab ». L'interprétation se fait dans en-direct/direct.js, qui lit aussi la copie du pipeline
- * (en-direct/resultats.json, même forme, écrite par en-direct/outils/alberta.py) si ce relais ne répond pas.
+ * (en-direct/alberta-2026/resultats.json, même forme, écrite par en-direct/alberta-2026/outils/alberta.py) si ce relais ne répond pas.
  * (Les pages orEDResultsReferendum2026.cfm d'officialresults.elections.ab.ca prévues avant le vote n'ont pas servi.)
  *
  *   ?type=resultats   cache 45 s

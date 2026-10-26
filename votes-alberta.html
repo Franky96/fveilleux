@@ -536,6 +536,8 @@
     /* blocs du bas : les 10 questions, sondages, comment voter */
     .ed-bloc { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; }
     .ed-bloc:empty { display: none; }
+    .ed-blocs { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }   /* blocs du bas des soirées de novembre 2026 (cadre « gen ») */
+    .ed-blocs:empty { display: none; }
     .ed-bloc h3 { margin: 0; font-family: "Literata", Georgia, serif; font-size: 1.25rem; }
     .ed-bloc > p { margin: 0; font-size: 0.88rem; color: var(--muted); max-width: 100ch; }
     .ed-qs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 10px; }
@@ -1120,17 +1122,17 @@
 <body>
   <div class="site-top" data-topbar>
     <a href="dashboard.html" class="retour">&#8592; Accueil</a>
-    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes Alberta · intentions de vote provinciales</span><span class="t-direct" hidden>En direct · élection générale en Colombie-Britannique du 24 octobre 2026</span><span class="t-ab2026" hidden>Anciennes élections · référendum en Alberta du 19 octobre 2026</span></p>
+    <p class="titre"><span class="t-loi39" hidden>Simulation · Projet de loi n<sup>o</sup> 39 (2019) × résultats de l'élection du 5 octobre 2026</span><span class="t-live" hidden>Intentions de vote et simulations · accueil</span><span class="t-votes">Votes Alberta · intentions de vote provinciales</span><span class="t-direct" hidden>En direct · élections de mi-mandat aux États-Unis du 3 novembre 2026</span><span class="t-bg" hidden>En direct · présidentielle en Bulgarie, 2e tour du 1er novembre 2026</span><span class="t-nz" hidden>En direct · élections générales en Nouvelle-Zélande du 7 novembre 2026</span><span class="t-tw" hidden>En direct · élections locales à Taïwan du 28 novembre 2026</span><span class="t-es" hidden>En direct · élections générales en Espagne du 29 novembre 2026</span><span class="t-cb2026" hidden>Anciennes élections · élection générale en Colombie-Britannique du 24 octobre 2026</span><span class="t-ab2026" hidden>Anciennes élections · référendum en Alberta du 19 octobre 2026</span></p>
   </div>
 
   <!-- Choix du mode de scrutin (d'autres modes viendront s'ajouter ici) + résultats en direct (temporaire) -->
   <nav class="scrutins" aria-label="Pages de la section">
     <div class="sc-tabs">
-      <!-- « En direct » : soirée d'un vote (en ce moment : élection générale en Colombie-Britannique du 24 octobre 2026), à gauche de l'Accueil -->
+      <!-- « En direct » : soirées de vote (en ce moment : les élections de novembre 2026, une page par vote dans le sous-menu « sous-direct »), à gauche de l'Accueil -->
       <div class="sc-groupe" role="presentation">
         <div class="sc-groupe-btns">
           <a class="sc-tab sc-live" href="en-direct.html">
-            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Colombie-Britannique · 24 octobre</small>
+            <b><i class="sc-dot" aria-hidden="true"></i>En direct</b><small>Élections de novembre 2026</small>
           </a>
         </div>
       </div>
@@ -1206,6 +1208,7 @@
       }
     })();
   </script>
+
 
 
 

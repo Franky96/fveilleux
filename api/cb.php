@@ -5,8 +5,8 @@
  * Elections BC publie les résultats du soir du vote sur results.elections.bc.ca (site statique sur Azure, sans en-tête CORS : le
  * navigateur ne peut pas le lire directement). Le serveur lit la page d'accueil des résultats, puis les rapports qu'elle relie
  * (pages HTML ou fichiers JSON de résultats par candidat), les garde en cache 45 s et les rend tels quels dans « pages ».
- * L'interprétation se fait dans en-direct/direct.js (qui reconnaît les candidats de la liste officielle), qui lit aussi la copie
- * du pipeline (en-direct/resultats.json, même forme, écrite par en-direct/outils/cb.py) si ce relais ne répond pas.
+ * L'interprétation se fait dans en-direct/cb-2026/direct.js (qui reconnaît les candidats de la liste officielle), qui lit aussi la copie
+ * du pipeline (en-direct/cb-2026/resultats.json, même forme, écrite par en-direct/cb-2026/outils/cb.py) si ce relais ne répond pas.
  *
  *   ?type=resultats   cache 45 s
  *

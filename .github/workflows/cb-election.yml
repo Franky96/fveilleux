@@ -1,6 +1,6 @@
 # Élection générale en Colombie-Britannique du 24 octobre 2026 (page « En direct ») : copie de secours des résultats d'Elections BC.
-# La page lit d'abord le relais du site (api/cb.php, cache 45 s) ; si le relais ne répond pas, elle lit en-direct/resultats.json,
-# écrit ici par en-direct/outils/cb.py et poussé sur master (Hostinger le déploie). Toutes les 5 minutes de la fermeture des
+# La page lit d'abord le relais du site (api/cb.php, cache 45 s) ; si le relais ne répond pas, elle lit en-direct/cb-2026/resultats.json,
+# écrit ici par en-direct/cb-2026/outils/cb.py et poussé sur master (Hostinger le déploie). Toutes les 5 minutes de la fermeture des
 # bureaux (20 h heure du Pacifique = 3 h UTC le 25 octobre) jusqu'au lendemain soir, puis toutes les 30 minutes jusqu'aux résultats
 # officiels du 18 novembre ; le script ne fait rien hors de cette fenêtre. GitHub peut retarder les déclenchements programmés :
 # le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite.
@@ -31,11 +31,11 @@ jobs:
 
       - name: Résultats d'Elections BC
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/outils/cb.py --force; else python3 en-direct/outils/cb.py; fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/cb-2026/outils/cb.py --force; else python3 en-direct/cb-2026/outils/cb.py; fi
 
       - name: Publier si les résultats ont changé
         run: |
-          git add en-direct/resultats.json
+          git add en-direct/cb-2026/resultats.json
           if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
           H=$(TZ=America/Vancouver date +"%H h %M")
           git config user.name "github-actions[bot]"

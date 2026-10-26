@@ -1,0 +1,49 @@
+# Mi-mandat aux États-Unis du 3 novembre 2026 (page « En direct ») : copie de secours des résultats.
+# La page lit d'abord le relais du site (api/usa.php, cache 30 s), puis les flux de CNN directement ; si rien ne répond, elle lit
+# en-direct/etats-unis/resultats.json, écrit ici par en-direct/etats-unis/outils/usa.py et poussé sur master (Hostinger le déploie).
+# Toutes les 5 minutes de la première fermeture des bureaux (18 h, heure de l'Est = 23 h UTC le 3 novembre) jusqu'au lendemain soir,
+# puis toutes les 30 minutes jusqu'au 2e tour de Géorgie (1er décembre) ; le script ne fait rien hors de cette fenêtre. GitHub peut
+# retarder les déclenchements programmés : le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite.
+name: Mi-mandat États-Unis · résultats
+
+on:
+  schedule:
+    - cron: "*/5 23 3 11 *"
+    - cron: "*/5 * 4 11 *"
+    - cron: "17,47 * 5-30 11 *"
+    - cron: "17,47 * 1-2 12 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usa-election
+  cancel-in-progress: false
+
+jobs:
+  lire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Résultats (flux de CNN)
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/etats-unis/outils/usa.py --force; else python3 en-direct/etats-unis/outils/usa.py; fi
+
+      - name: Publier si les résultats ont changé
+        run: |
+          git add en-direct/etats-unis/resultats.json
+          if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
+          H=$(TZ=America/Toronto date +"%H h %M")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Mi-mandat États-Unis : résultats de $H, heure de l'Est"
+          for essai in 1 2 3 4; do
+            git push origin HEAD:master && exit 0
+            sleep $((2 ** essai)); git pull --rebase origin master
+          done
+          exit 1
