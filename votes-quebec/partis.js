@@ -115,6 +115,23 @@ export const PARTIS = {
     LEGA: P("Lega dei Ticinesi", "Parti populiste et régionaliste, classé à droite, présent seulement au Tessin.", "dp", "dr"),
     PST: P("Parti suisse du Travail – solidaritéS", "Petits partis de gauche radicale.", "gr"),
   },
+  royaumeuni: {
+    LAB: P("Parti travailliste (Labour)", "Parti de centre gauche fondé en 1900 par les syndicats ; il gouverne depuis juillet 2024.", "cg"),
+    CON: P("Parti conservateur (Tories)", "Parti de droite, l'un des deux grands partis historiques ; au pouvoir de 2010 à 2024, il est depuis dans l'opposition.", "d"),
+    REF: P("Reform UK", "Parti de droite populiste et eurosceptique dirigé par Nigel Farage ; troisième parti en voix en 2024.", "dp"),
+    LD: P("Libéraux-démocrates", "Parti libéral de centre, pro-européen ; il a obtenu 72 sièges en 2024, son meilleur résultat.", "c"),
+    VERT: P("Verts (Green Party)", "Parti écologiste de gauche ; quatre députés élus en 2024, un record.", "g"),
+    SNP: P("Parti national écossais (SNP)", "Parti indépendantiste écossais de centre gauche, au pouvoir au Parlement écossais depuis 2007 ; il ne se présente qu'en Écosse.", "cg"),
+    PC: P("Plaid Cymru", "Parti nationaliste gallois de centre gauche ; il ne se présente qu'au pays de Galles.", "cg"),
+    RB: P("Restore Britain", "Parti de droite populiste, représenté aux Communes par Rupert Lowe (Great Yarmouth).", "dp"),
+    YP: P("Your Party", "Parti de gauche radicale lancé en 2025 ; ses députés, dont Jeremy Corbyn (Islington North), siègent hors du Parti travailliste.", "gr"),
+    SF: P("Sinn Féin", "Parti républicain irlandais de gauche, premier parti nationaliste d'Irlande du Nord ; ses députés ne prennent pas leur siège à Westminster.", "g"),
+    DUP: P("Parti unioniste démocrate (DUP)", "Principal parti unioniste d'Irlande du Nord, conservateur sur les questions de société.", "d"),
+    SDLP: P("Parti social-démocrate et travailliste (SDLP)", "Parti nationaliste modéré d'Irlande du Nord, de centre gauche.", "cg"),
+    ALL: P("Alliance", "Parti libéral et centriste d'Irlande du Nord, ni unioniste ni nationaliste.", "c"),
+    UUP: P("Parti unioniste d'Ulster (UUP)", "Parti unioniste modéré d'Irlande du Nord, de centre droit.", "cd"),
+    TUV: P("Voix unioniste traditionnelle (TUV)", "Parti unioniste de droite d'Irlande du Nord, opposé au protocole commercial avec l'Union européenne.", "d"),
+  },
 };
 
 // Axes multiples (essai sur Votes Québec) : axes supplémentaires d'un pays, avec une valeur (v) et sa justification
@@ -317,6 +334,36 @@ export const AXES = {
         LIB: { v: -2, pourquoi: "campagne « Alberta in Canada » pour rester" },
         VERT: { v: -2, pourquoi: "son chef, James Anderson, appuie l'option Rester" },
         PT: { v: -2, pourquoi: "son chef, Peter Guthrie, appuie l'option Rester" },
+      },
+    },
+  },
+  royaumeuni: {
+    noteX: "Axe gauche-droite : groupe de la bande des partis.",
+    // les valeurs (GAL-TAN) suivent de près le gauche-droite : on prend plutôt le discours anti-élites, bien moins lié
+    y: {
+      titre: "Discours anti-élites", bas: "faible", haut: "fort", max: 5, decal: 5, bouts3: ["Peu anti-élites", "Anti-élites"],
+      note: "Axe anti-élites : importance du discours contre les élites et l'establishment dans l'enquête d'experts Chapel Hill (CHES 2024), de 0 (aucune) à 10 (très grande). L'enquête ne couvre que sept partis britanniques.",
+      valeurs: {
+        REF: { v: 4.4, pourquoi: "9,4 sur 10 (CHES 2024)" },
+        CON: { v: -0.3, pourquoi: "4,7 sur 10 (CHES 2024)" },
+        LAB: { v: -3.4, pourquoi: "1,6 sur 10 (CHES 2024)" },
+        LD: { v: -2.67, pourquoi: "2,3 sur 10 (CHES 2024)" },
+        VERT: { v: -1.11, pourquoi: "3,9 sur 10 (CHES 2024)" },
+        SNP: { v: -1.71, pourquoi: "3,3 sur 10 (CHES 2024)" },
+        PC: { v: -2.0, pourquoi: "3,0 sur 10 (CHES 2024)" },
+      },
+    },
+    z: {
+      titre: "Intégration européenne", bas: "contre", haut: "pour", max: 3, decal: 4, bouts3: ["Eurosceptique", "Pro-européen"],
+      note: "Axe européen : position sur l'intégration européenne dans la même enquête (CHES 2024), de 1 (très opposé) à 7 (très favorable).",
+      valeurs: {
+        REF: { v: -2.95, pourquoi: "1,0 sur 7 (CHES 2024)" },
+        CON: { v: -2.24, pourquoi: "1,8 sur 7 (CHES 2024)" },
+        LAB: { v: 0.43, pourquoi: "4,4 sur 7 (CHES 2024)" },
+        LD: { v: 1.76, pourquoi: "5,8 sur 7 (CHES 2024)" },
+        VERT: { v: 2.15, pourquoi: "6,2 sur 7 (CHES 2024)" },
+        SNP: { v: 2.37, pourquoi: "6,4 sur 7 (CHES 2024)" },
+        PC: { v: 2.2, pourquoi: "6,2 sur 7 (CHES 2024)" },
       },
     },
   },
