@@ -32,7 +32,7 @@ BASCULE = "--bascule" in sys.argv
 FICHIER = {"direct": "en-direct.html", "bg": "en-direct-bulgarie.html", "nz": "en-direct-nouvelle-zelande.html", "tw": "en-direct-taiwan.html", "es": "en-direct-espagne.html",
            "cb2026": "election-cb-2026.html", "ab2026": "referendum-alberta-2026.html", "live": "intentions-simulations.html", "votes": "votes-quebec.html" if BASCULE else "votes-quebec-v2.html", "loi39": "loi39.html",
            "france": "votes-france.html", "canada": "votes-canada.html", "usa": "votes-usa.html",
-           "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html", "alberta": "votes-alberta.html"}
+           "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html", "alberta": "votes-alberta.html", "royaumeuni": "votes-royaume-uni.html"}
 # soirées « En direct » (sous-menu de l'onglet) : même cadre, le bloc « gen » du gabarit, avec ces textes
 DIRECTS = {
     "direct": {"H2": "Élections de mi-mandat aux États-Unis · 3 novembre 2026", "SUR": "Chambre des représentants · 435 sièges · majorité 218",
@@ -221,13 +221,13 @@ assert 'src="votes-quebec/intentions.js"' not in us and 'data-z="ne"' in us
 open(os.path.join(RACINE, FICHIER["usa"]), "w", encoding="utf-8").write(us)
 print(f"{FICHIER['usa']:30} {len(us):7} octets")
 
-# Pages ajoutées ensuite (Allemagne, Suisse, Alberta…) : même cadre que Votes Québec ; chaque page fournit ses propres remplacements
-# dans votes-<pays>/outils/page.py, fonction construire(html_de_votes_quebec, FICHIER) → html de la page
+# Pages ajoutées ensuite (Allemagne, Suisse, Alberta, Royaume-Uni…) : même cadre que Votes Québec ; chaque page fournit ses propres remplacements
+# dans votes-<dossier>/outils/page.py, fonction construire(html_de_votes_quebec, FICHIER) → html de la page
 import importlib.util
-for pays in ("allemagne", "suisse", "alberta"):
-    chemin = os.path.join(RACINE, f"votes-{pays}", "outils", "page.py")
+for pays, dossier in (("allemagne", "allemagne"), ("suisse", "suisse"), ("alberta", "alberta"), ("royaumeuni", "royaume-uni")):
+    chemin = os.path.join(RACINE, f"votes-{dossier}", "outils", "page.py")
     if not os.path.exists(chemin):
-        print(f"{FICHIER[pays]:30} (votes-{pays}/outils/page.py absent : page non générée)"); continue
+        print(f"{FICHIER[pays]:30} (votes-{dossier}/outils/page.py absent : page non générée)"); continue
     spec = importlib.util.spec_from_file_location(f"page_{pays}", chemin); mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
     html = mod.construire(open(os.path.join(RACINE, FICHIER["votes"]), encoding="utf-8").read(), FICHIER)
     assert 'src="votes-quebec/intentions.js"' not in html, f"votes-{pays} : le module de Votes Québec est resté dans la page"

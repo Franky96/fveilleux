@@ -62,6 +62,7 @@ mais leurs sources de résultats n'ont pas toutes été vues en vrai. **Le soir 
 - PT6A-21 : vue en coupe pleine, puis collecteur carburant et adaptateurs d'injecteurs refaits d'après les
   manuels 73-10, avec jets de carburant ;
 - RONA : dates d'expiration du PDF dans l'ordre de la liste du site.
+- Votes Royaume-Uni : nouvelle page (Chambre des communes, 650 sièges, projection du site, sondages, partielles) ; détails dans `docs/intentions-de-vote.md`.
 
 ## Tester avant de dire « c'est fait »
 

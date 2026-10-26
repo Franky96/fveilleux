@@ -44,11 +44,11 @@ function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donne
 }
 
 async function demarrer() {
-  const [QE, CP, UP, FA, FP, L39, UPR, DEP, CHP, ABP] = await Promise.all([
+  const [QE, CP, UP, FA, FP, L39, UPR, DEP, CHP, ABP, UKP] = await Promise.all([
     lireJ("votes-quebec/election-2026.json"), lireJ("votes-canada/projection.json"), lireJ("votes-usa/projection.json"),
     lireJ("votes-france/assemblee.json"), lireJ("votes-france/sondages-pres.json"), lireJ("votes-quebec/loi39-resume.json"),
     lireJ("votes-usa/presidentielle.json"), lireJ("votes-allemagne/projection.json"), lireJ("votes-suisse/projection.json"),
-    lireJ("votes-alberta/projection.json")]);
+    lireJ("votes-alberta/projection.json"), lireJ("votes-royaume-uni/projection.json")]);
   // cartes dans l'ordre de la bande d'onglets : par continent ; en Amérique du Nord, Québec et Alberta, une barre, puis Canada et États-Unis
   // (deux sous-groupes sans titre, séparés comme dans la bande d'onglets)
   const cartes = { "amn-a": [], "amn-b": [], "eur-a": [] };
@@ -144,6 +144,16 @@ async function demarrer() {
       chiffre: `${esc(lab(lead))} ${N[lead].s}`, legende: `sièges projetés sur 200 · Conseil national`,
       barreHtml: barre(ordre.map(p => ({ lab: lab(p), n: N[p].s, c: CH[p] || "#8D949A" })), 200, 101),
       donnees: `dernier sondage le ${dateFr(CHP.maj)}` }));
+  }
+  // Votes Royaume-Uni : projection des 650 sièges calculée par le site (report proportionnel par pays des résultats de 2024)
+  if (UKP?.national) {
+    const N = UKP.national, CK = { LAB: "#E4003B", CON: "#0A6CC6", REF: "#12A9C4", LD: "#EE8A0C", VERT: "#5BA620", SNP: "#C8B400", PC: "#0B7A5B", SF: "#2E7D6B", DUP: "#C8553D" };
+    const ordre = Object.keys(N).filter(p => N[p].s > 0 && p !== "SPK").sort((a, b) => N[b].s - N[a].s), lead = ordre[0];
+    cartes["eur-a"].push(carte({ url: "votes-royaume-uni.html", eyebrow: "Projection · Royaume-Uni", titre: "Votes Royaume-Uni",
+      chiffre: `${lead} ${N[lead].s}`, legende: `sièges projetés sur 650 · ${N[lead].s >= 326 ? "majoritaire" : "aucune majorité"}`,
+      barreHtml: barre(ordre.map(p => ({ lab: p === "AUT" ? "Autres" : p, n: N[p].s, c: CK[p] || "#8D949A" })), 650, 326),
+      phrase: `LAB ${nf(N.LAB.v, 0)} %, CON ${nf(N.CON.v, 0)} %, REF ${nf(N.REF.v, 0)} % dans les sondages ; élection au plus tard le 15 août 2029.`,
+      donnees: `projection du site du ${dateFr(UKP.maj)}` }));
   }
   const html = CONTINENTS.map(([k, nom, sous]) => {
     const grp = sous.filter(g => cartes[k + "-" + g].length); if (!grp.length) return "";
