@@ -1,0 +1,49 @@
+# Élections locales à Taïwan du 28 novembre 2026 (page « En direct ») : copie de secours des résultats de la Commission électorale centrale.
+# La page lit d'abord le relais du site (api/direct-tw.php, cache 45 s) ; si le relais ne répond pas, elle lit en-direct/taiwan/resultats.json,
+# écrit ici par en-direct/taiwan/outils/tw.py et poussé sur master (Hostinger le déploie). Toutes les 5 minutes de la fermeture des
+# bureaux (16 h à Taïwan = 8 h UTC le 28 novembre, 3 h au Québec) jusqu'à minuit à Taïwan, puis toutes les 30 minutes jusqu'à la
+# proclamation des élus (4 décembre) ; le script ne fait rien hors de cette fenêtre. GitHub peut retarder les déclenchements programmés :
+# le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite.
+name: Élections Taïwan · résultats
+
+on:
+  schedule:
+    - cron: "*/5 8-15 28 11 *"
+    - cron: "17,47 16-23 28 11 *"
+    - cron: "17,47 * 29-30 11 *"
+    - cron: "17,47 * 1-4 12 *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tw-election
+  cancel-in-progress: false
+
+jobs:
+  lire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Résultats de la Commission électorale centrale
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then python3 en-direct/taiwan/outils/tw.py --force; else python3 en-direct/taiwan/outils/tw.py; fi
+
+      - name: Publier si les résultats ont changé
+        run: |
+          git add en-direct/taiwan/resultats.json
+          if git diff --cached --quiet; then echo "Aucun changement."; exit 0; fi
+          H=$(TZ=Asia/Taipei date +"%H h %M")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Élections Taïwan : résultats du dépouillement de $H, heure de Taïwan"
+          for essai in 1 2 3 4; do
+            git push origin HEAD:master && exit 0
+            sleep $((2 ** essai)); git pull --rebase origin master
+          done
+          exit 1

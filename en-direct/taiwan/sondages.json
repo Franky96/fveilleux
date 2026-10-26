@@ -1,0 +1,66 @@
+{
+ "note": "Sondages publiés par les maisons de sondage et les médias, compilés par Wikipédia en chinois (« 2026年中華民國直轄市長及縣市長選舉民意調查 », relevé le 26 octobre 2026) ; lien vers chaque publication. Taïwan interdit de publier des sondages dans les dix jours précédant le vote (à partir du 18 novembre). « autres » : autres candidats, indécis et refus.",
+ "courses": {
+  "63000": [
+   {"s": "TPOC 台灣議題研究中心", "d": "5 au 7 août", "v": {"蔣萬安": 48.4, "沈伯洋": 33.0}, "autres": 18.6, "u": "https://news.ltn.com.tw/news/politics/breakingnews/5539708"},
+   {"s": "信民協會", "d": "16 au 18 septembre", "v": {"蔣萬安": 41.7, "沈伯洋": 40.5}, "autres": 17.8, "u": "https://dc579968-5ed9-4902-8454-9871fa44324e.filesusr.com/ugd/3ea6ac_7c66d227dc414f169202cda2ca75a7f3.pdf"},
+   {"s": "TVBS", "d": "3 et 5 au 7 octobre", "v": {"蔣萬安": 49, "沈伯洋": 41}, "autres": 11, "n": 1120, "u": "https://news.tvbs.com.tw/politics/4033527"},
+   {"s": "信民協會", "d": "14 au 16 octobre", "v": {"蔣萬安": 33.3, "沈伯洋": 50.3}, "autres": 16.4, "u": "https://dc579968-5ed9-4902-8454-9871fa44324e.filesusr.com/ugd/3ea6ac_257951a3d235492f8595f6dcd7b5cdd3.pdf"},
+   {"s": "震傳媒 (Zmedia)", "d": "18 et 19 octobre", "v": {"蔣萬安": 39.0, "沈伯洋": 42.8}, "autres": 18.2, "u": "https://www.zmedia.com.tw/Document/PoolDetail/44789"}
+  ],
+  "65000": [
+   {"s": "山水民調", "d": "20 et 21 septembre", "v": {"李四川": 37.1, "蘇巧慧": 38.2, "蘇輝湟": 2.6}, "autres": 22.1, "u": "https://www.setn.com/news/1911568"},
+   {"s": "山水民調", "d": "30 septembre et 1er octobre", "v": {"李四川": 34.5, "蘇巧慧": 39.1}, "autres": 26.4, "u": "https://news.ltn.com.tw/news/politics/breakingnews/5593630"},
+   {"s": "TVBS", "d": "29 septembre au 2 octobre", "v": {"李四川": 42.6, "蘇巧慧": 35.9}, "autres": 21.5, "u": "https://news.ltn.com.tw/news/politics/breakingnews/5598111"},
+   {"s": "鉅聞天下", "d": "28 septembre au 3 octobre", "v": {"李四川": 45.74, "蘇巧慧": 45.18}, "autres": 9.08, "u": "https://www.bigmedia.com.tw/article/1791969638295"},
+   {"s": "信民協會", "d": "6 au 8 octobre", "v": {"李四川": 30.0, "蘇巧慧": 43.1, "蘇輝湟": 1.5}, "autres": 25.4, "u": "https://www.storm.mg/article/11171838"}
+  ],
+  "68000": [
+   {"s": "新台灣國策智庫", "d": "15 au 17 septembre", "v": {"張善政": 47.0, "黃世杰": 25.9}, "autres": 27.1, "u": "https://newtalk.tw/news/view/2026-09-22/1061231"}
+  ],
+  "66000": [
+   {"s": "TVBS", "d": "7 au 11 septembre", "v": {"江啟臣": 45.1, "何欣純": 32.5}, "autres": 22.4, "u": "https://news.tvbs.com.tw/politics/4022042"},
+   {"s": "年代民調", "d": "2 au 4 octobre", "v": {"江啟臣": 37.3, "何欣純": 31.3, "洪麗華": 1.1}, "autres": 30.3, "u": "https://www.youtube.com/watch?v=MLwUdNyfH20"},
+   {"s": "循證民調", "d": "5 et 6 octobre", "v": {"江啟臣": 34.3, "何欣純": 32.4, "洪麗華": 1.1}, "autres": 32.2, "u": "https://news.ltn.com.tw/news/politics/breakingnews/5603302"},
+   {"s": "世新大學", "d": "15 et 16 octobre", "v": {"江啟臣": 39.8, "何欣純": 28.7}, "autres": 31.5, "u": "https://www.upmedia.mg/tw/focus/politics/271680"}
+  ],
+  "67000": [
+   {"s": "TVBS", "d": "9 au 12 mars", "v": {"陳亭妃": 53, "謝龍介": 30}, "autres": 17, "u": "https://news.tvbs.com.tw/politics/3152745"},
+   {"s": "新台灣國策智庫", "d": "13 au 15 octobre", "v": {"陳亭妃": 59.4, "謝龍介": 22.6}, "autres": 18.0, "u": "https://www.setn.com/news/1925870"}
+  ],
+  "64000": [
+   {"s": "山水民調", "d": "18 au 20 juillet", "v": {"賴瑞隆": 39.6, "柯志恩": 31.6}, "autres": 28.8, "u": "https://www.zmedia.com.tw/Document/PoolDetail/43287"},
+   {"s": "皮爾森數據", "d": "27 juillet au 1er août", "v": {"賴瑞隆": 47.78, "柯志恩": 46.14}, "autres": 6.08, "u": "https://www.bigmedia.com.tw/article/1786278801544"},
+   {"s": "ETtoday", "d": "22 au 30 août", "v": {"賴瑞隆": 43.5, "柯志恩": 43.8}, "autres": 12.7, "n": 1283, "u": "https://www.ettoday.net/news/20260911/3233581.htm"}
+  ],
+  "10017": [
+   {"s": "趨勢民調", "d": "7 au 10 octobre", "v": {"謝國樑": 42.9, "童子瑋": 38.3}, "autres": 18.8, "u": "https://newtalk.tw/news/view/2026-10-15/1065627"},
+   {"s": "全國公信力民調", "d": "13 au 16 octobre", "v": {"謝國樑": 41.3, "童子瑋": 35.7}, "autres": 23.0, "u": "https://www.ctwant.com/article/503031"},
+   {"s": "雨晴民調", "d": "16 au 18 octobre", "v": {"謝國樑": 40.5, "童子瑋": 33.2, "魏造文": 1.9}, "autres": 24.4, "u": "https://www.upmedia.mg/tw/focus/politics/272280"},
+   {"s": "大地民意", "d": "18 au 21 octobre", "v": {"謝國樑": 36.3, "童子瑋": 37.0, "魏造文": 0.8}, "autres": 25.9, "u": "https://www.mnews.tw/story/20261023nm001"}
+  ],
+  "10018": [
+   {"s": "ETtoday", "d": "3 au 10 septembre", "v": {"高虹安": 48.6, "莊競程": 21.2, "何志勇": 1.8}, "autres": 28.4, "u": "https://www.ettoday.net/news/20260916/3238141.htm"},
+   {"s": "匯流民調", "d": "10 au 13 septembre", "v": {"高虹安": 49.5, "莊競程": 25.7, "何志勇": 6.1}, "autres": 18.7, "u": "https://news.tvbs.com.tw/politics/4025748"}
+  ],
+  "10004": [
+   {"s": "精確民調", "d": "18 au 20 août", "v": {"徐欣瑩": 41.4, "鄭朝方": 38.1}, "autres": 20.5, "u": "https://cnews.com.tw/247260821a05/"},
+   {"s": "年代民調", "d": "16 au 18 septembre", "v": {"徐欣瑩": 28.7, "鄭朝方": 35.1, "朱定瑀": 2.8}, "autres": 33.4, "u": "https://newtalk.tw/news/view/2026-09-21/1061013"}
+  ],
+  "10007": [
+   {"s": "聯合報 (United Daily News)", "d": "13 au 15 octobre", "v": {"魏平政": 16, "陳素月": 32, "邱建富": 10, "陳重嘉": 0.3}, "autres": 41.7, "u": "https://udn.com/vote2026/story/124652/9822866"}
+  ],
+  "10015": [
+   {"s": "風傳媒 (Storm Media)", "d": "16 au 18 octobre", "v": {"游淑貞": 29.6, "魏嘉賢": 13.8, "張峻": 17.8}, "autres": 38.8, "u": "https://www.storm.mg/article/11175544"}
+  ],
+  "09020": [
+   {"s": "雨晴民調", "d": "7 au 11 septembre", "v": {"陳玉珍": 45.4, "李文良": 10.7, "張國威": 3.5, "洪和成": 1.1, "張火木": 0.7, "黃世團": 0.6, "梁文韜": 0.4}, "autres": 37.6, "u": "https://news.tvbs.com.tw/politics/4023574"}
+  ],
+  "10020": [
+   {"s": "關鍵調查", "d": "10 au 12 juillet", "v": {"王美惠": 41.5, "張啓楷": 38}, "autres": 20.5, "u": "https://sunmedia.tw/news/collaborative/2acUgQRl2gSuldPntgr9btUK4mmfKahkpZSFUMtNIIUC4U3WdIUjKIoe8AxhAA8S3BdGM03R"}
+  ],
+  "10016": [
+   {"s": "ETtoday", "d": "14 juillet au 3 août", "v": {"吳淑瑾": 21.0, "陳振中": 30.3, "葉竹林": 17.8, "周倪安": 3.2, "許智富": 4.0, "陳盡川": 3.1}, "autres": 20.6, "u": "https://penghudaily.blogspot.com/2026/08/ettoday.html"}
+  ]
+ }
+}

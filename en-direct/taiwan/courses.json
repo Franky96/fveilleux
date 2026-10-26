@@ -1,0 +1,1930 @@
+{
+ "election": "2026-11-28",
+ "source": "CNA et Focus Taiwan (enregistrement des candidatures, 4 et 7 septembre 2026) ; 2022 : db.cec.gov.tw",
+ "popMois": "11509",
+ "courses": {
+  "63000": {
+   "fr": "Taipei",
+   "zh": "臺北市",
+   "type": "mun",
+   "sortant": {
+    "zh": "蔣萬安",
+    "fr": "Chiang Wan-an",
+    "p": "kmt",
+    "statut": "se représente"
+   },
+   "cands": [
+    {
+     "zh": "蔣萬安",
+     "fr": "Chiang Wan-an",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Maire sortant, élu en 2022",
+     "no": null,
+     "sortant": true
+    },
+    {
+     "zh": "沈伯洋",
+     "fr": "Puma Shen (Shen Po-yang)",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Député (liste nationale), ancien professeur de criminologie",
+     "no": null
+    },
+    {
+     "zh": "郭璽",
+     "fr": "Kuo Hsi",
+     "p": "aut",
+     "aff": "台灣麻將最大黨",
+     "bio": "Capitaine de vaisseau à la retraite",
+     "no": null
+    },
+    {
+     "zh": "蕭文乾",
+     "fr": "Hsiao Wen-chien",
+     "p": "aut",
+     "aff": "台灣SoR無法黨",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "唐新民",
+     "fr": "Tang Hsin-min",
+     "p": "aut",
+     "aff": "三勢團結促進聯盟",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "林志成",
+     "fr": "Lin Chih-cheng",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 1360951,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "蔣萬安",
+      "fr": "Chiang Wan-an",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 6,
+      "voix": 575590,
+      "pct": 42.29,
+      "elu": true
+     },
+     {
+      "zh": "陳時中",
+      "fr": "Chen Shih-chung",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 12,
+      "voix": 434558,
+      "pct": 31.93
+     },
+     {
+      "zh": "黃珊珊",
+      "fr": "Vivian Huang",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 8,
+      "voix": 342141,
+      "pct": 25.14
+     },
+     {
+      "zh": "童文薰",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 5,
+      "voix": 2425,
+      "pct": 0.18
+     },
+     {
+      "zh": "張家豪",
+      "p": "aut",
+      "aff": "台灣動物保護黨",
+      "no": 1,
+      "voix": 2367,
+      "pct": 0.17
+     },
+     {
+      "zh": "蘇煥智",
+      "p": "aut",
+      "aff": "台灣維新",
+      "no": 7,
+      "voix": 1851,
+      "pct": 0.14
+     },
+     {
+      "zh": "王文娟",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 2,
+      "voix": 451,
+      "pct": 0.03
+     },
+     {
+      "zh": "鄭匡宇",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 386,
+      "pct": 0.03
+     },
+     {
+      "zh": "施奉先",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 9,
+      "voix": 383,
+      "pct": 0.03
+     },
+     {
+      "zh": "唐新民",
+      "p": "aut",
+      "aff": "共和黨",
+      "no": 10,
+      "voix": 316,
+      "pct": 0.02
+     },
+     {
+      "zh": "黃聖峰",
+      "p": "aut",
+      "aff": "台澎黨",
+      "no": 4,
+      "voix": 256,
+      "pct": 0.02
+     },
+     {
+      "zh": "謝立康",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 11,
+      "voix": 227,
+      "pct": 0.02
+     }
+    ]
+   },
+   "pop": 2418872
+  },
+  "65000": {
+   "fr": "Nouveau Taipei",
+   "zh": "新北市",
+   "type": "mun",
+   "sortant": {
+    "zh": "侯友宜",
+    "fr": "Hou Yu-ih",
+    "p": "kmt",
+    "statut": "limité à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "蘇巧慧",
+     "fr": "Su Chiao-hui",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Députée",
+     "no": null
+    },
+    {
+     "zh": "李四川",
+     "fr": "Lee Shu-chuan",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Ancien vice-maire de Taipei · candidat commun du KMT et du PPT (Huang Kuo-chang s'est retiré en avril)",
+     "no": null
+    },
+    {
+     "zh": "蘇輝湟",
+     "fr": "Su Hui-huang",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 1846531,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "侯友宜",
+      "fr": "Hou Yu-ih",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 1152555,
+      "pct": 62.42,
+      "elu": true
+     },
+     {
+      "zh": "林佳龍",
+      "fr": "Lin Chia-lung",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 1,
+      "voix": 693976,
+      "pct": 37.58
+     }
+    ]
+   },
+   "pop": 4034572
+  },
+  "68000": {
+   "fr": "Taoyuan",
+   "zh": "桃園市",
+   "type": "mun",
+   "sortant": {
+    "zh": "張善政",
+    "fr": "Chang San-cheng",
+    "p": "kmt",
+    "statut": "se représente"
+   },
+   "cands": [
+    {
+     "zh": "張善政",
+     "fr": "Chang San-cheng",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Maire sortant, ancien premier ministre",
+     "no": null,
+     "sortant": true
+    },
+    {
+     "zh": "黃世杰",
+     "fr": "Huang Shih-chieh",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Ancien vice-ministre de la Justice",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 1071763,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "張善政",
+      "fr": "Chang San-cheng",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 557572,
+      "pct": 52.02,
+      "elu": true
+     },
+     {
+      "zh": "鄭運鵬",
+      "fr": "Cheng Yun-peng",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 3,
+      "voix": 428983,
+      "pct": 40.03
+     },
+     {
+      "zh": "賴香伶",
+      "fr": "Lai Hsiang-ling",
+      "p": "tpp",
+      "aff": "台灣民眾黨",
+      "no": 2,
+      "voix": 54926,
+      "pct": 5.12
+     },
+     {
+      "zh": "鄭寶清",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 4,
+      "voix": 30282,
+      "pct": 2.83
+     }
+    ]
+   },
+   "pop": 2358611
+  },
+  "66000": {
+   "fr": "Taichung",
+   "zh": "臺中市",
+   "type": "mun",
+   "sortant": {
+    "zh": "盧秀燕",
+    "fr": "Lu Shiow-yen",
+    "p": "kmt",
+    "statut": "limitée à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "何欣純",
+     "fr": "Ho Hsin-chun",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Députée",
+     "no": null
+    },
+    {
+     "zh": "江啟臣",
+     "fr": "Johnny Chiang (Chiang Chi-chen)",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Vice-président du Yuan législatif, ancien président du KMT",
+     "no": null
+    },
+    {
+     "zh": "洪麗華",
+     "fr": "Hung Li-hua",
+     "p": "aut",
+     "aff": "司法正義黨",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 1346471,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "盧秀燕",
+      "fr": "Lu Shiow-yen",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 3,
+      "voix": 799107,
+      "pct": 59.35,
+      "elu": true
+     },
+     {
+      "zh": "蔡其昌",
+      "fr": "Tsai Chi-chang",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 2,
+      "voix": 524224,
+      "pct": 38.93
+     },
+     {
+      "zh": "陳美妃",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 23140,
+      "pct": 1.72
+     }
+    ]
+   },
+   "pop": 2866367
+  },
+  "67000": {
+   "fr": "Tainan",
+   "zh": "臺南市",
+   "type": "mun",
+   "sortant": {
+    "zh": "黃偉哲",
+    "fr": "Huang Wei-che",
+    "p": "dpp",
+    "statut": "limité à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "蕭燐洪",
+     "fr": "Hsiao Lin-hung",
+     "p": "aut",
+     "aff": "台灣SoR無法黨",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "謝龍介",
+     "fr": "Hsieh Lung-chieh",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Député, candidat en 2018 et en 2022",
+     "no": null
+    },
+    {
+     "zh": "葉人文",
+     "fr": "Yeh Jen-wen",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "陳亭妃",
+     "fr": "Chen Ting-fei",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Députée",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 888674,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "黃偉哲",
+      "fr": "Huang Wei-che",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 5,
+      "voix": 433684,
+      "pct": 48.8,
+      "elu": true
+     },
+     {
+      "zh": "謝龍介",
+      "fr": "Hsieh Lung-chieh",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 3,
+      "voix": 387731,
+      "pct": 43.63
+     },
+     {
+      "zh": "許忠信",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 38697,
+      "pct": 4.35
+     },
+     {
+      "zh": "林義豐",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 2,
+      "voix": 24606,
+      "pct": 2.77
+     },
+     {
+      "zh": "吳炳輝",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 4,
+      "voix": 3956,
+      "pct": 0.45
+     }
+    ]
+   },
+   "pop": 1845313
+  },
+  "64000": {
+   "fr": "Kaohsiung",
+   "zh": "高雄市",
+   "type": "mun",
+   "sortant": {
+    "zh": "陳其邁",
+    "fr": "Chen Chi-mai",
+    "p": "dpp",
+    "statut": "limité à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "張靜",
+     "fr": "Chang Ching",
+     "p": "aut",
+     "aff": "司法改革黨",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "賴瑞隆",
+     "fr": "Lai Jui-lung",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Député",
+     "no": null
+    },
+    {
+     "zh": "王肇民",
+     "fr": "Wang Chao-min",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "柯志恩",
+     "fr": "Ko Chih-en",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Députée, candidate en 2022",
+     "no": null
+    },
+    {
+     "zh": "洪方隆",
+     "fr": "Hung Fang-lung",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 1318733,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "陳其邁",
+      "fr": "Chen Chi-mai",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 4,
+      "voix": 766147,
+      "pct": 58.1,
+      "elu": true
+     },
+     {
+      "zh": "柯志恩",
+      "fr": "Ko Chih-en",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 3,
+      "voix": 529607,
+      "pct": 40.16
+     },
+     {
+      "zh": "曾尹儷",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 2,
+      "voix": 14585,
+      "pct": 1.11
+     },
+     {
+      "zh": "鄭宇翔",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 8394,
+      "pct": 0.64
+     }
+    ]
+   },
+   "pop": 2705240
+  },
+  "10017": {
+   "fr": "Keelung",
+   "zh": "基隆市",
+   "type": "ville",
+   "sortant": {
+    "zh": "謝國樑",
+    "fr": "Hsieh Kuo-liang",
+    "p": "kmt",
+    "statut": "se représente"
+   },
+   "cands": [
+    {
+     "zh": "謝國樑",
+     "fr": "Hsieh Kuo-liang (George Hsieh)",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Maire sortant",
+     "no": null,
+     "sortant": true
+    },
+    {
+     "zh": "魏造文",
+     "fr": "Wei Tsao-wen",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "童子瑋",
+     "fr": "Tung Tzu-wei",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Président du conseil municipal",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 182893,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "謝國樑",
+      "fr": "Hsieh Kuo-liang",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 96784,
+      "pct": 52.92,
+      "elu": true
+     },
+     {
+      "zh": "蔡適應",
+      "fr": "Tsai Shih-ying",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 3,
+      "voix": 71354,
+      "pct": 39.01
+     },
+     {
+      "zh": "陳薇仲",
+      "fr": "Chen Wei-chung",
+      "p": "aut",
+      "aff": "時代力量",
+      "no": 2,
+      "voix": 12000,
+      "pct": 6.56
+     },
+     {
+      "zh": "黃希賢",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 5,
+      "voix": 2136,
+      "pct": 1.17
+     },
+     {
+      "zh": "曾國民",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 4,
+      "voix": 619,
+      "pct": 0.34
+     }
+    ]
+   },
+   "pop": 357575
+  },
+  "10018": {
+   "fr": "Hsinchu",
+   "zh": "新竹市",
+   "type": "ville",
+   "sortant": {
+    "zh": "高虹安",
+    "fr": "Kao Hung-an",
+    "p": "ind",
+    "statut": "se représente (élue sous l'étiquette du PPT en 2022)"
+   },
+   "cands": [
+    {
+     "zh": "高虹安",
+     "fr": "Kao Hung-an (Ann Kao)",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Mairesse sortante, élue pour le PPT en 2022, sans parti depuis 2024 · soutenue par le KMT et le PPT",
+     "no": null,
+     "sortant": true
+    },
+    {
+     "zh": "莊競程",
+     "fr": "Chuang Ching-cheng",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Ancien député, dirigeant du Taiwan Thinktank",
+     "no": null
+    },
+    {
+     "zh": "何志勇",
+     "fr": "Ho Chih-yung",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien porte-parole du KMT",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 217941,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "高虹安",
+      "fr": "Kao Hung-an",
+      "p": "tpp",
+      "aff": "台灣民眾黨",
+      "no": 6,
+      "voix": 98121,
+      "pct": 45.02,
+      "elu": true
+     },
+     {
+      "zh": "沈慧虹",
+      "fr": "Shen Hui-hung",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 5,
+      "voix": 77764,
+      "pct": 35.68
+     },
+     {
+      "zh": "林耕仁",
+      "fr": "Lin Keng-jen",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 3,
+      "voix": 39391,
+      "pct": 18.07
+     },
+     {
+      "zh": "李驥羣",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 4,
+      "voix": 1108,
+      "pct": 0.51
+     },
+     {
+      "zh": "黃源甫",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 1049,
+      "pct": 0.48
+     },
+     {
+      "zh": "龔偉綸",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 2,
+      "voix": 508,
+      "pct": 0.23
+     }
+    ]
+   },
+   "pop": 455731
+  },
+  "10004": {
+   "fr": "comté de Hsinchu",
+   "zh": "新竹縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "楊文科",
+    "fr": "Yang Wen-ke",
+    "p": "kmt",
+    "statut": "limité à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "鄭朝方",
+     "fr": "Cheng Chao-fang",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Maire de la ville de Zhubei",
+     "no": null
+    },
+    {
+     "zh": "朱定瑀",
+     "fr": "Chu Ting-yu",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "徐欣瑩",
+     "fr": "Hsu Hsin-ying",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Députée",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 258305,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "楊文科",
+      "fr": "Yang Wen-ke",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 4,
+      "voix": 163662,
+      "pct": 63.36,
+      "elu": true
+     },
+     {
+      "zh": "周江杰",
+      "fr": "Chou Chiang-chieh",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 3,
+      "voix": 83683,
+      "pct": 32.4
+     },
+     {
+      "zh": "范振揆",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 2,
+      "voix": 4874,
+      "pct": 1.89
+     },
+     {
+      "zh": "黃秀龍",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 3403,
+      "pct": 1.32
+     },
+     {
+      "zh": "劉復嵐",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 5,
+      "voix": 2683,
+      "pct": 1.04
+     }
+    ]
+   },
+   "pop": 598229
+  },
+  "10005": {
+   "fr": "comté de Miaoli",
+   "zh": "苗栗縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "鍾東錦",
+    "fr": "Chung Tung-chin",
+    "p": "kmt",
+    "statut": "se représente (élu sans étiquette en 2022, revenu au KMT)"
+   },
+   "cands": [
+    {
+     "zh": "陳品安",
+     "fr": "Chen Pin-an",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Conseillère de comté",
+     "no": null
+    },
+    {
+     "zh": "鍾東錦",
+     "fr": "Chung Tung-chin",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Chef de comté sortant, élu sans étiquette en 2022",
+     "no": null,
+     "sortant": true
+    }
+   ],
+   "r22": {
+    "valides": 292100,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "鍾東錦",
+      "fr": "Chung Tung-chin",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 124603,
+      "pct": 42.66,
+      "elu": true
+     },
+     {
+      "zh": "徐定禎",
+      "fr": "Hsu Ting-chen",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 4,
+      "voix": 91260,
+      "pct": 31.24
+     },
+     {
+      "zh": "宋國鼎",
+      "fr": "Sung Kuo-ting",
+      "p": "aut",
+      "aff": "時代力量",
+      "no": 5,
+      "voix": 39347,
+      "pct": 13.47
+     },
+     {
+      "zh": "謝福弘",
+      "fr": "Hsieh Fu-hung",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 32026,
+      "pct": 10.96
+     },
+     {
+      "zh": "吳盛聖",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 4864,
+      "pct": 1.67
+     }
+    ]
+   },
+   "pop": 529012
+  },
+  "10007": {
+   "fr": "comté de Changhua",
+   "zh": "彰化縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "王惠美",
+    "fr": "Wang Hui-mei",
+    "p": "kmt",
+    "statut": "limitée à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "陳重嘉",
+     "fr": "Chen Chung-chia",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Conseiller de comté",
+     "no": null
+    },
+    {
+     "zh": "陳素月",
+     "fr": "Chen Su-yueh",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Députée",
+     "no": null
+    },
+    {
+     "zh": "邱建富",
+     "fr": "Chiu Chien-fu",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien maire de la ville de Changhua",
+     "no": null
+    },
+    {
+     "zh": "魏平政",
+     "fr": "Wei Ping-cheng",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Avocat, ancien président de la commission de discipline du KMT",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 650424,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "王惠美",
+      "fr": "Wang Hui-mei",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 369133,
+      "pct": 56.75,
+      "elu": true
+     },
+     {
+      "zh": "黃秀芳",
+      "fr": "Huang Hsiu-fang",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 2,
+      "voix": 272817,
+      "pct": 41.94
+     },
+     {
+      "zh": "蕭仁正",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 8474,
+      "pct": 1.3
+     }
+    ]
+   },
+   "pop": 1200447
+  },
+  "10008": {
+   "fr": "comté de Nantou",
+   "zh": "南投縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "許淑華",
+    "fr": "Hsu Shu-hua",
+    "p": "kmt",
+    "statut": "se représente"
+   },
+   "cands": [
+    {
+     "zh": "温世政",
+     "fr": "Wen Shih-cheng",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Dentiste",
+     "no": null
+    },
+    {
+     "zh": "許淑華",
+     "fr": "Hsu Shu-hua",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Cheffe de comté sortante",
+     "no": null,
+     "sortant": true
+    }
+   ],
+   "r22": {
+    "valides": 275499,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "許淑華",
+      "fr": "Hsu Shu-hua",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 154256,
+      "pct": 55.99,
+      "elu": true
+     },
+     {
+      "zh": "蔡培慧",
+      "fr": "Tsai Pei-hui",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 1,
+      "voix": 117993,
+      "pct": 42.83
+     },
+     {
+      "zh": "王永慶",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 3250,
+      "pct": 1.18
+     }
+    ]
+   },
+   "pop": 465984
+  },
+  "10009": {
+   "fr": "comté de Yunlin",
+   "zh": "雲林縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "張麗善",
+    "fr": "Chang Li-shan",
+    "p": "kmt",
+    "statut": "limitée à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "吳炳輝",
+     "fr": "Wu Ping-hui",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Avocat",
+     "no": null
+    },
+    {
+     "zh": "張嘉郡",
+     "fr": "Alice Chang (Chang Chia-chun)",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Députée, nièce de la cheffe de comté sortante",
+     "no": null
+    },
+    {
+     "zh": "劉建國",
+     "fr": "Liu Chien-kuo",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Député, candidat en 2022",
+     "no": null
+    },
+    {
+     "zh": "林佳瑜",
+     "fr": "Lin Chia-yu",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 366833,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "張麗善",
+      "fr": "Chang Li-shan",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 207519,
+      "pct": 56.57,
+      "elu": true
+     },
+     {
+      "zh": "劉建國",
+      "fr": "Liu Chien-kuo",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 2,
+      "voix": 152620,
+      "pct": 41.6
+     },
+     {
+      "zh": "林佳瑜",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 6694,
+      "pct": 1.82
+     }
+    ]
+   },
+   "pop": 645881
+  },
+  "10020": {
+   "fr": "Chiayi",
+   "zh": "嘉義市",
+   "type": "ville",
+   "sortant": {
+    "zh": "黃敏惠",
+    "fr": "Huang Min-hui",
+    "p": "kmt",
+    "statut": "limitée à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "黃宏成台灣阿成世界偉人財神總統",
+     "fr": "Huang Hung-chen",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Candidat de toutes les élections",
+     "no": null
+    },
+    {
+     "zh": "陳愷璜",
+     "fr": "Chen Kai-huang",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien recteur de l'Université nationale des arts de Taipei",
+     "no": null
+    },
+    {
+     "zh": "張啓楷",
+     "fr": "Chang Chi-kai",
+     "p": "tpp",
+     "aff": "台灣民眾黨",
+     "bio": "Ancien député · soutenu par le KMT",
+     "no": null
+    },
+    {
+     "zh": "王美惠",
+     "fr": "Wang Mei-hui",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Députée",
+     "no": null
+    },
+    {
+     "zh": "王義成",
+     "fr": "Wang Yi-cheng",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 93813,
+    "date": "2022-12-18",
+    "cands": [
+     {
+      "zh": "黃敏惠",
+      "fr": "Huang Min-hui",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 59874,
+      "pct": 63.82,
+      "elu": true
+     },
+     {
+      "zh": "李俊俋",
+      "fr": "Lee Chun-yi",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 2,
+      "voix": 32790,
+      "pct": 34.95
+     },
+     {
+      "zh": "黃宏成台灣阿成世界偉人財神總統",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 535,
+      "pct": 0.57
+     },
+     {
+      "zh": "鄭凱升",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 4,
+      "voix": 368,
+      "pct": 0.39
+     },
+     {
+      "zh": "陳泰山",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 5,
+      "voix": 246,
+      "pct": 0.26
+     }
+    ]
+   },
+   "pop": 261429
+  },
+  "10010": {
+   "fr": "comté de Chiayi",
+   "zh": "嘉義縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "翁章梁",
+    "fr": "Weng Chang-liang",
+    "p": "dpp",
+    "statut": "limité à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "吳品叡",
+     "fr": "Wu Pin-jui",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Maire de la ville de Puzi",
+     "no": null
+    },
+    {
+     "zh": "蔡易餘",
+     "fr": "Tsai Yi-yu",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Député",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 273294,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "翁章梁",
+      "fr": "Weng Chang-liang",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 2,
+      "voix": 171777,
+      "pct": 62.85,
+      "elu": true
+     },
+     {
+      "zh": "王育敏",
+      "fr": "Wang Yu-min",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 101517,
+      "pct": 37.15
+     }
+    ]
+   },
+   "pop": 468974
+  },
+  "10013": {
+   "fr": "comté de Pingtung",
+   "zh": "屏東縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "周春米",
+    "fr": "Chou Chun-mi",
+    "p": "dpp",
+    "statut": "se représente"
+   },
+   "cands": [
+    {
+     "zh": "蘇清泉",
+     "fr": "Su Ching-chuan",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Ancien député, candidat en 2018 et en 2022",
+     "no": null
+    },
+    {
+     "zh": "周春米",
+     "fr": "Chou Chun-mi",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Cheffe de comté sortante",
+     "no": null,
+     "sortant": true
+    }
+   ],
+   "r22": {
+    "valides": 443153,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "周春米",
+      "fr": "Chou Chun-mi",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 3,
+      "voix": 217537,
+      "pct": 49.09,
+      "elu": true
+     },
+     {
+      "zh": "蘇清泉",
+      "fr": "Su Ching-chuan",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 206460,
+      "pct": 46.59
+     },
+     {
+      "zh": "詹智鈞",
+      "fr": "Chan Chih-chun",
+      "p": "aut",
+      "aff": "時代力量",
+      "no": 1,
+      "voix": 19156,
+      "pct": 4.32
+     }
+    ]
+   },
+   "pop": 777252
+  },
+  "10002": {
+   "fr": "comté de Yilan",
+   "zh": "宜蘭縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "林姿妙",
+    "fr": "Lin Zi-miao",
+    "p": "kmt",
+    "statut": "limitée à deux mandats ; suspendue depuis sa condamnation de décembre 2024 (appel en cours), intérim par Lin Mao-sheng"
+   },
+   "cands": [
+    {
+     "zh": "陳宏毅",
+     "fr": "Chen Hung-yi",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "吳宗憲",
+     "fr": "Wu Tsung-hsien",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Député",
+     "no": null
+    },
+    {
+     "zh": "劉燦輝",
+     "fr": "Liu Tsan-hui",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "林國漳",
+     "fr": "Lin Kuo-chang",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Avocat",
+     "no": null
+    },
+    {
+     "zh": "楊鉯婷",
+     "fr": "Yang Yi-ting",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 235281,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "林姿妙",
+      "fr": "Lin Zi-miao",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 119421,
+      "pct": 50.76,
+      "elu": true
+     },
+     {
+      "zh": "江聰淵",
+      "fr": "Chiang Tsung-yuan",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 5,
+      "voix": 96779,
+      "pct": 41.13
+     },
+     {
+      "zh": "陳琬惠",
+      "fr": "Chen Wan-hui",
+      "p": "tpp",
+      "aff": "台灣民眾黨",
+      "no": 6,
+      "voix": 16412,
+      "pct": 6.98
+     },
+     {
+      "zh": "許鋐哲",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 1036,
+      "pct": 0.44
+     },
+     {
+      "zh": "朱振東",
+      "p": "aut",
+      "aff": "天一黨",
+      "no": 2,
+      "voix": 919,
+      "pct": 0.39
+     },
+     {
+      "zh": "陳秋境",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 4,
+      "voix": 714,
+      "pct": 0.3
+     }
+    ]
+   },
+   "pop": 447883
+  },
+  "10014": {
+   "fr": "comté de Taitung",
+   "zh": "臺東縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "饒慶鈴",
+    "fr": "April Yao (Rao Ching-ling)",
+    "p": "kmt",
+    "statut": "limitée à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "陳瑩",
+     "fr": "Chen Ying",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Députée",
+     "no": null
+    },
+    {
+     "zh": "吳秀華",
+     "fr": "Wu Hsiu-hua",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Présidente du conseil de comté",
+     "no": null
+    },
+    {
+     "zh": "李吳穎智",
+     "fr": "Li Wu Ying-chih",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "王志偉",
+     "fr": "Wang Chih-wei",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 112148,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "饒慶鈴",
+      "fr": "April Yao",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 68661,
+      "pct": 61.22,
+      "elu": true
+     },
+     {
+      "zh": "劉櫂豪",
+      "fr": "Liu Chao-hao",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 3,
+      "voix": 41104,
+      "pct": 36.65
+     },
+     {
+      "zh": "陳長宏",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 2383,
+      "pct": 2.12
+     }
+    ]
+   },
+   "pop": 207454
+  },
+  "10015": {
+   "fr": "comté de Hualien",
+   "zh": "花蓮縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "徐榛蔚",
+    "fr": "Hsu Chen-wei",
+    "p": "kmt",
+    "statut": "limitée à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "游淑貞",
+     "fr": "Yu Shu-chen",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Cheffe du canton de Ji'an",
+     "no": null
+    },
+    {
+     "zh": "張峻",
+     "fr": "Chang Chun",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Président du conseil de comté",
+     "no": null
+    },
+    {
+     "zh": "魏嘉賢",
+     "fr": "Wei Chia-hsien",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Conseiller de comté, ancien maire de la ville de Hualien",
+     "no": null
+    },
+    {
+     "zh": "羅佩秦",
+     "fr": "Lo Pei-chin",
+     "p": "aut",
+     "aff": "台灣工黨",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 149307,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "徐榛蔚",
+      "fr": "Hsu Chen-wei",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 1,
+      "voix": 96645,
+      "pct": 64.73,
+      "elu": true
+     },
+     {
+      "zh": "谷辣斯．尤達卡 Kolas Yotaka",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 3,
+      "voix": 47845,
+      "pct": 32.04
+     },
+     {
+      "zh": "黄師鵬",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 2,
+      "voix": 4817,
+      "pct": 3.23
+     }
+    ]
+   },
+   "pop": 310550
+  },
+  "10016": {
+   "fr": "comté de Penghu",
+   "zh": "澎湖縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "陳光復",
+    "fr": "Chen Kuang-fu",
+    "p": "dpp",
+    "statut": "limité à deux mandats"
+   },
+   "cands": [
+    {
+     "zh": "吳淑瑾",
+     "fr": "Wu Shu-chin",
+     "p": "dpp",
+     "aff": "民主進步黨",
+     "bio": "Épouse du chef de comté sortant",
+     "no": null
+    },
+    {
+     "zh": "陳振中",
+     "fr": "Chen Chen-chung",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Ancien chef du canton de Huxi",
+     "no": null
+    },
+    {
+     "zh": "周倪安",
+     "fr": "Chou Ni-an",
+     "p": "aut",
+     "aff": "台灣團結聯盟",
+     "bio": "Présidente de l'Union pour la solidarité de Taïwan",
+     "no": null
+    },
+    {
+     "zh": "許智富",
+     "fr": "Hsu Chih-fu",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien chef de comté adjoint",
+     "no": null
+    },
+    {
+     "zh": "陳盡川",
+     "fr": "Chen Chin-chuan",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "葉竹林",
+     "fr": "Yeh Chu-lin",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien maire de Magong, 3e en 2022",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 51242,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "陳光復",
+      "fr": "Chen Kuang-fu",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 1,
+      "voix": 18777,
+      "pct": 36.64,
+      "elu": true
+     },
+     {
+      "zh": "賴峰偉",
+      "fr": "Lai Feng-wei",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 17081,
+      "pct": 33.33
+     },
+     {
+      "zh": "葉竹林",
+      "fr": "Yeh Chu-lin",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 15384,
+      "pct": 30.02
+     }
+    ]
+   },
+   "pop": 106725
+  },
+  "09020": {
+   "fr": "comté de Kinmen",
+   "zh": "金門縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "陳福海",
+    "fr": "Chen Fu-hai",
+    "p": "ind",
+    "statut": "ne peut se représenter (condamnation passée, loi électorale modifiée)"
+   },
+   "cands": [
+    {
+     "zh": "洪和成",
+     "fr": "Hung Ho-chen",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    },
+    {
+     "zh": "陳玉珍",
+     "fr": "Chen Yu-jen",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Députée",
+     "no": null
+    },
+    {
+     "zh": "李文良",
+     "fr": "Lee Wen-liang",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien chef de comté adjoint",
+     "no": null
+    },
+    {
+     "zh": "黃世團",
+     "fr": "Hwang Shyh-twan",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Artiste",
+     "no": null
+    },
+    {
+     "zh": "張國威",
+     "fr": "Chang Kuo-wei",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Entrepreneur",
+     "no": null
+    },
+    {
+     "zh": "梁文韜",
+     "fr": "Leung Man-to",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Professeur de science politique (Université nationale Cheng Kung)",
+     "no": null
+    },
+    {
+     "zh": "張火木",
+     "fr": "Chang Huo-mu",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 47114,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "陳福海",
+      "fr": "Chen Fu-hai",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 5,
+      "voix": 23248,
+      "pct": 49.34,
+      "elu": true
+     },
+     {
+      "zh": "楊鎮浯",
+      "fr": "Yang Chen-wu",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 4,
+      "voix": 19340,
+      "pct": 41.05
+     },
+     {
+      "zh": "李應文",
+      "fr": "Lee Yin-wen",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 1,
+      "voix": 3459,
+      "pct": 7.34
+     },
+     {
+      "zh": "洪志恒",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 6,
+      "voix": 752,
+      "pct": 1.6
+     },
+     {
+      "zh": "朱紀瑋",
+      "p": "aut",
+      "aff": "龍黨",
+      "no": 2,
+      "voix": 174,
+      "pct": 0.37
+     },
+     {
+      "zh": "林志錦",
+      "p": "ind",
+      "aff": "無黨籍",
+      "no": 3,
+      "voix": 141,
+      "pct": 0.3
+     }
+    ]
+   },
+   "pop": 137490
+  },
+  "09007": {
+   "fr": "comté de Lienchiang (Matsu)",
+   "zh": "連江縣",
+   "type": "comte",
+   "sortant": {
+    "zh": "王忠銘",
+    "fr": "Wang Chung-ming",
+    "p": "kmt",
+    "statut": "se représente"
+   },
+   "cands": [
+    {
+     "zh": "王忠銘",
+     "fr": "Wang Chung-ming",
+     "p": "kmt",
+     "aff": "中國國民黨",
+     "bio": "Chef de comté sortant",
+     "no": null,
+     "sortant": true
+    },
+    {
+     "zh": "曹爾元",
+     "fr": "Tsao Erh-yuan",
+     "p": "ind",
+     "aff": "無黨籍",
+     "bio": "Ancien directeur de l'administration foncière du comté, 2e en 2022",
+     "no": null
+    }
+   ],
+   "r22": {
+    "valides": 8505,
+    "date": "2022-11-26",
+    "cands": [
+     {
+      "zh": "王忠銘",
+      "fr": "Wang Chung-ming",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 3,
+      "voix": 4337,
+      "pct": 50.99,
+      "elu": true
+     },
+     {
+      "zh": "曹爾元",
+      "fr": "Tsao Erh-yuan",
+      "p": "kmt",
+      "aff": "中國國民黨",
+      "no": 2,
+      "voix": 3582,
+      "pct": 42.12
+     },
+     {
+      "zh": "李問",
+      "p": "dpp",
+      "aff": "民主進步黨",
+      "no": 1,
+      "voix": 586,
+      "pct": 6.89
+     }
+    ]
+   },
+   "pop": 13660
+  }
+ }
+}
