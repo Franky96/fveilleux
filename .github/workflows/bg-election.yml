@@ -1,0 +1,86 @@
+# Présidentielle en Bulgarie (page « En direct », 2e tour du dimanche 1er novembre 2026) : copie de secours des résultats de la CIK.
+# La page lit d'abord le relais du site (api/direct-bg.php, cache 45 s) ; results.cik.bg étant derrière Cloudflare, qui met au défi les
+# lectures sans navigateur (le relais risque d'être refusé), elle lit surtout en-direct/bulgarie/resultats.json, écrit ici par
+# en-direct/bulgarie/outils/bg.py (qui passe par un navigateur sans tête, navigateur.mjs + Playwright) et poussé sur master (Hostinger le déploie).
+#   · 1er tour (tour1.json) : toutes les 3 heures jusqu'au 31 octobre (résultats définitifs) ;
+#   · 2e tour : participation de 11 h et 16 h (heure de Sofia) ; le soir du vote, GitHub retardant souvent les déclenchements programmés,
+#     une seule exécution lit les résultats en boucle (toutes les 90 s environ) de 19 h 40 à 2 h, heure de Sofia (12 h 40 à 19 h au Québec),
+#     relancée par deux horaires de secours ; une autre boucle de 2 h à 7 h ; puis chaque heure le 2 novembre et toutes les 3 heures jusqu'au 8.
+# Le bouton « Run workflow » de l'onglet Actions lance une lecture tout de suite (--force), avec le tour et la durée de boucle choisis.
+name: Présidentielle Bulgarie · résultats
+
+on:
+  schedule:
+    - cron: "17 */3 26-31 10 *"          # 1er tour
+    - cron: "37 9,14 1 11 *"             # participation de 11 h et 16 h à Sofia
+    - cron: "40 17 1 11 *"               # soirée : boucle jusqu'à 23 h 59 UTC
+    - cron: "10 19 1 11 *"               # secours si la boucle n'a pas démarré
+    - cron: "40 20 1 11 *"               # secours
+    - cron: "5 0 2 11 *"                 # nuit : boucle jusqu'à 5 h UTC
+    - cron: "23 6-23 2 11 *"
+    - cron: "23 */3 3-8 11 *"
+  workflow_dispatch:
+    inputs:
+      tour:
+        description: "Tour (1 ou 2)"
+        default: "2"
+      minutes:
+        description: "Durée de la boucle en minutes (0 = une seule lecture)"
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bg-election
+  cancel-in-progress: false
+
+jobs:
+  lire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Navigateur sans tête (Playwright)
+        run: |
+          npm install --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/pw" playwright@1.56.1
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+
+      - name: Résultats de la CIK
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+          EVENEMENT: ${{ github.event_name }}
+          HORAIRE: ${{ github.event.schedule }}
+          TOUR_DEMANDE: ${{ github.event.inputs.tour }}
+          MINUTES_DEMANDEES: ${{ github.event.inputs.minutes }}
+        run: |
+          TOUR=2; FORCE=""; FIN=$(date +%s)
+          case "$HORAIRE" in
+            *" 10 *") TOUR=1 ;;
+            "40 17 1 11 *"|"10 19 1 11 *"|"40 20 1 11 *") FIN=$(date -u -d "2026-11-01 23:59" +%s) ;;
+            "5 0 2 11 *") FIN=$(date -u -d "2026-11-02 05:00" +%s) ;;
+          esac
+          if [ "$EVENEMENT" = "workflow_dispatch" ]; then
+            TOUR=${TOUR_DEMANDE:-2}; FORCE="--force"; FIN=$(( $(date +%s) + ${MINUTES_DEMANDEES:-0} * 60 ))
+          fi
+          [ "$TOUR" = "1" ] && FICHIER=en-direct/bulgarie/tour1.json || FICHIER=en-direct/bulgarie/resultats.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          while :; do
+            python3 en-direct/bulgarie/outils/bg.py --tour "$TOUR" $FORCE || echo "Lecture ratée, on continue."
+            git add "$FICHIER"
+            if ! git diff --cached --quiet; then
+              H=$(TZ=Europe/Sofia date +"%H h %M")
+              [ "$TOUR" = "1" ] && QUOI="1er tour" || QUOI="2e tour"
+              git commit -q -m "Présidentielle Bulgarie : résultats du $QUOI de $H, heure de Sofia"
+              for essai in 1 2 3 4; do
+                git push -q origin HEAD:master && break
+                sleep $((2 ** essai)); git pull -q --rebase origin master
+              done
+            fi
+            [ "$(date +%s)" -ge "$FIN" ] && break
+            sleep 90
+          done
