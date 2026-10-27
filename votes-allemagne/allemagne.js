@@ -398,7 +398,7 @@ function peindre() {
     const voix = groupe() === "e25" && etat.mode === "e25" ? "premières voix (candidats des Wahlkreise)" : `secondes voix (listes du Land)${groupe() === "proj" ? " projetées" : ""}`;
     $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
       ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Land (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}` : ""}</span>`
-      : etat.mode === "lead" || etat.mode === "e25" ? `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le Land (${groupe() === "e25" ? `élus en ${AN(2025)}` : "projection du site"}) : la seconde voix répartit les sièges à la proportionnelle, il n'y a pas de vainqueur du Land. Anneau : sièges de chaque parti, total au centre. <b>Sièges affichés : ${TYPES_S[etat.typeS]}</b>${etat.typeS === "tous" ? " ; un Wahlkreis gagné compte dans les sièges de la liste de son Land, il ne s'y ajoute pas" : " ; choisis « Tous » pour le total du Land"}. Clique sur un Land pour son détail.</span>`
+      : etat.mode === "lead" || etat.mode === "e25" ? `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le Land (${groupe() === "e25" ? `élus en ${AN(2025)}` : "projection du site"}) : la seconde voix répartit les sièges à la proportionnelle, il n'y a pas de vainqueur du Land. Anneau : sièges de chaque parti, total au centre. <b>Le total des sièges d'un parti se calcule à l'échelle du pays ; la vue Länder montre comment ils sont répartis entre les Länder.</b> <b>Sièges affichés : ${TYPES_S[etat.typeS]}</b>${etat.typeS === "tous" ? " ; un Wahlkreis gagné compte dans les sièges de la liste de son Land, il ne s'y ajoute pas" : " ; choisis « Tous » pour le total du Land"}. Clique sur un Land pour son détail.</span>`
       : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "en tête"} des ${voix} dans chaque Land (${quoi}). Plus la couleur est foncée, plus son score est élevé. Clique sur un Land pour son détail.</span>`) + VOIX;
     return;
   }
@@ -674,6 +674,16 @@ function systemeElectoral() {
   const lignes = partis.map(p => `<div class="vi-dlg-vs-ligne" style="--c:${COUL[p]}"><b>${lab(p)}</b>
       <span class="vi-dlg-vs-barres"><i style="width:${2 * voix(p)}%"></i><i style="width:${Math.max(0.6, 2 * pctS(p))}%"></i></span>
       <small>${nf(voix(p), voix(p) < 1 ? 2 : 1)} % des voix<br>${sg(G[p] || 0)} (${nf(pctS(p), pctS(p) < 1 && pctS(p) > 0 ? 1 : 0)} %)</small></div>`).join("");
+  // exemple de la Saxe (élection de 2025) : le total du Land = somme de la part de chaque parti
+  const SN = R25.lands.SN, nomSN = nomLand("SN"), totSN = d3.sum(Object.values(SN.sieges));
+  const wkSN = DATA.ridings.map((r, i) => [r, i]).filter(([r]) => r.r === "SN").map(([, i]) => CE[i]).filter(Boolean);
+  const gSN = d3.rollup(wkSN, v => v.length, c => c.g), sSN = d3.rollup(wkSN.filter(c => c.siege), v => v.length, c => c.g);
+  const exempleSaxe = `<table class="vi-dlg-tab"><caption>Comment la ${esc(nomSN)} arrive à ses ${totSN} sièges (élection de ${AN(2025)})</caption>
+      <thead><tr><th scope="col">Parti</th><th scope="col">Secondes voix en ${esc(nomSN)}</th><th scope="col">Part de ses voix du pays</th><th scope="col">Sièges du parti au pays</th><th scope="col">Part × sièges</th><th scope="col">Sièges en ${esc(nomSN)}</th></tr></thead>
+      <tbody>${["CDU", "AfD", "SPD", "Grüne", "Linke"].filter(p => SN.sieges[p]).map(p => { const part = SN.voix_z[p] / R25.voix_z[p];
+        return `<tr style="--c:${COUL[p]}"><th scope="row"><i></i>${lab(p)}</th><td>${nf(SN.voix_z[p])}</td><td>${nf(100 * part, 1)} %</td><td>${R25.sieges[p]}</td><td>${nf(part * R25.sieges[p], 1)}</td><td><b>${SN.sieges[p]}</b></td></tr>`; }).join("")}
+        <tr><th scope="row">Total</th><td></td><td></td><td></td><td></td><td><b>${totSN}</b></td></tr></tbody></table>
+      <p>Chaque parti reçoit en ${esc(nomSN)} sa part nationale de sièges, proportionnelle à la part de ses secondes voix du pays qui vient de ce Land (le résultat arrondi par la méthode de Sainte-Laguë peut différer d'un siège de l'arrondi simple de la colonne « Part × sièges »). Les ${totSN} sièges ne sont donc pas un quota de la ${esc(nomSN)} : ils viennent de ses 5 partis. Ensuite, dans le Land, les gagnants de Wahlkreise passent d'abord : sur ${wkSN.length} Wahlkreise, ${[...gSN].map(([p, n]) => `${n} ${lab(p)}`).join(" et ")} ; ${[...sSN].map(([p, n]) => `${n} ${lab(p)}`).join(" et ")} ont un siège${[...gSN].some(([p, n]) => n > (sSN.get(p) || 0)) ? `, car ${[...gSN].filter(([p, n]) => n > (sSN.get(p) || 0)).map(([p, n]) => `${lab(p)} a gagné ${n} Wahlkreise mais n'a que ${sSN.get(p) || 0} siège${(sSN.get(p) || 0) > 1 ? "s" : ""} dans le Land (le moins bien élu reste sans siège)`).join(" ; ")}` : ""}. Les autres sièges (${totSN - d3.sum([...sSN.values()])}) viennent de la liste du Land.</p>`;
   const graphique = `<div class="vi-dlg-vs">${lignes}</div>
       <div class="vi-dlg-legende"><span>part des secondes voix</span><span>part des sièges</span></div>`;
   const tabChambre = `<table class="vi-dlg-tab"><caption>Sièges au Bundestag</caption>
@@ -743,6 +753,8 @@ function systemeElectoral() {
         <li><b>Seuil de 5 %</b> : seuls les partis qui obtiennent au moins 5 % des secondes voix du pays ont des sièges. Exceptions : un parti qui gagne au moins <b>trois Wahlkreise</b> participe quand même à la répartition, et les <b>partis des minorités nationales</b>, comme le SSW de la minorité danoise du Schleswig-Holstein, sont exemptés du seuil.</li>
         <li><b>En ${AN(2025)}</b> : ${nf(perdus, 1)} % des secondes voix sont allées à des partis sans siège. Le BSW (${nf(V.BSW, 2)} %) a manqué le seuil d'environ ${nf(Math.round(manqueBSW / 100) * 100)} voix, et le FDP (${nf(V.FDP, 1)} %) a quitté le Bundestag. Le SSW (${nf(V.SSW, 2)} %) a obtenu ${sg(S.SSW || 0)} grâce à l'exemption.</li>
       </ul>
+      <p><b>Le total de chaque parti est fixé à l'échelle du pays</b> ; les Länder ne font que répartir ces sièges. Le nombre de sièges d'un Land n'est pas fixé d'avance (il ne dépend pas de sa population) : c'est la somme de la part qu'il reçoit de chaque parti, selon la part des secondes voix du parti qui vient de ce Land. La vue « Länder » de la carte montre cette répartition.</p>
+      ${exempleSaxe}
       ${graphique}
     </section>
     <section>
