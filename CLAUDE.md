@@ -38,7 +38,7 @@ Garder ces documents à jour : quand une demande de l'utilisateur change une rè
 
 ## Section « Intentions de vote et simulations » et « En direct » — règles essentielles
 
-- Toutes les pages de la section, y compris les soirées En direct et les anciennes soirées, sortent du gabarit `votes-quebec/outils/pages.src.html`, transformé par `cd votes-quebec/outils && /usr/bin/python3 pages.py --bascule`. **Ne jamais modifier ces .html à la main.**
+- Toutes les pages de la section, y compris les soirées En direct et les anciennes soirées, sortent du gabarit `votes-quebec/outils/pages.src.html`, transformé par `cd votes-quebec/outils && /usr/bin/python3 pages.py --bascule`. **Ne jamais modifier ces .html à la main.** Pour modifier une page, on touche le gabarit, `pages.py`, ou `votes-<pays>/outils/page.py` (Allemagne, Suisse, Alberta, Royaume-Uni), puis on relance le script.
 - `votes-quebec/loi39.js`, `loi39.css` et `fragment.html` sont générés depuis `outils/page.author.html` par `outils/build_site.py`.
 - Onglets et cartes de l'accueil groupés par continent (Amérique du Nord : Québec, Alberta | Canada, États-Unis ; Europe : France, Allemagne, Suisse, Royaume-Uni). Tout nouvel endroit va dans le groupe de son continent, avec un libellé court.
 - Hémicycles : pas de règle générale, on décide au cas par cas ; seule règle à garder, l'ordre gauche-droite (le même classement que la bande des partis).

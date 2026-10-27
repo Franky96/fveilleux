@@ -52,7 +52,7 @@
 - `votes-quebec-qc125.yml` (« Votes Québec · données Qc125 », toutes les 3 h) : sondages, projections, députés, gouvernement, données des pages d'intentions de vote. Écrit aussi `votes-verif.json` (heure de vérification affichée sur les pages).
 - Un workflow par soirée électorale (`cb-`, `alberta-referendum`, `usa-`, `bg-`, `nz-`, `tw-`, `es-election.yml`) : copie de secours des résultats, active seulement autour de la soirée. Voir `docs/en-direct.md`.
 - `deploy-hostinger.yml` : voir plus haut.
-- Les scripts n'utilisent que la bibliothèque standard de Python, sauf exception documentée (Bulgarie : Playwright).
+- Les scripts du pipeline n'utilisent que la bibliothèque standard de Python, sauf exception documentée (Bulgarie : Playwright). Les scripts de données fixes (`…_fixe.py`, `…_geo.py`, lancés à la main, hors pipeline) peuvent exiger `shapely` et `topojson` (`pip install shapely topojson`).
 
 ## Ajouter une page au site
 

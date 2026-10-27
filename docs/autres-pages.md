@@ -7,7 +7,7 @@ Pages plus simples, chacune avec son HTML, son JS et sa permission. Le schéma c
 - **Usage** : inventaire des trousses de premiers soins par emplacement.
   - `ITEMS` : liste de référence de la trousse, avec les quantités petite, moyenne, grande et perso.
   - Pour chaque emplacement : articles manquants, articles complets, et dates d'expiration pour les articles de `ITEMS_AVEC_EXPIRY`.
-- **Données** : document `donnees/rona_global`, lu par `firebase-config.js` puis `api/data.php`. La mise à jour se propage en direct (`onSnapshot`).
+- **Données** : document `donnees/rona_global`, lu par `firebase-config.js` puis `api/data.php`. La mise à jour se propage presque en direct : `onSnapshot` de `firebase-config.js` interroge `api/data.php` toutes les 4 secondes.
 - **PDF (pdf-lib)** :
   - la liste est imprimée par-dessus le gabarit `liste_trousse.pdf` ;
   - puis viennent les pages « Dates d'expiration des articles » (`ajouterPagesDates()`).

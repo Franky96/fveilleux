@@ -22,7 +22,7 @@ Les détails par sujet sont dans les autres fichiers de `docs/`, à ouvrir **seu
 - `research_notes/`, `reports/` et `.claude/` ne se committent jamais.
 - Scripts de CDN : toujours avec `integrity="sha384-…"` et `crossorigin="anonymous"`.
 - **Pages générées** (section Intentions de vote, En direct) : ne jamais modifier les `.html` à la main ;
-  modifier `votes-quebec/outils/pages.src.html` ou `pages.py`, puis `cd votes-quebec/outils && /usr/bin/python3 pages.py --bascule`.
+  modifier `votes-quebec/outils/pages.src.html` ou `pages.py` (ou `votes-<pays>/outils/page.py` pour les pages par pays : Allemagne, Suisse, Alberta, Royaume-Uni), puis `cd votes-quebec/outils && /usr/bin/python3 pages.py --bascule`.
 - **PT6A-21** : après toute modification d'un module `pt6a21-*.js`, remettre à jour les empreintes `?v=` (commande dans CLAUDE.md).
 - Messages de commit en français, descriptifs, avec les lignes d'attribution demandées par l'environnement ;
   la ligne d'attribution `Co-Authored-By` demandée par l'environnement (qui nomme le modèle) est acceptée ; aucun autre identifiant de modèle dans les commits.
@@ -53,7 +53,7 @@ mais leurs sources de résultats n'ont pas toutes été vues en vrai. **Le soir 
 
 - **Colombie-Britannique (24 oct.)** : archivée dans « Anciennes élections » (`election-cb-2026.html`) ; la copie de secours
   se met à jour jusqu'aux résultats officiels du 18 novembre.
-- **Référendum en Alberta (19 oct.)** : archivé, terminé.
+- **Référendum en Alberta (19 oct.)** : archivé ; la copie de secours (`alberta-referendum.yml`) tourne jusqu'au 30 octobre pour les résultats officiels du 29.
 
 **Derniers travaux** :
 - Votes Québec : carte actuelle avec députés et photos, « Gouvernement actuel », boutons « Moyenne lissée » ;
