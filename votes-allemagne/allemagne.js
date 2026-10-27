@@ -52,7 +52,7 @@ function majBarre(nom, donnees) {
 let DATA, R25, PROJ, SOND, BT, CE, CP, SIEGES_DE, NUM_LAND, sel = null, demarre = false;
 // mode de la carte : projection (lead, second, vote), élection de 2025 (e25 : élu de la 1re voix, e25z : 2e voix en tête, e25vote)
 // vue de la carte : circ (299 circonscriptions) ou lander (16 Länder, régions)
-const etat = { mode: "lead", parti: null, pct: lireLS("viPct", true), chambre: "proj", reg: null, vue: lireLS("vaVue", "circ") };
+const etat = { mode: "lead", parti: null, pct: lireLS("viPct", true), chambre: "proj", reg: null, vue: lireLS("vaVue", "circ"), typeS: lireLS("vaTypeS", "tous") };
 const enLander = () => etat.vue === "lander";
 const groupe = () => etat.mode.startsWith("e25") ? "e25" : "proj";
 const voteMode = () => etat.mode === "vote" || etat.mode === "e25vote";
@@ -193,7 +193,7 @@ const partsLand = L => groupe() === "e25" ? (etat.mode === "e25" ? R25.lands[L]?
 function remplirLand(L) {
   // sièges (projection ou élus de 2025) : bandes proportionnelles aux sièges du Land (la seconde voix les répartit à la
   // proportionnelle : pas de vainqueur du Land)
-  if (etat.mode === "lead" || etat.mode === "e25") return [bandes(svg.select("defs"), "de-" + L, siegesLand(L), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.6];
+  if (etat.mode === "lead" || etat.mode === "e25") return [bandes(svg.select("defs"), "de-" + L, siegesLandType(L), p => COUL[p] || COUL.AUT, ORDRE) || "var(--soft)", 0.6];
   const parts = partsLand(L); if (!parts) return ["var(--soft)", 1];
   if (voteMode()) return [COUL[etat.parti], Math.max(0.06, Math.min(1, partDe(parts, etat.parti) / 50))];
   const deux = etat.mode === "second", [p, v] = tri(parts)[deux ? 1 : 0] || ["AUT", 0];
@@ -237,11 +237,27 @@ function ancre(f) {
 const LBL_MIN_CIRC = 14, LBL_NAME = 70, NAME_ZOOM = 6;
 // sièges d'un Land (vue Länder) : la seconde voix les répartit Land par Land
 const siegesLand = L => (groupe() === "e25" ? R25.lands[L]?.sieges : PROJ?.sieges_land[L]) || {};
+// Les sièges d'un Land sont des sièges « totaux » : depuis la réforme de 2023, un Wahlkreis gagné et « couvert » par les secondes voix de son
+// parti compte dans les sièges de la liste du Land (il n'y a pas de sièges en plus). Choix d'affichage (demande de l'utilisateur, 27 octobre 2026) :
+// tous les sièges · seulement les élus de Wahlkreis · seulement les élus de liste (le reste du Land)
+const TYPES_S = { tous: "tous les sièges (Wahlkreis + liste)", wk: "élus de Wahlkreis seulement", liste: "élus de liste seulement" };
+function wkLand(L, g = groupe()) { const src = srcCirc(g), o = {};
+  DATA.ridings.forEach((r, i) => { const c = src[i]; if (r.r === L && c && c.siege) o[c.g] = (o[c.g] || 0) + 1; }); return o; }
+function decoupeLand(L, tot = siegesLand(L)) {   // { parti: [total, élus de Wahlkreis, élus de liste] }
+  const w = wkLand(L), o = {};
+  for (const [p, n] of Object.entries(tot)) { const k = Math.min(w[p] || 0, n); o[p] = [n, k, n - k]; }
+  return o;
+}
+function siegesLandType(L, tot = siegesLand(L)) {
+  if (etat.typeS === "tous") return tot;
+  const o = {}; for (const [p, [n, k, l]] of Object.entries(decoupeLand(L, tot))) { const v = etat.typeS === "wk" ? k : l; if (v) o[p] = v; }
+  return o;
+}
 function placerEtiquettes() {
   const el = svg.node(), px = Math.min(el.clientWidth / MW, el.clientHeight / MH) * curK;
   const hx = el.clientWidth / 2 / (px / curK), hy = el.clientHeight / 2 / (px / curK);
   // vue Länder : anneau des sièges de chaque Land (votes-quebec/anneau.js), étiquette du Land décalée sous l'anneau
-  const avecAnneau = anneaux(gAnn, enLander() ? DATA.curRegionGeo.features.map(f => { const [x, y, rad] = ancre(f); return { id: f.properties.REG, x, y, rad, sieges: siegesLand(f.properties.REG) }; }) : [],
+  const avecAnneau = anneaux(gAnn, enLander() ? DATA.curRegionGeo.features.map(f => { const [x, y, rad] = ancre(f); return { id: f.properties.REG, x, y, rad, sieges: siegesLandType(f.properties.REG) }; }) : [],
     { px, coul: p => COUL[p] || COUL.AUT });
   gLbl.selectAll("g.vi-lab").each(function (f) {
     const [x, y0, rad] = ancre(f), y = y0 + (avecAnneau.has(f.properties.REG) && f.properties.RID == null ? DESSOUS / px : 0);
@@ -301,7 +317,8 @@ function construireCarte() {
   preparerPleinEcran();   // plein écran de la carte et bouton « Info » (votes-quebec/plein.js)
   $("viPct").addEventListener("click", () => { etat.pct = !etat.pct; ecrireLS("viPct", etat.pct); peindre(); });
   $("viModes").addEventListener("click", e => { const b = e.target.closest("button[data-m]"); if (b) changerMode(b.dataset.m);
-    const v = e.target.closest("button[data-vue-carte]"); if (v) changerVue(v.dataset.vueCarte); });
+    const v = e.target.closest("button[data-vue-carte]"); if (v) changerVue(v.dataset.vueCarte);
+    const t = e.target.closest("button[data-type-sieges]"); if (t) changerTypeSieges(t.dataset.typeSieges); });
   $("viChips").innerHTML = CHIPS.map(p => `<button type="button" class="vi-chip" style="--c:${COUL[p]}" data-p="${p}">${lab(p)}</button>`).join("");
   $("viChips").addEventListener("click", e => { const b = e.target.closest("button[data-p]"); if (!b) return;
     etat.parti = b.dataset.p; if (!voteMode()) etat.mode = groupe() === "e25" ? "e25vote" : "vote"; peindre(); if (sel == null) dessinerPanneau(); });
@@ -313,6 +330,8 @@ function outilsCarte() {
   $("viModes").className = "vf-modes";
   $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Carte</span><span class="lv-groupe">${[["circ", "Wahlkreis (circonscription)"], ["lander", "Länder (régions)"]]
       .map(([v, t]) => `<button type="button" data-vue-carte="${v}" aria-pressed="${v === etat.vue}">${t}</button>`).join("")}</span></span>`
+    + `<span class="vf-mode-grp" id="vaTypeS" hidden><span class="vf-mode-lab">Sièges des Länder</span><span class="lv-groupe">${[["tous", "Tous (Wahlkreis + liste)"], ["wk", "Wahlkreis seulement"], ["liste", "Liste seulement"]]
+      .map(([v, t]) => `<button type="button" data-type-sieges="${v}" aria-pressed="${v === etat.typeS}">${t}</button>`).join("")}</span></span>`
     + (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu 1re voix"], ["e25z", "2e voix en tête"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
 }
@@ -323,6 +342,10 @@ function changerVue(v) {
   if (enLander() && etat.mode === "second") etat.mode = "lead";   // pas de « Meilleur 2e » par Land (proportionnelle)
   if (curK !== 1) svg.transition().duration(reduit ? 0 : 600).call(ZOOM.transform, d3.zoomIdentity);
   peindre(); dessinerPanneau();
+}
+function changerTypeSieges(t) {
+  if (t === etat.typeS) return;
+  etat.typeS = t; ecrireLS("vaTypeS", t); peindre(); dessinerPanneau();
 }
 function changerMode(m) {
   etat.mode = m;
@@ -341,6 +364,8 @@ function peindre() {
     b.textContent = enLander() && (b.dataset.m === "lead" || b.dataset.m === "e25") ? "Sièges" : b.dataset.txt;
     b.hidden = enLander() && b.dataset.m === "second"; });   // « Meilleur 2e » : Wahlkreise seulement
   gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
+  // choix « sièges des Länder » : seulement en vue Länder, quand la carte montre les sièges (bandes et anneaux)
+  const grpS = $("vaTypeS"); if (grpS) { grpS.hidden = !(enLander() && (etat.mode === "lead" || etat.mode === "e25")); grpS.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.typeSieges === etat.typeS)); }
   svg.classed("vi-bandes", enLander() && (etat.mode === "lead" || etat.mode === "e25"));   // bandes : frontières épaissies
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });
   gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = o; });   // Land choisi : contour seulement, les autres gardent leur couleur
@@ -370,7 +395,7 @@ function peindre() {
     const voix = groupe() === "e25" && etat.mode === "e25" ? "premières voix (candidats des Wahlkreise)" : `secondes voix (listes du Land)${groupe() === "proj" ? " projetées" : ""}`;
     $("viEchelle").innerHTML = (groupe() === "e25" ? `<b>2025</b> · ` : "") + (voteMode()
       ? `<span>0 %</span>${ramp}<span>50 % et +</span><span>· secondes voix du parti ${lab(p)} dans chaque Land (${quoi})${etat.pct ? ` · chiffre = % de ${lab(p)}` : ""}</span>`
-      : etat.mode === "lead" || etat.mode === "e25" ? `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le Land (${groupe() === "e25" ? `élus en ${AN(2025)}` : "projection du site"}) : la seconde voix répartit les sièges à la proportionnelle, il n'y a pas de vainqueur du Land. Anneau : sièges de chaque parti, total au centre. Clique sur un Land pour son détail.</span>`
+      : etat.mode === "lead" || etat.mode === "e25" ? `<span>Couleur : bandes aux couleurs des partis, chacune aussi large que la part des sièges du parti dans le Land (${groupe() === "e25" ? `élus en ${AN(2025)}` : "projection du site"}) : la seconde voix répartit les sièges à la proportionnelle, il n'y a pas de vainqueur du Land. Anneau : sièges de chaque parti, total au centre. <b>Sièges affichés : ${TYPES_S[etat.typeS]}</b>${etat.typeS === "tous" ? " ; un Wahlkreis gagné compte dans les sièges de la liste de son Land, il ne s'y ajoute pas" : " ; choisis « Tous » pour le total du Land"}. Clique sur un Land pour son détail.</span>`
       : `<span>Couleur : parti ${etat.mode === "second" ? "arrivé deuxième" : "en tête"} des ${voix} dans chaque Land (${quoi}). Plus la couleur est foncée, plus son score est élevé. Clique sur un Land pour son détail.</span>`) + VOIX;
     return;
   }
@@ -399,7 +424,7 @@ function infobulleLand(e, f) {
   const sg = d => Object.entries(d || {}).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${lab(p)} ${n}`).join(" · ");
   const n = DATA.ridings.filter(r => r.r === L).length;
   t.innerHTML = `<b>${esc(nomLand(L))}</b><small>Land · ${n} Wahlkreis${n > 1 ? "e" : ""}</small><br>`
-    + (PROJ ? `<small>Projection, 2e voix : ${top3(PROJ.lands[L])}</small><br><small>Sièges (projection) : ${sg(PROJ.sieges_land[L])}</small><br>` : "")
+    + (PROJ ? `<small>Projection, 2e voix : ${top3(PROJ.lands[L])}</small><br><small>Sièges du Land, Wahlkreis + liste (projection) : ${sg(PROJ.sieges_land[L])}</small><br><small>${detailTypes(L)}</small><br>` : "")
     + `<small>2e voix 2025 : ${top3(R25.lands[L]?.z)}</small>`;
 }
 // clic sur un Land (vue Länder) : son panneau, sans zoomer (les autres Länder restent visibles et cliquables)
@@ -421,6 +446,18 @@ const selecteurRegions = () => `<details class="vc-menu"><summary>Land : <b>${et
   <div class="vc-menu-liste">${[[null, "Toute l'Allemagne"], ...DATA.regions.map(r => [r.code, r.name])]
     .map(([k, t]) => `<button type="button" data-regsel="${k || ""}" aria-pressed="${(k || null) === etat.reg}">${esc(t)}</button>`).join("")}</div></details>`;
 // tableau des sièges par Land (projection, élection de 2025 ou Bundestag actuel)
+// « dont X élus de Wahlkreis et Y de liste » : découpage des sièges d'un Land (tous les partis)
+function detailTypes(L, tot = siegesLand(L)) {
+  const d = Object.values(decoupeLand(L, tot)), k = d.reduce((a, x) => a + x[1], 0), l = d.reduce((a, x) => a + x[2], 0);
+  return `dont ${k} élu${k > 1 ? "s" : ""} de Wahlkreis et ${l} de liste`;
+}
+// tableau Wahlkreis / liste des sièges d'un Land, par parti (fiche d'un Land)
+function blocTypes(L, tot, cols) {
+  const d = decoupeLand(L, tot), partis = cols.filter(p => d[p]);
+  return `<details class="lv-sg vf-hors"${etat.typeS !== "tous" ? " open" : ""}><summary><span>Sièges du Land : Wahlkreis et liste</span><small>${Object.values(tot).reduce((a, b) => a + b, 0)}</small></summary>
+    <p class="va-note">Un Wahlkreis gagné compte dans les sièges de la liste du Land (réforme de 2023) : le total n'est pas la somme de deux étages. ${detailTypes(L, tot)}.</p>
+    <div class="vi-table"><table><thead><tr><th>Parti</th><th>Total</th><th>Wahlkreis</th><th>Liste</th></tr></thead><tbody>${partis.map(p => `<tr><td style="color:${COUL[p]}"><b>${lab(p)}</b></td><td><b>${d[p][0]}</b></td><td>${d[p][1] || "·"}</td><td>${d[p][2] || "·"}</td></tr>`).join("")}</tbody></table></div></details>`;
+}
 function tableLands(parLand, titre, cols) {
   const lignes = DATA.regions.filter(r => !etat.reg || r.code === etat.reg).map(r => { const n = parLand[r.code] || {};
     const tot = Object.values(n).reduce((a, b) => a + b, 0);
@@ -467,7 +504,8 @@ function dessinerPanneau() {
         <div class="vi-vrows">${lignesVS(vote, sg, ref, COLS)}</div>
         ${L ? "" : `<p class="va-note">CDU et CSU : intentions de l'Union partagées selon leur rapport de ${AN(2025)} (la CSU ne se présente qu'en Bavière).${PROJ.clause.includes("CSU") ? " Sous 5 % des voix du pays, la CSU entrerait grâce à ses Wahlkreise." : ""}</p>${coalitions(sg)}`}
         ${meilleures(CP, "projection")}
-        ${tableLands(PROJ.sieges_land, "Sièges par Land · projection", ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "BSW", "FDP", "SSW"].filter(p => SIEGES_DE.proj[p]))}
+        ${L ? blocTypes(L, PROJ.sieges_land[L], COLS) : ""}
+        ${tableLands(Object.fromEntries(Object.keys(PROJ.sieges_land).map(k => [k, siegesLandType(k)])), `Sièges par Land · projection · ${TYPES_S[etat.typeS]}`, ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "BSW", "FDP", "SSW"].filter(p => SIEGES_DE.proj[p]))}
         <details class="lv-sg vf-hors"><summary><span>Wahlkreise gagnés sans siège (projection)</span><small>${sans.length}</small></summary>
         ${listeCirc(sans, c => `${lab(c.g)} <small>sans siège</small>`)}</details>
         <span class="lv-eyebrow">Les plus serrés à la première voix (moins de 3 points)</span>${listeCirc(serres.slice(0, 12), c => c.marge >= 0.05 ? `${lab(c.g)} +${nf(c.marge, 1)}` : `${lab(c.g)} <small>moins de 0,1 pt</small>`)}
@@ -500,7 +538,8 @@ function dessinerPanneau() {
       <span class="lv-eyebrow">Premières voix et Wahlkreise gagnés</span>
       <div class="vi-vrows">${COLS.filter(p => ev[p] >= 0.5).sort((a, b) => (gagnes[b] || 0) - (gagnes[a] || 0) || ev[b] - ev[a]).map(p => jauge(lab(p), COUL[p], ev[p], `<b>${gagnes[p] || 0}</b> <small>circ.</small>`, 50, "va-proj")).join("")}</div>
       ${meilleures(CE, "élection de " + AN(2025))}
-      ${tableLands(Object.fromEntries(Object.entries(R25.lands).map(([k, x]) => [k, x.sieges])), `Sièges par Land · élus en ${AN(2025)}`, ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "SSW"])}
+      ${L ? blocTypes(L, R25.lands[L].sieges, COLS) : ""}
+      ${tableLands(Object.fromEntries(Object.keys(R25.lands).map(k => [k, siegesLandType(k, R25.lands[k].sieges)])), `Sièges par Land · élus en ${AN(2025)} · ${TYPES_S[etat.typeS]}`, ["CDU", "CSU", "AfD", "SPD", "Grüne", "Linke", "SSW"])}
       <details class="lv-sg vf-hors"${L ? " open" : ""}><summary><span>Wahlkreise gagnés sans siège (couverture insuffisante)</span><small>${sans.length}</small></summary>
       <p class="va-note">Depuis la réforme de 2023, un parti n'a pas plus de sièges dans un Land que ses secondes voix ne lui en donnent : ses vainqueurs de Wahlkreis au plus faible pourcentage restent alors sans siège.</p>
       ${listeCirc(sans, c => `${lab(c.g)} ${nf(c.e[c.g], 1)} %`)}</details>
