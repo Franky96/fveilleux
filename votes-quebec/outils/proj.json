@@ -9,7 +9,7 @@
 "Abitibi-Ouest": {
 "PQ": 53,
 "PCQ": 19,
-"CAQ": 10,
+"CAQ": 11,
 "QS": 9,
 "PLQ": 9
 },
@@ -21,7 +21,7 @@
 "CAQ": 4
 },
 "Anjou–Louis-Riel": {
-"PLQ": 43,
+"PLQ": 42,
 "PQ": 22,
 "QS": 15,
 "PCQ": 10,
@@ -36,7 +36,7 @@
 },
 "Arthabaska-L’Érable": {
 "PCQ": 43,
-"PQ": 34,
+"PQ": 35,
 "CAQ": 9,
 "PLQ": 8,
 "QS": 5
@@ -104,7 +104,7 @@
 "QS": 11
 },
 "Bourassa-Sauvé": {
-"PLQ": 50,
+"PLQ": 49,
 "PQ": 17,
 "QS": 17,
 "PCQ": 10,
@@ -202,7 +202,7 @@
 "QS": 6
 },
 "D’Arcy-McGee": {
-"PLQ": 62,
+"PLQ": 61,
 "PCQ": 20,
 "QS": 10,
 "PQ": 4
@@ -226,7 +226,7 @@
 "PCQ": 30,
 "PLQ": 12,
 "CAQ": 10,
-"QS": 6
+"QS": 7
 },
 "Duplessis": {
 "PQ": 52,
@@ -265,7 +265,7 @@
 },
 "Granby": {
 "PQ": 36,
-"PLQ": 20,
+"PLQ": 21,
 "PCQ": 19,
 "CAQ": 14,
 "QS": 9
@@ -362,7 +362,7 @@
 "L’Assomption": {
 "PQ": 44,
 "PCQ": 20,
-"PLQ": 14,
+"PLQ": 15,
 "CAQ": 12,
 "QS": 10
 },
@@ -440,7 +440,7 @@
 "PCQ": 22,
 "PLQ": 17,
 "QS": 9,
-"CAQ": 8
+"CAQ": 9
 },
 "Lévis": {
 "PCQ": 41,
@@ -457,7 +457,7 @@
 "QS": 4
 },
 "Louis-Hébert": {
-"PCQ": 31,
+"PCQ": 30,
 "PQ": 28,
 "PLQ": 24,
 "CAQ": 9,
@@ -562,7 +562,7 @@
 "CAQ": 9
 },
 "Nelligan": {
-"PLQ": 65,
+"PLQ": 64,
 "PCQ": 15,
 "PQ": 8,
 "QS": 7,
@@ -813,8 +813,8 @@
 "QS": 5
 },
 "Vachon": {
-"PLQ": 30,
 "PQ": 30,
+"PLQ": 29,
 "CAQ": 15,
 "PCQ": 14,
 "QS": 11
@@ -859,7 +859,7 @@
 "PQ": 22,
 "PCQ": 13,
 "QS": 10,
-"CAQ": 8
+"CAQ": 9
 },
 "Westmount–Saint-Louis": {
 "PLQ": 61,
