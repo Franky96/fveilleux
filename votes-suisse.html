@@ -983,6 +983,9 @@
     .vi-dlg-tete > div:first-child { padding-bottom: 2px; }
     /* deux parties bien distinctes : système politique (or) et système électoral (sarcelle), hors des couleurs des partis */
     .vi-dlg { --sys-pol: #9A6A10; --sys-elec: #0B8577; }
+    /* fenêtre ouverte : la page en arrière ne défile pas */
+    html:has(dialog.vi-dlg[open]), html:has(dialog.vi-dlg[open]) body { overflow: hidden; }
+    .vi-dlg { overscroll-behavior: contain; }
     :root[data-theme="dark"] .vi-dlg { --sys-pol: #E2B041; --sys-elec: #19B3A1; }
     .vi-dlg-onglets { flex-basis: 100%; display: flex; gap: 4px; margin-bottom: -1px; }
     .vi-dlg-onglets[hidden] { display: none; }
