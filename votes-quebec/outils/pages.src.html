@@ -755,6 +755,11 @@
     @media (max-width: 820px) { .vi-gouv-corps { grid-template-columns: minmax(0, 1fr); } }
     .vi-gouv-ass { position: sticky; top: 0; display: grid; gap: 8px; }
     .vi-gouv-sieges { margin: 0; font-size: 1rem; }
+    /* autres pages : la chambre actuelle en haut (un ou deux blocs côte à côte), le gouvernement dessous (votes-quebec/gouvernement.js) */
+    .vi-gouv-pile { grid-template-columns: minmax(0, 1fr); }
+    .vi-gouv-pile .vi-gouv-ass { position: static; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; align-items: start; }
+    .vi-gouv-ch { display: grid; gap: 8px; align-content: start; }
+    .vi-gouv-ch .vi-plan { width: 100%; max-width: 780px; height: auto; margin: 0 auto; }
     .vi-org { display: grid; gap: 10px; }
     .vi-org h4 { margin: 10px 0 0; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
     .vi-org-niveau { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }

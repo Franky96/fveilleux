@@ -12,6 +12,7 @@ import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 
 const SIEGES = 650, MAJ = 326;
 const P = ["LAB", "CON", "REF", "LD", "VERT", "SNP", "PC"];          // pastilles de la carte
@@ -667,6 +668,19 @@ function partisEnLice() {
       `Chambre actuelle : ${act[p] || 0} siège${(act[p] || 0) > 1 ? "s" : ""}`, `élection de ${AN(2024)} : ${e24[p] || 0} siège${(e24[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })), { multi: AXES.royaumeuni });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : Chambre des communes actuelle en haut, gouvernement dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-royaume-uni/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  preparerGouvernement({ donnees: g, pays: "Royaume-Uni", couleur: p => coul(p), dessiner: svg => {
+    const s = SIEGES_DE.act, ordre = Object.keys(s).filter(p => p !== "VAC" && p !== "SPK").sort((a, b) => s[b] - s[a]), lead = ordre[0];
+    chambre(svg, s, SIEGES);
+    return { eyebrow: "Chambre des communes · composition actuelle", titre: `${NOMS[lead] || lead} : ${s[lead]} sièges, gouvernement ${s[lead] >= MAJ ? "majoritaire" : "minoritaire"}`,
+      legende: [...SEAT_ORDER].filter(p => s[p]).sort((a, b) => (a === "VAC") - (b === "VAC") || s[b] - s[a])
+        .map(p => `<span style="--c:${p === "VAC" ? "var(--muted)" : coul(p)}"><i></i>${p === "VAC" ? "Vacants" : p === "SPK" ? "Président" : p} <b>${s[p]}</b></span>`).join(""),
+      note: "Composition actuelle d'après la liste des députés du Parlement (partielles et changements de parti compris)." };
+  } });
+}
+
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
@@ -676,6 +690,7 @@ async function demarrer() {
       lireJ("votes-royaume-uni/resultats-2024.json"), lireJ("votes-royaume-uni/actuel.json").catch(() => null), lireVerif("royaume-uni")]);
     preparer();
     dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vukPeriode", periode); dessinerEvolution(); });

@@ -11,6 +11,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 import { anneaux, bandes, DESSOUS } from "../votes-quebec/anneau.js";
 
@@ -752,6 +753,25 @@ function partisEnLice() {
     detail: [N[p] ? `Projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> · ${nf(N[p].v, 1)} % des secondes voix` : "", `élection de 2025 : ${e25[p] || 0} siège${(e25[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })), { multi: AXES.allemagne });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : le Bundestag actuel en haut, le Cabinet dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-allemagne/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  preparerGouvernement({ donnees: g, pays: "Allemagne", couleur: () => "var(--aut)", dessiner: svg => {
+    const s = SIEGES_DE.act || SIEGES_DE.e25, G = parGroupe(s);
+    const premier = Object.keys(G).filter(p => p !== "VAC" && p !== "FL").sort((a, b) => G[b] - G[a])[0], coal = (G.Union || 0) + (G.SPD || 0);
+    const dir = directs(SIEGES_DE.act ? "act" : "e25");
+    const parts = trierAxe(PARTIS.allemagne, ORDRE.filter(k => s[k])).map(k => ({ k, n: s[k], c: COUL[k] || COUL.AUT, nom: `${NOMS[k] || k} : ${s[k]} sièges`
+      + (dir && k !== "VAC" ? ` (${Math.min(dir[k] || 0, s[k])} de Wahlkreis, ${s[k] - Math.min(dir[k] || 0, s[k])} de liste)` : ""),
+      d: dir && k !== "VAC" ? Math.min(dir[k] || 0, s[k]) : null, bord: k === "VAC" ? "vac" : bordDe(PARTIS.allemagne, k) }));
+    hemicycle(svg, parts, `sièges · majorité ${MAJ}`);
+    const legende = Object.keys(s).filter(k => k !== "VAC").sort((a, b) => s[b] - s[a] || ORDRE.indexOf(a) - ORDRE.indexOf(b));
+    if (s.VAC) legende.push("VAC");
+    return { eyebrow: `Bundestag · composition au ${dateFr(BT.date)}`, titre: `${lab(premier)} : ${G[premier]} sièges · coalition CDU/CSU–SPD : ${coal}`,
+      legende: legende.map(k => `<span style="--c:${k === "VAC" ? "var(--muted)" : COUL[k] || COUL.AUT}"><i></i>${lab(k)} <b>${s[k]}</b></span>`).join(""),
+      note: "Les cartes sont de couleur neutre : le Cabinet réunit la CDU/CSU et le SPD." };
+  } });
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
   try {
@@ -762,6 +782,7 @@ async function demarrer() {
     if (!PROJ) { etat.mode = "e25"; etat.chambre = "e25"; }
     preparer();
     dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vaPeriode", periode); dessinerEvolution(); });

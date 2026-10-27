@@ -12,6 +12,7 @@ import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 
 const SIEGES = 87, MAJ = 44;
 const P = ["UCP", "NPD", "PT", "LIB", "VERT"];                       // pastilles de la carte et courbes du graphique
@@ -661,6 +662,19 @@ function partisEnLice() {
       `Assemblée actuelle : ${act[p] || 0} siège${(act[p] || 0) > 1 ? "s" : ""}`, `élection de 2023 : ${e23[p] || 0} siège${(e23[p] || 0) > 1 ? "s" : ""}`].filter(Boolean).join(" · ") })), { multi: AXES.alberta });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : Assemblée législative actuelle en haut, gouvernement dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-alberta/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  preparerGouvernement({ donnees: g, pays: "Alberta", couleur: p => coul(p), dessiner: svg => {
+    const s = SIEGES_DE.act, ordre = Object.keys(s).filter(p => p !== "VAC" && p !== "SPK").sort((a, b) => s[b] - s[a]), lead = ordre[0];
+    chambre(svg, s, SIEGES);
+    return { eyebrow: "Assemblée législative · composition actuelle", titre: `${NOMS[lead] || lead} : ${s[lead]} sièges, gouvernement ${s[lead] >= MAJ ? "majoritaire" : "minoritaire"}`,
+      legende: [...SEAT_ORDER].filter(p => s[p]).sort((a, b) => (a === "VAC") - (b === "VAC") || s[b] - s[a])
+        .map(p => `<span style="--c:${p === "VAC" ? "var(--muted)" : coul(p)}"><i></i>${p === "VAC" ? "Vacants" : p === "SPK" ? "Président" : p} <b>${s[p]}</b></span>`).join(""),
+      note: "Composition actuelle d'après la liste des députés de l'Assemblée législative (partielles et changements de caucus compris)." };
+  } });
+}
+
 /* ---------- démarrage ---------- */
 async function demarrer() {
   if (demarre) return; demarre = true;
@@ -670,6 +684,7 @@ async function demarrer() {
       lireJ("votes-alberta/resultats-2023.json"), lireJ("votes-alberta/actuel.json").catch(() => null), lireVerif("alberta")]);
     preparer();
     dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vabPeriode", periode); dessinerEvolution(); });

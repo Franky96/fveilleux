@@ -10,6 +10,7 @@ import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 
 const SIEGES = 343, MAJ = 172;
 const P = ["PLC", "PCC", "BQ", "NPD", "PVC"];
@@ -656,6 +657,19 @@ function systemeElectoral() {
       { id: "electoral", onglet: "Système électoral", chapeau: "Comment on choisit les députés : le mode de scrutin, des voix aux sièges, le calendrier, les électeurs et la carte.", html: electoral, court: electoralCourt }] });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : Chambre des communes actuelle en haut, gouvernement dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-canada/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  preparerGouvernement({ donnees: g, pays: "Canada", couleur: p => COUL[p], dessiner: svg => {
+    const s = SIEGES_DE.act, ordre = Object.keys(s).filter(p => p !== "VAC" && p !== "SPK").sort((a, b) => s[b] - s[a]), lead = ordre[0];
+    chambre(svg, s, SIEGES);
+    return { eyebrow: "Chambre des communes · composition actuelle", titre: `${NOMS[lead] || lead} : ${s[lead]} sièges, gouvernement ${s[lead] >= MAJ ? "majoritaire" : "minoritaire"}`,
+      legende: [...SEAT_ORDER].filter(p => s[p]).sort((a, b) => (a === "VAC") - (b === "VAC") || s[b] - s[a])
+        .map(p => `<span style="--c:${p === "VAC" ? "var(--muted)" : COUL[p]}"><i></i>${p === "VAC" ? "Vacants" : p === "SPK" ? "Président" : p} <b>${s[p]}</b></span>`).join(""),
+      note: "Composition actuelle d'après la liste des députés de la Chambre des communes (partielles et changements de parti compris)." };
+  } });
+}
+
 /* ---------- démarrage ---------- */
 /* ---------- section « Les partis » (votes-quebec/partis.js) : liste cliquable, fiche de chaque parti ---------- */
 function partisEnLice() {
@@ -671,6 +685,7 @@ async function demarrer() {
     [DATA, PROJ, SOND] = await Promise.all([lireJ("votes-canada/data.json"), lireJ("votes-canada/projection.json"), lireJ("votes-canada/sondages.json"), lireVerif("canada")]);
     preparer();
     dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vcPeriode", periode); dessinerEvolution(); });

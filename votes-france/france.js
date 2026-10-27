@@ -10,6 +10,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 577, MAJ = 289;
@@ -737,6 +738,20 @@ function partisEnLice() {
     { titre: "Groupes de l'Assemblée", note: "Les députés siègent par groupe : un groupe réunit un parti et ses alliés.", multi: AXES.france });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : l'Assemblée actuelle en haut, le gouvernement dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-france/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  preparerGouvernement({ donnees: g, pays: "France", couleur: () => "var(--aut)", dessiner: svg => {
+    const A = DATA.assemblee, lead = A.groupes.slice().sort((a, b) => b.n - a.n)[0], parG = Object.fromEntries(A.groupes.map(x => [x.id, x]));
+    hemicycle(svg, [...trierAxe(PARTIS.france, A.groupes.map(x => x.id)).map(k => { const x = parG[k]; return { k: x.id, n: x.n, c: x.c, nom: x.nom, bord: bordDe(PARTIS.france, x.id) }; }),
+      ...(A.vacants ? [{ k: "VAC", n: A.vacants, c: "var(--soft)", nom: "Siège vacant", bord: "vac" }] : [])]);
+    return { eyebrow: `Assemblée nationale · 577 sièges · majorité absolue ${MAJ}`,
+      titre: lead.n >= MAJ ? `${lead.nom} : ${lead.n} sièges, majorité absolue` : `Aucune majorité absolue · premier groupe : ${lead.id} (${lead.n} sièges)`,
+      legende: A.groupes.map(x => `<span style="--c:${x.c}" title="${esc(x.nom)}"><i></i>${esc(x.id)} <b>${x.n}</b></span>`).join("") + (A.vacants ? `<span style="--c:var(--soft)"><i></i>Vacants <b>${A.vacants}</b></span>` : ""),
+      note: `Assemblée au ${dateFr(A.date)}. Les cartes sont de couleur neutre : le gouvernement réunit plusieurs partis (le sigle de chacun est sous le nom).` };
+  } });
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
   try {
@@ -749,6 +764,7 @@ async function demarrer() {
     // couleurs officielles des groupes ; les trop foncées sont éclaircies pour rester lisibles sur fond sombre
     DATA.assemblee.groupes.forEach(g => { g.c = FAMILLE[g.id] || g.c; GP[g.id] = g; });   // même palette que les partis
     ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return; periode = +b.dataset.per; ecrireLS("vfPeriode", periode); dessinerEvolution(); });
     let attente; addEventListener("resize", () => { clearTimeout(attente); attente = setTimeout(dessinerEvolution, 200); });

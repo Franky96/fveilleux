@@ -66,6 +66,14 @@ jobs:
           (cd ../../votes-alberta/outils && python3 sondages_ab.py) || echo "::warning::Votes Alberta non mis à jour"
           # Votes Royaume-Uni : sondages (Wikipédia), projection du site, Chambre des communes actuelle (API des membres du Parlement)
           (cd ../../votes-royaume-uni/outils && python3 sondages_uk.py) || echo "::warning::Votes Royaume-Uni non mis à jour"
+          # Fenêtre « Gouvernement actuel » de chaque page (ministres lus sur les sites officiels ou Wikipédia ; fichier gardé si la source change)
+          (cd ../../votes-royaume-uni/outils && python3 gouvernement.py) || echo "::warning::Gouvernement du Royaume-Uni non mis à jour"
+          (cd ../../votes-canada/outils && python3 gouvernement.py) || echo "::warning::Gouvernement du Canada non mis à jour"
+          (cd ../../votes-usa/outils && python3 gouvernement.py) || echo "::warning::Gouvernement des États-Unis non mis à jour"
+          (cd ../../votes-france/outils && python3 gouvernement.py) || echo "::warning::Gouvernement de la France non mis à jour"
+          (cd ../../votes-allemagne/outils && python3 gouvernement.py) || echo "::warning::Gouvernement de l'Allemagne non mis à jour"
+          (cd ../../votes-suisse/outils && python3 gouvernement.py) || echo "::warning::Conseil fédéral suisse non mis à jour"
+          (cd ../../votes-alberta/outils && python3 gouvernement.py) || echo "::warning::Gouvernement de l'Alberta non mis à jour"
 
       - name: data.json, simulation de référence et page
         working-directory: votes-quebec/outils
@@ -78,7 +86,7 @@ jobs:
 
       - name: Publier la vérification (et les données si elles ont changé)
         run: |
-          DONNEES="votes-quebec/loi39-resume.json votes-verif.json votes-usa/projection.json votes-usa/sondages.json votes-usa/presidentielle.json votes-allemagne/sondages.json votes-allemagne/projection.json votes-allemagne/bundestag.json votes-suisse/sondages.json votes-suisse/projection.json votes-suisse/actuel.json votes-alberta/sondages.json votes-alberta/projection.json votes-alberta/actuel.json votes-royaume-uni/sondages.json votes-royaume-uni/projection.json votes-royaume-uni/actuel.json votes-canada/sondages.json votes-canada/projection.json votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/deputes.json votes-quebec/gouvernement.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json"
+          DONNEES="votes-quebec/loi39-resume.json votes-verif.json votes-usa/projection.json votes-usa/sondages.json votes-usa/presidentielle.json votes-allemagne/sondages.json votes-allemagne/projection.json votes-allemagne/bundestag.json votes-suisse/sondages.json votes-suisse/projection.json votes-suisse/actuel.json votes-alberta/sondages.json votes-alberta/projection.json votes-alberta/actuel.json votes-royaume-uni/sondages.json votes-royaume-uni/projection.json votes-royaume-uni/actuel.json votes-royaume-uni/gouvernement.json votes-canada/gouvernement.json votes-usa/gouvernement.json votes-france/gouvernement.json votes-allemagne/gouvernement.json votes-suisse/gouvernement.json votes-alberta/gouvernement.json votes-canada/sondages.json votes-canada/projection.json votes-france/sondages.json votes-france/sondages-pres.json votes-france/assemblee.json votes-quebec/sondages.json votes-quebec/election-2026.json votes-quebec/deputes.json votes-quebec/gouvernement.json votes-quebec/verif.json votes-quebec/data.json votes-quebec/outils/data.json votes-quebec/outils/proj.json votes-quebec/outils/ridings.tsv votes-quebec/outils/maj.json"
           # la page elle-même ne doit pas changer : seules les données sont publiées
           AUTRES=$(git status --porcelain --untracked-files=no | awk '{print $2}' | grep -vxF -f <(tr ' ' '\n' <<< "$DONNEES") || true)
           if [ -n "$AUTRES" ]; then echo "Fichiers de la page modifiés par la reconstruction, rien n'est publié :"; echo "$AUTRES"; exit 1; fi

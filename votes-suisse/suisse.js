@@ -11,6 +11,7 @@ import { sectionPartis, PARTIS, AXES, bordDe, trierAxe } from "../votes-quebec/p
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 import { anneaux, bandes, DESSOUS } from "../votes-quebec/anneau.js";
 
@@ -708,6 +709,24 @@ function partisEnLice() {
     detail: `Conseil national, projection du site : <b>${N[p].s} siège${N[p].s > 1 ? "s" : ""}</b> (${N[p].smin}–${N[p].smax}) · ${nf(N[p].v, 1)} % des voix` })), { multi: AXES.suisse });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : le Parlement actuel (Conseil national et Conseil des États) en haut, le Conseil fédéral dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-suisse/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const gr = ACT ? "act" : "e23";
+  const leg = s => Object.keys(s).sort((a, b) => s[b] - s[a] || ORDRE.indexOf(a) - ORDRE.indexOf(b)).map(p => `<span style="--c:${COUL[p] || COUL.AUT}"><i></i>${nomP(p)} <b>${s[p]}</b></span>`).join("");
+  preparerGouvernement({ donnees: g, pays: "Suisse", couleur: p => COUL[p] || COUL.AUT, dessiner: (svg, section) => {
+    const cn = siegesDe("cn", gr), ce = siegesDe("ce", gr), [lead, nl] = premier(cn), [leadE, nE] = premier(ce);
+    hemicycle(svg, cn, CN, `conseillers nationaux · majorité ${MAJ_CN}`);
+    const div = document.createElement("div"); div.className = "vi-gouv-ch";
+    div.innerHTML = `<span class="lv-eyebrow">Conseil des États · ${gr === "act" ? "composition actuelle" : "élus de 2023"}</span><h4 class="vi-gouv-sieges">${nomP(leadE)} en tête : ${nE} sur ${CE}</h4>
+      <svg class="vi-plan" role="img" aria-label="Hémicycle du Conseil des États (46 sièges)"></svg><div class="vf-legende">${leg(ce)}</div>`;
+    section.appendChild(div);
+    hemicycle(div.querySelector("svg"), ce, CE, `conseillers aux États · majorité ${MAJ_CE}`);
+    return { eyebrow: `Conseil national · ${gr === "act" ? "composition actuelle" : "élus de 2023"}`, titre: `${nomP(lead)} en tête : ${nl} sur ${CN} · UDC + PLR : ${(cn.UDC || 0) + (cn.PLR || 0)}`, legende: leg(cn),
+      note: "" };
+  } });
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
   try {
@@ -719,6 +738,7 @@ async function demarrer() {
     etat.mode = MODE0(); etat.chambre = groupe();
     ajouterChoixType();
     construireCarte(); dessinerTete(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vsPeriode", periode); dessinerEvolution(); });

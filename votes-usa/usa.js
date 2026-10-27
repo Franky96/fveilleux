@@ -13,6 +13,7 @@ import { sectionPartis, PARTIS, AXES } from "../votes-quebec/partis.js";
 import { equilibrerHaut } from "../votes-quebec/equilibre.js";
 import { majLissage } from "../votes-quebec/lissage.js";
 import { preparerPleinEcran, infoPlein } from "../votes-quebec/plein.js";
+import { preparerGouvernement } from "../votes-quebec/gouvernement.js";
 import { regrouper } from "../votes-quebec/hemicycle.js";
 
 const SIEGES = 435, MAJ = 218;
@@ -1069,6 +1070,27 @@ function partisEnLice() {
     { note: "Les deux grands partis occupent presque tous les sièges du Congrès.", multi: AXES.usa });
 }
 
+/* ---------- fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : le Congrès actuel en haut, le Cabinet dessous ---------- */
+async function gouvernement() {
+  const g = await fetch("votes-usa/gouvernement.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const bloc = (parts, nb) => parts.map(p => `<span style="--c:${p.k === "VAC" ? "var(--muted)" : p.c}"><i></i>${p.nom} <b>${p.n}</b></span>`).join("");
+  preparerGouvernement({ donnees: g, pays: "États-Unis", couleur: p => COUL[p], dessiner: (svg, section) => {
+    const n = {}; Object.values(PROJ.actuel).forEach(a => { const p = a ? a.p : "VAC"; n[p] = (n[p] || 0) + 1; });
+    const ch = ["D", "I", "VAC", "R"].filter(p => n[p]).map(p => ({ k: p, n: n[p], c: COUL[p], nom: p === "VAC" ? "Siège vacant" : NOMS[p] }));
+    hemicycle(svg, ch, `représentants · majorité ${MAJ}`, 435);
+    const lead = (n.D || 0) >= (n.R || 0) ? "D" : "R";
+    // Sénat à côté de la Chambre
+    const sen = partsSenat("act"), ns = Object.fromEntries(sen.map(p => [p.k, p.n]));
+    const div = document.createElement("div"); div.className = "vi-gouv-ch";
+    div.innerHTML = `<span class="lv-eyebrow">Sénat · sénateurs en exercice</span><h4 class="vi-gouv-sieges">Républicains ${ns.R || 0}, démocrates ${ns.D || 0}${ns.I ? ` et ${ns.I} indépendants (avec les démocrates)` : ""}</h4>
+      <svg class="vi-plan" role="img"></svg><div class="vf-legende">${bloc(sen)}</div>`;
+    section.appendChild(div);
+    hemicycle(div.querySelector("svg"), sen, "sénateurs · majorité 51", 100);
+    return { eyebrow: `Chambre des représentants · membres en exercice au ${dateFr(PROJ.clerk)}`, titre: `${NOMS[lead]} : ${n[lead]} sièges${n[lead] >= MAJ ? ", majorité" : ""}`,
+      legende: bloc(ch), note: "" };
+  } });
+}
+
 async function demarrer() {
   if (demarre) return; demarre = true;
   try {
@@ -1080,6 +1102,7 @@ async function demarrer() {
     couleursPrimaires();
     DATA.districts.forEach(d => NOM26[d.id] = d.n); DATA.districts24.forEach(d => NOM24[d.id] = d.n);
     ajouterChoixType(); dessinerTete(); construireCarte(); outilsCarte(); peindre(); dessinerPanneau(); dessinerEvolution(); systemeElectoral(); partisEnLice();
+    gouvernement();   // fenêtre « Gouvernement actuel » (votes-quebec/gouvernement.js) : sans attendre le fichier
     await equilibrerHaut(dessinerEvolution);   // colonnes du haut équilibrées avant d'afficher la page (rien ne bouge ensuite)
     $("viPeriodes").addEventListener("click", e => { const b = e.target.closest("button[data-per]"); if (!b) return;
       periode = +b.dataset.per; ecrireLS("vuPeriode", periode); dessinerEvolution(); });
