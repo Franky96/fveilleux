@@ -330,7 +330,7 @@ function outilsCarte() {
   $("viModes").className = "vf-modes";
   $("viModes").innerHTML = `<span class="vf-mode-grp"><span class="vf-mode-lab">Carte</span><span class="lv-groupe">${[["circ", "Wahlkreis (circonscription)"], ["lander", "Länder (régions)"]]
       .map(([v, t]) => `<button type="button" data-vue-carte="${v}" aria-pressed="${v === etat.vue}">${t}</button>`).join("")}</span></span>`
-    + `<span class="vf-mode-grp" id="vaTypeS" hidden><span class="vf-mode-lab">Sièges des Länder</span><span class="lv-groupe">${[["tous", "Tous (Wahlkreis + liste)"], ["wk", "Wahlkreis seulement"], ["liste", "Liste seulement"]]
+    + `<span class="vf-mode-grp" id="vaTypeS"><span class="vf-mode-lab">Sièges des Länder</span><span class="lv-groupe">${[["tous", "Tous (Wahlkreis + liste)"], ["wk", "Wahlkreis seulement"], ["liste", "Liste seulement"]]
       .map(([v, t]) => `<button type="button" data-type-sieges="${v}" aria-pressed="${v === etat.typeS}">${t}</button>`).join("")}</span></span>`
     + (CP.some(Boolean) ? `<span class="vf-mode-grp"><span class="vf-mode-lab">Projection</span><span class="lv-groupe">${[["lead", "En tête"], ["second", "Meilleur 2e"], ["vote", "Vote"]].map(bouton).join("")}</span></span>` : "")
     + `<span class="vf-mode-grp"><span class="vf-mode-lab">Élection ${AN(2025)}</span><span class="lv-groupe">${[["e25", "Élu 1re voix"], ["e25z", "2e voix en tête"], ["e25vote", "Vote"]].map(bouton).join("")}</span></span>`;
@@ -364,8 +364,11 @@ function peindre() {
     b.textContent = enLander() && (b.dataset.m === "lead" || b.dataset.m === "e25") ? "Sièges" : b.dataset.txt;
     b.hidden = enLander() && b.dataset.m === "second"; });   // « Meilleur 2e » : Wahlkreise seulement
   gRid.style("display", enLander() ? "none" : null); gLand.style("display", enLander() ? null : "none");
-  // choix « sièges des Länder » : seulement en vue Länder, quand la carte montre les sièges (bandes et anneaux)
-  const grpS = $("vaTypeS"); if (grpS) { grpS.hidden = !(enLander() && (etat.mode === "lead" || etat.mode === "e25")); grpS.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.typeSieges === etat.typeS)); }
+  // choix « sièges des Länder » : toujours affiché, mais actif seulement en vue Länder, quand la carte montre les sièges (bandes et anneaux) ;
+  // grisé en vue Wahlkreis (demande de l'utilisateur)
+  const grpS = $("vaTypeS"); if (grpS) { const actif = enLander() && (etat.mode === "lead" || etat.mode === "e25");
+    grpS.classList.toggle("va-inactif", !actif); grpS.title = actif ? "" : "Disponible en vue Länder, dans le mode « Sièges »";
+    grpS.querySelectorAll("button").forEach(b => { b.disabled = !actif; b.setAttribute("aria-pressed", b.dataset.typeSieges === etat.typeS); }); }
   svg.classed("vi-bandes", enLander() && (etat.mode === "lead" || etat.mode === "e25"));   // bandes : frontières épaissies
   gRid.selectAll("path").each(function (f) { const [c, o] = remplir(f.properties.RID); this.style.fill = c; this.style.fillOpacity = dans(f.properties.RID) ? o : o * 0.22; });
   gLand.selectAll("path").each(function (f) { const L = f.properties.REG, [c, o] = remplirLand(L); this.style.fill = c; this.style.fillOpacity = o; });   // Land choisi : contour seulement, les autres gardent leur couleur
