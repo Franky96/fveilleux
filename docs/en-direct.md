@@ -3,6 +3,14 @@
 Onglet « En direct » de la section Intentions de vote : une page par soirée électorale, avec les résultats lus en direct.
 Pour le gabarit et la génération des pages, voir aussi `docs/intentions-de-vote.md`.
 
+## Règles des pages En direct
+
+Elles sont distinctes de celles des pages d'intentions de vote (demande de l'utilisateur, 27 octobre 2026 : les besoins diffèrent) :
+- cadre `gen` du gabarit et modules `en-direct/…/direct.js` ;
+- cartes `lv-*` avec leurs propres contrôles (zooms, modes, suivies) : pas de contrôles uniformes ni de repli « ☰ Contrôles » obligatoires comme sur les pages d'intentions de vote ;
+- fond en dégradé fixe de gauche à droite (bleu → rouge) ;
+- compte à rebours, vérifications du soir de vote et copie de secours des résultats (voir plus bas).
+
 ## Comment c'est construit
 
 - **Soirées en cours** (`DIRECTS` de `votes-quebec/outils/pages.py`) : un même cadre, le bloc `gen` de `pages.src.html`, avec les textes `{{H2}}`, `{{SUR}}`, `{{CHOIX}}`, `{{CARTE}}` et `{{CLASSEMENT}}`.

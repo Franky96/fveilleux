@@ -41,13 +41,15 @@ Garder ces documents à jour : quand une demande de l'utilisateur change une rè
 - Toutes les pages de la section, y compris les soirées En direct et les anciennes soirées, sortent du gabarit `votes-quebec/outils/pages.src.html`, transformé par `cd votes-quebec/outils && /usr/bin/python3 pages.py --bascule`. **Ne jamais modifier ces .html à la main.**
 - `votes-quebec/loi39.js`, `loi39.css` et `fragment.html` sont générés depuis `outils/page.author.html` par `outils/build_site.py`.
 - Onglets et cartes de l'accueil groupés par continent (Amérique du Nord : Québec, Alberta | Canada, États-Unis ; Europe : France, Allemagne, Suisse, Royaume-Uni). Tout nouvel endroit va dans le groupe de son continent, avec un libellé court.
-- **Ne plus modifier les hémicycles** (demande de l'utilisateur).
-- **À garder sur toute nouvelle page ou carte de la section** (détails dans `docs/intentions-de-vote.md`) :
+- Hémicycles : pas de règle générale, on décide au cas par cas ; seule règle à garder, l'ordre gauche-droite (le même classement que la bande des partis).
+- **Règles des pages d'intentions de vote** (détails dans `docs/intentions-de-vote.md`) — à garder sur toute nouvelle page ou carte :
   - sur chaque graphique d'évolution : le bouton « ⓘ Moyenne lissée » (`lissage.js`) et le zoom vertical (`zoom-y.js`) ;
   - sur chaque carte : le plein écran avec « ⓘ Info » (`plein.js`), des contrôles uniformes, et les contrôles repliés sur téléphone ;
   - sur une carte de scrutin proportionnel par région : l'anneau des sièges ;
   - le fond en dégradé fixe ;
-  - la bande « Partis en lice », avec chaque nouveau parti ajouté à `partis.js` à sa place sur l'axe.
+  - la bande « Partis en lice », avec chaque nouveau parti ajouté à `partis.js` à sa place sur l'axe ;
+  - les axes multiples (2 axes au minimum ; le 3e est facultatif, absent en Alberta faute de source).
+- **Règles des pages En direct** (détails dans `docs/en-direct.md`), distinctes des précédentes (besoins différents, demande de l'utilisateur) : cadre `gen` du gabarit, cartes `lv-*` avec leurs propres contrôles (zooms, modes), non soumises aux contrôles uniformes des pages d'intentions de vote ; fond en dégradé fixe de gauche à droite (bleu → rouge).
 - Soirées En direct de novembre 2026 : une page par soirée dans le sous-menu, cadre `gen`, `DIRECTS` et `PRETES` de pages.py ; voir `docs/en-direct.md`.
 
 ## Information Monde — règles essentielles
