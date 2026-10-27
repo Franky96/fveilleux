@@ -17,15 +17,6 @@ Usage : /usr/bin/python3 pages.py            (avant la bascule : la page des int
 """
 import os, re, sys
 
-# ---------------------------------------------------------------------------------------------------------------------
-# PAGE D'ARRIVÉE DE LA SECTION — TEMPORAIRE (référendum en Alberta du 19 octobre 2026)
-#   True  : on arrive sur « En direct » (en-direct.html) par tous les liens vers la section (menu du site dashboard.html,
-#           archive.html, page d'accueil choisie dans admin.html…), qui pointent vers intentions-simulations.html : cette page
-#           renvoie vers en-direct.html, sauf si on vient de l'onglet « Accueil » (adresse intentions-simulations.html#accueil).
-#   False : retour à la normale (on arrive sur l'Accueil). Changer cette ligne puis relancer pages.py --bascule.
-ARRIVEE_EN_DIRECT = True
-# ---------------------------------------------------------------------------------------------------------------------
-
 ICI = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.normpath(os.path.join(ICI, "..", ".."))
 BASCULE = "--bascule" in sys.argv
@@ -80,8 +71,7 @@ def page(vue):
         classe = re.search(r'class="([^"]+)"', attrs).group(1)
         # « Votes Québec » (ligne du haut) reste la page courante sur ses simulations (loi 39)
         courant = ' aria-current="page"' if v == vue or ("sc-sous-tab" not in classe and ((vue == "loi39" and v == "votes") or (vue in DIRECTS and v == "direct"))) else ""
-        # page d'arrivée temporaire : l'onglet Accueil garde son adresse propre (#accueil), qui ne renvoie pas vers En direct
-        href = FICHIER[v] + ("#accueil" if v == "live" and ARRIVEE_EN_DIRECT else "")
+        href = FICHIER[v]
         return f'<a class="{classe}" href="{href}"{courant}>{contenu}</a>'
     s = re.sub(r'<button type="button" role="tab"([^>]*)>(.*?)</button>', onglet, s, flags=re.S)
     s = s.replace('<div class="sc-tabs" role="tablist">', '<div class="sc-tabs">').replace('<div class="sc-sous" role="tablist"', '<div class="sc-sous"')
@@ -103,11 +93,6 @@ def page(vue):
     if vue == "votes":
         s = s.replace("  <script>\n    const _pL", "  <script>\n    if (location.hash === '#live') location.replace('" + FICHIER["live"] + "');\n"
                       "    if (location.hash === '#loi39') location.replace('" + FICHIER["loi39"] + "');\n    const _pL", 1)
-    if vue == "live" and ARRIVEE_EN_DIRECT:
-        s = s.replace("    // Thème du site (clair / sombre)", "    // page d'arrivée temporaire de la section : En direct (votes-quebec/outils/pages.py, ARRIVEE_EN_DIRECT)\n"
-                      "    if (sessionStorage.getItem('loggedIn') && location.hash !== '#accueil') location.replace('" + FICHIER["direct"] + "');\n"
-                      "    // Thème du site (clair / sombre)", 1)
-        assert "ARRIVEE_EN_DIRECT" in s
     assert "montrer(" not in s, "bascule d'onglets restée dans " + vue
     open(os.path.join(RACINE, FICHIER[vue]), "w", encoding="utf-8").write(s)
     print(f"{FICHIER[vue]:30} {len(s):7} octets")

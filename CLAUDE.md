@@ -11,7 +11,7 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 ## Git
 
 - Travailler et pousser directement sur `master` : Hostinger déploie automatiquement `master` à chaque push.
-- **Toujours commit et push sur `master` après chaque modification.**
+- **Toujours, et seulement, `master`** : commit et push sur `master` après chaque modification, jamais de branche de travail (demande de l'utilisateur, 27 octobre 2026).
 - Ne jamais faire de push forcé sur `master` (ça casse le déploiement Hostinger) sans prévenir l'utilisateur au préalable.
 - Ne jamais committer de manuels (PDF P&WC, etc.) ni d'identifiants : le dépôt est public.
 
@@ -48,7 +48,7 @@ Garder ces documents à jour : quand une demande de l'utilisateur change une rè
   - sur une carte de scrutin proportionnel par région : l'anneau des sièges ;
   - le fond en dégradé fixe ;
   - la bande « Partis en lice », avec chaque nouveau parti ajouté à `partis.js` à sa place sur l'axe.
-- Soirées En direct de novembre 2026 : une page par soirée dans le sous-menu, cadre `gen`, `DIRECTS` et `PRETES` de pages.py ; voir `docs/en-direct.md`. **Page d'arrivée temporaire** : `ARRIVEE_EN_DIRECT = True` dans pages.py (le menu du site ouvre En direct) ; remettre `False` après la dernière soirée, avec l'accord de l'utilisateur.
+- Soirées En direct de novembre 2026 : une page par soirée dans le sous-menu, cadre `gen`, `DIRECTS` et `PRETES` de pages.py ; voir `docs/en-direct.md`.
 
 ## Information Monde — règles essentielles
 

@@ -15,7 +15,7 @@ Les détails par sujet sont dans les autres fichiers de `docs/`, à ouvrir **seu
 
 ## Règles absolues (aussi dans CLAUDE.md)
 
-- **Toujours commit et push sur `master`** après chaque modification : Hostinger déploie `master` automatiquement.
+- **Toujours, et seulement, `master`** (demande de l'utilisateur, 27 octobre 2026) : commit et push sur `master` après chaque modification ; Hostinger le déploie automatiquement. Jamais de branche de travail.
   Jamais de push forcé sur `master` sans prévenir.
 - **Dépôt public** : ne jamais committer de manuels (PDF P&WC…), d'identifiants, de clés, ni l'adresse de
   déploiement Hostinger (secret `HOSTINGER_DEPLOY_URL`). Ne jamais mettre le courriel de l'utilisateur dans une requête.
@@ -25,7 +25,7 @@ Les détails par sujet sont dans les autres fichiers de `docs/`, à ouvrir **seu
   modifier `votes-quebec/outils/pages.src.html` ou `pages.py`, puis `cd votes-quebec/outils && /usr/bin/python3 pages.py --bascule`.
 - **PT6A-21** : après toute modification d'un module `pt6a21-*.js`, remettre à jour les empreintes `?v=` (commande dans CLAUDE.md).
 - Messages de commit en français, descriptifs, avec les lignes d'attribution demandées par l'environnement ;
-  aucun identifiant de modèle dans les commits.
+  la ligne d'attribution `Co-Authored-By` demandée par l'environnement (qui nomme le modèle) est acceptée ; aucun autre identifiant de modèle dans les commits.
 
 ## Où trouver quoi (`docs/`)
 
@@ -54,8 +54,6 @@ mais leurs sources de résultats n'ont pas toutes été vues en vrai. **Le soir 
 - **Colombie-Britannique (24 oct.)** : archivée dans « Anciennes élections » (`election-cb-2026.html`) ; la copie de secours
   se met à jour jusqu'aux résultats officiels du 18 novembre.
 - **Référendum en Alberta (19 oct.)** : archivé, terminé.
-- **Page d'arrivée temporaire** : `ARRIVEE_EN_DIRECT = True` dans `pages.py` (le menu du site ouvre En direct).
-  À remettre à `False` après la dernière soirée (29 nov.), si l'utilisateur est d'accord.
 
 **Derniers travaux** :
 - Votes Québec : carte actuelle avec députés et photos, « Gouvernement actuel », boutons « Moyenne lissée » ;

@@ -10,8 +10,6 @@
         (!_pL.includes('votes-quebec') && !_pL.includes('loi39') && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = sessionStorage.getItem('loggedIn') ? 'dashboard.html' : 'index.html';
     }
-    // page d'arrivée temporaire de la section : En direct (votes-quebec/outils/pages.py, ARRIVEE_EN_DIRECT)
-    if (sessionStorage.getItem('loggedIn') && location.hash !== '#accueil') location.replace('en-direct.html');
     // Thème du site (clair / sombre) appliqué aussi à la simulation
     document.documentElement.dataset.theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
   </script>
@@ -1119,7 +1117,7 @@
       </div>
       <div class="sc-groupe" role="presentation">
         <div class="sc-groupe-btns">
-          <a class="sc-tab" href="intentions-simulations.html#accueil" aria-current="page">
+          <a class="sc-tab" href="intentions-simulations.html" aria-current="page">
             <b>Accueil</b><small>Vue d'ensemble</small>
           </a>
         </div>
