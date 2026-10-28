@@ -8,7 +8,7 @@
   <script>
     const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!['moteurs', 'turboreacteur', 'pt6a21', 'planetaire', 'pompe-engrenages', 'pw1500g', 'o320'].some(k => _permsMot.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!['moteurs', 'turboreacteur', 'pt6a21', 'planetaire', 'pompe-engrenages', 'helice', 'pw1500g', 'o320'].some(k => _permsMot.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>
@@ -106,6 +106,12 @@
               <span class="icon">🛢️</span>
               <h2>Pompe à engrenages</h2>
               <p>Simulation d'une pompe à huile : débit, fuites, pression du circuit et clapet de décharge</p>
+            </a>
+
+            <a href="helice.html" class="menu-card" data-section="helice">
+              <span class="icon">💨</span>
+              <h2>Hélice à vitesse constante</h2>
+              <p>L'hélice d'un PT6 et son régulateur : masselottes, moyeu, survitesse, drapeau automatique, bêta et inversion</p>
             </a>
 
           </nav>

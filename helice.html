@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hélice à vitesse constante — Outils de Frank</title>
+<script>
+  const _pE = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pE.includes('helice') && !_pE.includes('moteurs') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* palette des pages moteurs (pt6a21, planetaire, pompe-engrenages) */
+:root{
+  color-scheme: dark;
+  --bg:#0a0e11; --panel:#131a1f; --panel2:#18222a; --line:#24313b; --line2:#2f3f4b;
+  --text:#dde4e9; --muted:#8797a3;
+  --accent:#7cc4e4; --accent-d:#2d5c73; --on-accent:#e8f6fd;
+  --acier:#b4b2a9; --acier-clair:#e4e2da; --acier-sombre:#7e7c74; --acier-trait:#444441; --carter:#1d2830; --carter-trait:#3a4b58; --tuyau:#3a4b58;
+  --cone:#56636d; --cone-trait:#7b8a95; --ressort:#4fb3d9; --tete:#2c86b8;
+  --vert:#3fae6a; --jaune:#e3b23c; --rouge:#e05a4a; --bleu:#3d8fd6;
+  --p-inv:#d9443b; --p-beta:#e3b23c; --p-fin:#3fae6a; --p-gros:#3d8fd6; --p-drap:#8797a3;
+  --s-np:#7cc4e4; --s-beta:#e0a030; --s-cpl:#b48ce0;
+  --voyant-off:#1a2228;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+html.light{
+  color-scheme: light;
+  --bg:#eef2f5; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
+  --text:#15202a; --muted:#52626f;
+  --accent:#1d6f99; --accent-d:#d4e8f3; --on-accent:#0f4a6a;
+  --acier:#c9c7bf; --acier-clair:#f2f1ec; --acier-sombre:#9c9a92; --acier-trait:#5f5e5a; --carter:#dfe6eb; --carter-trait:#9fb0bd; --tuyau:#a9b8c4;
+  --cone:#c3ccd3; --cone-trait:#8d9ca8; --ressort:#1f86b3; --tete:#5aa9d6;
+  --vert:#2a8a50; --jaune:#b98a12; --rouge:#c4402f; --bleu:#1d6f99;
+  --p-inv:#c4402f; --p-beta:#c9961c; --p-fin:#2a8a50; --p-gros:#1d6f99; --p-drap:#52626f;
+  --s-np:#1d6f99; --s-beta:#c0611b; --s-cpl:#7b4fb0;
+  --voyant-off:#e3e9ee;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 40px;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* en-tête */
+.toprow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
+.back:hover{border-color:var(--accent)}
+.top{padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.top h1{font-size:40px;line-height:1;font-weight:700}
+.top p{margin:8px 0 0;color:var(--muted);max-width:76ch}
+
+/* simulation */
+.panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.modes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.modes .lab{font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted);margin-right:2px}
+.btn{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;cursor:pointer;color:var(--text)}
+.btn:hover{border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent-d);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger[aria-pressed="true"]{background:color-mix(in srgb,var(--rouge) 30%,var(--panel2));border-color:var(--rouge);color:var(--text)}
+#status{margin:2px 0 12px;font-size:14px;min-height:2.6em;max-width:90ch}
+#status b{font-weight:600}
+
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;font-size:13px;fill:var(--muted);text-transform:uppercase}
+svg text.fin{font-family:var(--f-body);font-weight:400;letter-spacing:0;font-size:11.5px;text-transform:none}
+svg text.val{font-family:var(--f-mono);font-weight:500;font-size:11.5px;fill:var(--text);letter-spacing:0;text-transform:none}
+svg text.titre{fill:var(--text);font-size:14px}
+.carter{fill:var(--carter);stroke:var(--carter-trait);stroke-width:1.5}
+.boite{fill:var(--panel2);stroke:var(--line2);stroke-width:1.2;transition:stroke .2s}
+.boite.actif{stroke:var(--jaune);stroke-width:2.4}
+.boite.alarme{stroke:var(--rouge);stroke-width:2.4}
+.tuyau{fill:none;stroke:var(--tuyau);stroke-width:11;stroke-linejoin:round;stroke-linecap:round}
+.huile{fill:none;stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
+.flux{fill:none;stroke:rgba(255,255,255,.75);stroke-width:2;stroke-dasharray:2 12;stroke-linecap:round}
+.acier{fill:url(#g-acier);stroke:var(--acier-trait);stroke-width:.8}
+.ressort{fill:none;stroke:var(--ressort);stroke-width:3;stroke-linejoin:round}
+.lien{stroke:var(--acier-sombre);stroke-width:4;stroke-linecap:round}
+.cone{fill:var(--cone);stroke:var(--cone-trait);stroke-width:1.5;opacity:.55}
+.pale{fill:url(#g-acier);stroke:var(--acier-trait);stroke-width:1}
+
+.schema-princ{margin-top:4px}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+@media (max-width:860px){.trio{grid-template-columns:1fr 1fr}.trio>:last-child{grid-column:1/-1}}
+@media (max-width:560px){.trio{grid-template-columns:1fr}}
+.carte{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:8px 10px}
+.carte h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.carte p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.carte svg{max-width:340px;margin:0 auto}
+
+/* voyants (annonciateurs) */
+.voyants{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:12px}
+.voyant{font-family:var(--f-display);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:12.5px;text-align:center;padding:6px 4px;border-radius:3px;border:1px solid var(--line2);background:var(--voyant-off);color:var(--muted);opacity:.55;transition:opacity .15s,background .15s,color .15s}
+.voyant.on{opacity:1;color:#101418}
+.voyant.on.v{background:#4cc27a;border-color:#4cc27a}
+.voyant.on.a{background:#f0b83a;border-color:#f0b83a}
+.voyant.on.r{background:#ef5a48;border-color:#ef5a48;color:#fff}
+.voyant.on.b{background:#7cc4e4;border-color:#7cc4e4}
+
+.vals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+@media (max-width:760px){.vals{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.val{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:8px 12px;min-width:0}
+.val span{font-size:12px;color:var(--muted);display:block}
+.val b{display:block;font-family:var(--f-mono);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.val small{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.val.cle{border-color:var(--accent)}
+.val.trop b{color:var(--rouge)}
+
+.courbe{margin-top:12px}
+.courbe .leg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;margin-top:2px}
+.courbe .leg i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+svg.trace .grille{stroke:var(--line);stroke-width:1}
+svg.trace text{font-family:var(--f-mono);font-size:11px;letter-spacing:0;text-transform:none}
+
+.reglages{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:8px}
+@media (max-width:760px){.reglages{grid-template-columns:1fr}}
+.reglages h3{grid-column:1/-1;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:10px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.ctrl{display:grid;grid-template-columns:minmax(150px,auto) minmax(0,1fr) 150px;align-items:center;gap:10px;color:var(--muted);font-size:13px;min-height:34px}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctrl output{text-align:right;font-family:var(--f-mono);color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12.5px}
+@media (max-width:560px){.ctrl{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding-block:4px}.ctrl input[type=range]{grid-column:1/-1;grid-row:2}}
+.portes{position:relative;height:14px;margin:-4px 0 0;font-size:10.5px;color:var(--muted);font-family:var(--f-mono)}
+.boutons{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:34px;font-size:13px;color:var(--muted)}
+.boutons .lab{min-width:150px}
+
+/* explications */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;margin-top:16px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.note h2{font-size:18px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.note p{margin:0 0 8px}
+.note p:last-child{margin-bottom:0}
+.note ul{margin:0 0 8px;padding-left:20px}
+.formule{font-family:var(--f-mono);font-size:13px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:6px 10px;display:inline-block}
+.source{margin-top:16px;color:var(--muted);font-size:12.5px}
+
+/* interrupteur de thème (règles de style.css, la page ne la charge pas) */
+#theme-toggle{width:68px;height:26px;border-radius:13px;background:#2a3a2a;border:1.5px solid #3a5a3a;cursor:pointer;transition:background .35s ease,border-color .35s ease;display:inline-flex;align-items:center;justify-content:space-between;padding:0 5px;position:relative;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+#theme-toggle.theme-toggle--fixed{position:fixed;top:.75rem;right:.75rem;z-index:9999}
+.toprow #theme-toggle{margin-bottom:2px}
+.tg-icon{font-size:.62rem;line-height:1;pointer-events:none;flex-shrink:0;position:relative;z-index:2}
+#theme-toggle-knob{position:absolute;width:20px;height:20px;border-radius:50%;top:50%;transform:translateY(-50%);left:3px;background:#7ab880;box-shadow:0 1px 4px rgba(0,0,0,.55);transition:left .35s cubic-bezier(.4,0,.2,1),background .35s ease;pointer-events:none;z-index:3}
+html.light #theme-toggle{background:#34c759;border-color:#28a045}
+html.light #theme-toggle-knob{left:45px;background:#ffffff}
+@media (prefers-reduced-motion: reduce){#theme-toggle,#theme-toggle-knob,.voyant{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="toprow"><a href="moteurs.html" class="back">&#8592; Moteurs</a><span id="tg-slot"></span></div>
+<header class="top">
+  <h1>Hélice à vitesse constante</h1>
+  <p>L'hélice Hartzell à trois pales d'un turbopropulseur PT6 (celle du <a href="pt6a21.html">PT6A-21</a> d'un King Air C90) et tout ce qui commande son pas : le régulateur primaire et ses masselottes, le moyeu à piston et ressort, le régulateur de survitesse, la mise en drapeau automatique, le régulateur de carburant (FTG) et le système bêta pour l'inversion de poussée. Bouge les manettes, change la vitesse de l'avion ou essaie une situation pour voir le régulateur garder le régime.</p>
+</header>
+
+<section class="panel" aria-labelledby="t-sim">
+  <h2 id="t-sim" class="sr-only">Simulation de l'hélice</h2>
+  <div class="modes" role="group" aria-label="Situations">
+    <span class="lab">Situations</span>
+    <button class="btn" type="button" data-cas="croisiere">Croisière</button>
+    <button class="btn" type="button" data-cas="pique">Piqué</button>
+    <button class="btn" type="button" data-cas="decollage">Décollage</button>
+    <button class="btn" type="button" data-cas="panneAF">Panne moteur (drapeau auto)</button>
+    <button class="btn" type="button" data-cas="panne">Panne moteur sans drapeau auto</button>
+    <button class="btn" type="button" data-cas="drapeau">Mise en drapeau</button>
+    <button class="btn" type="button" data-cas="gov">Panne du régulateur primaire</button>
+    <button class="btn" type="button" data-cas="osg">Essai de l'OSG au sol</button>
+    <button class="btn" type="button" data-cas="inversion">Inversion à l'atterrissage</button>
+    <button class="btn" type="button" data-cas="rnr">Reverse not ready</button>
+    <button class="btn" type="button" data-cas="rnrFtg">Reverse not ready + FTG en panne</button>
+  </div>
+  <p id="status" aria-live="polite"></p>
+
+  <svg class="schema-princ" id="svg" viewBox="0 0 900 430" role="img" aria-labelledby="svg-t svg-d">
+    <title id="svg-t">Régulateur d'hélice et moyeu en coupe</title>
+    <desc id="svg-d">À gauche, le régulateur primaire : la manette d'hélice règle la tension du ressort de vitesse, les masselottes de la tête tournante s'y opposent et déplacent le distributeur. La pompe du régulateur porte l'huile du moteur d'environ 80 psi à 375 psi. Au centre, le régulateur de survitesse, l'électrovanne de mise en drapeau et la soupape bêta. À droite, le moyeu en coupe : l'huile pousse le piston vers l'avant (petit pas), le ressort et les masselottes des pales le repoussent vers l'arrière (gros pas, drapeau). La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute).</desc>
+    <defs>
+      <linearGradient id="g-acier" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acier-clair)"/><stop offset=".55" style="stop-color:var(--acier)"/><stop offset="1" style="stop-color:var(--acier-sombre)"/></linearGradient>
+      <marker id="m-fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker>
+    </defs>
+    <!-- régulateur primaire -->
+    <rect x="40" y="40" width="280" height="330" rx="8" class="carter"/>
+    <text x="50" y="30" class="titre">Régulateur primaire (CSU)</text>
+    <!-- manette d'hélice et ressort de vitesse -->
+    <line id="g-tige" x1="180" y1="20" x2="180" y2="80" class="lien"/>
+    <rect id="g-coupelle" x="160" y="76" width="40" height="7" rx="2" class="acier"/>
+    <polyline id="g-ressort" class="ressort"/>
+    <text x="52" y="108" class="fin">ressort de vitesse</text>
+    <text x="52" y="122" class="val" id="g-consigne-t">consigne</text>
+    <!-- tête tournante et masselottes -->
+    <rect x="128" y="196" width="104" height="44" rx="5" fill="var(--tete)" opacity=".85"/>
+    <rect id="g-collet" x="166" y="186" width="28" height="8" rx="2" class="acier"/>
+    <g id="g-mass-g"><line x1="0" y1="0" x2="0" y2="-34" class="lien"/><rect x="-9" y="-46" width="18" height="16" rx="3" class="acier"/><line x1="0" y1="0" x2="18" y2="0" class="lien"/></g>
+    <g id="g-mass-d"><line x1="0" y1="0" x2="0" y2="-34" class="lien"/><rect x="-9" y="-46" width="18" height="16" rx="3" class="acier"/><line x1="0" y1="0" x2="-18" y2="0" class="lien"/></g>
+    <text x="60" y="190" class="fin">masselottes</text>
+    <!-- distributeur (pilot valve) -->
+    <rect x="166" y="244" width="28" height="104" rx="2" fill="var(--panel)" stroke="var(--line2)"/>
+    <g id="g-tiroir"><rect x="174" y="236" width="12" height="104" class="acier"/><rect x="169" y="270" width="22" height="13" rx="2" class="acier"/><rect x="169" y="308" width="22" height="13" rx="2" class="acier"/></g>
+    <text x="200" y="330" class="fin">distributeur</text>
+    <!-- pompe du régulateur, soupape de décharge -->
+    <path class="tuyau" d="M95 420V342M95 320V289H166M70 289H95M194 289H560M180 348V395H250"/>
+    <path class="huile" id="h-moteur" d="M95 420V342"/>
+    <path class="huile" id="h-pompe" d="M95 320V289H166M70 289H95"/>
+    <path class="huile" id="h-moyeu" d="M194 289H560"/>
+    <path class="huile" id="h-retour" d="M180 348V395H250"/>
+    <path class="flux" id="f-moyeu" d="M194 289H560"/>
+    <path class="flux" id="f-pompe" d="M95 420V289H166"/>
+    <g id="g-pompe"><circle cx="95" cy="331" r="12" class="acier" stroke-dasharray="3 2.3" stroke-width="3" stroke="var(--acier-trait)"/></g>
+    <text x="112" y="328" class="fin">pompe du</text>
+    <text x="112" y="341" class="fin">régulateur</text>
+    <rect x="50" y="276" width="20" height="26" rx="2" class="boite" id="b-decharge"/>
+    <text x="46" y="270" class="fin">décharge 400 psi</text>
+    <text x="102" y="416" class="fin">huile moteur ≈ 80 psi</text>
+    <text x="258" y="399" class="fin">retour au carter</text>
+    <text x="206" y="281" class="val" id="t-pmoyeu"></text>
+    <!-- FTG -->
+    <rect x="232" y="50" width="78" height="54" rx="4" class="boite" id="b-ftg"/>
+    <text x="271" y="68" text-anchor="middle">FTG</text>
+    <text x="271" y="84" text-anchor="middle" class="val" id="t-ftg"></text>
+    <text x="271" y="98" text-anchor="middle" class="fin">Py → FCU</text>
+
+    <!-- régulateur de survitesse, électrovanne, soupape bêta -->
+    <path class="tuyau" d="M410 120V289M440 210V289" style="stroke-width:7"/>
+    <path class="huile" id="h-osg" d="M410 120V289" style="stroke-width:3.5"/>
+    <path class="huile" id="h-af" d="M440 210V289" style="stroke-width:3.5"/>
+    <rect x="345" y="58" width="130" height="62" rx="4" class="boite" id="b-osg"/>
+    <text x="410" y="76" text-anchor="middle">Survitesse (OSG)</text>
+    <text x="410" y="93" text-anchor="middle" class="val" id="t-osg"></text>
+    <text x="410" y="109" text-anchor="middle" class="fin">vide le moyeu</text>
+    <rect x="345" y="150" width="130" height="60" rx="4" class="boite" id="b-af"/>
+    <text x="410" y="168" text-anchor="middle">Électrovanne</text>
+    <text x="410" y="184" text-anchor="middle" class="fin">drapeau auto (dump)</text>
+    <text x="410" y="200" text-anchor="middle" class="val" id="t-af"></text>
+    <rect x="345" y="330" width="130" height="62" rx="4" class="boite" id="b-beta"/>
+    <text x="410" y="348" text-anchor="middle">Soupape bêta</text>
+    <text x="410" y="365" text-anchor="middle" class="val" id="t-beta"></text>
+    <text x="410" y="382" text-anchor="middle" class="fin" id="t-beta2"></text>
+    <line id="h-bielle" x1="475" y1="360" x2="546" y2="360" class="lien" style="stroke-width:3"/>
+    <rect id="h-carbone" x="540" y="352" width="10" height="16" rx="1" fill="#333"/>
+
+    <!-- moyeu en coupe -->
+    <path class="cone" d="M556 92H700C810 92 872 170 886 235C872 300 810 378 700 378H556Z"/>
+    <text x="566" y="84" class="titre">Moyeu (coupe)</text>
+    <rect x="598" y="178" width="214" height="114" rx="3" fill="var(--carter)" stroke="var(--carter-trait)" stroke-width="2"/>
+    <rect id="h-chambre" x="600" y="180" width="20" height="110"/>
+    <polyline id="h-ressort" class="ressort"/>
+    <rect id="h-piston" x="610" y="174" width="14" height="122" rx="2" class="acier"/>
+    <line id="h-tige1" class="lien" style="stroke-width:3"/>
+    <line id="h-tige2" class="lien" style="stroke-width:3"/>
+    <rect id="h-bague" x="560" y="166" width="8" height="140" rx="2" class="acier"/>
+    <line id="h-lien" class="lien"/>
+    <circle cx="720" cy="338" r="30" fill="var(--panel2)" stroke="var(--line2)" stroke-width="1.5"/>
+    <g id="h-pale"><path class="pale" d="M-28 0C-20 -6 4 -9 20 -5C26 -3 28 0 28 0C26 2 18 4 4 4C-12 4 -24 2 -28 0Z"/><circle cx="-6" cy="12" r="5" fill="var(--acier-trait)"/></g>
+    <circle id="h-maneton" r="4" fill="var(--acier-clair)" stroke="var(--acier-trait)"/>
+    <text x="826" y="214" class="fin">ressort</text>
+    <text x="826" y="227" class="fin">(gros pas)</text>
+    <text x="600" y="162" class="fin">huile → petit pas</text>
+    <text x="760" y="372" class="fin">pale et</text>
+    <text x="760" y="385" class="fin">masselotte</text>
+    <text x="574" y="322" class="fin">tiges bêta</text>
+    <text x="490" y="394" class="fin">bloc de carbone</text>
+    <text x="812" y="170" text-anchor="end" class="val" id="t-beta-moyeu"></text>
+  </svg>
+
+  <div class="trio">
+    <div class="carte">
+      <h3>Vue de face</h3>
+      <svg id="face" viewBox="0 0 300 300" role="img" aria-label="Hélice vue de face : trois pales qui tournent ; leur largeur apparente dépend de l'angle de pale">
+        <circle cx="150" cy="150" r="128" id="f-disque" fill="var(--accent)" opacity="0"/>
+        <g id="f-pales"></g>
+        <circle cx="150" cy="150" r="26" fill="var(--cone)" stroke="var(--cone-trait)" stroke-width="1.5"/>
+        <text x="150" y="292" text-anchor="middle" class="val" id="f-np"></text>
+      </svg>
+      <p>De face, une pale au petit pas montre presque toute sa largeur ; en drapeau, on ne voit que sa tranche.</p>
+    </div>
+    <div class="carte">
+      <h3>Profil à 75 % du rayon</h3>
+      <svg id="tri" viewBox="0 0 320 260" role="img" aria-label="Triangle des vitesses sur un profil de pale : vitesse de rotation, vitesse de l'avion, vent relatif, incidence et poussée">
+        <defs><marker id="m-v" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+        <line x1="10" y1="160" x2="310" y2="160" stroke="var(--line2)" stroke-dasharray="4 4"/>
+        <text x="12" y="176" class="fin">plan de rotation</text>
+        <path id="t-arc" fill="none" stroke="var(--jaune)" stroke-width="2"/>
+        <line id="t-ur" stroke="var(--s-np)" stroke-width="2.5" marker-end="url(#m-v)"/>
+        <line id="t-v" stroke="var(--vert)" stroke-width="2.5" marker-end="url(#m-v)"/>
+        <line id="t-w" stroke="var(--text)" stroke-width="2.5" marker-end="url(#m-v)"/>
+        <line id="t-corde" stroke="var(--muted)" stroke-dasharray="3 3"/>
+        <path id="t-profil" class="pale"/>
+        <line id="t-pouss" stroke-width="4" marker-end="url(#m-v)"/>
+        <text id="t-ur-t" class="val" fill="var(--s-np)">ωr</text>
+        <text id="t-v-t" class="val">V</text>
+        <text id="t-w-t" class="val">vent relatif</text>
+        <text x="10" y="20" class="val" id="t-l1"></text>
+        <text x="10" y="36" class="val" id="t-l2"></text>
+        <text x="10" y="250" class="val" id="t-l3"></text>
+      </svg>
+      <p>L'incidence α est l'écart entre la corde de la pale (β) et le vent relatif (φ) : α = β − φ.</p>
+    </div>
+    <div class="carte">
+      <h3>Plages d'angle de pale</h3>
+      <svg id="plages" viewBox="0 0 340 250" role="img" aria-label="Rapporteur des plages d'angle de pale : inversion, bêta, petit pas, gros pas et drapeau, avec la pale à son angle actuel">
+        <g id="p-secteurs"></g>
+        <g id="p-pale"><path class="pale" d="M-96 0C-70 -14 20 -20 74 -10C92 -6 98 0 98 0C92 4 70 8 10 8C-40 8 -80 4 -96 0Z"/></g>
+        <line id="p-aig" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <text x="334" y="244" text-anchor="end" class="val" id="p-lib"></text>
+      </svg>
+      <p>Gros pas et petit pas (alpha) : manette d'hélice. Bêta et inversion : manette de puissance, par-dessus les portes, au sol seulement.</p>
+    </div>
+  </div>
+
+  <div class="voyants" aria-label="Voyants">
+    <div class="voyant v" id="v-af">Autofeather</div>
+    <div class="voyant a" id="v-af2">AF autre moteur désarmé</div>
+    <div class="voyant b" id="v-drap">Drapeau</div>
+    <div class="voyant a" id="v-beta">Bêta</div>
+    <div class="voyant a" id="v-rnr">Reverse not ready</div>
+    <div class="voyant a" id="v-ftg">FTG : carburant réduit</div>
+    <div class="voyant r" id="v-osg">Survitesse (OSG)</div>
+    <div class="voyant a" id="v-test">Prop test</div>
+  </div>
+
+  <div class="vals" aria-live="off">
+    <div class="val cle" id="c-np"><span>Régime de l'hélice (Np)</span><b id="o-np">—</b><small id="o-np2">—</small></div>
+    <div class="val" id="c-cpl"><span>Couple</span><b id="o-cpl">—</b><small id="o-cpl2">—</small></div>
+    <div class="val cle"><span>Angle de pale β</span><b id="o-beta">—</b><small id="o-beta2">—</small></div>
+    <div class="val"><span>Poussée de l'hélice</span><b id="o-t">—</b><small id="o-t2">—</small></div>
+    <div class="val"><span>Incidence α · vent relatif φ</span><b id="o-a">—</b><small id="o-a2">—</small></div>
+    <div class="val"><span>Pression d'huile au moyeu</span><b id="o-p">—</b><small id="o-p2">—</small></div>
+    <div class="val"><span>Générateur de gaz (Ng)</span><b id="o-ng">—</b><small id="o-ng2">—</small></div>
+    <div class="val"><span>Vitesse de l'avion</span><b id="o-v">—</b><small id="o-v2">—</small></div>
+  </div>
+
+  <div class="courbe">
+    <svg class="trace" id="trace" viewBox="0 0 900 150" role="img" aria-label="Évolution des 30 dernières secondes : régime de l'hélice, angle de pale et couple">
+      <g id="tr-grille"></g>
+      <polyline id="tr-np" fill="none" stroke="var(--s-np)" stroke-width="2"/>
+      <polyline id="tr-beta" fill="none" stroke="var(--s-beta)" stroke-width="2"/>
+      <polyline id="tr-cpl" fill="none" stroke="var(--s-cpl)" stroke-width="1.5" stroke-dasharray="5 3"/>
+    </svg>
+    <div class="leg"><span><i style="background:var(--s-np)"></i>Np (% de 2200 tr/min)</span><span><i style="background:var(--s-beta)"></i>angle de pale β (°)</span><span><i style="background:var(--s-cpl)"></i>couple (% de 1315 ft-lb)</span><span style="color:var(--muted)">30 dernières secondes</span></div>
+  </div>
+
+  <div class="reglages">
+    <h3>Manettes</h3>
+    <label class="ctrl">Manette de puissance<input type="range" id="r-pl" min="-30" max="100" step="1" value="75"><output id="o-pl"></output></label>
+    <label class="ctrl">Manette d'hélice<input type="range" id="r-rpm" min="1500" max="2200" step="10" value="1900"><output id="o-rpm"></output></label>
+    <label class="ctrl">Vitesse de l'avion<input type="range" id="r-v" min="0" max="260" step="1" value="200"><output id="o-vv"></output></label>
+    <div class="boutons" role="group" aria-label="Vitesse de la simulation"><span class="lab">Simulation</span>
+      <button class="btn" type="button" data-vit="1" aria-pressed="true">Temps réel</button>
+      <button class="btn" type="button" data-vit="0.5" aria-pressed="false">½</button>
+      <button class="btn" type="button" data-vit="0.2" aria-pressed="false">⅕</button>
+      <button class="btn" type="button" data-vit="0" aria-pressed="false">Pause</button>
+    </div>
+    <h3>Systèmes</h3>
+    <div class="boutons" role="group" aria-label="Mise en drapeau automatique"><span class="lab">Drapeau auto</span>
+      <button class="btn" type="button" data-af="off" aria-pressed="true">Off</button>
+      <button class="btn" type="button" data-af="arm" aria-pressed="false">Arm</button>
+      <button class="btn" type="button" data-af="test" aria-pressed="false">Test</button>
+    </div>
+    <div class="boutons"><span class="lab">Essai de l'hélice</span><button class="btn" type="button" id="b-test" aria-pressed="false">Prop test (OSG à 92 %)</button></div>
+    <h3>Pannes</h3>
+    <div class="boutons"><span class="lab">Moteur</span><button class="btn danger" type="button" id="b-moteur" aria-pressed="false">Panne du moteur</button></div>
+    <div class="boutons"><span class="lab">Régulateurs</span><button class="btn danger" type="button" id="b-gov" aria-pressed="false">Régulateur primaire</button><button class="btn danger" type="button" id="b-ftgp" aria-pressed="false">FTG</button></div>
+  </div>
+</section>
+
+<div class="notes">
+  <section class="note">
+    <h2>Vitesse de pale et torsion</h2>
+    <p>Chaque tranche de pale avance en hélice : elle tourne (ωr, de plus en plus vite vers le bout) et avance avec l'avion (V). Le vent relatif qu'elle reçoit fait l'angle φ avec le plan de rotation. Pour que toutes les tranches travaillent à la même incidence, la pale est vrillée : grand angle près du moyeu, petit angle au bout.</p>
+    <p><span class="formule">φ = atan(V / ωr) · α = β − φ</span></p>
+    <p>La simulation calcule une seule tranche, à 75 % du rayon, avec la vitesse induite par le disque (théorie de Froude).</p>
+  </section>
+  <section class="note">
+    <h2>Pas géométrique et pas effectif</h2>
+    <p>Le pas géométrique est la distance que la pale avancerait en un tour si elle « vissait » dans l'air sans glisser ; le pas effectif est la distance réellement parcourue. L'écart, le recul, donne l'incidence et donc la poussée. À vitesse constante, le régulateur change β pour garder le régime : en <b>Piqué</b>, la vitesse monte, φ augmente, et la pale passe au gros pas pour ne pas s'emballer.</p>
+  </section>
+  <section class="note">
+    <h2>Forces sur la pale</h2>
+    <p>Le moment de torsion aérodynamique tend à faire tourner la pale vers le petit pas ; les masselottes fixées au pied de pale, tirées par la force centrifuge, la ramènent vers le gros pas. Dans le moyeu, un ressort pousse aussi vers le gros pas et le drapeau. Sur un bimoteur, ressort et masselottes amènent l'hélice en drapeau quand l'huile disparaît ; sur un monomoteur, l'hélice va plutôt vers le petit pas.</p>
+  </section>
+  <section class="note">
+    <h2>Moyeu et piston</h2>
+    <p>L'huile sous pression pousse le piston vers l'avant : les pales passent du gros pas au petit pas. Quand on vide l'huile, le ressort et les masselottes ramènent le piston vers l'arrière, jusqu'au drapeau (90°). Le joint tournant est dans le moteur, pas dans l'hélice : l'huile arrive par un tube de transfert dans l'arbre.</p>
+    <p>Les tiges bêta relient le piston à la bague de rétroaction, à l'arrière du moyeu ; un bloc de carbone transmet sa position à la soupape bêta.</p>
+  </section>
+  <section class="note">
+    <h2>Plages de fonctionnement</h2>
+    <ul>
+      <li><b>Drapeau</b> : 90°, pale face au vent, hélice arrêtée.</li>
+      <li><b>Gros pas</b> (alpha) : 90° à 30°, manette d'hélice.</li>
+      <li><b>Petit pas</b> (alpha, flight fine) : 30° à 11°, manette d'hélice.</li>
+      <li><b>Bêta</b> : 11° à −2°, manette de puissance par-dessus la 1re porte.</li>
+      <li><b>Inversion</b> : −2° à environ −15°, par-dessus la 2e porte.</li>
+    </ul>
+    <p>Bêta et inversion ne s'utilisent qu'au sol. La butée de 11° est hydraulique : la soupape bêta coupe l'huile si le piston va plus loin.</p>
+  </section>
+  <section class="note">
+    <h2>Régulateur primaire</h2>
+    <p>La pompe du régulateur prend l'huile du moteur (environ 80 psi) et la porte à environ 375 psi ; une soupape de décharge s'ouvre à 400 psi. Les masselottes tournent avec l'hélice et s'opposent au ressort de vitesse :</p>
+    <ul>
+      <li><b>survitesse</b> : les masselottes s'écartent, soulèvent le distributeur, l'huile du moyeu est vidée et les pales vont au gros pas ; le régime baisse ;</li>
+      <li><b>sous-vitesse</b> : le ressort l'emporte, le distributeur descend, l'huile va au moyeu et les pales vont au petit pas ; le régime monte ;</li>
+      <li><b>en régime</b> : le distributeur reste centré et bloque l'huile.</li>
+    </ul>
+    <p>La manette d'hélice change la tension du ressort de vitesse, donc le régime gardé (1600 à 2200 tr/min ; tout en arrière : drapeau).</p>
+  </section>
+  <section class="note">
+    <h2>Régulateur de survitesse (OSG)</h2>
+    <p>Si le régulateur primaire lâche, rien n'arrête plus le régime. Un second régulateur à masselottes vide le moyeu à 104 % du régime maximal (2288 tr/min). Avec le contacteur d'essai (prop test), il agit dès 92 % : c'est l'essai qu'on fait au sol.</p>
+    <p>Essaie <b>Panne du régulateur primaire</b> : le distributeur reste en sous-vitesse, les pales vont au petit pas et le régime grimpe jusqu'à ce que l'OSG le tienne à 104 %.</p>
+  </section>
+  <section class="note">
+    <h2>Mise en drapeau automatique</h2>
+    <p>Armée par le pilote, elle devient active quand la manette de puissance dépasse environ 90 % (ou avec l'interrupteur en test). Si le couple tombe sous 400 ft-lb, elle désarme celle de l'autre moteur (on ne met jamais les deux hélices en drapeau). Sous 200 ft-lb, l'électrovanne (dump valve) vide le moyeu : ressort et masselottes amènent l'hélice en drapeau.</p>
+    <p>Compare <b>Panne moteur (drapeau auto)</b> et <b>sans drapeau auto</b> : l'hélice qui tourne en moulinet au petit pas freine l'avion ; en drapeau, elle s'arrête et ne traîne presque plus.</p>
+  </section>
+  <section class="note">
+    <h2>Régulateur de carburant (FTG)</h2>
+    <p>Ce n'est pas vraiment un régulateur : une partie du régulateur primaire qui, à 106 % du régime choisi, ouvre une fuite d'air Py de l'unité de commande carburant (FCU). Le débit de carburant descend vers le ralenti vol, quel que soit le pas. Comme son levier suit la manette d'hélice, il reste à 106 % du régime choisi. Il ne fonctionne plus si le régulateur primaire est en panne.</p>
+    <p>Par-dessus la 2e porte, son réglage descend à 95 % : il réduit la puissance avant que le régulateur primaire n'atteigne son régime et ne sorte l'hélice de l'inversion.</p>
+  </section>
+  <section class="note">
+    <h2>Bêta et inversion</h2>
+    <p>En marche normale, la soupape bêta empêche l'hélice d'entrer en bêta : si l'huile pousse le piston trop loin, la bague de rétroaction déplace la soupape, qui coupe l'huile. Par-dessus la 2e porte, le levier bêta pivote vers l'arrière, la manette de puissance commande l'angle (jusqu'à −15°) et demande plus de puissance au FCU.</p>
+    <p>Avant l'inversion, la manette d'hélice doit être tout en avant : le régulateur primaire reste alors en sous-vitesse. Sinon (voyant <b>Reverse not ready</b>, train sorti), le régulateur sent une survitesse et vide le moyeu : la pale quitte l'angle négatif, ce qui la fait tourner encore plus vite, et elle bascule en poussée positive. Le FTG à 95 % l'empêche normalement ; essaie <b>Reverse not ready + FTG en panne</b> pour voir la bascule.</p>
+  </section>
+  <section class="note">
+    <h2>Synchrophaseur</h2>
+    <p>Sur un bimoteur, deux hélices à des régimes presque égaux font un battement (« wah-wah ») inconfortable et source de vibrations. Le synchrophaseur compare les régimes et agit sur une bobine de chaque régulateur primaire pour les égaliser. Sans lui, le pilote ajuste la manette d'hélice dans le sens où tourne l'indicateur de synchronisation (prop sync) : plus il tourne lentement, plus la correction est petite.</p>
+  </section>
+  <section class="note">
+    <h2>Limites du modèle</h2>
+    <p>Une seule tranche de pale (à 75 % du rayon) remplace la pale entière ; ses angles sont décalés d'environ 6° au petit pas pour retrouver le comportement réel au ralenti. Moteur de 550 shp, régime maximal de 2200 tr/min, couple maximal de 1315 ft-lb, au niveau de la mer. Les pressions d'huile et les vitesses de changement de pas sont des ordres de grandeur. Au roulage, l'avion est un bimoteur de 4300 kg dont les deux hélices font la même chose ; au-dessus d'environ 80 kt, le vent relatif peut entraîner l'hélice en bêta jusqu'au régime du régulateur, et elle n'entre alors pas en inversion.</p>
+  </section>
+</div>
+<p class="source">D'après la vidéo « PT6 Prop Governor Operation » de qp Aviation (<a href="https://www.youtube.com/watch?v=nDcdRmtoaIw" target="_blank" rel="noopener">YouTube</a>) : schémas du régulateur, du moyeu et des plages bêta et inversion. Simulation simplifiée à but d'apprentissage, pas une référence d'entretien ni de vol.</p>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const lim = (x, a, b) => Math.max(a, Math.min(b, x));
+const fmt = (x, d = 0) => x.toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// ---------- modèle physique : une tranche de pale à 0,75 R, vitesse induite par la théorie de Froude ----------
+const RAYON = 1.19, RE = 0.75 * RAYON, DISQUE = Math.PI * RAYON * RAYON, RHO = 1.225, SURF = 0.35, INERTIE = 16, CD0 = 0.03;
+const NMAX = 2200, PMAX = 550 * 745.7, KT = 0.5144, FTLB = 0.7376, LBF = 0.2248, CPLMAX = 1315;
+const RALENTI_VOL = 0.07, RALENTI_SOL = 0.035, INV_MAX = 0.6;   // fractions de la puissance maximale
+const V_FIN = 25, V_BETA = 45, V_GROS = 20;                     // vitesses de changement de pas (°/s) : huile vers le moyeu (alpha, bêta), ressort et masselottes
+function profil(a) {                                            // coefficients de portance et de traînée selon l'incidence (°)
+  const aa = Math.abs(a), s = Math.sign(a) || 1, ar = aa * Math.PI / 180;
+  if (aa <= 15) return [0.1 * a, CD0 + 0.0004 * a * a];
+  return [s * Math.max(1.05 * Math.sin(2 * ar), 1.5 - 0.12 * (aa - 15)), 0.102 + 1.6 * (Math.sin(ar) ** 2 - 0.067)];
+}
+// angle équivalent de la tranche unique : les plages (11°, 30°, 90°…) sont des angles de référence ; la tranche a besoin d'environ 6° de plus
+// aux petits pas pour que l'hélice, au ralenti et à l'approche, reste sur sa butée en sous-vitesse comme la vraie
+const angleEquiv = b => b + 6 * lim((90 - b) / 60, 0, 1);
+function aero(b, N, V, vi) {
+  const U = 2 * Math.PI * N / 60 * RE, Va = V + vi, phi = Math.atan2(Va, Math.max(U, 0.01)), a = angleEquiv(b) - phi * 180 / Math.PI;
+  const [CL, CD] = profil(a), q = 0.5 * RHO * (U * U + Va * Va) * SURF, L = q * CL, D = q * CD;
+  const T = L * Math.cos(phi) - D * Math.sin(phi), F = L * Math.sin(phi) + D * Math.cos(phi);
+  const vic = T >= 0 ? (-V + Math.sqrt(V * V + 2 * T / (RHO * DISQUE))) / 2
+                     : -Math.abs(T) / (2 * RHO * DISQUE * Math.max(V, Math.sqrt(Math.abs(T) / (2 * RHO * DISQUE))));
+  return { T, Q: F * RE, a, phi: phi * 180 / Math.PI, U, Va, vic };
+}
+// manette de puissance : 100 = pleine puissance, 0 = ralenti vol ; sous 0, par-dessus la 1re porte (bêta, 0 à −10), puis la 2e (inversion, −10 à −30)
+function manette(pl) {
+  if (pl >= 0) return { zone: 'alpha', p: RALENTI_VOL + (1 - RALENTI_VOL) * pl / 100, bcmd: 11 };
+  if (pl >= -10) return { zone: 'beta', p: RALENTI_SOL, bcmd: 11 - 13 * (-pl / 10) };
+  const k = (-pl - 10) / 20;
+  return { zone: 'inv', p: RALENTI_SOL + (INV_MAX - RALENTI_SOL) * k, bcmd: -2 - 13 * k };
+}
+const nouvelEtat = () => ({ N: 1900, b: 28, vi: 10, P: 0.75 * PMAX, Ng: 90, phub: 200, af: false, t: 0, dN: 0, osg: 0, ftg: 0, x: 0, vid: 0, rem: 0 });
+// R : pl, rpm (≤ 1500 : drapeau), V (kt), moteur, gov et ftg (pannes), af ('off' | 'arm' | 'test'), test (essai de l'hélice), roule (roulage)
+function pas(E, R, dt) {
+  const M = manette(R.pl), drapeau = R.rpm <= 1500, Nsel = drapeau ? 1600 : R.rpm, V = R.V * KT;
+  // FTG : 106 % du régime choisi, 95 % par-dessus la 2e porte ; inopérant si le régulateur primaire est en panne
+  const Nftg = (M.zone === 'inv' ? 0.95 : 1.06) * Nsel;
+  E.ftg = (!R.gov && !R.ftg) ? lim((E.N - Nftg) / (0.01 * NMAX), 0, 1) : 0;
+  const pid = M.zone === 'alpha' ? RALENTI_VOL : RALENTI_SOL;
+  const pc = R.moteur ? M.p - (M.p - pid) * E.ftg : 0;
+  // générateur de gaz : la puissance suit la commande avec un retard
+  const tau = !R.moteur ? 1.5 : pc > E.P / PMAX ? 2 : 0.7;
+  E.P += (pc * PMAX - E.P) * Math.min(1, dt / tau);
+  E.Ng += ((R.moteur ? 52 + 49 * E.P / PMAX : 12) - E.Ng) * Math.min(1, dt / (R.moteur ? 1.2 : 3));
+  const w = 2 * Math.PI * E.N / 60, Qm = E.P / Math.max(w, Math.PI * NMAX / 60);
+  const o = aero(E.b, E.N, V, E.vi);
+  E.vi += (o.vic - E.vi) * Math.min(1, dt * 8);
+  const Qf = E.N > 0 ? 15 + 25 * E.N / NMAX : 0;                     // frottements du réducteur
+  const N0 = E.N;
+  E.N = Math.max(0, E.N + (Qm - o.Q - Qf) / INERTIE * dt * 60 / (2 * Math.PI));
+  E.dN = (E.N - N0) / dt;
+  // régulateur primaire : x > 0, survitesse (vidange, gros pas) ; x < 0, sous-vitesse (huile vers le moyeu, petit pas)
+  let x = drapeau ? 1 : (E.N * E.N - Nsel * Nsel) / (Nsel * Nsel) * 25 + 0.012 * E.dN;
+  if (R.gov) x = -1;                                                   // panne : distributeur coincé en sous-vitesse
+  E.x = x = lim(x, -1, 1);
+  // OSG : 104 % du régime maximal (92 % avec l'essai de l'hélice), il vide le moyeu
+  const Nosg = (R.test ? 0.92 : 1.04) * NMAX;
+  E.osg = lim((E.N - Nosg) / (0.005 * NMAX), 0, 1);
+  // drapeau automatique : armé et manette au-delà de 90 % (ou en test) ; couple < 400 ft-lb : désarme l'autre moteur ; < 200 ft-lb : vidange
+  const cpl = Qm * FTLB;
+  E.afActif = R.af === 'test' || (R.af === 'arm' && R.pl >= 90);
+  E.afAutre = E.afActif && cpl < 400;
+  if (E.afActif && cpl < 200) E.af = true;
+  if (R.af === 'off' || (!E.afActif && R.moteur)) E.af = false;
+  // pression que la pompe du régulateur peut donner, pression qui tient le piston contre le ressort et les masselottes
+  // (moteur en marche : la pompe est alimentée même hélice arrêtée en drapeau, ce qui permet de la sortir du drapeau)
+  const pcap = 375 * Math.min(1, Math.max(E.N / 900, R.moteur ? E.Ng / 50 : 0)) * Math.min(1, E.Ng / 10);
+  const peq = 40 + 2.6 * (90 - Math.max(-15, E.b)) * (0.6 + 0.4 * (E.N / NMAX) ** 2);
+  const butee = M.zone === 'alpha' ? 11 : M.bcmd;                      // butée de petit pas hydraulique (soupape bêta)
+  const vid = E.af ? 1 : Math.max(Math.max(0, x), E.osg);
+  let rem = (E.af || E.osg > 0) ? 0 : Math.max(0, -x);
+  if (E.b <= butee) rem = 0;
+  rem *= lim((pcap - peq) / 60, 0, 1);
+  let db = -(M.zone === 'alpha' ? V_FIN : V_BETA) * rem + V_GROS * vid;
+  if (E.b < butee) db = Math.max(db, V_GROS * Math.min(1, (butee - E.b) / 2));   // la soupape bêta ramène l'hélice à la butée
+  const b0 = E.b;
+  E.b = lim(E.b + db * dt, -15, 90);
+  if (b0 >= butee && E.b < butee && db < 0) E.b = butee;
+  E.vid = vid; E.rem = rem;
+  const cible = vid > 0.02 ? peq * (1 - vid) : rem > 0.02 ? Math.min(pcap, peq + 120 * rem) : Math.min(pcap, peq);
+  E.phub += (cible - E.phub) * Math.min(1, dt * 6);
+  // roulage : bimoteur de 4300 kg (les deux hélices pareilles), poussée, traînée et roulement
+  if (R.roule) {
+    const acc = (2 * o.T - 0.5 * RHO * V * V * 0.8 - (V > 0.3 ? 0.02 * 4300 * 9.81 : 0)) / 4300;
+    R.V = Math.max(0, R.V + acc * dt / KT);
+  }
+  Object.assign(E, { cpl, T: o.T, a: o.a, phi: o.phi, U: o.U, Va: o.Va, M, Nsel, Nftg, Nosg, butee, pcap, drapeau });
+  E.t += dt;
+}
+
+// ---------- réglages, situations ----------
+const R = { pl: 75, rpm: 1900, V: 200, moteur: true, gov: false, ftg: false, af: 'off', test: false, roule: false };
+let E = nouvelEtat(), vitesse = 1, prog = null, tProg = 0;
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// chaque situation : réglages de départ (stabilisés 8 s avant de commencer), puis un programme (temps en s → action) et le texte expliqué
+const CAS = {
+  croisiere: { r: { pl: 75, rpm: 1900, V: 200 }, txt: "<b>Croisière</b> : 200 kt, manette d'hélice à 1900 tr/min. Le régulateur est en régime : le distributeur est centré et bloque l'huile du moyeu. Bouge la manette d'hélice ou la vitesse pour voir le pas changer." },
+  pique: { r: { pl: 75, rpm: 1900, V: 160 }, prog: t => { R.V = Math.min(250, 160 + 12 * Math.max(0, t - 1)); },
+    txt: "<b>Piqué</b> : la vitesse passe de 160 à 250 kt à puissance constante. Le vent relatif tourne (φ augmente) : sans régulateur, l'hélice s'emballerait. Les masselottes sentent la survitesse, vident un peu d'huile, et la pale passe au gros pas : le régime reste à 1900 tr/min." },
+  decollage: { r: { pl: 0, rpm: 2200, V: 0, af: 'arm' }, prog: t => { R.pl = lim(t * 35, 0, 100); if (t > 3) R.V = Math.min(110, (t - 3) * 6); },
+    txt: "<b>Décollage</b> : manette d'hélice tout en avant (2200 tr/min), drapeau auto armé. Au ralenti, l'hélice est sur sa butée de petit pas, en sous-vitesse. Avec la puissance, le régime monte jusqu'à 2200 tr/min, puis le régulateur augmente le pas à mesure que l'avion accélère." },
+  panneAF: { r: { pl: 100, rpm: 2200, V: 110, af: 'arm' }, prog: (t, d) => { if (t >= 2 && !d.p) { d.p = 1; R.moteur = false; majBoutons(); } },
+    txt: "<b>Panne moteur au décollage, drapeau auto armé</b> (110 kt, pleine puissance). À 2 s, le moteur s'arrête : le couple tombe sous 400 ft-lb (l'autre moteur est désarmé), puis sous 200 ft-lb : l'électrovanne vide le moyeu, ressort et masselottes mettent l'hélice en drapeau." },
+  panne: { r: { pl: 100, rpm: 2200, V: 110, af: 'off' }, prog: (t, d) => { if (t >= 2 && !d.p) { d.p = 1; R.moteur = false; majBoutons(); } },
+    txt: "<b>Panne moteur sans drapeau auto</b>. Le régulateur essaie de garder le régime : il met la pale au petit pas, jusqu'à la butée. L'hélice tourne en moulinet, entraînée par le vent : poussée négative, l'avion est freiné. Mets la manette d'hélice tout en arrière (drapeau) pour l'arrêter." },
+  drapeau: { r: { pl: 0, rpm: 1900, V: 150 }, prog: (t, d) => { if (t >= 2 && !d.p) { d.p = 1; R.rpm = 1500; majManettes(); } if (t >= 14 && !d.q) { d.q = 1; R.rpm = 1900; majManettes(); } },
+    txt: "<b>Mise en drapeau</b> : à 2 s, manette d'hélice tout en arrière. Elle soulève le distributeur, le moyeu se vide et les pales tournent jusqu'à 90°. L'hélice s'arrête presque. À 14 s, on la ramène à 1900 tr/min : l'huile repousse le piston et l'hélice repart." },
+  gov: { r: { pl: 80, rpm: 1900, V: 150 }, prog: (t, d) => { if (t >= 2 && !d.p) { d.p = 1; R.gov = true; majBoutons(); } },
+    txt: "<b>Panne du régulateur primaire</b> à 2 s : le distributeur reste en sous-vitesse, l'huile pousse les pales au petit pas et le régime s'emballe. Le FTG, qui fait partie du régulateur primaire, ne peut rien. Le régulateur de survitesse (OSG) vide le moyeu à 104 % et tient le régime vers 2288 tr/min." },
+  osg: { r: { pl: 0, rpm: 2200, V: 0, test: true }, prog: t => { R.pl = lim((t - 1) * 30, 0, 100); },
+    txt: "<b>Essai de l'OSG au sol</b> : contacteur prop test enfoncé, manette d'hélice tout en avant, on monte la puissance. Le régulateur de survitesse agit à 92 % (2024 tr/min) au lieu de 104 % : le régime plafonne là, sous le réglage du régulateur primaire." },
+  inversion: { r: { pl: 0, rpm: 2200, V: 70, roule: true }, prog: (t, d) => { if (t >= 1.5 && t < 2.2) R.pl = -30 * (t - 1.5) / 0.7; else if (t >= 2.2 && !d.p && R.V > 40) R.pl = -30; if (R.V <= 40 && t > 2.2 && !d.p) { d.p = 1; R.pl = -8; } },
+    txt: "<b>Inversion à l'atterrissage</b> : 70 kt après le toucher, manette d'hélice tout en avant. La manette de puissance passe les deux portes : la soupape bêta laisse les pales aller jusqu'à −15° et le FCU donne de la puissance. Le FTG limite le régime à 95 % (2090 tr/min), sous le régulateur primaire, qui reste en sous-vitesse. Sous 40 kt, retour en bêta." },
+  rnr: { r: { pl: 0, rpm: 1700, V: 70, roule: true }, prog: t => { if (t >= 1.5) R.pl = Math.max(-30, -30 * (t - 1.5) / 0.7); },
+    txt: "<b>Reverse not ready</b> : manette d'hélice à 1700 tr/min, train sorti : le voyant s'allume. En inversion, le FTG réduit la puissance à 95 % de 1700 (1615 tr/min) : le régulateur primaire reste en sous-vitesse, mais l'inversion est bien plus faible et l'avion ralentit mal." },
+  rnrFtg: { r: { pl: 0, rpm: 1700, V: 70, roule: true, ftg: true }, prog: t => { if (t >= 1.5) R.pl = Math.max(-30, -30 * (t - 1.5) / 0.7); },
+    txt: "<b>Reverse not ready, FTG en panne</b> : la puissance d'inversion fait monter le régime jusqu'à 1700 tr/min ; le régulateur primaire sent une survitesse et vide le moyeu. La pale quitte l'angle négatif, ce qui accélère encore l'hélice, et bascule en poussée positive : l'avion accélère au lieu de freiner. Sur un bimoteur, avec un seul moteur dans cet état, la poussée dissymétrique rend l'avion incontrôlable." },
+};
+function lancer(nom) {
+  const c = CAS[nom];
+  Object.assign(R, { pl: 75, rpm: 1900, V: 200, moteur: true, gov: false, ftg: false, af: 'off', test: false, roule: false }, c.r);
+  const roule = R.roule; R.roule = false;
+  E = nouvelEtat();
+  for (let i = 0; i < 8 * 240; i++) pas(E, R, 1 / 240);                  // état stabilisé avant le début
+  R.roule = roule;
+  prog = c.prog ? { f: c.prog, d: {} } : null; tProg = 0;
+  histo.length = 0;
+  $('status').innerHTML = c.txt;
+  document.querySelectorAll('[data-cas]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cas === nom));
+  majManettes(); majBoutons();
+}
+
+// ---------- commandes ----------
+function libPl(pl) {
+  const M = manette(pl);
+  if (M.zone === 'alpha') return pl === 0 ? 'ralenti vol' : `${pl} %`;
+  if (M.zone === 'beta') return `bêta · ${fmt(M.bcmd, 1)}°`;
+  return `inversion · ${fmt(M.bcmd, 1)}°`;
+}
+function majManettes() {
+  $('r-pl').value = Math.round(R.pl); $('o-pl').textContent = libPl(Math.round(R.pl));
+  $('r-rpm').value = R.rpm; $('o-rpm').textContent = R.rpm <= 1500 ? 'drapeau' : `${fmt(R.rpm)} tr/min`;
+  $('r-v').value = Math.round(R.V); $('o-vv').textContent = `${fmt(R.V)} kt`;
+}
+function majBoutons() {
+  document.querySelectorAll('[data-af]').forEach(b => b.setAttribute('aria-pressed', b.dataset.af === R.af));
+  $('b-test').setAttribute('aria-pressed', R.test);
+  $('b-moteur').setAttribute('aria-pressed', !R.moteur); $('b-moteur').textContent = R.moteur ? 'Panne du moteur' : 'Moteur arrêté · rallumer';
+  $('b-gov').setAttribute('aria-pressed', R.gov); $('b-ftgp').setAttribute('aria-pressed', R.ftg);
+}
+const manuel = () => { prog = null; document.querySelectorAll('[data-cas]').forEach(b => b.setAttribute('aria-pressed', 'false')); };
+$('r-pl').addEventListener('input', e => { R.pl = +e.target.value; manuel(); majManettes(); });
+$('r-rpm').addEventListener('input', e => { R.rpm = +e.target.value; manuel(); majManettes(); });
+$('r-v').addEventListener('input', e => { R.V = +e.target.value; R.roule = false; manuel(); majManettes(); });
+document.querySelectorAll('[data-cas]').forEach(b => b.addEventListener('click', () => lancer(b.dataset.cas)));
+document.querySelectorAll('[data-af]').forEach(b => b.addEventListener('click', () => { R.af = b.dataset.af; majBoutons(); }));
+document.querySelectorAll('[data-vit]').forEach(b => b.addEventListener('click', () => {
+  vitesse = +b.dataset.vit; document.querySelectorAll('[data-vit]').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+$('b-test').addEventListener('click', () => { R.test = !R.test; majBoutons(); });
+$('b-moteur').addEventListener('click', () => { R.moteur = !R.moteur; majBoutons(); });
+$('b-gov').addEventListener('click', () => { R.gov = !R.gov; majBoutons(); });
+$('b-ftgp').addEventListener('click', () => { R.ftg = !R.ftg; majBoutons(); });
+
+// ---------- dessin ----------
+function couleurP(p) {                                          // pression (psi) → couleur, du bleu (basse) au rouge (haute)
+  const k = lim(p / 400, 0, 1), A = [59, 143, 217], B = [224, 160, 48], C = [217, 68, 59];
+  const [u, v, s] = k < 0.55 ? [A, B, k / 0.55] : [B, C, (k - 0.55) / 0.45];
+  return `rgb(${u.map((x, i) => Math.round(x + (v[i] - x) * s)).join(',')})`;
+}
+function zigzag(x0, y0, x1, y1, n, amp) {                      // ressort entre deux points
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+  let s = `${x0},${y0} `;
+  for (let i = 1; i < n; i++) { const t = i / n, c = i % 2 ? amp : -amp; s += `${(x0 + dx * t - uy * c).toFixed(1)},${(y0 + dy * t + ux * c).toFixed(1)} `; }
+  return s + `${x1},${y1}`;
+}
+const cls = (id, nom, on) => $(id).classList.toggle(nom, !!on);
+
+// rapporteur des plages
+const PC = { x: 130, y: 168 }, PR1 = 112, PR2 = 136;
+const pol = (r, a) => [PC.x + r * Math.cos(a * Math.PI / 180), PC.y - r * Math.sin(a * Math.PI / 180)];
+(function secteurs() {
+  const g = $('p-secteurs');
+  const S = [[-15, -2, '--p-inv', 'Inversion'], [-2, 11, '--p-beta', 'Bêta'], [11, 30, '--p-fin', 'Petit pas'], [30, 89, '--p-gros', 'Gros pas'], [89, 91, '--p-drap', '']];
+  for (const [a0, a1, c, lib] of S) {
+    const [x0, y0] = pol(PR2, a0), [x1, y1] = pol(PR2, a1), [x2, y2] = pol(PR1, a1), [x3, y3] = pol(PR1, a0);
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('d', `M${x0} ${y0}A${PR2} ${PR2} 0 0 0 ${x1} ${y1}L${x2} ${y2}A${PR1} ${PR1} 0 0 1 ${x3} ${y3}Z`);
+    p.setAttribute('fill', `var(${c})`); p.setAttribute('opacity', '.8'); g.appendChild(p);
+    if (lib) {
+      const am = (a0 + a1) / 2, [tx, ty] = pol(PR2 + 8, am), t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', tx); t.setAttribute('y', ty + 4); t.setAttribute('class', 'fin'); t.textContent = lib;
+      if (a0 >= 30) { t.setAttribute('x', tx + 2); } g.appendChild(t);
+    }
+  }
+  for (const a of [-15, -2, 11, 30, 90]) {
+    const [x0, y0] = pol(PR1 - 4, a), [x1, y1] = pol(PR2 + 2, a), l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', x0); l.setAttribute('y1', y0); l.setAttribute('x2', x1); l.setAttribute('y2', y1); l.setAttribute('stroke', 'var(--text)'); g.appendChild(l);
+    const [tx, ty] = pol(PR1 - 16, a), t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', tx); t.setAttribute('y', ty + 4); t.setAttribute('text-anchor', 'middle'); t.setAttribute('class', 'val'); t.textContent = `${a}°`; g.appendChild(t);
+  }
+  const t = document.createElementNS(NS, 'text'); const [tx, ty] = pol(PR2 + 10, 90);
+  t.setAttribute('x', tx + 6); t.setAttribute('y', ty + 2); t.setAttribute('class', 'fin'); t.textContent = 'Drapeau'; g.appendChild(t);
+})();
+
+// vue de face : trois pales
+const PALES = [0, 1, 2].map(() => { const p = document.createElementNS(NS, 'polygon'); p.setAttribute('class', 'pale'); $('f-pales').appendChild(p);
+  const b = document.createElementNS(NS, 'polygon'); b.setAttribute('fill', '#f0c53a'); $('f-pales').appendChild(b); return [p, b]; });
+let rotF = 0;
+function dessinerFace(dt) {
+  rotF += (reduit ? 0 : E.N / NMAX * 300) * dt;                    // vitesse visuelle ralentie (300°/s à 2200 tr/min)
+  const larg = Math.max(0.08, Math.abs(Math.cos(E.b * Math.PI / 180)));
+  PALES.forEach(([p, bout], k) => {
+    const a = (rotF + k * 120) * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux;
+    const pt = (r, w) => `${(150 + ux * r + vx * w).toFixed(1)},${(150 + uy * r + vy * w).toFixed(1)}`;
+    const w0 = 11 * larg + 2, w1 = 15 * larg + 1.5, w2 = 9 * larg + 1;
+    p.setAttribute('points', [pt(24, -w0), pt(70, -w1), pt(112, -w2), pt(124, 0), pt(112, w2), pt(70, w1), pt(24, w0)].join(' '));
+    bout.setAttribute('points', [pt(112, -w2), pt(124, 0), pt(112, w2)].join(' '));
+  });
+  $('f-disque').setAttribute('opacity', (lim(E.N / NMAX, 0, 1) * 0.12).toFixed(3));
+  $('f-np').textContent = `${fmt(E.N)} tr/min`;
+}
+
+// profil et triangle des vitesses
+const PROFIL = (() => { const pts = []; for (let i = 0; i <= 20; i++) { const x = i / 20, y = 0.6 * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1015 * x ** 4); pts.push([x, y]); }
+  return [...pts.map(([x, y]) => [x, y + 0.03 * Math.sin(Math.PI * x)]), ...pts.reverse().map(([x, y]) => [x, -y + 0.03 * Math.sin(Math.PI * x)])]; })();
+function dessinerTriangle() {
+  const C = [118, 160], c = 120, b = E.b * Math.PI / 180, ub = [Math.cos(b), -Math.sin(b)], nb = [-ub[1], ub[0]];
+  // bord d'attaque à droite (sens de rotation), la pale avance vers le haut (vers l'avant de l'avion)
+  const LE = [C[0] + ub[0] * c / 2, C[1] + ub[1] * c / 2];
+  const d = PROFIL.map(([x, y]) => { const s = (1 - x) * c - c / 2, t = y * c; return `${(C[0] + ub[0] * s - nb[0] * t).toFixed(1)},${(C[1] + ub[1] * s - nb[1] * t).toFixed(1)}`; });
+  $('t-profil').setAttribute('d', 'M' + d.join('L') + 'Z');
+  $('t-corde').setAttribute('x1', C[0] - ub[0] * 90); $('t-corde').setAttribute('y1', C[1] - ub[1] * 90);
+  $('t-corde').setAttribute('x2', C[0] + ub[0] * 140); $('t-corde').setAttribute('y2', C[1] + ub[1] * 140);
+  // vent relatif : arrive sur le bord d'attaque depuis (ωr, V) ; échelle : 230 m/s → 125 px
+  const k = 112 / 230, Lu = E.U * k, Lv = E.Va * k, S = [LE[0] + Lu, LE[1] - Lv], S1 = [S[0] - Lu, S[1]];
+  const ligne = (id, a, z) => { const l = $(id); l.setAttribute('x1', a[0]); l.setAttribute('y1', a[1]); l.setAttribute('x2', z[0]); l.setAttribute('y2', z[1]); };
+  ligne('t-ur', S, S1); ligne('t-v', S1, LE); ligne('t-w', S, LE);
+  $('t-ur').style.display = Lu > 6 ? '' : 'none'; $('t-v').style.display = Math.abs(Lv) > 6 ? '' : 'none'; $('t-w').style.display = Math.hypot(Lu, Lv) > 6 ? '' : 'none';
+  const pos = (id, x, y) => { $(id).setAttribute('x', x.toFixed(1)); $(id).setAttribute('y', y.toFixed(1)); };
+  pos('t-ur-t', (S[0] + S1[0]) / 2 - 8, S[1] - 6); pos('t-v-t', S1[0] - 14, (S1[1] + LE[1]) / 2 + 4); pos('t-w-t', Math.min(250, (S[0] + LE[0]) / 2 + 8), (S[1] + LE[1]) / 2 + 14);
+  // arc d'incidence entre la corde (vers l'avant) et la direction d'où vient le vent
+  const r = 34, a1 = -E.b, a2 = -E.phi, p1 = [LE[0] + r * Math.cos(a1 * Math.PI / 180), LE[1] + r * Math.sin(a1 * Math.PI / 180)], p2 = [LE[0] + r * Math.cos(a2 * Math.PI / 180), LE[1] + r * Math.sin(a2 * Math.PI / 180)];
+  $('t-arc').setAttribute('d', `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)}A${r} ${r} 0 0 ${a2 > a1 ? 1 : 0} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`);
+  // poussée (vers le haut = vers l'avant)
+  const T = E.T * LBF, h = lim(T / 2400 * 110, -110, 110);
+  const tp = $('t-pouss'); tp.setAttribute('x1', C[0] - 40); tp.setAttribute('y1', C[1]); tp.setAttribute('x2', C[0] - 40); tp.setAttribute('y2', C[1] - h);
+  tp.setAttribute('stroke', T >= 0 ? 'var(--vert)' : 'var(--rouge)'); tp.style.display = Math.abs(h) > 4 ? '' : 'none';
+  $('t-l1').textContent = `β ${fmt(E.b, 1)}°  φ ${fmt(E.phi, 1)}°  α ${fmt(E.a, 1)}°`;
+  $('t-l2').textContent = `ωr ${fmt(E.U)} m/s  V ${fmt(R.V)} kt`;
+  $('t-l3').textContent = `poussée ${fmt(T)} lbf`;
+}
+
+function dessinerPlages() {
+  const L = 0.7;
+  $('p-pale').setAttribute('transform', `translate(${PC.x} ${PC.y}) rotate(${-E.b}) scale(${L})`);
+  const [x, y] = pol(PR2 + 2, E.b), [x0, y0] = pol(98, E.b);
+  $('p-aig').setAttribute('x1', x0); $('p-aig').setAttribute('y1', y0); $('p-aig').setAttribute('x2', x); $('p-aig').setAttribute('y2', y);
+  const b = E.b, zone = b >= 85 ? 'drapeau' : b >= 30 ? 'gros pas (alpha)' : b >= 10.9 ? 'petit pas (alpha)' : b >= -2 ? 'bêta' : 'inversion';
+  $('p-lib').textContent = `β = ${fmt(b, 1)}° · ${zone}`;
+}
+
+// régulateur et moyeu
+let rotPompe = 0, flux = 0;
+function dessinerSchema(dt) {
+  // ressort de vitesse : la manette d'hélice abaisse la coupelle
+  const yc = E.drapeau ? 62 : 62 + (R.rpm - 1600) / 600 * 34;
+  $('g-coupelle').setAttribute('y', yc); $('g-tige').setAttribute('y2', yc);
+  $('g-consigne-t').textContent = E.drapeau ? 'drapeau' : `${fmt(R.rpm)} tr/min`;
+  // masselottes : écartées en survitesse, rentrées en sous-vitesse
+  const ratio = E.drapeau ? 1 : E.N / E.Nsel, th = lim(14 + 70 * (ratio * ratio - 1), -12, 45);
+  $('g-mass-g').setAttribute('transform', `translate(150 200) rotate(${-th})`);
+  $('g-mass-d').setAttribute('transform', `translate(210 200) rotate(${th})`);
+  const lev = lim(E.x, -1, 1) * 9;                                  // distributeur : vers le haut en survitesse
+  $('g-tiroir').setAttribute('transform', `translate(0 ${-lev})`);
+  $('g-collet').setAttribute('y', 186 - lev);
+  $('g-ressort').setAttribute('points', zigzag(180, yc + 7, 180, 186 - lev, 10, 13));
+  rotPompe += (reduit ? 0 : E.N / NMAX * 360) * dt;
+  $('g-pompe').setAttribute('transform', `rotate(${rotPompe.toFixed(1)} 95 331)`);
+  // huile
+  const huileMoteur = E.Ng > 10 ? 80 : 80 * E.Ng / 10;
+  $('h-moteur').setAttribute('stroke', couleurP(huileMoteur)); $('h-pompe').setAttribute('stroke', couleurP(E.pcap));
+  $('h-moyeu').setAttribute('stroke', couleurP(E.phub)); $('h-retour').setAttribute('stroke', couleurP(E.vid > 0.05 ? 40 : 10));
+  $('h-osg').setAttribute('stroke', E.osg > 0.02 ? couleurP(E.phub) : 'var(--tuyau)');
+  $('h-af').setAttribute('stroke', E.af ? couleurP(E.phub) : 'var(--tuyau)');
+  flux += (reduit ? 0 : 60) * dt;
+  const sens = E.rem > 0.02 ? -1 : E.vid > 0.02 ? 1 : 0;
+  $('f-moyeu').style.strokeDashoffset = (sens * flux).toFixed(1); $('f-moyeu').style.opacity = sens ? 0.8 : 0;
+  $('f-pompe').style.strokeDashoffset = (-flux * lim(E.N / NMAX, 0, 1)).toFixed(1); $('f-pompe').style.opacity = E.N > 100 ? 0.6 : 0;
+  $('t-pmoyeu').textContent = `${fmt(E.phub)} psi`;
+  cls('b-decharge', 'actif', E.pcap > 370 && E.rem < 0.02 && E.vid < 0.02);
+  // FTG, OSG, électrovanne, soupape bêta
+  $('t-ftg').textContent = R.gov || R.ftg ? 'en panne' : `${E.M.zone === 'inv' ? 95 : 106} % · ${fmt(E.Nftg)}`;
+  cls('b-ftg', 'actif', E.ftg > 0.02); cls('b-ftg', 'alarme', R.gov || R.ftg);
+  $('t-osg').textContent = `${R.test ? 92 : 104} % · ${fmt(E.Nosg)}`;
+  cls('b-osg', 'alarme', E.osg > 0.02);
+  $('t-af').textContent = E.af ? 'ouverte : drapeau' : R.af === 'off' ? 'désarmée' : E.afActif ? 'armée, active' : 'armée';
+  cls('b-af', 'actif', E.afActif && !E.af); cls('b-af', 'alarme', E.af);
+  $('t-beta').textContent = E.M.zone === 'alpha' ? 'butée 11°' : `commande ${fmt(E.M.bcmd, 1)}°`;
+  $('t-beta2').textContent = E.M.zone === 'alpha' ? 'garde l\'hélice hors du bêta' : E.M.zone === 'beta' ? '1re porte (bêta)' : '2e porte (inversion)';
+  cls('b-beta', 'actif', E.M.zone !== 'alpha');
+  // moyeu : piston vers l'avant (droite) au petit pas, vers l'arrière (gauche) au gros pas
+  const px = 612 + (90 - E.b) / 105 * 128;
+  $('h-piston').setAttribute('x', px.toFixed(1));
+  $('h-chambre').setAttribute('width', Math.max(0, px - 600).toFixed(1)); $('h-chambre').setAttribute('fill', couleurP(E.phub));
+  $('h-ressort').setAttribute('points', zigzag(px + 14, 235, 810, 235, 12, 34 - (px - 612) / 128 * 6));
+  // tiges bêta et bague : la bague ne suit le piston qu'en deçà de 11° (bêta, inversion)
+  const bx = 560 + Math.max(0, 11 - E.b) * 1.6;
+  $('h-bague').setAttribute('x', bx.toFixed(1)); $('h-carbone').setAttribute('x', (bx - 18).toFixed(1)); $('h-bielle').setAttribute('x2', (bx - 14).toFixed(1));
+  for (const [id, y] of [['h-tige1', 186], ['h-tige2', 284]]) { const l = $(id); l.setAttribute('x1', bx + 8); l.setAttribute('y1', y); l.setAttribute('x2', px); l.setAttribute('y2', y); }
+  // pale : pied vu de côté, à l'angle β ; le maneton est relié au piston
+  $('h-pale').setAttribute('transform', `translate(720 338) rotate(${-E.b})`);
+  const am = (180 - E.b) * Math.PI / 180, mx = 720 + 22 * Math.cos(am) * -1, my = 338 - 22 * Math.sin(am);
+  $('h-maneton').setAttribute('cx', mx.toFixed(1)); $('h-maneton').setAttribute('cy', my.toFixed(1));
+  $('h-lien').setAttribute('x1', (px + 7).toFixed(1)); $('h-lien').setAttribute('y1', 296); $('h-lien').setAttribute('x2', mx.toFixed(1)); $('h-lien').setAttribute('y2', my.toFixed(1));
+  $('t-beta-moyeu').textContent = `β ${fmt(E.b, 1)}°`;
+}
+
+// voyants et valeurs
+function dessinerVoyants() {
+  cls('v-af', 'on', E.afActif && !E.af); cls('v-af2', 'on', E.afAutre);
+  cls('v-drap', 'on', E.b > 85); cls('v-beta', 'on', E.b < 10.5);
+  cls('v-rnr', 'on', R.rpm < 2200 && R.V <= 140);                  // train sorti (supposé sous 140 kt) et manette d'hélice pas tout en avant
+  cls('v-ftg', 'on', E.ftg > 0.02); cls('v-osg', 'on', E.osg > 0.02); cls('v-test', 'on', R.test);
+  const np = E.N / NMAX * 100;
+  $('o-np').textContent = `${fmt(E.N)} tr/min`; $('o-np2').textContent = `${fmt(np, 1)} % · consigne ${E.drapeau ? 'drapeau' : fmt(E.Nsel)}`;
+  cls('c-np', 'trop', E.N > NMAX + 5);
+  $('o-cpl').textContent = `${fmt(E.cpl)} ft-lb`; $('o-cpl2').textContent = `${fmt(E.P / 745.7)} shp · max ${fmt(CPLMAX)}`;
+  cls('c-cpl', 'trop', E.cpl > CPLMAX + 5);
+  $('o-beta').textContent = `${fmt(E.b, 1)}°`; $('o-beta2').textContent = E.rem > 0.02 ? 'vers le petit pas' : E.vid > 0.02 ? 'vers le gros pas' : 'stable';
+  $('o-t').textContent = `${fmt(E.T * LBF)} lbf`; $('o-t2').textContent = E.T < -50 ? (E.M.zone === 'inv' ? 'inversion' : 'moulinet : freine') : E.T > 50 ? 'traction' : '≈ nulle';
+  $('o-a').textContent = `${fmt(E.a, 1)}°`; $('o-a2').textContent = `φ ${fmt(E.phi, 1)}° · ωr ${fmt(E.U)} m/s`;
+  $('o-p').textContent = `${fmt(E.phub)} psi`; $('o-p2').textContent = `pompe du régulateur ${fmt(E.pcap)} psi`;
+  $('o-ng').textContent = `${fmt(E.Ng, 1)} %`; $('o-ng2').textContent = R.moteur ? (E.ftg > 0.02 ? 'FTG : carburant réduit' : 'en marche') : 'moteur arrêté';
+  $('o-v').textContent = `${fmt(R.V)} kt`; $('o-v2').textContent = R.roule ? 'roulage : l\'avion ralentit' : R.V < 1 ? 'au sol, arrêté' : 'vitesse imposée';
+}
+
+// courbes des 30 dernières secondes
+const histo = []; let tEch = 0;
+(function grille() {
+  const g = $('tr-grille');
+  for (const v of [0, 25, 50, 75, 100]) {
+    const y = 140 - v * 1.2, l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', 40); l.setAttribute('x2', 895); l.setAttribute('y1', y); l.setAttribute('y2', y); l.setAttribute('class', 'grille'); g.appendChild(l);
+    const t = document.createElementNS(NS, 'text'); t.setAttribute('x', 34); t.setAttribute('y', y + 4); t.setAttribute('text-anchor', 'end'); t.setAttribute('fill', 'var(--muted)'); t.textContent = v; g.appendChild(t);
+  }
+})();
+function dessinerTrace() {
+  const n = histo.length, x = i => 895 - (n - 1 - i) * (855 / 300), y = v => (140 - lim(v, -15, 110) * 1.2).toFixed(1);
+  $('tr-np').setAttribute('points', histo.map((h, i) => `${x(i).toFixed(1)},${y(h[0])}`).join(' '));
+  $('tr-beta').setAttribute('points', histo.map((h, i) => `${x(i).toFixed(1)},${y(h[1])}`).join(' '));
+  $('tr-cpl').setAttribute('points', histo.map((h, i) => `${x(i).toFixed(1)},${y(h[2])}`).join(' '));
+}
+
+// ---------- boucle ----------
+let tPrec = performance.now(), majM = 0;
+function image(t) {
+  const dtr = Math.min(0.1, (t - tPrec) / 1000); tPrec = t;
+  const dts = dtr * vitesse, nb = Math.round(dts * 240);
+  for (let i = 0; i < nb; i++) {
+    if (prog) { prog.f(tProg, prog.d); tProg += 1 / 240; }
+    pas(E, R, 1 / 240);
+    tEch += 1 / 240;
+    if (tEch >= 0.1) { tEch = 0; histo.push([E.N / NMAX * 100, E.b, E.cpl / CPLMAX * 100]); if (histo.length > 300) histo.shift(); }
+  }
+  dessinerFace(dts); dessinerSchema(dts); dessinerTriangle(); dessinerPlages(); dessinerVoyants(); dessinerTrace();
+  if ((majM += dtr) > 0.1 && (prog || R.roule)) { majM = 0; majManettes(); majBoutons(); }
+  requestAnimationFrame(image);
+}
+lancer('croisiere');
+requestAnimationFrame(image);
+</script>
+<script src="theme-toggle.js"></script>
+<script>
+(function () {
+  const t = document.getElementById('theme-toggle'), slot = document.getElementById('tg-slot');
+  if (t && slot) { t.classList.remove('theme-toggle--fixed'); slot.replaceWith(t); }
+})();
+</script>
+</body>
+</html>

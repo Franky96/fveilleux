@@ -26,7 +26,8 @@ Pages plus simples, chacune avec son HTML, son JS et sa permission. Le schéma c
 ## Moteurs (permission `moteurs` et sous-permissions)
 
 - **PT6A-21** : voir `docs/pt6a21.md`.
-- **Autres** : CFM56-7B (`turboreacteur`), PW1500G (`pw1500g`), O-320 (`o320`), engrenages planétaires (`planetaire`), pompe à engrenages (`pompe-engrenages`). La page d'index est `moteurs.html`.
+- **Autres** : CFM56-7B (`turboreacteur`), PW1500G (`pw1500g`), O-320 (`o320`), engrenages planétaires (`planetaire`), pompe à engrenages (`pompe-engrenages`), hélice à vitesse constante (`helice`). La page d'index est `moteurs.html`.
+- **Hélice à vitesse constante** (`helice.html`, fichier unique) : hélice Hartzell du PT6 et son régulateur, d'après la vidéo « PT6 Prop Governor Operation » de qp Aviation (sa transcription n'est pas dans le dépôt). Modèle : une tranche de pale à 0,75 R (angle équivalent décalé de 6° aux petits pas), théorie de Froude, régulateur primaire, OSG (104 %, 92 % en prop test), FTG (106 %, 95 % en inversion), drapeau automatique (400 et 200 ft-lb), soupape bêta, roulage d'un bimoteur de 4300 kg. Les situations (`CAS` dans le script) partent d'un état stabilisé 8 s.
 
 ## Jeux de société (`jeuxdesociete.html`, permission `jeuxdesociete`)
 
