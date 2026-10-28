@@ -154,6 +154,80 @@ svg.trace text{font-family:var(--f-mono);font-size:11px;letter-spacing:0;text-tr
 html.light #theme-toggle{background:#34c759;border-color:#28a045}
 html.light #theme-toggle-knob{left:45px;background:#ffffff}
 @media (prefers-reduced-motion: reduce){#theme-toggle,#theme-toggle-knob,.voyant{transition:none}}
+
+/* poste de pilotage : vue (3D ou schéma) à gauche, pupitre et cadrans à droite, collés */
+:root{--bg3d:#0f171d}
+html.light{--bg3d:#dce5eb}
+.poste{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto auto auto auto auto 1fr;
+  grid-template-areas:"barre cmd" "stage cmd" "explic cmd" "encarts cmd" "status cmd" "vide cmd";gap:12px 16px;align-items:start}
+.barre{grid-area:barre;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.onglets{display:flex;gap:6px}
+.btn[aria-selected="true"]{background:var(--accent-d);border-color:var(--accent);color:var(--on-accent)}
+.situ{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.situ select{background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:6px 8px;max-width:250px;min-width:0}
+.btn.mini{padding:4px 9px;font-size:12px}
+.scene-boite{grid-area:stage;position:relative;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:var(--bg3d);border:1px solid var(--line)}
+.scene{position:absolute;inset:0}
+.scene canvas{display:block;width:100%;height:100%;touch-action:none}
+#pane-schema{grid-area:stage}
+.hud{position:absolute;left:10px;top:8px;pointer-events:none;font-family:var(--f-mono);display:flex;flex-direction:column;line-height:1.3;color:var(--text);text-shadow:0 1px 3px var(--bg3d),0 0 8px var(--bg3d)}
+.hud b{font-size:24px;font-weight:500}
+.hud span{font-size:13px}
+.vues3d{position:absolute;right:8px;top:8px;display:flex;gap:4px}
+.tempo{position:absolute;right:8px;bottom:8px;display:flex;gap:4px}
+.note3d{position:absolute;left:10px;bottom:7px;margin:0;font-size:11.5px;color:var(--muted);pointer-events:none;max-width:55%}
+.repli{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--muted)}
+.explic{grid-area:explic;display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-left:5px solid var(--etat,var(--accent));border-radius:5px;padding:9px 12px;min-height:3.4em}
+.explic p{margin:0;font-size:15px}
+.explic b{font-family:var(--f-display);letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--etat,var(--accent));white-space:nowrap;padding-top:2px}
+.explic[data-etat=ok]{--etat:var(--vert)}
+.explic[data-etat=sous]{--etat:var(--bleu)}
+.explic[data-etat=sur]{--etat:var(--jaune)}
+.explic[data-etat=sol]{--etat:var(--p-beta)}
+.explic[data-etat=info]{--etat:var(--muted)}
+.explic[data-etat=alerte]{--etat:var(--rouge)}
+.encarts{grid-area:encarts;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cas-txt{grid-area:status;margin:0;color:var(--muted);font-size:13.5px}
+.cas-txt:empty{display:none}
+.commandes{grid-area:cmd;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.commandes h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.commandes h3:first-child{margin-top:0}
+.aide{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+#quadrant{max-width:270px;margin:0 auto}
+#quadrant .zone{fill:transparent;cursor:ns-resize;touch-action:none}
+#quadrant .manche:focus{outline:none}
+#quadrant .manche:focus-visible .poignee{stroke:var(--accent);stroke-width:3}
+.vit{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px;color:var(--muted);margin-top:8px}
+.vit output{font-family:var(--f-mono);color:var(--text)}
+.vit input{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.cadrans{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.cadrans svg text.chiffre{font-family:var(--f-mono);font-size:9.5px;letter-spacing:0;fill:var(--muted)}
+.cadrans svg text.lecture{font-family:var(--f-mono);font-size:15px;font-weight:500;letter-spacing:0;fill:var(--text);text-transform:none}
+.cadrans svg text.lecture.trop{fill:var(--rouge)}
+.commandes .voyants{grid-template-columns:1fr 1fr;gap:4px;margin-top:10px}
+.commandes .voyant{font-size:11px;padding:4px 2px}
+.commandes .boutons{gap:5px;min-height:30px}
+.commandes .boutons .lab{min-width:0;flex:1 0 100%;font-size:12.5px}
+.vals6{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:980px){.vals6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){
+  .poste{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"barre" "stage" "explic" "cmd" "encarts" "status"}
+  .scene-boite{position:sticky;top:0;z-index:5}
+  .situ{margin-left:0}
+  .commandes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px}
+  .commandes>*{grid-column:1/-1}
+  .commandes>#quadrant{grid-column:1}
+  .commandes>.cadrans{grid-column:2;grid-template-columns:1fr;align-self:center}
+}
+@media (max-width:560px){
+  .encarts{grid-template-columns:1fr}
+  .vals6{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .commandes>#quadrant{grid-column:1/-1;max-width:300px}
+  .commandes>.cadrans{grid-column:1/-1;grid-template-columns:1fr 1fr}
+  .note3d{display:none}
+  .hud b{font-size:18px}
+  .hud span{font-size:11.5px}
+}
 </style>
 </head>
 <body>
@@ -161,27 +235,58 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 <div class="toprow"><a href="moteurs.html" class="back">&#8592; Moteurs</a><span id="tg-slot"></span></div>
 <header class="top">
   <h1>Hélice à vitesse constante</h1>
-  <p>L'hélice Hartzell à trois pales d'un turbopropulseur PT6 (celle du <a href="pt6a21.html">PT6A-21</a> d'un King Air C90) et tout ce qui commande son pas : le régulateur primaire et ses masselottes, le moyeu à piston et ressort, le régulateur de survitesse, la mise en drapeau automatique, le régulateur de carburant (FTG) et le système bêta pour l'inversion de poussée. Bouge les manettes, change la vitesse de l'avion ou essaie une situation pour voir le régulateur garder le régime.</p>
+  <p>L'hélice tripale d'un turbopropulseur PT6 (celle du <a href="pt6a21.html">PT6A-21</a> d'un King Air C90). Le pilote choisit la puissance et le régime ; le régulateur change tout seul l'angle des pales pour garder ce régime. Glisse les manettes, change la vitesse, ou choisis une situation : la bande sous la vue explique ce qui se passe.</p>
 </header>
 
 <section class="panel" aria-labelledby="t-sim">
   <h2 id="t-sim" class="sr-only">Simulation de l'hélice</h2>
-  <div class="modes" role="group" aria-label="Situations">
-    <span class="lab">Situations</span>
-    <button class="btn" type="button" data-cas="croisiere">Croisière</button>
-    <button class="btn" type="button" data-cas="pique">Piqué</button>
-    <button class="btn" type="button" data-cas="decollage">Décollage</button>
-    <button class="btn" type="button" data-cas="panneAF">Panne moteur (drapeau auto)</button>
-    <button class="btn" type="button" data-cas="panne">Panne moteur sans drapeau auto</button>
-    <button class="btn" type="button" data-cas="drapeau">Mise en drapeau</button>
-    <button class="btn" type="button" data-cas="gov">Panne du régulateur primaire</button>
-    <button class="btn" type="button" data-cas="osg">Essai de l'OSG au sol</button>
-    <button class="btn" type="button" data-cas="inversion">Inversion à l'atterrissage</button>
-    <button class="btn" type="button" data-cas="rnr">Reverse not ready</button>
-    <button class="btn" type="button" data-cas="rnrFtg">Reverse not ready + FTG en panne</button>
-  </div>
-  <p id="status" aria-live="polite"></p>
+  <div class="poste">
+    <div class="barre">
+      <div class="onglets" role="tablist" aria-label="Vue">
+        <button class="btn" type="button" role="tab" id="tab-3d" aria-selected="true" aria-controls="pane-3d">Hélice en 3D</button>
+        <button class="btn" type="button" role="tab" id="tab-schema" aria-selected="false" aria-controls="pane-schema">Régulateur et moyeu</button>
+      </div>
+      <label class="situ">Situation
+        <select id="cas">
+          <option value="">Pilotage libre</option>
+          <optgroup label="En vol">
+            <option value="croisiere">Croisière</option>
+            <option value="pique">Piqué : la vitesse augmente</option>
+            <option value="drapeau">Mise en drapeau et retour</option>
+          </optgroup>
+          <optgroup label="Pannes">
+            <option value="panneAF">Panne moteur, drapeau auto armé</option>
+            <option value="panne">Panne moteur sans drapeau auto</option>
+            <option value="gov">Panne du régulateur primaire</option>
+          </optgroup>
+          <optgroup label="Au sol">
+            <option value="decollage">Décollage</option>
+            <option value="osg">Essai de l'OSG (prop test)</option>
+            <option value="inversion">Inversion à l'atterrissage</option>
+            <option value="rnr">Reverse not ready</option>
+            <option value="rnrFtg">Reverse not ready + FTG en panne</option>
+          </optgroup>
+        </select>
+      </label>
+      <button class="btn" type="button" id="rejouer">Rejouer</button>
+    </div>
 
+    <div class="scene-boite" id="pane-3d" role="tabpanel" aria-labelledby="tab-3d">
+      <div id="scene" class="scene" role="img" aria-label="Hélice tripale en 3D sur sa nacelle : les pales tournent, changent d'angle, et des particules montrent l'air poussé vers l'arrière (traction) ou vers l'avant (inversion). La flèche donne la poussée."></div>
+      <div class="hud" aria-hidden="true"><b id="hud-np"></b><span id="hud-b"></span><span id="hud-t"></span></div>
+      <div class="vues3d" role="group" aria-label="Angle de vue">
+        <button class="btn mini" type="button" data-vue="34">3/4</button>
+        <button class="btn mini" type="button" data-vue="face">Face</button>
+        <button class="btn mini" type="button" data-vue="cote">Côté</button>
+      </div>
+      <div class="tempo" role="group" aria-label="Vitesse de la simulation">
+        <button class="btn mini" type="button" data-vit="1" aria-pressed="true">1×</button>
+        <button class="btn mini" type="button" data-vit="0.25" aria-pressed="false">¼</button>
+        <button class="btn mini" type="button" data-vit="0" aria-pressed="false">Pause</button>
+      </div>
+      <p class="note3d">Rotation ralentie à l'écran · glisse pour tourner autour</p>
+    </div>
+    <div id="pane-schema" role="tabpanel" aria-labelledby="tab-schema" hidden>
   <svg class="schema-princ" id="svg" viewBox="0 0 900 430" role="img" aria-labelledby="svg-t svg-d">
     <title id="svg-t">Régulateur d'hélice et moyeu en coupe</title>
     <desc id="svg-d">À gauche, le régulateur primaire : la manette d'hélice règle la tension du ressort de vitesse, les masselottes de la tête tournante s'y opposent et déplacent le distributeur. La pompe du régulateur porte l'huile du moteur d'environ 80 psi à 375 psi. Au centre, le régulateur de survitesse, l'électrovanne de mise en drapeau et la soupape bêta. À droite, le moyeu en coupe : l'huile pousse le piston vers l'avant (petit pas), le ressort et les masselottes des pales le repoussent vers l'arrière (gros pas, drapeau). La couleur de l'huile indique sa pression, du bleu (basse) au rouge (haute).</desc>
@@ -272,20 +377,13 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
     <text x="490" y="394" class="fin">bloc de carbone</text>
     <text x="812" y="170" text-anchor="end" class="val" id="t-beta-moyeu"></text>
   </svg>
-
-  <div class="trio">
-    <div class="carte">
-      <h3>Vue de face</h3>
-      <svg id="face" viewBox="0 0 300 300" role="img" aria-label="Hélice vue de face : trois pales qui tournent ; leur largeur apparente dépend de l'angle de pale">
-        <circle cx="150" cy="150" r="128" id="f-disque" fill="var(--accent)" opacity="0"/>
-        <g id="f-pales"></g>
-        <circle cx="150" cy="150" r="26" fill="var(--cone)" stroke="var(--cone-trait)" stroke-width="1.5"/>
-        <text x="150" y="292" text-anchor="middle" class="val" id="f-np"></text>
-      </svg>
-      <p>De face, une pale au petit pas montre presque toute sa largeur ; en drapeau, on ne voit que sa tranche.</p>
     </div>
-    <div class="carte">
-      <h3>Profil à 75 % du rayon</h3>
+
+    <div class="explic" id="explic" data-etat="ok"><b id="explic-e"></b><p id="explic-t"></p></div>
+
+    <div class="encarts">
+      <div class="carte">
+        <h3>Profil de pale à 75 % du rayon</h3>
       <svg id="tri" viewBox="0 0 320 260" role="img" aria-label="Triangle des vitesses sur un profil de pale : vitesse de rotation, vitesse de l'avion, vent relatif, incidence et poussée">
         <defs><marker id="m-v" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
         <line x1="10" y1="160" x2="310" y2="160" stroke="var(--line2)" stroke-dasharray="4 4"/>
@@ -304,42 +402,96 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
         <text x="10" y="36" class="val" id="t-l2"></text>
         <text x="10" y="250" class="val" id="t-l3"></text>
       </svg>
-      <p>L'incidence α est l'écart entre la corde de la pale (β) et le vent relatif (φ) : α = β − φ.</p>
-    </div>
-    <div class="carte">
-      <h3>Plages d'angle de pale</h3>
+        <p>L'incidence α est l'écart entre la corde de la pale (β) et le vent relatif (φ) : α = β − φ.</p>
+      </div>
+      <div class="carte">
+        <h3>Plages d'angle de pale</h3>
       <svg id="plages" viewBox="0 0 340 250" role="img" aria-label="Rapporteur des plages d'angle de pale : inversion, bêta, petit pas, gros pas et drapeau, avec la pale à son angle actuel">
         <g id="p-secteurs"></g>
         <g id="p-pale"><path class="pale" d="M-96 0C-70 -14 20 -20 74 -10C92 -6 98 0 98 0C92 4 70 8 10 8C-40 8 -80 4 -96 0Z"/></g>
         <line id="p-aig" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 3"/>
         <text x="334" y="244" text-anchor="end" class="val" id="p-lib"></text>
       </svg>
-      <p>Gros pas et petit pas (alpha) : manette d'hélice. Bêta et inversion : manette de puissance, par-dessus les portes, au sol seulement.</p>
+        <p>Gros pas et petit pas : manette d'hélice (régulateur). Bêta et inversion : manette de puissance, par-dessus les portes, au sol seulement.</p>
+      </div>
     </div>
+    <p class="cas-txt" id="status"></p>
+
+    <aside class="commandes" aria-label="Commandes">
+      <h3>Manettes</h3>
+      <p class="aide">Glisse les manettes. Puissance : ce que donne le moteur. Hélice : le régime voulu. Le régulateur choisit le pas tout seul.</p>
+      <svg id="quadrant" viewBox="0 0 260 262" role="group" aria-label="Pupitre des manettes">
+        <rect x="1" y="1" width="258" height="260" rx="10" fill="var(--carter)" stroke="var(--carter-trait)"/>
+        <text x="86" y="18" text-anchor="middle" class="titre">Puissance</text>
+        <text x="196" y="18" text-anchor="middle" class="titre">Hélice</text>
+        <rect x="80" y="26" width="12" height="208" rx="6" fill="var(--bg)" stroke="var(--line2)"/>
+        <rect x="98" y="30" width="4" height="128" rx="2" fill="var(--p-fin)"/>
+        <rect x="98" y="168" width="4" height="20" rx="2" fill="var(--p-beta)"/>
+        <rect x="98" y="188" width="4" height="40" rx="2" fill="var(--p-inv)"/>
+        <line x1="56" y1="163" x2="100" y2="163" stroke="var(--text)" stroke-width="2"/>
+        <line x1="56" y1="188" x2="100" y2="188" stroke="var(--text)" stroke-width="2"/>
+        <text x="50" y="35" text-anchor="end" class="fin">max</text>
+        <text x="50" y="160" text-anchor="end" class="fin">ralenti</text>
+        <text x="50" y="182" text-anchor="end" class="fin" fill="var(--p-beta)">bêta</text>
+        <text x="50" y="225" text-anchor="end" class="fin" fill="var(--p-inv)">invers.</text>
+        <rect x="190" y="26" width="12" height="208" rx="6" fill="var(--bg)" stroke="var(--line2)"/>
+        <line x1="186" y1="182" x2="214" y2="182" stroke="var(--text)" stroke-width="2"/>
+        <text x="226" y="35" class="fin">2200</text>
+        <text x="226" y="170" class="fin">1600</text>
+        <text x="226" y="219" class="fin" fill="var(--p-inv)">dra-</text>
+        <text x="226" y="231" class="fin" fill="var(--p-inv)">peau</text>
+        <g id="q-pl" class="manche" tabindex="0" role="slider" aria-label="Manette de puissance" aria-valuemin="-30" aria-valuemax="100">
+          <rect class="poignee" x="-32" y="-12" width="64" height="24" rx="6" fill="#2a2f33" stroke="#6b737a" stroke-width="1.5"/>
+          <path d="M-20 -4H20M-20 0H20M-20 4H20" stroke="#5a6268" stroke-width="1.2"/>
+        </g>
+        <g id="q-rpm" class="manche" tabindex="0" role="slider" aria-label="Manette d'hélice" aria-valuemin="1500" aria-valuemax="2200">
+          <rect class="poignee" x="-27" y="-12" width="54" height="24" rx="12" fill="#2f5d8f" stroke="#7aa7d6" stroke-width="1.5"/>
+          <path d="M-14 -4H14M-14 0H14M-14 4H14" stroke="#4d7fb5" stroke-width="1.2"/>
+        </g>
+        <rect class="zone" id="q-pl-zone" x="40" y="20" width="90" height="224"/>
+        <rect class="zone" id="q-rpm-zone" x="150" y="20" width="96" height="224"/>
+        <text id="q-pl-t" x="86" y="254" text-anchor="middle" class="val"></text>
+        <text id="q-rpm-t" x="196" y="254" text-anchor="middle" class="val"></text>
+      </svg>
+      <label class="vit">Vitesse de l'avion <output id="o-vv"></output><input type="range" id="r-v" min="0" max="260" step="1" value="200"></label>
+      <div class="cadrans">
+        <svg id="cad-np" viewBox="0 0 140 140" role="img" aria-label="Régime de l'hélice"></svg>
+        <svg id="cad-cpl" viewBox="0 0 140 140" role="img" aria-label="Couple"></svg>
+      </div>
+      <div class="voyants" aria-label="Voyants">
+        <div class="voyant v" id="v-af">Autofeather</div>
+        <div class="voyant a" id="v-af2">AF autre désarmé</div>
+        <div class="voyant b" id="v-drap">Drapeau</div>
+        <div class="voyant a" id="v-beta">Bêta</div>
+        <div class="voyant a" id="v-rnr">Reverse not ready</div>
+        <div class="voyant a" id="v-ftg">FTG</div>
+        <div class="voyant r" id="v-osg">Survitesse OSG</div>
+        <div class="voyant a" id="v-test">Prop test</div>
+      </div>
+      <h3>Systèmes</h3>
+      <div class="boutons" role="group" aria-label="Mise en drapeau automatique"><span class="lab">Drapeau automatique</span>
+        <button class="btn mini" type="button" data-af="off" aria-pressed="true">Off</button>
+        <button class="btn mini" type="button" data-af="arm" aria-pressed="false">Arm</button>
+        <button class="btn mini" type="button" data-af="test" aria-pressed="false">Test</button>
+        <button class="btn mini" type="button" id="b-test" aria-pressed="false">Prop test</button>
+      </div>
+      <h3>Pannes</h3>
+      <div class="boutons">
+        <button class="btn mini danger" type="button" id="b-moteur" aria-pressed="false">Moteur</button>
+        <button class="btn mini danger" type="button" id="b-gov" aria-pressed="false">Régulateur primaire</button>
+        <button class="btn mini danger" type="button" id="b-ftgp" aria-pressed="false">FTG</button>
+      </div>
+    </aside>
   </div>
 
-  <div class="voyants" aria-label="Voyants">
-    <div class="voyant v" id="v-af">Autofeather</div>
-    <div class="voyant a" id="v-af2">AF autre moteur désarmé</div>
-    <div class="voyant b" id="v-drap">Drapeau</div>
-    <div class="voyant a" id="v-beta">Bêta</div>
-    <div class="voyant a" id="v-rnr">Reverse not ready</div>
-    <div class="voyant a" id="v-ftg">FTG : carburant réduit</div>
-    <div class="voyant r" id="v-osg">Survitesse (OSG)</div>
-    <div class="voyant a" id="v-test">Prop test</div>
-  </div>
-
-  <div class="vals" aria-live="off">
-    <div class="val cle" id="c-np"><span>Régime de l'hélice (Np)</span><b id="o-np">—</b><small id="o-np2">—</small></div>
-    <div class="val" id="c-cpl"><span>Couple</span><b id="o-cpl">—</b><small id="o-cpl2">—</small></div>
+  <div class="vals vals6" aria-live="off">
     <div class="val cle"><span>Angle de pale β</span><b id="o-beta">—</b><small id="o-beta2">—</small></div>
     <div class="val"><span>Poussée de l'hélice</span><b id="o-t">—</b><small id="o-t2">—</small></div>
-    <div class="val"><span>Incidence α · vent relatif φ</span><b id="o-a">—</b><small id="o-a2">—</small></div>
-    <div class="val"><span>Pression d'huile au moyeu</span><b id="o-p">—</b><small id="o-p2">—</small></div>
-    <div class="val"><span>Générateur de gaz (Ng)</span><b id="o-ng">—</b><small id="o-ng2">—</small></div>
-    <div class="val"><span>Vitesse de l'avion</span><b id="o-v">—</b><small id="o-v2">—</small></div>
+    <div class="val"><span>Incidence α</span><b id="o-a">—</b><small id="o-a2">—</small></div>
+    <div class="val"><span>Huile au moyeu</span><b id="o-p">—</b><small id="o-p2">—</small></div>
+    <div class="val"><span>Générateur de gaz Ng</span><b id="o-ng">—</b><small id="o-ng2">—</small></div>
+    <div class="val"><span>Puissance</span><b id="o-pw">—</b><small id="o-pw2">—</small></div>
   </div>
-
   <div class="courbe">
     <svg class="trace" id="trace" viewBox="0 0 900 150" role="img" aria-label="Évolution des 30 dernières secondes : régime de l'hélice, angle de pale et couple">
       <g id="tr-grille"></g>
@@ -348,31 +500,8 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
       <polyline id="tr-cpl" fill="none" stroke="var(--s-cpl)" stroke-width="1.5" stroke-dasharray="5 3"/>
     </svg>
     <div class="leg"><span><i style="background:var(--s-np)"></i>Np (% de 2200 tr/min)</span><span><i style="background:var(--s-beta)"></i>angle de pale β (°)</span><span><i style="background:var(--s-cpl)"></i>couple (% de 1315 ft-lb)</span><span style="color:var(--muted)">30 dernières secondes</span></div>
-  </div>
-
-  <div class="reglages">
-    <h3>Manettes</h3>
-    <label class="ctrl">Manette de puissance<input type="range" id="r-pl" min="-30" max="100" step="1" value="75"><output id="o-pl"></output></label>
-    <label class="ctrl">Manette d'hélice<input type="range" id="r-rpm" min="1500" max="2200" step="10" value="1900"><output id="o-rpm"></output></label>
-    <label class="ctrl">Vitesse de l'avion<input type="range" id="r-v" min="0" max="260" step="1" value="200"><output id="o-vv"></output></label>
-    <div class="boutons" role="group" aria-label="Vitesse de la simulation"><span class="lab">Simulation</span>
-      <button class="btn" type="button" data-vit="1" aria-pressed="true">Temps réel</button>
-      <button class="btn" type="button" data-vit="0.5" aria-pressed="false">½</button>
-      <button class="btn" type="button" data-vit="0.2" aria-pressed="false">⅕</button>
-      <button class="btn" type="button" data-vit="0" aria-pressed="false">Pause</button>
-    </div>
-    <h3>Systèmes</h3>
-    <div class="boutons" role="group" aria-label="Mise en drapeau automatique"><span class="lab">Drapeau auto</span>
-      <button class="btn" type="button" data-af="off" aria-pressed="true">Off</button>
-      <button class="btn" type="button" data-af="arm" aria-pressed="false">Arm</button>
-      <button class="btn" type="button" data-af="test" aria-pressed="false">Test</button>
-    </div>
-    <div class="boutons"><span class="lab">Essai de l'hélice</span><button class="btn" type="button" id="b-test" aria-pressed="false">Prop test (OSG à 92 %)</button></div>
-    <h3>Pannes</h3>
-    <div class="boutons"><span class="lab">Moteur</span><button class="btn danger" type="button" id="b-moteur" aria-pressed="false">Panne du moteur</button></div>
-    <div class="boutons"><span class="lab">Régulateurs</span><button class="btn danger" type="button" id="b-gov" aria-pressed="false">Régulateur primaire</button><button class="btn danger" type="button" id="b-ftgp" aria-pressed="false">FTG</button></div>
-  </div>
 </section>
+
 
 <div class="notes">
   <section class="note">
@@ -447,6 +576,9 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
 <p class="source">D'après la vidéo « PT6 Prop Governor Operation » de qp Aviation (<a href="https://www.youtube.com/watch?v=nDcdRmtoaIw" target="_blank" rel="noopener">YouTube</a>) : schémas du régulateur, du moyeu et des plages bêta et inversion. Simulation simplifiée à but d'apprentissage, pas une référence d'entretien ni de vol.</p>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js" integrity="sha384-vV17nr/rMaJqmeZkFUzXLpHdQ+ME5QHKdydaqqN+3Ga39RJlNrTatJxHwGV4ml2C" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js" integrity="sha384-I0DMsfimAPIqWT8lF+oA997gRgdUi3jhidoTq3fN0zmn35smXZukD01FLnsPRU9i" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js" integrity="sha384-NG9Vjao8FDKsRPhzsQGvMRSCrkgzJlysZlYZ69P52mH1tEpkurCHq0M8jbSP7/gl" crossorigin="anonymous"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -546,7 +678,6 @@ const R = { pl: 75, rpm: 1900, V: 200, moteur: true, gov: false, ftg: false, af:
 let E = nouvelEtat(), vitesse = 1, prog = null, tProg = 0;
 const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// chaque situation : réglages de départ (stabilisés 8 s avant de commencer), puis un programme (temps en s → action) et le texte expliqué
 const CAS = {
   croisiere: { r: { pl: 75, rpm: 1900, V: 200 }, txt: "<b>Croisière</b> : 200 kt, manette d'hélice à 1900 tr/min. Le régulateur est en régime : le distributeur est centré et bloque l'huile du moyeu. Bouge la manette d'hélice ou la vitesse pour voir le pas changer." },
   pique: { r: { pl: 75, rpm: 1900, V: 160 }, prog: t => { R.V = Math.min(250, 160 + 12 * Math.max(0, t - 1)); },
@@ -580,7 +711,7 @@ function lancer(nom) {
   prog = c.prog ? { f: c.prog, d: {} } : null; tProg = 0;
   histo.length = 0;
   $('status').innerHTML = c.txt;
-  document.querySelectorAll('[data-cas]').forEach(b => b.setAttribute('aria-pressed', b.dataset.cas === nom));
+  $('cas').value = nom; casCourant = nom;
   majManettes(); majBoutons();
 }
 
@@ -588,25 +719,57 @@ function lancer(nom) {
 function libPl(pl) {
   const M = manette(pl);
   if (M.zone === 'alpha') return pl === 0 ? 'ralenti vol' : `${pl} %`;
-  if (M.zone === 'beta') return `bêta · ${fmt(M.bcmd, 1)}°`;
-  return `inversion · ${fmt(M.bcmd, 1)}°`;
+  if (M.zone === 'beta') return `bêta ${fmt(M.bcmd, 1)}°`;
+  return `inversion ${fmt(M.bcmd, 1)}°`;
 }
+// pupitre : positions des manettes (y dans le dessin) ; on franchit une porte en tirant un peu plus loin que la butée
+const yPl = v => v >= 0 ? 158 - v * 1.28 : v >= -10 ? 168 - 2 * v : 188 + 2 * (-v - 10);
+const plY = y => lim(y <= 158 ? Math.round((158 - y) / 1.28) : y < 168 ? 0 : y <= 188 ? -Math.round((y - 168) / 2) : -10 - Math.round((y - 188) / 2), -30, 100);
+const yRpm = v => v <= 1500 ? 222 : 30 + (2200 - v) / 600 * 136;
+const rpmY = y => y >= 198 ? 1500 : y > 166 ? 1600 : Math.round((2200 - lim((y - 30) / 136, 0, 1) * 600) / 10) * 10;
 function majManettes() {
-  $('r-pl').value = Math.round(R.pl); $('o-pl').textContent = libPl(Math.round(R.pl));
-  $('r-rpm').value = R.rpm; $('o-rpm').textContent = R.rpm <= 1500 ? 'drapeau' : `${fmt(R.rpm)} tr/min`;
+  const pl = Math.round(R.pl), rpm = R.rpm, lp = libPl(pl), lr = rpm <= 1500 ? 'drapeau' : `${fmt(rpm)} tr/min`;
+  $('q-pl').setAttribute('transform', `translate(86 ${yPl(pl).toFixed(1)})`);
+  $('q-rpm').setAttribute('transform', `translate(196 ${yRpm(rpm).toFixed(1)})`);
+  $('q-pl-t').textContent = lp; $('q-rpm-t').textContent = lr;
+  $('q-pl').setAttribute('aria-valuenow', pl); $('q-pl').setAttribute('aria-valuetext', lp);
+  $('q-rpm').setAttribute('aria-valuenow', rpm); $('q-rpm').setAttribute('aria-valuetext', lr);
   $('r-v').value = Math.round(R.V); $('o-vv').textContent = `${fmt(R.V)} kt`;
 }
 function majBoutons() {
   document.querySelectorAll('[data-af]').forEach(b => b.setAttribute('aria-pressed', b.dataset.af === R.af));
   $('b-test').setAttribute('aria-pressed', R.test);
-  $('b-moteur').setAttribute('aria-pressed', !R.moteur); $('b-moteur').textContent = R.moteur ? 'Panne du moteur' : 'Moteur arrêté · rallumer';
+  $('b-moteur').setAttribute('aria-pressed', !R.moteur); $('b-moteur').textContent = R.moteur ? 'Moteur' : 'Moteur arrêté · rallumer';
   $('b-gov').setAttribute('aria-pressed', R.gov); $('b-ftgp').setAttribute('aria-pressed', R.ftg);
 }
-const manuel = () => { prog = null; document.querySelectorAll('[data-cas]').forEach(b => b.setAttribute('aria-pressed', 'false')); };
-$('r-pl').addEventListener('input', e => { R.pl = +e.target.value; manuel(); majManettes(); });
-$('r-rpm').addEventListener('input', e => { R.rpm = +e.target.value; manuel(); majManettes(); });
+let casCourant = '';
+const manuel = () => { if (prog) { prog = null; } if (casCourant) { casCourant = ''; $('cas').value = ''; } };
+(function pupitre() {
+  const svg = $('quadrant');
+  const yDe = ev => { const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()).y; };
+  const lier = (zone, manche, fixer) => {
+    let actif = false;
+    const z = $(zone);
+    z.addEventListener('pointerdown', e => { actif = true; z.setPointerCapture(e.pointerId); $(manche).focus({ preventScroll: true }); fixer(yDe(e)); manuel(); majManettes(); e.preventDefault(); });
+    z.addEventListener('pointermove', e => { if (actif) { fixer(yDe(e)); majManettes(); } });
+    for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) z.addEventListener(t, () => { actif = false; });
+  };
+  lier('q-pl-zone', 'q-pl', y => { R.pl = plY(y); });
+  lier('q-rpm-zone', 'q-rpm', y => { R.rpm = rpmY(y); });
+  const clavier = (id, f) => $(id).addEventListener('keydown', e => {
+    const k = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 10, PageDown: -10, Home: 1e4, End: -1e4 }[e.key];
+    if (k === undefined) return; e.preventDefault(); f(k, e.shiftKey); manuel(); majManettes();
+  });
+  clavier('q-pl', (k, maj) => { R.pl = lim(Math.round(R.pl) + k * (maj ? 10 : 1), -30, 100); });
+  clavier('q-rpm', k => {
+    if (Math.abs(k) > 100) { R.rpm = k > 0 ? 2200 : 1500; return; }
+    const r = R.rpm + 10 * k;
+    R.rpm = r < 1600 ? (k < 0 ? 1500 : 1600) : Math.min(2200, R.rpm <= 1500 ? 1600 : r);
+  });
+})();
 $('r-v').addEventListener('input', e => { R.V = +e.target.value; R.roule = false; manuel(); majManettes(); });
-document.querySelectorAll('[data-cas]').forEach(b => b.addEventListener('click', () => lancer(b.dataset.cas)));
+$('cas').addEventListener('change', e => { if (e.target.value) lancer(e.target.value); else manuel(); });
+$('rejouer').addEventListener('click', () => lancer($('cas').value || 'croisiere'));
 document.querySelectorAll('[data-af]').forEach(b => b.addEventListener('click', () => { R.af = b.dataset.af; majBoutons(); }));
 document.querySelectorAll('[data-vit]').forEach(b => b.addEventListener('click', () => {
   vitesse = +b.dataset.vit; document.querySelectorAll('[data-vit]').forEach(x => x.setAttribute('aria-pressed', x === b));
@@ -615,6 +778,15 @@ $('b-test').addEventListener('click', () => { R.test = !R.test; majBoutons(); })
 $('b-moteur').addEventListener('click', () => { R.moteur = !R.moteur; majBoutons(); });
 $('b-gov').addEventListener('click', () => { R.gov = !R.gov; majBoutons(); });
 $('b-ftgp').addEventListener('click', () => { R.ftg = !R.ftg; majBoutons(); });
+// onglets : hélice en 3D, ou schéma du régulateur et du moyeu
+let ongletSchema = false;
+function onglet(schema) {
+  ongletSchema = schema;
+  $('tab-3d').setAttribute('aria-selected', !schema); $('tab-schema').setAttribute('aria-selected', schema);
+  $('pane-3d').hidden = schema; $('pane-schema').hidden = !schema;
+}
+$('tab-3d').addEventListener('click', () => onglet(false));
+$('tab-schema').addEventListener('click', () => onglet(true));
 
 // ---------- dessin ----------
 function couleurP(p) {                                          // pression (psi) → couleur, du bleu (basse) au rouge (haute)
@@ -656,24 +828,6 @@ const pol = (r, a) => [PC.x + r * Math.cos(a * Math.PI / 180), PC.y - r * Math.s
   const t = document.createElementNS(NS, 'text'); const [tx, ty] = pol(PR2 + 10, 90);
   t.setAttribute('x', tx + 6); t.setAttribute('y', ty + 2); t.setAttribute('class', 'fin'); t.textContent = 'Drapeau'; g.appendChild(t);
 })();
-
-// vue de face : trois pales
-const PALES = [0, 1, 2].map(() => { const p = document.createElementNS(NS, 'polygon'); p.setAttribute('class', 'pale'); $('f-pales').appendChild(p);
-  const b = document.createElementNS(NS, 'polygon'); b.setAttribute('fill', '#f0c53a'); $('f-pales').appendChild(b); return [p, b]; });
-let rotF = 0;
-function dessinerFace(dt) {
-  rotF += (reduit ? 0 : E.N / NMAX * 300) * dt;                    // vitesse visuelle ralentie (300°/s à 2200 tr/min)
-  const larg = Math.max(0.08, Math.abs(Math.cos(E.b * Math.PI / 180)));
-  PALES.forEach(([p, bout], k) => {
-    const a = (rotF + k * 120) * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux;
-    const pt = (r, w) => `${(150 + ux * r + vx * w).toFixed(1)},${(150 + uy * r + vy * w).toFixed(1)}`;
-    const w0 = 11 * larg + 2, w1 = 15 * larg + 1.5, w2 = 9 * larg + 1;
-    p.setAttribute('points', [pt(24, -w0), pt(70, -w1), pt(112, -w2), pt(124, 0), pt(112, w2), pt(70, w1), pt(24, w0)].join(' '));
-    bout.setAttribute('points', [pt(112, -w2), pt(124, 0), pt(112, w2)].join(' '));
-  });
-  $('f-disque').setAttribute('opacity', (lim(E.N / NMAX, 0, 1) * 0.12).toFixed(3));
-  $('f-np').textContent = `${fmt(E.N)} tr/min`;
-}
 
 // profil et triangle des vitesses
 const PROFIL = (() => { const pts = []; for (let i = 0; i <= 20; i++) { const x = i / 20, y = 0.6 * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1015 * x ** 4); pts.push([x, y]); }
@@ -770,24 +924,211 @@ function dessinerSchema(dt) {
   $('t-beta-moyeu').textContent = `β ${fmt(E.b, 1)}°`;
 }
 
-// voyants et valeurs
-function dessinerVoyants() {
+// cadrans à aiguille (régime et couple)
+function cadran(svg, { max, pas, vert, rouge, titre }) {
+  const C = [70, 62], r = 48, ang = v => (210 - 240 * lim(v, 0, max) / max) * Math.PI / 180;
+  const pt = (v, rr) => [C[0] + rr * Math.cos(ang(v)), C[1] - rr * Math.sin(ang(v))];
+  const arc = (v0, v1, rr) => { const [x0, y0] = pt(v0, rr), [x1, y1] = pt(v1, rr); return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${rr} ${rr} 0 ${(v1 - v0) / max * 240 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+  let h = `<circle cx="${C[0]}" cy="${C[1]}" r="58" fill="var(--panel)" stroke="var(--line2)"/>`;
+  h += `<path d="${arc(0, max, r)}" fill="none" stroke="var(--line2)" stroke-width="6"/>`;
+  h += `<path d="${arc(vert[0], vert[1], r)}" fill="none" stroke="var(--vert)" stroke-width="6"/>`;
+  { const [x0, y0] = pt(rouge, r - 8), [x1, y1] = pt(rouge, r + 5); h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--rouge)" stroke-width="3"/>`; }
+  for (let v = 0; v <= max; v += pas) {
+    const [x0, y0] = pt(v, r - 4), [x1, y1] = pt(v, r + 3), [tx, ty] = pt(v, r - 14);
+    h += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--muted)"/><text x="${tx.toFixed(1)}" y="${(ty + 3.5).toFixed(1)}" text-anchor="middle" class="chiffre">${v / 100}</text>`;
+  }
+  h += `<text x="70" y="98" text-anchor="middle" class="chiffre">${titre}</text>`;
+  h += `<line class="aig" x1="70" y1="62" x2="70" y2="20" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/><circle cx="70" cy="62" r="4" fill="var(--text)"/>`;
+  h += `<text x="70" y="136" text-anchor="middle" class="lecture"></text>`;
+  svg.innerHTML = h;
+  const aig = svg.querySelector('.aig'), lec = svg.querySelector('.lecture');
+  let x = 0;
+  return (v, texte, trop, dt) => {
+    x += (v - x) * Math.min(1, dt * 10);
+    const [ax, ay] = pt(x, r - 6);
+    aig.setAttribute('x2', ax.toFixed(1)); aig.setAttribute('y2', ay.toFixed(1));
+    lec.textContent = texte; lec.classList.toggle('trop', !!trop);
+  };
+}
+const CAD_NP = cadran($('cad-np'), { max: 2400, pas: 400, vert: [1600, 2200], rouge: 2200, titre: 'Np ×100 tr/min' });
+const CAD_CPL = cadran($('cad-cpl'), { max: 1600, pas: 400, vert: [0, 1315], rouge: 1315, titre: 'couple ×100 ft-lb' });
+
+// voyants, cadrans et valeurs
+function dessinerVoyants(dt) {
   cls('v-af', 'on', E.afActif && !E.af); cls('v-af2', 'on', E.afAutre);
   cls('v-drap', 'on', E.b > 85); cls('v-beta', 'on', E.b < 10.5);
   cls('v-rnr', 'on', R.rpm < 2200 && R.V <= 140);                  // train sorti (supposé sous 140 kt) et manette d'hélice pas tout en avant
   cls('v-ftg', 'on', E.ftg > 0.02); cls('v-osg', 'on', E.osg > 0.02); cls('v-test', 'on', R.test);
-  const np = E.N / NMAX * 100;
-  $('o-np').textContent = `${fmt(E.N)} tr/min`; $('o-np2').textContent = `${fmt(np, 1)} % · consigne ${E.drapeau ? 'drapeau' : fmt(E.Nsel)}`;
-  cls('c-np', 'trop', E.N > NMAX + 5);
-  $('o-cpl').textContent = `${fmt(E.cpl)} ft-lb`; $('o-cpl2').textContent = `${fmt(E.P / 745.7)} shp · max ${fmt(CPLMAX)}`;
-  cls('c-cpl', 'trop', E.cpl > CPLMAX + 5);
+  CAD_NP(E.N, `${fmt(E.N)} tr/min`, E.N > NMAX + 5, dt);
+  CAD_CPL(E.cpl, `${fmt(E.cpl)} ft-lb`, E.cpl > CPLMAX + 5, dt);
   $('o-beta').textContent = `${fmt(E.b, 1)}°`; $('o-beta2').textContent = E.rem > 0.02 ? 'vers le petit pas' : E.vid > 0.02 ? 'vers le gros pas' : 'stable';
-  $('o-t').textContent = `${fmt(E.T * LBF)} lbf`; $('o-t2').textContent = E.T < -50 ? (E.M.zone === 'inv' ? 'inversion' : 'moulinet : freine') : E.T > 50 ? 'traction' : '≈ nulle';
-  $('o-a').textContent = `${fmt(E.a, 1)}°`; $('o-a2').textContent = `φ ${fmt(E.phi, 1)}° · ωr ${fmt(E.U)} m/s`;
-  $('o-p').textContent = `${fmt(E.phub)} psi`; $('o-p2').textContent = `pompe du régulateur ${fmt(E.pcap)} psi`;
-  $('o-ng').textContent = `${fmt(E.Ng, 1)} %`; $('o-ng2').textContent = R.moteur ? (E.ftg > 0.02 ? 'FTG : carburant réduit' : 'en marche') : 'moteur arrêté';
-  $('o-v').textContent = `${fmt(R.V)} kt`; $('o-v2').textContent = R.roule ? 'roulage : l\'avion ralentit' : R.V < 1 ? 'au sol, arrêté' : 'vitesse imposée';
+  $('o-t').textContent = `${fmt(E.T * LBF)} lbf`; $('o-t2').textContent = E.T < -50 ? (E.M.zone === 'inv' ? 'inversion : freine' : 'moulinet : freine') : E.T > 50 ? 'traction' : '≈ nulle';
+  $('o-a').textContent = `${fmt(E.a, 1)}°`; $('o-a2').textContent = `vent relatif φ ${fmt(E.phi, 1)}°`;
+  $('o-p').textContent = `${fmt(E.phub)} psi`; $('o-p2').textContent = `pompe ${fmt(E.pcap)} psi`;
+  $('o-ng').textContent = `${fmt(E.Ng, 1)} %`; $('o-ng2').textContent = R.moteur ? (E.ftg > 0.02 ? 'carburant réduit (FTG)' : 'en marche') : 'moteur arrêté';
+  $('o-pw').textContent = `${fmt(E.P / 745.7)} shp`; $('o-pw2').textContent = R.roule ? `roulage · ${fmt(R.V)} kt` : `${fmt(R.V)} kt`;
+  $('hud-np').textContent = `${fmt(E.N)} tr/min`;
+  $('hud-b').textContent = `pas β ${fmt(E.b, 1)}°`;
+  $('hud-t').textContent = `poussée ${fmt(E.T * LBF)} lbf`;
 }
+
+// ce qui se passe, en mots simples
+let tExpl = 1;
+function expliquer(dt) {
+  if ((tExpl += dt) < 0.25) return; tExpl = 0;
+  const np = fmt(E.N), cons = fmt(E.Nsel), b = fmt(E.b, 1), mot = R.moteur ? '' : 'Moteur arrêté. ';
+  let e, t;
+  if (E.af) { e = ['alerte', 'Drapeau auto']; t = "Le couple est tombé sous 200 ft-lb : l'électrovanne vide l'huile du moyeu, le ressort et les masselottes tournent les pales à 90°. L'hélice s'arrête et ne freine plus l'avion."; }
+  else if (E.osg > 0.02) { e = ['alerte', 'Survitesse']; t = `${np} tr/min, au-delà de ${R.test ? 92 : 104} % : le régulateur de survitesse (OSG) vide le moyeu, les pales passent au gros pas et freinent l'hélice.`; }
+  else if (R.gov && E.M.zone === 'alpha') { e = ['alerte', 'Panne']; t = "Le régulateur primaire est en panne : il envoie de l'huile au moyeu sans arrêt, les pales vont au petit pas et le régime grimpe jusqu'à ce que l'OSG intervienne."; }
+  else if (E.drapeau) { e = ['info', 'Drapeau']; t = E.b > 85 ? `${mot}Manette d'hélice en drapeau : pales à 90°, face au vent. L'hélice ne tourne presque plus.` : "Manette d'hélice en drapeau : elle soulève le distributeur, l'huile sort du moyeu et les pales tournent vers 90°."; }
+  else if (E.M.zone !== 'alpha') {
+    const sortie = E.b > E.M.bcmd + 2 && E.x > 0.02;
+    if (sortie) { e = [E.T > 50 ? 'alerte' : 'sur', 'Attention']; t = `Le régulateur primaire voit une survitesse (${np} tr/min pour ${cons}) : il vide le moyeu et la pale sort de l'inversion. ` + (E.T > 50 ? "Elle pousse vers l'avant au lieu de freiner !" : "L'inversion faiblit."); }
+    else if (E.M.zone === 'inv') { e = ['sol', 'Inversion']; t = `La manette de puissance commande ${fmt(E.M.bcmd, 1)}° et plus de puissance. Pales à ${b}° : l'hélice souffle l'air vers l'avant et freine l'avion` + (R.rpm < 2200 ? `. Mais la manette d'hélice n'est pas tout en avant : le FTG coupe la puissance à 95 % de ${cons} tr/min et l'inversion reste faible.` : E.ftg > 0.02 ? ' ; le FTG limite le régime à 95 %.' : '.'); }
+    else { e = ['sol', 'Bêta']; t = `Au sol, la manette de puissance règle directement l'angle des pales (${fmt(E.M.bcmd, 1)}°) : peu ou pas de traction, pour rouler lentement.`; }
+  }
+  else if (!R.moteur) { e = ['alerte', 'Moulinet']; t = `Moteur arrêté : c'est le vent qui fait tourner l'hélice (${np} tr/min). Le régulateur la garde ${E.b <= E.butee + 0.3 ? 'sur la butée de petit pas' : 'au petit pas'} : elle freine l'avion (poussée ${fmt(E.T * LBF)} lbf). Mets la manette d'hélice en drapeau, ou arme le drapeau auto.`; }
+  else if (E.ftg > 0.02) { e = ['sur', 'FTG']; t = `Le régime atteint ${fmt(E.N / E.Nsel * 100)} % de la consigne : le régulateur de carburant (FTG) coupe du carburant pour limiter la survitesse.`; }
+  else if (E.x < -0.08 && E.b <= E.butee + 0.3) { e = ['sous', 'Sous-vitesse']; t = `${mot}${np} tr/min au lieu de ${cons}. Les pales sont déjà sur la butée de petit pas (11°) : pas assez de puissance${R.V > 20 ? ' ni de vitesse' : ''} pour atteindre la consigne.`; }
+  else if (E.x < -0.08) { e = ['sous', 'Sous-vitesse']; t = `${mot}${np} tr/min au lieu de ${cons}. Les masselottes rentrent, l'huile va au moyeu et les pales passent au petit pas : l'hélice accélère.`; }
+  else if (E.x > 0.08) { e = ['sur', 'Survitesse']; t = `${mot}${np} tr/min au lieu de ${cons}. Les masselottes s'écartent, l'huile sort du moyeu et les pales passent au gros pas : l'hélice ralentit.`; }
+  else { e = ['ok', 'En régime']; t = `${mot}${np} tr/min, comme demandé par la manette d'hélice. Le régulateur garde les pales à ${b}° ` + (R.moteur ? 'pour absorber la puissance du moteur.' : ": c'est le vent qui fait tourner l'hélice (moulinet), et elle freine l'avion."); }
+  $('explic').dataset.etat = e[0]; $('explic-e').textContent = e[1]; $('explic-t').textContent = t;
+}
+
+// ---------- vue 3D (three.js) ----------
+const V3 = (function () {
+  const hote = $('scene');
+  const repli = m => { const d = document.createElement('div'); d.className = 'repli'; d.textContent = m; $('pane-3d').appendChild(d); return null; };
+  if (typeof THREE === 'undefined') return repli("La vue 3D n'a pas pu être chargée (connexion internet requise). L'onglet « Régulateur et moyeu » fonctionne.");
+  let ren;
+  try { ren = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { return repli("Ce navigateur n'affiche pas la 3D (WebGL). L'onglet « Régulateur et moyeu » fonctionne."); }
+  THREE.ColorManagement.legacyMode = false;
+  ren.setPixelRatio(Math.min(2, devicePixelRatio));
+  ren.outputEncoding = THREE.sRGBEncoding; ren.toneMapping = THREE.ACESFilmicToneMapping;
+  hote.appendChild(ren.domElement);
+  const scene = new THREE.Scene();
+  const pm = new THREE.PMREMGenerator(ren); scene.environment = pm.fromScene(new THREE.RoomEnvironment(ren), 0.04).texture;
+  scene.add(new THREE.HemisphereLight(0xdfeaf2, 0x22282d, 0.5));
+  const soleil = new THREE.DirectionalLight(0xffffff, 1.3); soleil.position.set(3, 5, 4); scene.add(soleil);
+  const fond = () => { scene.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--bg3d').trim() || '#0f171d'); };
+  fond(); new MutationObserver(fond).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+  const cam = new THREE.PerspectiveCamera(36, 16 / 10, 0.05, 80);
+  const ctl = new THREE.OrbitControls(cam, ren.domElement);
+  ctl.enableDamping = true; ctl.dampingFactor = 0.08; ctl.enablePan = false; ctl.minDistance = 2.2; ctl.maxDistance = 11;
+  const VUES = { '34': [[3.4, 1.4, 3.9], [0, -0.1, -0.7]], face: [[0, 0.25, 5.6], [0, 0, 0]], cote: [[5.8, 0.5, -0.3], [0, 0, -0.7]] };
+  cam.position.set(...VUES['34'][0]); ctl.target.set(...VUES['34'][1]);
+  let anim = null;
+  const vue = n => { anim = { t: 0, p0: cam.position.clone(), c0: ctl.target.clone(), p1: new THREE.Vector3(...VUES[n][0]), c1: new THREE.Vector3(...VUES[n][1]) }; };
+  document.querySelectorAll('[data-vue]').forEach(b => b.addEventListener('click', () => vue(b.dataset.vue)));
+
+  const mat = (c, m, r) => new THREE.MeshStandardMaterial({ color: c, metalness: m, roughness: r, side: THREE.DoubleSide });
+  // pièces de révolution autour de l'axe de l'hélice (z vers l'avant de l'avion)
+  const tour = (pts, m, seg = 64) => { const g = new THREE.LatheGeometry(pts.map(([r, z]) => new THREE.Vector2(Math.max(1e-3, r), z)), seg); g.rotateX(Math.PI / 2); return new THREE.Mesh(g, m); };
+  const mBlanc = mat(0xe9ecee, 0.15, 0.45), mSombre = mat(0x3a3f43, 0.6, 0.4);
+  scene.add(tour([[0.02, -3.65], [0.18, -3.5], [0.36, -3.0], [0.46, -2.2], [0.47, -1.2], [0.44, -0.55], [0.36, -0.2], [0.25, -0.04]], mBlanc));
+  for (const s of [-1, 1]) {                                          // échappements du PT6, à l'avant de la nacelle
+    const g = new THREE.CylinderGeometry(0.1, 0.12, 0.3, 20); g.rotateZ(Math.PI / 2);
+    const m = new THREE.Mesh(g, mSombre); m.position.set(s * 0.47, 0.04, -0.8); m.rotation.y = s * 0.35; scene.add(m);
+  }
+  const aile = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.12, 1.6), mat(0xdfe3e6, 0.15, 0.5)); aile.position.set(0.6, -0.34, -2.1); scene.add(aile);
+  const rot = new THREE.Group(); scene.add(rot);
+  rot.add(tour([[0.24, -0.02], [0.235, 0.12], [0.2, 0.3], [0.14, 0.44], [0.06, 0.55], [0.001, 0.58]], mat(0xd9dcde, 0.75, 0.25)));
+  // pale vrillée : profil épais au pied, mince au bout ; angle de calage relatif à la station de 75 % (le pas β fait tourner toute la pale)
+  const gPale = (() => {
+    const nu = 30, nv = 22, pos = [], col = [], idx = [];
+    for (let i = 0; i <= nu; i++) {
+      const u = i / nu, r = 0.2 + u * (RAYON - 0.2);
+      const c = (u < 0.15 ? 0.12 + 0.12 * u / 0.15 : 0.24 - 0.08 * (u - 0.15) / 0.85) * (u > 0.94 ? 0.35 + 0.65 * Math.sqrt(Math.max(0, (1 - u) / 0.06)) : 1);
+      const ep = u < 0.12 ? 0.32 - 1.4 * u : 0.15 - 0.07 * u;
+      const tw = Math.atan(2.6 / (2 * Math.PI * r)) - Math.atan(2.6 / (2 * Math.PI * RE));
+      const cy = Math.cos(tw), cz = Math.sin(tw);
+      const jaune = u > 0.93;
+      for (let j = 0; j < nv; j++) {
+        const a = j / nv * 2 * Math.PI, x = (1 - Math.cos(a)) / 2;      // 0 au bord d'attaque, 1 au bord de fuite
+        const e = 5 * ep * c * (0.2969 * Math.sqrt(x) - 0.126 * x - 0.3516 * x * x + 0.2843 * x ** 3 - 0.1015 * x ** 4);
+        const s = 0.4 * c - x * c, n = (Math.sin(a) >= 0 ? 1 : -1) * e + 0.02 * c * Math.sin(Math.PI * x);
+        pos.push(r, s * cy - n * cz, s * cz + n * cy);
+        col.push(...(jaune ? [0.95, 0.76, 0.2] : [0.16, 0.18, 0.2]));
+      }
+    }
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+      const a = i * nv + j, b = i * nv + (j + 1) % nv, c = a + nv, d = b + nv;
+      idx.push(a, c, b, b, c, d);
+    }
+    const bout = pos.length / 3; pos.push(RAYON + 0.004, 0, 0); col.push(0.95, 0.76, 0.2);
+    for (let j = 0; j < nv; j++) idx.push(nu * nv + j, bout, nu * nv + (j + 1) % nv);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setIndex(idx); g.computeVertexNormals(); return g;
+  })();
+  const mPale = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.25, roughness: 0.5, side: THREE.DoubleSide });
+  const pivots = [];
+  for (let k = 0; k < 3; k++) {
+    const porte = new THREE.Group(); porte.rotation.z = Math.PI / 2 + k * 2 * Math.PI / 3; porte.position.z = 0.18; rot.add(porte);
+    const piv = new THREE.Group(); porte.add(piv); pivots.push(piv);
+    piv.add(new THREE.Mesh(gPale, mPale));
+    const gm = new THREE.CylinderGeometry(0.055, 0.062, 0.18, 18); gm.rotateZ(Math.PI / 2);
+    const manchon = new THREE.Mesh(gm, mat(0x2b2f33, 0.4, 0.5)); manchon.position.x = 0.25; piv.add(manchon);
+  }
+  // disque balayé, flèche de poussée
+  const disque = new THREE.Mesh(new THREE.RingGeometry(0.26, RAYON, 72), new THREE.MeshBasicMaterial({ color: 0x9fb8c8, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+  disque.position.z = 0.18; rot.add(disque);
+  const fleche = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0.7), 1, 0x4cc27a, 0.3, 0.2); scene.add(fleche);
+  // air : particules qui traversent le disque (vers l'arrière en traction, vers l'avant en inversion)
+  const NP = 1400, pts = new Float32Array(NP * 3), cols = new Float32Array(NP * 3), P = [];
+  for (let i = 0; i < NP; i++) P.push({ r: 0.5 + (RAYON * 1.5 - 0.5) * Math.sqrt(Math.random()), a: Math.random() * 2 * Math.PI, z: -5.5 + 9 * Math.random() });
+  const gAir = new THREE.BufferGeometry();
+  gAir.setAttribute('position', new THREE.BufferAttribute(pts, 3)); gAir.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  const air = new THREE.Points(gAir, new THREE.PointsMaterial({ size: 0.04, vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false }));
+  scene.add(air);
+
+  const taille = () => { const w = hote.clientWidth, h = hote.clientHeight; if (!w || !h) return; ren.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); };
+  new ResizeObserver(taille).observe(hote); taille();
+
+  let angle = 0;
+  return {
+    rendu(dts, dtr) {
+      if (anim) {
+        anim.t = Math.min(1, anim.t + dtr / 0.6); const s = anim.t * anim.t * (3 - 2 * anim.t);
+        cam.position.lerpVectors(anim.p0, anim.p1, s); ctl.target.lerpVectors(anim.c0, anim.c1, s);
+        if (anim.t >= 1) anim = null;
+      }
+      // rotation ralentie à l'écran : 1,4 tour par seconde à 2200 tr/min (le vrai régime ferait un stroboscope)
+      angle += E.N / NMAX * 2 * Math.PI * 1.4 * (reduit ? 0.25 : 1) * dts;
+      rot.rotation.z = angle % (2 * Math.PI);
+      for (const p of pivots) p.rotation.x = E.b * Math.PI / 180;
+      disque.material.opacity = 0.1 * lim((E.N - 300) / 1500, 0, 1);
+      const T = E.T * LBF, L = 0.15 + Math.min(2, Math.abs(T) / 2400 * 1.6);
+      fleche.visible = Math.abs(T) > 40;
+      if (T >= 0) { fleche.position.set(0, 0, 0.7); fleche.setDirection(new THREE.Vector3(0, 0, 1)); fleche.setColor(0x4cc27a); }
+      else { fleche.position.set(0, 0, 0.7 + L); fleche.setDirection(new THREE.Vector3(0, 0, -1)); fleche.setColor(0xef5a48); }
+      fleche.setLength(L, Math.min(0.32, L * 0.5), 0.2);
+      // air : vitesse de l'avion partout, plus la vitesse induite dans le tube de courant de l'hélice (deux fois plus loin derrière)
+      const Vs = R.V * KT, vi = E.vi, k = 0.032 * (reduit ? 0.4 : 1), vis = Math.abs(vi) > 1.5 && E.N > 150;
+      const tourb = 1.2 * lim(E.cpl / CPLMAX, -1, 1) * (E.N > 150 ? 1 : 0), serre = lim(vi / (Math.abs(Vs) + Math.abs(vi) + 3), -1, 1);
+      const clair = document.documentElement.classList.contains('light');
+      const cT = E.T >= 0 ? (clair ? [0.05, 0.42, 0.7] : [0.45, 0.8, 0.95]) : (clair ? [0.8, 0.2, 0.12] : [1, 0.45, 0.3]), cG = clair ? [0.42, 0.48, 0.55] : [0.5, 0.56, 0.62];
+      for (let i = 0; i < NP; i++) {
+        const q = P[i], dedans = q.r < RAYON, s = 0.5 * (1 + Math.tanh(-q.z / 0.45));
+        q.z -= (Vs + (dedans ? 2 * vi * s : 0)) * k * dts;
+        if (dedans) q.a += tourb * s * dts;
+        if (q.z < -5.5) q.z += 9; else if (q.z > 3.5) q.z -= 9;
+        if (Math.random() < 0.002 * Math.min(1, dts * 60)) q.z = -5.5 + 9 * Math.random();
+        const rr = dedans ? q.r * (1 - 0.15 * s * serre) : q.r;
+        pts[3 * i] = rr * Math.cos(q.a); pts[3 * i + 1] = rr * Math.sin(q.a); pts[3 * i + 2] = q.z;
+        const c = dedans && vis && s > 0.35 ? cT : cG;
+        cols[3 * i] = c[0]; cols[3 * i + 1] = c[1]; cols[3 * i + 2] = c[2];
+      }
+      gAir.attributes.position.needsUpdate = true; gAir.attributes.color.needsUpdate = true;
+      ctl.update();
+      ren.render(scene, cam);
+    }
+  };
+})();
+if (!V3) onglet(true);
 
 // courbes des 30 dernières secondes
 const histo = []; let tEch = 0;
@@ -817,7 +1158,8 @@ function image(t) {
     tEch += 1 / 240;
     if (tEch >= 0.1) { tEch = 0; histo.push([E.N / NMAX * 100, E.b, E.cpl / CPLMAX * 100]); if (histo.length > 300) histo.shift(); }
   }
-  dessinerFace(dts); dessinerSchema(dts); dessinerTriangle(); dessinerPlages(); dessinerVoyants(); dessinerTrace();
+  if (ongletSchema) dessinerSchema(dts); else if (V3) V3.rendu(dts, dtr);
+  dessinerTriangle(); dessinerPlages(); dessinerVoyants(dtr); expliquer(dtr); dessinerTrace();
   if ((majM += dtr) > 0.1 && (prog || R.roule)) { majM = 0; majManettes(); majBoutons(); }
   requestAnimationFrame(image);
 }
