@@ -43,6 +43,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'rona',         icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',        icon: '🌐', label: 'OSINT Map'       },
   { key: 'monde',        icon: '🗺️', label: 'Information Monde' },
+  { key: 'heure',        icon: '🕰️', label: "Heure d'été ou d'hiver" },
   { key: 'distant',      icon: '🖥️', label: 'Connexion à distance' },
   { key: 'votes-quebec', icon: '🗳️', label: 'Intentions de vote et simulations' },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
@@ -70,6 +71,7 @@ const SECTIONS_INVITABLES = [
   { key: 'rona',          icon: '👷', label: 'RONA S&S'        },
   { key: 'osint',         icon: '🌐', label: 'OSINT Map'       },
   { key: 'monde',         icon: '🗺️', label: 'Information Monde' },
+  { key: 'heure',         icon: '🕰️', label: "Heure d'été ou d'hiver" },
   { key: 'votes-quebec',  icon: '🗳️', label: 'Intentions de vote et simulations' },
 ];
 
@@ -364,6 +366,7 @@ const PERMS_STRUCTURE = [
   { key: 'pageTest',  label: 'Page de tests' },
   { key: 'osint',     label: 'OSINT Map' },
   { key: 'monde',     label: 'Information Monde' },
+  { key: 'heure',     label: "Heure d'été ou d'hiver" },
   { key: 'distant',   label: 'Connexion à distance' },
   { key: 'votes-quebec', label: 'Intentions de vote et simulations' },
   { key: 'informatique', label: 'Informatique', children: [

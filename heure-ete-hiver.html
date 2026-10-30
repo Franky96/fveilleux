@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heure d'été ou heure d'hiver — Outils de Frank</title>
+<script>
+  const _pE = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pE.includes('heure') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0a0e11; --panel:#131a1f; --panel2:#18222a; --line:#24313b; --line2:#2f3f4b;
+  --text:#dde4e9; --muted:#8797a3;
+  --accent:#7cc4e4; --accent-d:#2d5c73; --on-accent:#e8f6fd;
+  --nuit:#0d1826; --aube:#2a3f5e; --jour:#e9c66a; --jour-t:#3a2b05;
+  --o-sq:#a7b3bd; --o-n:#5aaee8; --o-a:#f0903f;
+  --bon:#3fae6a; --mal:#e05a4a;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+html.light{
+  color-scheme: light;
+  --bg:#eef2f5; --panel:#ffffff; --panel2:#f4f7f9; --line:#d3dce3; --line2:#b9c6d0;
+  --text:#15202a; --muted:#52626f;
+  --accent:#1d6f99; --accent-d:#d4e8f3; --on-accent:#0f4a6a;
+  --nuit:#2c3e5c; --aube:#6d84a8; --jour:#f8dc8a;
+  --o-sq:#5f6d78; --o-n:#1f6fb2; --o-a:#c4601a;
+  --bon:#2a8a50; --mal:#c4402f;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 40px;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.02em;text-wrap:balance;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.toprow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.back{display:inline-flex;align-items:center;gap:6px;margin-top:14px;color:var(--accent);text-decoration:none;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;border:1px solid var(--line2);border-radius:4px;padding:5px 12px}
+.back:hover{border-color:var(--accent)}
+.top{padding-block:18px 14px;border-bottom:1px solid var(--line)}
+.top h1{font-size:40px;line-height:1.05;font-weight:700}
+.top p{margin:8px 0 0;color:var(--muted);max-width:78ch}
+.panel{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.panel>h2{font-size:20px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.etat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:10px}
+@media (max-width:760px){.etat{grid-template-columns:1fr}}
+.etat div{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:10px 12px}
+.etat b{display:block;font-family:var(--f-display);font-size:26px;letter-spacing:.02em;line-height:1.1}
+.etat span{font-size:13px;color:var(--muted)}
+
+.btn{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:13px;background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:7px 12px;cursor:pointer;color:var(--text)}
+.btn:hover{border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent-d);border-color:var(--accent);color:var(--on-accent)}
+.btn i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.reglages{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:10px}
+.reglages label{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--muted)}
+.reglages select,.reglages input[type=time]{background:var(--panel2);border:1px solid var(--line2);border-radius:4px;padding:5px 8px;color:var(--text)}
+.choix{display:flex;flex-wrap:wrap;gap:6px}
+.graph{position:relative}
+svg.annee{display:block;width:100%;height:auto;touch-action:pan-y}
+svg.annee text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+svg.annee .grille{stroke:var(--line);stroke-width:1;opacity:.6}
+svg.annee .ref{stroke:var(--text);stroke-width:1;stroke-dasharray:5 4;opacity:.7}
+.bulle{position:absolute;pointer-events:none;background:#0b1013ee;color:#e6edf2;border:1px solid var(--line2);border-radius:4px;padding:6px 9px;font-size:12px;line-height:1.45;white-space:nowrap;transform:translate(-50%,-105%);display:none}
+.bulle b{font-family:var(--f-mono);font-weight:500}
+.leg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;margin-top:6px;color:var(--muted)}
+.leg i{display:inline-block;width:16px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.leg i.l{height:3px;vertical-align:2px}
+
+.verdict{margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:5px;padding:10px 14px}
+.verdict p{margin:0 0 6px}
+.verdict p:last-child{margin:0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+td{font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+@media (max-width:600px){table{font-size:13px}td{font-size:12px}td:first-child{font-size:13px;white-space:normal;min-width:120px}th,td{padding:6px 5px}}
+td:first-child{font-family:var(--f-body);font-size:14px}
+td.bon{color:var(--bon);font-weight:600}
+td.mal{color:var(--mal)}
+td small{display:block;color:var(--muted);font-size:11px}
+.defile{overflow-x:auto}
+.sq{color:var(--o-sq)} .n{color:var(--o-n)} .a{color:var(--o-a)}
+th.sq,th.n,th.a{color:inherit}
+th.sq span,th.n span,th.a span{display:block;font-size:11px;letter-spacing:.02em;text-transform:none;font-family:var(--f-mono);font-weight:400;color:var(--muted)}
+th.sq::before,th.n::before,th.a::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:currentColor}
+th.sq{color:var(--o-sq)} th.n{color:var(--o-n)} th.a{color:var(--o-a)}
+
+.args{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+@media (max-width:900px){.args{grid-template-columns:1fr}}
+.arg{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:6px;padding:14px 16px}
+.arg h2{font-size:19px;text-transform:uppercase;letter-spacing:.05em;color:var(--c);margin-bottom:2px}
+.arg .sous{margin:0 0 8px;color:var(--muted);font-size:13px}
+.arg ul{margin:0;padding-left:18px}
+.arg li{margin-bottom:6px}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px;margin-top:16px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.note h2{font-size:18px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.note p{margin:0 0 8px}
+.note p:last-child{margin-bottom:0}
+.note ul{margin:0;padding-left:18px}
+.source{margin-top:16px;color:var(--muted);font-size:12.5px}
+.source li{margin-bottom:3px}
+
+#theme-toggle{width:68px;height:26px;border-radius:13px;background:#2a3a2a;border:1.5px solid #3a5a3a;cursor:pointer;transition:background .35s ease,border-color .35s ease;display:inline-flex;align-items:center;justify-content:space-between;padding:0 5px;position:relative;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+#theme-toggle.theme-toggle--fixed{position:fixed;top:.75rem;right:.75rem;z-index:9999}
+.toprow #theme-toggle{margin-bottom:2px}
+.tg-icon{font-size:.62rem;line-height:1;pointer-events:none;flex-shrink:0;position:relative;z-index:2}
+#theme-toggle-knob{position:absolute;width:20px;height:20px;border-radius:50%;top:50%;transform:translateY(-50%);left:3px;background:#7ab880;box-shadow:0 1px 4px rgba(0,0,0,.55);transition:left .35s cubic-bezier(.4,0,.2,1),background .35s ease;pointer-events:none;z-index:3}
+html.light #theme-toggle{background:#34c759;border-color:#28a045}
+html.light #theme-toggle-knob{left:45px;background:#ffffff}
+@media (prefers-reduced-motion: reduce){#theme-toggle,#theme-toggle-knob{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="toprow"><a href="dashboard.html" class="back">&#8592; Accueil</a><span id="tg-slot"></span></div>
+<header class="top">
+  <h1>Heure d'été ou heure d'hiver ?</h1>
+  <p>Le Québec va arrêter de changer l'heure. Reste à choisir laquelle garder toute l'année : l'heure normale (« d'hiver », UTC−5) ou l'heure avancée (« d'été », UTC−4). Les heures du soleil sont calculées pour chaque ville et chaque jour de 2027. Entre ton horaire pour voir ce que chaque choix changerait pour toi.</p>
+</header>
+
+<section class="panel" aria-labelledby="t-etat">
+  <h2 id="t-etat">Où en est le débat</h2>
+  <p>Le 28 octobre 2026, le gouvernement de Paul St-Pierre Plamondon a annoncé qu'il abolira le changement d'heure ; le recul du 1er novembre 2026 serait le dernier. Le choix de l'heure n'est pas fait : une courte commission parlementaire entendra des spécialistes dans les prochains mois. Le dossier relève de la ministre de la Justice, Marie-Claude Sarrazin.</p>
+  <div class="etat">
+    <div><b>214 000</b><span>réponses à la consultation en ligne de la fin de 2024 ; 91 % voulaient arrêter de changer l'heure</span></div>
+    <div><b class="a">72 %</b><span>de ceux-là voulaient garder l'heure avancée (d'été) toute l'année</span></div>
+    <div><b class="n">Heure normale</b><span>recommandée par les spécialistes du sommeil, dont une analyse de quatre chercheurs de la Colombie-Britannique publiée dans le Journal de l'Association médicale canadienne</span></div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-annee">
+  <h2 id="t-annee">Le soleil sur une année</h2>
+  <div class="reglages">
+    <label>Ville <select id="ville"></select></label>
+    <label>Je pars le matin à <input type="time" id="depart" value="07:30" step="300"></label>
+    <label>Je reviens à <input type="time" id="retour" value="17:00" step="300"></label>
+  </div>
+  <div class="choix" role="group" aria-label="Option affichée">
+    <button class="btn" type="button" data-opt="sq" aria-pressed="false"><i style="background:var(--o-sq)"></i>On change l'heure (aujourd'hui)</button>
+    <button class="btn" type="button" data-opt="n" aria-pressed="true"><i style="background:var(--o-n)"></i>Heure normale toute l'année</button>
+    <button class="btn" type="button" data-opt="a" aria-pressed="false"><i style="background:var(--o-a)"></i>Heure avancée toute l'année</button>
+  </div>
+  <div class="graph">
+    <svg class="annee" id="annee" viewBox="0 0 900 430" role="img" aria-labelledby="annee-t">
+      <title id="annee-t">Lever et coucher du soleil, jour par jour, selon l'option choisie</title>
+      <rect id="g-nuit" fill="var(--nuit)"/>
+      <path id="g-aube" fill="var(--aube)"/>
+      <path id="g-jour" fill="var(--jour)"/>
+      <g id="g-grille"></g>
+      <path id="g-autre1" fill="none" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <path id="g-autre2" fill="none" stroke-width="1.6" stroke-dasharray="4 3"/>
+      <path id="g-dep" fill="none" stroke-width="2"/>
+      <path id="g-dep-noir" fill="none" stroke="var(--mal)" stroke-width="4" stroke-linecap="round"/>
+      <path id="g-ret" fill="none" stroke-width="2"/>
+      <path id="g-ret-noir" fill="none" stroke="var(--mal)" stroke-width="4" stroke-linecap="round"/>
+      <g id="g-etiq"></g>
+      <line id="g-curseur" stroke="var(--text)" stroke-width="1" opacity="0"/>
+    </svg>
+    <div class="bulle" id="bulle"></div>
+  </div>
+  <div class="leg">
+    <span><i style="background:var(--jour)"></i>soleil levé</span>
+    <span><i style="background:var(--aube)"></i>aube et crépuscule (clarté)</span>
+    <span><i style="background:var(--nuit);border:1px solid var(--line2)"></i>nuit</span>
+    <span><i class="l" style="background:var(--mal)"></i>ton départ ou ton retour se fait dans le noir</span>
+    <span id="leg-autres"></span>
+  </div>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<section class="panel" aria-labelledby="t-comp">
+  <h2 id="t-comp">Les trois options, côte à côte</h2>
+  <p style="margin-top:0;color:var(--muted);font-size:13.5px" id="comp-sous"></p>
+  <div class="defile"><table id="comp"></table></div>
+</section>
+
+<section class="panel" aria-labelledby="t-qc">
+  <h2 id="t-qc">Partout au Québec</h2>
+  <p style="margin-top:0;color:var(--muted);font-size:13.5px">Le fuseau de l'Est va de la Gaspésie (le soleil y est en avance) à l'Abitibi (en retard d'environ une heure). Le pire matin et le pire soir de l'année, selon l'heure choisie.</p>
+  <div class="defile"><table id="qc"></table></div>
+  <p style="color:var(--muted);font-size:12.5px;margin:8px 0 0">Les Îles-de-la-Madeleine sont à l'heure de l'Atlantique (une heure de plus), et la Basse-Côte-Nord, à l'est de Natashquan, garde déjà l'heure de l'Atlantique toute l'année, sans changement.</p>
+</section>
+
+<div class="args">
+  <section class="arg" style="--c:var(--o-n)">
+    <h2>Heure normale (UTC−5)</h2>
+    <p class="sous">L'heure « d'hiver » toute l'année : midi au soleil arrive vers midi à l'horloge.</p>
+    <ul>
+      <li><b>Le corps</b> : la lumière du matin règle l'horloge biologique. Les sociétés savantes du sommeil (Société canadienne du sommeil, American Academy of Sleep Medicine) et l'analyse publiée dans le JAMC recommandent l'heure normale permanente.</li>
+      <li><b>Les matins d'hiver</b> : enfants à l'arrêt d'autobus et travailleurs sur la route à la clarté. L'heure avancée permanente essayée aux États-Unis en 1974 a été abandonnée après un hiver, en partie à cause des matins noirs.</li>
+      <li><b>Les voisins</b> : une loi américaine permet déjà à un État de rester à l'heure normale (Arizona, Hawaï). Rester à l'heure avancée exigerait une loi du Congrès, qui n'a jamais été adoptée.</li>
+      <li><b>Le prix</b> : en été, le soleil se couche une heure plus tôt qu'aujourd'hui.</li>
+    </ul>
+  </section>
+  <section class="arg" style="--c:var(--o-a)">
+    <h2>Heure avancée (UTC−4)</h2>
+    <p class="sous">L'heure « d'été » toute l'année : une heure de clarté de plus le soir.</p>
+    <ul>
+      <li><b>Les soirées</b> : plus de clarté après le travail et l'école, pour le sport, les commerces et le moral, surtout en hiver.</li>
+      <li><b>L'opinion</b> : 72 % des répondants de la consultation de 2024 la préféraient.</li>
+      <li><b>Les voisins</b> : la Colombie-Britannique, l'Alberta, le Manitoba et les Territoires du Nord-Ouest viennent de choisir l'heure avancée permanente (2026). L'Ontario a voté en 2020 une loi pour l'heure avancée permanente, qui n'entrera en vigueur que si le Québec et l'État de New York font de même.</li>
+      <li><b>Le prix</b> : en décembre et janvier, le soleil se lèverait après 8 h presque partout, et vers 9 h en Abitibi.</li>
+    </ul>
+  </section>
+  <section class="arg" style="--c:var(--o-sq)">
+    <h2>Changer l'heure (aujourd'hui)</h2>
+    <p class="sous">Ce qu'on abandonne : la seule option qui donne la clarté le matin en hiver et le soir en été.</p>
+    <ul>
+      <li><b>Le pour</b> : chaque saison a son heure ; c'est elle qui gagne sur la plupart des lignes du tableau.</li>
+      <li><b>Le contre</b> : deux décalages par année. Les études notent plus de fatigue, d'accidents de la route et de crises cardiaques dans les jours qui suivent le passage à l'heure avancée, au printemps.</li>
+      <li><b>L'énergie</b> : l'économie d'électricité qui justifiait le changement est aujourd'hui jugée négligeable.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="notes">
+  <section class="note">
+    <h2>Et ailleurs</h2>
+    <ul>
+      <li><b>Saskatchewan</b> : ne change plus l'heure depuis 1966 ; <b>Yukon</b> : depuis 2020.</li>
+      <li><b>Colombie-Britannique, Alberta, Manitoba, T.N.-O.</b> : heure avancée permanente en 2026.</li>
+      <li><b>Ontario</b> : loi de 2020 pour l'heure avancée permanente, en attente du Québec et de New York.</li>
+      <li><b>États-Unis</b> : le Sénat a adopté en 2022 l'heure avancée permanente (Sunshine Protection Act), mais la loi est morte à la Chambre.</li>
+      <li><b>Russie</b> : heure avancée permanente en 2011, abandonnée en 2014 pour l'heure normale, à cause des matins noirs.</li>
+      <li><b>Europe</b> : le Parlement européen a voté en 2019 pour arrêter le changement ; les États ne se sont jamais entendus sur l'heure à garder.</li>
+    </ul>
+  </section>
+  <section class="note">
+    <h2>Lire le graphique</h2>
+    <p>Chaque colonne est un jour de 2027, de janvier à décembre ; on descend dans la journée de minuit (en haut) à minuit (en bas), comme dans un agenda. La bande jaune est le temps où le soleil est levé ; la bande bleu pâle, l'aube et le crépuscule, quand il fait clair sans soleil.</p>
+    <p>Les deux lignes horizontales sont ton départ et ton retour. Elles deviennent rouges les jours où tu pars ou reviens avant le lever, ou après le coucher du soleil. Les pointillés montrent le lever et le coucher avec les deux autres options.</p>
+    <p>Calcul : équations astronomiques du lever et du coucher (centre du soleil à 0,833° sous l'horizon, réfraction comprise ; aube et crépuscule civils à 6°), justes à une ou deux minutes près.</p>
+  </section>
+</div>
+
+<div class="source">
+  <p style="margin-bottom:4px">Sources sur le débat (consultées le 30 octobre 2026) :</p>
+  <ul>
+    <li><a href="https://www.lapresse.ca/actualites/2026-10-28/quebec-compte-mettre-fin-au-changement-d-heure.php" target="_blank" rel="noopener">La Presse, « Québec compte mettre fin au changement d'heure », 28 octobre 2026</a></li>
+    <li><a href="https://www.noovo.info/nouvelles/politique/article/vers-labolition-du-changement-dheure/" target="_blank" rel="noopener">Noovo Info, « Vers l'abolition du changement d'heure »</a></li>
+    <li><a href="https://www.ledevoir.com/politique/quebec/1020200/quebec-veut-abolir-changement-heure" target="_blank" rel="noopener">Le Devoir, « Le gouvernement du Québec compte déposer un projet de loi pour abolir le changement d'heure »</a></li>
+    <li><a href="https://www.cbc.ca/news/canada/montreal/end-time-change-parti-quebecois-9.7399165" target="_blank" rel="noopener">CBC, « Parti Québécois promises to abolish time change »</a></li>
+    <li><a href="https://www.timeanddate.com/news/time/alberta-permanent-dst.html" target="_blank" rel="noopener">timeanddate.com, l'Alberta passe à l'heure avancée permanente</a></li>
+  </ul>
+</div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const lim = (x, a, b) => Math.max(a, Math.min(b, x));
+const ANNEE = 2027;
+const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const VILLES = [
+  ['Montréal', 45.5017, -73.5673], ['Québec', 46.8139, -71.208], ['Gatineau', 45.4765, -75.7013], ['Sherbrooke', 45.4042, -71.8929],
+  ['Trois-Rivières', 46.3432, -72.5477], ['Saguenay', 48.4284, -71.0685], ['Rimouski', 48.4489, -68.523], ['Gaspé', 48.8316, -64.4869],
+  ['Sept-Îles', 50.2001, -66.3821], ['Rouyn-Noranda', 48.2366, -79.0231], ['Val-d\'Or', 48.0975, -77.7828], ['Chibougamau', 49.9166, -74.3667],
+  ['Kuujjuaq', 58.1, -68.4],
+];
+const OPTS = { sq: { nom: "On change l'heure", c: '--o-sq' }, n: { nom: 'Heure normale', c: '--o-n' }, a: { nom: 'Heure avancée', c: '--o-a' } };
+
+// ---------- lever et coucher du soleil (équation du lever, J2000) ----------
+const RAD = Math.PI / 180;
+function soleil(n, lat, lon, h0) {          // n : jours depuis le 1er janv. 2000 à midi TU ; renvoie les minutes TU depuis 0 h TU, ou null / « jour » / « nuit »
+  const J = n - lon / 360;
+  const M = (357.5291 + 0.98560028 * J) % 360;
+  const C = 1.9148 * Math.sin(M * RAD) + 0.02 * Math.sin(2 * M * RAD) + 0.0003 * Math.sin(3 * M * RAD);
+  const L = (M + C + 180 + 102.9372) % 360;
+  const Jt = J + 0.0053 * Math.sin(M * RAD) - 0.0069 * Math.sin(2 * L * RAD);
+  const sd = Math.sin(L * RAD) * Math.sin(23.4397 * RAD), cd = Math.cos(Math.asin(sd));
+  const cw = (Math.sin(h0 * RAD) - Math.sin(lat * RAD) * sd) / (Math.cos(lat * RAD) * cd);
+  if (cw < -1) return 'jour'; if (cw > 1) return 'nuit';
+  const w = Math.acos(cw) / RAD / 360;
+  return [(Jt - w - n + 0.5) * 1440, (Jt + w - n + 0.5) * 1440];
+}
+// changement d'heure actuel : 2e dimanche de mars → 1er dimanche de novembre
+function dimanche(mois, rang) { const d = new Date(Date.UTC(ANNEE, mois, 1)); return 1 + (7 - d.getUTCDay()) % 7 + 7 * (rang - 1); }
+const JOURS = [];
+{
+  const ete0 = Date.UTC(ANNEE, 2, dimanche(2, 2)), ete1 = Date.UTC(ANNEE, 10, dimanche(10, 1));
+  for (let t = Date.UTC(ANNEE, 0, 1); t < Date.UTC(ANNEE + 1, 0, 1); t += 864e5) {
+    const d = new Date(t);
+    JOURS.push({ t, n: Math.round(t / 864e5 + 2440587.5 + 0.5 - 2451545), m: d.getUTCMonth(), j: d.getUTCDate(), ete: t >= ete0 && t < ete1 });
+  }
+}
+const decalage = (opt, jour) => opt === 'n' ? -5 : opt === 'a' ? -4 : jour.ete ? -4 : -5;
+function calculer(lat, lon) {                 // pour chaque option : [lever, coucher, aube, crépuscule] en minutes locales, jour par jour
+  const base = JOURS.map(j => ({ s: soleil(j.n, lat, lon, -0.833), c: soleil(j.n, lat, lon, -6) }));
+  const res = {};
+  for (const o of ['sq', 'n', 'a']) res[o] = base.map((b, i) => {
+    const k = decalage(o, JOURS[i]) * 60;
+    const sl = Array.isArray(b.s) ? b.s : b.s === 'jour' ? [0, 1440] : [720, 720];
+    const cv = Array.isArray(b.c) ? b.c : b.c === 'jour' ? [0, 1440] : sl;
+    return { lever: sl[0] + k, coucher: sl[1] + k, aube: Array.isArray(b.c) ? cv[0] + k : b.c === 'jour' ? 0 : sl[0] + k, crep: Array.isArray(b.c) ? cv[1] + k : b.c === 'jour' ? 1440 : sl[1] + k };
+  });
+  return res;
+}
+const hm = m => { m = Math.round(m); const h = Math.floor(m / 60), mi = ((m % 60) + 60) % 60; return `${h} h ${String(mi).padStart(2, '0')}`; };
+const date = i => `${JOURS[i].j}${JOURS[i].j === 1 ? 'er' : ''} ${MOIS[JOURS[i].m]}`;
+const minutes = v => { const [h, m] = v.split(':').map(Number); return h * 60 + m; };
+
+// ---------- mesures ----------
+function mesures(serie, dep, ret) {
+  let tard = 0, tot = 0;
+  serie.forEach((d, i) => { if (d.lever > serie[tard].lever) tard = i; if (d.coucher < serie[tot].coucher) tot = i; });
+  let ctard = 0; serie.forEach((d, i) => { if (d.coucher > serie[ctard].coucher) ctard = i; });
+  const compte = f => serie.filter(f).length;
+  return {
+    leverTard: tard, coucherTot: tot, coucherTard: ctard,
+    apres8: compte(d => d.lever > 480), avant17: compte(d => d.coucher < 1020), apres21: compte(d => d.coucher > 1260),
+    departNoir: compte(d => d.lever > dep), retourNoir: compte(d => d.coucher < ret),
+    departNuit: compte(d => d.aube > dep), clarteSoir: Math.round(serie.reduce((t, d) => t + Math.max(0, d.coucher - ret), 0) / serie.length),
+  };
+}
+
+// ---------- graphique ----------
+// géométrie : large à l'écran d'ordinateur, plus haute et plus étroite sur téléphone (le texte reste lisible)
+const etroit = matchMedia('(max-width: 600px)');
+let G, VB;
+function geom() {
+  VB = etroit.matches ? [420, 540] : [900, 430];
+  G = etroit.matches ? { x0: 36, x1: 414, y0: 10, y1: 512 } : { x0: 46, x1: 892, y0: 12, y1: 398 };
+  $('annee').setAttribute('viewBox', `0 0 ${VB[0]} ${VB[1]}`);
+}
+geom();
+const X = i => G.x0 + (i + 0.5) * (G.x1 - G.x0) / JOURS.length, Y = m => G.y0 + lim(m, 0, 1440) / 1440 * (G.y1 - G.y0);
+function grille() {
+  const g = $('g-grille'), e = $('g-etiq');
+  g.innerHTML = ''; e.innerHTML = '';
+  $('g-nuit').setAttribute('x', G.x0); $('g-nuit').setAttribute('y', G.y0); $('g-nuit').setAttribute('width', G.x1 - G.x0); $('g-nuit').setAttribute('height', G.y1 - G.y0);
+  for (let h = 0; h <= 24; h += 2) {
+    const y = Y(h * 60);
+    g.insertAdjacentHTML('beforeend', `<line class="grille" x1="${G.x0}" x2="${G.x1}" y1="${y}" y2="${y}"/>`);
+    e.insertAdjacentHTML('beforeend', `<text x="${G.x0 - 6}" y="${y + 4}" text-anchor="end">${h} h</text>`);
+  }
+  JOURS.forEach((j, i) => {
+    if (j.j !== 1) return;
+    const x = G.x0 + i * (G.x1 - G.x0) / JOURS.length;
+    g.insertAdjacentHTML('beforeend', `<line class="grille" x1="${x}" x2="${x}" y1="${G.y0}" y2="${G.y1}"/>`);
+    e.insertAdjacentHTML('beforeend', `<text x="${x + (G.x1 - G.x0) / 24}" y="${G.y1 + 18}" text-anchor="middle">${etroit.matches ? 'JFMAMJJASOND'[j.m] : MOIS[j.m]}</text>`);
+  });
+}
+grille();
+const bande = (s, a, b) => { let d = ''; s.forEach((v, i) => { d += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v[a]).toFixed(1); }); for (let i = s.length - 1; i >= 0; i--) d += 'L' + X(i).toFixed(1) + ' ' + Y(s[i][b]).toFixed(1); return d + 'Z'; };
+const ligne = (s, k) => s.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v[k]).toFixed(1)).join('');
+function morceaux(s, f, y) {                 // segments horizontaux où la condition est vraie
+  let d = '', ouvert = false;
+  s.forEach((v, i) => { const ok = f(v); if (ok && !ouvert) { d += `M${(X(i) - 1).toFixed(1)} ${y}`; ouvert = true; } if (!ok && ouvert) { d += `L${(X(i - 1) + 1).toFixed(1)} ${y}`; ouvert = false; } });
+  if (ouvert) d += `L${(X(s.length - 1) + 1).toFixed(1)} ${y}`;
+  return d;
+}
+
+// ---------- état et dessin ----------
+let opt = 'n', ville = 0, donnees = null, affiche = null, anim = null;
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+VILLES.forEach(([nom], i) => $('ville').insertAdjacentHTML('beforeend', `<option value="${i}">${nom}</option>`));
+const hor = () => ({ dep: minutes($('depart').value || '07:30'), ret: minutes($('retour').value || '17:00') });
+
+function dessiner(s) {
+  const { dep, ret } = hor();
+  $('g-jour').setAttribute('d', bande(s, 'lever', 'coucher'));
+  $('g-aube').setAttribute('d', bande(s, 'aube', 'crep'));
+  const yd = Y(dep).toFixed(1), yr = Y(ret).toFixed(1);
+  $('g-dep').setAttribute('d', `M${G.x0} ${yd}H${G.x1}`); $('g-ret').setAttribute('d', `M${G.x0} ${yr}H${G.x1}`);
+  for (const id of ['g-dep', 'g-ret']) $(id).setAttribute('stroke', 'var(--text)');
+  $('g-dep-noir').setAttribute('d', morceaux(s, v => v.lever > dep, yd));
+  $('g-ret-noir').setAttribute('d', morceaux(s, v => v.coucher < ret, yr));
+}
+function dessinerAutres() {
+  const autres = ['sq', 'n', 'a'].filter(o => o !== opt);
+  autres.forEach((o, k) => {
+    const p = $(k ? 'g-autre2' : 'g-autre1'), s = donnees[o];
+    p.setAttribute('d', ligne(s, 'lever') + ligne(s, 'coucher')); p.setAttribute('stroke', `var(${OPTS[o].c})`);
+  });
+  $('leg-autres').innerHTML = autres.map(o => `<span style="margin-right:14px"><i class="l" style="background:var(${OPTS[o].c})"></i>${OPTS[o].nom} (pointillé)</span>`).join('');
+}
+function animer(cible) {
+  if (!affiche || reduit) { affiche = cible.map(v => ({ ...v })); dessiner(affiche); return; }
+  const depart = affiche.map(v => ({ ...v })), t0 = performance.now();
+  cancelAnimationFrame(anim);
+  const pas = t => {
+    const k = Math.min(1, (t - t0) / 450), e = k * k * (3 - 2 * k);
+    affiche = depart.map((v, i) => { const c = cible[i], o = {}; for (const key in c) o[key] = v[key] + (c[key] - v[key]) * e; return o; });
+    dessiner(affiche);
+    if (k < 1) anim = requestAnimationFrame(pas);
+  };
+  anim = requestAnimationFrame(pas);
+}
+
+function tableau() {
+  const { dep, ret } = hor(), M = {};
+  for (const o of ['sq', 'n', 'a']) M[o] = mesures(donnees[o], dep, ret);
+  const L = [
+    ['Lever le plus tard', o => [donnees[o][M[o].leverTard].lever, date(M[o].leverTard)], 'min', true],
+    ['Coucher le plus tôt', o => [donnees[o][M[o].coucherTot].coucher, date(M[o].coucherTot)], 'max', true],
+    ['Coucher le plus tard', o => [donnees[o][M[o].coucherTard].coucher, date(M[o].coucherTard)], null, true],
+    ['Jours où le soleil se lève après 8 h', o => M[o].apres8, 'min'],
+    ['Jours où le soleil se couche avant 17 h', o => M[o].avant17, 'min'],
+    ['Jours où le soleil se couche après 21 h', o => M[o].apres21, null],
+    [`Jours où tu pars avant le lever (${hm(dep)})`, o => M[o].departNoir, 'min'],
+    [`…et en pleine nuit, avant l'aube`, o => M[o].departNuit, 'min'],
+    [`Jours où tu reviens après le coucher (${hm(ret)})`, o => M[o].retourNoir, 'min'],
+    ['Soleil après ton retour, en moyenne', o => M[o].clarteSoir, 'max', false, v => `${Math.floor(v / 60)} h ${String(v % 60).padStart(2, '0')}`],
+  ];
+  let h = `<thead><tr><th>${VILLES[ville][0]}, 2027</th>${['sq', 'n', 'a'].map(o => `<th class="${o}">${OPTS[o].nom}<span>${o === 'sq' ? 'UTC−5 l\'hiver, −4 l\'été' : o === 'n' ? 'UTC−5' : 'UTC−4'}</span></th>`).join('')}</tr></thead><tbody>`;
+  for (const [lib, f, mieux, heure, fmtv] of L) {
+    const vals = ['sq', 'n', 'a'].map(o => f(o)), nums = vals.map(v => Array.isArray(v) ? v[0] : v);
+    const best = mieux === 'min' ? Math.min(...nums) : mieux === 'max' ? Math.max(...nums) : null;
+    const worst = mieux === 'min' ? Math.max(...nums) : mieux === 'max' ? Math.min(...nums) : null;
+    h += `<tr><td>${lib}</td>` + vals.map((v, k) => {
+      const n = nums[k], c = best === null || best === worst ? '' : Math.abs(n - best) < 0.5 ? 'bon' : Math.abs(n - worst) < 0.5 ? 'mal' : '';
+      const txt = heure ? `${hm(v[0])}<small>${v[1]}</small>` : fmtv ? fmtv(n) : `${n} j`;
+      return `<td class="${c}">${txt}</td>`;
+    }).join('') + '</tr>';
+  }
+  $('comp').innerHTML = h + '</tbody>';
+  $('comp-sous').textContent = `En vert, la meilleure option pour la ligne ; en rouge, la pire. Les jours se comptent sur les 365 jours de 2027. « Coucher après 21 h » n'est ni bon ni mauvais : plus de soirée, mais des enfants qui se couchent au soleil.`;
+  // verdict
+  const v = VILLES[ville][0], s = donnees, Ma = M.a, Mn = M.n, Ms = M.sq;
+  $('verdict').innerHTML = `
+    <p><b class="a">Heure avancée toute l'année</b> : à ${v}, le soleil se lèverait après 8 h pendant <b>${Ma.apres8} jours</b> (aujourd'hui : ${Ms.apres8 || 'aucun'}), jusqu'à <b>${hm(s.a[Ma.leverTard].lever)}</b> (${date(Ma.leverTard)}). En échange, il ne se coucherait jamais avant <b>${hm(s.a[Ma.coucherTot].coucher)}</b>.</p>
+    <p><b class="n">Heure normale toute l'année</b> : le soleil se lèverait au plus tard à <b>${hm(s.n[Mn.leverTard].lever)}</b>, mais l'été, il se coucherait au plus tard à <b>${hm(s.n[Mn.coucherTard].coucher)}</b> au lieu de ${hm(s.sq[Ms.coucherTard].coucher)} aujourd'hui, et ${Mn.apres21 ? `après 21 h pendant ${Mn.apres21} jours seulement` : 'jamais après 21 h'}.</p>
+    <p><b>Pour toi</b> (départ ${hm(dep)}, retour ${hm(ret)}) : tu partirais avant le lever du soleil <b class="n">${Mn.departNoir} jours</b> avec l'heure normale et <b class="a">${Ma.departNoir} jours</b> avec l'heure avancée ; tu reviendrais après le coucher <b class="n">${Mn.retourNoir} jours</b> contre <b class="a">${Ma.retourNoir} jours</b>.</p>`;
+}
+function tableauQuebec() {
+  const r = VILLES.map(([nom, la, lo]) => { const d = calculer(la, lo), m = { n: mesures(d.n, 480, 1020), a: mesures(d.a, 480, 1020) }; return { nom, d, m }; });
+  let h = `<thead><tr><th>Ville</th><th class="n">Lever le plus tard<span>heure normale</span></th><th class="a">Lever le plus tard<span>heure avancée</span></th><th class="n">Coucher le plus tôt<span>heure normale</span></th><th class="a">Coucher le plus tôt<span>heure avancée</span></th><th class="a">Levers après 8 h<span>heure avancée</span></th></tr></thead><tbody>`;
+  for (const { nom, d, m } of r) h += `<tr><td>${nom}</td><td>${hm(d.n[m.n.leverTard].lever)}</td><td>${hm(d.a[m.a.leverTard].lever)}</td><td>${hm(d.n[m.n.coucherTot].coucher)}</td><td>${hm(d.a[m.a.coucherTot].coucher)}</td><td>${m.a.apres8} j</td></tr>`;
+  $('qc').innerHTML = h + '</tbody>';
+}
+
+function maj(anime = true) {
+  donnees = calculer(VILLES[ville][1], VILLES[ville][2]);
+  if (anime) animer(donnees[opt]); else { affiche = null; animer(donnees[opt]); }
+  dessinerAutres(); tableau();
+}
+document.querySelectorAll('[data-opt]').forEach(b => b.addEventListener('click', () => {
+  opt = b.dataset.opt; document.querySelectorAll('[data-opt]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  animer(donnees[opt]); dessinerAutres();
+}));
+$('ville').addEventListener('change', e => { ville = +e.target.value; try { localStorage.setItem('heure-ville', ville); } catch (x) {} maj(); });
+for (const id of ['depart', 'retour']) $(id).addEventListener('input', () => { if (affiche) dessiner(affiche); tableau(); try { localStorage.setItem('heure-' + id, $(id).value); } catch (x) {} });
+try {
+  const v = localStorage.getItem('heure-ville'); if (v !== null && VILLES[+v]) { ville = +v; $('ville').value = v; }
+  for (const id of ['depart', 'retour']) { const t = localStorage.getItem('heure-' + id); if (t) $(id).value = t; }
+} catch (x) {}
+
+// bulle au survol
+(function survol() {
+  const svg = $('annee'), bulle = $('bulle'), cur = $('g-curseur');
+  const montrer = ev => {
+    const r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * VB[0];
+    if (x < G.x0 || x > G.x1) { cacher(); return; }
+    const i = lim(Math.floor((x - G.x0) / (G.x1 - G.x0) * JOURS.length), 0, JOURS.length - 1);
+    const l = o => `<span style="color:var(${OPTS[o].c})">●</span> ${OPTS[o].nom} : <b>${hm(donnees[o][i].lever)}</b> → <b>${hm(donnees[o][i].coucher)}</b>`;
+    bulle.innerHTML = `<b>${date(i)} 2027</b><br>${['sq', 'n', 'a'].map(l).join('<br>')}<br>Durée du jour : ${hm(donnees.n[i].coucher - donnees.n[i].lever)}`;
+    bulle.style.display = 'block';
+    const bx = lim(ev.clientX - svg.parentElement.getBoundingClientRect().left, 140, svg.parentElement.clientWidth - 140);
+    bulle.style.left = bx + 'px'; bulle.style.top = (ev.clientY - svg.parentElement.getBoundingClientRect().top - 10) + 'px';
+    cur.setAttribute('x1', X(i)); cur.setAttribute('x2', X(i)); cur.setAttribute('y1', G.y0); cur.setAttribute('y2', G.y1); cur.setAttribute('opacity', 0.8);
+  };
+  const cacher = () => { bulle.style.display = 'none'; cur.setAttribute('opacity', 0); };
+  svg.addEventListener('pointermove', montrer); svg.addEventListener('pointerdown', montrer); svg.addEventListener('pointerleave', cacher);
+})();
+
+etroit.addEventListener('change', () => { geom(); grille(); affiche = null; animer(donnees[opt]); dessinerAutres(); });
+maj(false);
+tableauQuebec();
+</script>
+<script src="theme-toggle.js"></script>
+<script>
+(function () {
+  const t = document.getElementById('theme-toggle'), slot = document.getElementById('tg-slot');
+  if (t && slot) { t.classList.remove('theme-toggle--fixed'); slot.replaceWith(t); }
+})();
+</script>
+</body>
+</html>

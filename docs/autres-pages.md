@@ -38,5 +38,6 @@ Pages plus simples, chacune avec son HTML, son JS et sa permission. Le schéma c
 
 - **Divers** : ÉNA (`ena`), Aviation (`aviation`, avec Aéronefs), Bières, Sci-Fi, Hockey, Liens utiles, Films & Séries, OSINT Map, Connexion à distance (`distant`, `api/distant.php`), page de tests (`pageTest`).
 - **Information Monde** : voir `docs/information-monde.md`.
+- **Heure d'été ou d'hiver** (`heure-ete-hiver.html`, permission `heure`, fichier unique) : comparaison des trois options pour le Québec (changement d'heure actuel, heure normale UTC−5 ou heure avancée UTC−4 toute l'année), demandée par l'utilisateur le 30 octobre 2026 pendant le débat sur l'abolition du changement d'heure. Levers, couchers, aube et crépuscule civils calculés dans le navigateur (équation du lever, J2000) pour 13 villes, jour par jour en 2027 ; horaire de l'utilisateur (départ, retour) gardé en `localStorage`. L'encadré « Où en est le débat » et les sources datent du 30 octobre 2026 : à mettre à jour quand le gouvernement choisira l'heure.
 - **Intentions de vote et simulations** : voir `docs/intentions-de-vote.md` et `docs/en-direct.md`.
 - `concept/` et `mgfitness/` : essais et images, à ne pas toucher sans demande.
