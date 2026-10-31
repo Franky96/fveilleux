@@ -90,18 +90,22 @@ a{color:var(--accent)}
 .tete-liste h2{font-size:32px;line-height:1.1;flex:1;min-width:0;overflow-wrap:anywhere}
 .retour{display:none}
 .actions-personne{display:flex;gap:6px}
-.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.item{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
-.item-ouvrir{all:unset;cursor:pointer;display:flex;flex-direction:column;flex:1}
-.item-photo{aspect-ratio:4/3;background:var(--panel2);display:grid;place-items:center;font-size:44px;position:relative;overflow:hidden}
+.items{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.items:empty{display:none}
+.item{display:flex;align-items:center;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.item-ouvrir{all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;flex:1;min-width:0;padding:10px 12px;min-height:56px}
+.item-ouvrir:hover{background:var(--panel2)}
+.item-photo{flex:0 0 auto;width:60px;height:60px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:28px;overflow:hidden}
 .item-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.item-photo .nb{position:absolute;right:8px;bottom:8px;background:#000a;color:#fff;font-size:12px;padding:2px 7px;border-radius:10px}
-.item-corps{padding:10px 12px 8px}
-.item-corps h3{font-family:var(--f-body);font-size:16px;font-weight:600;line-height:1.3;letter-spacing:0;overflow-wrap:anywhere}
+.item-corps{flex:1;min-width:0}
+.item-corps .t{display:block;font-size:16px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
 .coeur{color:var(--coeur)}
-.prix{display:inline-block;margin-top:4px;font-size:13px;font-weight:600;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
-.item-corps p.notes{margin:6px 0 0;color:var(--muted);font-size:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere}
-.item-lien{display:flex;align-items:center;gap:6px;margin:0 12px 12px;padding:9px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);text-decoration:none;font-size:14px;font-weight:600;min-height:42px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.prix{display:inline-block;font-size:13px;font-weight:600;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:3px;font-size:13px;color:var(--muted)}
+.item-corps .notes{display:block;margin:3px 0 0;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-lien{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;margin-right:10px;border-radius:50%;background:var(--panel2);border:1px solid var(--line2);text-decoration:none;font-size:18px;font-weight:600}
+.item-fl{color:var(--muted);font-size:22px;margin-left:2px}
 .ajouter{margin-bottom:12px;min-width:240px;font-size:17px}
 .items-vide{color:var(--muted);margin:0 0 12px}
 .accueil-vide{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px 20px;text-align:center;color:var(--muted)}
@@ -114,15 +118,14 @@ a{color:var(--accent)}
   .retour{display:inline-flex}
   .tete-liste h2{font-size:28px;flex-basis:100%;order:2}
   .actions-personne{margin-left:auto}
-  .items{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .ajouter{width:100%}
   .barre h1{font-size:22px}
   .barre h1 span{display:none}
-  .item-corps{padding:8px 10px 6px}
-  .item-corps h3{font-size:15px}
-  .item-lien{margin:0 8px 8px;padding:7px 9px;font-size:13px}
+  .item-ouvrir{gap:10px;padding:10px 8px 10px 10px}
+  .item-photo{width:54px;height:54px}
+  .item-corps .t{font-size:15px}
+  .item-lien{margin-right:8px}
 }
-@media (max-width:360px){.items{grid-template-columns:minmax(0,1fr)}}
 
 /* fenêtres : formulaire, fiche, photo */
 dialog{border:none;padding:0;background:transparent;color:var(--text);max-width:none;max-height:none}
@@ -344,12 +347,14 @@ function rendre() {
   $('items-vide').hidden = items.length > 0;
   $('items').innerHTML = items.map(it => {
     const ph = it.photos || [];
+    const meta = [it.prix ? `<span class="prix">${esc(it.prix)}</span>` : '', it.lien && hote(it.lien) !== it.titre ? `<span>${esc(hote(it.lien))}</span>` : '', ph.length > 1 ? `<span>📷 ${ph.length}</span>` : ''].filter(Boolean).join('');
     return `<article class="item">
       <button class="item-ouvrir" type="button" data-i="${esc(it.id)}" aria-label="${esc(it.titre)} : voir le détail">
-        <div class="item-photo">${ph.length ? `<img src="${photoUrl(ph[0], true)}" alt="" loading="lazy">${ph.length > 1 ? `<span class="nb">${ph.length} photos</span>` : ''}` : '<span aria-hidden="true">🎁</span>'}</div>
-        <div class="item-corps"><h3>${it.coeur ? '<span class="coeur" title="Coup de cœur">❤️</span> ' : ''}${esc(it.titre)}</h3>${it.prix ? `<span class="prix">${esc(it.prix)}</span>` : ''}${it.notes ? `<p class="notes">${esc(it.notes)}</p>` : ''}</div>
+        <span class="item-photo">${ph.length ? `<img src="${photoUrl(ph[0], true)}" alt="" loading="lazy">` : '<span aria-hidden="true">🎁</span>'}</span>
+        <span class="item-corps"><span class="t">${it.coeur ? '<span class="coeur" title="Coup de cœur">❤️</span> ' : ''}${esc(it.titre)}</span>${meta ? `<span class="meta">${meta}</span>` : ''}${it.notes ? `<span class="notes">${esc(it.notes.replace(/\s+/g, ' '))}</span>` : ''}</span>
+        ${it.lien ? '' : '<span class="item-fl" aria-hidden="true">›</span>'}
       </button>
-      ${it.lien ? `<a class="item-lien" href="${esc(it.lien)}" target="_blank" rel="noopener noreferrer">↗ ${esc(hote(it.lien))}</a>` : ''}
+      ${it.lien ? `<a class="item-lien" href="${esc(it.lien)}" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir le lien (${esc(hote(it.lien))})" title="${esc(hote(it.lien))}">↗</a>` : ''}
     </article>`;
   }).join('');
 }
