@@ -80,10 +80,20 @@ function modifier(callable $f): never {
   $l = listes();
   $d = $l['data'];
   $f($d['personnes']);
+  trierPersonnes($d['personnes']);
   $d['v']++;
   ecrireDoc(COL, 'listes', $d, $l['existe']);
   flock($v, LOCK_UN);
   reponse($d);
+}
+// les noms restent toujours en ordre alphabétique (demande de l'utilisateur), sans tenir compte des accents ni des majuscules
+function cleTri(string $nom): string {
+  $t = function_exists('iconv') ? @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nom) : false;
+  return mb_strtolower($t !== false && $t !== '' ? $t : $nom);
+}
+function trierPersonnes(array &$ps): void {
+  if (class_exists('Collator')) { $c = new Collator('fr_CA'); $c->setAttribute(Collator::NUMERIC_COLLATION, Collator::ON); usort($ps, fn($a, $b) => $c->compare($a['nom'] ?? '', $b['nom'] ?? '')); }
+  else usort($ps, fn($a, $b) => strnatcmp(cleTri($a['nom'] ?? ''), cleTri($b['nom'] ?? '')));
 }
 function nouvelId(string $p): string { return $p . bin2hex(random_bytes(6)); }
 function texte($v, int $max): string { return mb_substr(trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', (string)$v)), 0, $max); }

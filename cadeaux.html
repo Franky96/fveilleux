@@ -325,7 +325,7 @@ function montrer(id) {
 // ---------- affichage ----------
 const teinte = s => { let h = 0; for (const c of s) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
 const initiales = n => n.trim().split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUpperCase();
-const triees = () => [...S.personnes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
+const triees = () => [...S.personnes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base', numeric: true }));
 const personne = () => S.personnes.find(p => p.id === S.sel);
 function rendre() {
   const ps = triees();
