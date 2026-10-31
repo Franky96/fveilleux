@@ -154,7 +154,7 @@ function telecharger(string $url, int $max, string $accepte): ?array {
       CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => 8,
       CURLOPT_ENCODING => '', CURLOPT_SSL_VERIFYPEER => true,
       CURLOPT_USERAGENT => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
-      CURLOPT_HTTPHEADER => ['Accept: ' . ($accepte === 'image' ? 'image/avif,image/webp,image/*,*/*;q=0.8' : 'text/html,application/xhtml+xml,*/*;q=0.8'), 'Accept-Language: fr-CA,fr;q=0.9,en;q=0.7'],
+      CURLOPT_HTTPHEADER => ['Accept: ' . ($accepte === 'image' ? 'image/webp,image/jpeg,image/png,image/gif;q=0.9,image/*;q=0.5' : 'text/html,application/xhtml+xml,*/*;q=0.8'), 'Accept-Language: fr-CA,fr;q=0.9,en;q=0.7'],
       CURLOPT_WRITEFUNCTION => function ($ch, $bloc) use (&$corps, &$trop, $max) { $corps .= $bloc; if (strlen($corps) > $max) { $trop = true; return 0; } return strlen($bloc); },
     ]);
     curl_exec($c);
@@ -218,8 +218,16 @@ function infosPage(string $html, string $base): array {
     $prixTxt = number_format($n, fmod($n, 1) ? 2 : 0, ',', ' ') . ' ' . (in_array(strtoupper($devise), ['', 'CAD', 'USD'], true) ? '$' : strtoupper($devise));
     if (strtoupper($devise) === 'USD') $prixTxt .= ' US';
   }
-  $images = array_values(array_unique(array_filter(array_map(fn($u) => absolue($base, (string)$u), $images), fn($u) => preg_match('#^https?://#i', $u))));
+  $images = array_values(array_unique(array_filter(array_map(fn($u) => agrandir(absolue($base, (string)$u)), $images), fn($u) => preg_match('#^https?://#i', $u))));
   return ['images' => array_slice($images, 0, 4), 'titre' => $titre, 'prix' => $prixTxt];
+}
+// quelques sites donnent une petite image de partage : on demande la grande (Costco : width=350 → 1200)
+function agrandir(string $u): string {
+  if (preg_match('#^https://gdx-assets\.costco\.com/#i', $u)) {
+    $u = preg_replace('/([?&])width=\d+/', '$1width=1200', $u);
+    if (!preg_match('/[?&]width=/', $u)) $u .= (str_contains($u, '?') ? '&' : '?') . 'width=1200';
+  }
+  return $u;
 }
 // image (n'importe quel format lisible par GD) → JPEG de côté ≤ $max et de poids ≤ $octets, en base64
 function versJpeg(GdImage $src, int $max, int $octets): string {
