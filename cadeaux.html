@@ -140,6 +140,8 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 label.l{display:grid;gap:5px;font-size:14px;color:var(--muted);font-weight:500}
 .coche{display:flex;align-items:center;gap:10px;font-size:15px;min-height:44px}
 .coche input{width:22px;height:22px;accent-color:var(--coeur)}
+.aide-lien{margin:-6px 0 0;font-size:13px;color:var(--muted)}
+.vign .cherche{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:12px;color:var(--muted);padding:4px}
 .photos-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
 .vign{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--panel2);border:1px solid var(--line)}
 .vign img{width:100%;height:100%;object-fit:cover;display:block}
@@ -251,14 +253,15 @@ html.light #theme-toggle-knob{left:45px;background:#ffffff}
   <form class="feuille" id="f-item" method="dialog" novalidate>
     <div class="feuille-tete"><h2 id="d-item-t">Nouveau cadeau</h2><button class="x" type="button" data-fermer aria-label="Fermer">×</button></div>
     <div class="feuille-corps">
-      <label class="l">Cadeau<input class="champ" id="i-titre" maxlength="150" placeholder="Ex. : casque d'écoute sans fil" autocomplete="off"></label>
-      <label class="l">Lien internet<input class="champ" id="i-lien" type="url" inputmode="url" maxlength="2000" placeholder="https://…" autocomplete="off" autocapitalize="off"></label>
-      <label class="l">Prix approximatif<input class="champ" id="i-prix" maxlength="40" placeholder="Ex. : 80 $" autocomplete="off"></label>
-      <label class="l">Notes<textarea class="champ" id="i-notes" rows="4" maxlength="3000" placeholder="Taille, couleur, magasin, autre idée…"></textarea></label>
-      <label class="coche"><input type="checkbox" id="i-coeur"> <span>❤️ Coup de cœur (le plus désiré)</span></label>
+      <label class="l">Lien internet<input class="champ" id="i-lien" type="url" inputmode="url" maxlength="2000" placeholder="Colle le lien du produit (facultatif)" autocomplete="off" autocapitalize="off"></label>
+      <p class="aide-lien" id="aide-lien" aria-live="polite">Avec un lien, la photo, le nom et le prix se remplissent tout seuls quand le site le permet.</p>
       <div class="l">Photos
         <div class="photos-form" id="i-photos"></div>
       </div>
+      <label class="l">Cadeau<input class="champ" id="i-titre" maxlength="150" placeholder="Ex. : casque d'écoute sans fil" autocomplete="off"></label>
+      <label class="l">Prix approximatif<input class="champ" id="i-prix" maxlength="40" placeholder="Ex. : 80 $" autocomplete="off"></label>
+      <label class="l">Notes<textarea class="champ" id="i-notes" rows="4" maxlength="3000" placeholder="Taille, couleur, magasin, autre idée…"></textarea></label>
+      <label class="coche"><input type="checkbox" id="i-coeur"> <span>❤️ Coup de cœur (le plus désiré)</span></label>
       <p class="msg" id="msg-item" role="alert"></p>
     </div>
     <div class="feuille-pied">
@@ -421,19 +424,49 @@ $('b-supprimer-item').addEventListener('click', async () => {
 let form = null;      // { id, photos: [{ id, url, envoi }], origine: [ids] }
 function ouvrirForm(id) {
   const it = id ? trouverItem(id) : null;
-  form = { id, photos: (it?.photos || []).map(x => ({ id: x, url: photoUrl(x, true) })), origine: [...(it?.photos || [])] };
+  form = { id, photos: (it?.photos || []).map(x => ({ id: x, url: photoUrl(x, true) })), origine: [...(it?.photos || [])], dernierLien: it?.lien || '', recherche: false };
+  aide('Avec un lien, la photo, le nom et le prix se remplissent tout seuls quand le site le permet.');
   $('d-item-t').textContent = it ? 'Modifier le cadeau' : `Cadeau pour ${personne()?.nom || ''}`;
   $('i-titre').value = it?.titre || ''; $('i-lien').value = it?.lien || ''; $('i-prix').value = it?.prix || '';
   $('i-notes').value = it?.notes || ''; $('i-coeur').checked = !!it?.coeur; $('msg-item').textContent = '';
   rendrePhotos();
   $('d-item').showModal();
-  if (!it && !matchMedia('(pointer: coarse)').matches) $('i-titre').focus();
+  if (!it && !matchMedia('(pointer: coarse)').matches) $('i-lien').focus();
 }
 function rendrePhotos() {
-  $('i-photos').innerHTML = form.photos.map((p, k) => `<div class="vign"><img src="${p.url}" alt="">${p.envoi ? '<span class="attente">Envoi…</span>' : ''}<button class="ret" type="button" data-k="${k}" aria-label="Retirer la photo">×</button></div>`).join('')
+  $('i-photos').innerHTML = (form.recherche ? '<div class="vign"><span class="cherche">🔎<br>Recherche de l\'image…</span></div>' : '')
+    + form.photos.map((p, k) => `<div class="vign"><img src="${p.url}" alt="">${p.envoi ? '<span class="attente">Envoi…</span>' : ''}<button class="ret" type="button" data-k="${k}" aria-label="Retirer la photo">×</button></div>`).join('')
     + (form.photos.length < 8 ? `<label class="ajout-photo" for="fichiers"><span aria-hidden="true">📷</span>Ajouter une photo</label>` : '');
-  $('b-enregistrer').disabled = form.photos.some(p => p.envoi);
+  $('b-enregistrer').disabled = form.recherche || form.photos.some(p => p.envoi);
 }
+const aide = t => { $('aide-lien').textContent = t; };
+// lien collé ou modifié : le serveur cherche l'image du produit (et propose le nom et le prix s'ils sont vides)
+async function chercherApercu() {
+  const f0 = form, lien = $('i-lien').value.trim();
+  if (!f0 || !lien || lien === f0.dernierLien || !/\./.test(lien)) return;
+  f0.dernierLien = lien;
+  const autre = f0.photos.some(p => !p.auto);              // déjà une photo à soi : on ne remplace rien, on complète seulement le texte
+  f0.recherche = !autre; rendrePhotos();
+  aide(`🔎 Recherche sur ${hote(/^[a-z]+:\/\//i.test(lien) ? lien : 'https://' + lien)}…`);
+  try {
+    const r = await api(null, { action: 'apercu', lien });
+    const perime = form !== f0 || f0.dernierLien !== lien || autre;
+    if (perime) { if (r.id) api(null, { action: 'photoAnnuler', id: r.id }).catch(() => {}); }
+    if (form !== f0 || f0.dernierLien !== lien) return;
+    if (!$('i-titre').value.trim() && r.titre) $('i-titre').value = r.titre;
+    if (!$('i-prix').value.trim() && r.prix) $('i-prix').value = r.prix;
+    if (r.id && !autre) {
+      for (const p of f0.photos.filter(p => p.auto)) if (!f0.origine.includes(p.id)) api(null, { action: 'photoAnnuler', id: p.id }).catch(() => {});
+      f0.photos = [{ id: r.id, url: photoUrl(r.id, true), auto: true }, ...f0.photos.filter(p => !p.auto)];
+      aide("📷 Image trouvée sur le site. Tu peux la retirer avec × ou ajouter la tienne.");
+    } else if (autre) aide(r.titre || r.prix ? 'Nom ou prix repris du site.' : '');
+    else aide(r.page ? "Pas d'image trouvée sur cette page : ajoute ta photo si tu veux." : "Ce site ne laisse pas lire sa page : ajoute ta photo si tu veux.");
+  } catch (x) { if (form === f0) aide(x.message); }
+  finally { f0.recherche = false; if (form === f0) rendrePhotos(); }
+}
+$('i-lien').addEventListener('change', chercherApercu);
+$('i-lien').addEventListener('paste', () => setTimeout(chercherApercu, 30));
+$('i-lien').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); chercherApercu(); } });
 $('i-photos').addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
   const [p] = form.photos.splice(+b.dataset.k, 1);

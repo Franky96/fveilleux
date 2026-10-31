@@ -118,6 +118,122 @@ function nettoyerItem(array $in): array {
           'coeur' => !empty($in['coeur']), 'photos' => array_slice($photos, 0, 8)];
 }
 
+/* ---------- image et infos tirées du lien (aperçu) ----------
+   Le serveur ouvre la page du produit et y cherche l'image que le site donne pour les partages (og:image,
+   twitter:image, données Product en JSON-LD, image principale d'Amazon). Garde-fous : http ou https seulement,
+   ports 80 et 443, adresses publiques seulement (jamais le serveur lui-même ni le réseau interne), adresse
+   vérifiée à chaque redirection et imposée à curl (pas de changement de DNS entre la vérification et l'appel),
+   8 s et quelques Mo au plus, 30 aperçus par 10 minutes et par session. Beaucoup de sites marchands bloquent
+   les robots : sans image trouvée, on ajoute sa propre photo. */
+function ipPublique(string $ip): bool { return (bool)filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE); }
+function absolue(string $base, string $rel): string {
+  $rel = trim(html_entity_decode($rel, ENT_QUOTES | ENT_HTML5));
+  if ($rel === '' || preg_match('#^[a-z][a-z0-9+.-]*:#i', $rel)) return $rel;
+  $b = parse_url($base);
+  $orig = $b['scheme'] . '://' . $b['host'] . (isset($b['port']) ? ':' . $b['port'] : '');
+  if (str_starts_with($rel, '//')) return $b['scheme'] . ':' . $rel;
+  if (str_starts_with($rel, '/')) return $orig . $rel;
+  $dir = preg_replace('#/[^/]*$#', '/', $b['path'] ?? '/');
+  return $orig . $dir . $rel;
+}
+function telecharger(string $url, int $max, string $accepte): ?array {
+  for ($saut = 0; $saut < 5; $saut++) {
+    $u = parse_url($url);
+    $sch = strtolower($u['scheme'] ?? '');
+    $hote = strtolower(trim($u['host'] ?? '', '[]'));
+    if (!in_array($sch, ['http', 'https'], true) || $hote === '' || isset($u['user'])) return null;
+    $port = (int)($u['port'] ?? ($sch === 'https' ? 443 : 80));
+    if (!in_array($port, [80, 443], true)) return null;
+    $ips = filter_var($hote, FILTER_VALIDATE_IP) ? [$hote] : (gethostbynamel($hote) ?: []);
+    if (!$ips) return null;
+    foreach ($ips as $ip) if (!ipPublique($ip)) return null;
+    $corps = ''; $trop = false;
+    $c = curl_init($url);
+    curl_setopt_array($c, [
+      CURLOPT_RESOLVE => ["$hote:$port:{$ips[0]}"], CURLOPT_FOLLOWLOCATION => false, CURLOPT_HEADER => false,
+      CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS, CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => 8,
+      CURLOPT_ENCODING => '', CURLOPT_SSL_VERIFYPEER => true,
+      CURLOPT_USERAGENT => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+      CURLOPT_HTTPHEADER => ['Accept: ' . ($accepte === 'image' ? 'image/avif,image/webp,image/*,*/*;q=0.8' : 'text/html,application/xhtml+xml,*/*;q=0.8'), 'Accept-Language: fr-CA,fr;q=0.9,en;q=0.7'],
+      CURLOPT_WRITEFUNCTION => function ($ch, $bloc) use (&$corps, &$trop, $max) { $corps .= $bloc; if (strlen($corps) > $max) { $trop = true; return 0; } return strlen($bloc); },
+    ]);
+    curl_exec($c);
+    $code = (int)curl_getinfo($c, CURLINFO_RESPONSE_CODE);
+    $type = strtolower((string)curl_getinfo($c, CURLINFO_CONTENT_TYPE));
+    $suite = (string)curl_getinfo($c, CURLINFO_REDIRECT_URL);
+    curl_close($c);
+    if ($code >= 300 && $code < 400 && $suite !== '') { $url = absolue($url, $suite); continue; }
+    if ($code !== 200 || ($trop && $accepte === 'image')) return null;
+    if ($accepte === 'image' ? !str_starts_with($type, 'image/') && !preg_match('/octet-stream/', $type) : !preg_match('/html|xml/', $type)) return null;
+    return ['corps' => $corps, 'url' => $url];
+  }
+  return null;
+}
+function infosPage(string $html, string $base): array {
+  $doc = new DOMDocument();
+  @$doc->loadHTML('<?xml encoding="utf-8"?>' . $html, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+  $x = new DOMXPath($doc);
+  $meta = function (array $noms) use ($x): string {
+    foreach ($noms as $n) foreach ($x->query("//meta[@property='$n' or @name='$n' or @itemprop='$n']/@content") as $a) if (trim($a->value) !== '') return trim($a->value);
+    return '';
+  };
+  $images = [];
+  foreach (['og:image:secure_url', 'og:image', 'twitter:image', 'twitter:image:src', 'image'] as $n) { $v = $meta([$n]); if ($v !== '') $images[] = $v; }
+  foreach ($x->query("//link[@rel='image_src']/@href") as $a) $images[] = $a->value;
+  // Amazon : image principale (version haute définition, sinon la liste des tailles)
+  foreach ($x->query("//img[@id='landingImage' or @id='imgBlkFront' or @id='main-image']") as $im) {
+    if ($im->getAttribute('data-a-hires')) $images[] = $im->getAttribute('data-a-hires');
+    if ($im->getAttribute('data-old-hires')) $images[] = $im->getAttribute('data-old-hires');
+    $dyn = json_decode(html_entity_decode($im->getAttribute('data-a-dynamic-image')), true);
+    if (is_array($dyn) && $dyn) $images[] = array_key_first($dyn);
+    if ($im->getAttribute('src')) $images[] = $im->getAttribute('src');
+  }
+  // données structurées (Product) : image, nom, prix
+  $titre = $meta(['og:title', 'twitter:title']); $prix = $meta(['product:price:amount', 'og:price:amount']); $devise = $meta(['product:price:currency', 'og:price:currency']);
+  foreach ($x->query("//script[@type='application/ld+json']") as $s) {
+    $j = json_decode(trim($s->textContent), true);
+    if (!is_array($j)) continue;
+    $pile = [$j];
+    while ($pile) {
+      $o = array_pop($pile);
+      if (!is_array($o)) continue;
+      $t = $o['@type'] ?? '';
+      if ($t === 'Product' || (is_array($t) && in_array('Product', $t, true))) {
+        $im = $o['image'] ?? null;
+        if (is_string($im)) $images[] = $im; elseif (is_array($im)) { $p = $im[0] ?? $im; $images[] = is_array($p) ? ($p['url'] ?? '') : $p; }
+        if ($titre === '' && is_string($o['name'] ?? null)) $titre = $o['name'];
+        $of = $o['offers'] ?? null; if (is_array($of) && isset($of[0])) $of = $of[0];
+        if ($prix === '' && is_array($of)) { $prix = (string)($of['price'] ?? $of['lowPrice'] ?? ''); $devise = $devise ?: (string)($of['priceCurrency'] ?? ''); }
+      }
+      foreach ($o as $v) if (is_array($v)) $pile[] = $v;
+    }
+  }
+  if ($titre === '') { $t = $x->query('//title'); if ($t->length) $titre = $t->item(0)->textContent; }
+  $titre = preg_replace('/\s*[:|–-]\s*Amazon\.(ca|com|fr)\b.*$/iu', '', $titre);
+  if (preg_match('/template|access denied|accès refusé|robot|captcha|attention required|just a moment|page not found|introuvable/i', $titre)) $titre = '';
+  $titre = texte(html_entity_decode(preg_replace('/\s+/', ' ', $titre), ENT_QUOTES | ENT_HTML5), 150);
+  $prixTxt = '';
+  if ($prix !== '' && is_numeric(str_replace(',', '.', $prix))) {
+    $n = (float)str_replace(',', '.', $prix);
+    $prixTxt = number_format($n, fmod($n, 1) ? 2 : 0, ',', ' ') . ' ' . (in_array(strtoupper($devise), ['', 'CAD', 'USD'], true) ? '$' : strtoupper($devise));
+    if (strtoupper($devise) === 'USD') $prixTxt .= ' US';
+  }
+  $images = array_values(array_unique(array_filter(array_map(fn($u) => absolue($base, (string)$u), $images), fn($u) => preg_match('#^https?://#i', $u))));
+  return ['images' => array_slice($images, 0, 4), 'titre' => $titre, 'prix' => $prixTxt];
+}
+// image (n'importe quel format lisible par GD) → JPEG de côté ≤ $max et de poids ≤ $octets, en base64
+function versJpeg(GdImage $src, int $max, int $octets): string {
+  $w = imagesx($src); $h = imagesy($src); $k = min(1, $max / max($w, $h));
+  $nw = max(1, (int)round($w * $k)); $nh = max(1, (int)round($h * $k));
+  $dst = imagecreatetruecolor($nw, $nh);
+  imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255));
+  imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+  for ($q = 85; ; $q -= 10) {
+    ob_start(); imagejpeg($dst, null, $q); $bin = ob_get_clean();
+    if (strlen($bin) <= $octets || $q <= 35) return base64_encode($bin);
+  }
+}
+
 /* ══════════════ GET ══════════════ */
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if (isset($_GET['etat'])) jsonOut(['ouvert' => ouvert(), 'codeDefini' => isset(config()['hash']), 'admin' => $isAdmin]);
@@ -235,6 +351,29 @@ switch ((string)($in['action'] ?? '')) {
     ecrireDoc(COL_PHOTOS, $id, ['t' => $t, 'b64' => $in['b64']], false);
     ecrireDoc(COL_PHOTOS, $id . '_m', ['t' => $t, 'b64' => $in['m']], false);
     jsonOut(['id' => $id]);
+
+  case 'apercu':               // lien d'un produit → photo (enregistrée comme une photo envoyée), nom et prix proposés
+    exigerOuvert();
+    $t = array_values(array_filter((array)($_SESSION['cadeaux_apercus'] ?? []), fn($x) => is_int($x) && $x > time() - 600));
+    if (count($t) >= 30) errOut('Trop de recherches d\'images. Réessaie dans quelques minutes.', 429);
+    $t[] = time(); $_SESSION['cadeaux_apercus'] = $t;
+    $lien = texte($in['lien'] ?? '', 2000);
+    if ($lien !== '' && !preg_match('#^[a-z]+://#i', $lien)) $lien = 'https://' . $lien;
+    if (!preg_match('#^https?://#i', $lien) || !filter_var($lien, FILTER_VALIDATE_URL)) errOut('Le lien ne semble pas valide');
+    session_write_close();                                       // la recherche peut prendre quelques secondes : ne bloque pas les autres requêtes
+    $page = telecharger($lien, 3000000, 'html');
+    $infos = $page ? infosPage($page['corps'], $page['url']) : ['images' => [], 'titre' => '', 'prix' => ''];
+    $id = null;
+    foreach ($infos['images'] as $u) {
+      $img = telecharger($u, 8000000, 'image');
+      $gd = $img ? @imagecreatefromstring($img['corps']) : false;
+      if (!$gd || imagesx($gd) < 80 || imagesy($gd) < 80) continue;      // pas les icônes ni les pixels de suivi
+      $id = bin2hex(random_bytes(10));
+      ecrireDoc(COL_PHOTOS, $id, ['t' => 'image/jpeg', 'b64' => versJpeg($gd, 1600, 1350000)], false);
+      ecrireDoc(COL_PHOTOS, $id . '_m', ['t' => 'image/jpeg', 'b64' => versJpeg($gd, 480, 180000)], false);
+      break;
+    }
+    jsonOut(['id' => $id, 'titre' => $infos['titre'], 'prix' => $infos['prix'], 'page' => $page !== null]);
 
   case 'photoAnnuler':          // photo envoyée puis abandonnée (formulaire annulé) : effacée si aucun cadeau ne l'utilise
     exigerOuvert();
