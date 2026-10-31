@@ -44,7 +44,8 @@
   - `api/suivis.php` : circonscriptions suivies, partagées entre appareils ;
   - `api/photo-depute.php` : photos officielles des députés de l'Assemblée nationale ;
   - `api/manuel.php` : manuels PDF hors du site, pour les utilisateurs connectés ;
-  - `api/distant.php` : connexion à distance.
+  - `api/distant.php` : connexion à distance ;
+  - `api/cadeaux.php` : listes de cadeaux (voir `docs/autres-pages.md`) ; seul script où un invité peut écrire, après le code d'accès de la page.
 - **En-têtes de sécurité** : posés par `session.php` (HSTS, nosniff, X-Frame-Options DENY, envois limités à 2 Mo).
 
 ## Pipelines GitHub Actions (`.github/workflows/`)
