@@ -350,7 +350,7 @@ function rendre() {
     const meta = [it.prix ? `<span class="prix">${esc(it.prix)}</span>` : '', it.lien && hote(it.lien) !== it.titre ? `<span>${esc(hote(it.lien))}</span>` : '', ph.length > 1 ? `<span>📷 ${ph.length}</span>` : ''].filter(Boolean).join('');
     return `<article class="item">
       <button class="item-ouvrir" type="button" data-i="${esc(it.id)}" aria-label="${esc(it.titre)} : voir le détail">
-        <span class="item-photo">${ph.length ? `<img src="${photoUrl(ph[0], true)}" alt="" loading="lazy">` : '<span aria-hidden="true">🎁</span>'}</span>
+        ${ph.length ? `<span class="item-photo"><img src="${photoUrl(ph[0], true)}" alt="" loading="lazy"></span>` : ''}
         <span class="item-corps"><span class="t">${it.coeur ? '<span class="coeur" title="Coup de cœur">❤️</span> ' : ''}${esc(it.titre)}</span>${meta ? `<span class="meta">${meta}</span>` : ''}${it.notes ? `<span class="notes">${esc(it.notes.replace(/\s+/g, ' '))}</span>` : ''}</span>
         ${it.lien ? '' : '<span class="item-fl" aria-hidden="true">›</span>'}
       </button>
