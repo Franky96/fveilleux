@@ -56,7 +56,7 @@ mais leurs sources de résultats n'ont pas toutes été vues en vrai. **Le soir 
 - **Référendum en Alberta (19 oct.)** : archivé ; la copie de secours (`alberta-referendum.yml`) tourne jusqu'au 30 octobre pour les résultats officiels du 29.
 
 **Derniers travaux** :
-- Visuel 2.0 (3 novembre 2026) : nouvelle page de connexion (aperçus animés en diagonales) et nouveau tableau de bord (recherche, raccourcis par compte, notifications d'événements et de vérifications) ; voir `docs/site.md`. Contrôle PHP des pages (refuser une page sans la permission) : prévu plus tard, demande de l'utilisateur ;
+- Visuel 2.0 (3 novembre 2026) : nouvelle page de connexion (aperçus animés en diagonales), nouveau tableau de bord (recherche, raccourcis par compte, notifications d'événements et de vérifications), couleurs foncées de la marque, et pages de catégorie 2.0 (Moteurs, Informatique, Jeux de société, Archives : `categorie.css`/`categorie.js`) ; voir `docs/site.md`. Contrôle PHP des pages (refuser une page sans la permission) : prévu plus tard, demande de l'utilisateur ;
 - Votes Québec : carte actuelle avec députés et photos, « Gouvernement actuel », boutons « Moyenne lissée » ;
 - PT6A-21 : vue en coupe pleine, puis collecteur carburant et adaptateurs d'injecteurs refaits d'après les
   manuels 73-10, avec jets de carburant ;

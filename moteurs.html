@@ -1,158 +1,77 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outils de Frank — Moteurs</title>
-  <link rel="stylesheet" href="style.css">
-  <script>
-    const _permsMot = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-    if (!sessionStorage.getItem('loggedIn') ||
-        (!['moteurs', 'turboreacteur', 'pt6a21', 'planetaire', 'pompe-engrenages', 'helice', 'pw1500g', 'o320'].some(k => _permsMot.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
-      window.location.href = 'dashboard.html';
-    }
-  </script>
-  <style>
-    .mot-group { max-width: 1000px; margin: 0 auto 2.5rem; }
-    .mot-group-title { font-size: 1.05rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 0.3rem; text-align: left; }
-    .mot-group-desc { margin: 0 0 1rem; font-size: 0.85rem; opacity: 0.7; text-align: left; }
-    .mot-grid-detail { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .mot-card-detail { border-width: 2px; }
-    .mot-card-detail h2 { font-size: 1.5rem; }
-    .mot-group:empty, .mot-group.vide { display: none; }
-    .mot-grid-connexe { grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }   /* une carte seule garde la largeur des Aperçus */
-  </style>
+<meta charset="UTF-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn')) location.href = 'index.html';
+  else if (sessionStorage.getItem('userRole') !== 'admin' && !["moteurs", "turboreacteur", "pt6a21", "planetaire", "pompe-engrenages", "helice", "pw1500g", "o320"].some(k => _p.includes(k))) location.href = 'dashboard.html';
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outils de Frank — Moteurs</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="categorie.css">
 </head>
-<body>
-  <div class="dashboard-container">
-
-    <header>
-      <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
-      <div style="text-align:center;">
-        <h1>Moteurs</h1>
-        <p class="subtitle">Simulations de moteurs d’avion</p>
-      </div>
-      <div class="header-controls">
-        <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
-        <div id="hamburger-menu">
-          <a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
-          <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
-          <button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
-          <div class="hbg-sep" id="admin-sep"></div>
-          <div id="logoutBtn" class="hbg-item" role="button" tabindex="0">↩ Déconnexion</div>
+<body data-parent="moteurs" style="--c:var(--c-avia)">
+<div class="fond" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="haut">
+    <a class="marque" href="dashboard.html" title="Retour à l'accueil"><span class="logo" aria-hidden="true"><span>O<i>d</i>F</span></span><span class="nom">Outils de Frank</span><span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></a>
+    <nav class="fil" aria-label="Fil d'Ariane"><a href="dashboard.html">← Accueil</a><b>Moteurs</b></nav>
+    <div class="outils">
+      <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
+      <div class="moi-zone">
+        <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
+        <div class="menu" id="menu" role="menu" hidden>
+          <a href="admin.html" id="m-admin" role="menuitem" hidden>⚙️ Administration</a>
+          <a href="archive.html" id="m-archives" role="menuitem" hidden>📁 Archives</a>
+          <a href="https://mail.hostinger.com/" id="m-webmail" target="_blank" rel="noopener" role="menuitem" hidden>✉️ Webmail</a>
+          <button type="button" id="m-version" role="menuitem" hidden>🏷️ Badge version des pages</button>
+          <hr>
+          <button type="button" id="logoutBtn" role="menuitem">↩ Déconnexion</button>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <p class="welcome-text">Les simulateurs</p>
+  <section class="tete"><span class="em" aria-hidden="true">🌀</span><div><h1>Moteurs</h1><p>Simulateurs de moteurs et notions connexes</p></div></section>
 
-      <div id="menu-grid" style="visibility:hidden;">
-
-        <section class="mot-group">
-          <h2 class="mot-group-title">Simulateurs détaillés</h2>
-          <p class="mot-group-desc">Modèles 3D complets avec coupes, circuits, procédures et instruments.</p>
-          <nav class="menu-grid mot-grid-detail">
-
-            <a href="pt6a21.html" class="menu-card mot-card-detail" data-section="pt6a21">
-              <span class="icon">🛩️</span>
-              <h2>PT6A-21</h2>
-              <p>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</p>
-            </a>
-
-            <a href="o320.html" class="menu-card mot-card-detail" data-section="o320">
-              <span class="icon">✈️</span>
-              <h2>O-320</h2>
-              <p>Lycoming quatre cylindres à plat de 150 HP — modèle 3D, cycle à quatre temps, instruments</p>
-            </a>
-
-          </nav>
-        </section>
-
-        <section class="mot-group">
-          <h2 class="mot-group-title">Aperçus</h2>
-          <p class="mot-group-desc">Simulations plus simples, pour découvrir le fonctionnement général.</p>
-          <nav class="menu-grid">
-
-            <a href="turboreacteur.html" class="menu-card" data-section="turboreacteur">
-              <span class="icon">🌀</span>
-              <h2>CFM56-7B</h2>
-              <p>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d'air</p>
-            </a>
-
-            <a href="pw1500g.html" class="menu-card" data-section="pw1500g">
-              <span class="icon">⚙️</span>
-              <h2>PW1500G</h2>
-              <p>Turbofan à réducteur de l'Airbus A220 — réducteur de soufflante, coupe 3D, données certifiées</p>
-            </a>
-
-          </nav>
-        </section>
-
-        <section class="mot-group">
-          <h2 class="mot-group-title">Connexe</h2>
-          <p class="mot-group-desc">Notions liées aux moteurs, expliquées à part.</p>
-          <nav class="menu-grid mot-grid-connexe">
-
-            <a href="planetaire.html" class="menu-card" data-section="planetaire">
-              <span class="icon">🔆</span>
-              <h2>Engrenages planétaires</h2>
-              <p>Un vrai train planétaire animé, en trois étapes, pour comprendre le rapport de réduction</p>
-            </a>
-
-            <a href="pompe-engrenages.html" class="menu-card" data-section="pompe-engrenages">
-              <span class="icon">🛢️</span>
-              <h2>Pompe à engrenages</h2>
-              <p>Simulation d'une pompe à huile : débit, fuites, pression du circuit et clapet de décharge</p>
-            </a>
-
-            <a href="helice.html" class="menu-card" data-section="helice">
-              <span class="icon">💨</span>
-              <h2>Hélice à vitesse constante</h2>
-              <p>L'hélice d'un PT6 et son régulateur : masselottes, moyeu, survitesse, drapeau automatique, bêta et inversion</p>
-            </a>
-
-          </nav>
-        </section>
-
+  <main class="cartes-zone">
+    <section class="groupe">
+      <header><h2>Simulateurs détaillés</h2><span class="nb"></span></header>
+      <p class="g-desc">Modèles 3D complets avec coupes, circuits, procédures et instruments.</p>
+      <div class="cartes">
+        <a class="carte" href="pt6a21.html" data-section="pt6a21" hidden><span class="em" aria-hidden="true">🛩️</span><span><b>PT6A-21</b><small>Turbopropulseur à turbine libre — modèle 3D, instruments et procédures</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="o320.html" data-section="o320" hidden><span class="em" aria-hidden="true">✈️</span><span><b>O-320</b><small>Lycoming quatre cylindres à plat de 150 HP — modèle 3D, cycle à quatre temps, instruments</small></span><span class="fl" aria-hidden="true">›</span></a>
       </div>
-    </main>
+    </section>
+    <section class="groupe">
+      <header><h2>Aperçus</h2><span class="nb"></span></header>
+      <p class="g-desc">Simulations plus simples, pour découvrir le fonctionnement général.</p>
+      <div class="cartes">
+        <a class="carte" href="turboreacteur.html" data-section="turboreacteur" hidden><span class="em" aria-hidden="true">🌀</span><span><b>CFM56-7B</b><small>Turbofan double-corps (Boeing 737NG) — coupe 3D, régimes, débit d&#x27;air</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="pw1500g.html" data-section="pw1500g" hidden><span class="em" aria-hidden="true">⚙️</span><span><b>PW1500G</b><small>Turbofan à réducteur de l&#x27;Airbus A220 — réducteur de soufflante, coupe 3D, données certifiées</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <section class="groupe">
+      <header><h2>Connexe</h2><span class="nb"></span></header>
+      <p class="g-desc">Notions liées aux moteurs, expliquées à part.</p>
+      <div class="cartes">
+        <a class="carte" href="planetaire.html" data-section="planetaire" hidden><span class="em" aria-hidden="true">🔆</span><span><b>Engrenages planétaires</b><small>Un vrai train planétaire animé, en trois étapes, pour comprendre le rapport de réduction</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="pompe-engrenages.html" data-section="pompe-engrenages" hidden><span class="em" aria-hidden="true">🛢️</span><span><b>Pompe à engrenages</b><small>Simulation d&#x27;une pompe à huile : débit, fuites, pression du circuit et clapet de décharge</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="helice.html" data-section="helice" hidden><span class="em" aria-hidden="true">💨</span><span><b>Hélice à vitesse constante</b><small>L&#x27;hélice d&#x27;un PT6 et son régulateur : masselottes, moyeu, survitesse, drapeau automatique, bêta et inversion</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <p class="vide">Aucune page de cette catégorie ne t&#x27;est ouverte pour le moment.</p>
+  </main>
+</div>
 
-  </div>
-
-  <script>
-    function toggleHamburger() {
-      const menu = document.getElementById('hamburger-menu');
-      const btn  = document.getElementById('hamburger-btn');
-      const open = menu.classList.toggle('open');
-      btn.classList.toggle('open', open);
-    }
-    function closeHamburger() {
-      document.getElementById('hamburger-menu').classList.remove('open');
-      document.getElementById('hamburger-btn').classList.remove('open');
-    }
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('#hamburger-btn') && !e.target.closest('#hamburger-menu')) {
-        closeHamburger();
-      }
-    });
-  </script>
-
-  <script type="module" src="moteurs.js"></script>
-  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
-  <script src="version.js"></script>
-  <script src="theme-toggle.js"></script>
-  <script>
-    (function () {
-      const toggle = document.getElementById('theme-toggle');
-      const controls = document.querySelector('.header-controls');
-      if (toggle && controls) {
-        toggle.classList.remove('theme-toggle--fixed');
-        controls.prepend(toggle);
-      }
-    })();
-  </script>
+<script type="module" src="categorie.js"></script>
+<script src="version.js"></script>
 </body>
 </html>

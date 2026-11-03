@@ -65,9 +65,19 @@
 
 1. Créer `ma-page.html` et son JS, en reprenant l'en-tête d'une page existante : script de permission, `version.js`, `theme-toggle.js`, `page-controls.js`, et le bandeau `.site-top` avec « ← Accueil ».
 2. Ajouter la permission dans `PERMS_STRUCTURE` (admin.js), et dans les listes d'archives et d'invités si pertinent.
-3. Ajouter la carte dans `dashboard.html` (`data-section`) et, si besoin, dans `archive.html` et parmi les choix de page d'accueil d'admin.html.
+3. Ajouter la page dans `GROUPES` de `dashboard.js`, et sa carte dans `archive.html` (même groupe que sur l'accueil ; `data-parent` pour une sous-page) ; une sous-page va aussi dans sa page de catégorie (voir plus bas). Au besoin, parmi les choix de page d'accueil d'admin.html.
 4. Si la page enregistre des données : ajouter son document à `SECTIONS` dans `api/data.php`.
 5. Pour une page de la section Intentions de vote ou En direct : passer par le gabarit (`docs/intentions-de-vote.md`).
+
+## Pages de catégorie (visuel 2.0)
+
+`moteurs.html`, `informatique.html`, `jeuxdesociete.html` et `archive.html` (3 novembre 2026) partagent `categorie.css` et `categorie.js` : la même barre du haut que le tableau de bord (logo et « Outils de Frank » qui ramènent à l'accueil, badge 2.0, « ← Accueil », thème, menu du compte), le même fond en diagonales, une tête (icône, titre, description), puis des groupes à intertitre (point de la couleur du thème, compteur, petite description) avec des cartes `<a class="carte" data-section="permission">`.
+- Couleur : `style="--c:var(--c-avia|--c-info|--c-lois|--c-trav)"` sur `<body>` (ou sur un groupe, comme dans Archives).
+- `<body data-parent="moteurs">` : une carte s'affiche pour l'admin, la permission du groupe ou la sienne, sauf section archivée (sauf si tout le groupe l'est). Un groupe sans carte visible est caché.
+- `<body data-mode="archives">` : seulement les sections archivées auxquelles on a droit, groupées comme sur l'accueil ; ouvrir une carte ramène ensuite aux Archives (« ← Archives », voir version.js).
+- Groupes : Moteurs (Simulateurs détaillés, Aperçus, Connexe), Informatique (Avionique, Réseau et transfert, Circuits), Jeux de société (Jeux, Outils), les mêmes que sur l'accueil.
+- Pour ajouter une sous-page : une carte dans le bon groupe de sa page de catégorie et dans `archive.html`, la permission dans le garde en tête de page.
+- Jeux de société reste dans le cache hors ligne (`sw.js`, avec `categorie.js`, `categorie.css`, `firebase-config.js`) : changer `CACHE_NAME` quand ces fichiers changent.
 
 ## Style commun
 

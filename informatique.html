@@ -1,136 +1,79 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outils de Frank — Informatique</title>
-  <link rel="stylesheet" href="style.css">
-  <script>
-    const _permsInfo = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
-    if (!sessionStorage.getItem('loggedIn') ||
-        (!['informatique', 'arinc429', 'csdb', 'converter', 'crypteur', 'tcpip', 'qr-transfer', 'shape-transfer', 'chips', 'circuit'].some(k => _permsInfo.includes(k)) && sessionStorage.getItem('userRole') !== 'admin')) {
-      window.location.href = 'dashboard.html';
-    }
-  </script>
+<meta charset="UTF-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn')) location.href = 'index.html';
+  else if (sessionStorage.getItem('userRole') !== 'admin' && !["informatique", "arinc429", "csdb", "converter", "crypteur", "tcpip", "qr-transfer", "shape-transfer", "chips", "circuit", "qrlink", "shapelink"].some(k => _p.includes(k))) location.href = 'dashboard.html';
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outils de Frank — Informatique</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="categorie.css">
 </head>
-<body>
-  <div class="dashboard-container">
-
-    <header>
-      <a href="dashboard.html" class="back-btn-dash">&#8592; Accueil</a>
-      <div style="text-align:center;">
-        <h1>Informatique</h1>
-        <p class="subtitle">Outils techniques</p>
-      </div>
-      <div class="header-controls">
-        <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
-        <div id="hamburger-menu">
-          <a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
-          <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
-          <button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
-          <div class="hbg-sep" id="admin-sep"></div>
-          <div id="logoutBtn" class="hbg-item" role="button" tabindex="0">↩ Déconnexion</div>
+<body data-parent="informatique" style="--c:var(--c-info)">
+<div class="fond" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="haut">
+    <a class="marque" href="dashboard.html" title="Retour à l'accueil"><span class="logo" aria-hidden="true"><span>O<i>d</i>F</span></span><span class="nom">Outils de Frank</span><span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></a>
+    <nav class="fil" aria-label="Fil d'Ariane"><a href="dashboard.html">← Accueil</a><b>Informatique</b></nav>
+    <div class="outils">
+      <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
+      <div class="moi-zone">
+        <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
+        <div class="menu" id="menu" role="menu" hidden>
+          <a href="admin.html" id="m-admin" role="menuitem" hidden>⚙️ Administration</a>
+          <a href="archive.html" id="m-archives" role="menuitem" hidden>📁 Archives</a>
+          <a href="https://mail.hostinger.com/" id="m-webmail" target="_blank" rel="noopener" role="menuitem" hidden>✉️ Webmail</a>
+          <button type="button" id="m-version" role="menuitem" hidden>🏷️ Badge version des pages</button>
+          <hr>
+          <button type="button" id="logoutBtn" role="menuitem">↩ Déconnexion</button>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <p class="welcome-text">Les Outils</p>
+  <section class="tete"><span class="em" aria-hidden="true">💻</span><div><h1>Informatique</h1><p>Outils techniques et avioniques</p></div></section>
 
-      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
+  <main class="cartes-zone">
+    <section class="groupe">
+      <header><h2>Avionique</h2><span class="nb"></span></header>
+      <p class="g-desc">Bus et formats de données des aéronefs.</p>
+      <div class="cartes">
+        <a class="carte" href="arinc429.html" data-section="arinc429" hidden><span class="em" aria-hidden="true">📡</span><span><b>ARINC 429</b><small>Décodeur de mots avioniques</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="csdb.html" data-section="csdb" hidden><span class="em" aria-hidden="true">📶</span><span><b>CSDB</b><small>Commercial Standard Digital Bus — décodeur de blocs</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="crypteur.html" data-section="crypteur" hidden><span class="em" aria-hidden="true">⚙️</span><span><b>Encodeur BNR</b><small>Signe-magnitude · Bit de signe · Valeur par bit</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="converter.html" data-section="converter" hidden><span class="em" aria-hidden="true">🔢</span><span><b>Convertisseur</b><small>Décimal · Binaire · Hex · Octal</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <section class="groupe">
+      <header><h2>Réseau et transfert</h2><span class="nb"></span></header>
+      <p class="g-desc">Adressage réseau et transfert de fichiers sans réseau.</p>
+      <div class="cartes">
+        <a class="carte" href="tcpip.html" data-section="tcpip" hidden><span class="em" aria-hidden="true">🌐</span><span><b>TCP/IP</b><small>Calculateur de sous-réseau · CIDR</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="qr-transfer.html" data-section="qr-transfer" hidden><span class="em" aria-hidden="true">📷</span><span><b>QR Transfert</b><small>Transfert de fichiers par codes QR — sans réseau</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="shape-transfer.html" data-section="shape-transfer" hidden><span class="em" aria-hidden="true">🔷</span><span><b>Shape Transfert</b><small>Transfert de fichiers par symboles géométriques colorés — sans réseau</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <section class="groupe">
+      <header><h2>Circuits</h2><span class="nb"></span></header>
+      <p class="g-desc">Composants et logique numérique, en simulation.</p>
+      <div class="cartes">
+        <a class="carte" href="chips.html" data-section="chips" hidden><span class="em" aria-hidden="true">🔧</span><span><b>Simulateurs de puces</b><small>NE555 · Portes logiques · AO 741 · MOS 6502</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="circuit.html" data-section="circuit" hidden><span class="em" aria-hidden="true">⚡</span><span><b>Circuit logique</b><small>Simulateur interactif — placer, connecter, simuler</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <p class="vide">Aucune page de cette catégorie ne t&#x27;est ouverte pour le moment.</p>
+  </main>
+</div>
 
-        <a href="arinc429.html" class="menu-card" data-section="arinc429">
-          <span class="icon">📡</span>
-          <h2>ARINC 429</h2>
-          <p>Décodeur de mots avioniques</p>
-        </a>
-
-        <a href="csdb.html" class="menu-card" data-section="csdb">
-          <span class="icon">📶</span>
-          <h2>CSDB</h2>
-          <p>Commercial Standard Digital Bus — décodeur de blocs</p>
-        </a>
-
-        <a href="converter.html" class="menu-card" data-section="converter">
-          <span class="icon">🔢</span>
-          <h2>Convertisseur</h2>
-          <p>Décimal · Binaire · Hex · Octal</p>
-        </a>
-
-        <a href="crypteur.html" class="menu-card" data-section="crypteur">
-          <span class="icon">⚙️</span>
-          <h2>Encodeur BNR</h2>
-          <p>Signe-magnitude · Bit de signe · Valeur par bit</p>
-        </a>
-
-        <a href="tcpip.html" class="menu-card" data-section="tcpip">
-          <span class="icon">🌐</span>
-          <h2>TCP/IP</h2>
-          <p>Calculateur de sous-réseau · CIDR</p>
-        </a>
-
-        <a href="qr-transfer.html" class="menu-card" data-section="qr-transfer">
-          <span class="icon">📷</span>
-          <h2>QR Transfert</h2>
-          <p>Transfert de fichiers par codes QR — sans réseau</p>
-        </a>
-
-        <a href="shape-transfer.html" class="menu-card" data-section="shape-transfer">
-          <span class="icon">▲■●</span>
-          <h2>Shape Transfert</h2>
-          <p>Transfert de fichiers par symboles géométriques colorés — sans réseau</p>
-        </a>
-
-        <a href="chips.html" class="menu-card" data-section="chips">
-          <span class="icon">🔧</span>
-          <h2>Simulateurs</h2>
-          <p>NE555 · Portes logiques · AO 741 · MOS 6502</p>
-        </a>
-
-        <a href="circuit.html" class="menu-card" data-section="circuit">
-          <span class="icon">⚡</span>
-          <h2>Circuit logique</h2>
-          <p>Simulateur interactif — placer, connecter, simuler</p>
-        </a>
-
-      </nav>
-    </main>
-
-  </div>
-
-  <script>
-    function toggleHamburger() {
-      const menu = document.getElementById('hamburger-menu');
-      const btn  = document.getElementById('hamburger-btn');
-      const open = menu.classList.toggle('open');
-      btn.classList.toggle('open', open);
-    }
-    function closeHamburger() {
-      document.getElementById('hamburger-menu').classList.remove('open');
-      document.getElementById('hamburger-btn').classList.remove('open');
-    }
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('#hamburger-btn') && !e.target.closest('#hamburger-menu')) {
-        closeHamburger();
-      }
-    });
-  </script>
-
-  <script type="module" src="informatique.js"></script>
-  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
-  <script src="version.js"></script>
-  <script src="theme-toggle.js"></script>
-  <script>
-    (function () {
-      const toggle = document.getElementById('theme-toggle');
-      const controls = document.querySelector('.header-controls');
-      if (toggle && controls) {
-        toggle.classList.remove('theme-toggle--fixed');
-        controls.prepend(toggle);
-      }
-    })();
-  </script>
+<script type="module" src="categorie.js"></script>
+<script src="version.js"></script>
 </body>
 </html>

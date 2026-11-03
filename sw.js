@@ -1,7 +1,10 @@
-const CACHE_NAME = 'jeux-v18';
+const CACHE_NAME = 'jeux-v19';
 const FILES_TO_CACHE = [
   '/jeuxdesociete.html',
-  '/jeuxdesociete.js',
+  '/categorie.js',
+  '/categorie.css',
+  '/firebase-config.js',
+  '/favicon-32.png',
   '/7wonders.html',
   '/qwirkle.html',
   '/tickettoride.html',

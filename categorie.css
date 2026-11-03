@@ -1,0 +1,108 @@
+/* Pages de catégorie, visuel 2.0 (Moteurs, Informatique, Jeux de société, Archives).
+   Mêmes jetons, même barre du haut et même fond que le tableau de bord (dashboard.html). */
+:root{
+  color-scheme:dark;
+  --bg:#0a0e11; --bg2:#0e1418; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79;
+  --c-avia:#1e6585; --c-info:#23753f; --c-pol:#45379e; --c-lois:#8f5a1a; --c-trav:#5f6d78; /* les couleurs foncées de la marque */
+  --m1:#1e6585; --m2:#23753f; --m3:#45379e; --m4:#8f5a1a; /* marque (logo, badge 2.0, favicon) : mêmes couleurs, en clair et en sombre */
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:14px;
+  --c:var(--c-trav);
+}
+html.light{
+  color-scheme:light;
+  --bg:#f2f4f6; --bg2:#eaeef1; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body)}
+body{background:transparent;min-height:100vh;
+  padding:0 max(18px,env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid color-mix(in srgb,var(--c) 55%,var(--text));outline-offset:2px;border-radius:6px}
+.wrap{max-width:1080px;margin:0 auto}
+
+/* ---- fond : bandes diagonales teintées, comme le tableau de bord ---- */
+.fond{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.fond::before,.fond::after{content:"";position:absolute;inset:0}
+.fond::before{background:
+  linear-gradient(120deg, transparent 0 14%, color-mix(in srgb,var(--c-avia) 16%,transparent) 14% 26%, transparent 26% 40%,
+    color-mix(in srgb,var(--c-info) 12%,transparent) 40% 50%, transparent 50% 64%, color-mix(in srgb,var(--c-pol) 15%,transparent) 64% 77%,
+    transparent 77% 88%, color-mix(in srgb,var(--c-lois) 14%,transparent) 88% 100%)}
+.fond::after{background:radial-gradient(70vmax 50vmax at 50% 0, transparent, var(--bg) 95%)}
+
+/* ---- barre du haut : marque (retour à l'accueil), fil d'Ariane, thème, compte ---- */
+.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px}
+.haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:50%;width:100vw;transform:translateX(-50%);
+  background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);opacity:0;transition:opacity .2s}
+.haut.colle::before{opacity:1}
+.marque{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;white-space:nowrap}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;flex:none;
+  background:conic-gradient(from 210deg,var(--m1),var(--m2),var(--m4),var(--m3),var(--m1))}
+.logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 55%)}
+.logo span{position:relative;z-index:1;font-weight:800;font-size:17px;color:#071016;letter-spacing:-.3px;-webkit-text-stroke:2px #a9b4bd;paint-order:stroke fill}
+.logo i{font-style:normal;font-size:12px;opacity:.62}
+.badge-v{font-family:var(--f-mono);font-weight:700;font-size:11.5px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,var(--m1),var(--m2))}
+.badge-v:empty{display:none}
+.fil{flex:1;display:flex;align-items:center;gap:8px;min-width:0;color:var(--muted);font-size:14px}
+.fil a{padding:4px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--panel)}
+.fil a:hover{color:var(--text);border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
+.fil b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.outils{display:flex;align-items:center;gap:8px;margin-left:auto}
+.rond{width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:var(--panel);display:grid;place-items:center;cursor:pointer;font-size:16px}
+.rond.moi{font-family:var(--f-display);font-weight:700;font-size:16px;background:var(--panel2)}
+.moi-zone{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:210px;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.3)}
+.menu a,.menu button{display:flex;gap:10px;width:100%;padding:9px 10px;border-radius:8px;background:none;border:none;text-align:left;cursor:pointer;font-size:14px}
+.menu a:hover,.menu button:hover{background:var(--panel2)}
+.menu hr{border:none;border-top:1px solid var(--line);margin:4px 0}
+.menu[hidden],.menu [hidden]{display:none!important}
+
+/* ---- tête de la catégorie ---- */
+.tete{display:flex;align-items:center;gap:16px;margin:22px 0 8px}
+.tete .em{width:58px;height:58px;flex:none;display:grid;place-items:center;font-size:30px;border-radius:16px;
+  background:color-mix(in srgb,var(--c) 22%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line))}
+.tete h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:40px;line-height:1.02;letter-spacing:.01em}
+.tete p{margin:3px 0 0;color:var(--muted)}
+
+/* ---- groupes et cartes ---- */
+.cartes-zone{visibility:hidden}
+.cartes-zone.pret{visibility:visible}
+.groupe{margin-top:26px}
+.groupe[hidden]{display:none}
+.groupe>header{display:flex;align-items:center;gap:8px;padding:0 2px 8px;margin-bottom:6px;border-bottom:1px solid var(--line2)}
+.groupe>header::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.groupe h2{margin:0;flex:1;font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase}
+.groupe .nb{color:var(--faint);font-size:12px;font-family:var(--f-mono)}
+.g-desc{margin:0 2px 12px;color:var(--muted);font-size:13.5px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px}
+.carte{position:relative;display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:12px;padding:14px 16px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.carte:hover{transform:translateY(-2px);background:var(--panel2);border-color:color-mix(in srgb,var(--c) 55%,var(--line));box-shadow:0 14px 30px rgba(0,0,0,.22)}
+.carte .em{width:46px;height:46px;display:grid;place-items:center;font-size:22px;border-radius:12px;
+  background:color-mix(in srgb,var(--c) 16%,var(--panel2));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+.carte b{display:block;font-weight:600;font-size:15.5px}
+.carte small{display:block;color:var(--muted);font-size:13px;line-height:1.4;margin-top:1px}
+.carte .fl{color:var(--faint);font-size:20px;transition:transform .15s}
+.carte:hover .fl{transform:translateX(3px);color:color-mix(in srgb,var(--c) 55%,var(--text))}
+.carte[hidden]{display:none}
+.vide{display:none;margin:40px 0;text-align:center;color:var(--muted);font-style:italic}
+
+.pied{margin-top:40px;text-align:center;color:var(--faint);font-size:12.5px}
+.pied a{color:var(--muted)}
+
+@media (max-width:640px){
+  .marque .nom,.fil b{display:none}
+  .tete h1{font-size:32px}
+  .tete .em{width:50px;height:50px;font-size:26px}
+  .carte{padding:12px 14px;grid-template-columns:40px 1fr auto}
+  .carte .em{width:40px;height:40px;font-size:20px}
+}
+@media (prefers-reduced-motion: reduce){.carte,.carte .fl{transition:none}.carte:hover{transform:none}}
