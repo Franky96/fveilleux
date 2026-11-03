@@ -77,10 +77,11 @@ html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème 
   border:1px solid var(--line2);background:var(--panel);overflow:hidden;
   transition:width .48s cubic-bezier(.2,.9,.25,1.12),border-color .3s,box-shadow .3s,background .3s}
 .cherche-ic{position:absolute;left:14px;color:var(--muted);opacity:0;transform:translateX(18px) scale(.6);transition:opacity .25s,transform .45s cubic-bezier(.2,.9,.25,1.1)}
-.cherche input{flex:1;min-width:0;height:100%;padding:0 4px 0 40px;border:0;outline:none;background:none;font-size:15px;
+.cherche input{position:absolute;left:0;top:0;bottom:0;right:36px;width:auto;min-width:0;height:100%;padding:0 4px 0 40px;border:0;outline:none;background:none;font-size:15px;
   opacity:0;transform:translateX(14px);transition:opacity .2s,transform .35s ease}
 .cherche input::-webkit-search-cancel-button{display:none}
-.cherche-btn{position:relative;flex:none;width:36px;height:36px;border:0;border-radius:50%;background:none;display:grid;place-items:center;cursor:pointer;color:var(--text)}
+.cherche:not(.ouvert) input{visibility:hidden;transition:opacity .2s,transform .35s ease,visibility 0s .2s}   /* fermé : seul le bouton reste (la loupe ne se fait plus pousser hors du rond)*/
+.cherche-btn{position:absolute;right:0;top:0;z-index:1;width:36px;height:36px;border:0;border-radius:50%;background:none;display:grid;place-items:center;cursor:pointer;color:var(--text)}
 .cherche-btn svg{grid-area:1/1;transition:transform .45s cubic-bezier(.2,.9,.25,1.2),opacity .25s}
 .cherche-btn .i-fermer{opacity:0;transform:rotate(-90deg) scale(.4)}
 .cherche.ouvert .cherche-barre{width:var(--large);border-color:color-mix(in srgb,var(--c-avia) 70%,var(--line2));background:var(--panel2);
@@ -261,6 +262,7 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
   .cherche{width:34px;height:34px;--large:calc(100vw - 36px - 2 * 40px)}   /* téléphone : la barre passe par-dessus le logo */
   .cherche-barre{width:34px;height:34px;border-radius:17px}
   .cherche-btn{width:32px;height:32px}
+  .cherche input{right:32px}
   .recherche kbd{display:none}
   .bonjour h1{font-size:30px}
   .raccourcis{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -18px;padding:0 18px 4px;scrollbar-width:none}
