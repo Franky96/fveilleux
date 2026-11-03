@@ -18,7 +18,8 @@
   color-scheme:dark;
   --bg:#0a0e11; --bg2:#0e1418; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
   --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79;
-  --c-avia:#5ec8f0; --c-info:#6fdc8c; --c-pol:#8f7cff; --c-lois:#f2a03d; --c-trav:#a7b3bd;
+  --c-avia:#4ba0c0; --c-info:#59b070; --c-pol:#7263cc; --c-lois:#c28031; --c-trav:#8e98a1;
+  --m1:#4ba0c0; --m2:#59b070; --m3:#7263cc; --m4:#c28031; /* marque (logo, badge 2.0) : mêmes en clair et en sombre */
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,monospace;
@@ -28,7 +29,7 @@ html.light{
   color-scheme:light;
   --bg:#f2f4f6; --bg2:#eaeef1; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
   --text:#16212b; --muted:#566571; --faint:#8794a0;
-  --c-avia:#1c86b5; --c-info:#23935a; --c-pol:#6252d6; --c-lois:#c4701a; --c-trav:#5f6d78;
+  --c-avia:#1979a3; --c-info:#208451; --c-pol:#584ac1; --c-lois:#b06517; --c-trav:#5f6d78;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body)}
@@ -41,7 +42,7 @@ button,input{font:inherit;color:inherit}
 .wrap{max-width:1180px;margin:0 auto}
 
 /* ---- barre du haut ---- */
-.badge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,#5ec8f0,#6fdc8c)}
+.badge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,var(--m1),var(--m2))}
 .badge-v:empty{display:none}
 .haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px}
 .haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:50%;width:100vw;transform:translateX(-50%);
@@ -59,7 +60,7 @@ button,input{font:inherit;color:inherit}
 .fond::after{background:radial-gradient(70vmax 50vmax at 50% 0, transparent, var(--bg) 95%)}
 .marque{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;white-space:nowrap}
 .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;
-  background:conic-gradient(from 210deg,#5ec8f0,#6fdc8c,#f2a03d,#8f7cff,#5ec8f0)}
+  background:conic-gradient(from 210deg,var(--m1),var(--m2),var(--m4),var(--m3),var(--m1))}
 .logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%)}
 .logo span{position:relative;z-index:1;font-weight:800;font-size:17px;color:#071016;letter-spacing:-.3px}
 .logo i{font-style:normal;font-size:12px;opacity:.62}
