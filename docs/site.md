@@ -80,6 +80,8 @@ Depuis le 3 novembre 2026 (demande de l'utilisateur), le serveur vérifie l'acc�
 - La session dure 30 jours, comme son témoin (`session.gc_maxlifetime` dans `session.php`).
 - Le cache hors ligne des jeux (`sw.js`) ne garde pas une réponse redirigée.
 - Test local : `php -S` avec un routeur qui imite la règle du `.htaccess` (voir les notes de test).
+- **État : règle du `.htaccess` retirée le soir même** (3 novembre 2026) : l'hébergeur répondait souvent « 503 » sur tout ce qui passe par PHP (même `version.php`, et déjà avant le contrôle) ; avec le contrôle, les pages elles-mêmes tombaient en 503. `api/page.php` reste prêt : remettre le bloc `mod_rewrite` (voir l'historique git) quand le serveur suivra.
+- La connexion (`auth.js`) réessaie 3 fois quand le serveur répond 503, puis affiche « Le serveur est occupé… » au lieu d'une erreur JSON.
 
 ## Pages de catégorie (visuel 2.0)
 
