@@ -64,7 +64,7 @@ function visibles() {
 let VUE = [];
 function rendreGroupes() {
   $('groupes').innerHTML = VUE.map(g => `<section class="groupe" style="--c:var(${g.c})">
-  <header><span class="ic">${g.ic}</span><h3>${esc(g.nom)}</h3><span>${g.pages.length}</span></header>
+  <header><span class="ic">${g.ic}</span><h3>${esc(g.nom)}</h3><span class="nb">${g.pages.length}</span></header>
   ${g.pages.map(p => `<div class="ligne" data-cherche="${esc((p.n + ' ' + p.d + ' ' + p.sous.map(x => x[1]).join(' ')).toLowerCase())}">
     <span class="em">${p.e}</span><span><a class="lien" href="${p.h}"><b>${esc(p.n)}</b></a><small>${esc(p.d)}</small></span><span class="fl">›</span>
     ${p.sous.length ? `<span class="sous">${p.sous.map(([sh, sn]) => `<a href="${sh}" data-n="${esc(sn.toLowerCase())}">${esc(sn)}</a>`).join('')}</span>` : ''}</div>`).join('')}
@@ -83,7 +83,7 @@ q.addEventListener('input', () => {
       l.classList.toggle('cache', !ok); if (ok) vis++;
       l.querySelectorAll('.sous a').forEach(x => { x.style.outline = t && sansAcc(x.dataset.n).includes(t) ? '2px solid var(--c)' : ''; });
     });
-    g.classList.toggle('cache', !vis); n += vis; g.querySelector('header span').textContent = vis;
+    g.classList.toggle('cache', !vis); n += vis; g.querySelector('header .nb').textContent = vis;
   });
   $('vide').style.display = n ? 'none' : 'block';
   $('sect-raccourcis').classList.toggle('cache', !!t);

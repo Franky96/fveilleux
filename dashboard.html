@@ -99,11 +99,12 @@ h2.sect{font-family:var(--f-display);font-weight:600;font-size:14px;letter-spaci
 
 /* ---- tout le site ---- */
 .groupes{columns:3 330px;column-gap:14px}
-.groupe{break-inside:avoid;margin-bottom:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.groupe header{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
-.groupe header .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:15px;background:color-mix(in srgb,var(--c) 16%,transparent)}
-.groupe header h3{margin:0;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.03em;flex:1}
-.groupe header span{color:var(--faint);font-size:12px;font-family:var(--f-mono)}
+.groupe{break-inside:avoid;margin-bottom:14px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:var(--r);overflow:hidden}
+/* titre de catégorie : petites capitales espacées, à la couleur du thème, sur un fond teinté (les pages, elles, restent en blanc) */
+.groupe header{display:flex;align-items:center;gap:8px;padding:9px 14px;background:color-mix(in srgb,var(--c) 9%,transparent)}
+.groupe header .ic{font-size:14px;line-height:1}
+.groupe header h3{margin:0;font-family:var(--f-display);font-weight:700;font-size:13.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--c);flex:1}
+.groupe header .nb{color:var(--c);opacity:.75;font-size:11px;font-family:var(--f-mono);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:999px;padding:0 7px}
 .ligne{position:relative;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:2px 10px;padding:9px 14px;border-top:1px solid var(--line)}
 .ligne:hover{background:var(--panel2)}
 .lien::after{content:"";position:absolute;inset:0}
