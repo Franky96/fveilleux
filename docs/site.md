@@ -63,7 +63,7 @@
 
 ## Ajouter une page au site
 
-1. Créer `ma-page.html` et son JS, en reprenant l'en-tête d'une page existante : script de permission, `version.js`, `theme-toggle.js`, `page-controls.js`, et le bandeau `.site-top` avec « ← Accueil ».
+1. Créer `ma-page.html` et son JS, en reprenant l'en-tête d'une page existante : script de permission, `version.js`, `theme-toggle.js`, `page-controls.js`, et le bandeau `.site-top` avec « ← Accueil ». Avec le favicon : `<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=…">` et `<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=…">` (copier les lignes d'une page existante).
 2. Ajouter la permission dans `PERMS_STRUCTURE` (admin.js), et dans les listes d'archives et d'invités si pertinent.
    **Et dans `PAGES` de `api/page.php`** (le serveur refuse sinon la page à tout le monde sauf l'admin).
 3. Ajouter la page dans `GROUPES` de `dashboard.js`, et sa carte dans `archive.html` (même groupe que sur l'accueil ; `data-parent` pour une sous-page) ; une sous-page va aussi dans sa page de catégorie (voir plus bas). Au besoin, parmi les choix de page d'accueil d'admin.html.
@@ -98,6 +98,7 @@ Depuis le 3 novembre 2026 (demande de l'utilisateur), le serveur vérifie l'acc�
 - Jeux de société reste dans le cache hors ligne (`sw.js`, avec `categorie.js`, `categorie.css`, `firebase-config.js`) : changer `CACHE_NAME` quand ces fichiers changent.
 
 ## Style commun
+- **Favicon** : chaque page (et le gabarit `pages.src.html`) déclare `/favicon-32.png?v=<empreinte>` et `/apple-touch-icon.png?v=<empreinte>` (8 premiers caractères du sha256 du fichier ; chemin absolu, valable aussi dans `concept/`). Sans déclaration, le navigateur gardait l'ancien `/favicon.ico` en cache. Si l'icône change : refaire les trois fichiers (`favicon.ico` reste en secours), puis remettre les empreintes partout (`sed` sur `favicon-32.png?v=` et `apple-touch-icon.png?v=`, gabarit compris, puis `pages.py --bascule`).
 
 - `style.css`, thème clair ou sombre par `theme-toggle.js` (`localStorage.theme`).
 - **Fond 2.0** (`fond.css`, 3 novembre 2026) : sur les pages pas encore en visuel 2.0, seulement le fond change (couleur de base et diagonales du tableau de bord ; `html`, `body` et `.dashboard-container` transparents par-dessus), rien d'autre (demande de l'utilisateur). Chargé en dernier dans `<head>`. Pas sur les pages archivées (Aviation, Aéronefs, ÉNA, Connexion à distance, OSINT, Films, Hockey, Bières, Science-fiction, Page de tests), ni sur Intentions de vote et En direct, ni sur concept.html. Toute nouvelle page qui n'est pas en 2.0 le reçoit aussi.
