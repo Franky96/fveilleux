@@ -15,22 +15,34 @@ const a = k => ADMIN || PERMS.includes(k);
 /* ---------- tout le site, par thème : [page, icône, nom, description, permission, sous-pages [page, nom, permission]] ---------- */
 const GROUPES = [
   { nom: 'Aviation et moteurs', ic: '✈️', c: '--c-avia', pages: [
-    ['moteurs.html', '🌀', 'Moteurs', 'Simulateurs de moteurs et notions connexes', 'moteurs', [['pt6a21.html', 'PT6A-21', 'pt6a21'], ['helice.html', 'Hélice', 'helice'], ['turboreacteur.html', 'CFM56-7B', 'turboreacteur'], ['pw1500g.html', 'PW1500G', 'pw1500g'], ['o320.html', 'O-320', 'o320'], ['pompe-engrenages.html', 'Pompe à engrenages', 'pompe-engrenages'], ['planetaire.html', 'Engrenages planétaires', 'planetaire']]],
+    ['moteurs.html', '🌀', 'Moteurs', 'Simulateurs de moteurs et notions connexes', 'moteurs', [
+      ['Simulateurs', [['pt6a21.html', 'PT6A-21', 'pt6a21'], ['o320.html', 'O-320', 'o320']]],
+      ['Aperçus', [['turboreacteur.html', 'CFM56-7B', 'turboreacteur'], ['pw1500g.html', 'PW1500G', 'pw1500g']]],
+      ['Connexe', [['helice.html', 'Hélice', 'helice'], ['planetaire.html', 'Engrenages planétaires', 'planetaire'], ['pompe-engrenages.html', 'Pompe à engrenages', 'pompe-engrenages']]]]],
     ['aviation.html', '🛩️', 'Aviation', 'Outils, météo et aéronefs', 'aviation', [['aeronefs.html', 'Aéronefs', 'aeronefs']]],
     ['ena.html', '🛠️', 'ÉNA', "École nationale d'aérotechnique", 'ena'],
   ]},
   { nom: 'Avionique et informatique', ic: '💻', c: '--c-info', pages: [
-    ['informatique.html', '💻', 'Informatique', 'Outils techniques et avioniques', 'informatique', [['arinc429.html', 'ARINC 429', 'arinc429'], ['csdb.html', 'CSDB', 'csdb'], ['converter.html', 'Convertisseur', 'converter'], ['crypteur.html', 'Encodeur BNR', 'crypteur'], ['tcpip.html', 'TCP/IP', 'tcpip'], ['qr-transfer.html', 'QR Transfert', 'qr-transfer'], ['shape-transfer.html', 'Shape Transfert', 'shape-transfer'], ['chips.html', 'Simulateurs de puces', 'chips'], ['circuit.html', 'Circuit logique', 'circuit']]],
+    ['informatique.html', '💻', 'Informatique', 'Outils techniques et avioniques', 'informatique', [
+      ['Avionique', [['arinc429.html', 'ARINC 429', 'arinc429'], ['csdb.html', 'CSDB', 'csdb'], ['crypteur.html', 'Encodeur BNR', 'crypteur'], ['converter.html', 'Convertisseur', 'converter']]],
+      ['Réseau', [['tcpip.html', 'TCP/IP', 'tcpip'], ['qr-transfer.html', 'QR Transfert', 'qr-transfer'], ['shape-transfer.html', 'Shape Transfert', 'shape-transfer']]],
+      ['Circuits', [['chips.html', 'Simulateurs de puces', 'chips'], ['circuit.html', 'Circuit logique', 'circuit']]]]],
     ['distant.html', '🖥️', 'Connexion à distance', 'Manuels de maintenance du cégep, dans le navigateur', 'distant'],
   ]},
   { nom: 'Politique et monde', ic: '🌎', c: '--c-pol', pages: [
-    ['intentions-simulations.html', '🗳️', 'Intentions de vote et simulations', 'Sondages, projections et soirées électorales', 'votes-quebec', [['votes-quebec.html', 'Québec', 'votes-quebec'], ['loi39.html', 'Loi 39', 'votes-quebec'], ['en-direct.html', 'En direct', 'votes-quebec'], ['votes-alberta.html', 'Alberta', 'votes-quebec'], ['votes-canada.html', 'Canada', 'votes-quebec'], ['votes-usa.html', 'États-Unis', 'votes-quebec'], ['votes-france.html', 'France', 'votes-quebec'], ['votes-allemagne.html', 'Allemagne', 'votes-quebec'], ['votes-suisse.html', 'Suisse', 'votes-quebec'], ['votes-royaume-uni.html', 'Royaume-Uni', 'votes-quebec']]],
+    ['intentions-simulations.html', '🗳️', 'Intentions de vote et simulations', 'Sondages, projections et soirées électorales', 'votes-quebec', [
+      ['Soirées', [['en-direct.html', 'En direct', 'votes-quebec']]],
+      ['Québec', [['votes-quebec.html', 'Québec', 'votes-quebec'], ['loi39.html', 'Loi 39', 'votes-quebec']]],
+      ['Amérique', [['votes-alberta.html', 'Alberta', 'votes-quebec'], ['votes-canada.html', 'Canada', 'votes-quebec'], ['votes-usa.html', 'États-Unis', 'votes-quebec']]],
+      ['Europe', [['votes-france.html', 'France', 'votes-quebec'], ['votes-allemagne.html', 'Allemagne', 'votes-quebec'], ['votes-suisse.html', 'Suisse', 'votes-quebec'], ['votes-royaume-uni.html', 'Royaume-Uni', 'votes-quebec']]]]],
     ['information-monde.html', '🗺️', 'Information Monde', 'Globe des pays et leurs drapeaux', 'monde'],
     ['osint.html', '🌐', 'OSINT Map', 'Avions, satellites, séismes en direct', 'osint'],
     ['heure-ete-hiver.html', '🕰️', "Heure d'été ou d'hiver ?", "Le soleil toute l'année selon l'heure gardée", 'heure'],
   ]},
   { nom: 'Loisirs', ic: '🎲', c: '--c-lois', pages: [
-    ['jeuxdesociete.html', '🎲', 'Jeux de société', 'Outils et compagnons de jeux', 'jeuxdesociete', [['7wonders.html', '7 Wonders', '7wonders'], ['qwirkle.html', 'Qwirkle', 'qwirkle'], ['tickettoride.html', 'Ticket to Ride', 'tickettoride'], ['flip7.html', 'Flip 7', 'flip7'], ['ladamepique.html', 'Dame de pique', 'ladamepique'], ['compteurgeneral.html', 'Compteur général', 'compteurgeneral']]],
+    ['jeuxdesociete.html', '🎲', 'Jeux de société', 'Outils et compagnons de jeux', 'jeuxdesociete', [
+      ['Jeux', [['7wonders.html', '7 Wonders', '7wonders'], ['ladamepique.html', 'Dame de pique', 'ladamepique'], ['flip7.html', 'Flip 7', 'flip7'], ['qwirkle.html', 'Qwirkle', 'qwirkle'], ['tickettoride.html', 'Ticket to Ride', 'tickettoride']]],
+      ['Outils', [['compteurgeneral.html', 'Compteur général', 'compteurgeneral']]]]],
     ['cadeaux.html', '🎁', 'Listes de cadeaux', 'Les idées de cadeaux de chacun', 'cadeaux'],
     ['films.html', '🎬', 'Films et séries', 'Ma liste de visionnement', 'films'],
     ['hockey.html', '🏒', 'Hockey', 'Statistiques LNH', 'hockey'],
@@ -52,8 +64,11 @@ function visibles() {
     const pages = [];
     for (const [h, e, n, d, k, s] of g.pages) {
       if (ARCHIVES.includes(k)) continue;
-      const sous = (s || []).filter(([, , sk]) => !ARCHIVES.includes(sk) && (a(k) || a(sk)));
-      if (a(k) || sous.length) pages.push({ h, e, n, d, k, sous });
+      // sous-pages : liste simple, ou groupes étiquetés [['Étiquette', [[href, nom, perm], …]], …]
+      const grp = (s || []).length && Array.isArray(s[0][1]) ? s : (s || []).length ? [['', s]] : [];
+      const sg = grp.map(([t, l]) => [t, l.filter(([, , sk]) => !ARCHIVES.includes(sk) && (a(k) || a(sk)))]).filter(([, l]) => l.length);
+      const sous = sg.flatMap(([, l]) => l);
+      if (a(k) || sous.length) pages.push({ h, e, n, d, k, sous, sg: sg.length > 1 ? sg : sg.map(([, l]) => ['', l]) });
     }
     if (pages.length) out.push({ ...g, pages });
   }
@@ -67,7 +82,7 @@ function rendreGroupes() {
   <header><span class="ic">${g.ic}</span><h3>${esc(g.nom)}</h3><span class="nb">${g.pages.length}</span></header>
   ${g.pages.map(p => `<div class="ligne" data-cherche="${esc((p.n + ' ' + p.d + ' ' + p.sous.map(x => x[1]).join(' ')).toLowerCase())}">
     <span class="em">${p.e}</span><span><a class="lien" href="${p.h}"><b>${esc(p.n)}</b></a><small>${esc(p.d)}</small></span><span class="fl">›</span>
-    ${p.sous.length ? `<span class="sous">${p.sous.map(([sh, sn]) => `<a href="${sh}" data-n="${esc(sn.toLowerCase())}">${esc(sn)}</a>`).join('')}</span>` : ''}</div>`).join('')}
+    ${p.sous.length ? `<span class="sous${p.sg[0][0] ? ' etiq' : ''}">${p.sg.map(([t, l]) => `<span class="sg">${t ? `<i>${esc(t)}</i>` : ''}<span>${l.map(([sh, sn]) => `<a href="${sh}" data-n="${esc(sn.toLowerCase())}">${esc(sn)}</a>`).join('')}</span></span>`).join('')}</span>` : ''}</div>`).join('')}
 </section>`).join('');
   if (!VUE.length) $('groupes').innerHTML = '<p class="vide" style="display:block">Aucune section ne t\'est ouverte pour le moment.</p>';
 }

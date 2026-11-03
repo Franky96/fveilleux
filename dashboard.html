@@ -116,7 +116,12 @@ h2.sect{font-family:var(--f-display);font-weight:600;font-size:14px;letter-spaci
 .ligne small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35}
 .ligne .fl{color:var(--faint);font-size:18px;transition:transform .15s}
 .ligne:hover .fl{transform:translateX(3px);color:var(--c)}
-.sous{position:relative;z-index:1;grid-column:2/-1;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.sous{position:relative;z-index:1;grid-column:2/-1;display:grid;gap:5px;margin-top:5px}
+.sous .sg>span{display:flex;flex-wrap:wrap;gap:5px}
+.sous.etiq{gap:0;margin-top:7px;border-top:1px dashed var(--line2)}
+.sous.etiq .sg{display:grid;grid-template-columns:84px 1fr;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line2)}
+.sous.etiq .sg:last-child{border-bottom:0;padding-bottom:1px}
+.sous .sg i{font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
 .sous a{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--muted);background:var(--bg)}
 .sous a:hover{color:var(--text);border-color:var(--c)}
 .cache{display:none!important}
