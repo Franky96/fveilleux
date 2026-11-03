@@ -93,6 +93,7 @@ Depuis le 3 novembre 2026 (demande de l'utilisateur), le serveur vérifie l'acc�
 - Couleur : `style="--c:var(--c-avia|--c-info|--c-lois|--c-trav)"` sur `<body>` (ou sur un groupe, comme dans Archives).
 - `<body data-parent="moteurs">` : une carte s'affiche pour l'admin, la permission du groupe ou la sienne, sauf section archivée (sauf si tout le groupe l'est). Un groupe sans carte visible est caché.
 - `<body data-mode="archives">` : seulement les sections archivées auxquelles on a droit, groupées comme sur l'accueil ; ouvrir une carte ramène ensuite aux Archives (« ← Archives », voir version.js).
+- `chips.html` (Simulateurs de puces) : son menu (4 composants) a le même visuel, mais les simulateurs sont dans la même page et gardent `style.css` : le style 2.0 y est copié dans un `<style>`, limité à `.c2` (en-tête et menu), avec quelques corrections contre les règles de `style.css` sur `header`, `h1`, `#logoutBtn` ; `categorie.js` gère le compte et le thème. Un clic sur une carte appelle `openChip()`, comme avant.
 - Groupes : Moteurs (Simulateurs détaillés, Aperçus, Connexe), Informatique (Avionique, Réseau et transfert, Circuits), Jeux de société (Jeux, Outils), les mêmes que sur l'accueil.
 - Pour ajouter une sous-page : une carte dans le bon groupe de sa page de catégorie et dans `archive.html`, la permission dans le garde en tête de page.
 - Jeux de société reste dans le cache hors ligne (`sw.js`, avec `categorie.js`, `categorie.css`, `firebase-config.js`) : changer `CACHE_NAME` quand ces fichiers changent.

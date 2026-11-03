@@ -129,6 +129,114 @@ html.light {
 .cpu-status .err { color: var(--sr); }
 .cbtn-row { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Menu 2.0 de la page Puces : le style des pages de catégorie (categorie.css), limité à .c2 pour ne pas toucher aux simulateurs */
+.c2{
+  color-scheme:dark;
+  --bg:#0a0e11; --bg2:#0e1418; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79;
+  --c-avia:#1e6585; --c-info:#23753f; --c-pol:#45379e; --c-lois:#8f5a1a; --c-trav:#5f6d78; /* les couleurs foncées de la marque */
+  --m1:#1e6585; --m2:#23753f; --m3:#45379e; --m4:#8f5a1a; /* marque (logo, badge 2.0, favicon) : mêmes couleurs, en clair et en sombre */
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:14px;
+  --c:var(--c-trav);
+}
+html.light .c2{
+  color-scheme:light;
+  --bg:#f2f4f6; --bg2:#eaeef1; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0;
+}
+.c2 /* ---- barre du haut : marque (retour à l'accueil),.c2 fil d'Ariane,.c2 thème,.c2 compte ---- */
+.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px}
+.c2 .haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:50%;width:100vw;transform:translateX(-50%);
+  background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);opacity:0;transition:opacity .2s}
+.c2 .haut.colle::before{opacity:1}
+.c2 .marque{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;white-space:nowrap}
+.c2 .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;flex:none;
+  background:conic-gradient(from 210deg,var(--m1),var(--m2),var(--m4),var(--m3),var(--m1))}
+.c2 .logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 55%)}
+.c2 .logo span{position:relative;z-index:1;font-weight:800;font-size:17px;color:#071016;letter-spacing:-.3px;-webkit-text-stroke:2px #a9b4bd;paint-order:stroke fill}
+.c2 .logo i{font-style:normal;font-size:12px;opacity:.62}
+html.light .c2 .logo span{color:#fff;-webkit-text-stroke-color:#071016}
+.c2 /* thème clair : texte blanc,.c2 contour noir (le favicon ne change pas) */
+.badge-v{font-family:var(--f-mono);font-weight:700;font-size:11.5px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,var(--m1),var(--m2))}
+.c2 .badge-v:empty{display:none}
+.c2 .fil{flex:1;display:flex;align-items:center;gap:8px;min-width:0;color:var(--muted);font-size:14px}
+.c2 .fil a{padding:4px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--panel)}
+.c2 .fil a:hover{color:var(--text);border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
+.c2 .fil b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c2 .outils{display:flex;align-items:center;gap:8px;margin-left:auto}
+.c2 .rond{width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:var(--panel);display:grid;place-items:center;cursor:pointer;font-size:16px}
+.c2 .rond.moi{font-family:var(--f-display);font-weight:700;font-size:16px;background:var(--panel2)}
+.c2 .moi-zone{position:relative}
+.c2 .menu{position:absolute;right:0;top:calc(100% + 6px);min-width:210px;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.3)}
+.c2 .menu a,.c2 .menu button{display:flex;gap:10px;width:100%;padding:9px 10px;border-radius:8px;background:none;border:none;text-align:left;cursor:pointer;font-size:14px}
+.c2 .menu a:hover,.c2 .menu button:hover{background:var(--panel2)}
+.c2 .menu hr{border:none;border-top:1px solid var(--line);margin:4px 0}
+.c2 .menu[hidden],.c2 .menu [hidden]{display:none!important}
+.c2 /* ---- tête de la catégorie ---- */
+.tete{display:flex;align-items:center;gap:16px;margin:22px 0 8px}
+.c2 .tete .em{width:58px;height:58px;flex:none;display:grid;place-items:center;font-size:30px;border-radius:16px;
+  background:color-mix(in srgb,var(--c) 22%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line))}
+.c2 .tete h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:40px;line-height:1.02;letter-spacing:.01em}
+.c2 .tete p{margin:3px 0 0;color:var(--muted)}
+.c2 /* ---- groupes et cartes ---- */
+.cartes-zone{visibility:hidden}
+.c2 .cartes-zone.pret{visibility:visible}
+.c2 .groupe{margin-top:26px}
+.c2 .groupe[hidden]{display:none}
+.c2 .groupe>header{display:flex;align-items:center;gap:8px;padding:0 2px 8px;margin-bottom:6px;border-bottom:1px solid var(--line2)}
+.c2 .groupe>header::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.c2 .groupe h2{margin:0;flex:1;font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase}
+.c2 .groupe .nb{color:var(--faint);font-size:12px;font-family:var(--f-mono)}
+.c2 .g-desc{margin:0 2px 12px;color:var(--muted);font-size:13.5px}
+.c2 .cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px}
+.c2 .carte{position:relative;display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:12px;padding:14px 16px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.c2 .carte:hover{transform:translateY(-2px);background:var(--panel2);border-color:color-mix(in srgb,var(--c) 55%,var(--line));box-shadow:0 14px 30px rgba(0,0,0,.22)}
+.c2 .carte .em{width:46px;height:46px;display:grid;place-items:center;font-size:22px;border-radius:12px;
+  background:color-mix(in srgb,var(--c) 16%,var(--panel2));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+.c2 .carte b{display:block;font-weight:600;font-size:15.5px}
+.c2 .carte small{display:block;color:var(--muted);font-size:13px;line-height:1.4;margin-top:1px}
+.c2 .carte .fl{color:var(--faint);font-size:20px;transition:transform .15s}
+.c2 .carte:hover .fl{transform:translateX(3px);color:color-mix(in srgb,var(--c) 55%,var(--text))}
+.c2 .carte[hidden]{display:none}
+.c2 .vide{display:none;margin:40px 0;text-align:center;color:var(--muted);font-style:italic}
+.c2 .pied{margin-top:40px;text-align:center;color:var(--faint);font-size:12.5px}
+.c2 .pied a{color:var(--muted)}
+@media (max-width:640px){.c2 .marque .nom,.c2 .fil b{display:none}
+.c2 .tete h1{font-size:32px}
+.c2 .tete .em{width:50px;height:50px;font-size:26px}
+.c2 .carte{padding:12px 14px;grid-template-columns:40px 1fr auto}
+.c2 .carte .em{width:40px;height:40px;font-size:20px}
+}
+@media (prefers-reduced-motion: reduce){.c2 .carte,.c2 .carte .fl{transition:none}
+.c2 .carte:hover{transform:none}
+}
+/* propre à cette page : style.css stylise header, h1 et h2 directement */
+.c2{font:15px/1.5 var(--f-body);color:var(--text)}
+.c2 a{color:inherit;text-decoration:none}
+.c2 button{font:inherit;color:inherit}
+.c2 header{border-bottom:0;padding-bottom:0;grid-template-columns:none}
+.c2 .groupe>header{border-bottom:1px solid var(--line2);padding-bottom:8px}
+.c2 h1,.c2 h2{color:var(--text)}
+.c2 .tete h1{margin:0}
+.c2 .carte{cursor:pointer}
+.c2 .haut::before{left:-2rem;right:-2rem;width:auto;transform:none}   /* pleine largeur du cadre */
+html{overflow-x:clip}   /* le voile de la barre du haut ne fait pas défiler la page de côté */
+.c2 .rond{padding:0;line-height:1;margin:0}
+.c2 #logoutBtn{border:none;background:none;color:inherit;padding:9px 10px;border-radius:8px;font-size:14px}   /* style.css stylise #logoutBtn */
+.c2 #logoutBtn:hover{background:var(--panel2);color:inherit}
+@media (max-width:600px){.c2 header.haut,.c2 .groupe>header{flex-direction:row;align-items:center;text-align:left;gap:10px}
+  .c2 .outils{flex:none;flex-wrap:nowrap;width:auto}.c2 .fil{min-width:0}.c2 .fil a{white-space:nowrap}}   /* style.css empile les header sur téléphone */
+</style>
 <link rel="stylesheet" href="fond.css">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
@@ -136,57 +244,41 @@ html.light {
 <body>
 <div class="dashboard-container">
 
-  <header>
-    <a href="informatique.html" class="back-btn-dash">&#8592; Informatique</a>
-    <div style="text-align:center;">
-      <h1>Puces</h1>
-      <p class="subtitle">Simulateurs de composants électroniques</p>
-    </div>
-    <div class="header-controls">
-      <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-      <div id="hamburger-menu">
-        <a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
-        <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">✉️ Webmail</a>
-        <button id="toggle-version-btn" class="hbg-item" onclick="if(window.toggleVersionBadge)toggleVersionBadge();closeHamburger();">🏷️ Badge version</button>
-        <div class="hbg-sep"></div>
-        <div id="logoutBtn" class="hbg-item" role="button" tabindex="0">↩ Déconnexion</div>
+  <!-- en-tête et menu au visuel 2.0 (style des pages de catégorie, limité à .c2) ; les simulateurs plus bas sont inchangés -->
+  <div class="c2" style="--c:var(--c-info)">
+    <header class="haut">
+      <a class="marque" href="dashboard.html" title="Retour à l'accueil"><span class="logo" aria-hidden="true"><span>O<i>d</i>F</span></span><span class="nom">Outils de Frank</span><span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></a>
+      <nav class="fil" aria-label="Fil d'Ariane"><a href="informatique.html">← Informatique</a><b>Simulateurs de puces</b></nav>
+      <div class="outils">
+        <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
+        <div class="moi-zone">
+          <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
+          <div class="menu" id="menu" role="menu" hidden>
+            <a href="admin.html" id="m-admin" role="menuitem" hidden>⚙️ Administration</a>
+            <a href="archive.html" id="m-archives" role="menuitem" hidden>📁 Archives</a>
+            <a href="https://mail.hostinger.com/" id="m-webmail" target="_blank" rel="noopener" role="menuitem" hidden>✉️ Webmail</a>
+            <button type="button" id="m-version" role="menuitem" hidden>🏷️ Badge version des pages</button>
+            <hr>
+            <button type="button" id="logoutBtn" role="menuitem">↩ Déconnexion</button>
+          </div>
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- ── CHIP SELECTOR ─────────────────────────────── -->
-  <main id="chip-selector">
-    <p class="welcome-text">Sélectionner un composant</p>
-    <nav class="menu-grid" style="visibility:visible;">
-
-      <a href="#" class="menu-card" onclick="openChip('555');return false;">
-        <span class="icon">⏱</span>
-        <h2>NE555</h2>
-        <p>Minuterie — modes astable et monostable</p>
-      </a>
-
-      <a href="#" class="menu-card" onclick="openChip('gates');return false;">
-        <span class="icon">⊻</span>
-        <h2>Portes logiques</h2>
-        <p>AND · OR · NAND · NOR · XOR · XNOR · NOT</p>
-      </a>
-
-      <a href="#" class="menu-card" onclick="openChip('opamp');return false;">
-        <span class="icon">▷</span>
-        <h2>AO 741</h2>
-        <p>Amplificateur opérationnel — inverseur · non-inverseur · comparateur</p>
-      </a>
-
-      <a href="#" class="menu-card" onclick="openChip('6502');return false;">
-        <span class="icon">⚙️</span>
-        <h2>MOS 6502</h2>
-        <p>Processeur 8 bits — simulateur complet avec éditeur mémoire</p>
-      </a>
-
-    </nav>
-  </main>
+    <main id="chip-selector" class="cartes-zone">
+      <section class="tete"><span class="em" aria-hidden="true">🔧</span><div><h1>Simulateurs de puces</h1><p>Simulateurs de composants électroniques</p></div></section>
+      <section class="groupe">
+        <header><h2>Composants</h2><span class="nb"></span></header>
+        <p class="g-desc">Choisis un composant pour ouvrir son simulateur.</p>
+        <div class="cartes">
+          <a class="carte" href="#" onclick="openChip('555');return false;"><span class="em" aria-hidden="true">⏱️</span><span><b>NE555</b><small>Minuterie — modes astable et monostable</small></span><span class="fl" aria-hidden="true">›</span></a>
+          <a class="carte" href="#" onclick="openChip('gates');return false;"><span class="em" aria-hidden="true">🔀</span><span><b>Portes logiques</b><small>AND · OR · NAND · NOR · XOR · XNOR · NOT</small></span><span class="fl" aria-hidden="true">›</span></a>
+          <a class="carte" href="#" onclick="openChip('opamp');return false;"><span class="em" aria-hidden="true">🔺</span><span><b>AO 741</b><small>Amplificateur opérationnel — inverseur · non-inverseur · comparateur</small></span><span class="fl" aria-hidden="true">›</span></a>
+          <a class="carte" href="#" onclick="openChip('6502');return false;"><span class="em" aria-hidden="true">🖥️</span><span><b>MOS 6502</b><small>Processeur 8 bits — simulateur complet avec éditeur mémoire</small></span><span class="fl" aria-hidden="true">›</span></a>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <!-- ── SIMULATOR CONTAINER ──────────────────────── -->
   <div id="sim-container" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
@@ -406,10 +498,9 @@ html.light {
 
 </div><!-- dashboard-container -->
 
-<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;display:none;"></div>
 <script src="sw-register.js"></script>
 <script src="version.js"></script>
-<script src="theme-toggle.js"></script>
+<script type="module" src="categorie.js"></script>
 
 <script>
 /* ── NAV ─────────────────────────────────────────── */
@@ -431,32 +522,7 @@ function backToSelector() {
   document.getElementById('sim-container').style.display = 'none';
   document.getElementById('chip-selector').style.display = '';
 }
-function toggleHamburger() {
-  const m = document.getElementById('hamburger-menu');
-  const b = document.getElementById('hamburger-btn');
-  const open = m.classList.toggle('open');
-  b.classList.toggle('open', open);
-}
-function closeHamburger() {
-  document.getElementById('hamburger-menu').classList.remove('open');
-  document.getElementById('hamburger-btn').classList.remove('open');
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('#hamburger-btn') && !e.target.closest('#hamburger-menu')) closeHamburger();
-});
-// Archives : pas pour le compte invité
-const archivesBtn = document.getElementById('btn-archives');
-if (archivesBtn) archivesBtn.style.display = sessionStorage.getItem('userRole') === 'guest' ? 'none' : 'flex';
-// Webmail : admins et permission « webmail » ; badge de version : admins
-const _admChip = sessionStorage.getItem('userRole') === 'admin';
-const webmailBtn = document.getElementById('btn-webmail');
-if (webmailBtn) webmailBtn.style.display = _admChip || _pChip.includes('webmail') ? 'flex' : 'none';
-const badgeBtn = document.getElementById('toggle-version-btn');
-if (badgeBtn) badgeBtn.style.display = _admChip ? 'flex' : 'none';
-const logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) logoutBtn.addEventListener('click', () => {
-  sessionStorage.clear(); window.location.href = 'index.html';
-});
+// menu du compte, thème, déconnexion : categorie.js (comme les pages de catégorie)
 
 /* ══════════════════════════════════════════════════
    NE555 TIMER
