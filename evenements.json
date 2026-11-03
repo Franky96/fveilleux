@@ -1,0 +1,27 @@
+{
+  "note": "Événements du tableau de bord (notifications « événement »). Heures du Québec. perm : permission requise pour voir l'événement. Ajouter chaque nouvelle soirée En direct ici (voir docs/en-direct.md).",
+  "evenements": [
+    {"id": "usa-2026", "titre": "États-Unis · élections de mi-mandat", "page": "en-direct.html", "perm": "votes-quebec",
+     "debut": "2026-11-03T18:00:00-05:00", "fin": "2026-11-04T01:00:00-05:00", "quand": "mardi 3 nov., 18 h à 1 h",
+     "desc": "Soirée électorale en direct : Chambre des représentants (435 sièges, majorité à 218), carte des résultats colorée selon le parti en tête.",
+     "infos": [["Début", "mardi 3 nov., 18 h"], ["Fin prévue", "mercredi 4 nov., 1 h"], ["Page", "En direct · États-Unis"]]},
+    {"id": "nz-2026", "titre": "Nouvelle-Zélande · élections générales", "page": "en-direct-nouvelle-zelande.html", "perm": "votes-quebec",
+     "debut": "2026-11-07T01:00:00-05:00", "fin": "2026-11-07T09:00:00-05:00", "quand": "samedi 7 nov., 1 h",
+     "desc": "Chambre des représentants : 120 sièges environ, majorité à 61. Résultats la nuit, heure du Québec.",
+     "infos": [["Début", "samedi 7 nov., 1 h"], ["Page", "En direct · Nouvelle-Zélande"]]},
+    {"id": "cb-2026-officiel", "titre": "Colombie-Britannique · résultats officiels", "page": "election-cb-2026.html", "perm": "votes-quebec",
+     "debut": "2026-11-18T09:00:00-05:00", "fin": "2026-11-18T23:00:00-05:00", "quand": "mercredi 18 nov.",
+     "desc": "Résultats officiels de l'élection du 24 octobre ; l'archive de la soirée se met à jour.",
+     "infos": [["Date", "mercredi 18 nov."], ["Page", "Anciennes élections · Colombie-Britannique"]]},
+    {"id": "tw-2026", "titre": "Taïwan · élections locales", "page": "en-direct-taiwan.html", "perm": "votes-quebec",
+     "debut": "2026-11-28T03:00:00-05:00", "fin": "2026-11-28T12:00:00-05:00", "quand": "samedi 28 nov., 3 h",
+     "desc": "22 maires et chefs de comté.", "infos": [["Début", "samedi 28 nov., 3 h"], ["Page", "En direct · Taïwan"]]},
+    {"id": "es-2026", "titre": "Espagne · élections générales", "page": "en-direct-espagne.html", "perm": "votes-quebec",
+     "debut": "2026-11-29T14:00:00-05:00", "fin": "2026-11-29T23:00:00-05:00", "quand": "dimanche 29 nov., 14 h",
+     "desc": "Congrès des députés : 350 sièges, majorité à 176. Sondages interdits à partir du 24 novembre.",
+     "infos": [["Début", "dimanche 29 nov., 14 h"], ["Page", "En direct · Espagne"]]},
+    {"id": "bg-2026-t2", "titre": "Bulgarie · présidentielle, 2e tour", "page": "en-direct-bulgarie.html", "perm": "votes-quebec",
+     "debut": "2026-11-01T01:00:00-05:00", "fin": "2026-11-01T13:00:00-05:00", "quand": "dimanche 1er nov.",
+     "desc": "Soirée terminée ; la page garde les résultats du 2e tour.", "infos": [["Date", "dimanche 1er nov."], ["Page", "En direct · Bulgarie"]]}
+  ]
+}

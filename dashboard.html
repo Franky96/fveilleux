@@ -1,199 +1,286 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outils de Frank — Accueil</title>
-  <link rel="stylesheet" href="style.css">
-  <script>
-    if (!sessionStorage.getItem('loggedIn')) {
-      document.location.href = 'index.html';
-    }
-  </script>
+<meta charset="UTF-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<script>if (!sessionStorage.getItem('loggedIn')) document.location.href = 'index.html';</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outils de Frank — Accueil</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Tableau de bord (visuel 2.0, novembre 2026). Plus calme que la page de connexion : recherche, raccourcis avec aperçu,
+   puis tout le site en listes groupées par thème (avec les sous-pages), au lieu d'une grille de carrés. */
+:root{
+  color-scheme:dark;
+  --bg:#0a0e11; --bg2:#0e1418; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79;
+  --c-avia:#5ec8f0; --c-info:#6fdc8c; --c-pol:#8f7cff; --c-lois:#f2a03d; --c-trav:#a7b3bd;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:14px;
+}
+html.light{
+  color-scheme:light;
+  --bg:#f2f4f6; --bg2:#eaeef1; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0;
+  --c-avia:#1c86b5; --c-info:#23935a; --c-pol:#6252d6; --c-lois:#c4701a; --c-trav:#5f6d78;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body)}
+body{background:radial-gradient(1200px 380px at 50% -120px, var(--bg2), transparent 70%), var(--bg);min-height:100vh;
+  padding:0 max(18px,env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--c-avia);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto}
+
+/* ---- barre du haut ---- */
+.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px;
+  background:linear-gradient(var(--bg) 70%, transparent)}
+.marque{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;white-space:nowrap}
+.logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;
+  background:conic-gradient(from 210deg,#5ec8f0,#6fdc8c,#f2a03d,#8f7cff,#5ec8f0)}
+.logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%)}
+.logo span{position:relative;z-index:1;font-weight:800;font-size:17px;color:#071016;letter-spacing:-.3px}
+.logo i{font-style:normal;font-size:12px;opacity:.62}
+.recherche{flex:1;max-width:520px;margin:0 auto;position:relative}
+.recherche input{width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 14px 10px 40px;font-size:15px;outline:none}
+.recherche input:focus{border-color:var(--c-avia)}
+.recherche::before{content:"⌕";position:absolute;left:14px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:20px}
+.recherche kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--f-mono);font-size:11px;color:var(--faint);border:1px solid var(--line2);border-radius:6px;padding:1px 6px}
+.outils{display:flex;align-items:center;gap:8px}
+.rond{width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:var(--panel);display:grid;place-items:center;cursor:pointer;font-size:16px}
+.rond.moi{font-family:var(--f-display);font-weight:700;font-size:16px;background:var(--panel2)}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:210px;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.3)}
+.menu a,.menu button{display:flex;gap:10px;width:100%;padding:9px 10px;border-radius:8px;background:none;border:none;text-align:left;cursor:pointer;font-size:14px}
+.menu a:hover,.menu button:hover{background:var(--panel2)}
+.menu hr{border:none;border-top:1px solid var(--line);margin:4px 0}
+.moi-zone{position:relative}
+
+/* ---- bonjour ---- */
+.bonjour{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin:18px 0 18px}
+.bonjour h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:38px;line-height:1.05;letter-spacing:.01em}
+.bonjour p{margin:2px 0 0;color:var(--muted)}
+.signaux{display:flex;flex-wrap:wrap;gap:8px}
+.signal{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;white-space:nowrap}
+.signal b{font-weight:600}
+.pt{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.pt.vif{box-shadow:0 0 0 0 var(--c);animation:pouls 2s infinite}
+@keyframes pouls{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 60%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+
+h2.sect{font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+
+/* ---- raccourcis (aperçus) ---- */
+.tuile{position:relative;display:flex;flex-direction:column;border-radius:var(--r);overflow:hidden;background:var(--panel);border:1px solid var(--line);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.tuile:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--c) 55%,var(--line));box-shadow:0 14px 34px rgba(0,0,0,.25)}
+.tuile .vue{position:relative;aspect-ratio:16/9;background:#0b1014 center/cover no-repeat;border-bottom:1px solid var(--line)}
+.tuile .vue::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.35))}
+.tuile .corps{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.tuile .titre{display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px}
+.tuile .titre::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--c)}
+.tuile .desc{color:var(--muted);font-size:13.5px}
+.tuile .info{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+.puce{font-family:var(--f-mono);font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+.puce b{color:var(--text);font-weight:500}
+.t-grand{grid-row:span 2}
+.t-grand .vue{aspect-ratio:auto;flex:1;min-height:200px}
+.t-petit{flex-direction:row}
+.t-petit .vue{aspect-ratio:auto;width:42%;min-height:120px;border-bottom:none;border-right:1px solid var(--line)}
+.t-petit .corps{flex:1;justify-content:center}
+
+
+/* ---- tout le site ---- */
+.groupes{columns:3 330px;column-gap:14px}
+.groupe{break-inside:avoid;margin-bottom:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.groupe header{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
+.groupe header .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:15px;background:color-mix(in srgb,var(--c) 16%,transparent)}
+.groupe header h3{margin:0;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.03em;flex:1}
+.groupe header span{color:var(--faint);font-size:12px;font-family:var(--f-mono)}
+.ligne{position:relative;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:2px 10px;padding:9px 14px;border-top:1px solid var(--line)}
+.ligne:hover{background:var(--panel2)}
+.lien::after{content:"";position:absolute;inset:0}
+.lien:focus-visible{outline:none}.ligne:focus-within{box-shadow:inset 0 0 0 2px var(--c)}
+.ligne .em{font-size:19px;text-align:center}
+.ligne b{font-weight:600;font-size:14.5px}
+.ligne small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35}
+.ligne .fl{color:var(--faint);font-size:18px;transition:transform .15s}
+.ligne:hover .fl{transform:translateX(3px);color:var(--c)}
+.sous{position:relative;z-index:1;grid-column:2/-1;display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.sous a{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--muted);background:var(--bg)}
+.sous a:hover{color:var(--text);border-color:var(--c)}
+.cache{display:none!important}
+mark{background:color-mix(in srgb,var(--c-lois) 35%,transparent);color:inherit;border-radius:3px}
+.vide{display:none;color:var(--muted);padding:20px 0;text-align:center}
+.pied{margin-top:26px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;color:var(--faint);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+.pied a:hover{color:var(--text)}
+
+
+/* ---- raccourcis personnalisés ---- */
+.sect-tete{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sect-tete h2.sect{margin:26px 0 10px}
+.lienbtn{background:none;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted);cursor:pointer;margin-top:16px}
+.lienbtn:hover{color:var(--text);border-color:var(--c-avia)}
+.lienbtn.on{background:var(--c-avia);border-color:var(--c-avia);color:#04121a;font-weight:600}
+.raccourcis{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));grid-template-rows:none;gap:14px}
+.raccourcis .tuile .vue{aspect-ratio:16/9;flex:none;min-height:0}
+.vue.ico{display:grid;place-items:center;font-size:54px;background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--c) 32%,transparent),transparent 70%),var(--panel2)}
+.vue.ico::after{display:none}
+.tuile .ctl{position:absolute;top:8px;right:8px;display:none;gap:4px;z-index:2}
+.perso .tuile .ctl{display:flex}
+.ctl button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,14,17,.75);color:#fff;cursor:pointer;font-size:15px;line-height:1}
+.ctl button.x:hover{background:#d9443b}
+.perso .tuile{cursor:grab;animation:tremble .35s ease-in-out infinite alternate}
+.perso .tuile:nth-child(2n){animation-delay:-.17s}
+@keyframes tremble{from{transform:rotate(-.35deg)}to{transform:rotate(.35deg)}}
+.perso .tuile.glisse{opacity:.4}
+.ajout{display:none;place-items:center;align-content:center;gap:6px;min-height:150px;border:2px dashed var(--line2);border-radius:var(--r);background:none;color:var(--muted);cursor:pointer;font-size:14px}
+.ajout span{font-size:32px;line-height:1;color:var(--c-avia)}
+.perso .ajout{display:grid}
+.ajout:hover{border-color:var(--c-avia);color:var(--text)}
+.aide-perso{margin:8px 0 0;color:var(--muted);font-size:13px}
+.vide-racc{grid-column:1/-1;color:var(--muted);font-size:14px;padding:18px;border:1px dashed var(--line2);border-radius:var(--r);text-align:center}
+dialog.choix{border:1px solid var(--line2);border-radius:16px;background:var(--panel);color:var(--text);padding:0;width:min(520px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 40px))}
+dialog.choix::backdrop{background:rgba(0,0,0,.5)}
+.choix .tete{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.choix .tete h3{margin:0;flex:1;font-family:var(--f-display);font-size:20px}
+.choix .tete input{width:100%}
+.choix .liste{overflow:auto;max-height:440px;padding:6px}
+.choix .opt{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:none;background:none;border-radius:10px;text-align:left;cursor:pointer}
+.choix .opt:hover{background:var(--panel2)}
+.choix .opt small{display:block;color:var(--muted);font-size:12px}
+.choix .opt .em{font-size:20px;width:28px;text-align:center}
+.choix .opt .grp{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
+@media (prefers-reduced-motion: reduce){.perso .tuile{animation:none}}
+
+/* ---- notifications : événements (tout le monde) et vérifications (administrateurs) ---- */
+.signaux-zone{position:relative}
+.notifs[hidden],.n-onglets button[hidden]{display:none!important}
+.signal{cursor:pointer;color:var(--text)}
+.signal:hover{border-color:var(--line2)}
+.signal .nb{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.notifs{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(440px,calc(100vw - 36px));max-height:min(620px,calc(100dvh - 160px));display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--line2);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden}
+.n-tete{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 12px;border-bottom:1px solid var(--line)}
+.n-onglets{display:flex;gap:4px;flex:1}
+.n-onglets button{border:none;background:none;border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--muted);font-size:13.5px}
+.n-onglets button[aria-selected="true"]{background:var(--panel2);color:var(--text);font-weight:600}
+.n-onglets span{font-family:var(--f-mono);font-size:11px;opacity:.8}
+.rond.petit{width:30px;height:30px;font-size:16px}
+.n-liste{overflow:auto;padding:6px}
+.n-groupe{font-family:var(--f-display);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:11.5px;color:var(--faint);margin:10px 8px 4px}
+.n-item{border-radius:12px;border:1px solid transparent}
+.n-item[open]{background:var(--panel2);border-color:var(--line)}
+.n-item summary{list-style:none;display:grid;grid-template-columns:22px 1fr auto;gap:2px 10px;align-items:start;padding:9px 10px;cursor:pointer;border-radius:12px}
+.n-item summary::-webkit-details-marker{display:none}
+.n-item summary:hover{background:var(--panel2)}
+.n-ic{width:10px;height:10px;border-radius:50%;margin:6px 0 0 6px;background:var(--c)}
+.n-ic.vif{animation:pouls 2s infinite}
+.n-titre{font-weight:600;font-size:14px}
+.n-sous{grid-column:2;color:var(--muted);font-size:12.5px}
+.n-quand{font-family:var(--f-mono);font-size:11px;color:var(--muted);white-space:nowrap;padding-top:2px}
+.n-det{padding:0 12px 12px 42px;font-size:13px}
+.n-det p{margin:0 0 8px;color:var(--muted)}
+.n-det dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0 0 10px}
+.n-det dt{color:var(--faint)}
+.n-det dd{margin:0}
+.n-actions{display:flex;flex-wrap:wrap;gap:6px}
+.n-actions a,.n-actions button{font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;color:var(--text)}
+.n-actions a:hover,.n-actions button:hover{border-color:var(--c-avia)}
+.n-pied{margin:0;padding:8px 14px 10px;border-top:1px solid var(--line);color:var(--faint);font-size:12px}
+.etat{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+@media (max-width:600px){
+  .notifs{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-height:80dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+  .signaux-zone{width:100%}
+}
+
+@media (max-width:900px){
+  .raccourcis{grid-template-columns:1fr 1fr}
+  .t-grand{grid-row:auto}
+  .t-grand .vue{aspect-ratio:16/9;flex:none;min-height:0}
+}
+@media (max-width:600px){
+  .haut{flex-wrap:wrap;gap:10px}
+  .marque{flex:1}
+  .recherche{order:3;flex-basis:100%;max-width:none}
+  .recherche kbd{display:none}
+  .bonjour h1{font-size:30px}
+  .raccourcis{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -18px;padding:0 18px 4px;scrollbar-width:none}
+  .raccourcis::-webkit-scrollbar{display:none}
+  .tuile{flex:0 0 78%;scroll-snap-align:start}
+  .t-petit{flex-direction:column}
+  .t-petit .vue{width:auto;aspect-ratio:16/9;min-height:0;border-right:none;border-bottom:1px solid var(--line)}
+}
+@media (prefers-reduced-motion: reduce){.pt.vif{animation:none}.tuile,.ligne .fl{transition:none}}
+</style>
 </head>
 <body>
-  <div class="dashboard-container">
-
-    <header>
-      <h1>Outils de Frank</h1>
-      <p class="subtitle">Bienvenue, Francis 👋</p>
-      <div class="header-controls">
-        <button id="hamburger-btn" onclick="toggleHamburger()" aria-label="Menu">
-          <span></span><span></span><span></span>
-        </button>
-        <div id="hamburger-menu">
-          <a href="archive.html" id="btn-archives" class="hbg-item" onclick="closeHamburger()">📁 Archives</a>
-          <a href="https://mail.hostinger.com/" id="btn-webmail" target="_blank" class="hbg-item" onclick="closeHamburger()">
-            ✉️ Webmail
-          </a>
-          <button id="toggle-version-btn" class="hbg-item" onclick="toggleVersionBadge(); closeHamburger();">
-            🏷️ Badge version
-          </button>
-          <a id="btn-concept" href="concept/index.html" class="hbg-item" onclick="closeHamburger()">
-            🎨 Concept
-          </a>
-          <div class="hbg-sep" id="admin-sep"></div>
-          <div id="logoutBtn" class="hbg-item" role="button" tabindex="0">
-            ↩ Déconnexion
-          </div>
+<div class="wrap">
+  <header class="haut">
+    <div class="marque"><div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div>Outils de Frank</div>
+    <label class="recherche"><span style="position:absolute;left:-9999px">Rechercher une page</span>
+      <input id="q" type="search" placeholder="Rechercher une page ou un outil…" autocomplete="off"><kbd>/</kbd></label>
+    <div class="outils">
+      <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
+      <div class="moi-zone">
+        <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
+        <div class="menu" id="menu" role="menu" hidden>
+          <a href="admin.html" id="m-admin" role="menuitem" hidden>⚙️ Administration</a>
+          <a href="archive.html" id="m-archives" role="menuitem" hidden>📁 Archives</a>
+          <a href="concept/index.html" id="m-concept" role="menuitem" hidden>🎨 Concept</a>
+          <a href="https://mail.hostinger.com/" id="m-webmail" target="_blank" rel="noopener" role="menuitem" hidden>✉️ Webmail</a>
+          <button type="button" id="m-version" role="menuitem" hidden>🏷️ Badge version</button>
+          <hr>
+          <button type="button" id="logoutBtn" role="menuitem">↩ Déconnexion</button>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <p class="welcome-text">
-        Les Outils
-      </p>
+  <section class="bonjour">
+    <div><h1 id="salut">Bonjour</h1><p id="date"></p></div>
+    <div class="signaux-zone">
+      <div class="signaux" id="signaux"></div>
+      <div class="notifs" id="notifs" role="dialog" aria-label="Notifications" hidden>
+        <div class="n-tete">
+          <div class="n-onglets" role="tablist">
+            <button type="button" role="tab" data-onglet="evt" aria-selected="true">Événements <span id="n-nb-evt"></span></button>
+            <button type="button" role="tab" data-onglet="verif" aria-selected="false" id="n-tab-verif" hidden>Vérifications <span id="n-nb-verif"></span></button>
+          </div>
+          <button class="rond petit" type="button" id="n-x" aria-label="Fermer">×</button>
+        </div>
+        <div class="n-liste" id="n-liste"></div>
+        <p class="n-pied" id="n-pied"></p>
+      </div>
+    </div>
+  </section>
 
-      <nav class="menu-grid" id="menu-grid" style="visibility:hidden;">
-        
-        <a href="ena.html" class="menu-card" data-section="ena">
-          <span class="icon">🛠️</span>
-          <h2>ÉNA</h2>
-          <p>École nationale d'aérotechnique</p>
-        </a>
-        
-        <a href="aviation.html" class="menu-card" data-section="aviation">
-          <span class="icon">✈️</span>
-          <h2>Aviation</h2>
-          <p>Outils, météo et aéronefs</p>
-        </a>
-        
-        <a href="bieres.html" class="menu-card" data-section="bieres">
-          <span class="icon">🍺</span>
-          <h2>Bières</h2>
-          <p>Vive la zythologie</p>
-        </a>
-        
-        <a href="scifi.html" class="menu-card" data-section="scifi">
-          <span class="icon">🚀</span>
-          <h2>Science-Fiction</h2>
-          <p>Archives galactiques</p>
-        </a>
-        
-        <a href="hockey.html" class="menu-card" data-section="hockey">
-          <span class="icon">🏒</span>
-          <h2>Hockey</h2>
-          <p>Statistiques LNH</p>
-        </a>
-        
-        <a href="liens.html" class="menu-card" data-section="liens">
-          <span class="icon">🌍</span>
-          <h2>Liens utiles</h2>
-          <p>Ressources et favoris</p>
-        </a>
+  <section id="sect-raccourcis" hidden>
+    <div class="sect-tete"><h2 class="sect">Mes raccourcis</h2><button class="lienbtn" id="b-perso" type="button">✎ Personnaliser</button></div>
+    <div class="raccourcis" id="raccourcis"></div>
+    <p class="aide-perso" id="aide-perso" hidden>Glisse une tuile pour la déplacer (ou utilise ‹ ›), × pour la retirer. Tes raccourcis te suivent sur tous tes appareils.</p>
+  </section>
 
-        <a href="films.html" class="menu-card" data-section="films">
-          <span class="icon">🎬</span>
-          <h2>Films & Séries</h2>
-          <p>Ma liste de visionnement</p>
-        </a>
+  <h2 class="sect" id="t-tout">Tout le site</h2>
+  <div class="groupes" id="groupes"></div>
+  <p class="vide" id="vide">Aucune page ne correspond.</p>
 
-        <a href="informatique.html" class="menu-card" data-section="informatique">
-          <span class="icon">💻</span>
-          <h2>Informatique</h2>
-          <p>Outils techniques et avioniques</p>
-        </a>
+  <footer class="pied"><span>fveilleux.com</span><span id="pied-liens"></span></footer>
+</div>
 
-        <a href="moteurs.html" class="menu-card" data-section="moteurs">
-          <span class="icon">🌀</span>
-          <h2>Moteurs</h2>
-          <p>Simulations CFM56-7B et PT6A-21</p>
-        </a>
+<dialog class="choix" id="choix" aria-labelledby="choix-t">
+  <div class="tete"><h3 id="choix-t">Ajouter un raccourci</h3><button class="rond" type="button" id="choix-x" aria-label="Fermer">×</button></div>
+  <div class="tete" style="border-bottom:none;padding-bottom:4px"><label class="recherche" style="max-width:none;margin:0;flex:1"><input id="choix-q" type="search" placeholder="Chercher une page…" autocomplete="off"></label></div>
+  <div class="liste" id="choix-liste"></div>
+</dialog>
 
-        <a href="jeuxdesociete.html" class="menu-card" data-section="jeuxdesociete">
-          <span class="icon">🎲</span>
-          <h2>Jeux de société</h2>
-          <p>Outils et compagnons de jeux</p>
-        </a>
-
-        <a href="rona.html" class="menu-card" data-section="rona">
-          <span class="icon">👷‍♂️</span>
-          <h2>RONA S&amp;S</h2>
-          <p>Suivi des trousses de premiers soins</p>
-        </a>
-
-        <a href="pageTest.html" class="menu-card" data-section="pageTest">
-          <span class="icon">🧪</span>
-          <h2>Page de tests</h2>
-          <p>Page pour faire des tests html et js</p>
-        </a>
-
-        <a href="intentions-simulations.html" class="menu-card" data-section="votes-quebec">
-          <span class="icon">🗳️</span>
-          <h2>Intentions de vote et simulations</h2>
-        </a>
-
-        <a href="distant.html" class="menu-card" data-section="distant">
-          <span class="icon">🖥️</span>
-          <h2>Connexion à distance</h2>
-          <p>Manuels de maintenance du cégep, dans le navigateur</p>
-        </a>
-
-        <a href="information-monde.html" class="menu-card" data-section="monde">
-          <span class="icon">🗺️</span>
-          <h2>Information Monde</h2>
-          <p>Globe des pays et leurs drapeaux</p>
-        </a>
-
-        <a href="heure-ete-hiver.html" class="menu-card" data-section="heure">
-          <span class="icon">🕰️</span>
-          <h2>Heure d'été ou d'hiver ?</h2>
-          <p>Le soleil toute l'année selon l'heure que le Québec gardera</p>
-        </a>
-
-        <a href="cadeaux.html" class="menu-card" data-section="cadeaux">
-          <span class="icon">🎁</span>
-          <h2>Listes de cadeaux</h2>
-          <p>Les idées de cadeaux de chacun, avec liens et photos</p>
-        </a>
-
-        <a href="osint.html" class="menu-card" data-section="osint">
-          <span class="icon">🌐</span>
-          <h2>OSINT Map</h2>
-          <p>Avions, satellites, séismes en direct</p>
-        </a>
-
-      </nav>
-    </main>
-
-  </div>
-
-  <!-- Bouton Archives — fixé en bas à droite -->
-
-  <script>
-    function toggleHamburger() {
-      const menu = document.getElementById('hamburger-menu');
-      const btn  = document.getElementById('hamburger-btn');
-      const open = menu.classList.toggle('open');
-      btn.classList.toggle('open', open);
-    }
-    function closeHamburger() {
-      document.getElementById('hamburger-menu').classList.remove('open');
-      document.getElementById('hamburger-btn').classList.remove('open');
-    }
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('#hamburger-btn') && !e.target.closest('#hamburger-menu')) {
-        closeHamburger();
-      }
-    });
-  </script>
-
-  <script type="module" src="dashboard.js"></script>
-
-  <div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
-  <script src="version.js"></script>
-  <script src="theme-toggle.js"></script>
-  <script>
-    // Déplace le toggle dans le header pour l'aligner avec h1 et subtitle
-    (function () {
-      const toggle = document.getElementById('theme-toggle');
-      const controls = document.querySelector('.header-controls');
-      if (toggle && controls) {
-        toggle.classList.remove('theme-toggle--fixed');
-        controls.prepend(toggle);
-      }
-    })();
-  </script>
+<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
+<script src="version.js"></script>
+<script type="module" src="dashboard.js"></script>
 </body>
 </html>

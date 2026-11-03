@@ -37,6 +37,8 @@ Pour les soirées de novembre, qui ont déjà chacune leur page et leur dossier,
 
 ## Vérifications le soir de chaque vote
 
+Quand une soirée est ajoutée (ou que son heure change) : l'inscrire dans `evenements.json` (notifications « événement » du tableau de bord : début, fin, page, permission `votes-quebec`).
+
 Avant l'heure :
 - Ouvrir la page, puis la démo (`?demo=…`) : rien de cassé.
 - Lancer le workflow de la soirée à la main (outil GitHub `actions_run_trigger`, avec `--force` par défaut), puis lire son journal : la source répond-elle depuis GitHub ?

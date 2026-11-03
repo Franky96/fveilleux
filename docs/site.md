@@ -18,13 +18,17 @@
 
 - **Connexion** :
   - `index.html` et `auth.js` envoient la demande à `api/login.php`, qui vérifie un hachage bcrypt et freine les essais répétés par adresse IP.
+  - **Page de connexion (visuel 2.0, 3 novembre 2026)** : fond en 4 diagonales, chacune un aperçu animé d'une page (PT6A-21, ARINC 429, Votes Québec, Hélice) : vidéos courtes en boucle de `connexion/` (WebM puis MP4 pour Safari ; affiche JPEG fixe). Les vidéos ne démarrent pas en mouvement réduit, en économie de données, avec peu de mémoire ou un processeur modeste, ni si iOS bloque la lecture ; si l'écran ne suit pas dans les 4 premières secondes, elles s'arrêtent et le navigateur s'en souvient (`localStorage.apercus`) ; bouton « Figer / Animer ». Thème clair ou sombre comme le reste du site. Logo et favicon « OdF » sur fond dégradé aux quatre couleurs (`favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`). Les vidéos ont été filmées image par image avec une horloge virtuelle (Playwright), hors du dépôt.
   - Le navigateur garde ensuite en `sessionStorage` : `loggedIn`, `userId`, `userName`, `userRole` (`admin`, `user` ou `guest`), `userPermissions` (tableau JSON) et `pageAccueil`.
   - Le serveur garde sa propre session PHP (`api/session.php` : `requireLogin()`, `requireAdmin()`, `getSession()`, `normaliserPermissions()`).
 - **Bouton invité** : connexion `guest` avec les permissions accordées aux invités (`SECTIONS_INVITABLES` d'admin.js).
 - **Chaque page** commence par un petit script qui renvoie à `index.html` ou à `dashboard.html` sans `loggedIn` ou sans la bonne permission ; l'administrateur passe partout. Ce n'est qu'un confort d'affichage : la vraie protection est dans chaque script PHP, qui revérifie la session et la permission.
 - **Permissions** : `PERMS_STRUCTURE` d'`admin.js` donne la liste et la hiérarchie, par exemple Moteurs → PT6A-21, ou Informatique → CSDB. Les anciens noms sont convertis par `ANCIENNES_PERMISSIONS` côté PHP et l'équivalent côté JS.
   - Quelques clés : `votes-quebec` (section Intentions de vote et En direct), `pt6a21` ou `moteurs`, `monde`, `rona`.
-- **Tableau de bord** : `dashboard.html` et `dashboard.js` montrent les cartes `.menu-card[data-section]` permises. Les sections archivées (`SECTIONS_ARCHIVABLES`, réglées dans admin) passent dans `archive.html`.
+- **Tableau de bord** (`dashboard.html`, `dashboard.js`, visuel 2.0 du 3 novembre 2026) : recherche (« / », Entrée ouvre le premier résultat), « Mes raccourcis », puis « Tout le site » en listes groupées par thème avec les sous-pages en pastilles (`GROUPES` de dashboard.js : page, permission, sous-pages et leurs permissions). Une page s'affiche si la personne a sa permission ou celle d'une de ses sous-pages ; une sous-page, si elle a la permission de la page ou la sienne ; les sections archivées (`SECTIONS_ARCHIVABLES`, réglées dans admin) n'y sont pas et passent dans `archive.html`. **Toute nouvelle page va dans `GROUPES`.**
+  - **Raccourcis** : propres à chaque compte, jusqu'à 8, « Personnaliser » (retirer, réordonner, ajouter parmi les pages permises), enregistrés sur le serveur par `api/prefs.php` (collection `_prefs`, un document par compte) ; par défaut PT6A-21, Votes Québec, ARINC 429, Hélice (celles que la personne peut voir). **Le compte invité n'a pas de raccourcis** (demande de l'utilisateur). Aperçus des tuiles dans `tableau/`.
+  - **Notifications en haut à droite**, deux sortes (demande de l'utilisateur) : **événements** (`evenements.json`, public : soirées électorales, résultats officiels ; chacun avec sa permission `perm`, retirés 7 jours après la fin ; détail, « Ouvrir la page », « Ajouter à mon calendrier » en .ics) et **vérifications** (`api/notifs.php`, **administrateurs seulement**, refusé par le serveur aux autres : passage du pipeline d'après `votes-quebec/verif.json`, Loi 39, gouvernements actuels, sondages, dernière mise en ligne ; états ok / à surveiller / erreur).
+  - Menu du compte (lettre du nom) : Administration (admin), Archives et Concept (pas l'invité), Webmail (admin ou permission `webmail`), Badge version (admin), Déconnexion.
 - **Administration** : `admin.html` et `admin.js`, avec `api/users.php`. On y gère les utilisateurs, les rôles, les permissions, la page d'accueil de chacun, les archives et les invités.
   - `api/coffre.php` gère le coffre des mots de passe (copie chiffrée AES-256-GCM) et la double authentification des administrateurs. La clé est hors du site.
 
@@ -45,6 +49,8 @@
   - `api/photo-depute.php` : photos officielles des députés de l'Assemblée nationale ;
   - `api/manuel.php` : manuels PDF hors du site, pour les utilisateurs connectés ;
   - `api/distant.php` : connexion à distance ;
+  - `api/prefs.php` : raccourcis du tableau de bord de chaque compte (pas l'invité) ;
+  - `api/notifs.php` : notifications de vérification du tableau de bord (administrateurs seulement) ;
   - `api/cadeaux.php` : listes de cadeaux (voir `docs/autres-pages.md`) ; seul script où un invité peut écrire, après le code d'accès de la page.
 - **En-têtes de sécurité** : posés par `session.php` (HSTS, nosniff, X-Frame-Options DENY, envois limités à 2 Mo).
 

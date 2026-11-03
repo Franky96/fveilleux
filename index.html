@@ -1,28 +1,238 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Outils de Frank — Connexion</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outils de Frank — Connexion</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Page de connexion (visuel 2.0, novembre 2026). Fond en 4 diagonales, chacune un aperçu animé d'une page du site
+   (vidéo courte en boucle ; image fixe sur un appareil trop lent, en économie de données ou en mouvement réduit). */
+:root{
+  color-scheme:dark;
+  --fond:#06090c; --texte:#e6edf2; --gris:#8b99a5; --trait:rgba(255,255,255,.14);
+  --carte:rgba(12,17,22,.62); --champ:rgba(255,255,255,.05); --champ-trait:rgba(255,255,255,.12);
+  --pt6:#5ec8f0; --arinc:#6fdc8c; --votes:#8f7cff; --helice:#f2a03d;
+  --lum:.66; --lum-survol:.86;
+  --voile-c:6,9,12;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --pente:14;
+}
+html.light{
+  color-scheme:light;
+  --fond:#eef2f5; --texte:#13202a; --gris:#55636f; --trait:rgba(0,0,0,.1);
+  --carte:rgba(255,255,255,.72); --champ:rgba(255,255,255,.85); --champ-trait:rgba(0,0,0,.14);
+  --pt6:#1c86b5; --arinc:#23935a; --votes:#6252d6; --helice:#c4701a;
+  --lum:.9; --lum-survol:1;
+  --voile-c:238,242,245;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--fond);color:var(--texte);font:16px/1.5 var(--f-body);overflow:hidden}
+
+/* ---- les diagonales ---- */
+.bandes{position:fixed;inset:0;overflow:hidden}
+.bande{position:absolute;inset:0;clip-path:var(--clip)}
+.bande[data-k]{--larg:calc((100% + var(--pente) * 1%) / 4 + var(--pente) * 1%)}
+.bande .img,.bande video{position:absolute;top:-3%;height:106%;left:var(--g);width:var(--l);object-fit:cover;object-position:var(--pos,center);
+  background-size:cover;background-position:var(--pos,center);filter:brightness(var(--lum)) saturate(1);transition:filter .6s ease,opacity .8s ease}
+.bande .img{animation:derive 38s ease-in-out infinite alternate;animation-delay:var(--retard,0s)}
+/* vidéo : moins zoomée que l'image (une vidéo horizontale dans une bande oblique), au milieu de la bande, fondue en haut et en bas ;
+   l'image fixe reste derrière, floue, comme ambiance */
+.bande video{opacity:0;top:50%;height:auto;aspect-ratio:var(--ar,16/10);left:calc(var(--g) - var(--l) * .3);width:calc(var(--l) * 1.6);transform:translateY(-50%);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 16%,#000 84%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0%,#000 16%,#000 84%,transparent 100%)}
+.bandes.animees .img{filter:blur(18px) brightness(calc(var(--lum) * .7)) saturate(1.1);animation:none}
+.bande video.joue{opacity:1}
+.bande:hover .img,.bande:hover video{filter:brightness(var(--lum-survol)) saturate(1.1)}
+.bande::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,color-mix(in srgb,var(--c) 20%,transparent));opacity:.6;pointer-events:none}
+@keyframes derive{from{transform:scale(1.02) translate(-1%,-1%)}to{transform:scale(1.08) translate(1%,1%)}}
+.b1{--clip:polygon(0% 0%, calc((100% + var(--pente) * 1%) * .25) 0%, calc((100% + var(--pente) * 1%) * .25 - var(--pente) * 1%) 100%, 0% 100%)}
+.b2{--clip:polygon(calc((100% + var(--pente) * 1%) * .25) 0%, calc((100% + var(--pente) * 1%) * .5) 0%, calc((100% + var(--pente) * 1%) * .5 - var(--pente) * 1%) 100%, calc((100% + var(--pente) * 1%) * .25 - var(--pente) * 1%) 100%)}
+.b3{--clip:polygon(calc((100% + var(--pente) * 1%) * .5) 0%, calc((100% + var(--pente) * 1%) * .75) 0%, calc((100% + var(--pente) * 1%) * .75 - var(--pente) * 1%) 100%, calc((100% + var(--pente) * 1%) * .5 - var(--pente) * 1%) 100%)}
+.b4{--clip:polygon(calc((100% + var(--pente) * 1%) * .75) 0%, 100% 0%, 100% 100%, calc((100% + var(--pente) * 1%) * .75 - var(--pente) * 1%) 100%)}
+.b1 .img,.b1 video{--g:calc(0% - var(--pente) * 1%);--l:var(--larg)}
+.b2 .img,.b2 video{--g:calc((100% + var(--pente) * 1%) * .25 - var(--pente) * 1%);--l:var(--larg)}
+.b3 .img,.b3 video{--g:calc((100% + var(--pente) * 1%) * .5 - var(--pente) * 1%);--l:var(--larg)}
+.b4 .img,.b4 video{--g:calc((100% + var(--pente) * 1%) * .75 - var(--pente) * 1%);--l:var(--larg)}
+.traits{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.traits line{stroke-width:1.5;opacity:.8}
+.voile{position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(ellipse 34% 48% at 50% 50%, rgba(var(--voile-c),.72) 0%, rgba(var(--voile-c),.25) 65%, rgba(var(--voile-c),0) 100%),
+  linear-gradient(180deg, rgba(var(--voile-c),.5) 0%, rgba(var(--voile-c),0) 18%, rgba(var(--voile-c),0) 78%, rgba(var(--voile-c),.8) 100%)}
+.etiq{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:2px;pointer-events:none;transform:translateX(-50%);text-align:center;white-space:nowrap}
+.etiq b{font-family:var(--f-display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:15px;color:var(--c)}
+.etiq span{font-size:12px;color:var(--gris);letter-spacing:.04em}
+.etiq::before{content:"";align-self:center;width:28px;height:2px;border-radius:2px;background:var(--c);margin-bottom:6px;box-shadow:0 0 12px var(--c)}
+
+/* ---- carte de connexion ---- */
+main{position:relative;z-index:2;height:100%;display:grid;place-items:center;padding:24px}
+.carte{width:min(380px,100%);padding:30px 28px 24px;border-radius:20px;background:var(--carte);border:1px solid var(--trait);
+  backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);
+  box-shadow:0 30px 80px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
+.marque{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;position:relative;overflow:hidden;
+  background:conic-gradient(from 210deg,#5ec8f0,#6fdc8c,#f2a03d,#8f7cff,#5ec8f0);box-shadow:0 0 24px rgba(94,200,240,.25)}
+.logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 55%)}
+.logo span{position:relative;z-index:1;font-family:var(--f-display);font-weight:800;font-size:25px;letter-spacing:-.5px;color:#071016;line-height:1;margin-top:-1px}
+.logo i{font-style:normal;font-weight:700;font-size:18px;opacity:.62}
+h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.02em;line-height:1}
+.sous{margin:2px 0 0;color:var(--gris);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+form{display:grid;gap:10px}
+label.champ{display:grid;gap:4px;font-size:12px;color:var(--gris);letter-spacing:.06em;text-transform:uppercase}
+input{width:100%;font:inherit;font-size:16px;color:var(--texte);background:var(--champ);border:1px solid var(--champ-trait);border-radius:10px;padding:11px 13px;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--pt6)}
+button{font:inherit;cursor:pointer;border-radius:10px;min-height:46px;transition:transform .1s,filter .2s,border-color .2s,color .2s}
+button:active{transform:scale(.985)}
+.entrer{margin-top:6px;border:none;color:#04121a;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;
+  background:linear-gradient(90deg,#5ec8f0,#6fdc8c);box-shadow:0 8px 24px rgba(94,200,240,.25)}
+.entrer:hover{filter:brightness(1.08)}
+#error-msg{margin:0;min-height:1.2em;color:#e0503f;font-size:13px}
+.ou{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--gris);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.ou::before,.ou::after{content:"";flex:1;height:1px;background:var(--trait)}
+#guest-btn{width:100%;background:transparent;border:1px solid var(--champ-trait);color:var(--texte);font-size:15px}
+#guest-btn:hover{border-color:var(--helice);color:var(--helice)}
+.pied{margin:16px 0 0;text-align:center;font-family:var(--f-mono);font-size:11px;color:var(--gris);opacity:.7;letter-spacing:.06em}
+:focus-visible{outline:2px solid var(--helice);outline-offset:2px}
+
+/* ---- petits réglages en haut à droite : aperçus animés ou figés, thème ---- */
+.coin{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:3;display:flex;gap:6px}
+.coin button{min-height:34px;padding:0 12px;border-radius:999px;font-size:12.5px;color:var(--texte);background:var(--carte);border:1px solid var(--trait);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+
+/* ---- téléphone en portrait : bandes obliques empilées ---- */
+@media (orientation: portrait) and (max-width: 760px){
+  :root{--pente:10}
+  .b1{--clip:polygon(0 0, 100% 0, 100% calc((100% + var(--pente) * 1%) * .25 - var(--pente) * 1%), 0 calc((100% + var(--pente) * 1%) * .25))}
+  .b2{--clip:polygon(0 calc((100% + var(--pente) * 1%) * .25), 100% calc((100% + var(--pente) * 1%) * .25 - var(--pente) * 1%), 100% calc((100% + var(--pente) * 1%) * .5 - var(--pente) * 1%), 0 calc((100% + var(--pente) * 1%) * .5))}
+  .b3{--clip:polygon(0 calc((100% + var(--pente) * 1%) * .5), 100% calc((100% + var(--pente) * 1%) * .5 - var(--pente) * 1%), 100% calc((100% + var(--pente) * 1%) * .75 - var(--pente) * 1%), 0 calc((100% + var(--pente) * 1%) * .75))}
+  .b4{--clip:polygon(0 calc((100% + var(--pente) * 1%) * .75), 100% calc((100% + var(--pente) * 1%) * .75 - var(--pente) * 1%), 100% 100%, 0 100%)}
+  .bande .img{left:-4%;width:108%;top:var(--g);height:var(--l)}
+  .bande video{left:-4%;width:108%;top:calc(var(--g) + var(--l) / 2);height:auto;-webkit-mask-image:linear-gradient(90deg,#000,#000);mask-image:none}
+  .etiq{display:none}
+  .voile{background:radial-gradient(ellipse 80% 45% at 50% 50%, rgba(var(--voile-c),.8) 0%, rgba(var(--voile-c),.4) 70%, rgba(var(--voile-c),.1) 100%)}
+}
+@media (prefers-reduced-motion: reduce){.bande .img{animation:none}}
+</style>
 </head>
 <body>
-  <div class="login-container">
-    <h1>Outils de Frank</h1>
-    <p class="subtitle">Espace privé</p>
+  <div class="bandes" aria-hidden="true">
+    <div class="bande b1" data-k="0" style="--c:var(--pt6)"><div class="img" style="background-image:url('connexion/pt6.jpg');--pos:50% 50%"></div><video muted playsinline loop preload="none" data-webm="connexion/pt6.webm" data-mp4="connexion/pt6.mp4" style="--ar:872/542;--pos:50% 50%"></video></div>
+    <div class="bande b2" data-k="1" style="--c:var(--arinc)"><div class="img" style="background-image:url('connexion/arinc.jpg');--pos:50% 40%;--retard:-9s"></div><video muted playsinline loop preload="none" data-webm="connexion/arinc.webm" data-mp4="connexion/arinc.mp4" style="--ar:780/420;--pos:50% 40%"></video></div>
+    <div class="bande b3" data-k="2" style="--c:var(--votes)"><div class="img" style="background-image:url('connexion/votes.jpg');--pos:40% 70%;--retard:-18s"></div><video muted playsinline loop preload="none" data-webm="connexion/votes.webm" data-mp4="connexion/votes.mp4" style="--ar:754/700;--pos:40% 70%"></video></div>
+    <div class="bande b4" data-k="3" style="--c:var(--helice)"><div class="img" style="background-image:url('connexion/helice.jpg');--pos:40% 50%;--retard:-27s"></div><video muted playsinline loop preload="none" data-webm="connexion/helice.webm" data-mp4="connexion/helice.mp4" style="--ar:750/468;--pos:40% 50%"></video></div>
+  </div>
+  <svg class="traits" id="traits" aria-hidden="true"></svg>
+  <div class="voile" aria-hidden="true"></div>
+  <div class="etiq" style="--c:var(--pt6)"><b>PT6A-21</b><span>simulateur 3D</span></div>
+  <div class="etiq" style="--c:var(--arinc)"><b>ARINC 429</b><span>décodeur de mots</span></div>
+  <div class="etiq" style="--c:var(--votes)"><b>Votes Québec</b><span>intentions de vote</span></div>
+  <div class="etiq" style="--c:var(--helice)"><b>Hélice</b><span>vitesse constante</span></div>
 
-    <form id="loginForm">
-      <input type="text" id="username" placeholder="Nom d'utilisateur" required />
-      <input type="password" id="password" placeholder="Mot de passe" required />
-      <button type="submit">Se connecter</button>
-      <p id="error-msg"></p>
-    </form>
-
-    <button id="guest-btn" type="button" style="display:block; width:100%; margin-top:0.5rem; padding:0.65rem; background:transparent; border:1px solid #2a3a2a; border-radius:8px; color:#556655; font-size:0.9rem; cursor:pointer; transition:all 0.2s;">
-      👤 Continuer en tant qu'invité
-    </button>
+  <div class="coin">
+    <button type="button" id="b-apercus" aria-pressed="true">⏸ Figer</button>
+    <button type="button" id="b-theme">☀︎ Clair</button>
   </div>
 
-  <script type="module" src="auth.js"></script>
+  <main>
+    <section class="carte" aria-labelledby="titre">
+      <div class="marque">
+        <div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div>
+        <div><h1 id="titre">Outils de Frank</h1><p class="sous">Espace privé</p></div>
+      </div>
+      <form id="loginForm">
+        <label class="champ">Nom d'utilisateur<input type="text" id="username" autocomplete="username" autocapitalize="off" required></label>
+        <label class="champ">Mot de passe<input type="password" id="password" autocomplete="current-password" required></label>
+        <button class="entrer" type="submit">Se connecter</button>
+        <p id="error-msg" role="alert"></p>
+      </form>
+      <div class="ou">ou</div>
+      <button id="guest-btn" type="button">👤 Continuer en tant qu'invité</button>
+      <p class="pied" id="pied">fveilleux.com</p>
+    </section>
+  </main>
+
+<script>
+// ---- traits lumineux et étiquettes, sur la géométrie des bandes ----
+function traits() {
+  const svg = document.getElementById('traits'), W = innerWidth, H = innerHeight;
+  const portrait = matchMedia('(orientation: portrait) and (max-width: 760px)').matches;
+  const pente = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pente')) / 100;
+  const coul = ['var(--arinc)', 'var(--votes)', 'var(--helice)'];
+  let h = '';
+  for (let k = 1; k <= 3; k++) {
+    if (portrait) { const y0 = (1 + pente) * k / 4 * H; h += `<line x1="0" y1="${y0}" x2="${W}" y2="${y0 - pente * H}" style="stroke:${coul[k - 1]}"/>`; }
+    else { const x0 = (1 + pente) * k / 4 * W; h += `<line x1="${x0}" y1="0" x2="${x0 - pente * W}" y2="${H}" style="stroke:${coul[k - 1]}"/>`; }
+  }
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = h;
+  document.querySelectorAll('.etiq').forEach((e, k) => {
+    const x = (1 + pente) * (k + .5) / 4 * W - pente * W * 0.94;
+    e.style.left = Math.min(W - 100, Math.max(100, x)) + 'px';
+  });
+}
+traits(); addEventListener('resize', traits);
+
+// ---- aperçus animés : vidéos courtes, sauf si l'appareil est trop lent ou demande moins de mouvement ----
+const VIDEOS = [...document.querySelectorAll('.bande video')];
+const btnA = document.getElementById('b-apercus');
+let anime = false;
+function raisonFixe() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return 'mouvement réduit demandé';
+  const c = navigator.connection;
+  if (c && (c.saveData || /(^|-)(2g|3g)$/.test(c.effectiveType || ''))) return 'économie de données';
+  if (navigator.deviceMemory && navigator.deviceMemory < 4) return 'peu de mémoire';
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) return 'processeur modeste';
+  try { if (localStorage.getItem('apercus') === 'fixes') return 'aperçus figés'; } catch (e) {}
+  return '';
+}
+function etiquette(r) { btnA.textContent = anime ? '⏸ Figer' : '▶ Animer'; btnA.setAttribute('aria-pressed', anime); btnA.title = r ? `Aperçus fixes : ${r}` : ''; }
+function figer(r) { anime = false; document.querySelector('.bandes').classList.remove('animees'); VIDEOS.forEach(v => { v.pause(); v.classList.remove('joue'); }); etiquette(r); }
+async function animer() {
+  anime = true; etiquette(''); document.querySelector('.bandes').classList.add('animees');
+  await Promise.all(VIDEOS.map(v => {
+    if (!v.dataset.pret) {             // WebM (Chrome, Firefox, Android) puis MP4 (Safari, iPhone, iPad) : le navigateur prend le premier qu'il sait lire
+      v.dataset.pret = 1;
+      for (const [t, s] of [['video/webm; codecs=vp9', v.dataset.webm], ['video/mp4; codecs=avc1.42E01E', v.dataset.mp4]]) {
+        const e = document.createElement('source'); e.type = t; e.src = s; v.appendChild(e);
+      }
+      v.load();
+    }
+    return v.play().then(() => v.classList.add('joue')).catch(() => {});
+  }));
+  if (!VIDEOS.some(v => v.classList.contains('joue'))) { figer('lecture automatique bloquée'); return; }  // ex. iPhone en mode économie d'énergie
+  surveiller();
+}
+// 4 s après le départ : si l'écran n'arrive pas à suivre (images trop lentes), on repasse aux aperçus fixes
+function surveiller() {
+  const t = []; let p = performance.now(); const debut = p;
+  const f = n => { t.push(n - p); p = n; if (n - debut < 4000 && anime) requestAnimationFrame(f); else juger(); };
+  setTimeout(() => requestAnimationFrame(n => { p = n; requestAnimationFrame(f); }), 800);
+  function juger() {
+    if (!anime || t.length < 20) return;
+    const lent = t.filter(d => d > 50).length / t.length, moy = t.reduce((a, b) => a + b, 0) / t.length;
+    if (lent > 0.25 || moy > 34) { figer('écran trop lent pour les animations'); try { localStorage.setItem('apercus', 'fixes'); } catch (e) {} }
+  }
+}
+btnA.addEventListener('click', () => {
+  try { localStorage.setItem('apercus', anime ? 'fixes' : 'animes'); } catch (e) {}
+  anime ? figer('aperçus figés') : animer();
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) VIDEOS.forEach(v => v.pause()); else if (anime) VIDEOS.forEach(v => v.play().catch(() => {})); });
+const r0 = raisonFixe();
+if (r0) etiquette(r0); else animer();
+
+// ---- thème clair / sombre (même réglage que le reste du site : localStorage.theme) ----
+const btnT = document.getElementById('b-theme');
+const majT = () => { const c = document.documentElement.classList.contains('light'); btnT.textContent = c ? '☾ Sombre' : '☀︎ Clair'; };
+btnT.addEventListener('click', () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); });
+majT();
+
+</script>
+<script type="module" src="auth.js"></script>
 </body>
 </html>

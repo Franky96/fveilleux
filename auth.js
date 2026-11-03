@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Bouton invité ── */
   if (guestBtn) {
-    guestBtn.addEventListener('mouseenter', () => { guestBtn.style.borderColor = '#80cc80'; guestBtn.style.color = '#80cc80'; });
-    guestBtn.addEventListener('mouseleave', () => { guestBtn.style.borderColor = '#2a3a2a'; guestBtn.style.color = '#556655'; });
     guestBtn.addEventListener('click', async () => {
       guestBtn.textContent = '⏳ Chargement…';
       guestBtn.disabled = true;
@@ -26,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorMsg.textContent = 'Connexion…';
-      errorMsg.style.color = '#a89f94';
+      errorMsg.style.color = 'var(--gris, #a89f94)';
 
       const userId   = document.getElementById('username').value.toLowerCase().trim();
       const password = document.getElementById('password').value;
