@@ -728,7 +728,7 @@ let periode = lireLS("vuPeriode", 3);   // 3 derniers mois par défaut
 function dessinerEvolution() {
   if (TYPE === "pres") return dessinerEvolutionPres();
   $("viEvolTitre").textContent = "Évolution du vote générique";
-  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(440, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
   const m = { t: 16, r: 54, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
   const tous = SOND.sondages, moyT = SOND.moyenne;
@@ -803,7 +803,7 @@ function seriePres() {
 }
 function dessinerEvolutionPres() {
   const S = seriePres();
-  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(440, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
   const m = { t: 16, r: 92, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
   const tous = S.points;

@@ -585,7 +585,7 @@ document.addEventListener("keydown", e => {
 /* ---------- évolution des intentions de vote (secondes voix) ---------- */
 let periode = lireLS("vaPeriode", 3);   // 3 derniers mois par défaut
 function dessinerEvolution() {
-  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(260, Math.min(560, W * 0.6));
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(440, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
   const m = { t: 16, r: 74, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
   const tous = SOND.sondages.filter(s => !s.e);
