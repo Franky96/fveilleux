@@ -2983,6 +2983,3 @@ html.light .sidebar-link.active {
 html.light .archive-btn {
   color: #6a8a68 !important; border-color: #c0d4b8;
 }
-html.light [data-version-badge] {
-  background: #c0392b !important;
-}

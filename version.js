@@ -16,7 +16,10 @@ const SITE_VERSION = '2.0';
     // le tableau de bord le place à côté du nom du site (data-version-place)
     if (!badge.hasAttribute('data-version-place')) Object.assign(badge.style, {
       top: 'calc(4px + env(safe-area-inset-top))', bottom: 'auto', left: '4px', fontSize: '0.65rem', padding: '0.1rem 0.4rem',
-      borderRadius: '4px', pointerEvents: 'none', lineHeight: '1.3' });
+      borderRadius: '4px', pointerEvents: 'none', lineHeight: '1.3',
+      // couleurs de la marque, comme le logo : dégradé foncé, texte noir à contour gris
+      background: 'linear-gradient(90deg,#1e6585,#23753f)', color: '#071016', fontWeight: '700',
+      webkitTextStroke: '1.4px #a9b4bd', paintOrder: 'stroke fill' });
     // le badge flottant des pages : admin seulement, masquable ; celui du nom du site (tableau de bord) : toujours, pour tous
     const isAdmin = sessionStorage.getItem('userRole') === 'admin';
     const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
