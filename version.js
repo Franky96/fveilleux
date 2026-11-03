@@ -17,9 +17,10 @@ const SITE_VERSION = '2.0';
     if (!badge.hasAttribute('data-version-place')) Object.assign(badge.style, {
       top: 'calc(4px + env(safe-area-inset-top))', bottom: 'auto', left: '4px', fontSize: '0.65rem', padding: '0.1rem 0.4rem',
       borderRadius: '4px', pointerEvents: 'none', lineHeight: '1.3' });
+    // le badge flottant des pages : admin seulement, masquable ; celui du nom du site (tableau de bord) : toujours, pour tous
     const isAdmin = sessionStorage.getItem('userRole') === 'admin';
     const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
-    if (!isAdmin || hidden) badge.style.display = 'none';
+    if (!badge.hasAttribute('data-version-place') && (!isAdmin || hidden)) badge.style.display = 'none';
   }
 
 })();
@@ -74,7 +75,7 @@ window.toggleVersionBadge = function () {
   const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
   const newHidden = !hidden;
   localStorage.setItem('versionBadgeHidden', newHidden);
-  const badge = document.querySelector('[data-version-badge]');
+  const badge = document.querySelector('[data-version-badge]:not([data-version-place])');
   if (badge) badge.style.display = newHidden ? 'none' : '';
   const btn = document.getElementById('toggle-version-btn');
   if (btn) updateToggleBtn(btn, newHidden);
