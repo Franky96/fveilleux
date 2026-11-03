@@ -75,7 +75,7 @@ async function phpPost(body) {
       return json;
     }
     // ce qui a empêché la connexion, affiché tel quel pour comprendre un appareil qui bloque (iPhone, 3 novembre 2026)
-    if (res) cause = `code ${res.status}${res.redirected ? ', redirigé vers ' + res.url : ''} : ${texte.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60)}`;
+    if (res) cause = `code ${res.status}${res.redirected ? ', redirigé vers ' + res.url : ''} : ${texte.replace(/<(style|script)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60)}`;
     if (essai >= 14) throw new Error(`${OCCUPE} (${cause})`);
     const m = document.getElementById('error-msg');
     if (m) { m.textContent = `Serveur occupé, nouvel essai (${essai + 2}/15)… (${cause})`; m.style.color = 'var(--gris, #a89f94)'; }
