@@ -106,10 +106,14 @@ q.addEventListener('input', () => {
 // recherche derrière la loupe (en haut à droite) : ouverte par la loupe ou « / », fermée par Échap ou la loupe (champ vidé)
 const zq = $('zone-q'), bq = $('b-cherche');
 function recherche(ouvrir) {
-  zq.hidden = !ouvrir; bq.classList.toggle('on', ouvrir); bq.setAttribute('aria-expanded', ouvrir);
-  if (ouvrir) q.focus(); else if (q.value) { q.value = ''; q.dispatchEvent(new Event('input')); }
+  zq.classList.toggle('ouvert', ouvrir); bq.setAttribute('aria-expanded', ouvrir);
+  bq.setAttribute('aria-label', ouvrir ? 'Fermer la recherche' : 'Rechercher une page'); q.tabIndex = ouvrir ? 0 : -1;
+  if (ouvrir) q.focus({ preventScroll: true }); else { if (q.value) { q.value = ''; q.dispatchEvent(new Event('input')); } q.blur(); }
 }
-bq.addEventListener('click', () => recherche(zq.hidden));
+bq.addEventListener('click', () => recherche(!zq.classList.contains('ouvert')));
+zq.addEventListener('click', e => { if (e.target !== bq && !bq.contains(e.target)) recherche(true); });
+// clic ailleurs avec un champ vide : la barre se replie
+addEventListener('pointerdown', e => { if (zq.classList.contains('ouvert') && !zq.contains(e.target) && !q.value) recherche(false); });
 q.addEventListener('keydown', e => {
   if (e.key === 'Enter') { const s = [...document.querySelectorAll('.sous a')].find(x => x.style.outline) || document.querySelector('.ligne:not(.cache) .lien'); if (s) location.href = s.getAttribute('href'); }
   if (e.key === 'Escape') { recherche(false); bq.focus(); }
