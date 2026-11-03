@@ -43,8 +43,13 @@ button,input{font:inherit;color:inherit}
 /* ---- barre du haut ---- */
 .badge-v{font-family:var(--f-mono);font-weight:700;font-size:11.5px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,var(--m1),var(--m2))}
 .badge-v:empty{display:none}
-.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px}
-.haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:50%;width:100vw;transform:translateX(-50%);
+/* barre du haut sur toute la largeur de l'écran : coin gauche (libre ici, bouton de retour ailleurs), logo et titre au milieu,
+   loupe, thème et compte à droite ; la recherche s'ouvre sous la barre (3 novembre 2026, demande de l'utilisateur) */
+.haut{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px 14px;
+  margin:0 calc(50% - 50vw) 4px;padding:12px max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left))}
+.haut .coin{justify-self:start}
+.haut .outils{justify-self:end}
+.haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:0;right:0;
   background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
   -webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);opacity:0;transition:opacity .2s}
 .haut.colle::before{opacity:1}
@@ -64,7 +69,9 @@ button,input{font:inherit;color:inherit}
 .logo span{position:relative;z-index:1;font-weight:800;font-size:17px;color:#071016;letter-spacing:-.3px;-webkit-text-stroke:2px #a9b4bd;paint-order:stroke fill}
 .logo i{font-style:normal;font-size:12px;opacity:.62}
 html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème clair : texte blanc, contour noir (le favicon ne change pas) */
-.recherche{flex:1;max-width:520px;margin:0 auto;position:relative}
+.recherche{grid-column:1/-1;justify-self:center;width:min(560px,100%);position:relative}
+.haut .recherche[hidden]{display:none}
+.rond.on{border-color:var(--c-avia);background:var(--panel2)}
 .recherche input{width:100%;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 14px 10px 40px;font-size:15px;outline:none}
 .recherche input:focus{border-color:var(--c-avia)}
 .recherche::before{content:"⌕";position:absolute;left:14px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:20px}
@@ -229,9 +236,9 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
   .t-grand .vue{aspect-ratio:16/9;flex:none;min-height:0}
 }
 @media (max-width:600px){
-  .haut{flex-wrap:wrap;gap:10px}
-  .marque{flex:1}
-  .recherche{order:3;flex-basis:100%;max-width:none}
+  .haut{gap:8px 6px}
+  .marque .nom{display:none}
+  .haut .rond{width:34px;height:34px}
   .recherche kbd{display:none}
   .bonjour h1{font-size:30px}
   .raccourcis{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -18px;padding:0 18px 4px;scrollbar-width:none}
@@ -247,10 +254,10 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
 <div class="fond" aria-hidden="true"></div>
 <div class="wrap">
   <header class="haut">
-    <div class="marque"><div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div>Outils de Frank<span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></div>
-    <label class="recherche"><span style="position:absolute;left:-9999px">Rechercher une page</span>
-      <input id="q" type="search" placeholder="Rechercher une page ou un outil…" autocomplete="off"><kbd>/</kbd></label>
+    <span class="coin"></span>
+    <div class="marque"><div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div><span class="nom">Outils de Frank</span><span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></div>
     <div class="outils">
+      <button class="rond" id="b-cherche" type="button" title="Rechercher une page (/)" aria-label="Rechercher une page" aria-expanded="false" aria-controls="zone-q"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg></button>
       <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
       <div class="moi-zone">
         <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
@@ -265,6 +272,8 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
         </div>
       </div>
     </div>
+    <label class="recherche" id="zone-q" hidden><span style="position:absolute;left:-9999px">Rechercher une page</span>
+      <input id="q" type="search" placeholder="Rechercher une page ou un outil…" autocomplete="off"></label>
   </header>
 
   <section class="bonjour">

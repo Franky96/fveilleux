@@ -103,11 +103,18 @@ q.addEventListener('input', () => {
   $('vide').style.display = n ? 'none' : 'block';
   $('sect-raccourcis').classList.toggle('cache', !!t);
 });
+// recherche derrière la loupe (en haut à droite) : ouverte par la loupe ou « / », fermée par Échap ou la loupe (champ vidé)
+const zq = $('zone-q'), bq = $('b-cherche');
+function recherche(ouvrir) {
+  zq.hidden = !ouvrir; bq.classList.toggle('on', ouvrir); bq.setAttribute('aria-expanded', ouvrir);
+  if (ouvrir) q.focus(); else if (q.value) { q.value = ''; q.dispatchEvent(new Event('input')); }
+}
+bq.addEventListener('click', () => recherche(zq.hidden));
 q.addEventListener('keydown', e => {
   if (e.key === 'Enter') { const s = [...document.querySelectorAll('.sous a')].find(x => x.style.outline) || document.querySelector('.ligne:not(.cache) .lien'); if (s) location.href = s.getAttribute('href'); }
-  if (e.key === 'Escape') { q.value = ''; q.dispatchEvent(new Event('input')); q.blur(); }
+  if (e.key === 'Escape') { recherche(false); bq.focus(); }
 });
-addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); q.focus(); } });
+addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !document.querySelector('dialog[open]')) { e.preventDefault(); recherche(true); } });
 
 /* ---------- raccourcis de chaque compte (pas pour l'invité), enregistrés sur le serveur (api/prefs.php) ---------- */
 const APERCUS = { 'pt6a21.html': 'tableau/pt6.jpg', 'votes-quebec.html': 'tableau/votes.jpg', 'arinc429.html': 'tableau/arinc.jpg', 'helice.html': 'tableau/helice.jpg' };

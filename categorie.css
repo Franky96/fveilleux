@@ -37,8 +37,10 @@ button{font:inherit;color:inherit}
 .fond::after{background:radial-gradient(70vmax 50vmax at 50% 0, transparent, var(--bg) 95%)}
 
 /* ---- barre du haut : marque (retour à l'accueil), fil d'Ariane, thème, compte ---- */
-.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px}
-.haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:50%;width:100vw;transform:translateX(-50%);
+/* barre du haut sur toute la largeur de l'écran : retour dans le coin gauche, logo et titre au milieu, thème et compte à droite */
+.haut{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;
+  margin:0 calc(50% - 50vw) 4px;padding:12px max(18px,env(safe-area-inset-right)) 12px max(18px,env(safe-area-inset-left))}
+.haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:0;right:0;
   background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
   -webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);opacity:0;transition:opacity .2s}
 .haut.colle::before{opacity:1}
@@ -51,11 +53,9 @@ button{font:inherit;color:inherit}
 html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème clair : texte blanc, contour noir (le favicon ne change pas) */
 .badge-v{font-family:var(--f-mono);font-weight:700;font-size:11.5px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,var(--m1),var(--m2))}
 .badge-v:empty{display:none}
-.fil{flex:1;display:flex;align-items:center;gap:8px;min-width:0;color:var(--muted);font-size:14px}
-.fil a{padding:4px 10px;border-radius:999px;border:1px solid var(--line2);background:var(--panel)}
-.fil a:hover{color:var(--text);border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
-.fil b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.outils{display:flex;align-items:center;gap:8px;margin-left:auto}
+.retour{justify-self:start;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);font-size:14px;white-space:nowrap}
+.retour:hover{color:var(--text);border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
+.outils{display:flex;align-items:center;gap:8px;justify-self:end}
 .rond{width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:var(--panel);display:grid;place-items:center;cursor:pointer;font-size:16px}
 .rond.moi{font-family:var(--f-display);font-weight:700;font-size:16px;background:var(--panel2)}
 .moi-zone{position:relative}
@@ -100,7 +100,9 @@ html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème 
 .pied a{color:var(--muted)}
 
 @media (max-width:640px){
-  .marque .nom,.fil b{display:none}
+  .marque .nom{display:none}
+  .haut{gap:8px}
+  .retour{padding:6px 10px}
   .tete h1{font-size:32px}
   .tete .em{width:50px;height:50px;font-size:26px}
   .carte{padding:12px 14px;grid-template-columns:40px 1fr auto}
