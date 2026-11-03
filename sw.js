@@ -1,8 +1,9 @@
-const CACHE_NAME = 'jeux-v19';
+const CACHE_NAME = 'jeux-v20';
 const FILES_TO_CACHE = [
   '/jeuxdesociete.html',
   '/categorie.js',
   '/categorie.css',
+  '/fond.css',
   '/firebase-config.js',
   '/favicon-32.png',
   '/7wonders.html',

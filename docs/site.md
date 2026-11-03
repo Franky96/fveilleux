@@ -82,5 +82,6 @@
 ## Style commun
 
 - `style.css`, thème clair ou sombre par `theme-toggle.js` (`localStorage.theme`).
+- **Fond 2.0** (`fond.css`, 3 novembre 2026) : sur les pages pas encore en visuel 2.0, seulement le fond change (couleur de base et diagonales du tableau de bord ; `html`, `body` et `.dashboard-container` transparents par-dessus), rien d'autre (demande de l'utilisateur). Chargé en dernier dans `<head>`. Pas sur les pages archivées (Aviation, Aéronefs, ÉNA, Connexion à distance, OSINT, Films, Hockey, Bières, Science-fiction, Page de tests), ni sur Intentions de vote et En direct, ni sur concept.html. Toute nouvelle page qui n'est pas en 2.0 le reçoit aussi.
 - Polices Google Fonts. Les bibliothèques passent par un CDN avec SRI (three.js 0.147, d3 7.9, topojson-client…).
 - Les pages de la section Intentions de vote ont leur propre feuille de style, dans le gabarit.
