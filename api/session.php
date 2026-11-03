@@ -37,6 +37,9 @@ function sessionInit(): void {
       'httponly' => true,
       'samesite' => 'Lax',
     ]);
+    // la session vit aussi longtemps que son témoin (30 jours) : sinon le serveur l'oubliait après ~24 min sans visite
+    // et, depuis le contrôle des pages (api/page.php), renvoyait à la connexion
+    ini_set('session.gc_maxlifetime', (string)(86400 * 30));
     session_name('fv_sess');
     session_start();
   }

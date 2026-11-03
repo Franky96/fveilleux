@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jeux-v20';
+const CACHE_NAME = 'jeux-v21';
 const FILES_TO_CACHE = [
   '/jeuxdesociete.html',
   '/categorie.js',
@@ -49,7 +49,8 @@ self.addEventListener('fetch', (e) => {
 
       const networkFetch = fetch(e.request)
         .then((res) => {
-          if (res.ok) cache.put(e.request, res.clone());
+          // une page refusée par le serveur (api/page.php) revient redirigée : ne pas la garder à la place de la vraie
+          if (res.ok && !res.redirected) cache.put(e.request, res.clone());
           return res;
         })
         .catch(() => null);

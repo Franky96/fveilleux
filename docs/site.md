@@ -65,9 +65,21 @@
 
 1. Créer `ma-page.html` et son JS, en reprenant l'en-tête d'une page existante : script de permission, `version.js`, `theme-toggle.js`, `page-controls.js`, et le bandeau `.site-top` avec « ← Accueil ».
 2. Ajouter la permission dans `PERMS_STRUCTURE` (admin.js), et dans les listes d'archives et d'invités si pertinent.
+   **Et dans `PAGES` de `api/page.php`** (le serveur refuse sinon la page à tout le monde sauf l'admin).
 3. Ajouter la page dans `GROUPES` de `dashboard.js`, et sa carte dans `archive.html` (même groupe que sur l'accueil ; `data-parent` pour une sous-page) ; une sous-page va aussi dans sa page de catégorie (voir plus bas). Au besoin, parmi les choix de page d'accueil d'admin.html.
 4. Si la page enregistre des données : ajouter son document à `SECTIONS` dans `api/data.php`.
 5. Pour une page de la section Intentions de vote ou En direct : passer par le gabarit (`docs/intentions-de-vote.md`).
+
+## Contrôle des pages par le serveur (`api/page.php`)
+
+Depuis le 3 novembre 2026 (demande de l'utilisateur), le serveur vérifie l'accès avant de servir une page : le `.htaccess` de la racine envoie chaque `.html` de la racine (et de `concept/`), sauf `index.html`, à `api/page.php?p=…`.
+- Pas de session PHP → redirigé vers `index.html` ; session sans la permission → `dashboard.html` ; sinon la page est servie telle quelle (ETag, 304 si inchangée, `Cache-Control: private, no-cache`).
+- Permissions de la session ouverte à la connexion (`api/login.php`), invité compris. Un changement de permissions dans admin compte à la prochaine connexion (comme pour `data.php`).
+- `PAGES` : page → permissions qui l'ouvrent (une suffit ; la permission du groupe ouvre ses sous-pages ; `'connecte'`, `'pas-invite'`, `[]` = admin seulement). `MOTIFS` : toutes les pages Intentions de vote et En direct (`votes-*`, `en-direct*`, `election-*`, `referendum-*`, `loi39`, `intentions-simulations`) → `votes-quebec`, nouvelles soirées comprises. **Une page absente de `PAGES` n'est ouverte qu'à l'admin.**
+- Les gardes JavaScript en tête de page restent (même règles, réponse immédiate).
+- La session dure 30 jours, comme son témoin (`session.gc_maxlifetime` dans `session.php`).
+- Le cache hors ligne des jeux (`sw.js`) ne garde pas une réponse redirigée.
+- Test local : `php -S` avec un routeur qui imite la règle du `.htaccess` (voir les notes de test).
 
 ## Pages de catégorie (visuel 2.0)
 
