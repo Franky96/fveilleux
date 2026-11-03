@@ -20,7 +20,7 @@ export function collection(db, col) {
 
 /* ── Lecture ── */
 export async function getDoc(ref) {
-  const res  = await fetch(`${API}/data.php?col=${enc(ref.collection)}&id=${enc(ref.id)}`, { credentials: 'include' });
+  const res  = await fetchServeur(`${API}/data.php?col=${enc(ref.collection)}&id=${enc(ref.id)}`, { credentials: 'include' });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? 'Erreur serveur');
   return { exists: () => json.exists, data: () => json.data ?? null, id: ref.id };
@@ -32,7 +32,7 @@ export async function getDocs(queryOrRef) {
     const json = await res.json();
     return _snapFromDocs(json.docs ?? []);
   }
-  const res  = await fetch(`${API}/data.php?col=${enc(queryOrRef.collection)}`, { credentials: 'include' });
+  const res  = await fetchServeur(`${API}/data.php?col=${enc(queryOrRef.collection)}`, { credentials: 'include' });
   const json = await res.json();
   return _snapFromDocs(json.docs ?? []);
 }
@@ -90,7 +90,7 @@ export function onSnapshot(ref, callback, onError) {
       if (ref.__type === 'doc') {
         snap = await getDoc(ref);
       } else {
-        const res  = await fetch(`${API}/data.php?col=${enc(ref.collection)}`, { credentials: 'include' });
+        const res  = await fetchServeur(`${API}/data.php?col=${enc(ref.collection)}`, { credentials: 'include' });
         const json = await res.json();
         snap = _snapFromDocs(json.docs ?? []);
       }
@@ -127,8 +127,20 @@ export const increment   = (n)        => ({ __op: 'increment', n });
 /* ── Helpers internes ── */
 function enc(s) { return encodeURIComponent(s ?? ''); }
 
+// L'hébergeur répond parfois « 503 » sans même lancer PHP (trop de processus à la fois, 3 novembre 2026) :
+// la requête n'a donc rien fait, on peut la refaire sans risque, quelques fois, avec une petite pause.
+async function fetchServeur(url, options) {
+  for (let essai = 0; ; essai++) {
+    let res = null;
+    try { res = await fetch(url, options); } catch (e) { if (essai >= 5) throw e; }
+    if (res && res.status !== 503) return res;
+    if (essai >= 5) return res;
+    await new Promise(r => setTimeout(r, 400 + 400 * essai));
+  }
+}
+
 function _post(action, body) {
-  return fetch(`${API}/data.php`, {
+  return fetchServeur(`${API}/data.php`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },

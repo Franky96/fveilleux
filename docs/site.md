@@ -81,7 +81,7 @@ Depuis le 3 novembre 2026 (demande de l'utilisateur), le serveur vérifie l'acc�
 - Le cache hors ligne des jeux (`sw.js`) ne garde pas une réponse redirigée.
 - Test local : `php -S` avec un routeur qui imite la règle du `.htaccess` (voir les notes de test).
 - **État : règle du `.htaccess` retirée le soir même** (3 novembre 2026) : l'hébergeur répondait souvent « 503 » sur tout ce qui passe par PHP (même `version.php`, et déjà avant le contrôle) ; avec le contrôle, les pages elles-mêmes tombaient en 503. `api/page.php` reste prêt : remettre le bloc `mod_rewrite` (voir l'historique git) quand le serveur suivra.
-- La connexion (`auth.js`) réessaie 3 fois quand le serveur répond 503, puis affiche « Le serveur est occupé… » au lieu d'une erreur JSON.
+- La connexion (`auth.js`) réessaie 6 fois quand le serveur répond 503, puis affiche « Le serveur est occupé… » au lieu d'une erreur JSON. Les lectures et écritures de `firebase-config.js` (`fetchServeur`) réessaient aussi jusqu'à 5 fois sur un 503 : l'hébergeur le renvoie sans lancer PHP, la requête n'a donc rien fait.
 - Charge PHP réduite le même soir : la session est relâchée dès qu'elle est lue (`requireLogin()`, `getSession()` ; `requireLogin(true)` pour garder la session ouverte, seulement `cadeaux.php` et `users.php`, qui y écrivent), et `onSnapshot` de `firebase-config.js` ne lit plus quand l'onglet est caché, une lecture à la fois.
 
 ## Pages de catégorie (visuel 2.0)

@@ -70,7 +70,7 @@ async function phpPost(body) {
       if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur serveur');
       return json;
     }
-    if (essai >= 3) throw new Error(OCCUPE);
-    await new Promise(r => setTimeout(r, 700 * (essai + 1)));
+    if (essai >= 6) throw new Error(OCCUPE);
+    await new Promise(r => setTimeout(r, 400 + 400 * essai));
   }
 }
