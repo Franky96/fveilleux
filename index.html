@@ -17,8 +17,8 @@
   color-scheme:dark;
   --fond:#06090c; --texte:#e6edf2; --gris:#8b99a5; --trait:rgba(255,255,255,.14);
   --carte:rgba(12,17,22,.62); --champ:rgba(255,255,255,.05); --champ-trait:rgba(255,255,255,.12);
-  --pt6:#4ba0c0; --arinc:#59b070; --votes:#7263cc; --helice:#c28031;
-  --m1:#1e6585; --m2:#23753f; --m3:#45379e; --m4:#8f5a1a; /* marque (logo, favicon) : vraies couleurs foncées, mêmes en clair et en sombre */
+  --pt6:#1e6585; --arinc:#23753f; --votes:#45379e; --helice:#8f5a1a; /* les couleurs foncées de la marque */
+  --m1:#1e6585; --m2:#23753f; --m3:#45379e; --m4:#8f5a1a; /* marque (logo, favicon) : mêmes couleurs, en clair et en sombre */
   --lum:.66; --lum-survol:.86;
   --voile-c:6,9,12;
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
@@ -30,7 +30,6 @@ html.light{
   color-scheme:light;
   --fond:#eef2f5; --texte:#13202a; --gris:#55636f; --trait:rgba(0,0,0,.1);
   --carte:rgba(255,255,255,.72); --champ:rgba(255,255,255,.85); --champ-trait:rgba(0,0,0,.14);
-  --pt6:#1979a3; --arinc:#208451; --votes:#584ac1; --helice:#b06517;
   --lum:.9; --lum-survol:1;
   --voile-c:238,242,245;
 }
@@ -67,7 +66,7 @@ html,body{margin:0;height:100%;background:var(--fond);color:var(--texte);font:16
   radial-gradient(ellipse 34% 48% at 50% 50%, rgba(var(--voile-c),.72) 0%, rgba(var(--voile-c),.25) 65%, rgba(var(--voile-c),0) 100%),
   linear-gradient(180deg, rgba(var(--voile-c),.5) 0%, rgba(var(--voile-c),0) 18%, rgba(var(--voile-c),0) 78%, rgba(var(--voile-c),.8) 100%)}
 .etiq{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:2px;pointer-events:none;transform:translateX(-50%);text-align:center;white-space:nowrap}
-.etiq b{font-family:var(--f-display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:15px;color:var(--c)}
+.etiq b{font-family:var(--f-display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:15px;color:color-mix(in srgb,var(--c) 55%,var(--texte))}
 .etiq span{font-size:12px;color:var(--gris);letter-spacing:.04em}
 .etiq::before{content:"";align-self:center;width:28px;height:2px;border-radius:2px;background:var(--c);margin-bottom:6px;box-shadow:0 0 12px var(--c)}
 
@@ -80,25 +79,25 @@ main{position:relative;z-index:2;height:100%;display:grid;place-items:center;pad
 .logo{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;position:relative;overflow:hidden;
   background:conic-gradient(from 210deg,var(--m1),var(--m2),var(--m4),var(--m3),var(--m1));box-shadow:0 0 24px color-mix(in srgb,var(--m1) 25%,transparent)}
 .logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 55%)}
-.logo span{position:relative;z-index:1;font-family:var(--f-display);font-weight:800;font-size:25px;letter-spacing:-.5px;color:#eef4f7;line-height:1;margin-top:-1px}
+.logo span{position:relative;z-index:1;font-family:var(--f-display);font-weight:800;font-size:25px;letter-spacing:-.5px;color:#071016;line-height:1;margin-top:-1px}
 .logo i{font-style:normal;font-weight:700;font-size:18px;opacity:.62}
 h1{margin:0;font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.02em;line-height:1}
-h1 .v2{background:linear-gradient(90deg,var(--pt6),var(--arinc),var(--helice));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .v2{background:linear-gradient(90deg,color-mix(in srgb,var(--pt6) 55%,var(--texte)),color-mix(in srgb,var(--arinc) 55%,var(--texte)),color-mix(in srgb,var(--helice) 55%,var(--texte)));-webkit-background-clip:text;background-clip:text;color:transparent}
 .sous{margin:2px 0 0;color:var(--gris);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
 form{display:grid;gap:10px}
 label.champ{display:grid;gap:4px;font-size:12px;color:var(--gris);letter-spacing:.06em;text-transform:uppercase}
 input{width:100%;font:inherit;font-size:16px;color:var(--texte);background:var(--champ);border:1px solid var(--champ-trait);border-radius:10px;padding:11px 13px;outline:none;transition:border-color .2s}
-input:focus{border-color:var(--pt6)}
+input:focus{border-color:color-mix(in srgb,var(--pt6) 55%,var(--texte))}
 button{font:inherit;cursor:pointer;border-radius:10px;min-height:46px;transition:transform .1s,filter .2s,border-color .2s,color .2s}
 button:active{transform:scale(.985)}
-.entrer{margin-top:6px;border:none;color:#04121a;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;
+.entrer{margin-top:6px;border:none;color:#fff;font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.08em;text-transform:uppercase;
   background:linear-gradient(90deg,var(--pt6),var(--arinc));box-shadow:0 8px 24px color-mix(in srgb,var(--pt6) 25%,transparent)}
 .entrer:hover{filter:brightness(1.08)}
 #error-msg{margin:0;min-height:1.2em;color:#e0503f;font-size:13px}
 .ou{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--gris);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .ou::before,.ou::after{content:"";flex:1;height:1px;background:var(--trait)}
 #guest-btn{width:100%;background:transparent;border:1px solid var(--champ-trait);color:var(--texte);font-size:15px}
-#guest-btn:hover{border-color:var(--helice);color:var(--helice)}
+#guest-btn:hover{border-color:var(--helice);color:color-mix(in srgb,var(--helice) 55%,var(--texte))}
 .pied{margin:16px 0 0;text-align:center;font-family:var(--f-mono);font-size:11px;color:var(--gris);opacity:.7;letter-spacing:.06em}
 :focus-visible{outline:2px solid var(--helice);outline-offset:2px}
 
