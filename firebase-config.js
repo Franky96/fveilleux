@@ -80,7 +80,7 @@ export function where(field, op, value)     { return { __type: 'where',   field,
 export function orderBy(field, dir = 'asc') { return { __type: 'orderBy', field, dir }; }
 export function limit(n)                    { return { __type: 'limit', n }; }
 
-/* ── onSnapshot → polling toutes les 4 s ── */
+/* ── onSnapshot → polling toutes les 4 s, onglet visible seulement ── */
 export function onSnapshot(ref, callback, onError) {
   let lastJson = null;
 
@@ -102,9 +102,19 @@ export function onSnapshot(ref, callback, onError) {
     }
   };
 
-  poll();
-  const id = setInterval(poll, 4000);
-  return () => clearInterval(id);
+  // Onglet caché (autre onglet, téléphone verrouillé) : pas de lecture ; elle reprend dès le retour sur la page.
+  // Chaque onglet ouvert interrogeait le serveur toutes les 4 s, même en arrière-plan (charge PHP, 503 du 3 novembre 2026).
+  let enCours = false;
+  const tour = async () => {
+    if (document.hidden || enCours) return;   // une lecture à la fois : pas d'empilement si le serveur est lent
+    enCours = true;
+    try { await poll(); } finally { enCours = false; }
+  };
+  const visible = () => { if (!document.hidden) tour(); };
+  tour();
+  const id = setInterval(tour, 4000);
+  document.addEventListener('visibilitychange', visible);
+  return () => { clearInterval(id); document.removeEventListener('visibilitychange', visible); };
 }
 
 /* ── Valeurs spéciales ── */
