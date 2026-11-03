@@ -20,27 +20,18 @@ function barre(parts, total, maj) {
     `<span style="flex:${p.n};background:${p.c}" title="${esc(p.lab)} : ${p.n}">${p.n / total > 0.13 ? `${esc(p.lab)} ${p.n}` : p.n / total > 0.05 ? p.n : ""}</span>`).join("")}
     ${maj ? `<i style="left:${100 * maj / total}%" title="majorité : ${maj}"></i>` : ""}</div>`;
 }
+// carte compacte (remodelage du 3 novembre 2026, « dézoomée ») : en-tête sur une ligne (endroit, type de page, flèche), chiffre clé et sa légende
+// sur une ligne, barre des sièges, au plus une phrase, date des données ; toute la carte est le lien
 function carte({ url, eyebrow, titre, chiffre, legende, barreHtml, phrase, donnees, sous }) {
-  // carte avec sous-carte : contenu de la page, puis ses simulations en plus petit dessous (deux liens, pas de lien imbriqué)
-  if (sous) return `<div class="ac-carte ac-large"><a class="ac-principal" href="${url}">
-    <span class="lv-eyebrow">${eyebrow}</span>
-    <h3>${titre}</h3>
-    <div class="ac-chiffre">${chiffre}</div>
-    <p class="ac-legende">${legende}</p>
+  const type = esc(String(eyebrow).split(" · ")[0]), nom = esc(String(titre).replace(/^Votes /, ""));
+  const corps = `<div class="ac-tete"><h3>${nom}</h3><span class="ac-type">${type}</span><span class="ac-fl" aria-hidden="true">→</span></div>
+    <div class="ac-ligne"><span class="ac-chiffre">${chiffre}</span><span class="ac-legende">${legende}</span></div>
     ${barreHtml}
-    ${phrase ? `<p class="ac-phrase">${phrase}</p>` : ""}
-    <p class="ac-dates">${donnees}</p>
-    <span class="ac-lien">Ouvrir la page →</span></a>
-    <div class="ac-sims">${sous}</div></div>`;
-  return `<a class="ac-carte" href="${url}">
-    <span class="lv-eyebrow">${eyebrow}</span>
-    <h3>${titre}</h3>
-    <div class="ac-chiffre">${chiffre}</div>
-    <p class="ac-legende">${legende}</p>
-    ${barreHtml}
-    ${phrase ? `<p class="ac-phrase">${phrase}</p>` : ""}
-    <p class="ac-dates">${donnees}</p>
-    <span class="ac-lien">Ouvrir la page →</span></a>`;
+    ${phrase ? `<span class="ac-phrase">${phrase}</span>` : ""}
+    <span class="ac-dates">${donnees}</span>`;
+  // carte avec sous-carte : contenu de la page, puis ses simulations dessous (deux liens, pas de lien imbriqué)
+  if (sous) return `<div class="ac-carte ac-large"><a class="ac-principal" href="${url}" aria-label="${titre}">${corps}</a><div class="ac-sims">${sous}</div></div>`;
+  return `<a class="ac-carte" href="${url}" aria-label="${titre}">${corps}</a>`;
 }
 
 async function demarrer() {
@@ -59,9 +50,9 @@ async function demarrer() {
   if (L39) {
     const ordre = Object.keys(L39.loi39).sort((a, b) => L39.loi39[b] - L39.loi39[a]), lead = ordre[0], maj = Math.floor(L39.sieges_loi39 / 2) + 1;
     sousQc = `<a class="ac-sous ac-sous-ligne" href="loi39.html" title="Simulation : mode de scrutin mixte compensatoire régional">
-      <span class="lv-eyebrow">Simulation</span><b>Loi 39</b>
+      <b>Loi 39</b><span class="ac-type">Simulation</span>
       <span><span class="ac-sous-chiffre">${lead} ${L39.loi39[lead]}</span> <small>sur ${L39.sieges_loi39} · ${L39.loi39[lead] >= maj ? "majoritaire" : "minoritaire"}</small></span>
-      <span class="ac-lien">→</span>
+      <span class="ac-fl" aria-hidden="true">→</span>
       ${barre(ordre.map(p => ({ lab: p, n: L39.loi39[p], c: CQ[p] })), L39.sieges_loi39, maj).replace('class="ac-barre"', 'class="ac-barre ac-barre-mini"')}</a>`;
   }
   // Votes Québec : dernier résultat (aucun sondage depuis l'élection)
