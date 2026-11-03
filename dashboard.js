@@ -281,8 +281,6 @@ bm.title = INVITE ? 'Invité' : `${nom}${ADMIN ? ' · administrateur' : ''}`;
 $('m-admin').hidden = !ADMIN;
 $('m-archives').hidden = $('m-concept').hidden = INVITE;
 $('m-webmail').hidden = !(ADMIN || PERMS.includes('webmail'));
-$('m-version').hidden = !ADMIN;
-$('m-version').addEventListener('click', () => { if (window.toggleVersionBadge) window.toggleVersionBadge(); menu.hidden = true; });
 bm.addEventListener('click', () => { menu.hidden = !menu.hidden; bm.setAttribute('aria-expanded', !menu.hidden); });
 addEventListener('click', e => { if (!e.target.closest('.moi-zone')) { menu.hidden = true; bm.setAttribute('aria-expanded', 'false'); } });
 $('logoutBtn').addEventListener('click', async () => {

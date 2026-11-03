@@ -102,7 +102,8 @@ html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème 
 @media (max-width:640px){
   .marque .nom{display:none}
   .haut{gap:8px}
-  .retour{padding:6px 10px}
+  .haut .rond{width:34px;height:34px}
+  .retour{width:34px;height:34px;padding:0;justify-content:center}.retour .rnom{display:none}   /* téléphone : la flèche seule, logo bien centré */
   .tete h1{font-size:32px}
   .tete .em{width:50px;height:50px;font-size:26px}
   .carte{padding:12px 14px;grid-template-columns:40px 1fr auto}

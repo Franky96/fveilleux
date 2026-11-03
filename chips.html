@@ -235,7 +235,7 @@ html{overflow-x:clip}   /* le voile de la barre du haut ne fait pas défiler la 
 .c2 #logoutBtn{border:none;background:none;color:inherit;padding:9px 10px;border-radius:8px;font-size:14px}   /* style.css stylise #logoutBtn */
 .c2 #logoutBtn:hover{background:var(--panel2);color:inherit}
 @media (max-width:600px){.c2 header.haut{display:grid;flex-direction:row;align-items:center;gap:8px}.c2 .groupe>header{flex-direction:row;align-items:center;text-align:left;gap:10px}
-  .c2 .outils{flex:none;flex-wrap:nowrap;width:auto}.c2 .retour{padding:6px 10px}}   /* style.css empile les header sur téléphone */
+  .c2 .outils{flex:none;flex-wrap:nowrap;width:auto}.c2 .retour{width:34px;height:34px;padding:0;justify-content:center}.c2 .retour .rnom{display:none}.c2 .haut .rond{width:34px;height:34px}}   /* style.css empile les header sur téléphone */
 </style>
 <link rel="stylesheet" href="fond.css">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
@@ -247,7 +247,7 @@ html{overflow-x:clip}   /* le voile de la barre du haut ne fait pas défiler la 
   <!-- en-tête et menu au visuel 2.0 (style des pages de catégorie, limité à .c2) ; les simulateurs plus bas sont inchangés -->
   <div class="c2" style="--c:var(--c-info)">
     <header class="haut">
-      <a class="retour" href="informatique.html">← Informatique</a>
+      <a class="retour" href="informatique.html" title="Retour : Informatique" aria-label="Retour : Informatique">←<span class="rnom"> Informatique</span></a>
       <a class="marque" href="dashboard.html" title="Retour à l'accueil"><span class="logo" aria-hidden="true"><span>O<i>d</i>F</span></span><span class="nom">Outils de Frank</span><span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></a>
       <div class="outils">
         <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
@@ -255,9 +255,9 @@ html{overflow-x:clip}   /* le voile de la barre du haut ne fait pas défiler la 
           <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
           <div class="menu" id="menu" role="menu" hidden>
             <a href="admin.html" id="m-admin" role="menuitem" hidden>⚙️ Administration</a>
+            <a href="dashboard.html" id="m-accueil" role="menuitem">🏠 Accueil</a>
             <a href="archive.html" id="m-archives" role="menuitem" hidden>📁 Archives</a>
             <a href="https://mail.hostinger.com/" id="m-webmail" target="_blank" rel="noopener" role="menuitem" hidden>✉️ Webmail</a>
-            <button type="button" id="m-version" role="menuitem" hidden>🏷️ Badge version des pages</button>
             <hr>
             <button type="button" id="logoutBtn" role="menuitem">↩ Déconnexion</button>
           </div>

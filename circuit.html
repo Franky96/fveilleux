@@ -45,13 +45,14 @@
     .tool-btn.t-wire { border-color:#cc8030; color:#cc8030; background:#1a0f00; }
     .tool-btn.t-del  { border-color:#e05555; color:#e05555; background:#1a0808; }
 
-    .canvas-wrap { flex:1; overflow:hidden; position:relative; }
+    .canvas-wrap { flex:1; min-height:0; overflow:hidden; position:relative; }   /* min-height:0 : le canevas suit la hauteur restante (barre du haut comprise) */
     #sim-canvas { display:block; }
     .status-bar { padding:0.22rem 1rem; font-size:0.7rem; color:#4a6a4a; background:#060e06; border-top:1px solid #1a2a1a; flex-shrink:0; }
   </style>
 <link rel="stylesheet" href="fond.css">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
+<script src="topbar.js" defer></script>
 </head>
 <body>
   <div class="top-bar">
