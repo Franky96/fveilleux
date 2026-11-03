@@ -79,6 +79,6 @@ async function phpPost(body) {
     if (essai >= 14) throw new Error(`${OCCUPE} (${cause})`);
     const m = document.getElementById('error-msg');
     if (m) { m.textContent = `Serveur occupé, nouvel essai (${essai + 2}/15)… (${cause})`; m.style.color = 'var(--gris, #a89f94)'; }
-    await new Promise(r => setTimeout(r, Math.min(600 + 300 * essai, 2500)));
+    await new Promise(r => setTimeout(r, 250 + Math.random() * 250 + Math.min(100 * essai, 700)));   // courtes pauses : le 503 tombe au hasard
   }
 }
