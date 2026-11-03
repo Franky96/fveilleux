@@ -45,21 +45,29 @@ function sessionInit(): void {
   }
 }
 
-function requireLogin(): array {
+// La session est relâchée dès qu'elle est lue (session_write_close) : PHP la verrouille tant qu'elle est ouverte,
+// et un relais qui attend un autre site (usa.php, jusqu'à 20 s) bloquait toutes les autres requêtes de la même
+// personne, chacune gardant un processus PHP : l'hébergeur répondait alors « 503 » à tout le monde (3 novembre 2026).
+// Seuls les scripts qui écrivent dans la session la gardent ouverte ($garder = true : cadeaux.php, users.php).
+function requireLogin(bool $garder = false): array {
   sessionInit();
-  if (empty($_SESSION['uid'])) errOut('Non authentifié', 401);
-  return $_SESSION;
+  if (empty($_SESSION['uid'])) { session_write_close(); errOut('Non authentifié', 401); }
+  $s = $_SESSION;
+  if (!$garder) session_write_close();
+  return $s;
 }
 
-function requireAdmin(): array {
-  $s = requireLogin();
+function requireAdmin(bool $garder = false): array {
+  $s = requireLogin($garder);
   if ($s['role'] !== 'admin') errOut('Accès refusé', 403);
   return $s;
 }
 
 function getSession(): ?array {
   sessionInit();
-  return empty($_SESSION['uid']) ? null : $_SESSION;
+  $s = empty($_SESSION['uid']) ? null : $_SESSION;
+  session_write_close();
+  return $s;
 }
 
 /* Anciens noms de permissions → nom de la page qu'elles ouvrent (mêmes règles dans admin.js) */

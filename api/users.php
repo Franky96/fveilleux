@@ -8,7 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
 
-$admin = requireAdmin();
+$admin = requireAdmin(true);   // écrit dans la session (double authentification)
 // erreurs du coffre (dossier config, clé…) : message clair plutôt qu'une page d'erreur
 set_exception_handler(function (Throwable $e) {
   error_log('fveilleux: users — ' . $e->getMessage());

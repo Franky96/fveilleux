@@ -21,7 +21,7 @@ require_once __DIR__ . '/session.php';
 header('Cache-Control: no-store');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit(0);
 
-$session = requireLogin();
+$session = requireLogin(true);   // écrit dans la session (code d'accès, aperçus)
 $isAdmin = ($session['role'] ?? '') === 'admin';
 $perms   = is_array($session['permissions'] ?? null) ? $session['permissions'] : [];
 if (!$isAdmin && !in_array('cadeaux', $perms, true)) errOut('Accès refusé', 403);
