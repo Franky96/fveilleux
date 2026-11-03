@@ -40,6 +40,8 @@ button,input{font:inherit;color:inherit}
 .wrap{max-width:1180px;margin:0 auto}
 
 /* ---- barre du haut ---- */
+.badge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,#5ec8f0,#6fdc8c)}
+.badge-v:empty{display:none}
 .haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px;
   background:linear-gradient(var(--bg) 70%, transparent)}
 .marque{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;white-space:nowrap}
@@ -222,7 +224,7 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
 <body>
 <div class="wrap">
   <header class="haut">
-    <div class="marque"><div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div>Outils de Frank</div>
+    <div class="marque"><div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div>Outils de Frank<span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></div>
     <label class="recherche"><span style="position:absolute;left:-9999px">Rechercher une page</span>
       <input id="q" type="search" placeholder="Rechercher une page ou un outil…" autocomplete="off"><kbd>/</kbd></label>
     <div class="outils">
@@ -279,7 +281,6 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
   <div class="liste" id="choix-liste"></div>
 </dialog>
 
-<div data-version-badge style="position:fixed;bottom:1rem;left:1rem;background:red;color:white;font-weight:bold;font-size:0.8rem;padding:0.3rem 0.6rem;border-radius:5px;z-index:9999;"></div>
 <script src="version.js"></script>
 <script type="module" src="dashboard.js"></script>
 </body>

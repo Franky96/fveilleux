@@ -1,4 +1,4 @@
-const SITE_VERSION = '1.5.0';
+const SITE_VERSION = '2.0';
 
 // Applique le thème sauvegardé le plus tôt possible pour éviter le flash
 (function () {
@@ -12,6 +12,11 @@ const SITE_VERSION = '1.5.0';
   const badge = document.querySelector('[data-version-badge]');
   if (badge) {
     badge.textContent = SITE_VERSION;
+    // en haut à gauche (visuel 2.0), petit et sans bloquer les clics sur ce qui est dessous (bouton « ← Accueil ») ;
+    // le tableau de bord le place à côté du nom du site (data-version-place)
+    if (!badge.hasAttribute('data-version-place')) Object.assign(badge.style, {
+      top: 'calc(4px + env(safe-area-inset-top))', bottom: 'auto', left: '4px', fontSize: '0.65rem', padding: '0.1rem 0.4rem',
+      borderRadius: '4px', pointerEvents: 'none', lineHeight: '1.3' });
     const isAdmin = sessionStorage.getItem('userRole') === 'admin';
     const hidden = localStorage.getItem('versionBadgeHidden') === 'true';
     if (!isAdmin || hidden) badge.style.display = 'none';
