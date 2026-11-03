@@ -55,24 +55,30 @@ function setSession(userId, nom, role, permissions, pageAccueil) {
 // avec un message clair plutôt que « JSON.parse: unexpected character ».
 async function phpPost(body) {
   const OCCUPE = 'Le serveur est occupé pour le moment. Réessaie dans quelques secondes.';
+  let cause = '';
   for (let essai = 0; ; essai++) {
-    let res = null;
+    let res = null, texte = '';
     try {
-      res = await fetch('/api/login.php', {
+      res = await fetch('/api/login.php?t=' + Date.now(), {
         method: 'POST',
         credentials: 'include',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-    } catch (e) { /* réseau coupé : on réessaie aussi */ }
-    const json = res ? await res.json().catch(() => null) : null;
+      texte = await res.text();
+    } catch (e) { cause = 'réseau : ' + (e && e.message || e); }
+    let json = null;
+    try { json = texte ? JSON.parse(texte) : null; } catch (e) { /* page HTML (503 de l'hébergeur…) */ }
     if (json) {
       if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur serveur');
       return json;
     }
-    if (essai >= 14) throw new Error(OCCUPE);
+    // ce qui a empêché la connexion, affiché tel quel pour comprendre un appareil qui bloque (iPhone, 3 novembre 2026)
+    if (res) cause = `code ${res.status}${res.redirected ? ', redirigé vers ' + res.url : ''} : ${texte.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60)}`;
+    if (essai >= 14) throw new Error(`${OCCUPE} (${cause})`);
     const m = document.getElementById('error-msg');
-    if (m) { m.textContent = `Serveur occupé, nouvel essai (${essai + 2}/15)…`; m.style.color = 'var(--gris, #a89f94)'; }
+    if (m) { m.textContent = `Serveur occupé, nouvel essai (${essai + 2}/15)… (${cause})`; m.style.color = 'var(--gris, #a89f94)'; }
     await new Promise(r => setTimeout(r, Math.min(600 + 300 * essai, 2500)));
   }
 }
