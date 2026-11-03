@@ -1,5 +1,27 @@
 const SITE_VERSION = '2.0';
 
+// Fiabilité (3 novembre 2026) : l'hébergeur répond parfois « 503 » (page HTML « The server is temporarily busy »)
+// sans même lancer PHP. Toute requête du site vers /api/ qui reçoit ce 503 est donc refaite, quelques fois, avec de
+// courtes pauses : la requête n'avait rien fait, la refaire est sans risque. Les 503 envoyés par nos scripts (JSON,
+// ex. « résultats indisponibles ») ne sont pas touchés. Chargé par presque toutes les pages, avant leurs modules.
+(function () {
+  if (window.__fetchFiable || !window.fetch) return;
+  window.__fetchFiable = true;
+  const f0 = window.fetch.bind(window);
+  window.fetch = async function (entree, options) {
+    let url;
+    try { url = new URL(typeof entree === 'string' || entree instanceof URL ? entree : entree.url, location.href); } catch (e) { return f0(entree, options); }
+    const rejouable = typeof entree === 'string' || entree instanceof URL;   // un objet Request ne se renvoie pas tel quel
+    if (url.origin !== location.origin || !url.pathname.startsWith('/api/') || !rejouable) return f0(entree, options);
+    for (let essai = 0; ; essai++) {
+      const res = await f0(entree, options);
+      const html = (res.headers.get('content-type') || '').includes('text/html');
+      if (res.status !== 503 || !html || essai >= 6) return res;
+      await new Promise(r => setTimeout(r, 250 + Math.random() * 250 + Math.min(150 * essai, 900)));
+    }
+  };
+})();
+
 // Applique le thème sauvegardé le plus tôt possible pour éviter le flash
 (function () {
   if (localStorage.getItem('theme') === 'light') {
