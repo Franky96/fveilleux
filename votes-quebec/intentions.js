@@ -488,7 +488,7 @@ document.addEventListener("click", e => {
 // période affichée (mois ; 0 = depuis l'élection de 2022), gardée d'une visite à l'autre
 let periode = (() => { try { return +localStorage.getItem("viPeriode") || 0; } catch { return 0; } })();
 function dessinerEvolution() {
-  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(440, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(800, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
   const m = { t: 16, r: 54, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
   const tous = SOND.sondages.filter(s => !s.e);

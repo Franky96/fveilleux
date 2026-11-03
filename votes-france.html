@@ -642,7 +642,7 @@
     .ac-continent-titre small { font-size: 0.74rem; font-weight: 400; color: var(--muted); font-family: system-ui, sans-serif; }
     /* même largeur de carte dans tous les continents (auto-fill) ; en Amérique du Nord, une barre verticale avant la première
        carte du second sous-groupe (Canada), comme la barre de la bande d'onglets */
-    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px 26px; }
+    .ac-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, max(250px, calc((100% - 3 * 26px) / 4))), 1fr)); gap: 12px 26px; }   /* au plus 4 cartes par ligne, même largeur partout */
     .ac-carte.ac-debut { position: relative; overflow: visible; }
     .ac-carte.ac-debut::before { content: ""; position: absolute; left: -14px; top: -6px; bottom: -6px; width: 2px; border-radius: 1px; background: var(--muted); opacity: 0.6; }
     @media (max-width: 560px) { .ac-carte.ac-debut::before { display: none; } }   /* une seule colonne : pas de barre collée au bord */
@@ -880,8 +880,8 @@
     .vue-votes .lv-panneau { padding: 14px; gap: 10px; }
     .vue-votes .lv-panneau h3 { font-size: 1.12rem; }
     .vue-votes .vi-haut, .vue-votes .vi-grid { gap: 14px; }
-    .vue-votes svg.vi-plan { max-height: min(36vh, 400px); }   /* hémicycle : ne grandit plus sans fin avec la largeur */
-    .vue-votes #viCarte { height: clamp(340px, 60vh, 760px); }
+    .vue-votes svg.vi-plan { max-height: min(38vh, 720px); }   /* hémicycle : ne grandit plus sans fin avec la largeur */
+    .vue-votes #viCarte { height: clamp(340px, 62vh, 1300px); }
     .vue-votes .vf-cands { gap: 4px; }                                   /* candidats et duels (France, États-Unis) plus serrés */
     .vue-votes .vf-cand-barre { height: 12px; }
     .vue-votes .vf-cand b { font-size: 0.86rem; }
@@ -896,8 +896,8 @@
     }
     /* très large et peu haut (21:9) : contenu limité à environ 1,9 fois la hauteur d'écran, centré, onglets alignés dessus */
     @media (min-width: 1800px) {
-      .vue-votes .lv-wrap { max-width: min(3360px, 190vh); }
-      body:has(.vue-votes:not([hidden])) .sc-tabs, body:has(.vue-votes:not([hidden])) .sc-sous { max-width: calc(min(3360px, 190vh) - 2 * clamp(16px, 3vw, 56px)); }
+      .vue-votes .lv-wrap, .vue-accueil .lv-wrap { max-width: min(3360px, 190vh); }
+      body:has(.vue-votes:not([hidden]), .vue-accueil:not([hidden])) .sc-tabs, body:has(.vue-votes:not([hidden]), .vue-accueil:not([hidden])) .sc-sous { max-width: calc(min(3360px, 190vh) - 2 * clamp(16px, 3vw, 56px)); }
     }
     /* téléphone : les zooms ne paraissent que dans le menu « Contrôles » ouvert (règles plus bas) */
     .vi-serres, .vi-parts, .vi-cands { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }

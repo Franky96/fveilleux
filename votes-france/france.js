@@ -464,7 +464,7 @@ function donneesSerie() {
 }
 function dessinerEvolution() {
   const S = donneesSerie();
-  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(440, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
+  const el = $("viEvol"), W = el.clientWidth || 800, H = Math.max(230, Math.min(800, W * 0.5, innerHeight * 0.42))   // hauteur liée à l'écran (4:3 à 21:9), pas seulement à la largeur;
   const m = { t: 16, r: 84, b: 28, l: 34 };
   const t = s => new Date(s + "T12:00:00");
   const tous = S.points;
