@@ -648,12 +648,16 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":
 /* Poids d'une circonscription actuelle : ses votes valides de 2026 (vv), sinon ses électeurs */
 const VV = r => r.vv ?? r.e;
 /* Base : vote national de la même source que les résultats (élection 2026, sinon projection Qc125),
-   chaque circonscription pondérée par ses votes valides */
+   chaque circonscription pondérée par ses votes valides. Élection : parts en % de TOUS les votes valides (les petits
+   partis et indépendants, « autres », comptent dans le total, comme dans les résultats officiels et pour le seuil de 10 %
+   de l'art. 379.2) ; projection Qc125 : parts ramenées à 100 % entre les cinq partis. */
+const PARTS = r => ELECTION ? {s: r.se, S: 100} : {s: r.s, S: r.s.reduce((a,b)=>a+b,0)};
 const BASE = (() => {
   const t = [0,0,0,0,0]; let T = 0;
-  for (const r of DATA.ridings){ const s = ELECTION ? r.se : r.s, S = s.reduce((a,b)=>a+b,0); s.forEach((v,i) => { t[i] += VV(r)*v/S; }); T += VV(r); }
+  for (const r of DATA.ridings){ const {s, S} = PARTS(r); s.forEach((v,i) => { t[i] += VV(r)*v/S; }); T += VV(r); }
   return t.map(v => 100*v/T);
 })();
+const AUTRES = Math.max(0, 100 - BASE.reduce((a,b)=>a+b,0));   // part des autres partis, fixe quand on bouge les curseurs
 
 const state = { target: BASE.slice(), thr: 10, mode: "lead", party: "ALL", lastParty: null, view: "reg", sel: {type:"all"} };
 let RES;
@@ -678,40 +682,39 @@ function simulate(){
   const zero = () => Object.fromEntries(P.map(p=>[p,0]));
   const votes = {}, fptpReg = {}, dReg = {}, fptp = zero();
   for (const r of DATA.regions){ votes[r.code] = [0,0,0,0,0]; fptpReg[r.code] = zero(); dReg[r.code] = zero(); }
-  const nat = [0,0,0,0,0];
+  const nat = [0,0,0,0,0], regTot = {}; let natTot = 0;
+  for (const r of DATA.regions) regTot[r.code] = 0;
   // Les 127 circonscriptions actuelles (résultat de l'élection, sinon projection Qc125) : mode actuel et votes régionaux.
   // Votes = parts × votes valides 2026 ; une circonscription coupée par une limite de région (rp) y verse ses votes
   // au prorata de ses électeurs de chaque côté (vote supposé uniforme dans la circonscription).
   const ridings = DATA.ridings.map(rd0 => {
     const rd = ELECTION ? {...rd0, s: rd0.se, o: rd0.oe} : rd0;
-    const S = rd.s.reduce((a,b)=>a+b,0);
+    const {S} = PARTS(rd0);
     const v = rd.s.map((x,i) => x/S*k[i]);
-    v.forEach((x,i) => { nat[i] += VV(rd)*x; });
-    for (const [c,e] of rd.rp ?? [[rd.r, rd.e]]) v.forEach((x,i) => { votes[c][i] += VV(rd)*e/rd.e*x; });
+    const tot = v.reduce((a,b)=>a+b,0) + Math.max(0, 1 - rd.s.reduce((a,b)=>a+b,0)/S);   // + autres partis
+    v.forEach((x,i) => { nat[i] += VV(rd)*x; }); natTot += VV(rd)*tot;
+    for (const [c,e] of rd.rp ?? [[rd.r, rd.e]]){ v.forEach((x,i) => { votes[c][i] += VV(rd)*e/rd.e*x; }); regTot[c] += VV(rd)*e/rd.e*tot; }
     let w = rd.o[0];                              // ordre de départage (gagnant officiel d'abord)
     for (const i of rd.o) if (v[i] > v[w]) w = i;
     fptp[P[w]]++; fptpReg[rd.r][P[w]]++;
-    const t = v.reduce((a,b)=>a+b,0);
-    return {...rd, v, sh: v.map(x=>100*x/t), w: P[w]};
+    return {...rd, v, tot, sh: v.map(x=>100*x/tot), w: P[w]};
   });
   // Les 80 circonscriptions hypothétiques : votes = somme des sections de vote qui les composent
   // (électeurs venus de chaque circonscription actuelle × sa participation de 2026 × ses parts)
   const districts = DATA.districts.map(di => {
-    const v = [0,0,0,0,0];
-    for (const [ri,e] of di.comp){ const rd = ridings[ri], f = e/rd.e*VV(rd); rd.v.forEach((x,i) => { v[i] += f*x; }); }
+    const v = [0,0,0,0,0]; let t = 0;
+    for (const [ri,e] of di.comp){ const rd = ridings[ri], f = e/rd.e*VV(rd); rd.v.forEach((x,i) => { v[i] += f*x; }); t += f*rd.tot; }
     let w = 0; for (let i = 1; i < 5; i++) if (v[i] > v[w]) w = i;
     dReg[di.r][P[w]]++;
-    const t = v.reduce((a,b)=>a+b,0);
     const sh = v.map(x=>100*x/t), sorted = sh.slice().sort((a,b)=>b-a);
     return {...di, sh, w: P[w], margin: sorted[0]-sorted[1]};
   });
-  const NT = nat.reduce((a,b)=>a+b,0);
-  const natShare = Object.fromEntries(P.map((p,i)=>[p,100*nat[i]/NT]));
+  const natShare = Object.fromEntries(P.map((p,i)=>[p,100*nat[i]/natTot]));
   const eligible = P.filter(p => natShare[p] >= state.thr - 1e-9);
 
   const regions = {}, totD = zero(), totL = zero();
   for (const r of DATA.regions){
-    const v = votes[r.code], vt = v.reduce((a,b)=>a+b,0);
+    const v = votes[r.code], vt = regTot[r.code];
     const share = Object.fromEntries(P.map((p,i)=>[p,100*v[i]/vt]));
     const d = dReg[r.code];
     const l = zero();
@@ -1742,8 +1745,8 @@ function syncSliders(){
 let raf = 0;
 sl.addEventListener("input", e => {
   const i = +e.target.dataset.i; if (Number.isNaN(i)) return;
-  const v = +e.target.value, others = state.target.reduce((a,t,j)=> j===i ? a : a+t, 0);
-  state.target = state.target.map((t,j) => j===i ? v : (others>0 ? t*(100-v)/others : (100-v)/4));
+  const v = Math.min(+e.target.value, 100 - AUTRES), others = state.target.reduce((a,t,j)=> j===i ? a : a+t, 0), reste = 100 - AUTRES - v;
+  state.target = state.target.map((t,j) => j===i ? v : (others>0 ? t*reste/others : reste/4));
   syncSliders();
   cancelAnimationFrame(raf); raf = requestAnimationFrame(render);
 });

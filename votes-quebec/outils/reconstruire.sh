@@ -60,7 +60,30 @@ json.dump({str(k): sorted(v) for k, v in adj.items()}, open('m80/adj.json', 'w')
 print('voisinage :', len(adj), 'sections')
 EOF
 
-  echo "== Régions de l'annexe I (municipalité → MRC → région) et découpage à 80 (≈ 2 min)"
+  # voisinage sur la terre ferme (sections découpées par le masque des terres) : le découpage n'enjambe pas l'eau
+  $MS -i "$SHP" -each 'IDX=this.id' -filter-fields IDX -proj wgs84 -clip m80/land.json -o m80/sections_terre_topo.json format=topojson
+  $PY - <<'EOF'
+import json
+from collections import defaultdict
+t = json.load(open('m80/sections_terre_topo.json')); obj = list(t['objects'].values())[0]
+users = defaultdict(set)
+def walk(a, g):
+    if isinstance(a, int): users[a if a >= 0 else ~a].add(g)
+    else:
+        for x in a: walk(x, g)
+for g in obj['geometries']:
+    if 'arcs' in g: walk(g['arcs'], g['properties']['IDX'])
+adj = defaultdict(set)
+for us in users.values():
+    us = list(us)
+    for i in range(len(us)):
+        for j in range(i + 1, len(us)): adj[us[i]].add(us[j]); adj[us[j]].add(us[i])
+json.dump({str(k): sorted(v) for k, v in adj.items()}, open('m80/adj_terre.json', 'w'))
+print('voisinage sur la terre ferme :', len(adj), 'sections')
+EOF
+  rm -f m80/sections_terre_topo.json
+
+  echo "== Régions de l'annexe I (municipalité → MRC → région) et découpage à 80 (quelques secondes)"
   $PY m80/regions39.py
   $PY m80/district2.py
 

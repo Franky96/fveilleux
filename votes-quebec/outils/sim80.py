@@ -5,7 +5,8 @@ P=["PQ","PLQ","CAQ","PCQ","QS"]
 D=json.load(open('data.json'))
 R=D['ridings']
 # base de la simulation : résultat de l'élection quand il est définitif, sinon projection Qc125
-if D.get('source',{}).get('type')=='election':
+EL=D.get('source',{}).get('type')=='election'
+if EL:
     for x in R: x['s'],x['o']=x['se'],x['oe']
 def hq(w,n):
     q=sorted(((v/d,k) for k,v in w.items() for d in range(1,n+1)),reverse=True)[:n]; return Counter(k for _,k in q)
@@ -13,18 +14,20 @@ el={r['code']:r['electors'] for r in D['regions']}
 ed,elq=hq(el,62),hq(el,29)
 DIST={c:1+(c=="11")+ed[c] for c in el}; LIST={c:(c!="10")+elq[c] for c in el}
 # poids : votes valides 2026 de chaque circonscription (vv), répartis entre ses régions selon ses électeurs (rp)
-nat=[0]*5; reg={c:[0]*5 for c in el}; fptp=Counter()
+nat=[0]*5; reg={c:[0]*5 for c in el}; fptp=Counter(); NT=0
+# élection : parts en % de tous les votes valides (les autres partis comptent dans le total, seuil de 10 % de l'art. 379.2)
 sh=[]
 for x in R:
-    t=sum(x['s']); s=[v/t for v in x['s']]; sh.append(s)
+    t=100 if EL else sum(x['s']); s=[v/t for v in x['s']]; sh.append(s)
     for i in range(5): nat[i]+=x['vv']*s[i]
+    NT+=x['vv']
     for c,e in x['rp']:
         for i in range(5): reg[c][i]+=x['vv']*e/x['e']*s[i]
     w=x['o'][0]
     for i in x['o']:
         if x['s'][i]>x['s'][w]: w=i
     fptp[P[w]]+=1
-N=sum(nat); ns={P[i]:100*nat[i]/N for i in range(5)}
+ns={P[i]:100*nat[i]/NT for i in range(5)}
 elig=[p for p in P if ns[p]>=10]
 d=Counter(); dreg={c:Counter() for c in el}
 for di in D['districts']:
