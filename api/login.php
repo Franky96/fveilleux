@@ -56,6 +56,9 @@ switch ($action) {
       if (!$c->fetch()) { require_once __DIR__ . '/coffre.php'; coffreEnregistrer($pdo, $user['id'], $pass); }
     } catch (Throwable $e) { error_log('fveilleux: coffre — ' . $e->getMessage()); }
 
+    // session neuve, sans relire l'ancienne : si une vieille requête la tient encore verrouillée, la connexion
+    // attendait derrière elle jusqu'au « 503 » de l'hébergeur (iPhone, 3 novembre 2026)
+    unset($_COOKIE['fv_sess']);
     sessionInit();
     session_regenerate_id(true);
     $_SESSION['uid']          = $user['id'];
@@ -89,6 +92,9 @@ switch ($action) {
     $config = $row ? json_decode($row['data'], true) : [];
     $perms  = normaliserPermissions($config['guestPermissions'] ?? []);
 
+    // session neuve, sans relire l'ancienne : si une vieille requête la tient encore verrouillée, la connexion
+    // attendait derrière elle jusqu'au « 503 » de l'hébergeur (iPhone, 3 novembre 2026)
+    unset($_COOKIE['fv_sess']);
     sessionInit();
     session_regenerate_id(true);
     $_SESSION['uid']          = 'guest';
