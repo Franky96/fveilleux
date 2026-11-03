@@ -65,6 +65,9 @@ html,body{margin:0;height:100%;background:var(--fond);color:var(--texte);font:16
 .voile{position:fixed;inset:0;pointer-events:none;background:
   radial-gradient(ellipse 34% 48% at 50% 50%, rgba(var(--voile-c),.72) 0%, rgba(var(--voile-c),.25) 65%, rgba(var(--voile-c),0) 100%),
   linear-gradient(180deg, rgba(var(--voile-c),.5) 0%, rgba(var(--voile-c),0) 18%, rgba(var(--voile-c),0) 78%, rgba(var(--voile-c),.8) 100%)}
+/* thème clair : plus de voile blanc sur les aperçus (demande de l'utilisateur), juste un fondu léger en bas pour lire les étiquettes */
+html.light .voile{background:linear-gradient(180deg, rgba(var(--voile-c),0) 0%, rgba(var(--voile-c),0) 80%, rgba(var(--voile-c),.85) 100%)!important}
+@media (orientation: portrait) and (max-width: 760px){html.light .voile{background:none!important}}   /* pas d'étiquettes en bas sur téléphone */
 .etiq{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:2px;pointer-events:none;transform:translateX(-50%);text-align:center;white-space:nowrap}
 .etiq b{font-family:var(--f-display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:15px;color:color-mix(in srgb,var(--c) 55%,var(--texte))}
 .etiq span{font-size:12px;color:var(--gris);letter-spacing:.04em}
