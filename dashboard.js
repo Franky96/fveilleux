@@ -302,3 +302,6 @@ $('pied-liens').innerHTML = INVITE ? '' : '<a href="archive.html">Archives</a>';
   chargerNotifs();
   setInterval(rendreNotifs, 60000);
 })();
+
+/* ---------- barre du haut : voile flou seulement quand la page défile ---------- */
+{ const h = document.querySelector('.haut'); const f = () => h.classList.toggle('colle', scrollY > 4); addEventListener('scroll', f, { passive: true }); f(); }

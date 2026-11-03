@@ -32,7 +32,8 @@ html.light{
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body)}
-body{background:radial-gradient(1200px 380px at 50% -120px, var(--bg2), transparent 70%), var(--bg);min-height:100vh;
+html{overflow-x:clip}
+body{background:transparent;min-height:100vh;
   padding:0 max(18px,env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}
 a{color:inherit;text-decoration:none}
 button,input{font:inherit;color:inherit}
@@ -42,8 +43,20 @@ button,input{font:inherit;color:inherit}
 /* ---- barre du haut ---- */
 .badge-v{font-family:var(--f-mono);font-weight:500;font-size:11px;letter-spacing:0;padding:2px 7px;border-radius:999px;color:#071016;background:linear-gradient(90deg,#5ec8f0,#6fdc8c)}
 .badge-v:empty{display:none}
-.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px;
-  background:linear-gradient(var(--bg) 70%, transparent)}
+.haut{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 0;margin-bottom:4px}
+.haut::before{content:"";position:absolute;z-index:-1;top:0;bottom:-6px;left:50%;width:100vw;transform:translateX(-50%);
+  background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-mask:linear-gradient(#000 80%,transparent);mask:linear-gradient(#000 80%,transparent);opacity:0;transition:opacity .2s}
+.haut.colle::before{opacity:1}
+
+/* ---- fond : bandes diagonales teintées aux couleurs des thèmes (rappel de la page de connexion), fixes derrière la page ---- */
+.fond{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.fond::before,.fond::after{content:"";position:absolute;inset:0}
+.fond::before{background:
+  linear-gradient(120deg, transparent 0 14%, color-mix(in srgb,var(--c-avia) 11%,transparent) 14% 26%, transparent 26% 40%,
+    color-mix(in srgb,var(--c-info) 8%,transparent) 40% 50%, transparent 50% 64%, color-mix(in srgb,var(--c-pol) 10%,transparent) 64% 77%,
+    transparent 77% 88%, color-mix(in srgb,var(--c-lois) 9%,transparent) 88% 100%)}
+.fond::after{background:radial-gradient(70vmax 50vmax at 50% 0, transparent, var(--bg) 95%)}
 .marque{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;white-space:nowrap}
 .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;
   background:conic-gradient(from 210deg,#5ec8f0,#6fdc8c,#f2a03d,#8f7cff,#5ec8f0)}
@@ -230,6 +243,7 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
+<div class="fond" aria-hidden="true"></div>
 <div class="wrap">
   <header class="haut">
     <div class="marque"><div class="logo" aria-hidden="true"><span>O<i>d</i>F</span></div>Outils de Frank<span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></div>
