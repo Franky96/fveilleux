@@ -15,11 +15,3 @@
   </FilesMatch>
 </IfModule>
 
-# Contrôle des pages par le serveur : chaque page .html de la racine (et de concept/), sauf la connexion,
-# passe par api/page.php, qui vérifie la session et la permission avant de la servir (voir docs/site.md).
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{REQUEST_FILENAME} -f
-  RewriteCond $1 !^index\.html$
-  RewriteRule ^((?:concept/)?[A-Za-z0-9_-]+\.html)$ api/page.php?p=$1 [L,QSA]
-</IfModule>
