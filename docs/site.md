@@ -100,6 +100,9 @@ Depuis le 3 novembre 2026 (demande de l'utilisateur), le serveur vérifie l'acc�
 - Jeux de société reste dans le cache hors ligne (`sw.js`, avec `categorie.js`, `categorie.css`, `firebase-config.js`) : changer `CACHE_NAME` quand ces fichiers changent.
 
 ## Style commun
+- **Animations** (3 novembre 2026, demande de l'utilisateur, ajoutées deux par deux ; liste proposée : 1 transitions entre les pages, 2 thème en cercle, 3 fond qui dérive, 4 arrivée en cascade du tableau de bord, 5 raccourcis vivants au survol, 6 reflet sur le logo, 7 chiffres qui comptent, 8 barres et hémicycles qui se remplissent, 9 courbes qui se dessinent, 10 cartes de catégorie animées). Toutes respectent `prefers-reduced-motion`. Faites :
+  - **2, thème en cercle** : `window.basculerThemeAnime(bouton, appliquer)` de `version.js` (View Transitions : le nouveau thème se répand en cercle depuis le bouton, l'icône tourne ; sinon bascule directe), utilisé par `theme-toggle.js`, `dashboard.js`, `categorie.js` ; copie dans `index.html` (qui ne charge pas version.js).
+  - **4, arrivée en cascade** : `<body class="arrivee">` du tableau de bord, `--i` par élément (bonjour, raccourcis, catégories, 70 ms d'écart), classe retirée après 2,6 s.
 - **Favicon** : chaque page (et le gabarit `pages.src.html`) déclare `/favicon-32.png?v=<empreinte>` et `/apple-touch-icon.png?v=<empreinte>` (8 premiers caractères du sha256 du fichier ; chemin absolu, valable aussi dans `concept/`). Sans déclaration, le navigateur gardait l'ancien `/favicon.ico` en cache. Si l'icône change : refaire les trois fichiers (`favicon.ico` reste en secours), puis remettre les empreintes partout (`sed` sur `favicon-32.png?v=` et `apple-touch-icon.png?v=`, gabarit compris, puis `pages.py --bascule`).
 
 - `style.css`, thème clair ou sombre par `theme-toggle.js` (`localStorage.theme`).

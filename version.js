@@ -22,6 +22,29 @@ const SITE_VERSION = '2.0';
   };
 })();
 
+// Bascule clair / sombre animée (3 novembre 2026, demande de l'utilisateur) : le nouveau thème se répand en cercle à partir du
+// bouton cliqué (View Transitions ; sinon, ou en mouvement réduit, bascule directe). appliquer() fait le vrai changement.
+window.basculerThemeAnime = function (bouton, appliquer) {
+  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (bouton) { bouton.classList.remove('theme-tourne'); void bouton.offsetWidth; bouton.classList.add('theme-tourne'); }
+  if (!document.startViewTransition || reduit || !bouton) { appliquer(); return; }
+  const r = bouton.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const t = document.startViewTransition(appliquer);
+  t.ready.then(() => document.documentElement.animate(
+    { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${R}px at ${x}px ${y}px)`] },
+    { duration: 650, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
+};
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}'
+    + '::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}'
+    + '.theme-tourne{animation:themeTourne .6s cubic-bezier(.2,.9,.3,1.25)}'
+    + '@keyframes themeTourne{from{transform:rotate(-140deg) scale(.55)}}'
+    + '@media (prefers-reduced-motion: reduce){.theme-tourne{animation:none}}';
+  document.head.appendChild(st);
+})();
+
 // Applique le thème sauvegardé le plus tôt possible pour éviter le flash
 (function () {
   if (localStorage.getItem('theme') === 'light') {

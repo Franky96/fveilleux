@@ -78,7 +78,7 @@ function visibles() {
 /* ---------- tout le site ---------- */
 let VUE = [];
 function rendreGroupes() {
-  $('groupes').innerHTML = VUE.map(g => `<section class="groupe" style="--c:var(${g.c})">
+  $('groupes').innerHTML = VUE.map((g, gi) => `<section class="groupe" style="--c:var(${g.c});--i:${gi + 4}">
   <header><span class="ic">${g.ic}</span><h3>${esc(g.nom)}</h3><span class="nb">${g.pages.length}</span></header>
   ${g.pages.map(p => `<div class="ligne" data-cherche="${esc((p.n + ' ' + p.d + ' ' + p.sous.map(x => x[1]).join(' ')).toLowerCase())}">
     <span class="em">${p.e}</span><span><a class="lien" href="${p.h}"><b>${esc(p.n)}</b></a><small>${esc(p.d)}</small></span><span class="fl">›</span>
@@ -156,7 +156,7 @@ function enregistrer() {
 function rendreRacc() {
   zone.classList.toggle('perso', perso);
   zone.innerHTML = liste.map((h, k) => { const p = page(h), img = APERCUS[h];
-    return `<a class="tuile" href="${h}" style="--c:var(${p.c})" draggable="${perso}" data-k="${k}">
+    return `<a class="tuile" href="${h}" style="--c:var(${p.c});--i:${k + 2}" draggable="${perso}" data-k="${k}">
       <span class="ctl"><button type="button" data-g="${k}" aria-label="Plus tôt">‹</button><button type="button" data-d="${k}" aria-label="Plus tard">›</button><button type="button" class="x" data-x="${k}" aria-label="Retirer ${esc(p.n)}">×</button></span>
       <div class="vue${img ? '' : ' ico'}"${img ? ` style="background-image:url('${img}')"` : ''}>${img ? '' : p.e}</div>
       <div class="corps"><span class="titre">${esc(p.n)}</span><span class="desc">${esc(p.d)}</span>${INFOS[h] ? `<span class="info">${INFOS[h]}</span>` : ''}</div></a>`; }).join('')
@@ -292,7 +292,10 @@ $('logoutBtn').addEventListener('click', async () => {
 });
 const bt = $('b-theme');
 const majT = () => { bt.textContent = document.documentElement.classList.contains('light') ? '☾' : '☀︎'; };
-bt.addEventListener('click', () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); });
+bt.addEventListener('click', () => {
+  const appliquer = () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); };
+  if (window.basculerThemeAnime) window.basculerThemeAnime(bt, appliquer); else appliquer();   // en cercle depuis le bouton (version.js)
+});
 majT();
 $('pied-liens').innerHTML = INVITE ? '' : '<a href="archive.html">Archives</a>';
 
@@ -316,3 +319,6 @@ $('pied-liens').innerHTML = INVITE ? '' : '<a href="archive.html">Archives</a>';
 
 /* ---------- barre du haut : voile flou seulement quand la page défile ---------- */
 { const h = document.querySelector('.haut'); const f = () => h.classList.toggle('colle', scrollY > 4); addEventListener('scroll', f, { passive: true }); f(); }
+
+/* fin de l'arrivée en cascade : les rendus suivants (personnalisation, recherche) ne rejouent pas l'animation */
+setTimeout(() => document.body.classList.remove('arrivee'), 2600);

@@ -20,13 +20,15 @@
   sun.textContent = '☀️';
   toggle.appendChild(sun);
 
-  toggle.onclick = function () {
+  const basculer = function () {
     const nowLight = document.documentElement.classList.toggle('light');
     localStorage.setItem('theme', nowLight ? 'light' : 'dark');
     toggle.setAttribute('aria-checked', nowLight ? 'true' : 'false');
     // les pages qui dessinent elles-mêmes (canvas, scène 3D) écoutent cet événement pour reprendre leurs couleurs
     window.dispatchEvent(new CustomEvent('themechange', { detail: { light: nowLight } }));
   };
+  // en cercle depuis l'interrupteur quand version.js est chargé (presque toutes les pages)
+  toggle.onclick = function () { if (window.basculerThemeAnime) window.basculerThemeAnime(knob, basculer); else basculer(); };
 
   toggle.classList.add('theme-toggle--fixed');
   document.body.appendChild(toggle);

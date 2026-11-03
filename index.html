@@ -123,6 +123,8 @@ button:active{transform:scale(.985)}
   .voile{background:radial-gradient(ellipse 80% 45% at 50% 50%, rgba(var(--voile-c),.8) 0%, rgba(var(--voile-c),.4) 70%, rgba(var(--voile-c),.1) 100%)}
 }
 @media (prefers-reduced-motion: reduce){.bande .img{animation:none}}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
 </style>
 </head>
 <body>
@@ -234,7 +236,15 @@ if (r0) etiquette(r0); else animer();
 // ---- thème clair / sombre (même réglage que le reste du site : localStorage.theme) ----
 const btnT = document.getElementById('b-theme');
 const majT = () => { const c = document.documentElement.classList.contains('light'); btnT.textContent = c ? '☾ Sombre' : '☀︎ Clair'; };
-btnT.addEventListener('click', () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); });
+// bascule clair / sombre en cercle depuis le bouton (même effet que version.js, que cette page ne charge pas)
+btnT.addEventListener('click', () => {
+  const appliquer = () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); };
+  if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { appliquer(); return; }
+  const r = btnT.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.startViewTransition(appliquer).ready.then(() => document.documentElement.animate(
+    { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${R}px at ${x}px ${y}px)`] },
+    { duration: 650, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
+});
 majT();
 
 </script>

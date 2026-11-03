@@ -271,10 +271,16 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
   .t-petit{flex-direction:column}
   .t-petit .vue{width:auto;aspect-ratio:16/9;min-height:0;border-right:none;border-bottom:1px solid var(--line)}
 }
+/* arrivée en cascade (3 novembre 2026, demande de l'utilisateur) : bonjour, raccourcis puis catégories glissent vers le haut l'un après l'autre ;
+   seulement au chargement (classe .arrivee retirée ensuite : la personnalisation des raccourcis ne rejoue pas l'effet) */
+@keyframes arrive{from{opacity:0;transform:translateY(16px)}}
+.arrivee .bonjour,.arrivee .sect-tete,.arrivee .tuile,.arrivee #t-tout,.arrivee .groupe{animation:arrive .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+.arrivee .bonjour{--i:0}.arrivee .sect-tete{--i:1}.arrivee #t-tout{--i:3}
+@media (prefers-reduced-motion: reduce){.arrivee *{animation:none!important}}
 @media (prefers-reduced-motion: reduce){.pt.vif{animation:none}.tuile,.ligne .fl{transition:none}}
 </style>
 </head>
-<body>
+<body class="arrivee">
 <div class="fond" aria-hidden="true"></div>
 <div class="wrap">
   <header class="haut">

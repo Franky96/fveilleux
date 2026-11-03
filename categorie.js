@@ -64,9 +64,8 @@ $('logoutBtn').addEventListener('click', async () => {
 const bt = $('b-theme');
 const majT = () => { bt.textContent = document.documentElement.classList.contains('light') ? '☾' : '☀︎'; };
 bt.addEventListener('click', () => {
-  const c = document.documentElement.classList.toggle('light');
-  try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {}
-  majT();
+  const appliquer = () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); };
+  if (window.basculerThemeAnime) window.basculerThemeAnime(bt, appliquer); else appliquer();   // en cercle depuis le bouton (version.js)
 });
 majT();
 { const h = document.querySelector('.haut'); const f = () => h.classList.toggle('colle', scrollY > 4); addEventListener('scroll', f, { passive: true }); f(); }
