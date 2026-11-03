@@ -70,7 +70,9 @@ async function phpPost(body) {
       if (!res.ok || json.error) throw new Error(json.error ?? 'Erreur serveur');
       return json;
     }
-    if (essai >= 6) throw new Error(OCCUPE);
-    await new Promise(r => setTimeout(r, 400 + 400 * essai));
+    if (essai >= 14) throw new Error(OCCUPE);
+    const m = document.getElementById('error-msg');
+    if (m) { m.textContent = `Serveur occupé, nouvel essai (${essai + 2}/15)…`; m.style.color = 'var(--gris, #a89f94)'; }
+    await new Promise(r => setTimeout(r, Math.min(600 + 300 * essai, 2500)));
   }
 }
