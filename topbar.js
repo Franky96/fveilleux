@@ -89,8 +89,8 @@ html.tb2-actif #theme-toggle,html.tb2-actif .page-topbar-controls,html.tb2-actif
 html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data-version-badge]:not(.tb2-badge),html.tb2-actif .tb2-cache{display:none!important}
 .tb2-theme-tourne{animation:tb2Tourne .6s cubic-bezier(.2,.9,.3,1.25)}
 @keyframes tb2Tourne{from{transform:rotate(-140deg) scale(.55)}}
-::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
-::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
+html.vt-theme::view-transition-old(root),html.vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transition-new(root){z-index:2}
 @media (prefers-reduced-motion: reduce){.tb2-theme-tourne{animation:none}}`;
   D.head.appendChild(st);
 
@@ -185,7 +185,9 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
     bt.classList.remove('tb2-theme-tourne'); void bt.offsetWidth; bt.classList.add('tb2-theme-tourne');
     if (!D.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { appliquer(); return; }
     const r = bt.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    D.startViewTransition(appliquer).ready.then(() => html.animate(
+    html.classList.add('vt-theme');
+    const vt = D.startViewTransition(appliquer); vt.finished.finally(() => html.classList.remove('vt-theme'));
+    vt.ready.then(() => html.animate(
       { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${R}px at ${x}px ${y}px)`] },
       { duration: 650, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
   });

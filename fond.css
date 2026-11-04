@@ -15,3 +15,9 @@ html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 @keyframes fond-derive{from{transform:translate3d(-11%,-3%,0)}to{transform:translate3d(11%,3%,0)}}
 @media (prefers-reduced-motion: reduce){html::before{animation:none}}
 body,.dashboard-container{background:transparent!important}
+/* transition entre les pages (animation 1) : la nouvelle page apparaît en fondu par-dessus l'ancienne ; la barre du haut, identique d'une page à l'autre, ne bouge pas */
+@view-transition{navigation:auto}
+html:not(.vt-theme)::view-transition-old(root){animation:none}
+html:not(.vt-theme)::view-transition-new(root){animation:vt-entree .3s ease-out both}
+@keyframes vt-entree{from{opacity:0}}
+@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}

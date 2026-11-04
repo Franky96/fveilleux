@@ -30,15 +30,17 @@ window.basculerThemeAnime = function (bouton, appliquer) {
   if (!document.startViewTransition || reduit || !bouton) { appliquer(); return; }
   const r = bouton.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
   const R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const H = document.documentElement; H.classList.add('vt-theme');   // limite le CSS du cercle à cette transition (pas aux transitions entre pages)
   const t = document.startViewTransition(appliquer);
+  t.finished.finally(() => H.classList.remove('vt-theme'));
   t.ready.then(() => document.documentElement.animate(
     { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${R}px at ${x}px ${y}px)`] },
     { duration: 650, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
 };
 (function () {
   const st = document.createElement('style');
-  st.textContent = '::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}'
-    + '::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}'
+  st.textContent = 'html.vt-theme::view-transition-old(root),html.vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}'
+    + 'html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transition-new(root){z-index:2}'
     + '.theme-tourne{animation:themeTourne .6s cubic-bezier(.2,.9,.3,1.25)}'
     + '@keyframes themeTourne{from{transform:rotate(-140deg) scale(.55)}}'
     + '@media (prefers-reduced-motion: reduce){.theme-tourne{animation:none}}';

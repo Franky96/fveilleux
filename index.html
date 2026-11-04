@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
 <script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Outils de Frank 2.0 — Connexion</title>
@@ -123,8 +124,14 @@ button:active{transform:scale(.985)}
   .voile{background:radial-gradient(ellipse 80% 45% at 50% 50%, rgba(var(--voile-c),.8) 0%, rgba(var(--voile-c),.4) 70%, rgba(var(--voile-c),.1) 100%)}
 }
 @media (prefers-reduced-motion: reduce){.bande .img{animation:none}}
-::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
-::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
+html.vt-theme::view-transition-old(root),html.vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transition-new(root){z-index:2}
+/* transition entre les pages (animation 1) : la nouvelle page apparaît en fondu par-dessus l'ancienne ; la barre du haut, identique d'une page à l'autre, ne bouge pas */
+@view-transition{navigation:auto}
+html:not(.vt-theme)::view-transition-old(root){animation:none}
+html:not(.vt-theme)::view-transition-new(root){animation:vt-entree .3s ease-out both}
+@keyframes vt-entree{from{opacity:0}}
+@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}
 </style>
 </head>
 <body>
@@ -241,7 +248,9 @@ btnT.addEventListener('click', () => {
   const appliquer = () => { const c = document.documentElement.classList.toggle('light'); try { localStorage.setItem('theme', c ? 'light' : 'dark'); } catch (e) {} majT(); };
   if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { appliquer(); return; }
   const r = btnT.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, R = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-  document.startViewTransition(appliquer).ready.then(() => document.documentElement.animate(
+  document.documentElement.classList.add('vt-theme');
+  const vt = document.startViewTransition(appliquer); vt.finished.finally(() => document.documentElement.classList.remove('vt-theme'));
+  vt.ready.then(() => document.documentElement.animate(
     { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${R}px at ${x}px ${y}px)`] },
     { duration: 650, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
 });

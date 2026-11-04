@@ -116,3 +116,9 @@ html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème 
   .carte .em{width:40px;height:40px;font-size:20px}
 }
 @media (prefers-reduced-motion: reduce){.carte,.carte .fl,.carte .em{transition:none}.carte:hover,.carte:hover .em{transform:none}}
+/* transition entre les pages (animation 1) : la nouvelle page apparaît en fondu par-dessus l'ancienne ; la barre du haut, identique d'une page à l'autre, ne bouge pas */
+@view-transition{navigation:auto}
+html:not(.vt-theme)::view-transition-old(root){animation:none}
+html:not(.vt-theme)::view-transition-new(root){animation:vt-entree .3s ease-out both}
+@keyframes vt-entree{from{opacity:0}}
+@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}

@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Outils de Frank — Votes États-Unis</title>
   <script src="topbar.js" defer></script>
@@ -1160,6 +1161,12 @@
       .site-top { padding: 0.45rem 1rem; grid-template-columns: auto 1fr; }   /* titre masqué : interrupteur à droite */
       .site-top .titre { display: none; }
     }
+/* transition entre les pages (animation 1) : la nouvelle page apparaît en fondu par-dessus l'ancienne ; la barre du haut, identique d'une page à l'autre, ne bouge pas */
+@view-transition{navigation:auto}
+html:not(.vt-theme)::view-transition-old(root){animation:none}
+html:not(.vt-theme)::view-transition-new(root){animation:vt-entree .3s ease-out both}
+@keyframes vt-entree{from{opacity:0}}
+@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}
   </style>
 </head>
 <body>
