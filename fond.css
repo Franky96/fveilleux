@@ -5,9 +5,13 @@
 :root{--f2-bg:#0a0e11}
 html.light{--f2-bg:#f2f4f6}
 html{background:var(--f2-bg)!important}
-html::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
-  radial-gradient(70vmax 50vmax at 50% 0, transparent, var(--f2-bg) 95%),
+html::before{content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;background:
   linear-gradient(120deg, transparent 0 14%, color-mix(in srgb,#1e6585 16%,transparent) 14% 26%, transparent 26% 40%,
     color-mix(in srgb,#23753f 12%,transparent) 40% 50%, transparent 50% 64%, color-mix(in srgb,#45379e 15%,transparent) 64% 77%,
-    transparent 77% 88%, color-mix(in srgb,#8f5a1a 14%,transparent) 88% 100%)}
+    transparent 77% 88%, color-mix(in srgb,#8f5a1a 14%,transparent) 88% 100%);
+  animation:fond-derive 45s ease-in-out infinite alternate;will-change:transform}
+html::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70vmax 50vmax at 50% 0, transparent, var(--f2-bg) 95%)}
+/* les bandes dérivent lentement, d'un côté puis de l'autre (animation 3, 4 novembre 2026) */
+@keyframes fond-derive{from{transform:translate3d(-4%,-2%,0)}to{transform:translate3d(4%,2%,0)}}
+@media (prefers-reduced-motion: reduce){html::before{animation:none}}
 body,.dashboard-container{background:transparent!important}
