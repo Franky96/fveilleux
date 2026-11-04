@@ -128,8 +128,9 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
   if (titreInfos) {
     // animation au chargement : le logo et la version partent du milieu et glissent jusqu'à leur place, à gauche (demande de l'utilisateur)
     const marque = bar.querySelector('.tb2-marque');
-    marque.querySelector('.tb2-nom').style.display = 'none';
-    const avant = marque.getBoundingClientRect();
+    // mesures au milieu, avec le titre « Outils de Frank » (état de départ de l'animation)
+    const nomEl = marque.querySelector('.tb2-nom'), avant = marque.getBoundingClientRect(), largeurNom = nomEl.getBoundingClientRect().width;
+    const ecart = parseFloat(getComputedStyle(marque).columnGap) || 10;
     const vieux = titreInfos.closest('.site-top'), gauche = D.createElement('div'), env = D.createElement('div');
     gauche.className = 'tb2-gauche';
     gauche.append(bar.querySelector('.tb2-retour, .tb2-vide'), bar.querySelector('.tb2-marque'));
@@ -137,19 +138,27 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
     bar.prepend(gauche); gauche.after(env);
     bar.classList.add('tb2-infos');
     vieux.style.display = 'none';
-    marque.querySelector('.tb2-nom').style.display = '';
     // en quittant la page, on note où était le logo : l'accueil (logo au milieu) le fera glisser de là vers le centre (animation inverse)
     addEventListener('pagehide', () => { try { sessionStorage.setItem('tb2LogoGauche', JSON.stringify({ x: marque.getBoundingClientRect().left, t: Date.now() })); } catch (e) {} });
     // à chaque entrée dans la section, mais pas en passant d'un onglet (d'une page de votes) à l'autre :
     // la page de votes qu'on vient de quitter a noté la place du logo (tb2LogoGauche, il y a moins de 15 s)
     let dejaVu = false;
     try { const v = JSON.parse(sessionStorage.getItem('tb2LogoGauche') || 'null'); dejaVu = !!v && Date.now() - v.t < 15000; } catch (e) {}
-    if (!dejaVu && !matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate) {
-      const apres = marque.getBoundingClientRect(), dx = avant.left - apres.left;
-      if (Math.abs(dx) > 4) {
-        marque.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 150, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
-        titreInfos.animate([{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: 650, easing: 'ease-out', fill: 'backwards' });
-      }
+    if (!dejaVu && !matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate && !largeurNom) {   // téléphone (pas de titre) : simple glissement
+      const dx = avant.left - marque.getBoundingClientRect().left;
+      if (Math.abs(dx) > 4) marque.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 200, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
+    } else if (!dejaVu && !matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate && largeurNom > 0) {
+      // 1) au milieu, le titre s'efface et le logo et la version se rapprochent (le groupe reste centré) ; 2) le groupe glisse à gauche
+      const apres = marque.getBoundingClientRect(), centre = avant.left + avant.width / 2;
+      const dx1 = avant.left - apres.left, dx2 = (centre - apres.width / 2) - apres.left;
+      const T = 1250, P = 0.36, opt = { duration: T, delay: 200, fill: 'backwards' };
+      Object.assign(nomEl.style, { display: 'inline-block', overflow: 'hidden', whiteSpace: 'nowrap' });
+      nomEl.animate([{ width: largeurNom + 'px', marginLeft: '0px', opacity: 1, offset: 0, easing: 'ease-in-out' }, { width: '0px', marginLeft: -ecart + 'px', opacity: 0, offset: P },
+        { width: '0px', marginLeft: -ecart + 'px', opacity: 0, offset: 1 }], { ...opt, fill: 'both' })
+        .finished.then(() => { nomEl.style.cssText = ''; }).catch(() => { nomEl.style.cssText = ''; });
+      marque.animate([{ transform: `translateX(${dx1}px)`, offset: 0, easing: 'ease-in-out' }, { transform: `translateX(${dx2}px)`, offset: P, easing: 'cubic-bezier(.65,0,.25,1)' },
+        { transform: 'none', offset: 1 }], opt);
+      titreInfos.animate([{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: 200 + T * 0.8, easing: 'ease-out', fill: 'backwards' });
     }
   }
   html.classList.add('tb2-actif');

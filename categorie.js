@@ -68,16 +68,27 @@ bt.addEventListener('click', () => {
 majT();
 { const h = document.querySelector('.haut'); const f = () => h.classList.toggle('colle', scrollY > 4); addEventListener('scroll', f, { passive: true }); f(); }
 
-/* ---------- retour d'une page de votes : le logo revient de la gauche jusqu'au milieu (animation inverse de celle des pages de votes) ---------- */
+/* ---------- retour d'une page de votes : animation inverse de celle des pages de votes ----------
+   1) le logo et la version glissent de la gauche jusqu'au milieu, rapprochés ; 2) au milieu, le titre « Outils de Frank » réapparaît entre eux */
 {
   let v = null;
   try { v = JSON.parse(sessionStorage.getItem('tb2LogoGauche') || 'null'); sessionStorage.removeItem('tb2LogoGauche'); } catch (e) {}
-  const m = document.querySelector('.haut .marque');
+  const m = document.querySelector('.haut .marque'), nom = m && m.querySelector('.nom');
   if (v && m && Date.now() - v.t < 15000 && m.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const dx = v.x - m.getBoundingClientRect().left, nom = m.querySelector('.nom');
-    if (Math.abs(dx) > 4) {
-      m.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 100, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
-      if (nom && getComputedStyle(nom).display !== 'none') nom.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 600, easing: 'ease-out', fill: 'backwards' });
+    const r = m.getBoundingClientRect(), centre = r.left + r.width / 2;
+    const ln = nom && getComputedStyle(nom).display !== 'none' ? nom.getBoundingClientRect().width : 0, ecart = parseFloat(getComputedStyle(m).columnGap) || 10;
+    // le logo est centré par la mise en page : pendant que le titre est replié, il est déjà à sa place serrée, au milieu
+    const serre = r.width - (ln ? ln + ecart : 0), dx0 = v.x - (ln ? centre - serre / 2 : r.left), dx1 = 0;
+    if (Math.abs(dx0) > 4) {
+      const T = 1250, P = 0.64, opt = { duration: T, delay: 120, fill: 'backwards' };
+      m.animate([{ transform: `translateX(${dx0}px)`, offset: 0, easing: 'cubic-bezier(.65,0,.25,1)' }, { transform: `translateX(${dx1}px)`, offset: P, easing: 'ease-in-out' },
+        { transform: 'none', offset: 1 }], opt);
+      if (ln) {
+        Object.assign(nom.style, { display: 'inline-block', overflow: 'hidden', whiteSpace: 'nowrap' });
+        nom.animate([{ width: '0px', marginLeft: -ecart + 'px', opacity: 0, offset: 0 }, { width: '0px', marginLeft: -ecart + 'px', opacity: 0, offset: P, easing: 'ease-in-out' },
+          { width: ln + 'px', marginLeft: '0px', opacity: 1, offset: 1 }], { ...opt, fill: 'both' })
+          .finished.then(() => { nom.style.cssText = ''; }).catch(() => { nom.style.cssText = ''; });
+      }
     }
   }
 }
