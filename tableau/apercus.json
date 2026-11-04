@@ -1,6 +1,250 @@
 {
- "arinc429.html": {"img": "tableau/arinc.jpg", "video": ["connexion/arinc.webm", "connexion/arinc.mp4"]},
- "helice.html": {"img": "tableau/helice.jpg", "video": ["connexion/helice.webm", "connexion/helice.mp4"]},
- "pt6a21.html": {"img": "tableau/pt6.jpg", "video": ["connexion/pt6.webm", "connexion/pt6.mp4"]},
- "votes-quebec.html": {"img": "tableau/votes.jpg", "video": ["connexion/votes.webm", "connexion/votes.mp4"]}
+ "7wonders.html": {
+  "img": "tableau/7wonders.jpg",
+  "video": [
+   "tableau/7wonders.webm"
+  ]
+ },
+ "arinc429.html": {
+  "img": "tableau/arinc.jpg",
+  "video": [
+   "connexion/arinc.webm",
+   "connexion/arinc.mp4"
+  ]
+ },
+ "cadeaux.html": {
+  "img": "tableau/cadeaux.jpg",
+  "video": [
+   "tableau/cadeaux.webm"
+  ]
+ },
+ "chips.html": {
+  "img": "tableau/chips.jpg",
+  "video": [
+   "tableau/chips.webm"
+  ]
+ },
+ "circuit.html": {
+  "img": "tableau/circuit.jpg",
+  "video": [
+   "tableau/circuit.webm"
+  ]
+ },
+ "compteurgeneral.html": {
+  "img": "tableau/compteurgeneral.jpg",
+  "video": [
+   "tableau/compteurgeneral.webm"
+  ]
+ },
+ "converter.html": {
+  "img": "tableau/converter.jpg",
+  "video": [
+   "tableau/converter.webm"
+  ]
+ },
+ "crypteur.html": {
+  "img": "tableau/crypteur.jpg",
+  "video": [
+   "tableau/crypteur.webm"
+  ]
+ },
+ "csdb.html": {
+  "img": "tableau/csdb.jpg",
+  "video": [
+   "tableau/csdb.webm"
+  ]
+ },
+ "en-direct.html": {
+  "img": "tableau/en-direct.jpg",
+  "video": [
+   "tableau/en-direct.webm"
+  ]
+ },
+ "flip7.html": {
+  "img": "tableau/flip7.jpg",
+  "video": [
+   "tableau/flip7.webm"
+  ]
+ },
+ "helice.html": {
+  "img": "tableau/helice.jpg",
+  "video": [
+   "connexion/helice.webm",
+   "connexion/helice.mp4"
+  ]
+ },
+ "heure-ete-hiver.html": {
+  "img": "tableau/heure-ete-hiver.jpg",
+  "video": [
+   "tableau/heure-ete-hiver.webm"
+  ]
+ },
+ "information-monde.html": {
+  "img": "tableau/information-monde.jpg",
+  "video": []
+ },
+ "informatique.html": {
+  "img": "tableau/informatique.jpg",
+  "video": [
+   "tableau/informatique.webm"
+  ]
+ },
+ "intentions-simulations.html": {
+  "img": "tableau/intentions-simulations.jpg",
+  "video": [
+   "tableau/intentions-simulations.webm"
+  ]
+ },
+ "jeuxdesociete.html": {
+  "img": "tableau/jeuxdesociete.jpg",
+  "video": [
+   "tableau/jeuxdesociete.webm"
+  ]
+ },
+ "ladamepique.html": {
+  "img": "tableau/ladamepique.jpg",
+  "video": [
+   "tableau/ladamepique.webm"
+  ]
+ },
+ "liens.html": {
+  "img": "tableau/liens.jpg",
+  "video": [
+   "tableau/liens.webm"
+  ]
+ },
+ "loi39.html": {
+  "img": "tableau/loi39.jpg",
+  "video": [
+   "tableau/loi39.webm"
+  ]
+ },
+ "moteurs.html": {
+  "img": "tableau/moteurs.jpg",
+  "video": [
+   "tableau/moteurs.webm"
+  ]
+ },
+ "o320.html": {
+  "img": "tableau/o320.jpg",
+  "video": [
+   "tableau/o320.webm"
+  ]
+ },
+ "planetaire.html": {
+  "img": "tableau/planetaire.jpg",
+  "video": [
+   "tableau/planetaire.webm"
+  ]
+ },
+ "pompe-engrenages.html": {
+  "img": "tableau/pompe-engrenages.jpg",
+  "video": [
+   "tableau/pompe-engrenages.webm"
+  ]
+ },
+ "pt6a21.html": {
+  "img": "tableau/pt6.jpg",
+  "video": [
+   "connexion/pt6.webm",
+   "connexion/pt6.mp4"
+  ]
+ },
+ "pw1500g.html": {
+  "img": "tableau/pw1500g.jpg",
+  "video": [
+   "tableau/pw1500g.webm"
+  ]
+ },
+ "qr-transfer.html": {
+  "img": "tableau/qr-transfer.jpg",
+  "video": [
+   "tableau/qr-transfer.webm"
+  ]
+ },
+ "qwirkle.html": {
+  "img": "tableau/qwirkle.jpg",
+  "video": [
+   "tableau/qwirkle.webm"
+  ]
+ },
+ "rona.html": {
+  "img": "tableau/rona.jpg",
+  "video": [
+   "tableau/rona.webm"
+  ]
+ },
+ "shape-transfer.html": {
+  "img": "tableau/shape-transfer.jpg",
+  "video": [
+   "tableau/shape-transfer.webm"
+  ]
+ },
+ "tcpip.html": {
+  "img": "tableau/tcpip.jpg",
+  "video": [
+   "tableau/tcpip.webm"
+  ]
+ },
+ "tickettoride.html": {
+  "img": "tableau/tickettoride.jpg",
+  "video": [
+   "tableau/tickettoride.webm"
+  ]
+ },
+ "turboreacteur.html": {
+  "img": "tableau/turboreacteur.jpg",
+  "video": [
+   "tableau/turboreacteur.webm"
+  ]
+ },
+ "votes-alberta.html": {
+  "img": "tableau/votes-alberta.jpg",
+  "video": [
+   "tableau/votes-alberta.webm"
+  ]
+ },
+ "votes-allemagne.html": {
+  "img": "tableau/votes-allemagne.jpg",
+  "video": [
+   "tableau/votes-allemagne.webm"
+  ]
+ },
+ "votes-canada.html": {
+  "img": "tableau/votes-canada.jpg",
+  "video": [
+   "tableau/votes-canada.webm"
+  ]
+ },
+ "votes-france.html": {
+  "img": "tableau/votes-france.jpg",
+  "video": [
+   "tableau/votes-france.webm"
+  ]
+ },
+ "votes-quebec.html": {
+  "img": "tableau/votes.jpg",
+  "video": [
+   "connexion/votes.webm",
+   "connexion/votes.mp4"
+  ]
+ },
+ "votes-royaume-uni.html": {
+  "img": "tableau/votes-royaume-uni.jpg",
+  "video": [
+   "tableau/votes-royaume-uni.webm"
+  ]
+ },
+ "votes-suisse.html": {
+  "img": "tableau/votes-suisse.jpg",
+  "video": [
+   "tableau/votes-suisse.webm"
+  ]
+ },
+ "votes-usa.html": {
+  "img": "tableau/votes-usa.jpg",
+  "video": [
+   "tableau/votes-usa.webm"
+  ]
+ }
 }
