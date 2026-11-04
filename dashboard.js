@@ -246,12 +246,15 @@ function rendreNotifs() {
     $('n-liste').innerHTML = VERIFS.slice().sort((x, y) => o[x.etat] - o[y.etat] || (y.quand || 0) - (x.quand || 0)).map(itemVerif).join('');
     $('n-pied').textContent = 'Visible par les administrateurs seulement.';
   }
-  const p = actifs[0], st = p && etatEvt(p);
-  let pills = '';
+  // pastilles : « En direct » (une par soirée en cours) mène droit à sa page ; « À venir » ouvre le panneau des événements
+  // (séparées à la demande de l'utilisateur, 4 novembre 2026)
+  const enCours = evts.filter(e => etatEvt(e) === 'cours'), aVenir = evts.filter(e => etatEvt(e) === 'venir');
+  let pills = enCours.map(e => `<a class="signal signal-direct" href="${esc(arrivee(e.page))}" style="--c:#ef4444" title="${esc(e.titre)} : ouvrir la page"><span class="pt vif"></span><b>En direct</b> ${esc(e.titre.split(' · ')[0])}<span class="fl" aria-hidden="true">→</span></a>`).join('');
+  const p = aVenir[0];
   if (p) {
-    const auj = p.debut.toDateString() === new Date().toDateString(), proche = st === 'cours' || p.debut - Date.now() < 12 * 3600e3;
-    pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:${st === 'cours' ? '#ef4444' : 'var(--c-pol)'}"><span class="pt${proche ? ' vif' : ''}"></span><b>${st === 'cours' ? 'En direct' : auj ? "Aujourd'hui" : 'Bientôt'}</b> ${esc(p.titre.split(' · ')[0])} · ${st === 'cours' ? 'en cours' : rel(p.debut)}${actifs.length > 1 ? ` <span class="nb">+${actifs.length - 1}</span>` : ''}</button>`;
-  } else if (evts.length) pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:var(--faint)"><span class="pt"></span>Événements</button>`;
+    const auj = p.debut.toDateString() === new Date().toDateString(), proche = p.debut - Date.now() < 12 * 3600e3;
+    pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:var(--c-pol)"><span class="pt${proche ? ' vif' : ''}"></span><b>${auj ? "Aujourd'hui" : 'À venir'}</b> ${esc(p.titre.split(' · ')[0])} · ${rel(p.debut)}${aVenir.length > 1 ? ` <span class="nb">+${aVenir.length - 1}</span>` : ''}</button>`;
+  } else if (evts.length && !enCours.length) pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:var(--faint)"><span class="pt"></span>Événements</button>`;
   if (voitVerifs) pills += `<button class="signal" type="button" data-ouvre="verif" style="--c:${VERIFS.some(v => v.etat === 'erreur') ? '#e0503f' : alertes ? '#e3a72f' : '#3fae6a'}"><span class="pt"></span>${alertes ? `<b>${alertes} à surveiller</b> · ` : ''}${VERIFS.length - alertes} vérification${VERIFS.length - alertes > 1 ? 's' : ''} OK</button>`;
   $('signaux').innerHTML = pills;
 }

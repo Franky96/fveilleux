@@ -215,6 +215,12 @@ dialog.choix::backdrop{background:rgba(0,0,0,.5)}
 .signal{cursor:pointer;color:var(--text)}
 .signal:hover{border-color:var(--line2)}
 .signal .nb{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+/* « En direct » : un lien direct vers la soirée, teinté de rouge */
+.signal-direct{text-decoration:none;border-color:color-mix(in srgb,#ef4444 45%,var(--line));background:color-mix(in srgb,#ef4444 10%,var(--panel))}
+.signal-direct:hover{border-color:#ef4444}
+.signal-direct b{color:color-mix(in srgb,#ef4444 70%,var(--text))}
+.signal-direct .fl{color:var(--muted);transition:transform .15s}
+.signal-direct:hover .fl{transform:translateX(3px);color:var(--text)}
 .notifs{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(440px,calc(100vw - 36px));max-height:min(620px,calc(100dvh - 160px));display:flex;flex-direction:column;
   background:var(--panel);border:1px solid var(--line2);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden}
 .n-tete{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 12px;border-bottom:1px solid var(--line)}
