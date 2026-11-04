@@ -53,18 +53,48 @@
     el.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 900, delay: 150 + d, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'backwards' });
   }
 
-  /* ---------- 8 : hémicycle qui se colore siège par siège ---------- */
+  /* ---------- 8 : hémicycle qui se remplit parti par parti, en même temps que son nombre de sièges (légende) monte ----------
+     (demande de l'utilisateur) : un parti après l'autre, dans l'ordre de la légende ; à vitesse constante (un parti de 247 sièges
+     prend plus de temps qu'un de 2) ; le chiffre de la légende correspond aux sièges déjà colorés. Sièges et légende sont
+     rapprochés par leur couleur calculée. */
   const enAttente = new WeakSet();
+  const couleur = (el, prop) => getComputedStyle(el)[prop];
   function colorer(svg) {
     if (faits.has(svg) || enAttente.has(svg)) return; enAttente.add(svg);   // le plan se remplit après coup : on réessaie tant qu'il est vide
     requestAnimationFrame(() => {
       enAttente.delete(svg);
-      const sieges = [...svg.querySelectorAll('rect, circle')].map(e => { let b; try { b = e.getBBox(); } catch (x) { return null; } return b && b.width <= 24 && b.height <= 24 && b.width > 0 ? { e, x: b.x, y: b.y } : null; }).filter(Boolean);
+      const sieges = [...svg.querySelectorAll('rect, circle')].map(e => { let b; try { b = e.getBBox(); } catch (x) { return null; } return b && b.width <= 24 && b.height <= 24 && b.width > 0 ? { e, x: b.x, y: b.y, c: couleur(e, 'fill') } : null; }).filter(Boolean);
       if (sieges.length < 20) return;
       faits.add(svg);
-      sieges.sort((a, b) => a.x - b.x || a.y - b.y);
-      const N = sieges.length, D = 1100;
-      sieges.forEach((s, i) => s.e.animate([{ opacity: 0.08 }, { opacity: 1 }], { duration: 260, delay: 150 + D * i / N, easing: 'ease-out', fill: 'backwards' }));
+      const bloc = svg.closest('section, .lv-sieges, div') || svg.parentElement, leg = bloc && bloc.querySelector('.vf-legende');
+      const entrees = leg ? [...leg.querySelectorAll(':scope > span')].map(sp => { const i = sp.querySelector('i'), b = sp.querySelector('b'); return i && b ? { c: couleur(i, 'backgroundColor'), b, n: parseInt(b.textContent.replace(/\D/g, ''), 10) || 0 } : null; }).filter(Boolean) : [];
+      // groupes : un par entrée de la légende (dans son ordre), puis les sièges d'une autre couleur
+      const groupes = entrees.map(en => ({ en, s: [] })), autres = { en: null, s: [] };
+      for (const st of sieges) (groupes.find(g => g.en.c === st.c) || autres).s.push(st);
+      if (autres.s.length) groupes.push(autres);
+      const N = sieges.length, D = Math.min(2200, 900 + N * 2.4), T0 = 150;
+      let k = 0;
+      for (const g of groupes) {
+        g.s.sort((a, b) => a.x - b.x || a.y - b.y);
+        g.debut = T0 + D * k / N;
+        for (const st of g.s) st.e.animate([{ opacity: 0.08 }, { opacity: 1 }], { duration: 160, delay: T0 + D * (k++) / N, easing: 'ease-out', fill: 'backwards' });
+        g.fin = T0 + D * k / N;
+      }
+      // chiffres de la légende : de 0 au total, au rythme des sièges de leur parti
+      const avecChiffre = groupes.filter(g => g.en && g.en.n);
+      if (!avecChiffre.length) return;
+      for (const g of avecChiffre) g.en.b.textContent = '0';
+      const depart = performance.now();
+      const pas = now => {
+        const t = now - depart; let encore = false;
+        for (const g of avecChiffre) {
+          const f = Math.max(0, Math.min(1, (t - g.debut) / Math.max(1, g.fin - g.debut)));
+          if (g.en.b.isConnected) g.en.b.textContent = String(Math.round(g.en.n * f));
+          if (f < 1) encore = true;
+        }
+        if (encore) requestAnimationFrame(pas);
+      };
+      requestAnimationFrame(pas);
     });
   }
 
