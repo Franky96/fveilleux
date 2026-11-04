@@ -117,8 +117,44 @@
     if (!essai()) { enAttente.add(svg); requestAnimationFrame(() => { enAttente.delete(svg); essai(); }); }
   }
 
+  /* ---------- 9 : courbes qui se dessinent (graphique d'évolution, #viEvol) ----------
+     Les lignes de tendance se tracent de gauche à droite ; les points des sondages et les repères d'élection apparaissent quand la
+     ligne passe sur eux ; les étiquettes de fin arrivent à la fin. À l'ouverture et au changement de période seulement (pas au zoom
+     vertical à la molette, ni à « Moyenne lissée », qui redessinent aussi le graphique). */
+  let tracerJusqua = 0;   // un nouveau dessin du graphique est animé s'il arrive avant cet instant
+  const D_COURBE = 1300;
+  function tracer(svg) {
+    if (faits.has(svg) || performance.now() > tracerJusqua) return; faits.add(svg); tracerJusqua = 0;   // les dessins suivants (zoom, lissage) ne sont pas animés
+    const lignes = [...svg.querySelectorAll('path.vi-ligne')];
+    if (!lignes.length) return;
+    let x0 = Infinity, x1 = -Infinity;
+    for (const l of lignes) { try { const b = l.getBBox(); x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width); } catch (e) {} }
+    if (!isFinite(x0) || x1 <= x0) return;
+    const anims = [];
+    for (const l of lignes) {
+      let L = 0; try { L = l.getTotalLength(); } catch (e) {}
+      if (!L) continue;
+      const b = l.getBBox(), d0 = D_COURBE * (b.x - x0) / (x1 - x0), d = D_COURBE * b.width / (x1 - x0);   // même vitesse horizontale pour toutes
+      anims.push(l.animate([{ strokeDasharray: `${L} ${L}`, strokeDashoffset: L }, { strokeDasharray: `${L} ${L}`, strokeDashoffset: 0 }], { duration: Math.max(60, d), delay: d0, easing: 'linear', fill: 'both' }));
+    }
+    for (const pt of svg.querySelectorAll('.vi-pt, .vi-elec-pt')) {
+      let x; try { const b = pt.getBBox(); x = b.x + b.width / 2; } catch (e) { continue; }
+      anims.push(pt.animate([{ opacity: 0 }, { opacity: getComputedStyle(pt).opacity }], { duration: 220, delay: Math.max(0, D_COURBE * (x - x0) / (x1 - x0)), easing: 'ease-out', fill: 'backwards' }));
+    }
+    for (const t of svg.querySelectorAll('.vi-fin')) anims.push(t.animate([{ opacity: 0, transform: 'translateX(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 350, delay: D_COURBE, easing: 'ease-out', fill: 'backwards' }));
+    anims.forEach(an => an.pause());
+    quandFluide(() => anims.forEach(an => an.play()));
+    // une fois tracées, les lignes reprennent leur style normal (pas de pointillé résiduel)
+    Promise.all(anims.map(an => an.finished)).then(() => anims.forEach(an => an.cancel())).catch(() => {});
+  }
+  // changement de période : le prochain dessin est animé
+  document.addEventListener('click', e => { if (e.target.closest('#viPeriodes button')) tracerJusqua = performance.now() + 1500; }, true);
+
   function examiner(racine) {
-    if (!actif() || !racine) return;
+    if (!racine) return;
+    { const el = racine.nodeType === 3 ? racine.parentElement : racine;   // 9 : graphique d'évolution (ouverture ou changement de période)
+      if (el && el.nodeType === 1) { const sv = el.matches('#viEvol svg') ? el : el.querySelector('#viEvol svg') || el.closest('#viEvol svg'); if (sv && !sv.closest('[aria-busy="true"]')) tracer(sv); } }
+    if (!actif()) return;
     const el = racine.nodeType === 3 ? racine.parentElement : racine;
     if (!el || el.nodeType !== 1) return;
     // encore cachée par « Chargement… » (aria-busy, France et autres pages qui attendent leurs données) : on attend qu'elle s'affiche,
@@ -131,8 +167,8 @@
   }
 
   const obs = new MutationObserver(liste => {
-    for (const m of liste) if (m.type === 'attributes' && m.target.getAttribute('aria-busy') !== 'true') { t0 = performance.now(); examiner(m.target); }   // la page s'affiche : la fenêtre repart
-    if (!actif()) { if (!document.querySelector('[aria-busy="true"]')) obs.disconnect(); return; }   // page encore en chargement : on garde l'œil ouvert
+    for (const m of liste) if (m.type === 'attributes' && m.target.getAttribute('aria-busy') !== 'true') { t0 = performance.now(); tracerJusqua = t0 + 1500; examiner(m.target); }   // la page s'affiche : la fenêtre repart
+    if (!actif()) { for (const m of liste) m.addedNodes.forEach(n => { if (performance.now() < tracerJusqua) examiner(n); }); return; }   // après la fenêtre : seulement le graphique, au changement de période
     for (const m of liste) {
       if (m.type === 'attributes') continue;
       if (m.type === 'characterData') { examiner(m.target); continue; }
@@ -141,10 +177,9 @@
     }
   });
   const go = () => {
+    tracerJusqua = performance.now() + DUREE_FENETRE;
     examiner(document.body);
     obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-busy'] });
-    const fin = () => { if (actif() || document.querySelector('[aria-busy="true"]')) setTimeout(fin, 500); else obs.disconnect(); };   // la fenêtre peut repartir : on vérifie avant d'arrêter
-    setTimeout(fin, DUREE_FENETRE + 200);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
