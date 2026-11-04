@@ -233,12 +233,13 @@ function rendreNotifs() {
   if (!voitVerifs && onglet === 'verif') onglet = 'evt';
   $('n-tab-verif').hidden = !voitVerifs;
   document.querySelectorAll('[data-onglet]').forEach(b => b.setAttribute('aria-selected', b.dataset.onglet === onglet));
-  const actifs = evts.filter(e => etatEvt(e) !== 'fini'), alertes = VERIFS.filter(v => v.etat !== 'ok').length;
+  const actifs = evts.filter(e => etatEvt(e) === 'venir'), alertes = VERIFS.filter(v => v.etat !== 'ok').length;
   $('n-nb-evt').textContent = actifs.length;
   $('n-nb-verif').textContent = alertes ? `${alertes} ⚠` : VERIFS.length;
   if (onglet === 'evt') {
     const titres = { cours: 'En ce moment', venir: 'À venir', fini: 'Récemment terminés' }; let h = '', der = '';
-    for (const e of evts) { const st = etatEvt(e); if (st !== der) { h += `<div class="n-groupe">${titres[st]}</div>`; der = st; } h += itemEvt(e); }
+    for (const e of evts) { const st = etatEvt(e); if (st === 'cours') continue;   // en cours : déjà dans la pastille « En direct »
+      if (st !== der) { h += `<div class="n-groupe">${titres[st]}</div>`; der = st; } h += itemEvt(e); }
     $('n-liste').innerHTML = h || '<p style="color:var(--muted);padding:12px">Aucun événement à venir.</p>';
     $('n-pied').textContent = 'Heures du Québec. Les événements suivent tes permissions.';
   } else {
