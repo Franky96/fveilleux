@@ -124,6 +124,7 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
   // une seule barre, avec le retour et le logo à gauche, les mises à jour au milieu (demande de l'utilisateur, 4 novembre 2026).
   // La ligne d'info est déplacée telle quelle, dans un conteneur .site-top « transparent » : les scripts qui la mettent à jour la retrouvent.
   const titreInfos = D.querySelector('.site-top .titre');
+  if (!titreInfos) try { sessionStorage.removeItem('tb2LogoGauche'); } catch (e) {}   // passé par une autre page : pas d'animation de retour
   if (titreInfos) {
     // animation au chargement : le logo et la version partent du milieu et glissent jusqu'à leur place, à gauche (demande de l'utilisateur)
     const marque = bar.querySelector('.tb2-marque');
@@ -137,6 +138,8 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
     bar.classList.add('tb2-infos');
     vieux.style.display = 'none';
     marque.querySelector('.tb2-nom').style.display = '';
+    // en quittant la page, on note où était le logo : l'accueil (logo au milieu) le fera glisser de là vers le centre (animation inverse)
+    addEventListener('pagehide', () => { try { sessionStorage.setItem('tb2LogoGauche', JSON.stringify({ x: marque.getBoundingClientRect().left, t: Date.now() })); } catch (e) {} });
     // une seule fois par visite : pas en passant d'un onglet (d'une page) à l'autre de la section
     let dejaVu = false;
     try { dejaVu = sessionStorage.getItem('tb2GlisseVu') === '1'; sessionStorage.setItem('tb2GlisseVu', '1'); } catch (e) {}

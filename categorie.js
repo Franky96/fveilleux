@@ -67,3 +67,17 @@ bt.addEventListener('click', () => {
 });
 majT();
 { const h = document.querySelector('.haut'); const f = () => h.classList.toggle('colle', scrollY > 4); addEventListener('scroll', f, { passive: true }); f(); }
+
+/* ---------- retour d'une page de votes : le logo revient de la gauche jusqu'au milieu (animation inverse de celle des pages de votes) ---------- */
+{
+  let v = null;
+  try { v = JSON.parse(sessionStorage.getItem('tb2LogoGauche') || 'null'); sessionStorage.removeItem('tb2LogoGauche'); } catch (e) {}
+  const m = document.querySelector('.haut .marque');
+  if (v && m && Date.now() - v.t < 15000 && m.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const dx = v.x - m.getBoundingClientRect().left, nom = m.querySelector('.nom');
+    if (Math.abs(dx) > 4) {
+      m.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 100, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
+      if (nom && getComputedStyle(nom).display !== 'none') nom.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 600, easing: 'ease-out', fill: 'backwards' });
+    }
+  }
+}

@@ -329,3 +329,17 @@ $('pied-liens').innerHTML = INVITE ? '' : '<a href="archive.html">Archives</a>';
 
 /* fin de l'arrivée en cascade : les rendus suivants (personnalisation, recherche) ne rejouent pas l'animation */
 setTimeout(() => document.body.classList.remove('arrivee'), 2600);
+
+/* ---------- retour d'une page de votes : le logo revient de la gauche jusqu'au milieu (animation inverse de celle des pages de votes) ---------- */
+{
+  let v = null;
+  try { v = JSON.parse(sessionStorage.getItem('tb2LogoGauche') || 'null'); sessionStorage.removeItem('tb2LogoGauche'); } catch (e) {}
+  const m = document.querySelector('.haut .marque');
+  if (v && m && Date.now() - v.t < 15000 && m.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const dx = v.x - m.getBoundingClientRect().left, nom = m.querySelector('.nom');
+    if (Math.abs(dx) > 4) {
+      m.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 100, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
+      if (nom && getComputedStyle(nom).display !== 'none') nom.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 600, easing: 'ease-out', fill: 'backwards' });
+    }
+  }
+}
