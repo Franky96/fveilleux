@@ -125,6 +125,10 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
   // La ligne d'info est déplacée telle quelle, dans un conteneur .site-top « transparent » : les scripts qui la mettent à jour la retrouvent.
   const titreInfos = D.querySelector('.site-top .titre');
   if (titreInfos) {
+    // animation au chargement : le logo et la version partent du milieu et glissent jusqu'à leur place, à gauche (demande de l'utilisateur)
+    const marque = bar.querySelector('.tb2-marque');
+    marque.querySelector('.tb2-nom').style.display = 'none';
+    const avant = marque.getBoundingClientRect();
     const vieux = titreInfos.closest('.site-top'), gauche = D.createElement('div'), env = D.createElement('div');
     gauche.className = 'tb2-gauche';
     gauche.append(bar.querySelector('.tb2-retour, .tb2-vide'), bar.querySelector('.tb2-marque'));
@@ -132,6 +136,14 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
     bar.prepend(gauche); gauche.after(env);
     bar.classList.add('tb2-infos');
     vieux.style.display = 'none';
+    marque.querySelector('.tb2-nom').style.display = '';
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate) {
+      const apres = marque.getBoundingClientRect(), dx = avant.left - apres.left;
+      if (Math.abs(dx) > 4) {
+        marque.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 150, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
+        titreInfos.animate([{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: 650, easing: 'ease-out', fill: 'backwards' });
+      }
+    }
   }
   html.classList.add('tb2-actif');
   // corps en flex ou en grille (barre de côté, contenu centré) : la barre est fixée en haut et le corps décalé d'autant
