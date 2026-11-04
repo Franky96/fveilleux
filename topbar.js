@@ -75,6 +75,14 @@ html.tb2-fixe .tb2{position:fixed;left:0;right:0;top:0}
 html.tb2-actif .page-container,html.tb2-actif .sidebar,html.tb2-actif .page-content{min-height:calc(100dvh - var(--tb2-h))!important}
 html.tb2-actif .sidebar[style*="100vh"]{height:calc(100dvh - var(--tb2-h))!important}
 html.tb2-fixe body{padding-top:var(--tb2-h)!important;box-sizing:border-box}
+.tb2.tb2-infos{grid-template-columns:auto minmax(0,1fr) auto}
+.tb2 .tb2-gauche{display:flex;align-items:center;gap:12px;min-width:0}
+.tb2.tb2-infos .tb2-marque{grid-column:auto}
+.tb2.tb2-infos .tb2-nom{display:none}
+.tb2.tb2-infos .tb2-outils{grid-column:3}
+.tb2 .tb2-site{display:contents}
+.tb2 .tb2-site .titre{grid-column:2;margin:0;text-align:center;font:600 13px/1.35 "IBM Plex Sans",system-ui,sans-serif;color:var(--tb-text);text-wrap:balance;min-width:0}
+.tb2 .tb2-site .titre > [hidden]{display:none}
 @media (max-width:640px){.tb2{gap:8px}.tb2 .tb2-nom{display:none}.tb2 .tb2-retour{width:34px;height:34px;padding:0;justify-content:center}.tb2 .tb2-rnom{display:none}.tb2 .tb2-rond{width:34px;height:34px}}
 /* anciens boutons remplacés par la barre */
 html.tb2-actif #theme-toggle,html.tb2-actif .page-topbar-controls,html.tb2-actif #hamburger-btn,html.tb2-actif #hamburger-menu,
@@ -112,6 +120,19 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
   }) : [];
   const cb = getComputedStyle(B), corpsEnLigne = /flex|grid/.test(cb.display) && !(cb.display.includes('flex') && cb.flexDirection.startsWith('column') && cb.alignItems !== 'center');
   B.insertBefore(bar, B.firstChild);
+  // pages qui affichaient leurs mises à jour dans une barre à elles (Intentions de vote, En direct : .site-top .titre) :
+  // une seule barre, avec le retour et le logo à gauche, les mises à jour au milieu (demande de l'utilisateur, 4 novembre 2026).
+  // La ligne d'info est déplacée telle quelle, dans un conteneur .site-top « transparent » : les scripts qui la mettent à jour la retrouvent.
+  const titreInfos = D.querySelector('.site-top .titre');
+  if (titreInfos) {
+    const vieux = titreInfos.closest('.site-top'), gauche = D.createElement('div'), env = D.createElement('div');
+    gauche.className = 'tb2-gauche';
+    gauche.append(bar.querySelector('.tb2-retour, .tb2-vide'), bar.querySelector('.tb2-marque'));
+    env.className = 'site-top tb2-site'; env.appendChild(titreInfos);
+    bar.prepend(gauche); gauche.after(env);
+    bar.classList.add('tb2-infos');
+    vieux.style.display = 'none';
+  }
   html.classList.add('tb2-actif');
   // corps en flex ou en grille (barre de côté, contenu centré) : la barre est fixée en haut et le corps décalé d'autant
   if (corpsEnLigne || bar.getBoundingClientRect().top > 2 || bar.getBoundingClientRect().width < innerWidth - 20) html.classList.add('tb2-fixe');
