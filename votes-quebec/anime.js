@@ -124,7 +124,7 @@
   let tracerJusqua = 0;   // un nouveau dessin du graphique est animé s'il arrive avant cet instant
   const D_COURBE = 1300;
   function tracer(svg) {
-    if (faits.has(svg) || performance.now() > tracerJusqua) return; faits.add(svg); tracerJusqua = 0;   // les dessins suivants (zoom, lissage) ne sont pas animés
+    if (faits.has(svg) || performance.now() > tracerJusqua) return; faits.add(svg); tracerJusqua = Math.min(tracerJusqua, performance.now() + 600);   // un nouveau dessin juste après (page qui se redimensionne) est animé aussi ; ensuite (zoom, lissage), non
     const lignes = [...svg.querySelectorAll('path.vi-ligne')];
     if (!lignes.length) return;
     let x0 = Infinity, x1 = -Infinity;
