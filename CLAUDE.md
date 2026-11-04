@@ -24,6 +24,14 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN porte un attribut `integrity="sha384-…"` et `crossorigin="anonymous"` (SRI). Pour changer de version d'une bibliothèque, recalculer l'empreinte :
 `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A` (préfixer par `sha384-`). Sans ça, le navigateur bloque le fichier.
 
+## Barre du haut 2.0 — par défaut sur toute nouvelle page
+
+Une seule barre en haut de chaque page : celle de `topbar.js` (demande de l'utilisateur, 4 novembre 2026). Toute nouvelle page (sauf archivée) :
+- charge `<script src="topbar.js" defer></script>` et **ne fait pas sa propre barre du haut** (pas de bouton de thème, de menu, de logo ni de badge à elle) ;
+- donne son retour par un lien « ← Nom » vers la page parente, ou `<body data-retour="page.html" data-retour-nom="Nom">` ;
+- si elle a un titre court à montrer dans la barre : `<div data-topbar><h1>Titre</h1></div>` en haut du `body` ; `topbar.js` met ce titre au milieu de la barre (retour, logo et version à gauche), et les boutons ou champs laissés dans ce bloc restent en rangée sous la barre. Sans titre : logo et « Outils de Frank » au milieu.
+Les pages de catégorie et le tableau de bord ont la même barre dans leur balisage (`.haut`). Détails : `docs/site.md`, « Barre du haut 2.0 ».
+
 ## Aperçus des raccourcis du tableau de bord
 
 Toute nouvelle page ajoutée au tableau de bord (`GROUPES` de `dashboard.js`) reçoit son aperçu **dans le même commit** (demande de l'utilisateur, 4 novembre 2026) : `node outils/apercus.js ma-page.html` filme la page et écrit `tableau/ma-page.jpg` (image de la tuile) et `tableau/ma-page.webm` (vidéo de 5 s jouée au survol), et l'ajoute à `tableau/apercus.json`. Si la page a une partie visuelle (carte, 3D, hémicycle…), la cadrer dans `REGLAGES` du script. Regarder l'image et la vidéo avant de committer. Pas pour les pages archivées.

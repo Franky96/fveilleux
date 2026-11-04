@@ -83,7 +83,11 @@ html.tb2-fixe body{padding-top:var(--tb2-h)!important;box-sizing:border-box}
 .tb2 .tb2-site{display:contents}
 .tb2 .tb2-site .titre{grid-column:2;margin:0;text-align:center;font:600 13px/1.35 "IBM Plex Sans",system-ui,sans-serif;color:var(--tb-text);text-wrap:balance;min-width:0}
 .tb2 .tb2-site .titre > [hidden]{display:none}
-@media (max-width:640px){.tb2{gap:8px}.tb2 .tb2-nom{display:none}.tb2 .tb2-retour{width:34px;height:34px;padding:0;justify-content:center}.tb2 .tb2-rnom{display:none}.tb2 .tb2-rond{width:34px;height:34px}}
+.tb2 .tb2-ptitre{grid-column:2;margin:0;min-width:0;text-align:center;font:700 19px/1.15 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.02em;color:var(--tb-text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.tb2-actif .tb2-rangee{position:static!important;top:auto!important;background:transparent!important;border:0!important;box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;min-height:0!important;justify-content:center!important;flex-wrap:wrap}
+@media (max-width:640px){.tb2 .tb2-ptitre{font-size:17px}.tb2:has(.tb2-ptitre) .tb2-badge{display:none}.tb2:has(.tb2-ptitre) .tb2-gauche{gap:8px}.tb2{gap:8px}.tb2 .tb2-nom{display:none}.tb2 .tb2-retour{width:34px;height:34px;padding:0;justify-content:center}.tb2 .tb2-rnom{display:none}.tb2 .tb2-rond{width:34px;height:34px}}
 /* anciens boutons remplacés par la barre */
 html.tb2-actif #theme-toggle,html.tb2-actif .page-topbar-controls,html.tb2-actif #hamburger-btn,html.tb2-actif #hamburger-menu,
 html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data-version-badge]:not(.tb2-badge),html.tb2-actif .tb2-cache{display:none!important}
@@ -124,20 +128,45 @@ html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transitio
   // une seule barre, avec le retour et le logo à gauche, les mises à jour au milieu (demande de l'utilisateur, 4 novembre 2026).
   // La ligne d'info est déplacée telle quelle, dans un conteneur .site-top « transparent » : les scripts qui la mettent à jour la retrouvent.
   const titreInfos = D.querySelector('.site-top .titre');
-  if (!titreInfos) try { sessionStorage.removeItem('tb2LogoGauche'); } catch (e) {}   // passé par une autre page : pas d'animation de retour
-  if (titreInfos) {
+  // pages qui avaient leur propre barre de titre (souvent [data-topbar]) : son titre passe au milieu de la barre 2.0, comme les
+  // mises à jour des Intentions de vote (demande de l'utilisateur, 4 novembre 2026) ; ses contrôles restent, en rangée sous la barre
+  let vieille = null, titreEl = null;
+  if (!titreInfos) {
+    vieille = D.querySelector('[data-topbar], body > .top-bar, header.barre, .admin-container > header');
+    const t = vieille && vieille.querySelector('h1, .top-bar-title, .brand');
+    const texte = t ? t.textContent.replace(/\s+/g, ' ').trim() : '';
+    if (texte) {
+      titreEl = D.createElement('h1'); titreEl.className = 'tb2-ptitre'; titreEl.textContent = texte; titreEl.title = texte;
+      t.classList.add('tb2-cache'); vieille.classList.add('tb2-rangee');
+      vieille.querySelectorAll('.top-bar-divider, .status-strip').forEach(e => e.classList.add('tb2-cache'));
+      if (lienPage && vieille.contains(lienPage)) { lienPage.classList.add('tb2-cache'); lienPage = null; }
+    } else vieille = null;
+  }
+  const milieuEl = titreInfos || titreEl;
+  if (!milieuEl) try { sessionStorage.removeItem('tb2LogoGauche'); } catch (e) {}   // passé par une autre page : pas d'animation de retour
+  if (milieuEl) {
     // animation au chargement : le logo et la version partent du milieu et glissent jusqu'à leur place, à gauche (demande de l'utilisateur)
     const marque = bar.querySelector('.tb2-marque');
     // mesures au milieu, avec le titre « Outils de Frank » (état de départ de l'animation)
     const nomEl = marque.querySelector('.tb2-nom'), avant = marque.getBoundingClientRect(), largeurNom = nomEl.getBoundingClientRect().width;
     const ecart = parseFloat(getComputedStyle(marque).columnGap) || 10;
-    const vieux = titreInfos.closest('.site-top'), gauche = D.createElement('div'), env = D.createElement('div');
+    const gauche = D.createElement('div');
     gauche.className = 'tb2-gauche';
     gauche.append(bar.querySelector('.tb2-retour, .tb2-vide'), bar.querySelector('.tb2-marque'));
-    env.className = 'site-top tb2-site'; env.appendChild(titreInfos);
-    bar.prepend(gauche); gauche.after(env);
+    bar.prepend(gauche);
+    if (titreInfos) {
+      const vieux = titreInfos.closest('.site-top'), env = D.createElement('div');
+      env.className = 'site-top tb2-site'; env.appendChild(titreInfos);
+      gauche.after(env);
+      vieux.style.display = 'none';
+    } else {
+      gauche.after(titreEl);
+      // l'ancienne barre disparaît si rien d'utile n'y reste (sinon : ses boutons, champs… en rangée) ; revérifiée si la page y ajoute quelque chose
+      const utile = () => [...vieille.querySelectorAll('input, button, select, textarea, a, canvas')].some(e => !e.closest('.tb2-cache, .page-topbar-controls') && e.getClientRects().length);
+      const majV = () => { vieille.classList.remove('tb2-cache'); if (!utile()) vieille.classList.add('tb2-cache'); };
+      majV(); new MutationObserver(majV).observe(vieille, { childList: true, subtree: true });
+    }
     bar.classList.add('tb2-infos');
-    vieux.style.display = 'none';
     // en quittant la page, on note où était le logo : l'accueil (logo au milieu) le fera glisser de là vers le centre (animation inverse)
     addEventListener('pagehide', () => { try { sessionStorage.setItem('tb2LogoGauche', JSON.stringify({ x: marque.getBoundingClientRect().left, t: Date.now() })); } catch (e) {} });
     // à chaque entrée dans la section, mais pas en passant d'un onglet (d'une page de votes) à l'autre :
@@ -158,7 +187,7 @@ html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transitio
         .finished.then(() => { nomEl.style.cssText = ''; }).catch(() => { nomEl.style.cssText = ''; });
       marque.animate([{ transform: `translateX(${dx1}px)`, offset: 0, easing: 'ease-in-out' }, { transform: `translateX(${dx2}px)`, offset: P, easing: 'cubic-bezier(.65,0,.25,1)' },
         { transform: 'none', offset: 1 }], opt);
-      titreInfos.animate([{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: 200 + T * 0.8, easing: 'ease-out', fill: 'backwards' });
+      milieuEl.animate([{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: 200 + T * 0.8, easing: 'ease-out', fill: 'backwards' });
     }
   }
   html.classList.add('tb2-actif');
