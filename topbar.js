@@ -83,6 +83,8 @@ html.tb2-fixe body{padding-top:var(--tb2-h)!important;box-sizing:border-box}
 .tb2 .tb2-site{display:contents}
 .tb2 .tb2-site .titre{grid-column:2;margin:0;text-align:center;font:600 13px/1.35 "IBM Plex Sans",system-ui,sans-serif;color:var(--tb-text);text-wrap:balance;min-width:0}
 .tb2 .tb2-site .titre > [hidden]{display:none}
+.tb2.tb2-infos:has(.tb2-ptitre){grid-template-columns:minmax(max-content,1fr) minmax(0,auto) minmax(max-content,1fr)}   /* titre centré sur la page, pas seulement entre le logo et les boutons */
+.tb2 .tb2-outils{justify-self:end}
 .tb2 .tb2-ptitre{grid-column:2;margin:0;min-width:0;text-align:center;font:700 19px/1.15 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.02em;color:var(--tb-text);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.tb2-actif .tb2-rangee{position:static!important;top:auto!important;background:transparent!important;border:0!important;box-shadow:none!important;
