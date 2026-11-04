@@ -63,14 +63,15 @@
     if (faits.has(svg) || enAttente.has(svg)) return; enAttente.add(svg);   // le plan se remplit après coup : on réessaie tant qu'il est vide
     requestAnimationFrame(() => {
       enAttente.delete(svg);
-      const sieges = [...svg.querySelectorAll('rect, circle')].map(e => { let b; try { b = e.getBBox(); } catch (x) { return null; } return b && b.width <= 24 && b.height <= 24 && b.width > 0 ? { e, x: b.x, y: b.y, c: couleur(e, 'fill') } : null; }).filter(Boolean);
+      const sieges = [...svg.querySelectorAll('rect, circle')].map(e => { let b; try { b = e.getBBox(); } catch (x) { return null; } return b && b.width <= 24 && b.height <= 24 && b.width > 0 ? { e, x: b.x, y: b.y, cs: [couleur(e, 'fill'), couleur(e, 'stroke')] } : null; }).filter(Boolean);
       if (sieges.length < 20) return;
       faits.add(svg);
       const bloc = svg.closest('section, .lv-sieges, div') || svg.parentElement, leg = bloc && bloc.querySelector('.vf-legende');
       const entrees = leg ? [...leg.querySelectorAll(':scope > span')].map(sp => { const i = sp.querySelector('i'), b = sp.querySelector('b'); return i && b ? { c: couleur(i, 'backgroundColor'), b, n: parseInt(b.textContent.replace(/\D/g, ''), 10) || 0 } : null; }).filter(Boolean) : [];
       // groupes : un par entrée de la légende (dans son ordre), puis les sièges d'une autre couleur
       const groupes = entrees.map(en => ({ en, s: [] })), autres = { en: null, s: [] };
-      for (const st of sieges) (groupes.find(g => g.en.c === st.c) || autres).s.push(st);
+      // siège plein (couleur de remplissage) ou seulement contourné, comme les élus de liste en Allemagne (couleur du contour)
+      for (const st of sieges) (groupes.find(g => g.en.c === st.cs[0]) || groupes.find(g => g.en.c === st.cs[1]) || autres).s.push(st);
       if (autres.s.length) groupes.push(autres);
       const N = sieges.length, D = Math.min(2200, 900 + N * 2.4), T0 = 150;
       let k = 0;
