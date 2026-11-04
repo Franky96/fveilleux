@@ -202,6 +202,9 @@ html.light .c2 .logo span{color:#fff;-webkit-text-stroke-color:#071016}
 .c2 .carte:hover{transform:translateY(-2px);background:var(--panel2);border-color:color-mix(in srgb,var(--c) 55%,var(--line));box-shadow:0 14px 30px rgba(0,0,0,.22)}
 .c2 .carte .em{width:46px;height:46px;display:grid;place-items:center;font-size:22px;border-radius:12px;
   background:color-mix(in srgb,var(--c) 16%,var(--panel2));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+.c2 .carte .em{transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.c2 .carte:hover .em{transform:scale(1.12) rotate(-7deg);background:color-mix(in srgb,var(--c) 30%,var(--panel2));
+  border-color:color-mix(in srgb,var(--c) 60%,var(--line));box-shadow:0 6px 16px color-mix(in srgb,var(--c) 35%,transparent)}
 .c2 .carte b{display:block;font-weight:600;font-size:15.5px}
 .c2 .carte small{display:block;color:var(--muted);font-size:13px;line-height:1.4;margin-top:1px}
 .c2 .carte .fl{color:var(--faint);font-size:20px;transition:transform .15s}
@@ -216,8 +219,8 @@ html.light .c2 .logo span{color:#fff;-webkit-text-stroke-color:#071016}
 .c2 .carte{padding:12px 14px;grid-template-columns:40px 1fr auto}
 .c2 .carte .em{width:40px;height:40px;font-size:20px}
 }
-@media (prefers-reduced-motion: reduce){.c2 .carte,.c2 .carte .fl{transition:none}
-.c2 .carte:hover{transform:none}
+@media (prefers-reduced-motion: reduce){.c2 .carte,.c2 .carte .fl,.c2 .carte .em{transition:none}
+.c2 .carte:hover,.c2 .carte:hover .em{transform:none}
 }
 /* propre à cette page : style.css stylise header, h1 et h2 directement */
 .c2{font:15px/1.5 var(--f-body);color:var(--text)}

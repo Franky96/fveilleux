@@ -89,6 +89,9 @@ html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème 
 .carte:hover{transform:translateY(-2px);background:var(--panel2);border-color:color-mix(in srgb,var(--c) 55%,var(--line));box-shadow:0 14px 30px rgba(0,0,0,.22)}
 .carte .em{width:46px;height:46px;display:grid;place-items:center;font-size:22px;border-radius:12px;
   background:color-mix(in srgb,var(--c) 16%,var(--panel2));border:1px solid color-mix(in srgb,var(--c) 30%,var(--line))}
+.carte .em{transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.carte:hover .em{transform:scale(1.12) rotate(-7deg);background:color-mix(in srgb,var(--c) 30%,var(--panel2));
+  border-color:color-mix(in srgb,var(--c) 60%,var(--line));box-shadow:0 6px 16px color-mix(in srgb,var(--c) 35%,transparent)}   /* l'icône réagit au survol */
 .carte b{display:block;font-weight:600;font-size:15.5px}
 .carte small{display:block;color:var(--muted);font-size:13px;line-height:1.4;margin-top:1px}
 .carte .fl{color:var(--faint);font-size:20px;transition:transform .15s}
@@ -109,4 +112,4 @@ html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème 
   .carte{padding:12px 14px;grid-template-columns:40px 1fr auto}
   .carte .em{width:40px;height:40px;font-size:20px}
 }
-@media (prefers-reduced-motion: reduce){.carte,.carte .fl{transition:none}.carte:hover{transform:none}}
+@media (prefers-reduced-motion: reduce){.carte,.carte .fl,.carte .em{transition:none}.carte:hover,.carte:hover .em{transform:none}}

@@ -42,7 +42,25 @@ if (!sessionStorage.getItem('loggedIn')) location.href = 'index.html';
   });
   const vide = document.querySelector('.vide'); if (vide) vide.style.display = total ? 'none' : 'block';
   document.querySelector('.cartes-zone')?.classList.add('pret');
+  cascade();
 })();
+
+/* ---------- arrivée : les groupes et les cartes apparaissent en cascade (une fois, au chargement) ---------- */
+function cascade() {
+  if (!document.body.animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let i = 0;
+  const pas = n => Math.min(n * 45, 650);   // décalage entre deux éléments, plafonné pour les longues listes
+  document.querySelectorAll('.groupe:not([hidden])').forEach(g => {
+    const h = g.querySelector(':scope > header');
+    if (h) h.animate([{ opacity: 0, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 380, delay: 80 + pas(i), easing: 'ease-out', fill: 'backwards' });
+    g.querySelectorAll('.carte:not([hidden])').forEach(c => {
+      i++;
+      c.animate([{ opacity: 0, transform: 'translateY(16px) scale(.97)' }, { opacity: 1, transform: 'none' }],
+        { duration: 520, delay: 120 + pas(i), easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
+    });
+  });
+}
 
 /* ---------- barre du haut : compte, thème, voile au défilement ---------- */
 const nom = sessionStorage.getItem('userName') || '';
