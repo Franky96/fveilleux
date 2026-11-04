@@ -67,7 +67,7 @@ export function preparerPleinEcran() {
   btn.addEventListener("click", () => {
     if (ecran()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     else if (carte.classList.contains("lv-plein")) { carte.classList.remove("lv-plein"); document.body.classList.remove("lv-plein-actif"); etat(); }
-    else if (carte.requestFullscreen || carte.webkitRequestFullscreen) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
+    else if (!window.PLEIN_TACTILE && (carte.requestFullscreen || carte.webkitRequestFullscreen)) (carte.requestFullscreen || carte.webkitRequestFullscreen).call(carte);
     else { carte.classList.add("lv-plein"); document.body.classList.add("lv-plein-actif"); etat(); }
   });
   info.addEventListener("click", () => panneau(info.getAttribute("aria-pressed") !== "true"));

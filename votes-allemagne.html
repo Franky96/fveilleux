@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Outils de Frank — Votes Allemagne</title>
   <script src="topbar.js" defer></script>
+  <script>
+    // iPad, iPhone, tablettes : le plein écran des cartes est une couche fixe de la page, pas le plein écran natif,
+    // que Safari ferme dès qu'on glisse vers le bas (demande de l'utilisateur, 4 novembre 2026)
+    window.PLEIN_TACTILE = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  </script>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
   <script>
@@ -413,6 +418,9 @@
     .lv-cartecard.lv-plein { position: fixed; inset: 0; z-index: 1000; height: 100dvh; }
     .lv-cartecard:fullscreen #lvCarte, .lv-cartecard.lv-plein #lvCarte { height: 100%; }
     body.lv-plein-actif { overflow: hidden; }
+    html:has(body.lv-plein-actif), html:has(.mapgrid.fs) { overflow: hidden; overscroll-behavior: none; }   /* tablette : rien ne défile derrière la carte */
+    .lv-cartecard.lv-plein, .mapgrid.fs { overscroll-behavior: contain; }
+    body.lv-plein-actif .tb2, html:has(.mapgrid.fs) .tb2 { display: none !important; }   /* la barre du haut ne passe pas par-dessus la carte */
     body.lv-plein-actif [data-version-badge] { visibility: hidden; }
     .lv-rid { stroke: var(--surface); stroke-width: 0.4px; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill-opacity 0.4s; }
     .lv-rid:hover { stroke: var(--ink); stroke-width: 1.2px; }

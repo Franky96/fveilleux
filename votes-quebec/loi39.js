@@ -392,7 +392,7 @@ function syncFsButton(){
 async function toggleFullscreen(){
   if (document.fullscreenElement === mapGrid){ await document.exitFullscreen().catch(()=>{}); return; }
   if (mapGrid.classList.contains("fs")){ mapGrid.classList.remove("fs"); syncFsButton(); return; }
-  try { await mapGrid.requestFullscreen(); }
+  try { if (window.PLEIN_TACTILE) throw 0; await mapGrid.requestFullscreen(); }   // tablette : couche fixe (le plein écran natif se ferme en glissant vers le bas)
   catch { mapGrid.classList.add("fs"); syncFsButton(); }   // repli : superposition fixe
 }
 document.addEventListener("fullscreenchange", syncFsButton);
