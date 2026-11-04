@@ -126,7 +126,9 @@ q.addEventListener('keydown', e => {
 addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !document.querySelector('dialog[open]')) { e.preventDefault(); recherche(true); } });
 
 /* ---------- raccourcis de chaque compte (pas pour l'invité), enregistrés sur le serveur (api/prefs.php) ---------- */
-const APERCUS = { 'pt6a21.html': 'tableau/pt6.jpg', 'votes-quebec.html': 'tableau/votes.jpg', 'arinc429.html': 'tableau/arinc.jpg', 'helice.html': 'tableau/helice.jpg' };
+// aperçus des tuiles : tableau/apercus.json, écrit par outils/apercus.js ({ page: { img, video: [webm, mp4…] } }) ;
+// au survol, la tuile joue la vidéo (raccourcis vivants, animation 5). Toute nouvelle page reçoit son aperçu (règle de CLAUDE.md).
+let APERCUS = {};
 const DESC = { 'pt6a21.html': 'Simulateur 3D du turbopropulseur : coupe, flux, démarrage et instruments', 'votes-quebec.html': 'Intentions de vote, carte des 127 circonscriptions et simulation Loi 39',
   'arinc429.html': 'Décodeur de mots de 32 bits', 'helice.html': 'Régulateur, drapeau et inversion, en 3D', 'loi39.html': 'Mode mixte compensatoire régional, simulé', 'csdb.html': 'Décodeur CSDB', 'en-direct.html': 'Soirées électorales en direct' };
 const EMO = { 'pt6a21.html': '🛩️', 'helice.html': '💨', 'arinc429.html': '🔢', 'csdb.html': '📶', 'loi39.html': '⚖️', 'votes-quebec.html': '🗳️', 'en-direct.html': '🔴' };
@@ -160,10 +162,10 @@ function enregistrer() {
 }
 function rendreRacc() {
   zone.classList.toggle('perso', perso);
-  zone.innerHTML = liste.map((h, k) => { const p = page(h), img = APERCUS[h];
+  zone.innerHTML = liste.map((h, k) => { const p = page(h), ap = APERCUS[h], img = ap && ap.img;
     return `<a class="tuile" href="${arrivee(h)}" style="--c:var(${p.c});--i:${k + 2}" draggable="${perso}" data-k="${k}">
       <span class="ctl"><button type="button" data-g="${k}" aria-label="Plus tôt">‹</button><button type="button" data-d="${k}" aria-label="Plus tard">›</button><button type="button" class="x" data-x="${k}" aria-label="Retirer ${esc(p.n)}">×</button></span>
-      <div class="vue${img ? '' : ' ico'}"${img ? ` style="background-image:url('${img}')"` : ''}>${img ? '' : p.e}</div>
+      <div class="vue${img ? '' : ' ico'}"${img ? ` style="background-image:url('${img}')"` : ''}>${img ? (ap.video && ap.video.length ? `<video muted playsinline loop preload="none" data-v="${esc(ap.video.join(' '))}"></video>` : '') : `<span class="em">${p.e}</span>`}</div>
       <div class="corps"><span class="titre">${esc(p.n)}</span><span class="desc">${esc(p.d)}</span>${INFOS[h] ? `<span class="info">${INFOS[h]}</span>` : ''}</div></a>`; }).join('')
     + (liste.length < 8 ? `<button class="ajout" type="button" id="b-ajout"><span>＋</span>Ajouter un raccourci</button>` : '')
     + (!liste.length && !perso ? '<p class="vide-racc">Aucun raccourci. Clique sur « Personnaliser » pour en ajouter.</p>' : '');
@@ -311,7 +313,8 @@ $('pied-liens').innerHTML = INVITE ? '' : '<a href="archive.html">Archives</a>';
   try { const s = await getDoc(doc(db, 'systeme', 'config')); if (s.exists()) ARCHIVES = (s.data().archivedSections || []).map(k => ANC[k] || k); } catch (e) { /* hors ligne : rien d'archivé */ }
   VUE = visibles(); rendreGroupes(); catalogue();
   if (!INVITE) {
-    await chargerRaccourcis();
+    await Promise.all([chargerRaccourcis(),
+      fetch('tableau/apercus.json').then(r => r.json()).then(j => { APERCUS = j; }).catch(() => {})]);
     // pourcentages du dernier résultat sur la tuile Votes Québec
     if (a('votes-quebec')) try {
       const r = await (await fetch('votes-quebec/loi39-resume.json', { cache: 'no-cache' })).json();
@@ -352,5 +355,26 @@ setTimeout(() => document.body.classList.remove('arrivee'), 2600);
           .finished.then(() => { nom.style.cssText = ''; }).catch(() => { nom.style.cssText = ''; });
       }
     }
+  }
+}
+
+/* ---------- raccourcis vivants (animation 5) : l'aperçu s'anime au survol ---------- */
+{
+  const peut = matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const essai = document.createElement('video');
+  const joue = f => essai.canPlayType(f.endsWith('.webm') ? 'video/webm; codecs=vp9' : 'video/mp4; codecs=avc1.42E01E');
+  if (peut) {
+    zone.addEventListener('pointerover', e => {
+      const t = e.target.closest('.tuile'); if (!t || t.contains(e.relatedTarget) || zone.classList.contains('perso')) return;
+      const v = t.querySelector('video'); if (!v) return;
+      if (!v.src) { const f = v.dataset.v.split(' ').find(joue); if (!f) return; v.src = f; }
+      v.currentTime = 0;
+      v.play().then(() => v.classList.add('joue')).catch(() => {});
+    });
+    zone.addEventListener('pointerout', e => {
+      const t = e.target.closest('.tuile'); if (!t || t.contains(e.relatedTarget)) return;
+      const v = t.querySelector('video'); if (!v) return;
+      v.classList.remove('joue'); setTimeout(() => { if (!v.classList.contains('joue')) v.pause(); }, 300);
+    });
   }
 }

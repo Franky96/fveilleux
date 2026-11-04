@@ -186,6 +186,13 @@ mark{background:color-mix(in srgb,var(--c-lois) 35%,transparent);color:inherit;b
 .raccourcis .tuile .vue{aspect-ratio:16/9;flex:none;min-height:0}
 .vue.ico{display:grid;place-items:center;font-size:54px;background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--c) 32%,transparent),transparent 70%),var(--panel2)}
 .vue.ico::after{display:none}
+/* raccourcis vivants (animation 5) */
+.tuile .vue{overflow:hidden}
+.tuile .vue video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s ease;pointer-events:none}
+.tuile .vue video.joue{opacity:1}
+.vue.ico .em{display:inline-block;transition:transform .45s cubic-bezier(.34,1.56,.64,1),filter .3s}
+.tuile:hover .vue.ico .em{transform:translateY(-6px) scale(1.15) rotate(-6deg);filter:drop-shadow(0 8px 14px color-mix(in srgb,var(--c) 55%,transparent))}
+@media (prefers-reduced-motion: reduce){.tuile .vue video{display:none}.vue.ico .em{transition:none}.tuile:hover .vue.ico .em{transform:none}}
 .tuile .ctl{position:absolute;top:8px;right:8px;display:none;gap:4px;z-index:2}
 .perso .tuile .ctl{display:flex}
 .ctl button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,14,17,.75);color:#fff;cursor:pointer;font-size:15px;line-height:1}

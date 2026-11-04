@@ -24,6 +24,10 @@ Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (
 Chaque `<script src="https://…">` / `<link href="https://…">` vers un CDN porte un attribut `integrity="sha384-…"` et `crossorigin="anonymous"` (SRI). Pour changer de version d'une bibliothèque, recalculer l'empreinte :
 `curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A` (préfixer par `sha384-`). Sans ça, le navigateur bloque le fichier.
 
+## Aperçus des raccourcis du tableau de bord
+
+Toute nouvelle page ajoutée au tableau de bord (`GROUPES` de `dashboard.js`) reçoit son aperçu **dans le même commit** (demande de l'utilisateur, 4 novembre 2026) : `node outils/apercus.js ma-page.html` filme la page et écrit `tableau/ma-page.jpg` (image de la tuile) et `tableau/ma-page.webm` (vidéo de 5 s jouée au survol), et l'ajoute à `tableau/apercus.json`. Si la page a une partie visuelle (carte, 3D, hémicycle…), la cadrer dans `REGLAGES` du script. Regarder l'image et la vidéo avant de committer. Pas pour les pages archivées.
+
 ## Documentation détaillée (`docs/`) — à lire seulement quand la tâche le demande
 
 - `docs/DEMARRAGE.md` : **à lire au début d'une nouvelle conversation** (l'utilisateur, la façon de travailler, l'état du site, les tests, les pièges connus).

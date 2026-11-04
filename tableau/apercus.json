@@ -1,0 +1,6 @@
+{
+ "arinc429.html": {"img": "tableau/arinc.jpg", "video": ["connexion/arinc.webm", "connexion/arinc.mp4"]},
+ "helice.html": {"img": "tableau/helice.jpg", "video": ["connexion/helice.webm", "connexion/helice.mp4"]},
+ "pt6a21.html": {"img": "tableau/pt6.jpg", "video": ["connexion/pt6.webm", "connexion/pt6.mp4"]},
+ "votes-quebec.html": {"img": "tableau/votes.jpg", "video": ["connexion/votes.webm", "connexion/votes.mp4"]}
+}
