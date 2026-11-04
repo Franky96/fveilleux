@@ -55,6 +55,11 @@ html.light .tb2{--tb-bg:#f2f4f6;--tb-panel:#ffffff;--tb-panel2:#f6f8fa;--tb-line
 .tb2 .tb2-logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;flex:none;
   background:conic-gradient(from 210deg,var(--m1),var(--m2),var(--m4),var(--m3),var(--m1))}
 .tb2 .tb2-logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 55%)}
+.tb2 .tb2-logo::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 47%,rgba(255,255,255,.18) 55%,transparent 68%);transform:translateX(-130%);animation:logo-reflet 9s ease-in-out 1.2s infinite}
+.tb2 .tb2-marque:hover .tb2-logo::before{animation:logo-reflet-survol .8s ease-in-out}
+@keyframes logo-reflet{0%{transform:translateX(-130%)}10%,100%{transform:translateX(130%)}}
+@keyframes logo-reflet-survol{from{transform:translateX(-130%)}to{transform:translateX(130%)}}
+@media (prefers-reduced-motion: reduce){.tb2 .tb2-logo::before{animation:none}}
 .tb2 .tb2-logo span{position:relative;z-index:1;font:800 17px/1 "Barlow Condensed","Arial Narrow",sans-serif;color:#071016;letter-spacing:-.3px;-webkit-text-stroke:2px #a9b4bd;paint-order:stroke fill}
 html.light .tb2 .tb2-logo span{color:#fff;-webkit-text-stroke-color:#071016}
 .tb2 .tb2-logo i{font-style:normal;font-size:12px;opacity:.62}
