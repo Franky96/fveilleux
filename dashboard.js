@@ -241,7 +241,7 @@ function rendreNotifs() {
     for (const e of evts) { const st = etatEvt(e); if (st === 'cours') continue;   // en cours : déjà dans la pastille « En direct »
       if (st !== der) { h += `<div class="n-groupe">${titres[st]}</div>`; der = st; } h += itemEvt(e); }
     $('n-liste').innerHTML = h || '<p style="color:var(--muted);padding:12px">Aucun événement à venir.</p>';
-    $('n-pied').textContent = 'Heures du Québec. Les événements suivent tes permissions.';
+    $('n-pied').textContent = 'Heures du Québec. Seuls les événements des sections accessibles à ce compte sont affichés.';
   } else {
     const o = { erreur: 0, alerte: 1, ok: 2 };
     $('n-liste').innerHTML = VERIFS.slice().sort((x, y) => o[x.etat] - o[y.etat] || (y.quand || 0) - (x.quand || 0)).map(itemVerif).join('');
