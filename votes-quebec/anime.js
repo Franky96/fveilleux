@@ -7,7 +7,7 @@
    Rien en mouvement réduit. */
 (function () {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || !Element.prototype.animate) return;
-  const DUREE_FENETRE = 5000, t0 = performance.now();
+  const DUREE_FENETRE = 5000; let t0 = performance.now();   // repart quand la page devient visible (fin du chargement)
   const CHIFFRES = '.ac-chiffre, .ac-sous-chiffre, .vi-num b, .vf-cand-v, .lv-parti > b, #viSiegesTitre, #lvSiegesTitre';
   const BARRES = '.ac-barre, .lv-barre, .vi-jauge, .vf-cand-barre, .vu-duel-barre';
   const PLANS = 'svg.vi-plan';
@@ -35,7 +35,7 @@
     const D = 900, debut = performance.now();
     const fmt = (x, o) => { const t = x.toFixed(o.dec).replace('.', ','); return o.sep ? t.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : t; };
     const pas = now => {
-      const k = Math.min(1, (now - debut) / D), e = 1 - Math.pow(1 - k, 3);
+      const k = Math.max(0, Math.min(1, (now - debut) / D)), e = 1 - Math.pow(1 - k, 3);   // (l'heure de l'image peut précéder le départ)
       for (const md of modeles) {
         if (!md.n.isConnected || md.n.data !== md.ecrit && md.ecrit !== undefined) continue;   // le module a réécrit le texte : on le laisse
         md.ecrit = k < 1 ? md.morceaux.map(x => typeof x === 'string' ? x : fmt(x.val * e, x)).join('') : md.fin;
@@ -103,20 +103,30 @@
     if (!actif() || !racine) return;
     const el = racine.nodeType === 3 ? racine.parentElement : racine;
     if (!el || el.nodeType !== 1) return;
-    const avec = (sel, f) => { if (el.matches(sel)) f(el); el.querySelectorAll(sel).forEach(f); const p = el.closest(sel); if (p && p !== el) f(p); };
+    // encore cachée par « Chargement… » (aria-busy, France et autres pages qui attendent leurs données) : on attend qu'elle s'affiche,
+    // sinon les compteurs ont fini avant qu'on les voie (demande de l'utilisateur)
+    const cache = x => !!x.closest('[aria-busy="true"]');
+    const avec = (sel, f) => { const g = x => { if (!cache(x)) f(x); }; if (el.matches(sel)) g(el); el.querySelectorAll(sel).forEach(g); const p = el.closest(sel); if (p && p !== el) g(p); };
     avec(CHIFFRES, compter);
     avec(BARRES, remplir);
     avec(PLANS, colorer);
   }
 
   const obs = new MutationObserver(liste => {
-    if (!actif()) { obs.disconnect(); return; }
+    for (const m of liste) if (m.type === 'attributes' && m.target.getAttribute('aria-busy') !== 'true') { t0 = performance.now(); examiner(m.target); }   // la page s'affiche : la fenêtre repart
+    if (!actif()) { if (!document.querySelector('[aria-busy="true"]')) obs.disconnect(); return; }   // page encore en chargement : on garde l'œil ouvert
     for (const m of liste) {
+      if (m.type === 'attributes') continue;
       if (m.type === 'characterData') { examiner(m.target); continue; }
       m.addedNodes.forEach(examiner);
       if (m.type === 'childList' && m.target.nodeType === 1 && m.target.matches(CHIFFRES)) { faits.delete(m.target); examiner(m.target); }
     }
   });
-  const go = () => { examiner(document.body); obs.observe(document.body, { childList: true, subtree: true }); setTimeout(() => obs.disconnect(), DUREE_FENETRE + 200); };
+  const go = () => {
+    examiner(document.body);
+    obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-busy'] });
+    const fin = () => { if (actif() || document.querySelector('[aria-busy="true"]')) setTimeout(fin, 500); else obs.disconnect(); };   // la fenêtre peut repartir : on vérifie avant d'arrêter
+    setTimeout(fin, DUREE_FENETRE + 200);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
