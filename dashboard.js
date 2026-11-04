@@ -57,8 +57,8 @@ const GROUPES = [
 ];
 
 /* ---------- page d'arrivée d'une section, quand elle n'est pas sa page habituelle (ligne et raccourci) :
-   Intentions de vote → la soirée En direct des États-Unis (demande de l'utilisateur, 4 novembre 2026 ; retirer après la soirée) ---------- */
-const ARRIVEE = { 'intentions-simulations.html': 'en-direct.html' };
+   ex. { 'intentions-simulations.html': 'en-direct.html' } (utilisé le soir du 3 novembre 2026, retiré : la pastille « En direct » suffit) ---------- */
+const ARRIVEE = {};   // vide : chaque page ouvre sa page habituelle (la soirée En direct a sa pastille, en haut)
 const arrivee = h => ARRIVEE[h] || h;
 
 /* ---------- ce que la personne peut voir : permission de la page (ou d'une de ses sous-pages), hors sections archivées ---------- */
