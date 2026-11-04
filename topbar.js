@@ -124,6 +124,10 @@ html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transitio
   }) : [];
   const cb = getComputedStyle(B), corpsEnLigne = /flex|grid/.test(cb.display) && !(cb.display.includes('flex') && cb.flexDirection.startsWith('column') && cb.alignItems !== 'center');
   B.insertBefore(bar, B.firstChild);
+  html.classList.add('tb2-actif');
+  // (avant de mesurer la place du logo pour son animation : RONA, corps en flex, le faisait partir de travers)
+  // corps en flex ou en grille (barre de côté, contenu centré) : la barre est fixée en haut et le corps décalé d'autant
+  if (corpsEnLigne || bar.getBoundingClientRect().top > 2 || bar.getBoundingClientRect().width < innerWidth - 20) html.classList.add('tb2-fixe');
   // pages qui affichaient leurs mises à jour dans une barre à elles (Intentions de vote, En direct : .site-top .titre) :
   // une seule barre, avec le retour et le logo à gauche, les mises à jour au milieu (demande de l'utilisateur, 4 novembre 2026).
   // La ligne d'info est déplacée telle quelle, dans un conteneur .site-top « transparent » : les scripts qui la mettent à jour la retrouvent.
@@ -190,9 +194,6 @@ html.vt-theme::view-transition-old(root){z-index:1}html.vt-theme::view-transitio
       milieuEl.animate([{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: 200 + T * 0.8, easing: 'ease-out', fill: 'backwards' });
     }
   }
-  html.classList.add('tb2-actif');
-  // corps en flex ou en grille (barre de côté, contenu centré) : la barre est fixée en haut et le corps décalé d'autant
-  if (corpsEnLigne || bar.getBoundingClientRect().top > 2 || bar.getBoundingClientRect().width < innerWidth - 20) html.classList.add('tb2-fixe');
   if (lienPage) {
     // ancien retour : retiré ; dans un en-tête en grille (retour | titre | boutons), seulement rendu invisible pour que le titre reste centré
     const pc = getComputedStyle(lienPage.parentElement);
