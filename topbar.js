@@ -140,9 +140,10 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
     marque.querySelector('.tb2-nom').style.display = '';
     // en quittant la page, on note où était le logo : l'accueil (logo au milieu) le fera glisser de là vers le centre (animation inverse)
     addEventListener('pagehide', () => { try { sessionStorage.setItem('tb2LogoGauche', JSON.stringify({ x: marque.getBoundingClientRect().left, t: Date.now() })); } catch (e) {} });
-    // une seule fois par visite : pas en passant d'un onglet (d'une page) à l'autre de la section
+    // à chaque entrée dans la section, mais pas en passant d'un onglet (d'une page de votes) à l'autre :
+    // la page de votes qu'on vient de quitter a noté la place du logo (tb2LogoGauche, il y a moins de 15 s)
     let dejaVu = false;
-    try { dejaVu = sessionStorage.getItem('tb2GlisseVu') === '1'; sessionStorage.setItem('tb2GlisseVu', '1'); } catch (e) {}
+    try { const v = JSON.parse(sessionStorage.getItem('tb2LogoGauche') || 'null'); dejaVu = !!v && Date.now() - v.t < 15000; } catch (e) {}
     if (!dejaVu && !matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate) {
       const apres = marque.getBoundingClientRect(), dx = avant.left - apres.left;
       if (Math.abs(dx) > 4) {
