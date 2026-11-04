@@ -137,7 +137,10 @@ html.tb2-actif .header-controls,html.tb2-actif .archive-btn,html.tb2-actif [data
     bar.classList.add('tb2-infos');
     vieux.style.display = 'none';
     marque.querySelector('.tb2-nom').style.display = '';
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate) {
+    // une seule fois par visite : pas en passant d'un onglet (d'une page) à l'autre de la section
+    let dejaVu = false;
+    try { dejaVu = sessionStorage.getItem('tb2GlisseVu') === '1'; sessionStorage.setItem('tb2GlisseVu', '1'); } catch (e) {}
+    if (!dejaVu && !matchMedia('(prefers-reduced-motion: reduce)').matches && marque.animate) {
       const apres = marque.getBoundingClientRect(), dx = avant.left - apres.left;
       if (Math.abs(dx) > 4) {
         marque.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 750, delay: 150, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'backwards' });
