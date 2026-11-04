@@ -30,8 +30,8 @@ button{font:inherit;color:inherit}
 /* ---- fond : bandes diagonales teintées, comme le tableau de bord ---- */
 .fond{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
 .fond::before,.fond::after{content:"";position:absolute;inset:0}
-.fond::before{inset:-12%;animation:fond-derive 45s ease-in-out infinite alternate;will-change:transform}   /* les bandes dérivent lentement (animation 3) */
-@keyframes fond-derive{from{transform:translate3d(-4%,-2%,0)}to{transform:translate3d(4%,2%,0)}}
+.fond::before{inset:-22%;animation:fond-derive 28s ease-in-out infinite alternate;will-change:transform}   /* les bandes dérivent lentement (animation 3) */
+@keyframes fond-derive{from{transform:translate3d(-11%,-3%,0)}to{transform:translate3d(11%,3%,0)}}
 @media (prefers-reduced-motion: reduce){.fond::before{animation:none}}
 .fond::before{background:
   linear-gradient(120deg, transparent 0 14%, color-mix(in srgb,var(--c-avia) 16%,transparent) 14% 26%, transparent 26% 40%,

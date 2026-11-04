@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jeux-v22';
+const CACHE_NAME = 'jeux-v23';
 const FILES_TO_CACHE = [
   '/jeuxdesociete.html',
   '/categorie.js',
