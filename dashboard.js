@@ -249,7 +249,7 @@ function rendreNotifs() {
   // pastilles : « En direct » (une par soirée en cours) mène droit à sa page ; « À venir » ouvre le panneau des événements
   // (séparées à la demande de l'utilisateur, 4 novembre 2026)
   const enCours = evts.filter(e => etatEvt(e) === 'cours'), aVenir = evts.filter(e => etatEvt(e) === 'venir');
-  let pills = enCours.map(e => `<a class="signal signal-direct" href="${esc(arrivee(e.page))}" style="--c:#ef4444" title="${esc(e.titre)} : ouvrir la page"><span class="pt vif"></span><b>En direct</b> ${esc(e.titre.split(' · ')[0])}<span class="fl" aria-hidden="true">→</span></a>`).join('');
+  let pills = enCours.map(e => `<a class="signal signal-direct" href="${esc(arrivee(e.page))}" style="--c:#ef4444" title="${esc(e.titre)} : ouvrir la page"><span class="pt vif"></span><b>En direct</b> ${esc(e.titre.split(' · ')[0])}</a>`).join('');
   const p = aVenir[0];
   if (p) {
     const auj = p.debut.toDateString() === new Date().toDateString(), proche = p.debut - Date.now() < 12 * 3600e3;
