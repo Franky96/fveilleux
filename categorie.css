@@ -51,11 +51,6 @@ button{font:inherit;color:inherit}
 .logo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;position:relative;overflow:hidden;flex:none;
   background:conic-gradient(from 210deg,var(--m1),var(--m2),var(--m4),var(--m3),var(--m1))}
 .logo::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.18),transparent 55%)}
-.logo::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 47%,rgba(255,255,255,.18) 55%,transparent 68%);transform:translateX(-130%);animation:logo-reflet 9s ease-in-out 1.2s infinite}   /* un reflet passe sur le logo toutes les 9 s, et au survol (animation 6) */
-.marque:hover .logo::before{animation:logo-reflet-survol .8s ease-in-out}
-@keyframes logo-reflet{0%{transform:translateX(-130%)}10%,100%{transform:translateX(130%)}}
-@keyframes logo-reflet-survol{from{transform:translateX(-130%)}to{transform:translateX(130%)}}
-@media (prefers-reduced-motion: reduce){.logo::before{animation:none}}
 .logo span{position:relative;z-index:1;font-weight:800;font-size:17px;color:#071016;letter-spacing:-.3px;-webkit-text-stroke:2px #a9b4bd;paint-order:stroke fill}
 .logo i{font-style:normal;font-size:12px;opacity:.62}
 html.light .logo span{color:#fff;-webkit-text-stroke-color:#071016}   /* thème clair : texte blanc, contour noir (le favicon ne change pas) */
