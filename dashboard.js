@@ -31,7 +31,7 @@ const GROUPES = [
   ]},
   { nom: 'Politique et monde', ic: '🌎', c: '--c-pol', pages: [
     ['intentions-simulations.html', '🗳️', 'Intentions de vote et simulations', 'Sondages, projections et soirées électorales', 'votes-quebec', [
-      ['Soirées', [['en-direct.html', 'En direct', 'votes-quebec']]],
+      ['Section', [['intentions-simulations.html', 'Accueil', 'votes-quebec'], ['en-direct.html', 'En direct', 'votes-quebec']]],
       ['Québec', [['votes-quebec.html', 'Québec', 'votes-quebec'], ['loi39.html', 'Loi 39', 'votes-quebec']]],
       ['Amérique', [['votes-alberta.html', 'Alberta', 'votes-quebec'], ['votes-canada.html', 'Canada', 'votes-quebec'], ['votes-usa.html', 'États-Unis', 'votes-quebec']]],
       ['Europe', [['votes-france.html', 'France', 'votes-quebec'], ['votes-allemagne.html', 'Allemagne', 'votes-quebec'], ['votes-suisse.html', 'Suisse', 'votes-quebec'], ['votes-royaume-uni.html', 'Royaume-Uni', 'votes-quebec']]]]],
@@ -55,6 +55,11 @@ const GROUPES = [
     ['pageTest.html', '🧪', 'Page de tests', 'Essais HTML et JavaScript', 'pageTest'],
   ]},
 ];
+
+/* ---------- page d'arrivée d'une section, quand elle n'est pas sa page habituelle (ligne et raccourci) :
+   Intentions de vote → la soirée En direct des États-Unis (demande de l'utilisateur, 4 novembre 2026 ; retirer après la soirée) ---------- */
+const ARRIVEE = { 'intentions-simulations.html': 'en-direct.html' };
+const arrivee = h => ARRIVEE[h] || h;
 
 /* ---------- ce que la personne peut voir : permission de la page (ou d'une de ses sous-pages), hors sections archivées ---------- */
 let ARCHIVES = [];
@@ -81,7 +86,7 @@ function rendreGroupes() {
   $('groupes').innerHTML = VUE.map((g, gi) => `<section class="groupe" style="--c:var(${g.c});--i:${gi + 4}">
   <header><span class="ic">${g.ic}</span><h3>${esc(g.nom)}</h3><span class="nb">${g.pages.length}</span></header>
   ${g.pages.map(p => `<div class="ligne" data-cherche="${esc((p.n + ' ' + p.d + ' ' + p.sous.map(x => x[1]).join(' ')).toLowerCase())}">
-    <span class="em">${p.e}</span><span><a class="lien" href="${p.h}"><b>${esc(p.n)}</b></a><small>${esc(p.d)}</small></span><span class="fl">›</span>
+    <span class="em">${p.e}</span><span><a class="lien" href="${arrivee(p.h)}"><b>${esc(p.n)}</b></a><small>${esc(p.d)}</small></span><span class="fl">›</span>
     ${p.sous.length ? `<span class="sous${p.sg[0][0] ? ' etiq' : ''}">${p.sg.map(([t, l]) => `<span class="sg">${t ? `<i>${esc(t)}</i>` : ''}<span>${l.map(([sh, sn]) => `<a href="${sh}" data-n="${esc(sn.toLowerCase())}">${esc(sn)}</a>`).join('')}</span></span>`).join('')}</span>` : ''}</div>`).join('')}
 </section>`).join('');
   if (!VUE.length) $('groupes').innerHTML = '<p class="vide" style="display:block">Aucune section ne t\'est ouverte pour le moment.</p>';
@@ -156,7 +161,7 @@ function enregistrer() {
 function rendreRacc() {
   zone.classList.toggle('perso', perso);
   zone.innerHTML = liste.map((h, k) => { const p = page(h), img = APERCUS[h];
-    return `<a class="tuile" href="${h}" style="--c:var(${p.c});--i:${k + 2}" draggable="${perso}" data-k="${k}">
+    return `<a class="tuile" href="${arrivee(h)}" style="--c:var(${p.c});--i:${k + 2}" draggable="${perso}" data-k="${k}">
       <span class="ctl"><button type="button" data-g="${k}" aria-label="Plus tôt">‹</button><button type="button" data-d="${k}" aria-label="Plus tard">›</button><button type="button" class="x" data-x="${k}" aria-label="Retirer ${esc(p.n)}">×</button></span>
       <div class="vue${img ? '' : ' ico'}"${img ? ` style="background-image:url('${img}')"` : ''}>${img ? '' : p.e}</div>
       <div class="corps"><span class="titre">${esc(p.n)}</span><span class="desc">${esc(p.d)}</span>${INFOS[h] ? `<span class="info">${INFOS[h]}</span>` : ''}</div></a>`; }).join('')

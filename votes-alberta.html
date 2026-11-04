@@ -157,6 +157,12 @@
     .lv-seg { position: relative; height: 100%; background: color-mix(in srgb, var(--c) 45%, var(--soft)); display: flex; align-items: center; justify-content: center; min-width: 0; transition: width 0.6s ease; }
     .lv-seg + .lv-seg { border-left: 2px solid var(--surface); }
     .lv-elus { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); }
+    /* sièges hors élection (Sénat, gouverneurs des États-Unis) : hachurés aux couleurs du parti */
+    .lv-seg.lv-hors { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 62%, var(--soft)) 0 5px, color-mix(in srgb, var(--c) 30%, var(--soft)) 5px 10px); }
+    .ed-hors-leg { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; margin: 2px 0 0; font-size: 0.78rem; color: var(--muted); }
+    .ed-hors-leg[hidden] { display: none; }
+    .ed-hors-leg b { color: var(--ink); font-weight: 600; }
+    .ed-hors-ech { display: inline-block; width: 22px; height: 11px; border-radius: 3px; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--muted) 70%, transparent) 0 4px, transparent 4px 8px); border: 1px solid var(--rule); }
     .lv-seg b { position: relative; font-size: 0.78rem; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.55); white-space: nowrap; }
     .lv-maj { position: absolute; top: 18px; bottom: -4px; width: 0; border-left: 2px solid var(--ink); }
     .lv-maj span { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.72rem; font-weight: 700; white-space: nowrap; color: var(--ink); line-height: 1; }

@@ -239,13 +239,27 @@ function dessinerSieges() {
     // avant les résultats : prévisions des analystes (sièges hors élection compris)
     const n = {}; for (const c of Object.values(COURSES[vue])) n[c.cote] = (n[c.cote] || 0) + 1;
     const hors = horsCourse(vue);
-    $("lvBarre").innerHTML = [["hD", hors.D + hors.I, "#7E98CC", "D hors élection"], ...COTES.map(k => [k, n[k] || 0, COTE[k][0], COTE[k][1]]), ["hR", hors.R, "#D88F8F", "R hors élection"]]
-      .filter(([, k]) => k).map(([k, x, c, l]) => `<span class="lv-seg" style="width:${pct(x)};--c:${c}" title="${esc(l)} : ${x}"><b>${x}</b></span>`).join("");
+    $("lvBarre").innerHTML = [["hD", hors.D + hors.I, coulP("D"), `Démocrates ${vue === "S" ? "et indépendants " : ""}hors élection`], ...COTES.map(k => [k, n[k] || 0, COTE[k][0], COTE[k][1]]), ["hR", hors.R, coulP("R"), "Républicains hors élection"]]
+      .filter(([, k]) => k).map(([k, x, c, l]) => `<span class="lv-seg${k[0] === "h" ? " lv-hors" : ""}" style="width:${pct(x)};--c:${c}" title="${esc(l)} : ${x}"><b>${x}</b></span>`).join("");
   } else {
-    $("lvBarre").innerHTML = [...segs.filter(x => x.p !== "R"), ...(reste > 0 ? [{ p: null, n: reste }] : []), ...segs.filter(x => x.p === "R")].map(({ p, n }) => p === null
+    // sièges hors élection (Sénat : élus en 2022 et 2024 ; gouverneurs : pas d'élection cette année) hachurés aux deux bouts,
+    // puis les courses de ce soir (foncé : appelées ; pâle : en tête) ; au milieu, ce qui reste à venir
+    const H = p => s[p].hors, J = p => s[p].elus + s[p].avance, G = ["D", "I", "A"];
+    const parts = [...G.filter(p => H(p)).map(p => ({ p, n: H(p), hors: true })), ...G.filter(p => J(p)).map(p => ({ p, n: J(p) })),
+      ...(reste > 0 ? [{ p: null, n: reste }] : []), ...(J("R") ? [{ p: "R", n: J("R") }] : []), ...(H("R") ? [{ p: "R", n: H("R"), hors: true }] : [])];
+    $("lvBarre").innerHTML = parts.map(({ p, n, hors }) => p === null
       ? `<span class="lv-seg" style="width:${pct(n)};--c:var(--soft)" title="${n} à venir"><b>${n}</b></span>`
-      : `<span class="lv-seg" style="width:${pct(n)};--c:${coulP(p)}" title="${esc(PARTIS[p].nom)} : ${n} (${s[p].elus} élus, ${s[p].avance} en tête${s[p].hors ? `, ${s[p].hors} hors élection` : ""})">`
-        + `<i class="lv-elus" style="width:${100 * (s[p].elus + s[p].hors) / n}%"></i><b>${esc(PARTIS[p].court)} ${n}</b></span>`).join("");
+      : hors ? `<span class="lv-seg lv-hors" style="width:${pct(n)};--c:${coulP(p)}" title="${esc(PARTIS[p].nom)} : ${n} hors élection"><b>${n}</b></span>`
+      : `<span class="lv-seg" style="width:${pct(n)};--c:${coulP(p)}" title="${esc(PARTIS[p].nom)} : ${n} ce soir (${s[p].elus} élus, ${s[p].avance} en tête)">`
+        + `<i class="lv-elus" style="width:${100 * s[p].elus / n}%"></i><b>${esc(PARTIS[p].court)} ${n}</b></span>`).join("");
+  }
+  { // légende : ce que veut dire le hachuré
+    let leg = $("edHorsLeg");
+    if (!leg) { leg = document.createElement("p"); leg.id = "edHorsLeg"; leg.className = "ed-hors-leg"; $("lvBarre").closest(".lv-barre-zone").after(leg); }
+    const hc = horsCourse(vue), nh = hc.D + hc.R + hc.I + hc.A;
+    leg.hidden = vue === "H" || !nh;
+    leg.innerHTML = vue === "S" ? `<i class="ed-hors-ech" aria-hidden="true"></i>Hachuré : <b>${nh} sièges hors élection</b> (sénateurs élus en 2022 et 2024, en poste jusqu'en 2029 ou 2031) · ${100 - nh} sièges en jeu ce soir ; foncé : course appelée, pâle : en tête`
+      : `<i class="ed-hors-ech" aria-hidden="true"></i>Hachuré : <b>${nh} États sans élection</b> cette année · ${50 - nh} en jeu ce soir ; foncé : course appelée, pâle : en tête`;
   }
   for (const seg of $("lvBarre").querySelectorAll(".lv-seg")) {
     const b = seg.querySelector("b"); if (!b) continue;
