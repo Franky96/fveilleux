@@ -13,7 +13,7 @@
       width: 100%;
       max-width: 600px;
       margin: 0 auto;
-      background: #0a0f0a;
+      background: #000000;
       min-height: 100vh;
       padding-bottom: 4rem;
     }
@@ -23,15 +23,15 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: #0f1a0f;
-      border-bottom: 1px solid #2a3a2a;
+      background: #0b0b0b;
+      border-bottom: 1px solid #2a2a2a;
       padding: 0.75rem 1rem;
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
     .rona-topbar a {
-      color: #80cc80;
+      color: #e0e0e0;
       text-decoration: none;
       font-size: 1.3rem;
       padding: 0.3rem;
@@ -46,8 +46,8 @@
     /* ── Sélection emplacement ── */
     .location-bar {
       padding: 0.75rem 1rem;
-      background: #0a0f0a;
-      border-bottom: 1px solid #1a2a1a;
+      background: #000000;
+      border-bottom: 1px solid #1a1a1a;
       display: flex;
       align-items: center;
       gap: 0.6rem;
@@ -59,8 +59,8 @@
     }
     .location-select {
       flex: 1;
-      background: #0f1a0f;
-      border: 1px solid #2a3a2a;
+      background: #0b0b0b;
+      border: 1px solid #2a2a2a;
       border-radius: 8px;
       color: #f0ede6;
       padding: 0.55rem 0.75rem;
@@ -69,12 +69,12 @@
       width: auto;
       margin: 0;
     }
-    .location-select:focus { border-color: #80cc80; }
+    .location-select:focus { border-color: #e0e0e0; }
     .btn-add-location {
       width: auto;
       background: transparent;
-      border: 1px solid #2a3a2a;
-      color: #80cc80;
+      border: 1px solid #2a2a2a;
+      color: #e0e0e0;
       padding: 0.5rem 0.75rem;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -84,20 +84,20 @@
     /* ── Barre de statut ── */
     .status-bar {
       padding: 0.5rem 1rem;
-      background: #0a0f0a;
+      background: #000000;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #1a2a1a;
+      border-bottom: 1px solid #1a1a1a;
     }
     .status-bar span { font-size: 0.8rem; color: #a89f94; }
     .status-count { font-weight: bold; }
     .status-count.alert { color: #c0392b; }
-    .status-count.ok { color: #80cc80; }
+    .status-count.ok { color: #e0e0e0; }
     .btn-reset-all {
       width: auto;
       background: transparent;
-      border: 1px solid #2a3a2a;
+      border: 1px solid #2a2a2a;
       color: #a89f94;
       padding: 0.3rem 0.7rem;
       border-radius: 6px;
@@ -118,8 +118,8 @@
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 0.75rem;
-      border-bottom: 1px solid #1a2a1a;
-      background: #0f1a0f;
+      border-bottom: 1px solid #1a1a1a;
+      background: #0b0b0b;
     }
     .item-row:first-child { border-radius: 10px 10px 0 0; }
     .item-row:last-child  { border-radius: 0 0 10px 10px; border-bottom: none; }
@@ -152,7 +152,7 @@
     .btn-x  { border-color: #3a1a1a; color: #555; }
     .btn-x:hover  { border-color: #c0392b; color: #c0392b; }
     .btn-x.active  { background: #c0392b; border-color: #c0392b; color: #fff; }
-    .btn-chk { border-color: #1a3a1a; color: #555; }
+    .btn-chk { border-color: #2a2a2a; color: #555; }
     .btn-chk:hover { border-color: #27ae60; color: #27ae60; }
     .btn-chk.active { background: #27ae60; border-color: #27ae60; color: #fff; }
 
@@ -178,7 +178,7 @@
 
     /* Select type Ajout/cmd */
     .item-type-select {
-      background: #0a0f0a;
+      background: #000000;
       border: 1px solid #c0392b;
       border-radius: 6px;
       color: #c0392b;
@@ -198,7 +198,7 @@
       font-size: 1rem;
       font-weight: bold;
       margin: 0;
-      background: #0a0f0a;
+      background: #000000;
       border: 1px solid #c0392b;
       border-radius: 8px;
       color: #c0392b;
@@ -236,10 +236,10 @@
       display: block;
       font-size: 0.6rem;
       padding: 0.1rem 0.35rem;
-      border: 1px solid #2a3a2a;
+      border: 1px solid #2a2a2a;
       border-radius: 5px;
       background: transparent;
-      color: #556655;
+      color: #666666;
       white-space: nowrap;
       width: auto;
       margin: 0;
@@ -281,18 +281,18 @@
 
     /* ── Thème clair ── */
     html.light .rona-container        { background: #f5f5f0; }
-    html.light .rona-topbar           { background: #ffffff; border-bottom-color: #d0d8d0; }
-    html.light .rona-topbar a         { color: #2a7a2a; }
+    html.light .rona-topbar           { background: #ffffff; border-bottom-color: #d6d6d6; }
+    html.light .rona-topbar a         { color: #111111; }
     html.light .rona-topbar h1        { color: #1a1a1a; }
-    html.light .location-bar          { background: #f5f5f0; border-bottom-color: #d0d8d0; }
+    html.light .location-bar          { background: #f5f5f0; border-bottom-color: #d6d6d6; }
     html.light .location-bar label    { color: #666; }
-    html.light .location-select       { background: #fff; border-color: #d0d8d0; color: #1a1a1a; }
-    html.light .location-select:focus { border-color: #2a7a2a; }
-    html.light .btn-add-location      { border-color: #d0d8d0; color: #2a7a2a; }
-    html.light .status-bar            { background: #f5f5f0; border-bottom-color: #d0d8d0; }
+    html.light .location-select       { background: #fff; border-color: #d6d6d6; color: #1a1a1a; }
+    html.light .location-select:focus { border-color: #111111; }
+    html.light .btn-add-location      { border-color: #d6d6d6; color: #111111; }
+    html.light .status-bar            { background: #f5f5f0; border-bottom-color: #d6d6d6; }
     html.light .status-bar span       { color: #666; }
-    html.light .btn-reset-all         { border-color: #d0d8d0; color: #666; }
-    html.light .item-row              { background: #ffffff; border-bottom-color: #e8ece8; }
+    html.light .btn-reset-all         { border-color: #d6d6d6; color: #666; }
+    html.light .item-row              { background: #ffffff; border-bottom-color: #ececec; }
     html.light .item-row.manquant     { background: #fff0f0; }
     html.light .item-row.non-rempli   { background: #fffbe0 !important; }
     html.light .item-nom              { color: #1a1a1a; }
@@ -302,7 +302,7 @@
     html.light .btn-chk               { border-color: #b8d8b8; color: #bbb; }
     html.light .item-type-select      { background: #fff; }
     html.light .item-qte-input        { background: #fff; }
-    html.light .btn-date-exp          { border-color: #d0d8d0; color: #aaa; }
+    html.light .btn-date-exp          { border-color: #d6d6d6; color: #aaa; }
     html.light .rona-empty            { color: #aaa; }
     html.light .modal-box label       { color: #666; }
   </style>
