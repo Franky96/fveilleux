@@ -56,13 +56,7 @@
   addEventListener('pagehide', () => sauverPosition(location.href));
   const retablir = () => scrollTo(0, positions[location.hash || '#'] || 0);
 
-  /* ---------- retours : le bouton ← de la barre du haut et les boutons en haut de la vue ---------- */
-  function majRetourBarre(href, nom, k = 0) {
-    const r = document.querySelector('.tb2-retour');
-    if (!r) { if (k < 40) setTimeout(() => majRetourBarre(href, nom, k + 1), 100); return; }   // topbar.js (defer) pas encore là
-    r.setAttribute('href', href); r.title = 'Retour : ' + nom; r.setAttribute('aria-label', 'Retour : ' + nom);
-    const t = r.querySelector('.tb2-rnom'); if (t) t.textContent = ' ' + nom;
-  }
+  /* ---------- retour : un seul bouton, en haut de la vue (le ← de la barre du haut ramène toujours à l'accueil du site) ---------- */
   const retours = liens => `<nav class="retours" aria-label="Retour">${liens.map(([t, h, sous], k) =>
     `<a class="retour-aec${k ? ' second' : ''}" href="${h}"><span class="fleche" aria-hidden="true">${k ? '↑' : '←'}</span><span>${sous ? `<small>${esc(sous)}</small>` : ''}<b>${esc(t)}</b></span></a>`).join('')}</nav>`;
 
@@ -92,7 +86,6 @@
     try { localStorage.setItem(CLE_ONGLET, `${et.id}/${co.id}`); } catch (x) {}
     // l'adresse dit toujours l'étape et le cours affichés : « précédent » depuis un module revient ici, au bon onglet
     if (location.hash !== `#${et.id}/${co.id}`) history.replaceState(null, '', `#${et.id}/${co.id}`);
-    majRetourBarre('dashboard.html', 'Accueil');
     document.title = `Outils de Frank — Documentation AEC Avionique · ${et.titre}`;
     const etapes = Array.from({ length: Math.max(NB_ETAPES, S.etapes.length) }, (_, k) => S.etapes[k] || null);
     const n = co.modules.reduce((t, mo) => t + nbLecons(mo), 0);
@@ -129,7 +122,6 @@
     const ic = et.cours.indexOf(co);
     document.title = `Outils de Frank — ${mo.num ? 'Module ' + mo.num : mo.titre} · ${co.titre}`;
     const lec = mo.lecons || [], docs = mo.docs || [];
-    majRetourBarre(`#${e}/${c}`, `Cours ${ic + 1}`);
     vue.innerHTML = retours([[co.titre, `#${e}/${c}`, `${et.titre} · Cours ${ic + 1} · tous les modules`]]) + `
       <div class="tete" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>
         <div><h1>${mo.num ? 'Module ' + esc(mo.num) + ' — ' : ''}${esc(mo.titre)}</h1><p>Cours ${ic + 1} — ${esc(co.titre)}${mo.duree ? ' · ' + esc(mo.duree) : ''}</p></div></div>
@@ -153,9 +145,7 @@
     const sommaire = `<h4>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</h4>` + lec.map((y, j) =>
       `<a href="${base}${encodeURIComponent(y.id)}" class="${j === k ? 'ici' : ''}"><span class="n">${j + 1}</span><span>${esc(y.titre)}</span></a>`).join('')
       + ((mo.docs || []).length ? `<div class="docs">${mo.docs.map(d => `<a ${lienDoc(d)}><span class="n">${typeDoc(d.f)[1]}</span><span>${esc(d.titre)}</span></a>`).join('')}</div>` : '');
-    majRetourBarre(`#${e}/${c}/${m}`, mo.num ? 'Module ' + mo.num : mo.titre);
-    vue.innerHTML = retours([[(mo.num ? 'Module ' + mo.num + ' — ' : '') + mo.titre, `#${e}/${c}/${m}`, 'Toutes les leçons du module'],
-      [`Cours ${ic + 1}`, `#${e}/${c}`, et.titre]]) + `
+    vue.innerHTML = retours([[(mo.num ? 'Module ' + mo.num + ' — ' : '') + mo.titre, `#${e}/${c}/${m}`, 'Toutes les leçons du module']]) + `
       <div class="lecon-zone" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})">
         <aside class="sommaire">${sommaire}</aside>
         <div><details class="sommaire-tel"><summary>Leçons du module (${k + 1} / ${lec.length})</summary><div class="sommaire">${sommaire}</div></details>
