@@ -17,6 +17,7 @@ Elles sont distinctes de celles des pages d'intentions de vote (demande de l'uti
   - Chaque page charge son module : `en-direct/direct.js` (États-Unis) ou `en-direct/<endroit>/direct.js`.
   - Le module remplit les zooms (`lvZoom`), le choix (`edChoix`), les blocs du bas (`edBlocs`) et la source (`edSource`).
 - **Sous-menu** (`sous-direct` du gabarit) : les soirées dans l'ordre des dates. `PRETES` de pages.py liste les soirées prêtes ; les autres ne sont ni générées ni montrées.
+- **Soirée en cours** (`COURANTE` de pages.py) : celle qu'ouvre l'onglet principal « En direct » de toutes les pages de la section (le sous-menu garde toutes les soirées). Sur le tableau de bord, la sous-page « En direct » et son raccourci ouvrent la même soirée (`ARRIVEE` de `dashboard.js` : `'en-direct.html' → la page de la soirée`). **Avant chaque vote, changer les deux**, puis relancer `pages.py --bascule`. Depuis le 6 novembre 2026 : Nouvelle-Zélande (après les États-Unis).
 - **Anciennes soirées** : chacune garde son propre bloc dans le gabarit (`cb2026`, `ab2026`) et son module dans `en-direct/<x>-2026/`. Elles sont listées par le bouton « Anciennes élections » de l'Accueil (`ac-anciennes`, gabarit).
 - **Chaque soirée a trois sources de résultats, essayées dans l'ordre** :
   1. le relais PHP du site, `api/<x>.php`, avec un cache de 30 à 45 s ;
@@ -39,6 +40,8 @@ Pour les soirées de novembre, qui ont déjà chacune leur page et leur dossier,
 
 Quand une soirée est ajoutée (ou que son heure change) : l'inscrire dans `evenements.json` (notifications « événement » du tableau de bord : début, fin, page, permission `votes-quebec`).
 
+La veille : en faire la soirée en cours (`COURANTE` de pages.py et `ARRIVEE` de dashboard.js, voir plus haut).
+
 Avant l'heure :
 - Ouvrir la page, puis la démo (`?demo=…`) : rien de cassé.
 - Lancer le workflow de la soirée à la main (outil GitHub `actions_run_trigger`, avec `--force` par défaut), puis lire son journal : la source répond-elle depuis GitHub ?
@@ -53,7 +56,7 @@ Points propres à chaque soirée :
 |---|---|
 | **Bulgarie**, dim. 1er nov. (bureaux de 1 h à 13 h, heure du Québec) | results.cik.bg est derrière Cloudflare : le relais passe de curl à `file_get_contents` au premier défi. Le workflow `bg-election.yml` lit en boucle toutes les 90 s de 17 h 40 à 23 h 59 UTC, avec Chromium sans tête. L'adresse du 2e tour n'était pas publiée : le relais la cherche dans l'index de la CIK, puis essaie `pvr202610/tur2/`, `pvr202611/`. 1er tour : `tour1.json`. |
 | **États-Unis**, mar. 3 nov. (18 h à 1 h, heure du Québec = heure de l'Est) | Flux de CNN `politics.api.cnn.io/results/national-races/2026-HG|SG|GG.json` ; `SG` et `GG` donnaient 404 le 26 oct. (normal avant la soirée). Vérifier les clés (`2026-HG-CA-13`, `2026-SG-OH`, `-S2G-` pour une spéciale) et que les élections spéciales de l'Ohio et de la Floride se rattachent bien. Cotes, candidats et sortants : `votes-usa/projection.json` (pipeline Qc125). Gouverneurs : `en-direct/etats-unis/gouverneurs.json` (`outils/prep.py`). |
-| **Nouvelle-Zélande**, sam. 7 nov. (1 h, heure du Québec) | Flux XML de la Commission électorale : `media.election.net.nz/xml/`, puis `www.electionresults.govt.nz/xml/`. Le site est derrière Cloudflare et le XML passait le 26 oct. Sièges calculés par la page (Sainte-Laguë). Le drapeau `final` n'est cru que s'il y a des votes. |
+| **Nouvelle-Zélande**, sam. 7 nov. (1 h, heure du Québec) | Flux XML de la Commission électorale : `media.election.net.nz/xml/`, puis `www.electionresults.govt.nz/xml/`. Le site est derrière Cloudflare et le XML passait le 26 oct. Sièges calculés par la page (Sainte-Laguë). Le drapeau `final` n'est cru que s'il y a des votes. Le 6 nov. (veille) : flux en ligne (17 partis, 71 circonscriptions, fichiers `xml/eNN/eNN.xml`, voix à zéro), `nz.py --force` lit les 75 fichiers, relais et démo `?demo=2023` vérifiés. |
 | **Taïwan**, sam. 28 nov. (3 h, heure du Québec) | Adresse des résultats de la CEC inconnue : le relais et `tw.py` essaient `vote.cec.gov.tw`, `vote2026.cec.gov.tw` et `www.cec.gov.tw` (`HOTES`/`TYPES`). Les serveurs refusaient l'étranger le 26 oct. Remplir les numéros de bulletin (`no` de `courses.json`), dont le tirage avait été reporté par un typhon. |
 | **Espagne**, dim. 29 nov. (bureaux jusqu'à 14 h au Québec, premiers chiffres vers 15 h) | Site d'information `29neleccionesgenerales.es` (pare-feu : agent utilisateur de navigateur). Les résultats sont supposés sur `resultados.29neleccionesgenerales.es`. Si la découverte des fichiers échoue, remplir `PLANTILLES` dans `api/direct-es.php` et `en-direct/espagne/outils/es.py`. Relancer `outils/sondages.py` au plus tard le 23 nov. : les sondages sont interdits ensuite. |
 

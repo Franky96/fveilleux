@@ -39,6 +39,9 @@ DIRECTS = {
 }
 # soirées déjà prêtes (module écrit et vérifié) : les autres ne sont ni générées ni dans le sous-menu
 PRETES = {"direct", "bg", "nz", "tw", "es"}
+# soirée « en cours » : celle qu'ouvre l'onglet principal « En direct » (le sous-menu garde toutes les soirées) ;
+# à changer avant chaque vote (6 novembre 2026 : Nouvelle-Zélande, après les États-Unis), avec ARRIVEE de dashboard.js
+COURANTE = "nz"
 BLOCS = ["cb2026", "ab2026", "live", "votes", "loi39"]          # vues qui ont leur propre bloc dans le gabarit (les soirées de DIRECTS prennent « gen »)
 PAGES = list(DIRECTS) + BLOCS          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"direct": "En direct · mi-mandat aux États-Unis", "bg": "En direct · présidentielle en Bulgarie", "nz": "En direct · élections en Nouvelle-Zélande",
@@ -71,7 +74,7 @@ def page(vue):
         classe = re.search(r'class="([^"]+)"', attrs).group(1)
         # « Votes Québec » (ligne du haut) reste la page courante sur ses simulations (loi 39)
         courant = ' aria-current="page"' if v == vue or ("sc-sous-tab" not in classe and ((vue == "loi39" and v == "votes") or (vue in DIRECTS and v == "direct"))) else ""
-        href = FICHIER[v]
+        href = FICHIER[COURANTE] if v == "direct" and "sc-sous-tab" not in classe else FICHIER[v]
         return f'<a class="{classe}" href="{href}"{courant}>{contenu}</a>'
     s = re.sub(r'<button type="button" role="tab"([^>]*)>(.*?)</button>', onglet, s, flags=re.S)
     s = s.replace('<div class="sc-tabs" role="tablist">', '<div class="sc-tabs">').replace('<div class="sc-sous" role="tablist"', '<div class="sc-sous"')

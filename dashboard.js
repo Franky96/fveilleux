@@ -59,7 +59,7 @@ const GROUPES = [
 
 /* ---------- page d'arrivée d'une section, quand elle n'est pas sa page habituelle (ligne et raccourci) :
    ex. { 'intentions-simulations.html': 'en-direct.html' } (utilisé le soir du 3 novembre 2026, retiré : la pastille « En direct » suffit) ---------- */
-const ARRIVEE = {};   // vide : chaque page ouvre sa page habituelle (la soirée En direct a sa pastille, en haut)
+const ARRIVEE = { 'en-direct.html': 'en-direct-nouvelle-zelande.html' };   // « En direct » ouvre la soirée en cours (COURANTE de votes-quebec/outils/pages.py)
 const arrivee = h => ARRIVEE[h] || h;
 
 /* ---------- ce que la personne peut voir : permission de la page (ou d'une de ses sous-pages), hors sections archivées ---------- */
