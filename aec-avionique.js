@@ -119,7 +119,16 @@
     const dossier = fichier.split('/').slice(0, -1).join('/');
     // l'adresse d'origine, en tête de chaque leçon, va en petit à la fin
     let source = '';
-    md = md.replace(/^﻿?\s*(?:<!--\s*)?(?:source|url)\s*:\s*(\S+?)\s*(?:-->)?\s*\n/i, (_, u) => { source = u; return ''; });
+    // en-tête des leçons : lignes « > Source : … » et « > Module : … » (ou sans « > », ou en commentaire), avant le texte
+    const lignes = md.replace(/^﻿/, '').split('\n');
+    while (lignes.length) {
+      const l = lignes[0].trim(), m = l.match(/^(?:>\s*|<!--\s*)?(source|url|module)\s*:\s*(.*?)\s*(?:-->)?$/i);
+      if (l === '' || l === '>') { lignes.shift(); continue; }
+      if (!m) break;
+      if (m[1].toLowerCase() !== 'module') { const lien = m[2].match(/\]\((\S+?)\)/) || m[2].match(/<?(https?:\/\/[^\s>]+)>?/); if (lien) source = lien[1]; }
+      lignes.shift();
+    }
+    md = lignes.join('\n');
     // formules (KaTeX) mises de côté avant Markdown, qui abîmerait les _ et les *
     const maths = [];
     const garde = (tex, bloc) => { maths.push([tex, bloc]); return `KTXMATH${maths.length - 1}KTX`; };
