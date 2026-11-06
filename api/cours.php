@@ -96,6 +96,10 @@ if (isset($_SERVER['HTTP_RANGE']) && preg_match('/^bytes=(\d*)-(\d*)$/', trim($_
 header('Content-Length: ' . ($fin - $debut + 1));
 if ($_SERVER['REQUEST_METHOD'] === 'HEAD') exit;
 
+// envoi en flux, par blocs de 256 Ko : rien n'est chargé en mémoire (un PowerPoint du CL601 fait 678 Mo) ;
+// pas de limite de temps PHP pendant l'envoi, et pas de tampon de sortie qui garderait les blocs
+@set_time_limit(0);
+while (ob_get_level() > 0) ob_end_clean();
 $h = fopen($path, 'rb');
 fseek($h, $debut);
 $reste = $fin - $debut + 1;

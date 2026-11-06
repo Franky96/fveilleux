@@ -62,6 +62,31 @@
     { "id": "doc", "num": "", "titre": "Documentation" }
    ] },
    { "id": "c2", "em": "🔌", "titre": "Composants électroniques analogiques d'aéronefs", "non_archive": true, "modules": [] }
+  ] },
+  { "id": "e4", "titre": "Étape 4", "cours": [
+   { "id": "c1", "em": "🔌", "titre": "Diagnostics de systèmes d'alimentation électrique 3", "modules": [
+    { "id": "m1", "num": "1", "titre": "Courant triphasé", "duree": "3 h" },
+    { "id": "m2", "num": "2", "titre": "Introduction au CL601", "duree": "4 h" },
+    { "id": "m3", "num": "3", "titre": "Maintenance du système DC – CL601", "duree": "3 h" },
+    { "id": "m4", "num": "4", "titre": "Maintenance du système AC – CL601", "duree": "5 h" },
+    { "id": "m5", "num": "5", "titre": "Nouvelles technologies", "duree": "2 h" },
+    { "id": "m6", "num": "6", "titre": "Analyse du A220", "duree": "5 h" },
+    { "id": "m7", "num": "7", "titre": "Analyse du Boeing 747", "duree": "3 h" },
+    { "id": "doc", "num": "", "titre": "Documentation et laboratoires" },
+    { "id": "exam", "num": "", "titre": "Informations sur les examens" }
+   ] },
+   { "id": "c2", "em": "📻", "titre": "Circuits électroniques analogiques d'aéronefs", "modules": [
+    { "id": "m1", "num": "1", "titre": "Circuits simples à diodes", "duree": "3 h" },
+    { "id": "m2", "num": "2", "titre": "Les redresseurs électroniques", "duree": "5 h" },
+    { "id": "m3", "num": "3", "titre": "Circuits à transistors", "duree": "8,5 h" },
+    { "id": "m4", "num": "4", "titre": "Circuits de puissance", "duree": "6 h" },
+    { "id": "m5", "num": "5", "titre": "Circuits à ampli-op", "duree": "5 h" },
+    { "id": "m6", "num": "6", "titre": "Les systèmes asservis", "duree": "4 h" },
+    { "id": "m7", "num": "7", "titre": "Circuits radio", "duree": "6 h" },
+    { "id": "labo", "num": "", "titre": "Laboratoires" },
+    { "id": "exam", "num": "", "titre": "Informations sur les examens" },
+    { "id": "doc", "num": "", "titre": "Documentation de référence" }
+   ] }
   ] }
  ]
 }

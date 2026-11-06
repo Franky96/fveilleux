@@ -65,7 +65,7 @@
     return { et, co, mo };
   };
   const nbLecons = mo => (mo.lecons || []).length;
-  const pastille = mo => { const t = String(mo.num || '').replace(/\s*à\s*/, '–'); return `<span class="num${t.length > 3 ? ' long' : ''}" aria-hidden="true">${esc(t || (mo.id === 'exam' ? '📝' : '📎'))}</span>`; };
+  const pastille = mo => { const t = String(mo.num || '').replace(/\s*à\s*/, '–'); return `<span class="num${t.length > 3 ? ' long' : ''}" aria-hidden="true">${esc(t || ({ exam: '📝', labo: '🧪' }[mo.id] || '📎'))}</span>`; };
   const duree = mo => mo.duree ? esc(mo.duree) + ' · ' : '';
 
   function afficher() {
@@ -159,8 +159,21 @@
       const r = await fetch(API(x.f), { credentials: 'same-origin' });
       if (!r.ok) throw new Error(await r.text());
       art.innerHTML = rendre(await r.text(), x.f);
+      art.addEventListener('click', lecteurYouTube);
       retablir();
     } catch (err) { art.innerHTML = `<p class="vide-mod">Leçon introuvable : ${esc(err.message || err)}</p>`; retablir(); }
+  }
+
+  /* ---------- vidéo YouTube : au clic sur la vignette, le lecteur remplace la vignette, dans la page ---------- */
+  // referrerpolicy : YouTube refuse le lecteur intégré (« Error 153 ») sans l'origine de la page ; la règle « same-origin »
+  // d'api/page.php (contrôle des pages) la retirerait, l'attribut du cadre l'emporte
+  function lecteurYouTube(ev) {
+    const b = ev.target.closest('a.yt[data-yt]');
+    if (!b || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;   // Ctrl/⌘-clic : nouvel onglet, comme un lien
+    ev.preventDefault();
+    const f = document.createElement('div'); f.className = 'yt yt-joue';
+    f.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.yt}?autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" title="${esc(b.title.replace(/^Lire la vidéo( : )?/, '') || 'Vidéo YouTube')}"></iframe>`;
+    b.replaceWith(f);
   }
 
   /* ---------- Markdown → HTML ---------- */
@@ -212,12 +225,17 @@
         a.target = '_blank'; a.rel = 'noopener'; a.classList.add('ouvrir');
       } else if (/\.(mp4|webm)(\?|$)/i.test(h) && seul) {
         const v = document.createElement('video'); v.controls = true; v.preload = 'metadata'; v.src = a.href; a.parentElement.replaceWith(v);
-      } else if (yt && seul) {   // vidéo YouTube : vignette, le lecteur ne se charge qu'au clic
-        const b = document.createElement('a'); b.className = 'yt'; b.href = h; b.target = '_blank'; b.rel = 'noopener';
-        b.style.backgroundImage = `url("https://i.ytimg.com/vi/${yt[1]}/hqdefault.jpg")`;
-        b.innerHTML = `<span class="jouer" aria-hidden="true">▶</span><span class="lib">${esc(/^https?:/.test(a.textContent.trim()) ? 'Vidéo' : a.textContent.trim())}</span>`;
-        b.addEventListener('click', ev => { ev.preventDefault(); b.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${yt[1]}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Vidéo"></iframe>`; });
-        a.parentElement.replaceWith(b);
+      } else if (yt && seul) {
+        // vidéo YouTube intégrée à sa place : la vignette, puis le lecteur dans la page au clic (voir lecteurYouTube) ;
+        // titre pris dans la ligne « **🎬 Titre** » juste au-dessus, quand il y en a une
+        const p = a.parentElement, avant = p.previousElementSibling;
+        let titre = /^https?:/.test(a.textContent.trim()) ? '' : a.textContent.trim(), legende = !!titre;   // texte du lien : légende dans la vignette
+        if (!titre && avant && avant.tagName === 'P' && /^\s*🎬/.test(avant.textContent)) titre = avant.textContent.replace(/^\s*🎬\s*/, '').trim();   // déjà affiché au-dessus
+        const bloc = document.createElement('div'); bloc.className = 'yt-bloc';
+        bloc.innerHTML = `<a class="yt" href="${esc(h)}" data-yt="${yt[1]}" target="_blank" rel="noopener" title="Lire la vidéo${titre ? ' : ' + esc(titre) : ''}"
+            style="background-image:url('https://i.ytimg.com/vi/${yt[1]}/hqdefault.jpg')"><span class="jouer" aria-hidden="true">▶</span>${legende ? `<span class="lib">${esc(titre)}</span>` : ''}</a>
+          <a class="ouvrir" href="${esc(h)}" target="_blank" rel="noopener">Ouvrir sur YouTube ↗</a>`;
+        p.replaceWith(bloc);
       } else {
         if (/\.pdf(\?|#|$)/i.test(h)) a.classList.add('pdf');
         else if (/\.(docx?|pptx?|xlsx?|ms1[34]|zip)(\?|#|$)/i.test(h)) { a.classList.add('fichier'); a.setAttribute('download', ''); }
