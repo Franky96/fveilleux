@@ -49,13 +49,20 @@ if (($s['role'] ?? '') !== 'admin' && !array_intersect(PERMISSIONS, $perms)) ref
 $f = (string)($_GET['f'] ?? '');
 // chemin relatif simple : pas de « .. », pas de chemin absolu, pas de fichier caché ; lettres accentuées permises
 if ($f === '' || str_contains($f, '..') || str_starts_with($f, '/') || str_contains($f, '\\') || preg_match('#(^|/)\.#', $f)
-    || !preg_match('#^[\p{L}\p{N} _.,()\'&+-]+(/[\p{L}\p{N} _.,()\'&+-]+)*$#u', $f)) refuse(400, "Nom de fichier invalide.");
+    || !preg_match('#^[\p{L}\p{M}\p{N} _.,()\'&+-]+(/[\p{L}\p{M}\p{N} _.,()\'&+-]+)*$#u', $f)) refuse(400, "Nom de fichier invalide.");
 $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
 if (!isset(TYPES[$ext])) refuse(400, "Type de fichier non servi.");
 
 $root = coursRoot();
 if (!$root) refuse(404, "Le contenu des cours n'est pas encore sur le serveur.");
 $path = realpath("$root/$f");
+// accents écrits autrement (fichiers venus d'un Mac : « é » en deux caractères) : on essaie l'autre forme
+if ((!$path || !is_file($path)) && class_exists('Normalizer')) {
+  foreach ([Normalizer::FORM_C, Normalizer::FORM_D] as $forme) {
+    $g = Normalizer::normalize($f, $forme);
+    if ($g && $g !== $f && ($q = realpath("$root/$g")) && is_file($q)) { $path = $q; break; }
+  }
+}
 if (!$path || !is_file($path) || !str_starts_with($path, $root . '/')) refuse(404, "Fichier introuvable.");
 
 session_write_close();   // ne pas bloquer les autres requêtes pendant l'envoi (vidéos)
