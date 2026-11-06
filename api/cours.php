@@ -8,6 +8,7 @@
  *   GET cours.php?f=index.json                          → la structure complète (étapes, cours, modules, leçons)
  *   GET cours.php?f=etape1/cours1/m1/01-lecon.md        → une leçon
  *   GET cours.php?f=etape1/cours1/m1/fichiers/fig1.png  → une image, un PDF, une vidéo (lecture partielle « Range » pour les vidéos)
+ *   Word, PowerPoint, Excel, Multisim (.ms13/.ms14) et .zip : envoyés en téléchargement (Content-Disposition: attachment)
  */
 define('_FVEILLEUX', 1);
 require_once __DIR__ . '/session.php';
@@ -17,7 +18,13 @@ const TYPES = [
   'json' => 'application/json; charset=utf-8', 'md' => 'text/markdown; charset=utf-8', 'txt' => 'text/plain; charset=utf-8',
   'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp', 'svg' => 'image/svg+xml',
   'pdf' => 'application/pdf', 'mp4' => 'video/mp4', 'webm' => 'video/webm', 'mp3' => 'audio/mpeg',
+  // documents des cours, servis en téléchargement (Word, PowerPoint, Excel, Multisim, archives)
+  'doc' => 'application/msword', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'ppt' => 'application/vnd.ms-powerpoint', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'xls' => 'application/vnd.ms-excel', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'ms13' => 'application/octet-stream', 'ms14' => 'application/octet-stream', 'zip' => 'application/zip',
 ];
+const TELECHARGES = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'ms13', 'ms14', 'zip'];
 
 function refuse(int $code, string $msg): never {
   http_response_code($code);
@@ -74,6 +81,7 @@ header('X-Robots-Tag: noindex, nofollow');
 header('Cache-Control: private, max-age=' . ($ext === 'json' || $ext === 'md' ? 300 : 86400));
 if ($ext === 'svg') header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox");
 if ($ext === 'pdf') header("Content-Disposition: inline; filename*=UTF-8''" . rawurlencode(basename($path)));
+if (in_array($ext, TELECHARGES, true)) header("Content-Disposition: attachment; filename*=UTF-8''" . rawurlencode(basename($path)));
 header('Accept-Ranges: bytes');
 
 // lecture partielle (Range) : le lecteur vidéo avance sans tout télécharger

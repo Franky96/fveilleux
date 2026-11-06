@@ -1,6 +1,7 @@
 /* Documentation AEC Avionique : Étape → cours → modules → leçons (archive des cours de Frank, ÉNA / Cégep Édouard-Montpetit).
    Structure : api/cours.php?f=index.json (le contenu est sur le serveur, hors du dépôt) ; sinon le squelette aec-avionique.json (titres seulement).
-   Adresses : #e1/c1/m3 (un module), #e1/c1/m3/<leçon> (une leçon). Leçons en Markdown, rendues ici (marked + DOMPurify + KaTeX). */
+   Adresses : #e2 (une étape), #e2/c1 (un cours de l'étape), #e1/c1/m3 (un module), #e1/c1/m3/<leçon> (une leçon).
+   Accueil en onglets : une rangée pour les étapes (6 en tout, celles qui manquent encore sont grisées), une rangée pour les cours de l'étape. Leçons en Markdown, rendues ici (marked + DOMPurify + KaTeX). */
 (function () {
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -8,10 +9,17 @@
   const vue = $('#vue');
   let S = null, avecContenu = false;
 
-  // leçons ouvertes (✓), par personne, dans ce navigateur
-  const CLE_VU = 'aec.vu.' + (sessionStorage.getItem('userId') || '');
-  const vus = new Set((() => { try { return JSON.parse(localStorage.getItem(CLE_VU) || '[]'); } catch (e) { return []; } })());
-  const marquerVu = id => { vus.add(id); try { localStorage.setItem(CLE_VU, JSON.stringify([...vus])); } catch (e) {} };
+  const NB_ETAPES = 6;   // l'AEC compte 6 étapes ; elles s'ajoutent au fil de l'archivage
+  const CLE_ONGLET = 'aec.onglet';   // dernier onglet ouvert (étape/cours), dans ce navigateur
+  // documentation de référence, pas un suivi : plus de coches « leçon lue » (demande de Frank) ; on efface l'ancienne liste
+  try { Object.keys(localStorage).filter(k => k.startsWith('aec.vu.')).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  // documents : type affiché, icône, et ouverture (PDF dans un onglet, les autres téléchargés)
+  const TYPES = { pdf: ['PDF', '📄'], doc: ['Word', '📝'], docx: ['Word', '📝'], ppt: ['PowerPoint', '📊'], pptx: ['PowerPoint', '📊'],
+    xls: ['Excel', '📈'], xlsx: ['Excel', '📈'], ms13: ['Multisim', '🔌'], ms14: ['Multisim', '🔌'], zip: ['Archive ZIP', '🗜️'] };
+  const ext = f => (String(f).split('.').pop() || '').toLowerCase();
+  const typeDoc = f => TYPES[ext(f)] || [ext(f).toUpperCase(), '📎'];
+  const lienDoc = d => ext(d.f) === 'pdf' ? `href="${API(d.f)}" target="_blank" rel="noopener"` : `href="${API(d.f)}" download`;
+  const couleur = i => `--c:var(${i % 2 ? '--c-pol' : '--c-info'})`;
 
   async function charger() {
     try {
@@ -35,36 +43,42 @@
 
   function afficher() {
     const [e, c, m, l] = decodeURIComponent(location.hash.slice(1)).split('/');
-    scrollTo(0, 0);
-    if (e && c && m && l) return lecon(e, c, m, l);
-    if (e && c && m) return module(e, c, m);
-    accueil();
+    if (e && c && m && l) { scrollTo(0, 0); return lecon(e, c, m, l); }
+    if (e && c && m) { scrollTo(0, 0); return module(e, c, m); }
+    accueil(e, c);
   }
 
-  /* ---------- accueil : étapes, cours, modules ---------- */
-  function accueil() {
-    document.title = 'Outils de Frank — Documentation AEC Avionique';
+  /* ---------- accueil : onglets des étapes, onglets des cours de l'étape, puis les modules du cours ---------- */
+  function accueil(e, c) {
+    if (!e) { try { [e, c] = (localStorage.getItem(CLE_ONGLET) || '').split('/'); } catch (x) {} }
+    const et = S.etapes.find(x => x.id === e) || S.etapes[0];
+    const ic = Math.max(0, et.cours.findIndex(x => x.id === c)), co = et.cours[ic];
+    try { localStorage.setItem(CLE_ONGLET, `${et.id}/${co.id}`); } catch (x) {}
+    document.title = `Outils de Frank — Documentation AEC Avionique · ${et.titre}`;
+    const etapes = Array.from({ length: Math.max(NB_ETAPES, S.etapes.length) }, (_, k) => S.etapes[k] || null);
+    const n = co.modules.reduce((t, mo) => t + nbLecons(mo), 0);
     vue.innerHTML = `
       <div class="tete"><span class="em" aria-hidden="true">📚</span><div><h1>Documentation AEC Avionique</h1>
         <p>Mes cours de l'AEC en avionique — École nationale d'aérotechnique, Cégep Édouard-Montpetit</p></div></div>
-      ${S.etapes.map(et => `
-        <section class="etape">
-          <h2>${esc(et.titre)} <small>${et.cours.length} cours</small></h2>
-          ${et.cours.map((co, i) => `
-            <section class="cours-bloc" style="--c:var(${i % 2 ? '--c-pol' : '--c-info'})">
-              <header><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>
-                <div><h3>Cours ${i + 1} — ${esc(co.titre)}</h3>
-                <small>${co.modules.length} modules${avecContenu ? ' · ' + co.modules.reduce((n, mo) => n + nbLecons(mo), 0) + ' leçons' : ''}</small></div></header>
-              <div class="cartes">${co.modules.map(mo => {
-                const n = nbLecons(mo), lus = (mo.lecons || []).filter(x => vus.has(`${et.id}/${co.id}/${mo.id}/${x.id}`)).length;
-                return `<a class="carte${n && lus === n ? ' vu' : ''}" href="#${et.id}/${co.id}/${mo.id}">
-                  ${pastille(mo)}
-                  <span><b>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</b><small>${mo.num ? esc(mo.titre) : 'Documents du cours'}</small>
-                    <span class="compte">${duree(mo)}${n ? `${n} leçon${n > 1 ? 's' : ''}${lus ? ` · ${lus} lue${lus > 1 ? 's' : ''}` : ''}` : (avecContenu ? 'aucune leçon' : 'contenu à venir')}</span></span>
-                  <span class="fl" aria-hidden="true">›</span></a>`; }).join('')}</div>
-            </section>`).join('')}
-        </section>`).join('')}
-      <section class="etape avenir"><h2>Étapes suivantes</h2><p>Elles s'ajouteront ici au fil de l'archivage.</p></section>`;
+      <nav class="onglets etapes" aria-label="Étapes">${etapes.map((x, k) => x
+        ? `<a class="onglet${x === et ? ' actif' : ''}" href="#${x.id}"${x === et ? ' aria-current="page"' : ''}>${esc(x.titre)}<small>${x.cours.length} cours</small></a>`
+        : `<span class="onglet avenir" title="Pas encore archivée">Étape ${k + 1}<small>à venir</small></span>`).join('')}</nav>
+      <nav class="onglets cours" aria-label="Cours de l'${esc(et.titre.toLowerCase())}">${et.cours.map((x, i) =>
+        `<a class="onglet-cours${x === co ? ' actif' : ''}" href="#${et.id}/${x.id}" style="${couleur(i)}"${x === co ? ' aria-current="page"' : ''}>
+          <span class="em" aria-hidden="true">${esc(x.em || '📘')}</span><span><small>Cours ${i + 1}</small><b>${esc(x.titre)}</b></span></a>`).join('')}</nav>
+      <section class="cours-bloc" style="${couleur(ic)}">
+        <header><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>
+          <div><h3>${esc(et.titre)} · Cours ${ic + 1} — ${esc(co.titre)}</h3>
+          <small>${co.modules.length} modules${avecContenu ? ` · ${n} leçon${n > 1 ? 's' : ''}` : ''}</small></div></header>
+        <div class="cartes">${co.modules.map(mo => { const k = nbLecons(mo), d = (mo.docs || []).length;
+          return `<a class="carte" href="#${et.id}/${co.id}/${mo.id}">
+            ${pastille(mo)}
+            <span><b>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</b><small>${mo.num ? esc(mo.titre) : 'Documents du cours'}</small>
+              <span class="compte">${duree(mo)}${k ? `${k} leçon${k > 1 ? 's' : ''}` : ''}${k && d ? ' · ' : ''}${d ? `${d} document${d > 1 ? 's' : ''}` : ''}${!k && !d ? (avecContenu ? 'vide' : 'contenu à venir') : ''}</span></span>
+            <span class="fl" aria-hidden="true">›</span></a>`; }).join('')}</div>
+      </section>`;
+    // sur téléphone, les onglets défilent : l'onglet ouvert reste en vue
+    vue.querySelectorAll('.onglet.actif, .onglet-cours.actif').forEach(a => a.scrollIntoView({ block: 'nearest', inline: 'center' }));
   }
 
   /* ---------- un module : la liste de ses leçons et documents ---------- */
@@ -74,17 +88,17 @@
     const ic = et.cours.indexOf(co);
     document.title = `Outils de Frank — ${mo.num ? 'Module ' + mo.num : mo.titre} · ${co.titre}`;
     const lec = mo.lecons || [], docs = mo.docs || [];
-    vue.innerHTML = fil([['Documentation AEC', '#'], [et.titre, '#'], [`Cours ${ic + 1}`, '#'], [mo.num ? 'Module ' + mo.num : mo.titre]]) + `
+    vue.innerHTML = fil([['Documentation AEC', `#${e}`], [et.titre, `#${e}`], [`Cours ${ic + 1}`, `#${e}/${c}`], [mo.num ? 'Module ' + mo.num : mo.titre]]) + `
       <div class="tete" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>
         <div><h1>${mo.num ? 'Module ' + esc(mo.num) + ' — ' : ''}${esc(mo.titre)}</h1><p>Cours ${ic + 1} — ${esc(co.titre)}${mo.duree ? ' · ' + esc(mo.duree) : ''}</p></div></div>
       ${lec.length ? `<section class="groupe" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})"><header><h2>Leçons</h2><span class="nb">${lec.length}</span></header>
-        <div class="cartes">${lec.map((x, k) => `<a class="carte${vus.has(`${e}/${c}/${m}/${x.id}`) ? ' vu' : ''}" href="#${e}/${c}/${m}/${encodeURIComponent(x.id)}">
+        <div class="cartes">${lec.map((x, k) => `<a class="carte" href="#${e}/${c}/${m}/${encodeURIComponent(x.id)}">
           <span class="num" aria-hidden="true">${k + 1}</span><span><b>${esc(x.titre)}</b>${x.desc ? `<small>${esc(x.desc)}</small>` : ''}</span>
           <span class="fl" aria-hidden="true">›</span></a>`).join('')}</div></section>`
         : `<p class="vide-mod">${avecContenu ? 'Aucune leçon dans ce module.' : 'Les leçons de ce module arrivent bientôt : le contenu des cours est en train d’être transféré sur le serveur.'}</p>`}
       ${docs.length ? `<section class="groupe"><header><h2>Documents</h2><span class="nb">${docs.length}</span></header>
-        <div class="cartes">${docs.map(d => `<a class="carte" href="${API(d.f)}" target="_blank" rel="noopener"><span class="num" aria-hidden="true">📄</span>
-          <span><b>${esc(d.titre)}</b><small>PDF</small></span><span class="fl" aria-hidden="true">↗</span></a>`).join('')}</div></section>` : ''}`;
+        <div class="cartes">${docs.map(d => { const [t, ic2] = typeDoc(d.f); return `<a class="carte" ${lienDoc(d)}><span class="num" aria-hidden="true">${ic2}</span>
+          <span><b>${esc(d.titre)}</b><small>${esc(t)}${ext(d.f) === 'pdf' ? '' : ' · téléchargement'}</small></span><span class="fl" aria-hidden="true">${ext(d.f) === 'pdf' ? '↗' : '↓'}</span></a>`; }).join('')}</div></section>` : ''}`;
   }
 
   /* ---------- une leçon ---------- */
@@ -95,9 +109,9 @@
     const x = lec[k], ic = et.cours.indexOf(co), base = `#${e}/${c}/${m}/`;
     document.title = `Outils de Frank — ${x.titre}`;
     const sommaire = `<h4>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</h4>` + lec.map((y, j) =>
-      `<a href="${base}${encodeURIComponent(y.id)}" class="${j === k ? 'ici' : ''}${vus.has(`${e}/${c}/${m}/${y.id}`) ? ' vu' : ''}"><span class="n">${j + 1}</span><span>${esc(y.titre)}</span></a>`).join('')
-      + ((mo.docs || []).length ? `<div class="docs">${mo.docs.map(d => `<a href="${API(d.f)}" target="_blank" rel="noopener"><span class="n">📄</span><span>${esc(d.titre)}</span></a>`).join('')}</div>` : '');
-    vue.innerHTML = fil([['Documentation AEC', '#'], [`Cours ${ic + 1}`, '#'], [mo.num ? 'Module ' + mo.num : mo.titre, `#${e}/${c}/${m}`], [x.titre]]) + `
+      `<a href="${base}${encodeURIComponent(y.id)}" class="${j === k ? 'ici' : ''}"><span class="n">${j + 1}</span><span>${esc(y.titre)}</span></a>`).join('')
+      + ((mo.docs || []).length ? `<div class="docs">${mo.docs.map(d => `<a ${lienDoc(d)}><span class="n">${typeDoc(d.f)[1]}</span><span>${esc(d.titre)}</span></a>`).join('')}</div>` : '');
+    vue.innerHTML = fil([[et.titre, `#${e}`], [`Cours ${ic + 1}`, `#${e}/${c}`], [mo.num ? 'Module ' + mo.num : mo.titre, `#${e}/${c}/${m}`], [x.titre]]) + `
       <div class="lecon-zone" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})">
         <aside class="sommaire">${sommaire}</aside>
         <div><details class="sommaire-tel"><summary>Leçons du module (${k + 1} / ${lec.length})</summary><div class="sommaire">${sommaire}</div></details>
@@ -110,7 +124,6 @@
       const r = await fetch(API(x.f), { credentials: 'same-origin' });
       if (!r.ok) throw new Error(await r.text());
       art.innerHTML = rendre(await r.text(), x.f);
-      marquerVu(`${e}/${c}/${m}/${x.id}`);
     } catch (err) { art.innerHTML = `<p class="vide-mod">Leçon introuvable : ${esc(err.message || err)}</p>`; }
   }
 
@@ -171,6 +184,7 @@
         a.parentElement.replaceWith(b);
       } else {
         if (/\.pdf(\?|#|$)/i.test(h)) a.classList.add('pdf');
+        else if (/\.(docx?|pptx?|xlsx?|ms1[34]|zip)(\?|#|$)/i.test(h)) { a.classList.add('fichier'); a.setAttribute('download', ''); }
         if (!h.startsWith('#')) { a.target = '_blank'; a.rel = 'noopener'; }
       }
     });

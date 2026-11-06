@@ -23,6 +23,30 @@
     { "id": "m7", "num": "7", "titre": "Avioniques modernes et commerciales", "duree": "présentiel" },
     { "id": "doc", "num": "", "titre": "Documentation" }
    ] }
+  ] },
+  { "id": "e2", "titre": "Étape 2", "cours": [
+   { "id": "c1", "em": "⚡", "titre": "Diagnostics de systèmes d'alimentation électrique 1", "modules": [
+    { "id": "m1", "num": "1", "titre": "" },
+    { "id": "m2", "num": "2", "titre": "" },
+    { "id": "m3", "num": "3", "titre": "" },
+    { "id": "m4", "num": "4", "titre": "" },
+    { "id": "m5", "num": "5", "titre": "" },
+    { "id": "m5-d", "num": "5", "titre": "Mises en situation de dépannages" },
+    { "id": "m6", "num": "6", "titre": "" },
+    { "id": "m7", "num": "7", "titre": "" },
+    { "id": "doc", "num": "", "titre": "Documentation" }
+   ] },
+   { "id": "c2", "em": "🔢", "titre": "Circuits numériques d'aéronefs", "modules": [
+    { "id": "m1", "num": "1", "titre": "" },
+    { "id": "m2", "num": "2", "titre": "" },
+    { "id": "m3", "num": "3", "titre": "" },
+    { "id": "m4", "num": "4", "titre": "" },
+    { "id": "m5", "num": "5", "titre": "" },
+    { "id": "m6", "num": "6", "titre": "" },
+    { "id": "m7", "num": "7", "titre": "" },
+    { "id": "m9", "num": "9", "titre": "Traitement numérique" },
+    { "id": "doc", "num": "", "titre": "Documentation" }
+   ] }
   ] }
  ]
 }
