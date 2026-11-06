@@ -87,6 +87,48 @@
     { "id": "exam", "num": "", "titre": "Informations sur les examens" },
     { "id": "doc", "num": "", "titre": "Documentation de référence" }
    ] }
+  ] },
+  { "id": "e5", "titre": "Étape 5", "cours": [
+   { "id": "c1", "em": "🖥️", "titre": "Systèmes avioniques modernes d'aéronefs", "modules": [
+    { "id": "gen", "num": "", "titre": "Informations générales" },
+    { "id": "doc", "num": "", "titre": "Documentation" },
+    { "id": "m1", "num": "1", "titre": "" },
+    { "id": "m2", "num": "2", "titre": "" },
+    { "id": "m3", "num": "3", "titre": "" },
+    { "id": "m4", "num": "4", "titre": "" },
+    { "id": "m5", "num": "5", "titre": "" },
+    { "id": "m6", "num": "6", "titre": "" },
+    { "id": "m7", "num": "7", "titre": "" },
+    { "id": "m8", "num": "8", "titre": "" }
+   ] }
+  ] },
+  { "id": "e6", "titre": "Étape 6", "cours": [
+   { "id": "c1", "em": "🛩️", "titre": "Systèmes de contrôles de vols automatisés d'aéronefs", "modules": [
+    { "id": "gen", "num": "", "titre": "Informations générales" },
+    { "id": "doc", "num": "", "titre": "Documentation" },
+    { "id": "m1", "num": "1", "titre": "" },
+    { "id": "m2", "num": "2", "titre": "" },
+    { "id": "m3", "num": "3", "titre": "" },
+    { "id": "m4", "num": "4", "titre": "" },
+    { "id": "m5", "num": "5", "titre": "" },
+    { "id": "m6", "num": "6", "titre": "" },
+    { "id": "m7", "num": "7", "titre": "" },
+    { "id": "m8", "num": "8", "titre": "" },
+    { "id": "m9", "num": "9", "titre": "" },
+    { "id": "m10", "num": "10", "titre": "" },
+    { "id": "m11", "num": "11", "titre": "" }
+   ] },
+   { "id": "c2", "em": "📡", "titre": "Systèmes avioniques à impulsions d'aéronefs", "modules": [
+    { "id": "gen", "num": "", "titre": "Informations générales" },
+    { "id": "doc", "num": "", "titre": "Documentation" },
+    { "id": "m1", "num": "1", "titre": "" },
+    { "id": "m2", "num": "2", "titre": "" },
+    { "id": "m3", "num": "3", "titre": "" },
+    { "id": "m4", "num": "4", "titre": "" },
+    { "id": "m5", "num": "5", "titre": "" },
+    { "id": "m6", "num": "6", "titre": "" },
+    { "id": "m7", "num": "7", "titre": "" }
+   ] }
   ] }
  ]
 }

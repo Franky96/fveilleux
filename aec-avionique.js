@@ -65,7 +65,7 @@
     return { et, co, mo };
   };
   const nbLecons = mo => (mo.lecons || []).length;
-  const pastille = mo => { const t = String(mo.num || '').replace(/\s*à\s*/, '–'); return `<span class="num${t.length > 3 ? ' long' : ''}" aria-hidden="true">${esc(t || ({ exam: '📝', labo: '🧪' }[mo.id] || '📎'))}</span>`; };
+  const pastille = mo => { const t = String(mo.num || '').replace(/\s*à\s*/, '–'); return `<span class="num${t.length > 3 ? ' long' : ''}" aria-hidden="true">${esc(t || ({ exam: '📝', labo: '🧪', gen: 'ℹ️' }[mo.id] || '📎'))}</span>`; };
   const duree = mo => mo.duree ? esc(mo.duree) + ' · ' : '';
 
   function afficher() {
@@ -242,6 +242,8 @@
         if (!h.startsWith('#')) { a.target = '_blank'; a.rel = 'noopener'; }
       }
     });
+    // question dans une vidéo (« #### ⏱ 3:19 ») : petite pastille de minutage
+    t.querySelectorAll('h4, h5').forEach(h => { if (/^\s*⏱/.test(h.textContent)) h.classList.add('minute'); });
     t.querySelectorAll('table').forEach(tb => { const d = document.createElement('div'); d.className = 'tableau'; tb.replaceWith(d); d.appendChild(tb); });
     return t.innerHTML + (source ? `<p class="source">Source : <a href="${esc(source)}" target="_blank" rel="noopener">${esc(source)}</a></p>` : '');
   }
