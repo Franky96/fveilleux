@@ -26,34 +26,73 @@
       const r = await fetch(API('index.json'), { credentials: 'same-origin', cache: 'no-cache' });
       if (r.ok) { S = await r.json(); avecContenu = true; }
     } catch (e) { /* pas encore de contenu sur le serveur */ }
-    if (!S) S = await (await fetch('aec-avionique.json', { cache: 'no-cache' })).json();
-    addEventListener('hashchange', afficher);
+    let sq = null;
+    try { sq = await (await fetch('aec-avionique.json', { cache: 'no-cache' })).json(); } catch (e) {}
+    if (!S) S = sq; else if (sq) fusion(S, sq);
+    history.scrollRestoration = 'manual';   // la page remet elle-même chaque vue à sa place (voir positions)
+    addEventListener('hashchange', ev => { sauverPosition(ev.oldURL); afficher(); });
     afficher();
   }
+
+  // ce que le squelette sait et que le serveur n'a pas encore : une étape annoncée, un cours non archivé
+  function fusion(S, sq) {
+    for (const et of sq.etapes) {
+      const se = S.etapes.find(x => x.id === et.id);
+      if (!se) { S.etapes.push({ ...et, squelette: true }); continue; }   // étape pas encore transférée : « contenu à venir »
+      for (const co of et.cours) if (co.non_archive && !se.cours.some(x => x.id === co.id || x.titre === co.titre)) se.cours.push(co);
+    }
+    const n = id => parseInt(String(id).replace(/\D/g, ''), 10) || 0;
+    S.etapes.sort((a, b) => n(a.id) - n(b.id));
+  }
+
+  /* ---------- « précédent » du navigateur : chaque vue retrouve sa position (sessionStorage, par adresse) ---------- */
+  const CLE_POS = 'aec.positions';
+  const positions = (() => { try { return JSON.parse(sessionStorage.getItem(CLE_POS) || '{}'); } catch (e) { return {}; } })();
+  function sauverPosition(url) {
+    const h = (url && url.includes('#') ? url.slice(url.indexOf('#')) : '') || '#';
+    positions[h] = Math.round(scrollY);
+    try { sessionStorage.setItem(CLE_POS, JSON.stringify(positions)); } catch (e) {}
+  }
+  addEventListener('pagehide', () => sauverPosition(location.href));
+  const retablir = () => scrollTo(0, positions[location.hash || '#'] || 0);
+
+  /* ---------- retours : le bouton ← de la barre du haut et les boutons en haut de la vue ---------- */
+  function majRetourBarre(href, nom, k = 0) {
+    const r = document.querySelector('.tb2-retour');
+    if (!r) { if (k < 40) setTimeout(() => majRetourBarre(href, nom, k + 1), 100); return; }   // topbar.js (defer) pas encore là
+    r.setAttribute('href', href); r.title = 'Retour : ' + nom; r.setAttribute('aria-label', 'Retour : ' + nom);
+    const t = r.querySelector('.tb2-rnom'); if (t) t.textContent = ' ' + nom;
+  }
+  const retours = liens => `<nav class="retours" aria-label="Retour">${liens.map(([t, h, sous], k) =>
+    `<a class="retour-aec${k ? ' second' : ''}" href="${h}"><span class="fleche" aria-hidden="true">${k ? '↑' : '←'}</span><span>${sous ? `<small>${esc(sous)}</small>` : ''}<b>${esc(t)}</b></span></a>`).join('')}</nav>`;
 
   const trouver = (e, c, m) => {
     const et = S.etapes.find(x => x.id === e), co = et && et.cours.find(x => x.id === c), mo = co && co.modules.find(x => x.id === m);
     return { et, co, mo };
   };
   const nbLecons = mo => (mo.lecons || []).length;
-  const pastille = mo => { const t = String(mo.num || '').replace(/\s*à\s*/, '–'); return `<span class="num${t.length > 3 ? ' long' : ''}" aria-hidden="true">${esc(t || '📎')}</span>`; };
+  const pastille = mo => { const t = String(mo.num || '').replace(/\s*à\s*/, '–'); return `<span class="num${t.length > 3 ? ' long' : ''}" aria-hidden="true">${esc(t || (mo.id === 'exam' ? '📝' : '📎'))}</span>`; };
   const duree = mo => mo.duree ? esc(mo.duree) + ' · ' : '';
-  const fil = parts => `<nav class="fil" aria-label="Fil d'Ariane">${parts.map((p, k) =>
-    (k ? '<span class="sep">›</span>' : '') + (p[1] ? `<a href="${p[1]}">${esc(p[0])}</a>` : `<b>${esc(p[0])}</b>`)).join('')}</nav>`;
 
   function afficher() {
     const [e, c, m, l] = decodeURIComponent(location.hash.slice(1)).split('/');
-    if (e && c && m && l) { scrollTo(0, 0); return lecon(e, c, m, l); }
-    if (e && c && m) { scrollTo(0, 0); return module(e, c, m); }
-    accueil(e, c);
+    if (e && c && m && l) return lecon(e, c, m, l);
+    if (e && c && m) { module(e, c, m); return retablir(); }
+    accueil(e, c); retablir();
   }
+  const archives = et => et.cours.filter(x => !x.non_archive);
 
   /* ---------- accueil : onglets des étapes, onglets des cours de l'étape, puis les modules du cours ---------- */
   function accueil(e, c) {
     if (!e) { try { [e, c] = (localStorage.getItem(CLE_ONGLET) || '').split('/'); } catch (x) {} }
     const et = S.etapes.find(x => x.id === e) || S.etapes[0];
-    const ic = Math.max(0, et.cours.findIndex(x => x.id === c)), co = et.cours[ic];
+    let ic = et.cours.findIndex(x => x.id === c && !x.non_archive);
+    if (ic < 0) ic = et.cours.findIndex(x => !x.non_archive);
+    const co = et.cours[ic];
     try { localStorage.setItem(CLE_ONGLET, `${et.id}/${co.id}`); } catch (x) {}
+    // l'adresse dit toujours l'étape et le cours affichés : « précédent » depuis un module revient ici, au bon onglet
+    if (location.hash !== `#${et.id}/${co.id}`) history.replaceState(null, '', `#${et.id}/${co.id}`);
+    majRetourBarre('dashboard.html', 'Accueil');
     document.title = `Outils de Frank — Documentation AEC Avionique · ${et.titre}`;
     const etapes = Array.from({ length: Math.max(NB_ETAPES, S.etapes.length) }, (_, k) => S.etapes[k] || null);
     const n = co.modules.reduce((t, mo) => t + nbLecons(mo), 0);
@@ -61,10 +100,12 @@
       <div class="tete"><span class="em" aria-hidden="true">📚</span><div><h1>Documentation AEC Avionique</h1>
         <p>Mes cours de l'AEC en avionique — École nationale d'aérotechnique, Cégep Édouard-Montpetit</p></div></div>
       <nav class="onglets etapes" aria-label="Étapes">${etapes.map((x, k) => x
-        ? `<a class="onglet${x === et ? ' actif' : ''}" href="#${x.id}"${x === et ? ' aria-current="page"' : ''}>${esc(x.titre)}<small>${x.cours.length} cours</small></a>`
+        ? `<a class="onglet${x === et ? ' actif' : ''}" href="#${x.id}"${x === et ? ' aria-current="page"' : ''}>${esc(x.titre)}<small>${archives(x).length} cours</small></a>`
         : `<span class="onglet avenir" title="Pas encore archivée">Étape ${k + 1}<small>à venir</small></span>`).join('')}</nav>
-      <nav class="onglets cours" aria-label="Cours de l'${esc(et.titre.toLowerCase())}">${et.cours.map((x, i) =>
-        `<a class="onglet-cours${x === co ? ' actif' : ''}" href="#${et.id}/${x.id}" style="${couleur(i)}"${x === co ? ' aria-current="page"' : ''}>
+      <nav class="onglets cours" aria-label="Cours de l'${esc(et.titre.toLowerCase())}">${et.cours.map((x, i) => x.non_archive
+        ? `<span class="onglet-cours avenir" title="Ce cours n'était plus accessible sur Brio : il n'est pas dans l'archive">
+            <span class="em" aria-hidden="true">${esc(x.em || '📘')}</span><span><small>Cours ${i + 1} · non archivé</small><b>${esc(x.titre)}</b></span></span>`
+        : `<a class="onglet-cours${x === co ? ' actif' : ''}" href="#${et.id}/${x.id}" style="${couleur(i)}"${x === co ? ' aria-current="page"' : ''}>
           <span class="em" aria-hidden="true">${esc(x.em || '📘')}</span><span><small>Cours ${i + 1}</small><b>${esc(x.titre)}</b></span></a>`).join('')}</nav>
       <section class="cours-bloc" style="${couleur(ic)}">
         <header><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>
@@ -73,8 +114,8 @@
         <div class="cartes">${co.modules.map(mo => { const k = nbLecons(mo), d = (mo.docs || []).length;
           return `<a class="carte" href="#${et.id}/${co.id}/${mo.id}">
             ${pastille(mo)}
-            <span><b>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</b><small>${mo.num ? esc(mo.titre) : 'Documents du cours'}</small>
-              <span class="compte">${duree(mo)}${k ? `${k} leçon${k > 1 ? 's' : ''}` : ''}${k && d ? ' · ' : ''}${d ? `${d} document${d > 1 ? 's' : ''}` : ''}${!k && !d ? (avecContenu ? 'vide' : 'contenu à venir') : ''}</span></span>
+            <span><b>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</b><small>${mo.num ? esc(mo.titre) : (mo.id === 'doc' ? 'Documents du cours' : '')}</small>
+              <span class="compte">${duree(mo)}${k ? `${k} leçon${k > 1 ? 's' : ''}` : ''}${k && d ? ' · ' : ''}${d ? `${d} document${d > 1 ? 's' : ''}` : ''}${!k && !d ? (avecContenu && !et.squelette ? 'vide' : 'contenu à venir') : ''}</span></span>
             <span class="fl" aria-hidden="true">›</span></a>`; }).join('')}</div>
       </section>`;
     // sur téléphone, les onglets défilent : l'onglet ouvert reste en vue
@@ -88,7 +129,8 @@
     const ic = et.cours.indexOf(co);
     document.title = `Outils de Frank — ${mo.num ? 'Module ' + mo.num : mo.titre} · ${co.titre}`;
     const lec = mo.lecons || [], docs = mo.docs || [];
-    vue.innerHTML = fil([['Documentation AEC', `#${e}`], [et.titre, `#${e}`], [`Cours ${ic + 1}`, `#${e}/${c}`], [mo.num ? 'Module ' + mo.num : mo.titre]]) + `
+    majRetourBarre(`#${e}/${c}`, `Cours ${ic + 1}`);
+    vue.innerHTML = retours([[co.titre, `#${e}/${c}`, `${et.titre} · Cours ${ic + 1} · tous les modules`]]) + `
       <div class="tete" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>
         <div><h1>${mo.num ? 'Module ' + esc(mo.num) + ' — ' : ''}${esc(mo.titre)}</h1><p>Cours ${ic + 1} — ${esc(co.titre)}${mo.duree ? ' · ' + esc(mo.duree) : ''}</p></div></div>
       ${lec.length ? `<section class="groupe" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})"><header><h2>Leçons</h2><span class="nb">${lec.length}</span></header>
@@ -111,7 +153,9 @@
     const sommaire = `<h4>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</h4>` + lec.map((y, j) =>
       `<a href="${base}${encodeURIComponent(y.id)}" class="${j === k ? 'ici' : ''}"><span class="n">${j + 1}</span><span>${esc(y.titre)}</span></a>`).join('')
       + ((mo.docs || []).length ? `<div class="docs">${mo.docs.map(d => `<a ${lienDoc(d)}><span class="n">${typeDoc(d.f)[1]}</span><span>${esc(d.titre)}</span></a>`).join('')}</div>` : '');
-    vue.innerHTML = fil([[et.titre, `#${e}`], [`Cours ${ic + 1}`, `#${e}/${c}`], [mo.num ? 'Module ' + mo.num : mo.titre, `#${e}/${c}/${m}`], [x.titre]]) + `
+    majRetourBarre(`#${e}/${c}/${m}`, mo.num ? 'Module ' + mo.num : mo.titre);
+    vue.innerHTML = retours([[(mo.num ? 'Module ' + mo.num + ' — ' : '') + mo.titre, `#${e}/${c}/${m}`, 'Toutes les leçons du module'],
+      [`Cours ${ic + 1}`, `#${e}/${c}`, et.titre]]) + `
       <div class="lecon-zone" style="--c:var(${ic % 2 ? '--c-pol' : '--c-info'})">
         <aside class="sommaire">${sommaire}</aside>
         <div><details class="sommaire-tel"><summary>Leçons du module (${k + 1} / ${lec.length})</summary><div class="sommaire">${sommaire}</div></details>
@@ -119,12 +163,14 @@
           <nav class="nav-lecons">${k > 0 ? `<a href="${base}${encodeURIComponent(lec[k - 1].id)}"><small>← Précédente</small>${esc(lec[k - 1].titre)}</a>` : ''}
             ${k + 1 < lec.length ? `<a class="suiv" href="${base}${encodeURIComponent(lec[k + 1].id)}"><small>Suivante →</small>${esc(lec[k + 1].titre)}</a>` : ''}</nav></div>
       </div>`;
+    retablir();
     const art = $('#texte');
     try {
       const r = await fetch(API(x.f), { credentials: 'same-origin' });
       if (!r.ok) throw new Error(await r.text());
       art.innerHTML = rendre(await r.text(), x.f);
-    } catch (err) { art.innerHTML = `<p class="vide-mod">Leçon introuvable : ${esc(err.message || err)}</p>`; }
+      retablir();
+    } catch (err) { art.innerHTML = `<p class="vide-mod">Leçon introuvable : ${esc(err.message || err)}</p>`; retablir(); }
   }
 
   /* ---------- Markdown → HTML ---------- */

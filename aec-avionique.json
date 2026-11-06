@@ -47,6 +47,21 @@
     { "id": "m9", "num": "9", "titre": "Traitement numérique" },
     { "id": "doc", "num": "", "titre": "Documentation" }
    ] }
+  ] },
+  { "id": "e3", "titre": "Étape 3", "cours": [
+   { "id": "c1", "em": "🔋", "titre": "Diagnostics de systèmes d'alimentation électrique 2", "modules": [
+    { "id": "exam", "num": "", "titre": "Informations examens" },
+    { "id": "m1", "num": "1", "titre": "Les transformateurs", "duree": "2 h" },
+    { "id": "m2", "num": "2", "titre": "Les moteurs électriques", "duree": "3 h" },
+    { "id": "m3", "num": "3", "titre": "Génération secondaire AC", "duree": "4 h" },
+    { "id": "m4", "num": "4", "titre": "Circuits RLC en courant AC", "duree": "3 h" },
+    { "id": "m5", "num": "5", "titre": "Bimoteur à générateurs DC – Structure", "duree": "1 h" },
+    { "id": "m6", "num": "6", "titre": "Bimoteur à générateurs DC – Système batterie et GPU", "duree": "4 h" },
+    { "id": "m7", "num": "7", "titre": "Bimoteur à générateurs DC – Système générateurs", "duree": "7 h" },
+    { "id": "m8", "num": "8", "titre": "Étude du BO-105", "duree": "présentiel" },
+    { "id": "doc", "num": "", "titre": "Documentation" }
+   ] },
+   { "id": "c2", "em": "🔌", "titre": "Composants électroniques analogiques d'aéronefs", "non_archive": true, "modules": [] }
   ] }
  ]
 }

@@ -47,6 +47,21 @@ a.onglet:hover{color:var(--text);border-color:color-mix(in srgb,var(--c-info) 55
 .onglet-cours>span:last-child{min-width:0}
 .onglet-cours:hover{color:var(--text);border-color:color-mix(in srgb,var(--c) 55%,var(--line))}
 .onglet-cours.actif{color:var(--text);background:color-mix(in srgb,var(--c) 18%,var(--panel2));border-color:color-mix(in srgb,var(--c) 65%,var(--line))}
+/* ---- boutons de retour, bien visibles, collés sous la barre du haut (demande de Frank) ---- */
+.retours{position:sticky;top:var(--tb2-h,60px);z-index:5;display:flex;flex-wrap:wrap;gap:8px;margin:0 calc(50% - 50vw);
+  padding:10px max(18px,calc(50vw - 590px)) 10px;background:color-mix(in srgb,var(--bg) 86%,transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.retour-aec{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%;padding:7px 14px 7px 10px;border-radius:12px;
+  border:1px solid color-mix(in srgb,var(--c) 55%,var(--line2));background:color-mix(in srgb,var(--c) 20%,var(--panel2));color:var(--text)}
+.retour-aec:hover{border-color:color-mix(in srgb,var(--c) 80%,var(--line2))}
+.retour-aec .fleche{flex:none;width:30px;height:30px;display:grid;place-items:center;border-radius:50%;font-size:17px;font-weight:700;
+  background:color-mix(in srgb,var(--c) 40%,var(--panel2))}
+.retour-aec>span:last-child{min-width:0}
+.retour-aec small{display:block;font:500 11px var(--f-mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.retour-aec b{display:block;font-weight:600;font-size:14.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.retour-aec.second{background:var(--panel);border-color:var(--line2)}
+.retour-aec.second .fleche{background:var(--panel2)}
+.retours+.tete,.retours+.lecon-zone{margin-top:16px}
 .etape{margin-top:30px}
 .etape>h2{display:flex;align-items:baseline;gap:10px;margin:0 0 2px;font-family:var(--f-display);font-weight:800;font-size:28px;letter-spacing:.01em}
 .etape>h2 small{font:500 13px var(--f-mono);color:var(--faint)}
@@ -70,7 +85,7 @@ article.md a.ouvrir{display:inline-block;margin:-4px 0 10px;font-size:13.5px}
 .vide-mod{margin:18px 0;padding:22px;border:1px dashed var(--line2);border-radius:14px;color:var(--muted);text-align:center}
 /* ---- leçon : liste du module à gauche, texte à droite ---- */
 .lecon-zone{display:grid;grid-template-columns:270px minmax(0,1fr);gap:26px;margin-top:18px;align-items:start}
-.sommaire{position:sticky;top:calc(var(--tb2-h,60px) + 12px);max-height:calc(100dvh - var(--tb2-h,60px) - 30px);overflow:auto;
+.sommaire{position:sticky;top:calc(var(--tb2-h,60px) + 76px);max-height:calc(100dvh - var(--tb2-h,60px) - 94px);overflow:auto;
   border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--panel)}
 .sommaire h4{margin:2px 6px 8px;font:700 13px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .sommaire a{display:flex;gap:8px;padding:7px 8px;border-radius:8px;font-size:13.5px;line-height:1.35;color:var(--muted)}
@@ -115,6 +130,7 @@ article.md a.fichier::before{content:"📎 ";text-decoration:none;display:inline
 .source{margin-top:6px;font-size:12.5px;color:var(--faint)}
 .source a{color:var(--faint)}
 .chargement{margin:40px 0;color:var(--muted);text-align:center}
+@media (max-width:640px){.retours{gap:6px;padding-top:8px;padding-bottom:8px}.retour-aec{padding:6px 10px 6px 8px}.retour-aec .fleche{width:26px;height:26px}.retour-aec.second{max-width:40%}.retour-aec:first-child{flex:1}}
 @media (max-width:640px){   /* téléphone : les cours de l'étape empilés (2 ou 3), pas en défilement de côté */
   .onglets.cours{flex-direction:column;overflow:visible;-webkit-mask:none;mask:none;gap:8px}
   .onglet-cours{max-width:none}
