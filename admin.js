@@ -46,6 +46,7 @@ const SECTIONS_ARCHIVABLES = [
   { key: 'heure',        icon: '🕰️', label: "Heure d'été ou d'hiver" },
   { key: 'cadeaux',      icon: '🎁', label: 'Listes de cadeaux' },
   { key: 'distant',      icon: '🖥️', label: 'Connexion à distance' },
+  { key: 'aec-avionique', icon: '📚', label: 'Documentation AEC Avionique' },
   { key: 'votes-quebec', icon: '🗳️', label: 'Intentions de vote et simulations' },
   { key: 'pageTest',     icon: '🧪', label: 'Page de tests'   },
   { key: 'jeuxdesociete', icon: '🎲', label: 'Jeux de société', children: [
@@ -371,6 +372,7 @@ const PERMS_STRUCTURE = [
   { key: 'heure',     label: "Heure d'été ou d'hiver" },
   { key: 'cadeaux',   label: 'Listes de cadeaux' },
   { key: 'distant',   label: 'Connexion à distance' },
+  { key: 'aec-avionique', label: 'Documentation AEC Avionique' },
   { key: 'votes-quebec', label: 'Intentions de vote et simulations' },
   { key: 'informatique', label: 'Informatique', children: [
     { key: 'arinc429',  label: 'ARINC 429' },

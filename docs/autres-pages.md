@@ -23,6 +23,15 @@ Pages plus simples, chacune avec son HTML, son JS et sa permission. Le schéma c
 - **ARINC 429** (`arinc429.html`, `arinc429.js`, `Manuel_Arinc_429.pdf`, `SSM_et_SDI_ARINC429.csv`) : décodeur de mots ARINC 429.
 - **Autres outils** : convertisseur (`converter`), encodeur BNR (`crypteur`), TCP/IP (`tcpip`), QR Transfert (`qr-transfer`), Shape Transfert (`shape-transfer`), simulateurs de puces (`chips`), circuit logique (`circuit`).
 
+## Documentation AEC Avionique (`aec-avionique.html`, `aec-avionique.js`, permission `aec-avionique`)
+
+Archive des cours de l'AEC en avionique de Frank (ÉNA, Cégep Édouard-Montpetit), demandée le 6 novembre 2026 ; la session Claude Code de l'ordinateur de Frank prépare le contenu (dossier `~/Cours_avionique`, Markdown).
+- Structure : Étape → cours → modules → leçons (et documents PDF par module). Étape 1 : cours 1 (7 modules) et cours 2 (9 modules, dont « 3.1 » et « 3.2 à 3.5 » comme dans Brio, et Documentation). Adresses : `#e1/c1/m5` (module), `#e1/c1/m5/<leçon>` (leçon).
+- **Le contenu n'est pas dans le dépôt** (dépôt public, contenu des enseignants, environ 1 Go avec les vidéos) : il est sur le serveur, dans `cours-avionique/`, **hors de `public_html`** (même niveau que `manuels/` et `config/`), et servi par `api/cours.php?f=<chemin>` aux personnes connectées qui ont la permission (jamais au compte invité), comme `api/manuel.php`. Images, PDF et vidéos MP4 (lecture partielle « Range », pour avancer dans une vidéo sans tout télécharger).
+- `api/cours.php?f=index.json` donne la structure complète ; sans lui (contenu pas encore transféré), la page montre le squelette `aec-avionique.json` (étapes, cours, modules, sans leçons). Format de `index.json` : celui du squelette (`duree` facultative par module : « 3 h », « présentiel »), avec dans chaque module `"lecons": [{ "id": "01", "titre": "…", "f": "etape1/cours1/m5/01-….md" }]` et au besoin `"docs": [{ "titre": "…", "f": "….pdf" }]`. Noms de fichiers : lettres (accents permis), chiffres, espaces et `_ . , ( ) ' & + -`.
+- Leçons en Markdown rendues dans la page : `marked` + `DOMPurify` (nettoyage) + `KaTeX` (formules `$…$`, `$$…$$`, `\(…\)`, `\[…\]`), par CDN avec SRI. Liens relatifs (`fichiers/…`) réécrits vers `api/cours.php` ; lien seul vers un `.mp4` → lecteur vidéo ; balises `<video controls src="fichiers/videos/….mp4">` du Markdown gardées (chemin réécrit), et le lien « Ouvrir la vidéo » qui les suit reste un simple lien (nouvel onglet) au lieu d'un 2e lecteur ; lien seul vers YouTube → vignette, le lecteur (youtube-nocookie) ne se charge qu'au clic ; ligne « Source : … » en tête → petite mention en bas. Leçons ouvertes cochées (✓) dans le navigateur (`localStorage`).
+- Ajouter une étape ou un cours : l'ajouter au squelette `aec-avionique.json` et à `index.json` sur le serveur.
+
 ## Moteurs (permission `moteurs` et sous-permissions)
 
 - **PT6A-21** : voir `docs/pt6a21.md`.

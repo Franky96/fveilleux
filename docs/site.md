@@ -51,6 +51,7 @@
   - `api/suivis.php` : circonscriptions suivies, partagées entre appareils ;
   - `api/photo-depute.php` : photos officielles des députés de l'Assemblée nationale ;
   - `api/manuel.php` : manuels PDF hors du site, pour les utilisateurs connectés ;
+  - `api/cours.php` : contenu de la Documentation AEC Avionique (leçons, images, PDF, vidéos), dans `cours-avionique/` hors du site, pour la permission `aec-avionique` (voir `docs/autres-pages.md`) ;
   - `api/distant.php` : connexion à distance ;
   - `api/prefs.php` : raccourcis du tableau de bord de chaque compte (pas l'invité) ;
   - `api/notifs.php` : notifications de vérification du tableau de bord (administrateurs seulement) ;

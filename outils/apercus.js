@@ -59,7 +59,8 @@ const jeu = noms => ({
   },
 });
 const REGLAGES = {
-  'moteurs.html': categorie, 'informatique.html': categorie, 'jeuxdesociete.html': categorie, 'chips.html': categorie,
+  'aec-avionique.html': { ...categorie, cadre: ['.tete', '.etape'] },
+  'moteurs.html': categorie,'informatique.html': categorie, 'jeuxdesociete.html': categorie, 'chips.html': categorie,
   'o320.html': { avant: async pg => { await clic(pg, '#menu-toggle'); await clic(pg, 'button:has-text("Démarrage auto")'); }, attente: 3500, cadre: ['canvas'], defile: 0, pendant: orbite },
   'turboreacteur.html': { avant: async pg => { await pg.check('#toggle-autorotate').catch(() => {}); await clic(pg, 'button:has-text("Décollage")'); }, attente: 2000, cadre: ['#engine-canvas'], defile: 0 },
   'pw1500g.html': { capture: 'ecran', stockage: { 'pw1500g.menus': '0' }, attente: 3000, cadre: ['#engine-canvas'], defile: 0, pendant: orbite },   // menus de la vue fermés (choix mémorisé)

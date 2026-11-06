@@ -1,0 +1,28 @@
+{
+ "titre": "Documentation AEC Avionique",
+ "note": "Squelette de la structure (titres seulement). Le contenu (leçons, images, PDF, vidéos) est hors du dépôt, sur le serveur, et sa liste complète vient de api/cours.php?f=index.json, qui remplace ce fichier quand il existe.",
+ "etapes": [
+  { "id": "e1", "titre": "Étape 1", "cours": [
+   { "id": "c1", "em": "📐", "titre": "Mathématiques appliquées à l'avionique", "modules": [
+    { "id": "m1", "num": "1", "titre": "Rappels mathématiques" },
+    { "id": "m2", "num": "2", "titre": "Arithmétique des grandeurs physiques" },
+    { "id": "m3", "num": "3", "titre": "Applications et modélisations" },
+    { "id": "m4", "num": "4", "titre": "Introduction aux ondes" },
+    { "id": "m5", "num": "5", "titre": "Ondes sinusoïdales et vecteurs complexes" },
+    { "id": "m6", "num": "6", "titre": "Fonctions exponentielles et logarithmiques" },
+    { "id": "m7", "num": "7", "titre": "Systèmes de numération" }
+   ] },
+   { "id": "c2", "em": "📡", "titre": "Initiation à l'avionique", "modules": [
+    { "id": "m1", "num": "1", "titre": "Analyser la profession", "duree": "3 h" },
+    { "id": "m2", "num": "2", "titre": "Propagation des ondes", "duree": "présentiel" },
+    { "id": "m3-1", "num": "3.1", "titre": "Systèmes de communication", "duree": "2 h" },
+    { "id": "m3-2", "num": "3.2 à 3.5", "titre": "Systèmes de communication", "duree": "8 h" },
+    { "id": "m4", "num": "4", "titre": "Systèmes de navigation", "duree": "10 h" },
+    { "id": "m5", "num": "5", "titre": "Instrumentation", "duree": "présentiel" },
+    { "id": "m6", "num": "6", "titre": "Systèmes à impulsion", "duree": "3 h" },
+    { "id": "m7", "num": "7", "titre": "Avioniques modernes et commerciales", "duree": "présentiel" },
+    { "id": "doc", "num": "", "titre": "Documentation" }
+   ] }
+  ] }
+ ]
+}

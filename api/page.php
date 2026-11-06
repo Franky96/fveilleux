@@ -46,6 +46,7 @@ const PAGES = [
   'chips.html'            => ['chips', 'informatique'],
   'circuit.html'          => ['circuit', 'informatique'],
   'distant.html'          => ['distant'],
+  'aec-avionique.html'    => ['aec-avionique'],
   // Politique et monde
   'information-monde.html'=> ['monde'],
   'osint.html'            => ['osint'],
