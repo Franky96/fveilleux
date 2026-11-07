@@ -134,13 +134,35 @@ html.light #carte{background:#e8eef3}
 .journal-tete{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .journal-tete .puce{font:600 11.5px var(--f-body);padding:3px 8px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--muted)}
 .journal-tete .puce[aria-pressed="true"]{color:var(--text);border-color:var(--c)}
-.journal{height:400px;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-right:4px;scrollbar-width:thin;overscroll-behavior:contain}
+.journal{height:400px;overflow:auto;padding-right:4px;scrollbar-width:thin;overscroll-behavior:contain;position:relative}
+.evts{height:150px;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:8px;scrollbar-width:thin;overscroll-behavior:contain}
+.evts[hidden]{display:none}
+.evts-tete{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--faint);position:sticky;top:0;background:var(--panel);padding:2px 0;z-index:1}
+.evts .msg{padding:5px 9px}
+.vide-j{color:var(--faint);font-size:12.5px;padding:6px 8px;margin:0}
+.tmsg{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:12.6px;line-height:1.35}
+.tmsg thead th{position:sticky;top:0;z-index:1;background:var(--panel);text-align:left;font:600 10.5px var(--f-mono);text-transform:uppercase;letter-spacing:.05em;color:var(--faint);padding:4px 8px;border-bottom:1px solid var(--line)}
+.tmsg thead th:not(:first-child){text-align:right;white-space:nowrap}
+.tmsg td{vertical-align:top;padding:7px 8px;background:color-mix(in srgb,var(--k) calc(var(--vif,0) * 20%),var(--panel2));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tmsg td:first-child{border-left:1px solid var(--line);border-radius:9px 0 0 9px}
+.tmsg td:last-child{border-right:1px solid var(--line);border-radius:0 9px 9px 0}
+.tmsg td.h{font:500 11px var(--f-mono);color:var(--muted);text-align:right;white-space:nowrap}
+.tmsg td.cpt{font:700 15px var(--f-mono);text-align:right;white-space:nowrap;color:color-mix(in srgb,var(--k) calc(var(--vif,0) * 100%),var(--text))}
+.tmsg .d{color:var(--muted)}
+.tmsg tr.courant td{border-color:var(--c);border-width:2px}
+@media (max-width:980px){.evts{height:auto;max-height:150px}}
+@media (max-width:560px){.tmsg,.tmsg tbody{display:block}.tmsg thead{display:none}
+  .tmsg tr{display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;margin-bottom:5px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--k) calc(var(--vif,0) * 20%),var(--panel2))}
+  .tmsg tr.courant{border:2px solid var(--c)}
+  .tmsg td,.tmsg tr.courant td{border:0;border-radius:0;background:none;padding:2px 9px 7px}
+  .tmsg td:first-child{grid-column:1/-1;padding-top:7px}
+  .tmsg td.h{text-align:left}.tmsg td.h::before{content:attr(data-l) " ";color:var(--faint)}.tmsg td.h::after{content:" s"}}
 .msg{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);font-size:12.8px;line-height:1.35}
 .msg .t{font:500 11px var(--f-mono);color:var(--faint);padding-top:2px}
-.msg .q{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:2px}
-.msg .code{font:700 11.5px var(--f-mono);padding:1px 6px;border-radius:5px;background:var(--panel);border:1px solid var(--line2)}
-.msg .fq{font:600 10.5px var(--f-mono);padding:1px 5px;border-radius:5px;color:#071016;background:var(--k)}
-.msg .dir{font:600 11.5px var(--f-mono);color:var(--muted)}
+.msg .q,.tmsg .q{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:2px}
+.msg .code,.tmsg .code{font:700 11.5px var(--f-mono);padding:1px 6px;border-radius:5px;background:var(--panel);border:1px solid var(--line2)}
+.msg .fq,.tmsg .fq{font:600 10.5px var(--f-mono);padding:1px 5px;border-radius:5px;color:#071016;background:var(--k)}
+.msg .dir,.tmsg .dir{font:600 11.5px var(--f-mono);color:var(--muted)}
 .msg .n{font:500 10.5px var(--f-mono);color:var(--faint);margin-left:auto}
 .msg .d{color:var(--muted)}
 .msg.evt{border-color:var(--k);background:color-mix(in srgb,var(--k) 12%,var(--panel2))}
@@ -277,8 +299,8 @@ table.sl td:first-child{white-space:nowrap}
         <button class="puce" type="button" data-f="evt" aria-pressed="true">Alertes et pilotes</button>
       </div>
       <div class="journaux">
-        <div class="colonne" style="--k:var(--avA)"><h3><i></i>Émis par A <small>C-GFAB · TCAS et transpondeur</small></h3><div class="journal" id="journalA" aria-live="off"></div></div>
-        <div class="colonne" style="--k:var(--avB)"><h3><i></i>Émis par B <small id="sousB">C-FXKR · TCAS et transpondeur</small></h3><div class="journal" id="journalB" aria-live="off"></div></div>
+        <div class="colonne" style="--k:var(--avA)"><h3><i></i>Émis par A <small>C-GFAB · TCAS et transpondeur</small></h3><div class="evts" id="evtsA"></div><div class="journal" id="journalA" aria-live="off"></div></div>
+        <div class="colonne" style="--k:var(--avB)"><h3><i></i>Émis par B <small id="sousB">C-FXKR · TCAS et transpondeur</small></h3><div class="evts" id="evtsB"></div><div class="journal" id="journalB" aria-live="off"></div></div>
       </div>
     </div>
 </section>
@@ -623,39 +645,60 @@ function cockpitTexte(k, im) {
 }
 
 /* ---------- journal des messages ---------- */
+// par avion : en haut, les alertes (la plus récente en premier) ; dessous, un tableau des messages émis,
+// une ligne par message (le plus récent apparu en haut), avec 1re fois, dernière fois et compteur ;
+// les lignes sont mises à jour sur place et s'allument quand le message part
 let dernierJournal = '';
+const rendu = { A: { ordre: null, lignes: new Map(), evts: null }, B: { ordre: null, lignes: new Map(), evts: null } };
 const COUL_EVT = { finta: 'var(--line2)', ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)', coord: 'var(--f1030)', vhf: 'var(--vhf)', detection: 'var(--f1090)', nonsuivi: 'var(--ra)', aural: 'var(--ta)' };
 function journal() {
-  // une colonne par avion (qui émet le message, ou à qui arrive l'alerte), du plus ancien en haut au plus récent en bas ;
-  // un message répété (UF0 chaque seconde…) n'a qu'une ligne, qui redescend en bas à chaque répétition
-  const col = { A: [], B: [] }, parCle = new Map();
-  let i = 0, j = 0;
-  const msgs = R.msgs, evts = R.evts.filter(e => e.type !== 'aural');
-  while ((i < msgs.length && msgs[i].t <= t) || (j < evts.length && evts[j].t <= t)) {
-    const m = i < msgs.length && msgs[i].t <= t ? msgs[i] : null, e = j < evts.length && evts[j].t <= t ? evts[j] : null;
-    if (m && (!e || m.t <= e.t)) {
-      i++;
-      if (!filtres.has(m.phase)) continue;
-      const liste = col[m.de];
-      if (m.cle && parCle.has(m.cle)) { const l = parCle.get(m.cle); l.n++; l.der = m; liste.splice(liste.indexOf(l), 1); liste.push(l); continue; }
-      const l = { type: 'msg', m, der: m, n: 1 }; liste.push(l); if (m.cle) parCle.set(m.cle, l);
-    } else { j++; if (filtres.has('evt')) col[e.qui].push({ type: 'evt', e }); }
+  const col = { A: [], B: [] }, ev = { A: [], B: [] }, parCle = new Map();
+  for (const m of R.msgs) {
+    if (m.t > t) break;
+    if (!filtres.has(m.phase)) continue;
+    const l = parCle.get(m.cle);
+    if (l) { l.n++; l.der = m; continue; }
+    const n = { m, der: m, n: 1 }; parCle.set(m.cle, n); col[m.de].push(n);
   }
-  const signature = ['A', 'B'].map(k => col[k].length + ':' + col[k].slice(-6).map(l => (l.n || 0) + (l.der ? l.der.t : l.e.t)).join(',')).join('|');
-  if (signature === dernierJournal) return;
-  dernierJournal = signature;
+  if (filtres.has('evt')) for (const e of R.evts) { if (e.t > t + 0.002) break;  /* une étape d'alerte est placée 0,001 s avant elle */ if (e.type !== 'aural') ev[e.qui].push(e); }
+  const force = dernierJournal === ''; dernierJournal = 'ok';
+  const cleCour = modeSeq && etapes[ie] && etapes[ie].m ? etapes[ie].m.cle : null, evtCour = modeSeq && etapes[ie] ? etapes[ie].e : null;
   for (const k of ['A', 'B']) {
-    const z = $('#journal' + k), enBas = z.scrollHeight - z.scrollTop - z.clientHeight < 60;
-    z.innerHTML = col[k].slice(-70).map(l => {
-      if (l.type === 'evt') { const e = l.e;
-        return `<div class="msg evt${t - e.t < 1.5 ? ' frais' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div><div class="d">${esc(e.texte)}</div></div></div>`; }
-      const m = l.der, dir = m.a === '*' ? `→ tous` : `→ ${m.a}`;
-      const cour = modeSeq && etapes[ie] && etapes[ie].m && etapes[ie].m.cle && etapes[ie].m.cle === m.cle;
-      return `<div class="msg${t - m.t < 1.2 ? ' frais' : ''}${cour ? ' courant' : ''}"><span class="t">${nf(m.t, 1)} s</span><div>
-        <div class="q"><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span><span class="code">${esc(m.code)}</span><span class="dir">${dir}</span>${l.n > 1 ? `<span class="n">×${l.n} depuis ${nf(l.m.t, 1)} s</span>` : ''}</div>
-        <div><b>${esc(m.titre)}</b></div><div class="d">${esc(m.detail)}</div></div></div>`;
-    }).join('') || `<p class="sous" style="padding:8px">${k === 'B' && cfg.B.mode === 'stby' ? 'Transpondeur en STBY : B n’émet rien.' : 'Rien encore : lance la lecture.'}</p>`;
-    if (enBas) z.scrollTop = z.scrollHeight;
+    const r = rendu[k], lignes = col[k].slice().reverse();
+    // alertes : la plus récente en haut
+    const sigE = ev[k].length + ':' + (ev[k].length ? ev[k][ev[k].length - 1].t : '') + ':' + (evtCour ? evtCour.t : '');
+    if (force || sigE !== r.evts) {
+      r.evts = sigE;
+      const z = $('#evts' + k);
+      z.hidden = !filtres.has('evt');
+      z.innerHTML = `<div class="evts-tete">Alertes et pilotes</div>` + (ev[k].slice().reverse().map((e, n) =>
+        `<div class="msg evt${n === 0 && t - e.t < 1.5 ? ' frais' : ''}${e === evtCour ? ' courant' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div class="d">${esc(e.texte)}</div></div>`).join('')
+        || `<p class="vide-j">Rien pour l’instant.</p>`);
+    }
+    // tableau des messages
+    const ordre = lignes.map(l => l.m.cle).join(',');
+    const z = $('#journal' + k);
+    if (force || ordre !== r.ordre) {
+      r.ordre = ordre; r.lignes.clear();
+      if (!lignes.length) { z.innerHTML = `<p class="vide-j">${k === 'B' && cfg.B.mode === 'stby' ? 'Transpondeur en STBY : B n’émet rien.' : 'Rien encore : lance la lecture.'}</p>`; continue; }
+      z.innerHTML = `<table class="tmsg"><thead><tr><th>Message</th><th title="Première émission, en secondes">1<sup>re</sup> fois (s)</th><th title="Dernière émission, en secondes">Dernière (s)</th><th>Nombre</th></tr></thead><tbody>${lignes.map(l => {
+        const m = l.m, dir = m.a === '*' ? '→ tous' : `→ ${m.a}`;
+        return `<tr data-cle="${esc(m.cle)}"><td><div class="q"><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span><span class="code">${esc(m.code)}</span><span class="dir">${dir}</span></div><b>${esc(m.titre)}</b><div class="d"></div></td><td class="h" data-l="1re fois">${nf(m.t, 1)}</td><td class="h der" data-l="dernière"></td><td class="cpt"></td></tr>`;
+      }).join('')}</tbody></table>`;
+      z.querySelectorAll('tbody tr').forEach(tr => r.lignes.set(tr.dataset.cle, { tr, d: tr.querySelector('.d'), der: tr.querySelector('.der'), cpt: tr.querySelector('.cpt'), v: {} }));
+    }
+    for (const l of lignes) {
+      const e = r.lignes.get(l.m.cle); if (!e) continue;
+      const m = l.der, v = e.v, vif = Math.max(0, 1 - (t - m.t) / 1.2).toFixed(2), cour = l.m.cle === cleCour;
+      if (v.detail !== m.detail) e.d.textContent = v.detail = m.detail;
+      if (v.t !== m.t) e.der.textContent = (v.t = m.t, nf(m.t, 1));
+      if (v.n !== l.n) e.cpt.textContent = (v.n = l.n, '×' + l.n);
+      if (v.vif !== vif) e.tr.style.setProperty('--vif', v.vif = vif);
+      if (v.cour !== cour) {
+        e.tr.classList.toggle('courant', v.cour = cour);
+        if (cour) { const h = z.querySelector('thead').offsetHeight; if (e.tr.offsetTop - h < z.scrollTop || e.tr.offsetTop + e.tr.offsetHeight > z.scrollTop + z.clientHeight) z.scrollTop = e.tr.offsetTop - h - 6; }
+      }
+    }
   }
 }
 
