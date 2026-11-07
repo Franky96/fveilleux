@@ -94,7 +94,13 @@ html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
 .phase.on{color:var(--text);border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,var(--panel2))}
 
 /* vue de dessus et journal */
-.scene{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:14px;align-items:start}
+.scene{display:block}
+.journaux-zone{margin-top:14px}
+.journaux{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.colonne h3{display:flex;align-items:center;gap:8px;font-size:17px;margin-bottom:6px}
+.colonne h3 i{width:11px;height:11px;border-radius:50%;background:var(--k)}
+.colonne h3 small{font:500 11.5px var(--f-mono);color:var(--muted)}
+.colonne .journal{border-top:3px solid var(--k);padding-top:6px}
 canvas{display:block;width:100%}
 .zoom{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}.zoom .btn{padding:5px 10px}.aide-zoom{font-size:12px;color:var(--faint)}
 #carte{height:440px;border-radius:12px;touch-action:none;cursor:grab;background:color-mix(in srgb,var(--bg) 70%,#0b1a24)}
@@ -104,8 +110,8 @@ html.light #carte{background:#e8eef3}
 .journal-tete{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .journal-tete .puce{font:600 11.5px var(--f-body);padding:3px 8px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--muted)}
 .journal-tete .puce[aria-pressed="true"]{color:var(--text);border-color:var(--c)}
-#journal{height:440px;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-right:4px;scrollbar-width:thin}
-.msg{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);font-size:12.8px;line-height:1.35}
+.journal{height:400px;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-right:4px;scrollbar-width:thin;overscroll-behavior:contain}
+.msg{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);font-size:12.8px;line-height:1.35}
 .msg .t{font:500 11px var(--f-mono);color:var(--faint);padding-top:2px}
 .msg .q{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:2px}
 .msg .code{font:700 11.5px var(--f-mono);padding:1px 6px;border-radius:5px;background:var(--panel);border:1px solid var(--line2)}
@@ -163,7 +169,7 @@ table.sl td:first-child{white-space:nowrap}
 .note p,.note li{margin:0 0 5px;font-size:13.5px}
 .note ul{margin:0;padding-left:18px}
 .f{font:500 12.5px var(--f-mono);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;white-space:nowrap}
-@media (max-width:980px){.scene{grid-template-columns:1fr}#journal{height:320px}#carte{height:360px}.calc{grid-template-columns:1fr}}
+@media (max-width:980px){.journaux{grid-template-columns:1fr}.journal{height:300px}#carte{height:360px}.calc{grid-template-columns:1fr}}
 @media (max-width:560px){.instr{grid-template-columns:1fr 1fr;gap:6px}.rang{grid-template-columns:76px 1fr}#carte{height:300px}.etats{margin-left:0}}
 </style>
 <link rel="stylesheet" href="fond.css">
@@ -227,16 +233,19 @@ table.sl td:first-child{white-space:nowrap}
       <button class="btn" type="button" data-f="0.7" aria-label="Dézoomer">−</button><button class="btn" type="button" data-f="1.4" aria-label="Zoomer">+</button><span class="aide-zoom">molette ou pincer pour zoomer, glisser pour déplacer</span></div>
       <canvas id="carte" aria-label="Vue de dessus de la rencontre"></canvas>
       <div class="legende"><span><i style="--k:var(--avA)"></i>A (notre avion)</span><span><i style="--k:var(--avB)"></i>B (l’intrus)</span><span><i style="--k:var(--ta)"></i>zone TA (selon τ)</span><span><i style="--k:var(--ra)"></i>zone RA</span></div></div>
-    <div>
-      <div class="journal-tete" id="filtres">
+  </div>
+    <div class="journaux-zone">
+      <div class="journal-tete" id="filtres"><span class="lab" style="margin:0 6px 0 0">Messages échangés</span>
         <button class="puce" type="button" data-f="detection" aria-pressed="true">Détection</button>
         <button class="puce" type="button" data-f="surveillance" aria-pressed="true">Surveillance</button>
         <button class="puce" type="button" data-f="coordination" aria-pressed="true">Coordination</button>
         <button class="puce" type="button" data-f="evt" aria-pressed="true">Alertes et pilotes</button>
       </div>
-      <div id="journal" aria-live="off"></div>
+      <div class="journaux">
+        <div class="colonne" style="--k:var(--avA)"><h3><i></i>Émis par A <small>C-GFAB · TCAS et transpondeur</small></h3><div class="journal" id="journalA" aria-live="off"></div></div>
+        <div class="colonne" style="--k:var(--avB)"><h3><i></i>Émis par B <small id="sousB">C-FXKR · TCAS et transpondeur</small></h3><div class="journal" id="journalB" aria-live="off"></div></div>
+      </div>
     </div>
-  </div>
 </section>
 
 <div class="cockpits">
@@ -314,7 +323,7 @@ function groupe(sel, cle, apres) {
   });
 }
 groupe('#scenarios', 'scenario', () => { majDesc(); relancer(false); });
-groupe('#equipB', 'equipB', () => { if (cfg.equipB !== 'tcas' && (cfg.B.mode === 'ta' || cfg.B.mode === 'tara')) cfg.B.mode = 'atc'; relancer(true); });
+groupe('#equipB', 'equipB', () => { $('#sousB').textContent = { tcas: 'C-FXKR · TCAS et transpondeur', modeS: 'C-FXKR · transpondeur Mode S seul', atcrbs: 'C-FXKR · transpondeur ATCRBS' }[cfg.equipB]; if (cfg.equipB !== 'tcas' && (cfg.B.mode === 'ta' || cfg.B.mode === 'tara')) cfg.B.mode = 'atc'; relancer(true); });
 groupe('#piloteB', 'piloteB', () => relancer(true));
 const majDesc = () => { $('#scen-desc').textContent = SCENARIOS[cfg.scenario].desc; };
 
@@ -578,31 +587,36 @@ function cockpitTexte(k, im) {
 let dernierJournal = '';
 const COUL_EVT = { finta: 'var(--line2)', ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)', coord: 'var(--f1030)', vhf: 'var(--vhf)', detection: 'var(--f1090)', nonsuivi: 'var(--ra)', aural: 'var(--ta)' };
 function journal() {
-  const lignes = [], parCle = new Map();
+  // une colonne par avion (qui émet le message, ou à qui arrive l'alerte), du plus ancien en haut au plus récent en bas ;
+  // un message répété (UF0 chaque seconde…) n'a qu'une ligne, qui redescend en bas à chaque répétition
+  const col = { A: [], B: [] }, parCle = new Map();
   let i = 0, j = 0;
   const msgs = R.msgs, evts = R.evts.filter(e => e.type !== 'aural');
-  // fusion des deux listes dans l'ordre du temps
   while ((i < msgs.length && msgs[i].t <= t) || (j < evts.length && evts[j].t <= t)) {
     const m = i < msgs.length && msgs[i].t <= t ? msgs[i] : null, e = j < evts.length && evts[j].t <= t ? evts[j] : null;
     if (m && (!e || m.t <= e.t)) {
       i++;
       if (!filtres.has(m.phase)) continue;
-      if (m.cle && parCle.has(m.cle)) { const l = parCle.get(m.cle); l.n++; l.der = m; continue; }
-      const l = { type: 'msg', m, der: m, n: 1 }; lignes.push(l); if (m.cle) parCle.set(m.cle, l);
-    } else { j++; if (filtres.has('evt')) lignes.push({ type: 'evt', e }); }
+      const liste = col[m.de];
+      if (m.cle && parCle.has(m.cle)) { const l = parCle.get(m.cle); l.n++; l.der = m; liste.splice(liste.indexOf(l), 1); liste.push(l); continue; }
+      const l = { type: 'msg', m, der: m, n: 1 }; liste.push(l); if (m.cle) parCle.set(m.cle, l);
+    } else { j++; if (filtres.has('evt')) col[e.qui].push({ type: 'evt', e }); }
   }
-  const signature = lignes.length + ':' + lignes.map(l => l.n || 0).join(',').slice(-200);
+  const signature = ['A', 'B'].map(k => col[k].length + ':' + col[k].slice(-6).map(l => (l.n || 0) + (l.der ? l.der.t : l.e.t)).join(',')).join('|');
   if (signature === dernierJournal) return;
   dernierJournal = signature;
-  const z = $('#journal');
-  z.innerHTML = lignes.slice(-80).reverse().map(l => {
-    if (l.type === 'evt') { const e = l.e;
-      return `<div class="msg evt${t - e.t < 1.5 ? ' frais' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div><div class="d">${esc(e.texte)}</div></div></div>`; }
-    const m = l.der, dir = m.a === '*' ? `${m.de} → tous` : `${m.de} → ${m.a}`;
-    return `<div class="msg${t - m.t < 1.2 ? ' frais' : ''}"><span class="t">${nf(l.m.t, 1)} s</span><div>
-      <div class="q"><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span><span class="code">${esc(m.code)}</span><span class="dir">${dir}</span>${l.n > 1 ? `<span class="n">×${l.n} · dernier ${nf(m.t, 1)} s</span>` : ''}</div>
-      <div><b>${esc(m.titre)}</b></div><div class="d">${esc(m.detail)}</div></div></div>`;
-  }).join('') || '<p class="sous" style="padding:8px">Rien encore : lance la lecture.</p>';
+  for (const k of ['A', 'B']) {
+    const z = $('#journal' + k), enBas = z.scrollHeight - z.scrollTop - z.clientHeight < 60;
+    z.innerHTML = col[k].slice(-70).map(l => {
+      if (l.type === 'evt') { const e = l.e;
+        return `<div class="msg evt${t - e.t < 1.5 ? ' frais' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div><div class="d">${esc(e.texte)}</div></div></div>`; }
+      const m = l.der, dir = m.a === '*' ? `→ tous` : `→ ${m.a}`;
+      return `<div class="msg${t - m.t < 1.2 ? ' frais' : ''}"><span class="t">${nf(m.t, 1)} s</span><div>
+        <div class="q"><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span><span class="code">${esc(m.code)}</span><span class="dir">${dir}</span>${l.n > 1 ? `<span class="n">×${l.n} depuis ${nf(l.m.t, 1)} s</span>` : ''}</div>
+        <div><b>${esc(m.titre)}</b></div><div class="d">${esc(m.detail)}</div></div></div>`;
+    }).join('') || `<p class="sous" style="padding:8px">${k === 'B' && cfg.B.mode === 'stby' ? 'Transpondeur en STBY : B n’émet rien.' : 'Rien encore : lance la lecture.'}</p>`;
+    if (enBas) z.scrollTop = z.scrollHeight;
+  }
 }
 
 /* ---------- calculs (point de vue de A ou de B) ---------- */

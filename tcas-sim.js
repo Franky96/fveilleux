@@ -249,8 +249,8 @@
       for (const a of [av.A, av.B]) {
         const off = a.k === 'A' ? 0.3 : 0.8;
         if (modeS(a) && xpdrOn(a) && Math.abs((t % 1) - off) < DT / 2) {
-          msg(t, { phase: 'detection', de: a.k, a: '*', freq: 1090, code: 'DF11', titre: 'Squitter d’acquisition', cle: `df11${a.k}`, detail: `Diffusé sans interrogation : annonce l’adresse 24 bits ${hex(a.adr)}.` });
-          msg(t + 0.03, { phase: 'detection', de: a.k, a: '*', freq: 1090, code: 'DF17', titre: 'Squitter long (ADS-B)', cle: `df17${a.k}`, detail: `Position GPS, altitude, vitesse et identification (${a.imm}).` });
+          msg(t, { phase: 'detection', de: a.k, a: '*', freq: 1090, code: 'DF11', titre: 'Squitter d’acquisition', cle: `df11${a.k}`, detail: `Diffusé sans interrogation, environ une fois par seconde : annonce l’adresse 24 bits ${hex(a.adr)}. C’est lui que le TCAS écoute pour détecter l’avion.` });
+          msg(t + 0.03, { phase: 'detection', de: a.k, a: '*', freq: 1090, code: 'DF17', titre: 'Squitter long (ADS-B Out)', cle: `df17${a.k}`, detail: `Émis en plus du DF11 par un transpondeur équipé du squitter long (1090ES) : position GPS, altitude, vitesse et identification (${a.imm}). En réalité, plusieurs fois par seconde.` });
         }
       }
       // cycles TCAS : A à chaque seconde pile, B à la demi-seconde
