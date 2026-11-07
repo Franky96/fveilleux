@@ -180,36 +180,27 @@
   addEventListener('keydown', ev => { if (ev.key === 'Escape') fermerTiroir(); });
   const retour = (t, h, sous) => { $('#retour-zone').innerHTML = `<a class="retour-aec" href="${h}"><span class="fleche" aria-hidden="true">←</span><span><small>${esc(sous)}</small><b>${esc(t)}</b></span></a>`; };
 
-  const cartesModules = (et, co) => `<div class="cartes">${co.modules.map(mo => { const k = nbLecons(mo), d = (mo.docs || []).length;
-    return `<a class="carte" href="#${et.id}/${co.id}/${mo.id}">
-      ${pastille(mo)}
-      <span><b>${mo.num ? 'Module ' + esc(mo.num) : esc(mo.titre)}</b><small>${mo.num ? esc(mo.titre) : (mo.id === 'doc' ? 'Documents du cours' : '')}</small>
-        <span class="compte">${duree(mo)}${k ? `${k} leçon${k > 1 ? 's' : ''}` : ''}${k && d ? ' · ' : ''}${d ? `${d} document${d > 1 ? 's' : ''}` : ''}${!k && !d ? (avecContenu && !et.squelette ? 'vide' : 'contenu à venir') : ''}</span></span>
-      <span class="fl" aria-hidden="true">›</span></a>`; }).join('')}</div>`;
-  const blocCours = (et, co) => { const i = et.cours.indexOf(co), n = lecTotal(co);
-    return `<section class="cours-bloc" style="${couleur(i)}">
-      <header><a class="em" href="#${et.id}/${co.id}" aria-hidden="true" tabindex="-1">${esc(co.em || '📘')}</a>
-        <div><h3><a href="#${et.id}/${co.id}">Cours ${i + 1} — ${esc(co.titre)}</a></h3>
-        <small>${co.modules.length} modules${avecContenu && !et.squelette ? ` · ${n} leçon${n > 1 ? 's' : ''}` : ''}</small></div></header>
-      ${cartesModules(et, co)}</section>`; };
-
-  /* ---------- vue d'une étape : ses cours ---------- */
+  /* ---------- vue d'une étape et vue d'un cours ---------- */
+  // les choix sont dans la barre latérale (demande de Frank) : ici, seulement une phrase qui attend un choix
+  const attente = (em, titre, sous, quoi) => `<div class="tete"><span class="em" aria-hidden="true">${esc(em)}</span><div><h1>${esc(titre)}</h1><p>${esc(sous)}</p></div></div>
+    <p class="attente"><span aria-hidden="true">👈</span> <span class="large">Choisis ${quoi} dans la barre à gauche.</span><span class="etroit">Choisis ${quoi} dans le menu <b>☰</b> ci-dessus.</span></p>`;
   function etapeVue(et) {
     document.title = `Outils de Frank — Documentation AEC Avionique · ${et.titre}`;
-    $('#contenu').innerHTML = `<div class="tete"><span class="em" aria-hidden="true">📚</span><div><h1>${esc(et.titre)}</h1><p>${archives(et).length} cours · choisis un cours ou un module dans la barre ou ci-dessous</p></div></div>`
-      + archives(et).map(co => blocCours(et, co)).join('');
+    const n = archives(et).length;
+    $('#contenu').innerHTML = attente('📚', et.titre, `${n} cours`, 'un cours, puis un module');
   }
-  /* ---------- vue d'un cours : ses modules ---------- */
+  /* ---------- vue d'un cours ---------- */
   function coursVue(et, co) {
     document.title = `Outils de Frank — ${co.titre}`;
-    $('#contenu').innerHTML = blocCours(et, co);
+    const ic = et.cours.indexOf(co), n = lecTotal(co);
+    $('#contenu').innerHTML = attente(co.em || '📘', co.titre, `${et.titre} · Cours ${ic + 1} · ${co.modules.length} modules${avecContenu && !et.squelette ? ` · ${n} leçon${n > 1 ? 's' : ''}` : ''}`, 'un module');
   }
 
   /* ---------- un module : la liste de ses leçons et documents ---------- */
   function module(et, co, mo) {
     const ic = et.cours.indexOf(co), e = et.id, c = co.id, m = mo.id;
     document.title = `Outils de Frank — ${nomModule(mo)} · ${co.titre}`;
-    retour(co.titre, `#${e}/${c}`, `${et.titre} · Cours ${ic + 1} · tous les modules`);
+    retour(co.titre, `#${e}/${c}`, `${et.titre} · Cours ${ic + 1}`);
     const lec = mo.lecons || [], docs = mo.docs || [];
     $('#contenu').innerHTML = `
       <div class="tete" style="${couleur(ic)}"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span>

@@ -110,6 +110,10 @@ a.b-cours:hover{background:var(--panel2);color:var(--text)}
 .voile{display:none}
 #retour-zone{min-width:0;flex:1;display:flex}
 .principal .tete{margin-top:6px}
+.attente{margin:22px 0;padding:28px 22px;border:1px dashed var(--line2);border-radius:16px;color:var(--muted);text-align:center;font-size:16px;
+  background:color-mix(in srgb,var(--panel) 60%,transparent)}
+.attente .etroit{display:none}
+@media (max-width:900px){.attente .large{display:none}.attente .etroit{display:inline}.attente>span[aria-hidden]{display:inline-block;transform:rotate(90deg)}}
 .cours-bloc h3 a:hover{color:color-mix(in srgb,var(--c) 55%,var(--text))}
 .cours-bloc>header a.em{text-decoration:none}
 .etape{margin-top:30px}
