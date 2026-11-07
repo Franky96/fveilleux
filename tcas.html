@@ -98,6 +98,7 @@ html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
 .seq-barre{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
 .seq-barre[hidden]{display:none}
 .seq-num{font:600 13px var(--f-mono);min-width:120px;text-align:center}
+#sonQui{padding:6px 8px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2)}#sonQui[hidden]{display:none}
 .seq-barre select{padding:6px 8px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);max-width:min(420px,100%)}
 body.mode-seq .lec-haut .rond,body.mode-seq #vitesses{display:none}
 .carte-zone{display:block}
@@ -278,7 +279,8 @@ table.sl td:first-child{white-space:nowrap}
       <button class="btn" type="button" data-v="0.5">×0,5</button>      <button class="btn" type="button" data-v="1">×1</button><button class="btn" type="button" data-v="2">×2</button>
       <button class="btn" type="button" data-v="4" aria-pressed="true">×4</button><button class="btn" type="button" data-v="8">×8</button><button class="btn" type="button" data-v="16">×16</button>
     </div>
-    <button class="btn" type="button" id="son" aria-pressed="false" title="Lire les annonces du TCAS à voix haute (anglais)">🔇 Annonces</button>
+    <button class="btn" type="button" id="son" aria-pressed="false" title="Faire entendre les alertes sonores du TCAS (voix de synthèse, en anglais comme en vrai)">🔇 Annonces</button>
+    <select id="sonQui" hidden aria-label="Alertes sonores de quel avion"><option value="A">cockpit A</option><option value="B">cockpit B</option><option value="AB">A et B (gauche / droite)</option></select>
     <div class="phases" id="phases"><span class="phase" data-p="detection">1 · Détection</span><span class="phase" data-p="surveillance">2 · Surveillance</span><span class="phase" data-p="coordination">3 · Coordination et RA</span></div>
     <div class="etats"><span class="pill" id="pillA">A</span><span class="pill" id="pillB">B</span></div>
   </div>
@@ -416,7 +418,8 @@ $('#temps').addEventListener('input', e => { t = +e.target.value; joue = false; 
   if (modeSeq) { const k = etapes.findIndex(x => x.t >= t - 0.01); return allerEtape(k < 0 ? etapes.length - 1 : k); }
   dessiner(true); });
 groupe('#vitesses', 'x', () => { vitesse = +document.querySelector('#vitesses [aria-pressed="true"]').dataset.v; });
-$('#son').onclick = () => { son = !son; $('#son').setAttribute('aria-pressed', son); $('#son').textContent = son ? '🔊 Annonces' : '🔇 Annonces'; if (!son && window.speechSynthesis) speechSynthesis.cancel(); };
+$('#son').onclick = () => { son = !son; $('#son').setAttribute('aria-pressed', son); $('#son').textContent = son ? '🔊 Annonces' : '🔇 Annonces'; $('#sonQui').hidden = !son; if (son) prepSons().then(() => { if (modeSeq) sonEtape(); }); else arreterSons(); };
+$('#sonQui').onchange = () => arreterSons();
 document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => { const f = b.dataset.f; filtres.has(f) ? filtres.delete(f) : filtres.add(f); b.setAttribute('aria-pressed', filtres.has(f)); dernierJournal = '';
   if (modeSeq) { const t0 = t; construireEtapes(); const k = etapes.findIndex(x => x.t >= t0 - 0.01); return allerEtape(k < 0 ? etapes.length - 1 : k); }   // en séquence : étapes refaites sans ce type
   dessiner(true); });
@@ -625,6 +628,41 @@ function dessinerVSI(k, im) {
   x.font = '700 12px "IBM Plex Mono",monospace'; x.fillStyle = '#e5e7eb'; x.textAlign = 'right'; x.fillText(`${o.vs >= 0 ? '+' : '−'}${nf(Math.abs(Math.round(o.vs / 10) * 10))}`, W - 8, H - 8); x.textAlign = 'left';
 }
 
+/* ---------- alertes sonores ---------- */
+// fichiers tcas-sons/*.mp3 : voix de synthèse (Piper, voix « joe », données CC0), filtrée comme un haut-parleur de cockpit.
+// Web Audio : décodés d'avance, et en « A et B », A à gauche, B à droite.
+const SONS = { 'TRAFFIC, TRAFFIC': 'traffic', 'CLIMB, CLIMB': 'climb', 'DESCEND, DESCEND': 'descend', 'CLIMB, CROSSING CLIMB': 'climb-crossing',
+  'DESCEND, CROSSING DESCEND': 'descend-crossing', 'MONITOR VERTICAL SPEED': 'monitor', 'CLIMB, CLIMB NOW': 'climb-now', 'DESCEND, DESCEND NOW': 'descend-now', 'CLEAR OF CONFLICT': 'coc' };
+let ctxAudio = null, enCours = [], charge = null;
+const tampons = {};
+function prepSons() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  if (!ctxAudio) {
+    ctxAudio = new AC();
+    charge = Promise.all([...new Set(Object.values(SONS))].map(n => fetch(`tcas-sons/${n}.mp3`).then(r => r.arrayBuffer()).then(b => ctxAudio.decodeAudioData(b)).then(d => { tampons[n] = d; }).catch(() => {})));
+  }
+  if (ctxAudio.state === 'suspended') ctxAudio.resume();
+  return charge || Promise.resolve();
+}
+function arreterSons() { for (const s of enCours) try { s.stop(); } catch (e) {} enCours = []; }
+function jouerAural(k, texte) {
+  if (!son || !ctxAudio) return;
+  const qui = $('#sonQui').value; if (qui !== 'AB' && qui !== k) return;
+  const b = tampons[SONS[texte]]; if (!b) return;
+  const src = ctxAudio.createBufferSource(); src.buffer = b;
+  let sortie = src;
+  if (qui === 'AB' && ctxAudio.createStereoPanner) { const p = ctxAudio.createStereoPanner(); p.pan.value = k === 'A' ? -0.7 : 0.7; src.connect(p); sortie = p; }
+  sortie.connect(ctxAudio.destination); src.start();
+  enCours.push(src); src.onended = () => { enCours = enCours.filter(x => x !== src); };
+}
+// en mode séquence : l'étape d'une alerte (TA, RA, inversion, CoC) fait entendre son annonce
+function sonEtape() {
+  const x = etapes[ie]; if (!son || !x || !x.e) return;
+  arreterSons();
+  const a = R.evts.find(e => e.type === 'aural' && e.qui === x.e.qui && Math.abs(e.t - x.e.t) < 0.01);
+  if (a) jouerAural(a.qui, a.texte);
+}
+
 /* ---------- annonce, consigne ---------- */
 let dernierAuralLu = { A: null, B: null };
 function cockpitTexte(k, im) {
@@ -643,10 +681,8 @@ function cockpitTexte(k, im) {
   } else if (o.etat === 'ta') c = 'Avis de trafic : chercher l’intrus visuellement, se préparer à un RA. Aucune manœuvre.';
   else if (o.pilote === 'retour') c = 'Retour à l’altitude autorisée, puis avis au contrôle.';
   cons.innerHTML = c;
-  // lecture à voix haute (une fois par annonce, seulement en lecture)
-  if (son && joue && aural && dernierAuralLu[k] !== aural.t && window.speechSynthesis && k === 'A') {
-    dernierAuralLu[k] = aural.t; const u = new SpeechSynthesisUtterance(aural.texte.toLowerCase().replace(/, /g, '... ')); u.lang = 'en-US'; u.rate = 1.05; speechSynthesis.speak(u);
-  }
+  // alerte sonore (une fois par annonce, en lecture, seulement si on vient de la franchir)
+  if (son && joue && aural && dernierAuralLu[k] !== aural.t && t - aural.t < Math.max(0.5, vitesse * 0.3)) { dernierAuralLu[k] = aural.t; jouerAural(k, aural.texte); }
   const pill = $('#pill' + k);
   pill.className = 'pill' + (o.etat === 'ra' ? ' ra' : o.etat === 'ta' ? ' ta' : '');
   pill.textContent = `${k} : ${o.etat === 'ra' ? 'RA ' + (o.ra.sens > 0 ? '↑' : '↓') : o.etat === 'ta' ? 'TA' : k === 'B' && cfg.equipB !== 'tcas' ? (cfg.B.mode === 'stby' ? 'STBY' : 'sans TCAS') : cfg[k].mode === 'tara' || cfg[k].mode === 'ta' ? 'surveille' : cfg[k].mode === 'atc' ? 'TCAS OFF' : 'STBY'}`;
@@ -855,7 +891,7 @@ function allerEtape(k) {
   const x = etapes[ie]; t = x.t; seqAnimT0 = performance.now(); dernierJournal = '';
   $('#seqNum').textContent = `Étape ${ie + 1} / ${etapes.length}`; $('#seqSaut').value = ie;
   $('#seqPrec').disabled = ie === 0; $('#seqSuiv').disabled = ie === etapes.length - 1;
-  fiche(x); dessiner(true);
+  fiche(x); dessiner(true); sonEtape();
 }
 function fiche(x) {
   const f = $('#fiche'); f.hidden = false;
