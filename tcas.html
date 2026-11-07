@@ -135,7 +135,7 @@ html.light #carte{background:#e8eef3}
 .journal-tete .puce{font:600 11.5px var(--f-body);padding:3px 8px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--muted)}
 .journal-tete .puce[aria-pressed="true"]{color:var(--text);border-color:var(--c)}
 .journal{max-height:420px;overflow:auto;padding-right:4px;scrollbar-width:thin;overscroll-behavior:contain;position:relative}
-.evts{height:150px;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:8px;scrollbar-width:thin;overscroll-behavior:contain}
+.evts{min-height:66px;overflow:hidden;display:flex;flex-direction:column;gap:4px;margin-bottom:8px;scrollbar-width:thin;overscroll-behavior:contain}
 .evts[hidden]{display:none}
 .evts-tete{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--faint);position:sticky;top:0;background:var(--panel);padding:2px 0;z-index:1}
 .evts .msg{padding:5px 9px}
@@ -161,7 +161,7 @@ html.light #carte{background:#e8eef3}
 .tmsg tr.det td{white-space:normal;color:var(--muted);font-size:12.3px;padding:2px 9px 8px 54px;background:color-mix(in srgb,var(--panel2) 60%,transparent)}
 .tmsg tr.det b{color:var(--text);font-weight:600}
 .tmsg tr.courant td{background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 2px 0 var(--c),inset 0 -2px 0 var(--c)}
-@media (max-width:980px){.evts{height:auto;max-height:150px}}
+@media (max-width:980px){.evts{min-height:0}}
 @media (max-width:560px){.tmsg{font-size:12px}.tmsg .nom{display:none}.tmsg{table-layout:auto}.tmsg col{width:auto!important}.tmsg thead th{white-space:normal;vertical-align:bottom}.tmsg td.code{white-space:nowrap}.tmsg td,.tmsg thead th{padding:5px 4px}.tmsg thead th{font-size:9.5px;letter-spacing:0}.tmsg td.code{font-size:11px;white-space:normal}.tmsg tr.det td{padding-left:8px}.tmsg td.code::after{content:" ▸";color:var(--faint);font-size:10px}.tmsg tr.ouvert td.code::after{content:" ▾"}}
 .msg{display:grid;grid-template-columns:54px 1fr;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);font-size:12.8px;line-height:1.35}
 .msg .t{font:500 11px var(--f-mono);color:var(--faint);padding-top:2px}
@@ -653,11 +653,11 @@ function cockpitTexte(k, im) {
 }
 
 /* ---------- journal des messages ---------- */
-// par avion : en haut, les alertes du TCAS (la plus récente en premier) ; dessous, un vrai tableau des messages
+// par avion : en haut, l'alerte du TCAS en cours (seulement la dernière) ; dessous, un vrai tableau des messages
 // émis : une ligne par message (le plus récent apparu en haut), 1re fois, dernière fois, compteur ; clic = détails.
 // Point de vue du système : les échanges des pilotes (VHF, pilote qui ne suit pas) n'y sont pas.
 let dernierJournal = '';
-const PILOTES = new Set(['aural', 'vhf', 'nonsuivi']);
+const PILOTES = new Set(['aural', 'vhf', 'nonsuivi', 'coord']);   // + la coordination reçue : c'est un message (UF16 UDS 3.0), déjà au tableau ; l'alerte en cours reste l'état du TCAS
 const ouverts = new Set();
 // le tableau est séparé en trois groupes : les UF/DF (interrogation → réponse), les diffusions à tous (broadcasts), puis les squitters (spontanés)
 const GROUPES_MSG = [
@@ -687,7 +687,7 @@ function journal() {
       r.evts = sigE;
       const z = $('#evts' + k);
       z.hidden = !filtres.has('evt');
-      z.innerHTML = `<div class="evts-tete">Alertes du TCAS</div>` + (ev[k].slice().reverse().map((e, n) =>
+      z.innerHTML = `<div class="evts-tete">Alerte du TCAS en cours</div>` + (ev[k].slice(-1).map((e, n) =>   // seulement la dernière
         `<div class="msg evt${n === 0 && t - e.t < 1.5 ? ' frais' : ''}${e === evtCour ? ' courant' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div class="d">${esc(e.texte)}</div></div>`).join('')
         || `<p class="vide-j">Rien pour l’instant.</p>`);
     }
