@@ -59,6 +59,7 @@ const jeu = noms => ({
   },
 });
 const REGLAGES = {
+  'triphase.html': { avant: async pg => pg.evaluate(() => document.getElementById('cv').scrollIntoView({ block: 'center' })), attente: 1200, cadre: ['#cv'], defile: 0 },
   'aec-avionique.html': { ...categorie, cadre: ['.tete', '.etape'] },
   'moteurs.html': categorie,'informatique.html': categorie, 'jeuxdesociete.html': categorie, 'chips.html': categorie,
   'o320.html': { avant: async pg => { await clic(pg, '#menu-toggle'); await clic(pg, 'button:has-text("Démarrage auto")'); }, attente: 3500, cadre: ['canvas'], defile: 0, pendant: orbite },

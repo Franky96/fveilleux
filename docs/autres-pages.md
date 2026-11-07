@@ -22,6 +22,11 @@ Pages plus simples, chacune avec son HTML, son JS et sa permission. Le schéma c
   - exemple, adresse 0x1E : CODE ALT, puis CODE ATC. Voir CLAUDE.md.
 - **ARINC 429** (`arinc429.html`, `arinc429.js`, `Manuel_Arinc_429.pdf`, `SSM_et_SDI_ARINC429.csv`) : décodeur de mots ARINC 429.
 - **Autres outils** : convertisseur (`converter`), encodeur BNR (`crypteur`), TCP/IP (`tcpip`), QR Transfert (`qr-transfer`), Shape Transfert (`shape-transfer`), simulateurs de puces (`chips`), circuit logique (`circuit`).
+- **Courant triphasé** (`triphase.html`, tout dans la page, permission `triphase`, groupe « Circuits » d'Informatique ; 7 novembre 2026, demande de l'utilisateur : comprendre le triphasé, en insistant sur les mesures et les relations, bien animé). Sources : avion 115/200 V 400 Hz, bâtiment 120/208 V 60 Hz, industriel 347/600 V 60 Hz. Alternateur en étoile ; charge en étoile avec neutre, sans neutre (déplacement du neutre V_N'N calculé) ou en triangle ; impédance et déphasage φ (capacitif à inductif), charge déséquilibrée (Z de chaque élément) et élément C ouvert. Calcul par phaseurs (complexes) : courants de ligne et d'élément, I_N, P, Q, S, FP, deux wattmètres (W₁ : I_A et V_AC ; W₂ : I_B et V_BC).
+  - Phaseurs tournants et oscilloscope sur une même toile : la hauteur de chaque vecteur est reliée à sa courbe (le passé défile vers la droite) ; on glisse sur l'image pour avancer ou reculer ; animation ralentie (vitesse en tours/s, fréquence réelle rappelée).
+  - Schéma SVG du circuit : points qui avancent dans chaque fil à la vitesse du courant instantané (sens compris), afficheurs efficace + instantané (lignes, tensions composées, chaque élément, neutre). En triangle, la charge pointe vers la gauche pour que chaque ligne arrive droit à son sommet.
+  - Mesures et relations vérifiées avec les valeurs calculées (✓ ou ✗ avec l'explication) : V_L = √3 V_ph, I_L = I_ph (étoile) ; V_L = V_ph, I_L = √3 I_ph (triangle) ; I_N = 0 ; P = √3 V_L I_L cos φ ; P = W₁ + W₂.
+  - « Pourquoi √3 ? » : construction animée en 4 étapes de V_AB = V_A − V_B. Puissance instantanée : p de chaque élément et somme (constante si équilibrée).
 
 ## Documentation AEC Avionique (`aec-avionique.html`, `aec-avionique.js`, permission `aec-avionique`)
 

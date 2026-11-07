@@ -7,7 +7,7 @@
 <script>
   const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn')) location.href = 'index.html';
-  else if (sessionStorage.getItem('userRole') !== 'admin' && !["informatique", "arinc429", "csdb", "converter", "crypteur", "tcpip", "qr-transfer", "shape-transfer", "chips", "circuit", "qrlink", "shapelink"].some(k => _p.includes(k))) location.href = 'dashboard.html';
+  else if (sessionStorage.getItem('userRole') !== 'admin' && !["informatique", "arinc429", "csdb", "converter", "crypteur", "tcpip", "qr-transfer", "shape-transfer", "chips", "circuit", "triphase", "qrlink", "shapelink"].some(k => _p.includes(k))) location.href = 'dashboard.html';
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Outils de Frank — Informatique</title>
@@ -68,6 +68,7 @@
       <div class="cartes">
         <a class="carte" href="chips.html" data-section="chips" hidden><span class="em" aria-hidden="true">🔧</span><span><b>Simulateurs de puces</b><small>NE555 · Portes logiques · AO 741 · MOS 6502</small></span><span class="fl" aria-hidden="true">›</span></a>
         <a class="carte" href="circuit.html" data-section="circuit" hidden><span class="em" aria-hidden="true">⚡</span><span><b>Circuit logique</b><small>Simulateur interactif — placer, connecter, simuler</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="triphase.html" data-section="triphase" hidden><span class="em" aria-hidden="true">🔺</span><span><b>Courant triphasé</b><small>Phaseurs, étoile et triangle, mesures, relations √3 et puissance, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
       </div>
     </section>
     <p class="vide">Aucune page de cette catégorie ne t&#x27;est ouverte pour le moment.</p>

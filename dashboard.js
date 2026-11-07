@@ -26,7 +26,7 @@ const GROUPES = [
     ['informatique.html', '💻', 'Informatique', 'Outils techniques et avioniques', 'informatique', [
       ['Avionique', [['arinc429.html', 'ARINC 429', 'arinc429'], ['csdb.html', 'CSDB', 'csdb'], ['crypteur.html', 'Encodeur BNR', 'crypteur'], ['converter.html', 'Convertisseur', 'converter']]],
       ['Réseau', [['tcpip.html', 'TCP/IP', 'tcpip'], ['qr-transfer.html', 'QR Transfert', 'qr-transfer'], ['shape-transfer.html', 'Shape Transfert', 'shape-transfer']]],
-      ['Circuits', [['chips.html', 'Simulateurs de puces', 'chips'], ['circuit.html', 'Circuit logique', 'circuit']]]]],
+      ['Circuits', [['chips.html', 'Simulateurs de puces', 'chips'], ['circuit.html', 'Circuit logique', 'circuit'], ['triphase.html', 'Courant triphasé', 'triphase']]]]],
     ['aec-avionique.html', '📚', 'Documentation AEC Avionique', "Mes cours de l'AEC en avionique (ÉNA)", 'aec-avionique'],
     ['distant.html', '🖥️', 'Connexion à distance', 'Manuels de maintenance du cégep, dans le navigateur', 'distant'],
   ]},

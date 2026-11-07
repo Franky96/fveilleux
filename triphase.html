@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Courant triphasé — Outils de Frank</title>
+<script>
+  const _pT = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pT.includes('triphase') && !_pT.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Courant triphasé : jetons du visuel 2.0 (tableau de bord, pages de catégorie) */
+:root{
+  color-scheme:dark;
+  --bg:#0a0e11; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79;
+  --c:#23753f; --ok:#3fb27f; --ko:#e8a33d;
+  /* phases : A rouge, B jaune, C bleu ; tensions composées : AB orange, BC vert, CA violet ; neutre gris */
+  --pa:#ef4444; --pb:#eab308; --pc:#3b82f6; --lab:#f97316; --lbc:#22c55e; --lca:#a855f7; --pn:#9aa7b2;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html.light{
+  color-scheme:light;
+  --bg:#f2f4f6; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0; --ok:#15803d; --ko:#b45309;
+  --pa:#dc2626; --pb:#ca8a04; --pc:#2563eb; --lab:#ea580c; --lbc:#16a34a; --lca:#9333ea; --pn:#64748b;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.55 var(--f-body);padding:0 max(16px,env(safe-area-inset-right)) 48px max(16px,env(safe-area-inset-left));overflow-x:hidden}
+.wrap{max-width:1180px;margin:0 auto}
+h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.02em;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.intro{margin:20px 0 6px;color:var(--muted);max-width:80ch}
+.intro b{color:var(--text)}
+
+.panel{margin-top:16px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:16px;padding:16px}
+.panel>h2{font-size:22px;margin-bottom:4px}
+.panel>.sous{margin:0 0 12px;color:var(--muted);font-size:13.5px}
+
+/* réglages */
+.reglages{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px 22px}
+.reg h3{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.choix{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:600 13.5px/1.2 var(--f-body);padding:7px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--text);
+  transition:border-color .15s,background .15s}
+.btn:hover{border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
+.btn[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 26%,var(--panel2));border-color:color-mix(in srgb,var(--c) 70%,var(--line2))}
+.btn small{display:block;font:500 11px var(--f-mono);color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.curseur{display:grid;grid-template-columns:110px 1fr 92px;align-items:center;gap:10px;margin:6px 0;font-size:13.5px;color:var(--muted)}
+.curseur input[type=range]{width:100%;accent-color:var(--c)}
+.curseur output{font:500 13px var(--f-mono);color:var(--text);text-align:right;white-space:nowrap}
+.case{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13.5px;color:var(--muted);cursor:pointer}
+.case input{accent-color:var(--c);width:16px;height:16px}
+#desequ[hidden]{display:none}
+
+/* phaseurs et oscilloscope */
+.barre-anim{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
+.barre-anim .rond{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:15px}
+.barre-anim .vit{display:flex;align-items:center;gap:8px;flex:1;min-width:220px;font-size:13px;color:var(--muted)}
+.barre-anim .vit input{flex:1;accent-color:var(--c)}
+.barre-anim .vit output{font:500 12.5px var(--f-mono);color:var(--text);min-width:76px}
+.ralenti{font:500 12px var(--f-mono);color:var(--faint);width:100%}
+.affiche{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.puce{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;font-size:13px;color:var(--muted)}
+.puce i{width:18px;height:3px;border-radius:2px;background:var(--k)}
+.puce i.tir{background:repeating-linear-gradient(90deg,var(--k) 0 5px,transparent 5px 8px)}
+.puce[aria-pressed="true"]{color:var(--text);border-color:color-mix(in srgb,var(--c) 60%,var(--line2));background:color-mix(in srgb,var(--c) 14%,var(--panel2))}
+.puce:disabled{opacity:.4;cursor:default}
+canvas{display:block;width:100%;touch-action:pan-y}
+#cv{height:300px;cursor:ew-resize}
+.legende{margin-top:6px;font-size:12.5px;color:var(--faint)}
+
+/* schéma */
+svg.schema{display:block;width:100%;height:auto;max-height:520px}
+.fil{fill:none;stroke:var(--line2);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.flux{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-dasharray:0.1 13}
+.boite{fill:var(--panel2);stroke-width:2}
+.borne{fill:var(--text)}
+.etiq{font:600 13px var(--f-body);fill:var(--muted)}
+.lcd rect{fill:var(--bg);stroke:var(--line2)}
+.lcd .v{font:600 13px var(--f-mono);fill:var(--text)}
+.lcd .n{font:500 10.5px var(--f-mono);fill:var(--faint)}
+.fleche{stroke-width:1.6;fill:none}
+
+/* mesures et relations */
+.mesures{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
+.carte{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.carte h3{font-size:18px;margin-bottom:6px}
+.ligne{display:grid;grid-template-columns:1fr auto;gap:6px;padding:3px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.ligne:last-of-type{border-bottom:0}
+.ligne span{color:var(--muted)}
+.ligne span i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--k);margin-right:6px}
+.ligne b{font:500 13.5px var(--f-mono);font-variant-numeric:tabular-nums}
+.rel{margin-top:10px;padding:8px 10px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);font-size:13.5px}
+.rel .f{font:600 14px var(--f-mono)}
+.rel .calc{display:block;margin-top:3px;font:500 12.5px var(--f-mono);color:var(--muted)}
+.rel.ok{border-color:color-mix(in srgb,var(--ok) 55%,var(--line2))}
+.rel.ok .etat{color:var(--ok)}
+.rel.ko{border-color:color-mix(in srgb,var(--ko) 55%,var(--line2))}
+.rel.ko .etat{color:var(--ko)}
+.rel.flash{animation:flash .9s ease}
+@keyframes flash{from{background:color-mix(in srgb,var(--c) 30%,var(--panel))}}
+
+/* pourquoi √3 et puissance */
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+#cv3{height:300px}
+#cvp{height:240px}
+.etape{min-height:44px;margin-top:6px;font-size:14px}
+.etape b{font-family:var(--f-mono);font-weight:600}
+.pas{display:flex;gap:6px;margin-top:6px}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:12px;margin-top:16px}
+.note{background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.note h3{font-size:18px;margin-bottom:4px}
+.note p{margin:0 0 6px;font-size:14px}
+.note p:last-child{margin-bottom:0}
+.formule{font:500 13px var(--f-mono);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap}
+@media (max-width:640px){
+  .curseur{grid-template-columns:86px 1fr 80px}
+}
+@media (prefers-reduced-motion: reduce){.rel.flash{animation:none}}
+</style>
+<link rel="stylesheet" href="fond.css">
+<script src="topbar.js" defer></script>
+</head>
+<body data-retour="informatique.html" data-retour-nom="Informatique">
+<div data-topbar><h1>Courant triphasé</h1></div>
+<div class="wrap">
+<p class="intro">Trois tensions de même valeur, décalées de <b>120°</b>, produites par un même alternateur. On les mesure de deux façons : entre une phase et le neutre (<b>tension simple</b>, ou de phase) et entre deux phases (<b>tension composée</b>, ou de ligne). Choisis la source, le montage et la charge : toutes les mesures et les relations se recalculent, et les animations montrent d'où elles viennent.</p>
+
+<section class="panel" aria-labelledby="t-reg">
+  <h2 id="t-reg">Réglages</h2>
+  <div class="reglages">
+    <div class="reg">
+      <h3>Source</h3>
+      <div class="choix" id="sources">
+        <button class="btn" type="button" data-src="avion" aria-pressed="true">Avion<small>115/200 V · 400 Hz</small></button>
+        <button class="btn" type="button" data-src="reseau" aria-pressed="false">Bâtiment<small>120/208 V · 60 Hz</small></button>
+        <button class="btn" type="button" data-src="industrie" aria-pressed="false">Industriel<small>347/600 V · 60 Hz</small></button>
+      </div>
+      <h3 style="margin-top:12px">Montage de la charge</h3>
+      <div class="choix" id="montages">
+        <button class="btn" type="button" data-m="yn" aria-pressed="true">Étoile + neutre<small>4 fils</small></button>
+        <button class="btn" type="button" data-m="y" aria-pressed="false">Étoile sans neutre<small>3 fils</small></button>
+        <button class="btn" type="button" data-m="d" aria-pressed="false">Triangle<small>3 fils</small></button>
+      </div>
+    </div>
+    <div class="reg">
+      <h3>Charge (par élément)</h3>
+      <div class="curseur"><label for="z">Impédance Z</label><input type="range" id="z" min="2" max="50" step="0.5" value="10"><output id="zo"></output></div>
+      <div class="curseur"><label for="phi">Déphasage φ</label><input type="range" id="phi" min="-60" max="60" step="1" value="30"><output id="phio"></output></div>
+      <label class="case"><input type="checkbox" id="eq" checked> Charge équilibrée (les trois éléments pareils)</label>
+      <div id="desequ" hidden>
+        <div class="curseur"><label for="za">Z de A</label><input type="range" id="za" min="2" max="50" step="0.5" value="10"><output id="zao"></output></div>
+        <div class="curseur"><label for="zb">Z de B</label><input type="range" id="zb" min="2" max="50" step="0.5" value="20"><output id="zbo"></output></div>
+        <div class="curseur"><label for="zc">Z de C</label><input type="range" id="zc" min="2" max="50" step="0.5" value="40"><output id="zco"></output></div>
+      </div>
+      <label class="case"><input type="checkbox" id="ouvre"> Ouvrir l'élément C (fusible grillé, fil coupé)</label>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-ph">
+  <h2 id="t-ph">Phaseurs et oscilloscope</h2>
+  <p class="sous">Chaque grandeur est un vecteur qui tourne ; sa hauteur, à chaque instant, est la valeur instantanée, que l'oscilloscope trace à droite. Glisse sur l'image pour avancer ou reculer dans le temps.</p>
+  <div class="barre-anim">
+    <button class="btn rond" type="button" id="pp" aria-label="Pause">⏸</button>
+    <button class="btn rond" type="button" id="recul" aria-label="Reculer de 15°">⟲</button>
+    <button class="btn rond" type="button" id="avance" aria-label="Avancer de 15°">⟳</button>
+    <label class="vit">Vitesse <input type="range" id="vit" min="0.03" max="1" step="0.01" value="0.2"><output id="vito"></output></label>
+    <span class="ralenti" id="ralenti"></span>
+  </div>
+  <div class="affiche" id="affiche"></div>
+  <canvas id="cv" aria-label="Phaseurs tournants et formes d'onde"></canvas>
+  <p class="legende" id="legende"></p>
+</section>
+
+<section class="panel" aria-labelledby="t-sc">
+  <h2 id="t-sc">Le circuit et ses mesures</h2>
+  <p class="sous">Les points montrent le courant dans chaque fil : leur vitesse suit la valeur instantanée, ils s'arrêtent quand le courant passe par zéro et repartent dans l'autre sens. Les afficheurs donnent la valeur efficace (en gros) et la valeur instantanée (en petit).</p>
+  <svg class="schema" id="schema" viewBox="0 0 960 420" role="img" aria-label="Schéma : alternateur triphasé en étoile, trois lignes, charge"></svg>
+</section>
+
+<section class="panel" aria-labelledby="t-me">
+  <h2 id="t-me">Mesures et relations</h2>
+  <p class="sous">Valeurs efficaces, comme les lirait un multimètre. Chaque relation est vérifiée avec les mesures : elle tient pour une charge équilibrée, et on voit ce qui se passe quand elle ne l'est plus.</p>
+  <div class="mesures" id="mesures"></div>
+</section>
+
+<div class="duo">
+  <section class="panel" aria-labelledby="t-r3">
+    <h2 id="t-r3">Pourquoi √3 ?</h2>
+    <p class="sous">La tension composée V<sub>AB</sub> est la différence de deux tensions simples décalées de 120°.</p>
+    <canvas id="cv3" aria-label="Construction de la tension composée"></canvas>
+    <p class="etape" id="etape"></p>
+    <div class="pas">
+      <button class="btn" type="button" id="p3-prec">← Étape</button>
+      <button class="btn" type="button" id="p3-pp">⏸ Pause</button>
+      <button class="btn" type="button" id="p3-suiv">Étape →</button>
+    </div>
+  </section>
+  <section class="panel" aria-labelledby="t-pw">
+    <h2 id="t-pw">Puissance instantanée</h2>
+    <p class="sous">p = v × i dans chaque élément. Chacune pulse au double de la fréquence, mais leur somme est constante quand la charge est équilibrée : un moteur triphasé ne vibre pas comme un moteur monophasé.</p>
+    <canvas id="cvp" aria-label="Puissance instantanée des trois phases et leur somme"></canvas>
+    <p class="legende" id="legp"></p>
+  </section>
+</div>
+
+<div class="notes">
+  <div class="note"><h3>Étoile (Y)</h3><p>Chaque élément de la charge est branché entre une phase et le point neutre : il reçoit la tension simple.</p><p><span class="formule">V<sub>L</sub> = √3 × V<sub>ph</sub></span> <span class="formule">I<sub>L</sub> = I<sub>ph</sub></span></p><p>Avec une charge équilibrée, le courant de neutre est nul : les trois courants s'annulent à chaque instant.</p></div>
+  <div class="note"><h3>Triangle (Δ)</h3><p>Chaque élément est branché entre deux phases : il reçoit la tension composée. Chaque courant de ligne est la différence de deux courants d'élément.</p><p><span class="formule">V<sub>L</sub> = V<sub>ph</sub></span> <span class="formule">I<sub>L</sub> = √3 × I<sub>ph</sub></span></p></div>
+  <div class="note"><h3>Puissance</h3><p>Pour tout montage équilibré : <span class="formule">P = √3 × V<sub>L</sub> × I<sub>L</sub> × cos φ</span>, avec φ le déphasage dans chaque élément (pas entre V<sub>L</sub> et I<sub>L</sub>).</p><p><span class="formule">Q = √3 V<sub>L</sub> I<sub>L</sub> sin φ</span> <span class="formule">S = √3 V<sub>L</sub> I<sub>L</sub></span></p><p>Méthode des deux wattmètres : en 3 fils, <span class="formule">P = W<sub>1</sub> + W<sub>2</sub></span>, même déséquilibré.</p></div>
+  <div class="note"><h3>Dans un avion</h3><p>Les alternateurs donnent 115 V entre phase et neutre, 200 V entre phases, à 400 Hz. Le neutre est relié à la structure de l'avion, qui sert de retour.</p><p>À 400 Hz, transformateurs et moteurs sont beaucoup plus légers qu'à 60 Hz pour la même puissance : moins de fer et de cuivre à bord.</p></div>
+</div>
+</div>
+
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const nf = (v, d = 1) => (Number.isFinite(v) ? v : 0).toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- nombres complexes (phaseurs, valeurs efficaces) ---------- */
+const C = (re, im = 0) => ({ re, im });
+const add = (a, b) => C(a.re + b.re, a.im + b.im), sub = (a, b) => C(a.re - b.re, a.im - b.im);
+const mul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const div = (a, b) => { const d = b.re * b.re + b.im * b.im; return d ? C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d) : C(0); };
+const conj = a => C(a.re, -a.im), mod = a => Math.hypot(a.re, a.im), arg = a => Math.atan2(a.im, a.re);
+const pol = (r, deg) => C(r * Math.cos(deg * Math.PI / 180), r * Math.sin(deg * Math.PI / 180));
+// valeur instantanée d'un phaseur efficace X à l'angle θ : √2 · Im(X · e^{jθ})
+const inst = (X, th) => Math.SQRT2 * (X.re * Math.sin(th) + X.im * Math.cos(th));
+
+/* ---------- état ---------- */
+const SOURCES = { avion: { v: 115, f: 400 }, reseau: { v: 120, f: 60 }, industrie: { v: 347, f: 60 } };
+const st = { src: 'avion', m: 'yn', z: 10, phi: 30, eq: true, za: 10, zb: 20, zc: 40, ouvre: false };
+let R = null;   // résultats du calcul
+let th = 0, joue = !reduit, vit = 0.2;
+const montre = new Set(['vph', 'vl']);
+
+/* ---------- calcul du circuit ---------- */
+function calculer() {
+  const s = SOURCES[st.src], Vph = s.v;
+  const V = [pol(Vph, 0), pol(Vph, -120), pol(Vph, 120)];                    // A, B, C (séquence directe)
+  const VL = [sub(V[0], V[1]), sub(V[1], V[2]), sub(V[2], V[0])];            // AB, BC, CA
+  const zs = st.eq ? [st.z, st.z, st.z] : [st.za, st.zb, st.zc];
+  const Z = zs.map(z => pol(z, st.phi));
+  const Y = Z.map((z, k) => (k === 2 && st.ouvre) ? C(0) : div(C(1), z));
+  let Vel, Iel, IL, IN = C(0), Vn = C(0);
+  if (st.m === 'd') {
+    Vel = VL;                                                                // éléments AB, BC, CA
+    Iel = VL.map((v, k) => mul(v, Y[k]));
+    IL = [sub(Iel[0], Iel[2]), sub(Iel[1], Iel[0]), sub(Iel[2], Iel[1])];
+  } else {
+    if (st.m === 'y') {                                                      // sans neutre : le point N' se déplace
+      const sy = Y.reduce(add, C(0));
+      Vn = mod(sy) ? div(V.map((v, k) => mul(v, Y[k])).reduce(add, C(0)), sy) : C(0);
+    }
+    Vel = V.map(v => sub(v, Vn));
+    Iel = Vel.map((v, k) => mul(v, Y[k]));
+    IL = Iel;
+    if (st.m === 'yn') IN = IL.reduce(add, C(0));
+  }
+  const S = Vel.map((v, k) => mul(v, conj(Iel[k])));
+  const P = S.reduce((t, x) => t + x.re, 0), Q = S.reduce((t, x) => t + x.im, 0);
+  const VAC = sub(V[0], V[2]);
+  const W1 = mul(VAC, conj(IL[0])).re, W2 = mul(VL[1], conj(IL[1])).re;
+  R = { s, Vph, V, VL, Z, zs, Vel, Iel, IL, IN, Vn, S, P, Q, W1, W2, Vt: Vel };
+}
+
+/* ---------- couleurs (lues dans le CSS, à chaque changement de thème) ---------- */
+let K = {};
+function couleurs() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  K = { pa: g('--pa'), pb: g('--pb'), pc: g('--pc'), lab: g('--lab'), lbc: g('--lbc'), lca: g('--lca'), pn: g('--pn'),
+    text: g('--text'), muted: g('--muted'), faint: g('--faint'), line: g('--line'), line2: g('--line2'), panel: g('--panel'), panel2: g('--panel2'), bg: g('--bg') };
+}
+
+/* ---------- grandeurs affichables ---------- */
+const GRANDEURS = [
+  { id: 'vph', nom: 'Tensions simples', ty: 'V', liste: () => [['V_A', R.Vel[0], K.pa], ['V_B', R.Vel[1], K.pb], ['V_C', R.Vel[2], K.pc]], seulY: true },
+  { id: 'vl', nom: 'Tensions composées', ty: 'V', liste: () => [['V_AB', R.VL[0], K.lab], ['V_BC', R.VL[1], K.lbc], ['V_CA', R.VL[2], K.lca]] },
+  { id: 'il', nom: 'Courants de ligne', ty: 'I', liste: () => [['I_A', R.IL[0], K.pa], ['I_B', R.IL[1], K.pb], ['I_C', R.IL[2], K.pc]] },
+  { id: 'iph', nom: 'Courants des éléments', ty: 'I', liste: () => [['I_AB', R.Iel[0], K.lab], ['I_BC', R.Iel[1], K.lbc], ['I_CA', R.Iel[2], K.lca]], seulD: true },
+  { id: 'in', nom: 'Courant de neutre', ty: 'I', liste: () => [['I_N', R.IN, K.pn]], seulN: true },
+];
+function puces() {
+  const z = $('#affiche'); z.innerHTML = '';
+  for (const g of GRANDEURS) {
+    const dispo = !(g.seulD && st.m !== 'd') && !(g.seulN && st.m !== 'yn') && !(g.seulY && st.m === 'd');
+    if (!dispo) montre.delete(g.id);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'puce'; b.disabled = !dispo; b.setAttribute('aria-pressed', montre.has(g.id));
+    const k = { vph: 'var(--pa)', vl: 'var(--lab)', il: 'var(--pa)', iph: 'var(--lab)', in: 'var(--pn)' }[g.id];
+    b.innerHTML = `<i class="${g.ty === 'I' ? 'tir' : ''}" style="--k:${k}"></i>${g.nom}`;
+    b.title = !dispo ? (g.seulD ? 'En étoile, le courant de chaque élément est le courant de ligne' : g.seulN ? 'Seulement en étoile avec neutre' : 'En triangle, chaque élément reçoit la tension composée') : '';
+    b.onclick = () => { montre.has(g.id) ? montre.delete(g.id) : montre.add(g.id); b.setAttribute('aria-pressed', montre.has(g.id)); };
+    z.appendChild(b);
+  }
+}
+
+/* ---------- toile : préparation (densité de pixels) ---------- */
+function prep(cv) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) { cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); }
+  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height);
+  return [x, r.width, r.height];
+}
+function fleche(x, x0, y0, x1, y1, coul, ep = 2.4, tir = false) {
+  const a = Math.atan2(y1 - y0, x1 - x0), L = Math.hypot(x1 - x0, y1 - y0), t = Math.min(10, L * .35);
+  x.strokeStyle = x.fillStyle = coul; x.lineWidth = ep; x.setLineDash(tir ? [6, 4] : []);
+  x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1 - Math.cos(a) * t * .6, y1 - Math.sin(a) * t * .6); x.stroke(); x.setLineDash([]);
+  if (L < 3) return;
+  x.beginPath(); x.moveTo(x1, y1); x.lineTo(x1 - t * Math.cos(a - .42), y1 - t * Math.sin(a - .42)); x.lineTo(x1 - t * Math.cos(a + .42), y1 - t * Math.sin(a + .42)); x.closePath(); x.fill();
+}
+const indice = n => n.replace(/_(\w+)/, (_, s) => s.split('').map(c => '₀₁₂₃₄₅₆₇₈₉'['0123456789'.indexOf(c)] || ({ A: 'ᴀ', B: 'ʙ', C: 'ᴄ', N: 'ɴ' }[c] || c)).join(''));
+const lib = n => n.replace('_', '');
+
+/* ---------- phaseurs + oscilloscope (une seule toile : la hauteur d'un vecteur = la valeur tracée) ---------- */
+function dessinerPhaseurs() {
+  const cv = $('#cv'), larg = cv.clientWidth;
+  // hauteur selon la largeur : sur téléphone, le cercle est petit, la toile aussi (pas de vide dessous)
+  const hv = Math.round(Math.max(190, Math.min(330, larg * .19 / .42 + 24)));
+  if (Math.abs(cv.clientHeight - hv) > 1) cv.style.height = hv + 'px';
+  const [x, W, H] = prep(cv);
+  const cy = H / 2, Rr = Math.min(H * .42, W * .19), cx = Rr + 18, x0 = cx + Rr + 26, x1 = W - 8;
+  const vis = GRANDEURS.filter(g => montre.has(g.id));
+  // échelles : tensions (la plus grande crête au rayon), courants (à 80 % du rayon)
+  const crete = ty => Math.max(1e-9, ...vis.filter(g => g.ty === ty).flatMap(g => g.liste().map(l => Math.SQRT2 * mod(l[1]))));
+  const kV = Rr / crete('V'), kI = Rr * .8 / Math.max(crete('I'), ...[R.IL, R.Iel].flat().map(i => Math.SQRT2 * mod(i)));
+  // cercle et grille
+  x.strokeStyle = K.line2; x.lineWidth = 1;
+  x.beginPath(); x.arc(cx, cy, Rr, 0, 2 * Math.PI); x.stroke();
+  x.beginPath(); x.moveTo(cx - Rr - 8, cy); x.lineTo(x1, cy); x.moveTo(cx, cy - Rr - 8); x.lineTo(cx, cy + Rr + 8); x.stroke();
+  x.strokeStyle = K.line; x.setLineDash([3, 5]);
+  for (const f of [-1, 1]) { x.beginPath(); x.moveTo(x0, cy + f * Rr); x.lineTo(x1, cy + f * Rr); x.stroke(); }
+  for (let k = 1; k < 4; k++) { const xx = x0 + (x1 - x0) * k / 4; x.beginPath(); x.moveTo(xx, cy - Rr); x.lineTo(xx, cy + Rr); x.stroke(); }
+  x.setLineDash([]);
+  x.fillStyle = K.faint; x.font = '500 11px "IBM Plex Mono",monospace'; x.textAlign = 'left';
+  x.fillText('maintenant', x0 + 3, cy + Rr + 14); x.textAlign = 'right'; if (x1 - x0 > 260) x.fillText('2 périodes plus tôt', x1, cy + Rr + 14); x.textAlign = 'left';
+  // angle de rotation
+  x.strokeStyle = K.faint; x.beginPath(); x.arc(cx, cy, 16, -0, -(((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)), true); x.stroke();
+  // courbes (passé vers la droite) et vecteurs
+  for (const g of vis) {
+    const kk = g.ty === 'V' ? kV : kI;
+    for (const [n, X, coul] of g.liste()) {
+      x.strokeStyle = coul; x.lineWidth = g.ty === 'V' ? 2.2 : 1.8; x.setLineDash(g.ty === 'I' ? [7, 5] : []);
+      x.beginPath();
+      for (let px = x0; px <= x1; px += 2) { const s = (px - x0) / (x1 - x0) * 4 * Math.PI, y = cy - kk * inst(X, th - s); px === x0 ? x.moveTo(px, y) : x.lineTo(px, y); }
+      x.stroke(); x.setLineDash([]);
+      const ang = th + arg(X), r = kk * Math.SQRT2 * mod(X), tx = cx + r * Math.cos(ang), ty = cy - r * Math.sin(ang);
+      // projection : du bout du vecteur jusqu'à la courbe, à la même hauteur
+      x.strokeStyle = coul; x.globalAlpha = .45; x.lineWidth = 1; x.setLineDash([2, 4]);
+      x.beginPath(); x.moveTo(tx, ty); x.lineTo(x0, ty); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+      fleche(x, cx, cy, tx, ty, coul, g.ty === 'V' ? 2.6 : 2, g.ty === 'I');
+      x.fillStyle = coul; x.beginPath(); x.arc(x0, ty, 3.6, 0, 2 * Math.PI); x.fill();
+      if (r > 14) { x.font = '600 12px "IBM Plex Sans",sans-serif'; x.fillText(indice(n), tx + 6 * Math.cos(ang) - 8, ty - 7 * Math.sin(ang) + 4); }
+    }
+  }
+  if (st.m === 'y' && mod(R.Vn) > .05) {   // déplacement du neutre (étoile sans neutre, déséquilibrée)
+    const ang = th + arg(R.Vn), r = kV * Math.SQRT2 * mod(R.Vn);
+    fleche(x, cx, cy, cx + r * Math.cos(ang), cy - r * Math.sin(ang), K.pn, 1.6, true);
+  }
+}
+
+/* ---------- puissance instantanée ---------- */
+function dessinerPuissance() {
+  const [x, W, H] = prep($('#cvp'));
+  const g = 34, top = 10, bas = H - 22, x0 = g, x1 = W - 8;
+  const pk = (k, t) => inst(R.Vel[k], t) * inst(R.Iel[k], t);
+  const N = 240, pts = [], tot = [];
+  let mx = 1;
+  for (let i = 0; i <= N; i++) { const t = th - i / N * 4 * Math.PI, p = [0, 1, 2].map(k => pk(k, t)); pts.push(p); tot.push(p[0] + p[1] + p[2]); mx = Math.max(mx, ...p.map(Math.abs), Math.abs(tot[i])); }
+  mx *= 1.25;
+  const y = v => top + (bas - top) * (1 - (v + mx) / (2 * mx)), xx = i => x0 + (x1 - x0) * i / N;
+  x.strokeStyle = K.line2; x.lineWidth = 1; x.beginPath(); x.moveTo(x0, y(0)); x.lineTo(x1, y(0)); x.stroke();
+  x.fillStyle = K.faint; x.font = '500 10.5px "IBM Plex Mono",monospace'; x.textAlign = 'right';
+  x.fillText('0', x0 - 4, y(0) + 4); x.fillText(nf(mx / 1000, 1), x0 - 4, top + 8); x.fillText('kW', x0 - 4, y(0) - 8); x.textAlign = 'left';
+  [K.pa, K.pb, K.pc].forEach((c, k) => { x.strokeStyle = c; x.lineWidth = 1.6; x.globalAlpha = .85; x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(xx(i), y(p[k])) : x.moveTo(xx(i), y(p[k]))); x.stroke(); });
+  x.globalAlpha = 1;
+  x.strokeStyle = K.text; x.lineWidth = 3; x.beginPath(); tot.forEach((v, i) => i ? x.lineTo(xx(i), y(v)) : x.moveTo(xx(i), y(v))); x.stroke();
+  x.strokeStyle = K.muted; x.setLineDash([5, 5]); x.lineWidth = 1; x.beginPath(); x.moveTo(x0, y(R.P)); x.lineTo(x1, y(R.P)); x.stroke(); x.setLineDash([]);
+  x.fillStyle = K.text; x.beginPath(); x.arc(x0, y(tot[0]), 4.5, 0, 2 * Math.PI); x.fill();
+  x.fillStyle = K.muted; x.font = '500 11px "IBM Plex Mono",monospace'; x.fillText('maintenant', x0 + 6, bas + 15);
+  const ond = Math.max(...tot) - Math.min(...tot);
+  $('#legp').innerHTML = `Trait épais : somme p<sub>A</sub>+p<sub>B</sub>+p<sub>C</sub> = <b>${nf(tot[0] / 1000, 2)} kW</b> en ce moment ; pointillé : moyenne P = ${nf(R.P / 1000, 2)} kW. `
+    + (ond < Math.max(1, Math.abs(R.P)) * .01 ? 'La somme ne varie pas : la puissance est constante.' : `La somme varie de ${nf(ond / 1000, 2)} kW : la charge n'est plus équilibrée.`);
+}
+
+/* ---------- pourquoi √3 : construction animée de V_AB = V_A − V_B ---------- */
+const P3 = { e: 0, t: 0, joue: !reduit };
+const ETAPES = [
+  () => `Deux tensions simples, <b>V<sub>A</sub></b> et <b>V<sub>B</sub></b>, de ${nf(R.Vph, 0)} V chacune, décalées de 120°.`,
+  () => `V<sub>AB</sub> = V<sub>A</sub> − V<sub>B</sub> : on retourne V<sub>B</sub> pour obtenir <b>−V<sub>B</sub></b> (même longueur, sens opposé).`,
+  () => `On place −V<sub>B</sub> au bout de V<sub>A</sub> : l'addition se fait bout à bout.`,
+  () => `Le triangle a deux côtés de ${nf(R.Vph, 0)} V et un angle de 120° entre eux, donc deux angles de 30°. Le troisième côté vaut <b>2 × ${nf(R.Vph, 0)} × cos 30° = √3 × ${nf(R.Vph, 0)} = ${nf(Math.sqrt(3) * R.Vph, 1)} V</b>, en avance de 30° sur V<sub>A</sub>.`,
+];
+function dessinerR3(dt) {
+  if (P3.joue) { P3.t += dt; if (P3.t > 3.4) { P3.t = 0; P3.e = (P3.e + 1) % ETAPES.length; majEtape(); } }
+  const [x, W, H] = prep($('#cv3'));
+  const L = Math.min(H * .36, W * .26), ox = W * .38, oy = H * .62;
+  const u = Math.min(1, P3.t / 1.3), ease = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+  const p = deg => [Math.cos(deg * Math.PI / 180), -Math.sin(deg * Math.PI / 180)];
+  const A = p(90), B = p(-30);   // V_A vers le haut, V_B 120° en retard
+  x.strokeStyle = K.line; x.lineWidth = 1; x.beginPath(); x.arc(ox, oy, L, 0, 2 * Math.PI); x.stroke();
+  fleche(x, ox, oy, ox + A[0] * L, oy + A[1] * L, K.pa, 3);
+  x.fillStyle = K.pa; x.font = '600 13px "IBM Plex Sans",sans-serif'; x.fillText('V', ox + A[0] * L + 6, oy + A[1] * L + 4); x.fillText('A', ox + A[0] * L + 15, oy + A[1] * L + 8);
+  const e = P3.e;
+  // V_B, puis retourné, puis déplacé
+  let ang = -30, bx = ox, by = oy;
+  if (e === 1) ang = -30 + 180 * ease;
+  if (e >= 2) ang = 150;
+  if (e === 2) { bx = ox + A[0] * L * ease; by = oy + A[1] * L * ease; }
+  if (e >= 3) { bx = ox + A[0] * L; by = oy + A[1] * L; }
+  if (e >= 1) { x.globalAlpha = .3; fleche(x, ox, oy, ox + B[0] * L, oy + B[1] * L, K.pb, 2, true); x.globalAlpha = 1; }
+  const q = p(ang);
+  fleche(x, bx, by, bx + q[0] * L, by + q[1] * L, K.pb, 3);
+  x.fillStyle = K.pb; x.fillText(e >= 1 && (e > 1 || ease > .5) ? '−V' : 'V', bx + q[0] * L + 6, by + q[1] * L + 4); x.fillText('B', bx + q[0] * L + (e >= 1 && (e > 1 || ease > .5) ? 22 : 15), by + q[1] * L + 8);
+  // arc 120° entre V_A et V_B
+  if (e === 0) { x.strokeStyle = K.muted; x.lineWidth = 1.2; x.beginPath(); x.arc(ox, oy, L * .3, -Math.PI / 2, Math.PI / 6); x.stroke(); x.fillStyle = K.muted; x.fillText('120°', ox + L * .26, oy - L * .16); }
+  if (e === 3) {
+    const R3 = Math.sqrt(3), C3 = p(120), ex = ox + C3[0] * L * R3 * ease, ey = oy + C3[1] * L * R3 * ease;
+    fleche(x, ox, oy, ex, ey, K.lab, 3.4);
+    x.fillStyle = K.lab; x.font = '700 14px "IBM Plex Sans",sans-serif'; x.fillText('V', ex - 34, ey); x.fillText('AB', ex - 25, ey + 5);
+    x.strokeStyle = K.muted; x.lineWidth = 1.2; x.fillStyle = K.muted; x.font = '600 12px "IBM Plex Sans",sans-serif';
+    x.beginPath(); x.arc(ox, oy, L * .32, -Math.PI * 2 / 3, -Math.PI / 2); x.stroke(); x.fillText('30°', ox - L * .2, oy - L * .4);
+    const tx = ox + A[0] * L, ty = oy + A[1] * L;
+    x.beginPath(); x.arc(tx, ty, L * .22, Math.PI / 2, Math.PI * 5 / 6); x.stroke(); x.fillText('120°', tx - L * .32, ty + L * .3);
+    x.font = '600 13px "IBM Plex Mono",monospace'; x.fillStyle = K.text; x.textAlign = 'right';
+    x.fillText(`|V_AB| = √3 × ${nf(R.Vph, 0)} V`, W - 10, 22); x.fillText(`= ${nf(R3 * R.Vph, 1)} V`, W - 10, 40); x.textAlign = 'left';
+  }
+}
+function majEtape() { $('#etape').innerHTML = `<span style="color:var(--faint)">Étape ${P3.e + 1}/4 · </span>` + ETAPES[P3.e](); }
+
+/* ---------- schéma du circuit (SVG), courants animés ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+let FILS = [], LCD = [];
+function el(nom, at, parent) { const e = document.createElementNS(NS, nom); for (const k in at) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; }
+function schema() {
+  const svg = $('#schema'); svg.innerHTML = ''; FILS = []; LCD = [];
+  const gF = el('g', {}, svg), gB = el('g', {}, svg), gT = el('g', {}, svg);
+  const Ns = [110, 210], S = [[220, 110], [220, 210], [220, 310]];
+  const coul = [K.pa, K.pb, K.pc], cel = [K.lab, K.lbc, K.lca];
+  const fil = (d, courant, c) => { el('path', { d, class: 'fil' }, gF); const f = el('path', { d, class: 'flux', stroke: c }, gF); FILS.push({ f, courant, off: 0 }); return f; };
+  const lcd = (x, y, nom, valeur, instant, c, w = 124) => {
+    const g = el('g', { class: 'lcd', transform: `translate(${x},${y})` }, gT);
+    el('rect', { x: 0, y: 0, width: w, height: 36, rx: 7 }, g);
+    if (c) el('rect', { x: 0, y: 0, width: 4, height: 36, rx: 2, fill: c, stroke: 'none' }, g);
+    const n = el('text', { x: 10, y: 14, class: 'n' }, g); n.textContent = nom;
+    const v = el('text', { x: 10, y: 30, class: 'v' }, g);
+    const i = el('text', { x: w - 6, y: 14, class: 'n', 'text-anchor': 'end' }, g);
+    LCD.push({ v, i, valeur, instant });
+  };
+  const etiq = (x, y, t, anchor = 'middle', c) => { const e = el('text', { x, y, class: 'etiq', 'text-anchor': anchor }, gT); if (c) e.setAttribute('style', `fill:${c}`); e.textContent = t; };
+  const boite = (x0, y0, x1, y1, c, nom) => {   // élément de charge (rectangle le long du fil)
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, a = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+    el('rect', { x: -22, y: -9, width: 44, height: 18, rx: 4, class: 'boite', stroke: c, transform: `translate(${mx},${my}) rotate(${a})` }, gB);
+    return [mx, my];
+  };
+  const ouvert = k => k === 2 && st.ouvre;
+  // alternateur en étoile : trois enroulements (~) du neutre aux bornes
+  S.forEach((p, k) => {
+    fil(`M${Ns[0]},${Ns[1]} L${p[0]},${p[1]}`, t => inst(R.IL[k], t), coul[k]);
+    const mx = (Ns[0] + p[0]) / 2, my = (Ns[1] + p[1]) / 2;
+    el('circle', { cx: mx, cy: my, r: 15, class: 'boite', stroke: coul[k] }, gB);
+    const s = el('text', { x: mx, y: my + 5, 'text-anchor': 'middle', class: 'etiq' }, gB); s.textContent = '~';
+    etiq(p[0] - 8, p[1] - 10, 'ABC'[k], 'end', coul[k]);
+  });
+  el('circle', { cx: Ns[0], cy: Ns[1], r: 5, class: 'borne' }, gB); etiq(Ns[0] - 10, Ns[1] + 4, 'N', 'end');
+  etiq(150, 400, 'Alternateur (étoile)');
+  // lignes et charge
+  const D = st.m === 'd';
+  if (!D) {
+    const Nl = [780, 210], a = [[640, 110], [640, 210], [640, 310]];
+    a.forEach((p, k) => {
+      fil(`M${S[k][0]},${S[k][1]} L${p[0]},${p[1]}`, t => inst(R.IL[k], t), coul[k]);
+      if (ouvert(k)) { el('path', { d: `M${p[0]},${p[1]} L${(p[0] + Nl[0]) / 2 - 12},${(p[1] + Nl[1]) / 2 + 6}`, class: 'fil' }, gF); el('path', { d: `M${(p[0] + Nl[0]) / 2 + 12},${(p[1] + Nl[1]) / 2 - 6} L${Nl[0]},${Nl[1]}`, class: 'fil' }, gF); }
+      else fil(`M${p[0]},${p[1]} L${Nl[0]},${Nl[1]}`, t => inst(R.Iel[k], t), coul[k]);
+      const [mx, my] = ouvert(k) ? [(p[0] + Nl[0]) / 2, (p[1] + Nl[1]) / 2] : boite(p[0], p[1], Nl[0], Nl[1], coul[k]);
+      if (ouvert(k)) etiq(mx, my - 12, 'ouvert', 'middle', K.muted);
+      lcd(800, [92, 228, 300][k], `élément ${'ABC'[k]}`, () => `${nf(mod(R.Vel[k]), 1)} V · ${nf(mod(R.Iel[k]), 2)} A`, t => '', coul[k], 152);
+    });
+    el('circle', { cx: Nl[0], cy: Nl[1], r: 5, class: 'borne' }, gB); etiq(Nl[0] - 6, Nl[1] - 12, "N'", 'end');
+    if (st.m === 'yn') {
+      fil(`M${Nl[0]},${Nl[1]} L${Nl[0]},385 L${Ns[0]},385 L${Ns[0]},${Ns[1]}`, t => inst(R.IN, t), K.pn);
+      etiq(450, 405, 'neutre (structure de l’avion)');
+      lcd(390, 340, 'I_N (neutre)', () => `${nf(mod(R.IN), 2)} A`, t => nf(inst(R.IN, t), 1), K.pn);
+    } else {
+      lcd(800, 156, "V_N'N déplacé", () => `${nf(mod(R.Vn), 1)} V`, t => nf(inst(R.Vn, t), 1), K.pn, 152);
+    }
+    etiq(720, 400, st.m === 'yn' ? 'Charge en étoile, avec neutre' : 'Charge en étoile, sans neutre');
+  } else {
+    const a = [770, 110], b = [640, 210], c = [770, 310];   // triangle pointé vers la gauche : chaque ligne arrive droit à son sommet
+    fil(`M${S[0][0]},${S[0][1]} L${a[0]},${a[1]}`, t => inst(R.IL[0], t), coul[0]);
+    fil(`M${S[1][0]},${S[1][1]} L${b[0]},${b[1]}`, t => inst(R.IL[1], t), coul[1]);
+    fil(`M${S[2][0]},${S[2][1]} L${c[0]},${c[1]}`, t => inst(R.IL[2], t), coul[2]);
+    const br = [[a, b], [b, c], [c, a]], noms = ['AB', 'BC', 'CA'];
+    br.forEach(([p, q], k) => {
+      if (ouvert(k)) { const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2; el('path', { d: `M${p[0]},${p[1]} L${mx},${my - 16}`, class: 'fil' }, gF); el('path', { d: `M${mx},${my + 16} L${q[0]},${q[1]}`, class: 'fil' }, gF); etiq(mx - 10, my + 4, 'ouvert', 'end', K.muted); }
+      else { fil(`M${p[0]},${p[1]} L${q[0]},${q[1]}`, t => inst(R.Iel[k], t), cel[k]); boite(p[0], p[1], q[0], q[1], cel[k]); }
+    });
+    [a, b, c].forEach((p, k) => { el('circle', { cx: p[0], cy: p[1], r: 5, class: 'borne' }, gB); });
+    lcd(800, 112, 'élément AB', () => `${nf(mod(R.Vel[0]), 1)} V · ${nf(mod(R.Iel[0]), 2)} A`, () => '', cel[0], 152);
+    lcd(800, 268, 'élément BC', () => `${nf(mod(R.Vel[1]), 1)} V · ${nf(mod(R.Iel[1]), 2)} A`, () => '', cel[1], 152);
+    lcd(800, 190, 'élément CA', () => `${nf(mod(R.Vel[2]), 1)} V · ${nf(mod(R.Iel[2]), 2)} A`, () => '', cel[2], 152);
+    etiq(740, 400, 'Charge en triangle');
+  }
+  // ampèremètres de ligne et voltmètres entre phases
+  [110, 210, 310].forEach((y, k) => lcd(372, y - 44, `I_${'ABC'[k]} ligne`, () => `${nf(mod(R.IL[k]), 2)} A`, t => nf(inst(R.IL[k], t), 1), coul[k]));
+  const vfl = (xx, y0, y1, c) => { el('path', { d: `M${xx},${y0 + 6} L${xx},${y1 - 6}`, class: 'fleche', stroke: c, 'marker-end': '' }, gB);
+    el('circle', { cx: xx, cy: y0, r: 3, fill: c }, gB); el('circle', { cx: xx, cy: y1, r: 3, fill: c }, gB); };
+  vfl(258, 110, 210, K.lab); vfl(258, 210, 310, K.lbc);
+  lcd(266, 130, 'V_AB', () => `${nf(mod(R.VL[0]), 1)} V`, t => nf(inst(R.VL[0], t), 0), K.lab);
+  lcd(266, 236, 'V_BC', () => `${nf(mod(R.VL[1]), 1)} V`, t => nf(inst(R.VL[1], t), 0), K.lbc);
+  majLcd(true);
+}
+function majLcd(tout) { for (const l of LCD) { if (tout) l.v.textContent = l.valeur(); l.i.textContent = l.instant(th); } }
+
+/* ---------- mesures et relations ---------- */
+let relPrec = {};
+function mesures() {
+  const r3 = Math.sqrt(3), D = st.m === 'd';
+  const m = a => a.map(mod), moy = a => a.reduce((s, v) => s + v, 0) / a.length;
+  const vph = m(R.Vel), vl = m(R.VL), il = m(R.IL), iph = m(R.Iel);
+  const eq = (a, b) => Math.abs(a - b) <= Math.max(1e-6, Math.abs(b) * .005);
+  const egal = a => a.every(v => eq(v, a[0]));
+  const ligne = (n, v, k) => `<div class="ligne"><span>${k ? `<i style="--k:${k}"></i>` : ''}${n}</span><b>${v}</b></div>`;
+  const rel = (id, f, calc, ok, pourquoi) => {
+    const change = relPrec[id] !== undefined && relPrec[id] !== ok; relPrec[id] = ok;
+    return `<div class="rel ${ok ? 'ok' : 'ko'}${change ? ' flash' : ''}"><span class="f">${f}</span> <span class="etat">${ok ? '✓ vérifié' : '✗ ne tient pas'}</span><span class="calc">${calc}</span>${!ok && pourquoi ? `<span class="calc">${pourquoi}</span>` : ''}</div>`;
+  };
+  const ab = ['A', 'B', 'C'], k3 = [K.pa, K.pb, K.pc], kl = [K.lab, K.lbc, K.lca], nl = ['AB', 'BC', 'CA'];
+  const Vp = D ? vl : vph, Ip = iph;
+  const rapV = moy(vl) / moy(Vp), rapI = moy(il) / Math.max(1e-9, moy(Ip));
+  const cosphi = Math.cos(st.phi * Math.PI / 180);
+  const P3 = r3 * moy(vl) * moy(il) * cosphi;
+  const S = Math.hypot(R.P, R.Q), fp = S ? R.P / S : 0;
+  let h = '';
+  h += `<div class="carte"><h3>Tensions</h3>`
+    + (D ? '' : ab.map((n, k) => ligne(`V<sub>${n}</sub> simple ${st.m === 'y' ? '(aux bornes de l’élément)' : '(phase–neutre)'}`, `${nf(vph[k], 1)} V`, k3[k])).join(''))
+    + nl.map((n, k) => ligne(`V<sub>${n}</sub> composée (phase–phase)${D ? ' = élément' : ''}`, `${nf(vl[k], 1)} V`, kl[k])).join('')
+    + (st.m === 'y' ? ligne("V<sub>N'N</sub> (déplacement du neutre)", `${nf(mod(R.Vn), 1)} V`, K.pn) : '')
+    + (D ? rel('v', 'V<sub>L</sub> = V<sub>ph</sub>', `chaque élément reçoit la tension composée : ${nf(vl[0], 1)} V`, true)
+         : rel('v', 'V<sub>L</sub> = √3 × V<sub>ph</sub>', `${nf(moy(vl), 1)} ÷ ${nf(moy(vph), 1)} = ${nf(rapV, 3)} (√3 = 1,732)`, eq(rapV, r3) && egal(vph),
+           'Sans neutre, la charge déséquilibrée déplace le point neutre : les tensions aux bornes des éléments ne sont plus égales.'))
+    + `</div>`;
+  h += `<div class="carte"><h3>Courants</h3>`
+    + ab.map((n, k) => ligne(`I<sub>${n}</sub> de ligne`, `${nf(il[k], 2)} A`, k3[k])).join('')
+    + (D ? nl.map((n, k) => ligne(`I<sub>${n}</sub> dans l’élément ${n}`, `${nf(iph[k], 2)} A`, kl[k])).join('') : '')
+    + (st.m === 'yn' ? ligne('I<sub>N</sub> dans le neutre', `${nf(mod(R.IN), 2)} A`, K.pn) : '')
+    + (D ? rel('i', 'I<sub>L</sub> = √3 × I<sub>ph</sub>', `${nf(moy(il), 2)} ÷ ${nf(moy(iph), 2)} = ${nf(rapI, 3)} (√3 = 1,732)`, eq(rapI, r3) && egal(iph),
+             'Charge déséquilibrée : chaque courant de ligne est la différence de deux courants d’élément différents.')
+         : rel('i', 'I<sub>L</sub> = I<sub>ph</sub>', `en étoile, le même courant traverse la ligne et l’élément : ${nf(il[0], 2)} A`, true))
+    + (st.m === 'yn' ? rel('n', 'I<sub>N</sub> = I<sub>A</sub> + I<sub>B</sub> + I<sub>C</sub> = 0', `somme des trois courants (en vecteurs) : ${nf(mod(R.IN), 2)} A`, mod(R.IN) < .01 * Math.max(...il),
+        'Déséquilibrée : les trois courants ne s’annulent plus, le neutre ramène la différence.') : '')
+    + `</div>`;
+  h += `<div class="carte"><h3>Puissances</h3>`
+    + ligne('P active (somme des trois éléments)', `${nf(R.P / 1000, 3)} kW`)
+    + ligne('Q réactive', `${nf(R.Q / 1000, 3)} kvar`)
+    + ligne('S apparente', `${nf(S / 1000, 3)} kVA`)
+    + ligne('Facteur de puissance P/S', `${nf(fp, 3)}${R.Q > 1 ? ' (inductif)' : R.Q < -1 ? ' (capacitif)' : ''}`)
+    + rel('p', 'P = √3 × V<sub>L</sub> × I<sub>L</sub> × cos φ', `1,732 × ${nf(moy(vl), 1)} × ${nf(moy(il), 2)} × ${nf(cosphi, 3)} = ${nf(P3 / 1000, 3)} kW`, eq(P3, R.P),
+        'Ne vaut que pour une charge équilibrée : on additionne alors la puissance de chaque élément.')
+    + (st.m !== 'yn' || mod(R.IN) < 1e-6
+        ? rel('w', 'P = W<sub>1</sub> + W<sub>2</sub> (deux wattmètres)', `W₁ (I<sub>A</sub>, V<sub>AC</sub>) = ${nf(R.W1 / 1000, 3)} kW ; W₂ (I<sub>B</sub>, V<sub>BC</sub>) = ${nf(R.W2 / 1000, 3)} kW ; somme ${nf((R.W1 + R.W2) / 1000, 3)} kW`, eq(R.W1 + R.W2, R.P))
+        : rel('w', 'P = W<sub>1</sub> + W<sub>2</sub> (deux wattmètres)', `somme ${nf((R.W1 + R.W2) / 1000, 3)} kW pour ${nf(R.P / 1000, 3)} kW`, eq(R.W1 + R.W2, R.P), 'Avec un courant dans le neutre (4 fils), il faut trois wattmètres.'))
+    + `</div>`;
+  $('#mesures').innerHTML = h;
+}
+
+/* ---------- réglages ---------- */
+function majSorties() {
+  const t = st.phi > 0 ? 'inductif' : st.phi < 0 ? 'capacitif' : 'résistif';
+  $('#zo').textContent = `${nf(st.z, 1)} Ω`; $('#phio').textContent = `${st.phi > 0 ? '+' : ''}${st.phi}° ${t}`;
+  for (const k of ['za', 'zb', 'zc']) $('#' + k + 'o').textContent = `${nf(st[k], 1)} Ω`;
+  $('#desequ').hidden = st.eq; $('#z').disabled = !st.eq;
+  $('#vito').textContent = `${nf(vit, 2)} tour/s`;
+  $('#ralenti').textContent = `Fréquence réelle ${R.s.f} Hz : l'animation tourne ${Math.round(R.s.f / vit).toLocaleString('fr-CA')} fois moins vite.`;
+  $('#legende').innerHTML = `Traits pleins : tensions (même échelle, la tension composée est donc √3 fois plus longue) ; tirets : courants, à leur propre échelle. Vecteurs : valeurs de crête (√2 × efficace).`
+    + (st.m === 'y' && mod(R.Vn) > .05 ? ' Tirets gris : déplacement du neutre V<sub>N’N</sub>.' : '');
+}
+function tout() { calculer(); puces(); schema(); mesures(); majSorties(); majEtape(); }
+document.querySelectorAll('#sources .btn').forEach(b => b.onclick = () => { st.src = b.dataset.src; document.querySelectorAll('#sources .btn').forEach(x => x.setAttribute('aria-pressed', x === b)); tout(); });
+document.querySelectorAll('#montages .btn').forEach(b => b.onclick = () => {
+  const avant = st.m; st.m = b.dataset.m; document.querySelectorAll('#montages .btn').forEach(x => x.setAttribute('aria-pressed', x === b));
+  if (st.m === 'd' && avant !== 'd') { montre.delete('vph'); montre.add('iph'); } else if (st.m !== 'd' && avant === 'd') montre.add('vph');
+  if (st.m === 'yn') montre.add('in');
+  tout();
+});
+for (const k of ['z', 'phi', 'za', 'zb', 'zc']) $('#' + k).addEventListener('input', e => { st[k] = +e.target.value; calculer(); majLcd(true); mesures(); majSorties(); majEtape(); });
+for (const k of ['z', 'za', 'zb', 'zc']) $('#' + k).addEventListener('change', () => schema());
+$('#eq').addEventListener('change', e => { st.eq = e.target.checked; tout(); });
+$('#ouvre').addEventListener('change', e => { st.ouvre = e.target.checked; tout(); });
+$('#vit').addEventListener('input', e => { vit = +e.target.value; majSorties(); });
+const majPP = () => { $('#pp').textContent = joue ? '⏸' : '▶'; $('#pp').setAttribute('aria-label', joue ? 'Pause' : 'Lecture'); };
+$('#pp').onclick = () => { joue = !joue; majPP(); };
+$('#recul').onclick = () => { th -= Math.PI / 12; };
+$('#avance').onclick = () => { th += Math.PI / 12; };
+$('#p3-pp').onclick = () => { P3.joue = !P3.joue; $('#p3-pp').textContent = P3.joue ? '⏸ Pause' : '▶ Lecture'; };
+$('#p3-suiv').onclick = () => { P3.e = (P3.e + 1) % 4; P3.t = 0; majEtape(); };
+$('#p3-prec').onclick = () => { P3.e = (P3.e + 3) % 4; P3.t = 0; majEtape(); };
+// glisser sur les phaseurs : avancer ou reculer dans le temps
+{ const cv = $('#cv'); let x0 = null, t0 = 0, j0 = false;
+  cv.addEventListener('pointerdown', e => { x0 = e.clientX; t0 = th; j0 = joue; joue = false; majPP(); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => { if (x0 === null) return; th = t0 - (e.clientX - x0) / cv.clientWidth * 4 * Math.PI; });
+  const fin = () => { if (x0 === null) return; x0 = null; joue = j0; majPP(); };
+  cv.addEventListener('pointerup', fin); cv.addEventListener('pointercancel', fin); }
+addEventListener('themechange', () => { couleurs(); schema(); mesures(); });
+new MutationObserver(() => { couleurs(); schema(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+/* ---------- boucle d'animation ---------- */
+let tPrec = performance.now();
+function boucle(t) {
+  const dt = Math.min(.1, (t - tPrec) / 1000); tPrec = t;
+  if (joue) th += 2 * Math.PI * vit * dt;
+  dessinerPhaseurs(); dessinerPuissance(); dessinerR3(dt);
+  for (const f of FILS) {   // points : vitesse proportionnelle au courant instantané
+    const i = f.courant(th), imax = Math.max(1e-9, ...R.IL.map(mod), ...R.Iel.map(mod)) * Math.SQRT2;
+    f.off -= (i / imax) * 60 * dt * (joue ? 1 : 0);
+    f.f.setAttribute('stroke-dashoffset', f.off.toFixed(2));
+    f.f.style.opacity = Math.min(1, .25 + Math.abs(i) / imax);
+  }
+  majLcd(false);
+  requestAnimationFrame(boucle);
+}
+couleurs(); tout(); majPP(); requestAnimationFrame(boucle);
+})();
+</script>
+<script src="version.js"></script>
+</body>
+</html>

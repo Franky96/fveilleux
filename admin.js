@@ -30,6 +30,7 @@ const SECTIONS_ARCHIVABLES = [
     { key: 'shape-transfer', icon: '🔷', label: 'Shape Transfert' },
     { key: 'chips',          icon: '🔌', label: 'Simulateurs'          },
     { key: 'circuit',        icon: '⚡', label: 'Circuit logique'      },
+    { key: 'triphase',       icon: '🔺', label: 'Courant triphasé'     },
   ]},
   { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
     { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
@@ -384,6 +385,7 @@ const PERMS_STRUCTURE = [
     { key: 'shape-transfer', label: 'Shape Transfert' },
     { key: 'chips',          label: 'Simulateurs' },
     { key: 'circuit',        label: 'Circuit logique' },
+    { key: 'triphase',       label: 'Courant triphasé' },
   ]},
   { key: 'moteurs', label: 'Moteurs', children: [
     { key: 'turboreacteur', label: 'CFM56-7B' },
