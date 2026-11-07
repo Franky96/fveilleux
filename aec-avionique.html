@@ -92,7 +92,12 @@ article.md a.ouvrir{display:inline-block;margin:-4px 0 10px;font-size:13.5px}
 .sommaire a .n{flex:none;min-width:22px;font:500 12px/1.6 var(--f-mono);color:var(--faint)}
 .sommaire .docs{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
 details.sommaire-tel{display:none}
-article.md{min-width:0;max-width:860px;font-size:16px;line-height:1.7}
+/* fond figé sur cette page (demande de Frank : lecture des cours) ; le texte des leçons sur un panneau opaque */
+.fond::before{animation:none!important;transform:none!important}
+article.md{min-width:0;max-width:900px;font-size:16px;line-height:1.7;padding:22px 30px 26px;border-radius:16px;
+  background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+article.md>:first-child{margin-top:0}
+.lecon-zone .sommaire{background:var(--panel)}
 article.md h1{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1.1;margin:4px 0 16px}
 article.md h2{font-family:var(--f-display);font-weight:700;font-size:25px;margin:30px 0 10px;padding-bottom:4px;border-bottom:1px solid var(--line)}
 article.md h3{font-size:18px;margin:24px 0 8px}
@@ -145,6 +150,7 @@ article.md a.fichier::before{content:"📎 ";text-decoration:none;display:inline
   .onglet-cours b{white-space:normal}
 }
 @media (max-width:860px){
+  article.md{padding:16px 14px 18px;border-radius:12px;margin-top:12px}
   .lecon-zone{grid-template-columns:1fr}
   .sommaire{display:none}
   details.sommaire-tel{display:block;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:8px 10px}
