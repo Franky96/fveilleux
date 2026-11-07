@@ -417,7 +417,9 @@ $('#temps').addEventListener('input', e => { t = +e.target.value; joue = false; 
   dessiner(true); });
 groupe('#vitesses', 'x', () => { vitesse = +document.querySelector('#vitesses [aria-pressed="true"]').dataset.v; });
 $('#son').onclick = () => { son = !son; $('#son').setAttribute('aria-pressed', son); $('#son').textContent = son ? '🔊 Annonces' : '🔇 Annonces'; if (!son && window.speechSynthesis) speechSynthesis.cancel(); };
-document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => { const f = b.dataset.f; filtres.has(f) ? filtres.delete(f) : filtres.add(f); b.setAttribute('aria-pressed', filtres.has(f)); dernierJournal = ''; dessiner(true); });
+document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => { const f = b.dataset.f; filtres.has(f) ? filtres.delete(f) : filtres.add(f); b.setAttribute('aria-pressed', filtres.has(f)); dernierJournal = '';
+  if (modeSeq) { const t0 = t; construireEtapes(); const k = etapes.findIndex(x => x.t >= t0 - 0.01); return allerEtape(k < 0 ? etapes.length - 1 : k); }   // en séquence : étapes refaites sans ce type
+  dessiner(true); });
 document.querySelectorAll('#vuCalc .btn').forEach(b => b.onclick = () => { vuCalc = b.dataset.v; document.querySelectorAll('#vuCalc .btn').forEach(x => x.setAttribute('aria-pressed', x === b)); tableSL(); dessiner(true); });
 
 /* ---------- utilitaires ---------- */
@@ -512,7 +514,7 @@ function dessinerCarte(im) {
   const fen = Math.min(0.9, 0.22 * vitesse + 0.12);
   for (const m of (modeSeq ? [] : R.msgs)) {
     if (m.t > t) break;
-    if (t - m.t > fen * 2.4) continue;
+    if (t - m.t > fen * 2.4 || !filtres.has(m.phase)) continue;   // filtre décoché : pas d'animation non plus
     const de = im[m.de], [sx, sy] = P(de.x, de.y), coul = m.freq === 1030 ? K.f1030 : K.f1090;
     if (m.a === '*') {   // diffusion : cercle qui s'étend
       const p = (t - m.t) / (fen * 2.4); x.strokeStyle = coul; x.globalAlpha = (1 - p) * .8; x.lineWidth = 2;
@@ -841,13 +843,14 @@ function construireEtapes() {
   const vus = new Map(), n = new Map();
   for (const m of R.msgs) if (m.cle) n.set(m.cle, (n.get(m.cle) || 0) + 1);
   const liste = [];
-  for (const m of R.msgs) { if (m.cle && vus.has(m.cle)) continue; if (m.cle) vus.set(m.cle, 1); liste.push({ t: m.t, m, n: m.cle ? n.get(m.cle) : 1 }); }
-  for (const e of R.evts) if (!['aural', 'coord', 'vhf', 'nonsuivi'].includes(e.type)) liste.push({ t: e.t - 0.001, e });
+  for (const m of R.msgs) { if (!filtres.has(m.phase) || (m.cle && vus.has(m.cle))) continue; if (m.cle) vus.set(m.cle, 1); liste.push({ t: m.t, m, n: m.cle ? n.get(m.cle) : 1 }); }
+  if (filtres.has('evt')) for (const e of R.evts) if (!['aural', 'coord', 'vhf', 'nonsuivi'].includes(e.type)) liste.push({ t: e.t - 0.001, e });
   liste.sort((a, b) => a.t - b.t);   // à un même instant : l'alerte (un millième plus tôt), puis le message qu'elle déclenche
   etapes = liste;
   $('#seqSaut').innerHTML = etapes.map((x, k) => `<option value="${k}">${k + 1}. ${nf(x.t, 1)} s · ${x.m ? `${x.m.de} ${x.m.a === '*' ? '→ tous' : '→ ' + x.m.a} · ${esc(x.m.code)}` : esc((NOM_EVT[x.e.type] || '') + ' · ' + x.e.qui)}</option>`).join('');
 }
 function allerEtape(k) {
+  if (!etapes.length) { ie = 0; $('#seqNum').textContent = 'Aucune étape'; $('#seqPrec').disabled = $('#seqSuiv').disabled = true; $('#fiche').innerHTML = '<p>Tous les types de messages sont décochés : coche au moins un filtre sous la carte.</p>'; dernierJournal = ''; return dessiner(true); }
   ie = Math.max(0, Math.min(etapes.length - 1, k));
   const x = etapes[ie]; t = x.t; seqAnimT0 = performance.now(); dernierJournal = '';
   $('#seqNum').textContent = `Étape ${ie + 1} / ${etapes.length}`; $('#seqSaut').value = ie;
