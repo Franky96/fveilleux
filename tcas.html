@@ -86,7 +86,8 @@ html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
 .ligne-temps{position:relative;margin-top:8px}
 .ligne-temps input{width:100%;accent-color:var(--c);margin:0}
 .reperes{position:relative;height:26px}
-.reperes b{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px var(--f-mono);padding:0 3px;border-radius:4px;color:#fff;white-space:nowrap}
+.reperes b{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px var(--f-mono);padding:0 3px;border-radius:4px;color:#fff;white-space:nowrap;cursor:pointer}
+.reperes b:hover{outline:2px solid var(--text)}
 .phases{display:flex;gap:5px;font-size:12px;flex-wrap:wrap}
 @media (min-width:900px) and (min-height:700px){.lecteur{position:sticky;top:var(--tb2-h,58px);z-index:6}}
 .phase{padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--faint)}
@@ -95,7 +96,8 @@ html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
 /* vue de dessus et journal */
 .scene{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:14px;align-items:start}
 canvas{display:block;width:100%}
-#carte{height:440px;border-radius:12px;background:color-mix(in srgb,var(--bg) 70%,#0b1a24)}
+.zoom{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}.zoom .btn{padding:5px 10px}.aide-zoom{font-size:12px;color:var(--faint)}
+#carte{height:440px;border-radius:12px;touch-action:none;cursor:grab;background:color-mix(in srgb,var(--bg) 70%,#0b1a24)}
 html.light #carte{background:#e8eef3}
 .legende{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:12.5px;color:var(--muted)}
 .legende i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--k);margin-right:5px;vertical-align:-1px}
@@ -205,7 +207,7 @@ table.sl td:first-child{white-space:nowrap}
     <span class="horloge" id="horloge">0,0 s</span>
     <div class="choix" id="vitesses">
       <button class="btn" type="button" data-v="0.5">×0,5</button>      <button class="btn" type="button" data-v="1">×1</button><button class="btn" type="button" data-v="2">×2</button>
-      <button class="btn" type="button" data-v="4" aria-pressed="true">×4</button><button class="btn" type="button" data-v="8">×8</button>
+      <button class="btn" type="button" data-v="4" aria-pressed="true">×4</button><button class="btn" type="button" data-v="8">×8</button><button class="btn" type="button" data-v="16">×16</button>
     </div>
     <button class="btn" type="button" id="son" aria-pressed="false" title="Lire les annonces du TCAS à voix haute (anglais)">🔇 Annonces</button>
     <div class="phases" id="phases"><span class="phase" data-p="detection">1 · Détection</span><span class="phase" data-p="surveillance">2 · Surveillance</span><span class="phase" data-p="coordination">3 · Coordination et RA</span></div>
@@ -221,7 +223,9 @@ table.sl td:first-child{white-space:nowrap}
   <h2 id="t-vu">Vue de dessus et messages échangés</h2>
   <p class="sous">Chaque point qui voyage est un message : <span style="color:var(--f1030)">● 1030 MHz</span> (interrogation d'un TCAS), <span style="color:var(--f1090)">● 1090 MHz</span> (réponse ou squitter d'un transpondeur), un cercle qui s'étend est une diffusion à tous. En vrai, un aller-retour dure quelques microsecondes : ici, il est ralenti pour être visible.</p>
   <div class="scene">
-    <div><canvas id="carte" aria-label="Vue de dessus de la rencontre"></canvas>
+    <div><div class="zoom" id="zoom"><button class="btn" type="button" data-z="auto" aria-pressed="true" title="Suivre les deux avions et zoomer à mesure qu'ils se rapprochent">🎯 Suivre</button><button class="btn" type="button" data-z="tout" title="Toute la rencontre">Tout</button>
+      <button class="btn" type="button" data-f="0.7" aria-label="Dézoomer">−</button><button class="btn" type="button" data-f="1.4" aria-label="Zoomer">+</button><span class="aide-zoom">molette ou pincer pour zoomer, glisser pour déplacer</span></div>
+      <canvas id="carte" aria-label="Vue de dessus de la rencontre"></canvas>
       <div class="legende"><span><i style="--k:var(--avA)"></i>A (notre avion)</span><span><i style="--k:var(--avB)"></i>B (l’intrus)</span><span><i style="--k:var(--ta)"></i>zone TA (selon τ)</span><span><i style="--k:var(--ra)"></i>zone RA</span></div></div>
     <div>
       <div class="journal-tete" id="filtres">
@@ -296,9 +300,9 @@ const filtres = new Set(['detection', 'surveillance', 'coordination', 'evt']);
 
 function relancer(garderTemps) {
   R = simuler({ scenario: cfg.scenario, equipB: cfg.equipB, piloteB: cfg.piloteB, A: { mode: cfg.A.mode, couv: cfg.A.couv }, B: { mode: cfg.B.mode, couv: cfg.B.couv } });
-  $('#temps').max = R.sc.duree;
+  $('#temps').max = R.duree;
   if (!garderTemps) t = 0;
-  t = Math.min(t, R.sc.duree);
+  t = Math.min(t, R.duree);
   dernierJournal = ''; prepCarte(); reperes(); tableSL(); ctrls(); dessiner(true);
 }
 
@@ -333,7 +337,7 @@ function ctrls() {
 
 /* lecteur */
 const majPP = () => { $('#pp').textContent = joue ? '⏸' : '▶'; $('#pp').setAttribute('aria-label', joue ? 'Pause' : 'Lecture'); };
-$('#pp').onclick = () => { if (!joue && t >= R.sc.duree - 0.05) t = 0; joue = !joue; majPP(); };
+$('#pp').onclick = () => { if (!joue && t >= R.duree - 0.05) t = 0; joue = !joue; majPP(); };
 $('#debut').onclick = () => { t = 0; dernierJournal = ''; dessiner(true); };
 $('#temps').addEventListener('input', e => { t = +e.target.value; joue = false; majPP(); dessiner(true); });
 groupe('#vitesses', 'x', () => { vitesse = +document.querySelector('#vitesses [aria-pressed="true"]').dataset.v; });
@@ -362,22 +366,51 @@ function avion(x, cx, cy, cap, coul, taille = 1) {   // silhouette d'avion, nez 
 
 /* ---------- vue de dessus ---------- */
 let boite = null;
+// vue de la carte : centre (NM) et échelle (px/NM). « auto » suit les deux avions et zoome à mesure qu'ils se rapprochent
+// (demande de l'utilisateur) ; la molette, les boutons et le glisser passent en manuel ; « Suivre » ou « Tout » y reviennent.
+const vue = { mode: 'auto', cx: 0, cy: 0, s: 10, cible: null };
 function prepCarte() {
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const im of R.images) for (const a of [im.A, im.B]) { x0 = Math.min(x0, a.x); x1 = Math.max(x1, a.x); y0 = Math.min(y0, a.y); y1 = Math.max(y1, a.y); }
-  const m = Math.max(1.2, (x1 - x0) * .08); boite = { x0: x0 - m, x1: x1 + m, y0: y0 - m * 1.6, y1: y1 + m * 1.6 };
+  boite = { x0, x1, y0, y1 };
+  if (vue.mode === 'tout') cadrer(x0, x1, y0, y1, true); else vue.mode = 'auto', suivre(true);
+  majVue();
+}
+function tailleCarte() { const r = $('#carte').getBoundingClientRect(); return [r.width || 600, r.height || 400]; }
+function cadrer(x0, x1, y0, y1, net) {
+  const [W, H] = tailleCarte(), mx = Math.max(0.6, (x1 - x0) * .12), my = Math.max(0.6, (y1 - y0) * .12);
+  const s2 = Math.min(W / (x1 - x0 + 2 * mx), H / (y1 - y0 + 2 * my)), c = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, s: s2 };
+  if (net) Object.assign(vue, c); vue.cible = c;
+}
+function suivre(net) {   // cadre les deux avions à l'instant affiché, avec de la marge (au moins 3 NM de large)
+  const im = img(), x0 = Math.min(im.A.x, im.B.x), x1 = Math.max(im.A.x, im.B.x), y0 = Math.min(im.A.y, im.B.y), y1 = Math.max(im.A.y, im.B.y);
+  const d = Math.max(3, Math.hypot(x1 - x0, y1 - y0) * 1.35), mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  cadrer(mx - d / 2, mx + d / 2, my - d / 2, my + d / 2, net);
+}
+function majVue() { document.querySelectorAll('#zoom [data-z]').forEach(b => b.setAttribute('aria-pressed', b.dataset.z === vue.mode)); }
+function zoomer(f, px, py) {   // facteur f autour du point (px, py) de la toile
+  const [W, H] = tailleCarte(); px ??= W / 2; py ??= H / 2;
+  const nx = vue.cx + (px - W / 2) / vue.s, ny = vue.cy - (py - H / 2) / vue.s;
+  vue.s = Math.max(2, Math.min(400, vue.s * f)); vue.cx = nx - (px - W / 2) / vue.s; vue.cy = ny + (py - H / 2) / vue.s;
+  vue.mode = 'manuel'; vue.cible = null; majVue(); dessiner(true);
 }
 function dessinerCarte(im) {
   const [x, W, H] = prep($('#carte'));
-  const b = boite, s = Math.min(W / (b.x1 - b.x0), H / (b.y1 - b.y0)), ox = (W - (b.x1 - b.x0) * s) / 2, oy = (H - (b.y1 - b.y0) * s) / 2;
-  const P = (px, py) => [ox + (px - b.x0) * s, H - oy - (py - b.y0) * s];
-  // quadrillage de 1 NM (ou 2 NM)
-  const pas = s < 18 ? 5 : s < 40 ? 2 : 1;
+  if (vue.mode === 'auto') suivre(false);
+  if (vue.cible) { const k = joue ? .08 : 1; for (const c of ['cx', 'cy', 's']) vue[c] += (vue.cible[c] - vue[c]) * k; if (vue.mode !== 'auto' && Math.abs(vue.cible.s - vue.s) < .01) vue.cible = null; }
+  const s = vue.s, P = (px, py) => [W / 2 + (px - vue.cx) * s, H / 2 - (py - vue.cy) * s];
+  const b = { x0: vue.cx - W / 2 / s, x1: vue.cx + W / 2 / s, y0: vue.cy - H / 2 / s, y1: vue.cy + H / 2 / s };
+  // quadrillage : pas choisi pour garder au moins ~45 px entre deux lignes
+  const pas = [0.5, 1, 2, 5, 10, 20].find(p => p * s >= 45) || 50;
   x.strokeStyle = K.line; x.lineWidth = 1; x.globalAlpha = .6;
   for (let gx = Math.ceil(b.x0 / pas) * pas; gx <= b.x1; gx += pas) { const [px] = P(gx, 0); x.beginPath(); x.moveTo(px, 0); x.lineTo(px, H); x.stroke(); }
   for (let gy = Math.ceil(b.y0 / pas) * pas; gy <= b.y1; gy += pas) { const [, py] = P(0, gy); x.beginPath(); x.moveTo(0, py); x.lineTo(W, py); x.stroke(); }
   x.globalAlpha = 1;
-  x.fillStyle = K.faint; x.font = '500 11px "IBM Plex Mono",monospace'; x.fillText(`quadrillage : ${pas} NM`, 10, H - 10);
+  x.fillStyle = K.faint; x.font = '500 11px "IBM Plex Mono",monospace'; x.fillText(`quadrillage : ${String(pas).replace('.', ',')} NM`, 10, H - 10);
+  // cercle de détection Mode S (30 NM) autour de A, tant que B n'est pas suivi
+  if (!im.A.suivi && cfg.A.mode !== 'stby') { const [ax, ay] = P(im.A.x, im.A.y), rd = (cfg.equipB === 'atcrbs' ? 14 : 30) * s;
+    x.strokeStyle = K.f1090; x.globalAlpha = .55; x.setLineDash([2, 6]); x.lineWidth = 1.5; x.beginPath(); x.arc(ax, ay, rd, 0, 2 * Math.PI); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+    x.fillStyle = K.f1090; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(`portée de détection ${cfg.equipB === 'atcrbs' ? '14 NM (ATCRBS)' : '30 NM (Mode S)'}`, ax + 6, ay - rd - 6); }
   // trajectoires : passé plein, avenir pointillé
   const n = Math.round(t / R.DT);
   for (const k of ['A', 'B']) {
@@ -629,17 +662,18 @@ function dessinerProfil() {
   let a0 = Infinity, a1 = -Infinity;
   for (const im of R.images) for (const k of ['A', 'B']) { a0 = Math.min(a0, im[k].alt); a1 = Math.max(a1, im[k].alt); }
   const m = Math.max(300, (a1 - a0) * .15); a0 -= m; a1 += m;
-  const X = s => g + (W - g - d) * s / R.sc.duree, Y = a => bas - (bas - top) * (a - a0) / (a1 - a0);
+  const X = s => g + (W - g - d) * s / R.duree, Y = a => bas - (bas - top) * (a - a0) / (a1 - a0);
   // bandes TA / RA de A
   let deb = null, typ = null;
   const bande = (t0, t1, ty) => { x.fillStyle = ty === 'ra' ? 'rgba(239,68,68,.16)' : 'rgba(245,158,11,.13)'; x.fillRect(X(t0), top, X(t1) - X(t0), bas - top); };
   for (const im of R.images) { const e = im.A.etat === 'clair' ? null : im.A.etat; if (e !== typ) { if (typ) bande(deb, im.t, typ); deb = im.t; typ = e; } }
-  if (typ) bande(deb, R.sc.duree, typ);
+  if (typ) bande(deb, R.duree, typ);
   // graduations
   x.strokeStyle = K.line; x.fillStyle = K.faint; x.font = '500 10.5px "IBM Plex Mono",monospace'; x.lineWidth = 1;
   const pas = (a1 - a0) > 3000 ? 1000 : 500;
   for (let a = Math.ceil(a0 / pas) * pas; a < a1; a += pas) { x.beginPath(); x.moveTo(g, Y(a)); x.lineTo(W - d, Y(a)); x.stroke(); x.textAlign = 'right'; x.fillText(nf(a), g - 4, Y(a) + 4); }
-  x.textAlign = 'center'; for (let s = 0; s <= R.sc.duree; s += 20) x.fillText(`${s} s`, X(s), bas + 15); x.textAlign = 'left';
+  const pasT = [10, 20, 30, 60, 120].find(p => R.duree / p <= 10) || 300;
+  x.textAlign = 'center'; for (let s = 0; s <= R.duree; s += pasT) x.fillText(`${s} s`, X(s), bas + 15); x.textAlign = 'left';
   for (const k of ['A', 'B']) {
     x.strokeStyle = K['av' + k]; x.lineWidth = 2.5; x.beginPath();
     R.images.forEach((im, i) => { if (i % 2) return; const px = X(im.t), py = Y(im[k].alt); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.globalAlpha = .9; x.stroke(); x.globalAlpha = 1;
@@ -655,7 +689,10 @@ function dessinerProfil() {
 /* repères de la ligne de temps : TA, RA, fin de conflit de A et de B */
 function reperes() {
   const z = $('#reperes'), coul = { ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)' };
-  z.innerHTML = R.evts.filter(e => ['ta', 'ra', 'coc'].includes(e.type)).map(e => `<b style="left:${e.t / R.sc.duree * 100}%;background:${coul[e.type]};${e.qui === 'B' ? 'top:auto;bottom:0;opacity:.8' : ''}" title="${esc(e.texte)}">${e.qui}·${e.type === 'coc' ? 'CoC' : e.type.toUpperCase()}</b>`).join('');
+  coul.detection = 'var(--f1090)';
+  z.innerHTML = R.evts.filter(e => ['detection', 'ta', 'ra', 'coc'].includes(e.type)).map(e =>
+    `<b role="button" tabindex="0" data-t="${e.t}" style="left:${e.t / R.duree * 100}%;background:${coul[e.type]};${e.type === 'detection' ? 'color:#071016;' : ''}${e.qui === 'B' ? 'top:auto;bottom:0;opacity:.85' : ''}" title="Aller à ${nf(e.t, 1)} s : ${esc(e.texte)}">${e.qui}·${{ coc: 'CoC', detection: 'Dét.', ta: 'TA', ra: 'RA' }[e.type]}</b>`).join('');
+  z.querySelectorAll('b').forEach(b => { const aller = () => { t = Math.max(0, +b.dataset.t - 2); dernierJournal = ''; dessiner(true); }; b.onclick = aller; b.onkeydown = e => { if (e.key === 'Enter') aller(); }; });
 }
 
 /* ---------- dessin d'une image ---------- */
@@ -675,10 +712,26 @@ function dessiner(force) {
 let tPrec = performance.now();
 function boucle(now) {
   const dt = Math.min(.1, (now - tPrec) / 1000); tPrec = now;
-  if (joue) { t += dt * vitesse; if (t >= R.sc.duree) { t = R.sc.duree; joue = false; majPP(); } dessiner(); }
+  if (joue) { t += dt * vitesse; if (t >= R.duree) { t = R.duree; joue = false; majPP(); } dessiner(); }
   requestAnimationFrame(boucle);
 }
 addEventListener('resize', () => dessiner(true));
+document.querySelectorAll('#zoom [data-z]').forEach(b => b.onclick = () => { vue.mode = b.dataset.z; if (vue.mode === 'tout') cadrer(boite.x0, boite.x1, boite.y0, boite.y1, false); else suivre(false); majVue(); dessiner(true); });
+document.querySelectorAll('#zoom [data-f]').forEach(b => b.onclick = () => zoomer(+b.dataset.f));
+{ const cv = $('#carte'), doigts = new Map(); let dist0 = null;
+  cv.addEventListener('wheel', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoomer(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); doigts.set(e.pointerId, [e.clientX, e.clientY]); cv.style.cursor = 'grabbing'; });
+  cv.addEventListener('pointermove', e => {
+    if (!doigts.has(e.pointerId)) return;
+    const [ox, oy] = doigts.get(e.pointerId); doigts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (doigts.size === 2) {   // pincer
+      const [a, b] = [...doigts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (dist0) { const r = cv.getBoundingClientRect(); zoomer(d / dist0, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top); } dist0 = d; return;
+    }
+    vue.cx -= (e.clientX - ox) / vue.s; vue.cy += (e.clientY - oy) / vue.s; vue.mode = 'manuel'; vue.cible = null; majVue(); dessiner(true);
+  });
+  const fin = e => { doigts.delete(e.pointerId); if (doigts.size < 2) dist0 = null; cv.style.cursor = ''; };
+  cv.addEventListener('pointerup', fin); cv.addEventListener('pointercancel', fin); }
 addEventListener('themechange', () => { couleurs(); dessiner(true); });
 new MutationObserver(() => { couleurs(); dessiner(true); }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 $('#idA').textContent = `${ID.A.imm} · ${hex(ID.A.adr)}`; $('#idB').textContent = `${ID.B.imm} · ${hex(ID.B.adr)}`;

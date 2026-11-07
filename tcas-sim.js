@@ -55,13 +55,23 @@
   // mode : 'stby' | 'atc' | 'ta' | 'tara'
   function simuler(cfg) {
     const sc = SCENARIOS[cfg.scenario];
-    const DT = 0.1, N = Math.round(sc.duree / DT);
+    // Approche : les avions partent à PORTEE NM l'un de l'autre, au-delà de la détection Mode S (30 NM) : au début, seulement des
+    // squitters (demande de l'utilisateur). On recule chaque avion sur sa route, en palier, de T0 secondes ; à T0, il reprend la
+    // situation du scénario (B commence sa montée, A sa descente…).
+    const PORTEE = 31;
+    const vit0 = p => [p.vit / 3600 * Math.sin(p.cap * Math.PI / 180), p.vit / 3600 * Math.cos(p.cap * Math.PI / 180)];
+    const [vxA, vyA] = vit0(sc.A), [vxB, vyB] = vit0(sc.B);
+    const px = sc.B.x - sc.A.x, py = sc.B.y - sc.A.y, vx = vxB - vxA, vy = vyB - vyA, vv = vx * vx + vy * vy, pv = px * vx + py * vy, pp = px * px + py * py;
+    let T0 = 0;
+    if (vv > 1e-12 && pp < PORTEE * PORTEE) T0 = Math.min(1200, Math.ceil((pv + Math.sqrt(pv * pv - vv * (pp - PORTEE * PORTEE))) / vv));
+    const duree = T0 + sc.duree;
+    const DT = 0.1, N = Math.round(duree / DT);
     const av = {};
     for (const k of ['A', 'B']) {
-      const p = sc[k];
-      av[k] = { k, ...ID[k], x: p.x, y: p.y, cap: p.cap, vit: p.vit, alt: p.alt, vs: p.vs, vsNominale: p.vs, autorisee: p.autorisee ?? p.alt,
+      const p = sc[k], [vxk, vyk] = vit0(p);
+      av[k] = { k, ...ID[k], x: p.x - vxk * T0, y: p.y - vyk * T0, cap: p.cap, vit: p.vit, alt: p.alt, vs: T0 ? 0 : p.vs, vsNominale: p.vs, autorisee: p.autorisee ?? p.alt, depart: T0,
         ctrl: cfg[k], equip: k === 'A' ? 'tcas' : cfg.equipB,
-        pilote: { mode: 'normal', cible: p.vs, debut: 0, accel: 0.1 },
+        pilote: { mode: 'normal', cible: T0 ? 0 : p.vs, debut: 0, accel: 0.1 },
         tcas: { suivi: false, etat: 'clair', ra: null, interdit: null, dernierBc: -99, dernierRaBc: -99, raT0: null, dernierAural: null, coordAvec: false } };
     }
     const modeS = a => a.equip !== 'atcrbs';
@@ -94,7 +104,7 @@
       const visible = xpdrOn(i);
       // ---- détection : écoute des DF11 / DF17 (Mode S) ou appel général Intermode ATCRBS seulement (whisper-shout)
       if (!T.suivi && visible) {
-        if (modeS(i) && g.r <= 30) { T.suivi = true; evt(t, o.k, 'detection', `Le TCAS de ${o.k} capte le squitter DF11 de ${i.k} (adresse ${hex(i.adr)}) et l'ajoute à sa table d'intrus.`); }
+        if (modeS(i) && g.r <= 30) { T.suivi = true; evt(t, o.k, 'detection', `Détection : ${i.k} entre à 30 NM. Le TCAS de ${o.k} décode son squitter DF11 (adresse ${hex(i.adr)}) et l'ajoute à sa table d'intrus ; la surveillance commence.`); }
         else if (!modeS(i)) {
           msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode « ATCRBS seulement »', titre: 'Appel général ATCRBS (whisper-shout)',
             detail: 'Puissance augmentée par paliers : seuls les transpondeurs ATCRBS répondent, par ordre de distance. Les Mode S l’ignorent.' });
@@ -226,7 +236,7 @@
       if (p.mode === 'normal' || (p.mode === 'retour' && t >= p.debut)) {
         const reste = a.autorisee - a.alt;
         if (p.mode === 'retour') { cible = Math.abs(reste) < 30 ? 0 : Math.sign(reste) * Math.min(1000, Math.abs(reste) * 2); if (Math.abs(reste) < 30) a.pilote = { mode: 'normal', cible: 0, debut: 0, accel: 0.1 }; }
-        else cible = Math.abs(reste) < 30 ? 0 : (a.vsNominale ? Math.sign(reste) * Math.min(Math.abs(a.vsNominale), Math.abs(reste) * 2) : 0);
+        else cible = t < a.depart || Math.abs(reste) < 30 ? 0 : (a.vsNominale ? Math.sign(reste) * Math.min(Math.abs(a.vsNominale), Math.abs(reste) * 2) : 0);
       } else if (t >= p.debut) cible = p.cible;
       else cible = a.vs;
       const acc = (p.mode === 'normal' ? 0.08 : p.accel) * 32.2 * 60;    // g → ft/min par seconde
@@ -266,7 +276,7 @@
     let cpa = images[0];
     for (const im of images) if (im.r < cpa.r) cpa = im;
     msgs.sort((a, b) => a.t - b.t); evts.sort((a, b) => a.t - b.t);
-    return { cfg, sc, images, msgs, evts, cpa, DT, ID, hex };
+    return { cfg, sc, duree, T0, images, msgs, evts, cpa, DT, ID, hex };
   }
 
   racine.TCAS = { simuler, SCENARIOS, SL, niveau, ID, hex };
