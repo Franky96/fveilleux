@@ -95,6 +95,30 @@ html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
 
 /* vue de dessus et journal */
 .scene{display:block}
+.seq-barre{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.seq-barre[hidden]{display:none}
+.seq-num{font:600 13px var(--f-mono);min-width:120px;text-align:center}
+.seq-barre select{padding:6px 8px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);max-width:min(420px,100%)}
+body.mode-seq .lec-haut .rond,body.mode-seq #vitesses{display:none}
+.carte-zone{display:block}
+body.mode-seq .carte-zone{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:14px;align-items:start}
+body.mode-seq .carte-zone .fiche{order:2;position:sticky;top:calc(var(--tb2-h,58px) + 170px)}
+@media (max-width:980px){body.mode-seq .carte-zone{grid-template-columns:1fr}body.mode-seq .carte-zone .fiche{order:0;position:static}}
+.fiche{margin:0 0 12px;padding:14px 16px;border-radius:14px;border:2px solid var(--k);background:color-mix(in srgb,var(--k) 9%,var(--panel2));animation:fiche .35s ease}
+@keyframes fiche{from{transform:translateY(-6px);opacity:.3}}
+.fiche .haut{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:600 12px var(--f-mono);color:var(--muted);margin-bottom:6px}
+.fiche .haut .phase-f{padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--text)}
+.fiche .ligne1{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:4px}
+.fiche .fq{font:700 13px var(--f-mono);padding:3px 8px;border-radius:6px;color:#071016;background:var(--kf)}
+.fiche .code{font:800 20px var(--f-mono)}
+.fiche .dir{font:700 16px var(--f-mono)}
+.fiche .dir b{color:var(--kd)}
+.fiche h3{font-size:22px;margin:2px 0 4px}
+.fiche p{margin:4px 0;font-size:14.5px}
+.fiche .infos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fiche .infos span{font:500 12.5px var(--f-mono);padding:3px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line2)}
+.msg.courant{outline:2px solid var(--c);outline-offset:1px}
+@media (prefers-reduced-motion: reduce){.fiche{animation:none}}
 .journaux-zone{margin-top:14px}
 .journaux{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .colonne h3{display:flex;align-items:center;gap:8px;font-size:17px;margin-bottom:6px}
@@ -207,6 +231,17 @@ table.sl td:first-child{white-space:nowrap}
 </section>
 
 <div class="lecteur" id="lecteur">
+  <div class="choix" id="modeLecture" style="margin-bottom:8px">
+    <button class="btn" type="button" data-v="continu" aria-pressed="true">▶ Lecture continue</button>
+    <button class="btn" type="button" data-v="sequence" aria-pressed="false">🔍 Un message à la fois</button>
+  </div>
+  <div class="seq-barre" id="seqBarre" hidden>
+    <button class="btn" type="button" id="seqPrec">← Précédent</button>
+    <span class="seq-num" id="seqNum"></span>
+    <button class="btn" type="button" id="seqSuiv">Suivant →</button>
+    <button class="btn" type="button" id="seqAuto" aria-pressed="false">⏵ Défilement auto</button>
+    <select id="seqSaut" aria-label="Aller à une étape"></select>
+  </div>
   <div class="lec-haut">
     <button class="btn rond" id="pp" type="button" aria-label="Lecture">▶</button>
     <button class="btn rond" id="debut" type="button" aria-label="Recommencer">⏮</button>
@@ -229,10 +264,10 @@ table.sl td:first-child{white-space:nowrap}
   <h2 id="t-vu">Vue de dessus et messages échangés</h2>
   <p class="sous">Chaque point qui voyage est un message : <span style="color:var(--f1030)">● 1030 MHz</span> (interrogation d'un TCAS), <span style="color:var(--f1090)">● 1090 MHz</span> (réponse ou squitter d'un transpondeur), un cercle qui s'étend est une diffusion à tous. En vrai, un aller-retour dure quelques microsecondes : ici, il est ralenti pour être visible.</p>
   <div class="scene">
-    <div><div class="zoom" id="zoom"><button class="btn" type="button" data-z="auto" aria-pressed="true" title="Suivre les deux avions et zoomer à mesure qu'ils se rapprochent">🎯 Suivre</button><button class="btn" type="button" data-z="tout" title="Toute la rencontre">Tout</button>
+    <div class="carte-zone"><div class="fiche" id="fiche" hidden></div><div><div class="zoom" id="zoom"><button class="btn" type="button" data-z="auto" aria-pressed="true" title="Suivre les deux avions et zoomer à mesure qu'ils se rapprochent">🎯 Suivre</button><button class="btn" type="button" data-z="tout" title="Toute la rencontre">Tout</button>
       <button class="btn" type="button" data-f="0.7" aria-label="Dézoomer">−</button><button class="btn" type="button" data-f="1.4" aria-label="Zoomer">+</button><span class="aide-zoom">molette ou pincer pour zoomer, glisser pour déplacer</span></div>
       <canvas id="carte" aria-label="Vue de dessus de la rencontre"></canvas>
-      <div class="legende"><span><i style="--k:var(--avA)"></i>A (notre avion)</span><span><i style="--k:var(--avB)"></i>B (l’intrus)</span><span><i style="--k:var(--ta)"></i>zone TA (selon τ)</span><span><i style="--k:var(--ra)"></i>zone RA</span></div></div>
+      <div class="legende"><span><i style="--k:var(--avA)"></i>A (notre avion)</span><span><i style="--k:var(--avB)"></i>B (l’intrus)</span><span><i style="--k:var(--ta)"></i>zone TA (selon τ)</span><span><i style="--k:var(--ra)"></i>zone RA</span></div></div></div>
   </div>
     <div class="journaux-zone">
       <div class="journal-tete" id="filtres"><span class="lab" style="margin:0 6px 0 0">Messages échangés</span>
@@ -313,6 +348,7 @@ function relancer(garderTemps) {
   if (!garderTemps) t = 0;
   t = Math.min(t, R.duree);
   dernierJournal = ''; prepCarte(); reperes(); tableSL(); ctrls(); dessiner(true);
+  if (modeSeq) { construireEtapes(); const k = etapes.findIndex(x => x.t >= t - 0.01); allerEtape(k < 0 ? 0 : k); }
 }
 
 /* scénarios */
@@ -348,7 +384,9 @@ function ctrls() {
 const majPP = () => { $('#pp').textContent = joue ? '⏸' : '▶'; $('#pp').setAttribute('aria-label', joue ? 'Pause' : 'Lecture'); };
 $('#pp').onclick = () => { if (!joue && t >= R.duree - 0.05) t = 0; joue = !joue; majPP(); };
 $('#debut').onclick = () => { t = 0; dernierJournal = ''; dessiner(true); };
-$('#temps').addEventListener('input', e => { t = +e.target.value; joue = false; majPP(); dessiner(true); });
+$('#temps').addEventListener('input', e => { t = +e.target.value; joue = false; majPP();
+  if (modeSeq) { const k = etapes.findIndex(x => x.t >= t - 0.01); return allerEtape(k < 0 ? etapes.length - 1 : k); }
+  dessiner(true); });
 groupe('#vitesses', 'x', () => { vitesse = +document.querySelector('#vitesses [aria-pressed="true"]').dataset.v; });
 $('#son').onclick = () => { son = !son; $('#son').setAttribute('aria-pressed', son); $('#son').textContent = son ? '🔊 Annonces' : '🔇 Annonces'; if (!son && window.speechSynthesis) speechSynthesis.cancel(); };
 document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => { const f = b.dataset.f; filtres.has(f) ? filtres.delete(f) : filtres.add(f); b.setAttribute('aria-pressed', filtres.has(f)); dernierJournal = ''; dessiner(true); });
@@ -441,9 +479,10 @@ function dessinerCarte(im) {
       x.fillStyle = coul; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(`${lib} ≈ ${nf(r, 1)} NM`, ax + r * s * .72 + 4, ay - r * s * .72);
     }
   }
-  // messages en vol
+  // messages en vol (en mode séquence : seulement celui de l'étape)
+  if (modeSeq) messageSeq(x, P, im);
   const fen = Math.min(0.9, 0.22 * vitesse + 0.12);
-  for (const m of R.msgs) {
+  for (const m of (modeSeq ? [] : R.msgs)) {
     if (m.t > t) break;
     if (t - m.t > fen * 2.4) continue;
     const de = im[m.de], [sx, sy] = P(de.x, de.y), coul = m.freq === 1030 ? K.f1030 : K.f1090;
@@ -611,7 +650,8 @@ function journal() {
       if (l.type === 'evt') { const e = l.e;
         return `<div class="msg evt${t - e.t < 1.5 ? ' frais' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div><div class="d">${esc(e.texte)}</div></div></div>`; }
       const m = l.der, dir = m.a === '*' ? `→ tous` : `→ ${m.a}`;
-      return `<div class="msg${t - m.t < 1.2 ? ' frais' : ''}"><span class="t">${nf(m.t, 1)} s</span><div>
+      const cour = modeSeq && etapes[ie] && etapes[ie].m && etapes[ie].m.cle && etapes[ie].m.cle === m.cle;
+      return `<div class="msg${t - m.t < 1.2 ? ' frais' : ''}${cour ? ' courant' : ''}"><span class="t">${nf(m.t, 1)} s</span><div>
         <div class="q"><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span><span class="code">${esc(m.code)}</span><span class="dir">${dir}</span>${l.n > 1 ? `<span class="n">×${l.n} depuis ${nf(l.m.t, 1)} s</span>` : ''}</div>
         <div><b>${esc(m.titre)}</b></div><div class="d">${esc(m.detail)}</div></div></div>`;
     }).join('') || `<p class="sous" style="padding:8px">${k === 'B' && cfg.B.mode === 'stby' ? 'Transpondeur en STBY : B n’émet rien.' : 'Rien encore : lance la lecture.'}</p>`;
@@ -706,7 +746,7 @@ function reperes() {
   coul.detection = 'var(--f1090)';
   z.innerHTML = R.evts.filter(e => ['detection', 'ta', 'ra', 'coc'].includes(e.type)).map(e =>
     `<b role="button" tabindex="0" data-t="${e.t}" style="left:${e.t / R.duree * 100}%;background:${coul[e.type]};${e.type === 'detection' ? 'color:#071016;' : ''}${e.qui === 'B' ? 'top:auto;bottom:0;opacity:.85' : ''}" title="Aller à ${nf(e.t, 1)} s : ${esc(e.texte)}">${e.qui}·${{ coc: 'CoC', detection: 'Dét.', ta: 'TA', ra: 'RA' }[e.type]}</b>`).join('');
-  z.querySelectorAll('b').forEach(b => { const aller = () => { t = Math.max(0, +b.dataset.t - 2); dernierJournal = ''; dessiner(true); }; b.onclick = aller; b.onkeydown = e => { if (e.key === 'Enter') aller(); }; });
+  z.querySelectorAll('b').forEach(b => { const aller = () => { if (modeSeq) { const k = etapes.findIndex(x => x.t >= +b.dataset.t - 0.01); return allerEtape(k < 0 ? 0 : k); } t = Math.max(0, +b.dataset.t - 2); dernierJournal = ''; dessiner(true); }; b.onclick = aller; b.onkeydown = e => { if (e.key === 'Enter') aller(); }; });
 }
 
 /* ---------- dessin d'une image ---------- */
@@ -722,11 +762,95 @@ function dessiner(force) {
   cockpitTexte('A', im); cockpitTexte('B', im); calculs(im); journal(); dessinerProfil();
 }
 
+/* ---------- mode « un message à la fois » ----------
+   Étapes : la première fois qu'apparaît chaque message (les répétitions sont résumées dans la fiche), chaque message unique
+   (fin de RA, annulation…) et chaque alerte ou appel radio. Le temps se fige à l'instant de l'étape ; seul ce message voyage. */
+let modeSeq = false, etapes = [], ie = 0, seqAuto = null, seqAnimT0 = 0;
+const FORMAT = { DF11: '56 bits (message court)', DF17: '112 bits (message long)', UF0: '56 bits (message court)', DF0: '56 bits (message court)',
+  UF16: '112 bits (message long ; MU de 56 bits)', DF16: '112 bits (message long ; MV de 56 bits)', 'Mode C': '12 impulsions de code d’altitude entre F1 et F2', 'Réponse Mode C': '12 impulsions de code d’altitude entre F1 et F2',
+  'Intermode « ATCRBS seulement »': 'impulsions P1, P3 et P4 longue (Intermode)' };
+const NOM_PHASE = { detection: '1 · Détection', surveillance: '2 · Surveillance', coordination: '3 · Coordination et RA' };
+const NOM_EVT = { detection: 'Détection', ta: 'Avis de trafic (TA)', ra: 'Avis de résolution (RA)', coc: 'Fin du conflit', vhf: 'Radio VHF (pilote ↔ contrôle)', nonsuivi: 'Pilote', finta: 'Fin du TA' };
+function construireEtapes() {
+  const vus = new Map(), n = new Map();
+  for (const m of R.msgs) if (m.cle) n.set(m.cle, (n.get(m.cle) || 0) + 1);
+  const liste = [];
+  for (const m of R.msgs) { if (m.cle && vus.has(m.cle)) continue; if (m.cle) vus.set(m.cle, 1); liste.push({ t: m.t, m, n: m.cle ? n.get(m.cle) : 1 }); }
+  for (const e of R.evts) if (!['aural', 'coord'].includes(e.type)) liste.push({ t: e.t - 0.001, e });
+  liste.sort((a, b) => a.t - b.t);   // à un même instant : l'alerte (un millième plus tôt), puis le message qu'elle déclenche
+  etapes = liste;
+  $('#seqSaut').innerHTML = etapes.map((x, k) => `<option value="${k}">${k + 1}. ${nf(x.t, 1)} s · ${x.m ? `${x.m.de} ${x.m.a === '*' ? '→ tous' : '→ ' + x.m.a} · ${esc(x.m.code)}` : esc((NOM_EVT[x.e.type] || '') + ' · ' + x.e.qui)}</option>`).join('');
+}
+function allerEtape(k) {
+  ie = Math.max(0, Math.min(etapes.length - 1, k));
+  const x = etapes[ie]; t = x.t; seqAnimT0 = performance.now(); dernierJournal = '';
+  $('#seqNum').textContent = `Étape ${ie + 1} / ${etapes.length}`; $('#seqSaut').value = ie;
+  $('#seqPrec').disabled = ie === 0; $('#seqSuiv').disabled = ie === etapes.length - 1;
+  fiche(x); dessiner(true);
+}
+function fiche(x) {
+  const f = $('#fiche'); f.hidden = false;
+  if (x.m) {
+    const m = x.m, coul = m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)', base = m.code.split(' ')[0];
+    const qui = m.freq === 1030 ? 'TCAS' : 'transpondeur';
+    f.style.setProperty('--k', coul);
+    f.innerHTML = `<div class="haut"><span class="phase-f">${NOM_PHASE[m.phase]}</span><span>${nf(m.t, 1)} s</span><span>émis par le ${qui} de ${m.de}</span></div>
+      <div class="ligne1"><span class="fq" style="--kf:${coul}">${m.freq} MHz</span><span class="code">${esc(m.code)}</span>
+        <span class="dir" style="--kd:var(--av${m.de})"><b>${m.de}</b> → ${m.a === '*' ? 'tous (diffusion)' : `<b style="color:var(--av${m.a})">${m.a}</b>`}</span></div>
+      <h3>${esc(m.titre)}</h3><p>${esc(m.detail)}</p>
+      <div class="infos"><span>Format : ${FORMAT[m.code] || FORMAT[base] || '—'}</span>
+        <span>${m.freq === 1030 ? 'Interrogation (du TCAS)' : 'Réponse ou émission spontanée (du transpondeur)'}</span>
+        ${x.n > 1 ? `<span>Se répète ensuite : ×${x.n} en tout dans cette rencontre</span>` : '<span>Message unique</span>'}</div>`;
+  } else {
+    const e = x.e, coul = COUL_EVT[e.type] || 'var(--line2)';
+    f.style.setProperty('--k', coul);
+    f.innerHTML = `<div class="haut"><span class="phase-f">${esc(NOM_EVT[e.type] || e.type)}</span><span>${nf(e.t, 1)} s</span><span>avion ${e.qui}</span></div>
+      <h3>${esc(e.texte)}</h3>${e.type === 'vhf' ? '<p>Ce message passe par la radio VHF (voix), pas par le TCAS : le pilote avise le contrôleur.</p>' : ''}`;
+  }
+}
+function changerMode(seq) {
+  modeSeq = seq; document.body.classList.toggle('mode-seq', seq);
+  document.querySelectorAll('#modeLecture .btn').forEach(b => b.setAttribute('aria-pressed', (b.dataset.v === 'sequence') === seq));
+  $('#seqBarre').hidden = !seq; $('#fiche').hidden = !seq;
+  if (seq) { joue = false; majPP(); construireEtapes(); allerEtape(0); }
+  else { arreterAuto(); dernierJournal = ''; dessiner(true); }
+}
+function arreterAuto() { clearInterval(seqAuto); seqAuto = null; $('#seqAuto').setAttribute('aria-pressed', 'false'); $('#seqAuto').textContent = '⏵ Défilement auto'; }
+document.querySelectorAll('#modeLecture .btn').forEach(b => b.onclick = () => changerMode(b.dataset.v === 'sequence'));
+$('#seqPrec').onclick = () => allerEtape(ie - 1);
+$('#seqSuiv').onclick = () => allerEtape(ie + 1);
+$('#seqSaut').onchange = e => allerEtape(+e.target.value);
+$('#seqAuto').onclick = () => {
+  if (seqAuto) return arreterAuto();
+  seqAuto = setInterval(() => { if (ie >= etapes.length - 1) return arreterAuto(); allerEtape(ie + 1); }, 4500);
+  $('#seqAuto').setAttribute('aria-pressed', 'true'); $('#seqAuto').textContent = '⏸ Arrêter le défilement';
+};
+addEventListener('keydown', e => {
+  if (!modeSeq || e.target.closest('input, select, textarea')) return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); allerEtape(ie + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); allerEtape(ie - 1); }
+});
+// le message de l'étape, seul, qui fait l'aller en boucle (1,6 s)
+function messageSeq(x, P, im) {
+  const e = etapes[ie]; if (!e || !e.m) return;
+  const m = e.m, p = ((performance.now() - seqAnimT0) / 1600) % 1, de = im[m.de], [sx, sy] = P(de.x, de.y), coul = m.freq === 1030 ? K.f1030 : K.f1090;
+  x.font = '800 13px "IBM Plex Mono",monospace';
+  if (m.a === '*') {
+    for (const dp of [0, .33, .66]) { const q = (p + dp) % 1; x.strokeStyle = coul; x.globalAlpha = (1 - q) * .9; x.lineWidth = 3; x.beginPath(); x.arc(sx, sy, 10 + q * 120, 0, 2 * Math.PI); x.stroke(); }
+    x.globalAlpha = 1; x.fillStyle = coul; x.fillText(m.code, sx + 14, sy - 22); return;
+  }
+  const vers = im[m.a], [ex, ey] = P(vers.x, vers.y);
+  x.strokeStyle = coul; x.globalAlpha = .5; x.lineWidth = 2; x.setLineDash([6, 6]); x.beginPath(); x.moveTo(sx, sy); x.lineTo(ex, ey); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+  const q = Math.min(1, p * 1.25), px = sx + (ex - sx) * q, py = sy + (ey - sy) * q;
+  x.fillStyle = coul; x.shadowColor = coul; x.shadowBlur = 16; x.beginPath(); x.arc(px, py, 8, 0, 2 * Math.PI); x.fill(); x.shadowBlur = 0;
+  x.fillText(m.code, px + 12, py - 10);
+}
+
 /* ---------- boucle ---------- */
 let tPrec = performance.now();
 function boucle(now) {
   const dt = Math.min(.1, (now - tPrec) / 1000); tPrec = now;
   if (joue) { t += dt * vitesse; if (t >= R.duree) { t = R.duree; joue = false; majPP(); } dessiner(); }
+  else if (modeSeq) dessinerCarte(img());   // le message de l'étape continue de voyager
   requestAnimationFrame(boucle);
 }
 addEventListener('resize', () => dessiner(true));
