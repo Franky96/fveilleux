@@ -204,7 +204,7 @@ table.sl td:first-child{white-space:nowrap}
     <button class="btn rond" id="debut" type="button" aria-label="Recommencer">⏮</button>
     <span class="horloge" id="horloge">0,0 s</span>
     <div class="choix" id="vitesses">
-      <button class="btn" type="button" data-v="1">×1</button><button class="btn" type="button" data-v="2">×2</button>
+      <button class="btn" type="button" data-v="0.5">×0,5</button>      <button class="btn" type="button" data-v="1">×1</button><button class="btn" type="button" data-v="2">×2</button>
       <button class="btn" type="button" data-v="4" aria-pressed="true">×4</button><button class="btn" type="button" data-v="8">×8</button>
     </div>
     <button class="btn" type="button" id="son" aria-pressed="false" title="Lire les annonces du TCAS à voix haute (anglais)">🔇 Annonces</button>
@@ -400,7 +400,7 @@ function dessinerCarte(im) {
     }
   }
   // messages en vol
-  const fen = Math.min(0.9, 0.22 * vitesse + 0.15);
+  const fen = Math.min(0.9, 0.22 * vitesse + 0.12);
   for (const m of R.msgs) {
     if (m.t > t) break;
     if (t - m.t > fen * 2.4) continue;

@@ -59,7 +59,7 @@ const jeu = noms => ({
   },
 });
 const REGLAGES = {
-  'tcas.html': { avant: async pg => { await pg.click('#pp').catch(() => {}); await pg.evaluate(() => { const r = document.getElementById('temps'); r.value = 84; r.dispatchEvent(new Event('input')); document.getElementById('pp').click(); document.getElementById('carte').scrollIntoView({ block: 'center' }); }); }, attente: 300, cadre: ['#carte'], defile: 0 },
+  'tcas.html': { avant: async pg => { await pg.click('#pp').catch(() => {}); await pg.evaluate(() => { const r = document.getElementById('temps'); r.value = 24; r.dispatchEvent(new Event('input')); document.getElementById('pp').click(); document.getElementById('carte').scrollIntoView({ block: 'center' }); }); }, attente: 300, cadre: ['#carte'], defile: 0 },
   'triphase.html': { avant: async pg => pg.evaluate(() => document.getElementById('cv').scrollIntoView({ block: 'center' })), attente: 1200, cadre: ['#cv'], defile: 0 },
   'aec-avionique.html': { ...categorie, cadre: ['.tete', '.etape'] },
   'moteurs.html': categorie,'informatique.html': categorie, 'jeuxdesociete.html': categorie, 'chips.html': categorie,

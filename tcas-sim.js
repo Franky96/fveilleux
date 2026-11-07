@@ -32,16 +32,16 @@
   /* ---------- scénarios ---------- */
   // A : notre avion (toujours équipé TCAS II, pilote qui suit ses RA). B : l'intrus.
   const SCENARIOS = {
-    face: { nom: 'Face à face', desc: 'Deux avions en palier au FL150, sur la même route, en sens inverse.', duree: 160, sol: 0,
-      A: { x: -10, y: 0, cap: 90, vit: 300, alt: 15100, vs: 0 }, B: { x: 10, y: 0.12, cap: 270, vit: 300, alt: 15000, vs: 0 } },
-    montee: { nom: 'Croisement en montée', desc: 'B, en montée vers 13 000 ft, coupe la route de A en palier à 11 000 ft.', duree: 150, sol: 0,
-      A: { x: -8, y: 0.1, cap: 90, vit: 280, alt: 11000, vs: 0 }, B: { x: 0, y: -8, cap: 0, vit: 280, alt: 8000, vs: 1800, autorisee: 13000 } },
-    rattrapage: { nom: 'Rattrapage', desc: 'B, plus rapide, rattrape A par l’arrière, à la même altitude.', duree: 170, sol: 0,
-      A: { x: -2, y: 0, cap: 90, vit: 250, alt: 13000, vs: 0 }, B: { x: -7, y: -0.1, cap: 90, vit: 400, alt: 13050, vs: 0 } },
-    ta: { nom: 'TA seulement', desc: 'Face à face, mais 700 ft d’écart vertical : avertissement de trafic, pas de manœuvre.', duree: 160, sol: 0,
-      A: { x: -10, y: 0, cap: 90, vit: 300, alt: 15000, vs: 0 }, B: { x: 10, y: 0.3, cap: 270, vit: 300, alt: 15700, vs: 0 } },
-    approche: { nom: 'Basse altitude', desc: 'A en approche, descend vers 600 ft sol ; B traverse à 1 300 ft. Sous 1 000 ft sol (SL 2), le TCAS ne donne pas de RA : seulement un TA.', duree: 150, sol: 0,
-      A: { x: -4.5, y: 0, cap: 90, vit: 140, alt: 900, vs: -300, autorisee: 600 }, B: { x: 0.05, y: -4.5, cap: 0, vit: 140, alt: 1300, vs: 0 } },
+    face: { nom: 'Face à face', desc: 'Deux avions en palier au FL150, sur la même route, en sens inverse.', duree: 100, sol: 0,
+      A: { x: -5, y: 0, cap: 90, vit: 300, alt: 15100, vs: 0 }, B: { x: 5, y: 0.12, cap: 270, vit: 300, alt: 15000, vs: 0 } },
+    montee: { nom: 'Croisement en montée', desc: 'B, en montée vers 13 000 ft, coupe la route de A en palier à 11 000 ft.', duree: 105, sol: 0,
+      A: { x: -4.4, y: 0.1, cap: 90, vit: 280, alt: 11000, vs: 0 }, B: { x: 0, y: -4.4, cap: 0, vit: 280, alt: 9380, vs: 1800, autorisee: 13000 } },
+    rattrapage: { nom: 'Rattrapage', desc: 'B, plus rapide, rattrape A par l’arrière, à la même altitude.', duree: 120, sol: 0,
+      A: { x: -1.5, y: 0, cap: 90, vit: 250, alt: 13000, vs: 0 }, B: { x: -4.4, y: -0.1, cap: 90, vit: 400, alt: 13050, vs: 0 } },
+    ta: { nom: 'TA seulement', desc: 'Face à face, mais 700 ft d’écart vertical : avertissement de trafic, pas de manœuvre.', duree: 100, sol: 0,
+      A: { x: -5, y: 0, cap: 90, vit: 300, alt: 15000, vs: 0 }, B: { x: 5, y: 0.3, cap: 270, vit: 300, alt: 15700, vs: 0 } },
+    approche: { nom: 'Basse altitude', desc: 'A en approche, descend vers 600 ft sol ; B traverse à 1 300 ft. Sous 1 000 ft sol (SL 2), le TCAS ne donne pas de RA : seulement un TA.', duree: 85, sol: 0,
+      A: { x: -1.8, y: 0, cap: 90, vit: 140, alt: 640, vs: -300, autorisee: 600 }, B: { x: 0.05, y: -1.8, cap: 0, vit: 140, alt: 1300, vs: 0 } },
   };
 
   const ID = {
