@@ -155,6 +155,9 @@ html.light #carte{background:#e8eef3}
 .tmsg tr.ouvert td.nom::after{content:" ▾"}
 .tmsg td.n{font:500 11.5px var(--f-mono);color:var(--muted)}
 .tmsg td.cpt{font:700 13.5px var(--f-mono);color:color-mix(in srgb,var(--k) calc(var(--vif,0) * 100%),var(--text))}
+.tmsg tr.groupe th{text-align:left;font:700 12.5px var(--f-body);color:var(--text);padding:12px 7px 4px;border-bottom:1px solid var(--k)}
+.tmsg tr.groupe:first-child th{padding-top:6px}
+.tmsg tr.groupe small{font:500 11px var(--f-mono);color:var(--faint);margin-left:6px}
 .tmsg tr.det td{white-space:normal;color:var(--muted);font-size:12.3px;padding:2px 9px 8px 54px;background:color-mix(in srgb,var(--panel2) 60%,transparent)}
 .tmsg tr.det b{color:var(--text);font-weight:600}
 .tmsg tr.courant td{background:color-mix(in srgb,var(--c) 18%,transparent);box-shadow:inset 0 2px 0 var(--c),inset 0 -2px 0 var(--c)}
@@ -654,6 +657,12 @@ function cockpitTexte(k, im) {
 let dernierJournal = '';
 const PILOTES = new Set(['aural', 'vhf', 'nonsuivi']);
 const ouverts = new Set();
+// le tableau est séparé en trois groupes : squitters (spontanés), diffusions à tous (broadcasts), et les autres UF/DF (interrogation → réponse)
+const GROUPES_MSG = [
+  { id: 'sq', nom: 'Squitters', sous: 'spontanés, sans interrogation (1090 MHz)' },
+  { id: 'bc', nom: 'Broadcasts', sous: 'diffusés à tous par le TCAS, sans réponse (1030 MHz)' },
+  { id: 'ir', nom: 'Interrogations et réponses', sous: 'UF du TCAS (1030 MHz) → DF du transpondeur (1090 MHz)' }];
+const groupeMsg = m => /^df1[17]/.test(m.cle) ? 'sq' : /^(bc|rabc)/.test(m.cle) ? 'bc' : 'ir';
 const rendu = { A: { ordre: null, lignes: new Map(), evts: null }, B: { ordre: null, lignes: new Map(), evts: null } };
 const COUL_EVT = { finta: 'var(--line2)', ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)', coord: 'var(--f1030)', vhf: 'var(--vhf)', detection: 'var(--f1090)', nonsuivi: 'var(--ra)', aural: 'var(--ta)' };
 function journal() {
@@ -669,7 +678,7 @@ function journal() {
   const force = dernierJournal === ''; dernierJournal = 'ok';
   const cleCour = modeSeq && etapes[ie] && etapes[ie].m ? etapes[ie].m.cle : null, evtCour = modeSeq && etapes[ie] ? etapes[ie].e : null;
   for (const k of ['A', 'B']) {
-    const r = rendu[k], lignes = col[k].slice().reverse();
+    const r = rendu[k], lignes = GROUPES_MSG.flatMap(g => col[k].filter(l => groupeMsg(l.m) === g.id).reverse());
     // alertes : la plus récente en haut
     const sigE = ev[k].length + ':' + (ev[k].length ? ev[k][ev[k].length - 1].t : '') + ':' + (evtCour ? evtCour.t : '');
     if (force || sigE !== r.evts) {
@@ -686,9 +695,10 @@ function journal() {
     if (force || ordre !== r.ordre) {
       r.ordre = ordre; r.lignes.clear();
       if (!lignes.length) { z.innerHTML = `<p class="vide-j">${k === 'B' && cfg.B.mode === 'stby' ? 'Transpondeur en STBY : B n’émet rien.' : 'Rien encore : lance la lecture.'}</p>`; continue; }
-      z.innerHTML = `<table class="tmsg"><colgroup><col class="c-fq"><col class="c-code"><col class="c-vers"><col class="nom"><col class="c-t"><col class="c-t"><col class="c-nb"></colgroup><thead><tr><th>Fréq.</th><th>Message</th><th>Vers</th><th class="nom">Nom</th><th class="n" title="Première émission, en secondes">1re fois (s)</th><th class="n" title="Dernière émission, en secondes">Dernière (s)</th><th class="n" title="Nombre d’émissions jusqu’ici">Nb</th></tr></thead><tbody>${lignes.map(l => {
-        const m = l.m, o = ouverts.has(m.cle);
-        return `<tr class="ligne${o ? ' ouvert' : ''}" data-cle="${esc(m.cle)}" tabindex="0" title="Cliquer pour les détails"><td><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span></td><td class="code">${esc(m.code)}</td><td class="vers">${m.a === '*' ? 'tous' : m.a}</td><td class="nom">${esc(m.titre)}</td><td class="n">${nf(m.t, 1)}</td><td class="n der"></td><td class="n cpt"></td></tr>`
+      z.innerHTML = `<table class="tmsg"><colgroup><col class="c-fq"><col class="c-code"><col class="c-vers"><col class="nom"><col class="c-t"><col class="c-t"><col class="c-nb"></colgroup><thead><tr><th>Fréq.</th><th>Message</th><th>Vers</th><th class="nom">Nom</th><th class="n" title="Première émission, en secondes">1re fois (s)</th><th class="n" title="Dernière émission, en secondes">Dernière (s)</th><th class="n" title="Nombre d’émissions jusqu’ici">Nb</th></tr></thead><tbody>${lignes.map((l, n) => {
+        const m = l.m, o = ouverts.has(m.cle), g = groupeMsg(m);
+        const tete = n === 0 || groupeMsg(lignes[n - 1].m) !== g ? GROUPES_MSG.find(x => x.id === g) : null;
+        return (tete ? `<tr class="groupe"><th colspan="7">${tete.nom} <small>${tete.sous}</small></th></tr>` : '') + `<tr class="ligne${o ? ' ouvert' : ''}" data-cle="${esc(m.cle)}" tabindex="0" title="Cliquer pour les détails"><td><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span></td><td class="code">${esc(m.code)}</td><td class="vers">${m.a === '*' ? 'tous' : m.a}</td><td class="nom">${esc(m.titre)}</td><td class="n">${nf(m.t, 1)}</td><td class="n der"></td><td class="n cpt"></td></tr>`
           + `<tr class="det" data-cle="${esc(m.cle)}"${o ? '' : ' hidden'}><td colspan="7"><b>${esc(m.titre)}</b> — <span class="d"></span></td></tr>`;
       }).join('')}</tbody></table>`;
       z.querySelectorAll('tr.ligne').forEach(tr => r.lignes.set(tr.dataset.cle, { tr, d: tr.nextElementSibling.querySelector('.d'), der: tr.querySelector('.der'), cpt: tr.querySelector('.cpt'), v: {} }));
