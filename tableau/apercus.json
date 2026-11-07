@@ -186,6 +186,12 @@
    "tableau/shape-transfer.webm"
   ]
  },
+ "tcas.html": {
+  "img": "tableau/tcas.jpg",
+  "video": [
+   "tableau/tcas.webm"
+  ]
+ },
  "tcpip.html": {
   "img": "tableau/tcpip.jpg",
   "video": [

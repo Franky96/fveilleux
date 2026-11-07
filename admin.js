@@ -31,6 +31,7 @@ const SECTIONS_ARCHIVABLES = [
     { key: 'chips',          icon: '🔌', label: 'Simulateurs'          },
     { key: 'circuit',        icon: '⚡', label: 'Circuit logique'      },
     { key: 'triphase',       icon: '🔺', label: 'Courant triphasé'     },
+    { key: 'tcas',           icon: '🛩️', label: 'Rencontre TCAS'       },
   ]},
   { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
     { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
@@ -386,6 +387,7 @@ const PERMS_STRUCTURE = [
     { key: 'chips',          label: 'Simulateurs' },
     { key: 'circuit',        label: 'Circuit logique' },
     { key: 'triphase',       label: 'Courant triphasé' },
+    { key: 'tcas',           label: 'Rencontre TCAS' },
   ]},
   { key: 'moteurs', label: 'Moteurs', children: [
     { key: 'turboreacteur', label: 'CFM56-7B' },

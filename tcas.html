@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rencontre TCAS — Outils de Frank</title>
+<script>
+  const _pT = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pT.includes('tcas') && !_pT.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Rencontre TCAS : jetons du visuel 2.0 */
+:root{
+  color-scheme:dark;
+  --bg:#0a0e11; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79; --c:#23753f;
+  --avA:#38bdf8; --avB:#e879f9; --f1030:#22d3ee; --f1090:#fbbf24;
+  --ta:#f59e0b; --ra:#ef4444; --vert:#22c55e; --vhf:#a3e635;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html.light{
+  color-scheme:light;
+  --bg:#f2f4f6; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0;
+  --avA:#0284c7; --avB:#c026d3; --f1030:#0891b2; --f1090:#d97706; --ta:#d97706; --ra:#dc2626; --vert:#16a34a; --vhf:#65a30d;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.5 var(--f-body);padding:0 max(14px,env(safe-area-inset-right)) 48px max(14px,env(safe-area-inset-left));overflow-x:hidden}
+.wrap{max-width:1320px;margin:0 auto}
+h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.02em;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.intro{margin:18px 0 4px;color:var(--muted);max-width:90ch}
+.intro b{color:var(--text)}
+.panel{margin-top:14px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.panel>h2{font-size:21px;margin-bottom:2px}
+.sous{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+.lab{font:600 12px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+.choix{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:600 13px/1.2 var(--f-body);padding:7px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--text);transition:border-color .15s,background .15s}
+.btn:hover{border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
+.btn[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 26%,var(--panel2));border-color:color-mix(in srgb,var(--c) 70%,var(--line2))}
+.btn:disabled{opacity:.35;cursor:default}
+.btn small{display:block;font:500 10.5px var(--f-mono);color:var(--muted)}
+.reg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px 22px}
+.scen-desc{margin:8px 0 0;font-size:13.5px;color:var(--muted)}
+
+/* contrôleurs ATC/TCAS : allure d'un boîtier */
+.ctrls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:12px}
+.boitier{border-radius:14px;border:1px solid var(--line2);background:linear-gradient(180deg,#1a2229,#11171c);padding:12px 14px;color:#dfe7ec}
+html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
+.boitier h3{display:flex;align-items:center;gap:8px;font-size:17px;margin-bottom:8px;color:#fff}
+.boitier h3 i{width:12px;height:12px;border-radius:50%;background:var(--k)}
+.boitier h3 small{font:500 11px var(--f-mono);color:#93a3ae;margin-left:auto}
+.rang{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:8px;margin:5px 0}
+.rang>span{font:600 11px var(--f-mono);letter-spacing:.06em;color:#93a3ae;text-transform:uppercase}
+.touches{display:flex;flex-wrap:wrap;gap:4px}
+.touche{font:600 11.5px var(--f-mono);padding:6px 8px;border-radius:6px;border:1px solid #3a4852;background:#0d1216;color:#c9d4db;cursor:pointer;min-width:44px}
+.touche[aria-pressed="true"]{background:#0b2b1a;border-color:#2f9e5e;color:#9ff0c0;box-shadow:inset 0 0 8px rgba(47,158,94,.4)}
+.touche:disabled{opacity:.3;cursor:default}
+
+/* lecteur */
+.lecteur{margin-top:14px;padding:8px 12px;border-radius:14px;border:1px solid var(--line);
+  background:color-mix(in srgb,var(--panel) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.lec-haut{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.rond{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:15px}
+.horloge{font:600 14px var(--f-mono);min-width:90px}
+.horloge small{display:block;font:500 11px var(--f-mono);color:var(--muted)}
+.etats{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.pill{font:700 12px var(--f-mono);padding:4px 9px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2)}
+.pill.ta{background:color-mix(in srgb,var(--ta) 25%,var(--panel2));border-color:var(--ta)}
+.pill.ra{background:color-mix(in srgb,var(--ra) 28%,var(--panel2));border-color:var(--ra)}
+.ligne-temps{position:relative;margin-top:8px}
+.ligne-temps input{width:100%;accent-color:var(--c);margin:0}
+.reperes{position:relative;height:26px}
+.reperes b{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px var(--f-mono);padding:0 3px;border-radius:4px;color:#fff;white-space:nowrap}
+.phases{display:flex;gap:5px;font-size:12px;flex-wrap:wrap}
+@media (min-width:900px) and (min-height:700px){.lecteur{position:sticky;top:var(--tb2-h,58px);z-index:6}}
+.phase{padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--faint)}
+.phase.on{color:var(--text);border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,var(--panel2))}
+
+/* vue de dessus et journal */
+.scene{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:14px;align-items:start}
+canvas{display:block;width:100%}
+#carte{height:440px;border-radius:12px;background:color-mix(in srgb,var(--bg) 70%,#0b1a24)}
+html.light #carte{background:#e8eef3}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.legende i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--k);margin-right:5px;vertical-align:-1px}
+.journal-tete{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.journal-tete .puce{font:600 11.5px var(--f-body);padding:3px 8px;border-radius:999px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--muted)}
+.journal-tete .puce[aria-pressed="true"]{color:var(--text);border-color:var(--c)}
+#journal{height:440px;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-right:4px;scrollbar-width:thin}
+.msg{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);font-size:12.8px;line-height:1.35}
+.msg .t{font:500 11px var(--f-mono);color:var(--faint);padding-top:2px}
+.msg .q{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-bottom:2px}
+.msg .code{font:700 11.5px var(--f-mono);padding:1px 6px;border-radius:5px;background:var(--panel);border:1px solid var(--line2)}
+.msg .fq{font:600 10.5px var(--f-mono);padding:1px 5px;border-radius:5px;color:#071016;background:var(--k)}
+.msg .dir{font:600 11.5px var(--f-mono);color:var(--muted)}
+.msg .n{font:500 10.5px var(--f-mono);color:var(--faint);margin-left:auto}
+.msg .d{color:var(--muted)}
+.msg.evt{border-color:var(--k);background:color-mix(in srgb,var(--k) 12%,var(--panel2))}
+.msg.evt .d{color:var(--text)}
+.msg.frais{animation:frais 1.2s ease}
+@keyframes frais{from{box-shadow:0 0 0 2px var(--c)}}
+
+/* cockpits */
+.cockpits{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));gap:14px}
+.cockpit h3{display:flex;align-items:center;gap:8px;font-size:19px}
+.cockpit h3 i{width:12px;height:12px;border-radius:50%;background:var(--k)}
+.instr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.ecran{position:relative;border-radius:12px;background:#05080b;border:1px solid #1d272e;padding:6px}
+.ecran .titre-e{position:absolute;left:10px;top:7px;font:600 10.5px var(--f-mono);color:#7f8f9a;letter-spacing:.06em}
+.ecran canvas{aspect-ratio:1/1}
+.annonce{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:40px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font:700 14px var(--f-mono)}
+.annonce.ta{border-color:var(--ta);color:var(--ta)}
+.annonce.ra{border-color:var(--ra);color:var(--ra);background:color-mix(in srgb,var(--ra) 12%,var(--panel2))}
+.annonce.coc{border-color:var(--vert);color:var(--vert)}
+.annonce small{font:500 12px var(--f-body);color:var(--muted);margin-left:auto}
+.consigne{margin-top:6px;font-size:13px;color:var(--muted);min-height:20px}
+
+/* calculs */
+.calc{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+.jauge{margin:6px 0 14px}
+.jauge .tt{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+.jauge .tt b{font:600 13px var(--f-mono)}
+.barre{position:relative;height:28px;border-radius:7px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
+.barre .zone{position:absolute;top:0;bottom:0}
+.barre .curseur{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;border-radius:2px;background:var(--text);box-shadow:0 0 6px var(--text);transition:left .1s linear}
+.barre .seuil{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed}
+.barre .lib{position:absolute;top:2px;font:700 10px var(--f-mono);padding:0 4px;white-space:nowrap}
+.verdict{padding:10px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);font-size:14px}
+table.sl{width:100%;border-collapse:collapse;font:500 12px var(--f-mono)}
+table.sl th,table.sl td{border:1px solid var(--line);padding:4px 6px;text-align:center}
+table.sl th{background:var(--panel2);font-family:var(--f-body);font-weight:600}
+table.sl tr.ici td{background:color-mix(in srgb,var(--c) 26%,var(--panel2));color:var(--text);font-weight:700}
+table.sl td:first-child{white-space:nowrap}
+.valeurs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:10px}
+.val{padding:6px 9px;border-radius:8px;background:var(--panel2);border:1px solid var(--line)}
+.val span{display:block;font-size:11.5px;color:var(--muted)}
+.val b{font:600 15px var(--f-mono)}
+.val.ok b{color:var(--vert)}
+.val.alerte b{color:var(--ra)}
+#profil{height:240px}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px;margin-top:14px}
+.note{background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:14px;padding:12px 15px}
+.note h3{font-size:18px;margin-bottom:4px}
+.note p,.note li{margin:0 0 5px;font-size:13.5px}
+.note ul{margin:0;padding-left:18px}
+.f{font:500 12.5px var(--f-mono);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;white-space:nowrap}
+@media (max-width:980px){.scene{grid-template-columns:1fr}#journal{height:320px}#carte{height:360px}.calc{grid-template-columns:1fr}}
+@media (max-width:560px){.instr{grid-template-columns:1fr 1fr;gap:6px}.rang{grid-template-columns:76px 1fr}#carte{height:300px}.etats{margin-left:0}}
+</style>
+<link rel="stylesheet" href="fond.css">
+<script src="topbar.js" defer></script>
+</head>
+<body data-retour="informatique.html" data-retour-nom="Informatique">
+<div data-topbar><h1>Rencontre TCAS</h1></div>
+<div class="wrap">
+<p class="intro">Deux avions se rapprochent. Leurs <b>transpondeurs</b> et leurs <b>TCAS II</b> (v7.1) échangent des messages sur <b>1030 MHz</b> (interrogations du TCAS) et <b>1090 MHz</b> (réponses et squitters des transpondeurs) : <b>détection</b>, <b>surveillance</b>, puis <b>coordination</b> pendant un avis de résolution. Choisis la situation et les réglages des contrôleurs, puis regarde la rencontre se dérouler, image par image si tu veux.</p>
+
+<section class="panel" aria-labelledby="t-sc">
+  <h2 id="t-sc">Situation</h2>
+  <div class="reg">
+    <div><p class="lab">Scénario</p><div class="choix" id="scenarios"></div><p class="scen-desc" id="scen-desc"></p></div>
+    <div>
+      <p class="lab">Équipement de B</p>
+      <div class="choix" id="equipB">
+        <button class="btn" type="button" data-v="tcas" aria-pressed="true">Mode S + TCAS II<small>coordination possible</small></button>
+        <button class="btn" type="button" data-v="modeS" aria-pressed="false">Mode S sans TCAS<small>répond, ne coordonne pas</small></button>
+        <button class="btn" type="button" data-v="atcrbs" aria-pressed="false">ATCRBS (Mode C)<small>pas de squitter, pas d’UF0</small></button>
+      </div>
+      <p class="lab" style="margin-top:10px">Pilote de B</p>
+      <div class="choix" id="piloteB">
+        <button class="btn" type="button" data-v="suit" aria-pressed="true">Suit son RA<small>ou garde sa trajectoire</small></button>
+        <button class="btn" type="button" data-v="inverse" aria-pressed="false">Manœuvre dans le mauvais sens<small>suit une autre instruction</small></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-ct">
+  <h2 id="t-ct">Contrôleurs ATC/TCAS</h2>
+  <p class="sous">Le mode change ce que l'avion émet et ce que fait son TCAS. La couverture verticale, l'altitude relative ou absolue et le RANGE ne changent que l'affichage.</p>
+  <div class="ctrls" id="ctrls"></div>
+</section>
+
+<div class="lecteur" id="lecteur">
+  <div class="lec-haut">
+    <button class="btn rond" id="pp" type="button" aria-label="Lecture">▶</button>
+    <button class="btn rond" id="debut" type="button" aria-label="Recommencer">⏮</button>
+    <span class="horloge" id="horloge">0,0 s</span>
+    <div class="choix" id="vitesses">
+      <button class="btn" type="button" data-v="1">×1</button><button class="btn" type="button" data-v="2">×2</button>
+      <button class="btn" type="button" data-v="4" aria-pressed="true">×4</button><button class="btn" type="button" data-v="8">×8</button>
+    </div>
+    <button class="btn" type="button" id="son" aria-pressed="false" title="Lire les annonces du TCAS à voix haute (anglais)">🔇 Annonces</button>
+    <div class="phases" id="phases"><span class="phase" data-p="detection">1 · Détection</span><span class="phase" data-p="surveillance">2 · Surveillance</span><span class="phase" data-p="coordination">3 · Coordination et RA</span></div>
+    <div class="etats"><span class="pill" id="pillA">A</span><span class="pill" id="pillB">B</span></div>
+  </div>
+  <div class="ligne-temps">
+    <div class="reperes" id="reperes"></div>
+    <input type="range" id="temps" min="0" max="160" step="0.1" value="0" aria-label="Instant de la simulation">
+  </div>
+</div>
+
+<section class="panel" aria-labelledby="t-vu">
+  <h2 id="t-vu">Vue de dessus et messages échangés</h2>
+  <p class="sous">Chaque point qui voyage est un message : <span style="color:var(--f1030)">● 1030 MHz</span> (interrogation d'un TCAS), <span style="color:var(--f1090)">● 1090 MHz</span> (réponse ou squitter d'un transpondeur), un cercle qui s'étend est une diffusion à tous. En vrai, un aller-retour dure quelques microsecondes : ici, il est ralenti pour être visible.</p>
+  <div class="scene">
+    <div><canvas id="carte" aria-label="Vue de dessus de la rencontre"></canvas>
+      <div class="legende"><span><i style="--k:var(--avA)"></i>A (notre avion)</span><span><i style="--k:var(--avB)"></i>B (l’intrus)</span><span><i style="--k:var(--ta)"></i>zone TA (selon τ)</span><span><i style="--k:var(--ra)"></i>zone RA</span></div></div>
+    <div>
+      <div class="journal-tete" id="filtres">
+        <button class="puce" type="button" data-f="detection" aria-pressed="true">Détection</button>
+        <button class="puce" type="button" data-f="surveillance" aria-pressed="true">Surveillance</button>
+        <button class="puce" type="button" data-f="coordination" aria-pressed="true">Coordination</button>
+        <button class="puce" type="button" data-f="evt" aria-pressed="true">Alertes et pilotes</button>
+      </div>
+      <div id="journal" aria-live="off"></div>
+    </div>
+  </div>
+</section>
+
+<div class="cockpits">
+  <section class="panel cockpit" data-av="A"><h3><i style="--k:var(--avA)"></i>Cockpit de A <small id="idA" style="font:500 12px var(--f-mono);color:var(--muted)"></small></h3>
+    <div class="instr"><div class="ecran"><span class="titre-e">ND · TRAFIC</span><canvas id="ndA"></canvas></div><div class="ecran"><span class="titre-e">VSI · TCAS</span><canvas id="vsiA"></canvas></div></div>
+    <div class="annonce" id="annA"></div><p class="consigne" id="consA"></p></section>
+  <section class="panel cockpit" data-av="B"><h3><i style="--k:var(--avB)"></i>Cockpit de B <small id="idB" style="font:500 12px var(--f-mono);color:var(--muted)"></small></h3>
+    <div class="instr"><div class="ecran"><span class="titre-e">ND · TRAFIC</span><canvas id="ndB"></canvas></div><div class="ecran"><span class="titre-e">VSI · TCAS</span><canvas id="vsiB"></canvas></div></div>
+    <div class="annonce" id="annB"></div><p class="consigne" id="consB"></p></section>
+</div>
+
+<section class="panel" aria-labelledby="t-ca">
+  <h2 id="t-ca">Les calculs du TCAS</h2>
+  <p class="sous">Recalculés à chaque seconde, à chaque réponse de l'intrus. <span class="choix" id="vuCalc" style="display:inline-flex;vertical-align:middle;margin-left:6px"><button class="btn" type="button" data-v="A" aria-pressed="true">TCAS de A</button><button class="btn" type="button" data-v="B" aria-pressed="false">TCAS de B</button></span></p>
+  <div class="calc">
+    <div>
+      <div class="valeurs" id="valeurs"></div>
+      <div class="jauge"><div class="tt"><span>TAU : temps avant le croisement, si rien ne change</span><b id="tauVal"></b></div><div class="barre" id="barreTau"></div></div>
+      <div class="jauge"><div class="tt"><span>Écart vertical actuel et prévu au croisement</span><b id="hVal"></b></div><div class="barre" id="barreH"></div></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+    <div>
+      <p class="lab">Niveaux de sensibilité (TCAS II v7.1)</p>
+      <table class="sl" id="tableSL"></table>
+      <p class="sous" style="margin-top:6px">Sous 1 000 ft sol : pas de RA (SL 2). Sous 500 ft sol : TA ONLY imposé et aucune annonce sonore.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-pr">
+  <h2 id="t-pr">Vue de côté</h2>
+  <p class="sous">Altitude des deux avions dans le temps. Bandes : TA (ambre) et RA (rouge) de A. Le trait vertical est l'instant affiché.</p>
+  <canvas id="profil" aria-label="Altitudes des deux avions dans le temps"></canvas>
+</section>
+
+<div class="notes">
+  <div class="note"><h3>1 · Détection</h3><p>Les transpondeurs Mode S diffusent d'eux-mêmes des <b>squitters</b> sur 1090 MHz : <span class="f">DF11</span> (adresse 24 bits) et <span class="f">DF17</span> (squitter long, ADS-B). Le TCAS les écoute pour remplir sa table : intrus, adresse, position.</p><p>Un transpondeur <b>ATCRBS</b> ne diffuse rien : le TCAS l'interroge par un appel général Intermode « ATCRBS seulement », en <b>whisper-shout</b> (14 NM au plus).</p></div>
+  <div class="note"><h3>2 · Surveillance</h3><p>Chaque seconde, le TCAS envoie une interrogation sélective <span class="f">UF0</span> (1030 MHz) ; le transpondeur répond <span class="f">DF0</span> (1090 MHz) avec son altitude et son niveau de sensibilité. Le temps aller-retour donne la <b>distance</b>, l'antenne directionnelle le <b>relèvement</b>.</p><p>Aux 10 s, <span class="f">UF16 · UDS 3.2</span> à tous (FFF FFF) : « mon TCAS existe » (densité du trafic).</p></div>
+  <div class="note"><h3>3 · Coordination</h3><p>Pendant un RA : chaque seconde, <span class="f">UF16 · UDS 3.0</span> à l'intrus, avec la restriction (VRC : « ne monte pas »), réponse <span class="f">DF16</span>. Aux 8 s environ, <span class="f">UF16 · UDS 3.1</span> RA Broadcast à tous (ARA, RAC, AID, CAC ; RAT = 1 à la fin).</p><p>Le premier TCAS en RA impose sa restriction ; en cas d'envoi simultané, l'adresse 24 bits la plus basse a priorité. Pas de coordination avec un Mode S sans TCAS ni avec un ATCRBS : le TCAS reste prêt à <b>inverser</b> son RA.</p></div>
+  <div class="note"><h3>Les calculs</h3><ul><li><b>TAU</b> : temps avant le croisement = distance ÷ vitesse de rapprochement.</li><li><b>DMOD</b> : distance qui déclenche l'alerte même si TAU est encore grand (avions lents).</li><li><b>ZTHR</b> : écart vertical en deçà duquel l'intrus compte ; sinon, on regarde le TAU vertical.</li><li><b>ALIM</b> : séparation verticale visée au croisement ; si elle est déjà assurée, pas de RA.</li></ul></div>
+  <div class="note"><h3>À l'écran</h3><ul><li>◇ trafic environnant · ◆ trafic de proximité (6 NM, ±1 200 ft) · <span style="color:var(--ta)">●</span> TA · <span style="color:var(--ra)">■</span> RA.</li><li>Altitude relative en centaines de pieds : <span class="f">+07</span> au-dessus du symbole, <span class="f">−15</span> en dessous ; flèche ↑ ↓ au-delà de 500 ft/min.</li><li>VSI : <span style="color:var(--vert)">vert</span> = plage prescrite, <span style="color:var(--ra)">rouge</span> = plage interdite. Le RA a priorité sur une instruction du contrôle.</li></ul></div>
+  <div class="note"><h3>Contrôleur ATC/TCAS</h3><ul><li><b>STBY</b> : rien n'est émis. <b>ATC ON</b> : transpondeur seul, TCAS OFF.</li><li><b>TA ONLY</b> : TCAS en fonction, sans RA. <b>TA/RA</b> : tout.</li><li>Couverture : <b>NML</b> ±2 700 ft, <b>ABV</b> +9 000/−2 700, <b>BLW</b> +2 700/−9 000 (affichage).</li><li><b>REL/ABS</b> : altitude relative ou niveau de vol des intrus.</li></ul></div>
+</div>
+</div>
+
+<script src="tcas-sim.js"></script>
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const nf = (v, d = 0) => (Number.isFinite(v) ? v : 0).toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const { simuler, SCENARIOS, SL, ID, hex } = window.TCAS;
+
+/* ---------- réglages ---------- */
+const cfg = { scenario: 'face', equipB: 'tcas', piloteB: 'suit',
+  A: { mode: 'tara', couv: 'nml', alt: 'rel', range: 10 }, B: { mode: 'tara', couv: 'nml', alt: 'rel', range: 10 } };
+let R = null, t = 0, joue = false, vitesse = 4, son = false, vuCalc = 'A';
+const filtres = new Set(['detection', 'surveillance', 'coordination', 'evt']);
+
+function relancer(garderTemps) {
+  R = simuler({ scenario: cfg.scenario, equipB: cfg.equipB, piloteB: cfg.piloteB, A: { mode: cfg.A.mode, couv: cfg.A.couv }, B: { mode: cfg.B.mode, couv: cfg.B.couv } });
+  $('#temps').max = R.sc.duree;
+  if (!garderTemps) t = 0;
+  t = Math.min(t, R.sc.duree);
+  dernierJournal = ''; prepCarte(); reperes(); tableSL(); ctrls(); dessiner(true);
+}
+
+/* scénarios */
+$('#scenarios').innerHTML = Object.entries(SCENARIOS).map(([k, s]) => `<button class="btn" type="button" data-v="${k}" aria-pressed="${k === cfg.scenario}">${esc(s.nom)}</button>`).join('');
+function groupe(sel, cle, apres) {
+  document.querySelectorAll(sel + ' .btn').forEach(b => b.onclick = () => {
+    cfg[cle] = b.dataset.v; document.querySelectorAll(sel + ' .btn').forEach(x => x.setAttribute('aria-pressed', x === b)); apres && apres();
+  });
+}
+groupe('#scenarios', 'scenario', () => { majDesc(); relancer(false); });
+groupe('#equipB', 'equipB', () => { if (cfg.equipB !== 'tcas' && (cfg.B.mode === 'ta' || cfg.B.mode === 'tara')) cfg.B.mode = 'atc'; relancer(true); });
+groupe('#piloteB', 'piloteB', () => relancer(true));
+const majDesc = () => { $('#scen-desc').textContent = SCENARIOS[cfg.scenario].desc; };
+
+/* contrôleurs ATC/TCAS */
+function ctrls() {
+  $('#ctrls').innerHTML = ['A', 'B'].map(k => {
+    const c = cfg[k], sansTcas = k === 'B' && cfg.equipB !== 'tcas';
+    const t = (cle, v, lib, dis) => `<button class="touche" type="button" data-av="${k}" data-cle="${cle}" data-v="${v}" aria-pressed="${String(c[cle]) === String(v)}"${dis ? ' disabled' : ''}>${lib}</button>`;
+    return `<div class="boitier"><h3><i style="--k:var(--av${k})"></i>Avion ${k} · ${ID[k].imm}<small>${k === 'B' ? { tcas: 'Mode S + TCAS II', modeS: 'Mode S, sans TCAS', atcrbs: 'ATCRBS (Mode C)' }[cfg.equipB] : 'Mode S + TCAS II'} · ${hex(ID[k].adr)}</small></h3>
+      <div class="rang"><span>Mode</span><div class="touches">${t('mode', 'stby', 'STBY')}${t('mode', 'atc', 'ATC ON')}${t('mode', 'ta', 'TA ONLY', sansTcas)}${t('mode', 'tara', 'TA/RA', sansTcas)}</div></div>
+      <div class="rang"><span>Couverture</span><div class="touches">${t('couv', 'blw', 'BLW', sansTcas)}${t('couv', 'nml', 'NML', sansTcas)}${t('couv', 'abv', 'ABV', sansTcas)}</div></div>
+      <div class="rang"><span>Altitude</span><div class="touches">${t('alt', 'rel', 'REL', sansTcas)}${t('alt', 'abs', 'ABS', sansTcas)}</div></div>
+      <div class="rang"><span>Range (NM)</span><div class="touches">${[2.5, 5, 10, 20, 40].map(r => t('range', r, String(r).replace('.', ','), sansTcas)).join('')}</div></div></div>`;
+  }).join('');
+  document.querySelectorAll('#ctrls .touche').forEach(b => b.onclick = () => {
+    const k = b.dataset.av, cle = b.dataset.cle; cfg[k][cle] = cle === 'range' ? +b.dataset.v : b.dataset.v;
+    if (cle === 'mode') relancer(true); else { ctrls(); dessiner(true); }
+  });
+}
+
+/* lecteur */
+const majPP = () => { $('#pp').textContent = joue ? '⏸' : '▶'; $('#pp').setAttribute('aria-label', joue ? 'Pause' : 'Lecture'); };
+$('#pp').onclick = () => { if (!joue && t >= R.sc.duree - 0.05) t = 0; joue = !joue; majPP(); };
+$('#debut').onclick = () => { t = 0; dernierJournal = ''; dessiner(true); };
+$('#temps').addEventListener('input', e => { t = +e.target.value; joue = false; majPP(); dessiner(true); });
+groupe('#vitesses', 'x', () => { vitesse = +document.querySelector('#vitesses [aria-pressed="true"]').dataset.v; });
+$('#son').onclick = () => { son = !son; $('#son').setAttribute('aria-pressed', son); $('#son').textContent = son ? '🔊 Annonces' : '🔇 Annonces'; if (!son && window.speechSynthesis) speechSynthesis.cancel(); };
+document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => { const f = b.dataset.f; filtres.has(f) ? filtres.delete(f) : filtres.add(f); b.setAttribute('aria-pressed', filtres.has(f)); dernierJournal = ''; dessiner(true); });
+document.querySelectorAll('#vuCalc .btn').forEach(b => b.onclick = () => { vuCalc = b.dataset.v; document.querySelectorAll('#vuCalc .btn').forEach(x => x.setAttribute('aria-pressed', x === b)); tableSL(); dessiner(true); });
+
+/* ---------- utilitaires ---------- */
+const img = () => R.images[Math.min(R.images.length - 1, Math.max(0, Math.round(t / R.DT)))];
+let K = {};
+function couleurs() { const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  for (const n of ['avA', 'avB', 'f1030', 'f1090', 'ta', 'ra', 'vert', 'vhf', 'text', 'muted', 'faint', 'line', 'line2', 'panel', 'panel2', 'bg']) K[n] = g('--' + n); }
+function prep(cv) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) { cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); }
+  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height); return [x, r.width, r.height];
+}
+const relAlt = (h, abs, altIntrus) => abs ? String(Math.round(altIntrus / 100)).padStart(3, '0') : `${h >= 0 ? '+' : '−'}${String(Math.round(Math.abs(h) / 100)).padStart(2, '0')}`;
+function avion(x, cx, cy, cap, coul, taille = 1) {   // silhouette d'avion, nez vers le cap
+  x.save(); x.translate(cx, cy); x.rotate(cap * Math.PI / 180); x.scale(taille, taille);
+  x.fillStyle = coul; x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = 1;
+  x.beginPath(); x.moveTo(0, -11); x.lineTo(1.6, -6); x.lineTo(1.6, -2); x.lineTo(10, 2.5); x.lineTo(10, 4.5); x.lineTo(1.6, 2.5); x.lineTo(1.2, 7.5); x.lineTo(4, 9.5); x.lineTo(4, 11);
+  x.lineTo(0, 10); x.lineTo(-4, 11); x.lineTo(-4, 9.5); x.lineTo(-1.2, 7.5); x.lineTo(-1.6, 2.5); x.lineTo(-10, 4.5); x.lineTo(-10, 2.5); x.lineTo(-1.6, -2); x.lineTo(-1.6, -6); x.closePath(); x.fill(); x.stroke();
+  x.restore();
+}
+
+/* ---------- vue de dessus ---------- */
+let boite = null;
+function prepCarte() {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const im of R.images) for (const a of [im.A, im.B]) { x0 = Math.min(x0, a.x); x1 = Math.max(x1, a.x); y0 = Math.min(y0, a.y); y1 = Math.max(y1, a.y); }
+  const m = Math.max(1.2, (x1 - x0) * .08); boite = { x0: x0 - m, x1: x1 + m, y0: y0 - m * 1.6, y1: y1 + m * 1.6 };
+}
+function dessinerCarte(im) {
+  const [x, W, H] = prep($('#carte'));
+  const b = boite, s = Math.min(W / (b.x1 - b.x0), H / (b.y1 - b.y0)), ox = (W - (b.x1 - b.x0) * s) / 2, oy = (H - (b.y1 - b.y0) * s) / 2;
+  const P = (px, py) => [ox + (px - b.x0) * s, H - oy - (py - b.y0) * s];
+  // quadrillage de 1 NM (ou 2 NM)
+  const pas = s < 18 ? 5 : s < 40 ? 2 : 1;
+  x.strokeStyle = K.line; x.lineWidth = 1; x.globalAlpha = .6;
+  for (let gx = Math.ceil(b.x0 / pas) * pas; gx <= b.x1; gx += pas) { const [px] = P(gx, 0); x.beginPath(); x.moveTo(px, 0); x.lineTo(px, H); x.stroke(); }
+  for (let gy = Math.ceil(b.y0 / pas) * pas; gy <= b.y1; gy += pas) { const [, py] = P(0, gy); x.beginPath(); x.moveTo(0, py); x.lineTo(W, py); x.stroke(); }
+  x.globalAlpha = 1;
+  x.fillStyle = K.faint; x.font = '500 11px "IBM Plex Mono",monospace'; x.fillText(`quadrillage : ${pas} NM`, 10, H - 10);
+  // trajectoires : passé plein, avenir pointillé
+  const n = Math.round(t / R.DT);
+  for (const k of ['A', 'B']) {
+    const c = K['av' + k];
+    x.strokeStyle = c; x.lineWidth = 1.5; x.setLineDash([3, 5]); x.globalAlpha = .35; x.beginPath();
+    for (let i = n; i < R.images.length; i += 5) { const [px, py] = P(R.images[i][k].x, R.images[i][k].y); i === n ? x.moveTo(px, py) : x.lineTo(px, py); } x.stroke();
+    x.setLineDash([]); x.globalAlpha = .9; x.lineWidth = 2.5; x.beginPath();
+    for (let i = 0; i <= n; i += 3) { const [px, py] = P(R.images[i][k].x, R.images[i][k].y); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); x.globalAlpha = 1;
+  }
+  // zones TA et RA autour de A : rayon où τ atteint le seuil, à la vitesse de rapprochement actuelle
+  const cA = im.A.calc;
+  if (cA && cA.g && cA.g.rdot < 0 && cA.S) {
+    const v = -cA.g.rdot, [ax, ay] = P(im.A.x, im.A.y);
+    for (const [tau, d, coul, lib] of [[cA.S.tauTA, cA.S.dmodTA, K.ta, 'TA'], [cA.S.tauRA, cA.S.dmodRA, K.ra, 'RA']]) {
+      if (!tau) continue;
+      const r = (v * tau + Math.sqrt(v * v * tau * tau + 4 * d * d)) / 2;   // τ modifié = seuil  ⇔  r² − v·τ·r − DMOD² = 0
+      x.strokeStyle = coul; x.setLineDash([6, 5]); x.lineWidth = 1.5; x.globalAlpha = .75;
+      x.beginPath(); x.arc(ax, ay, r * s, 0, 2 * Math.PI); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+      x.fillStyle = coul; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(`${lib} ≈ ${nf(r, 1)} NM`, ax + r * s * .72 + 4, ay - r * s * .72);
+    }
+  }
+  // messages en vol
+  const fen = Math.min(0.9, 0.22 * vitesse + 0.15);
+  for (const m of R.msgs) {
+    if (m.t > t) break;
+    if (t - m.t > fen * 2.4) continue;
+    const de = im[m.de], [sx, sy] = P(de.x, de.y), coul = m.freq === 1030 ? K.f1030 : K.f1090;
+    if (m.a === '*') {   // diffusion : cercle qui s'étend
+      const p = (t - m.t) / (fen * 2.4); x.strokeStyle = coul; x.globalAlpha = (1 - p) * .8; x.lineWidth = 2;
+      x.beginPath(); x.arc(sx, sy, 8 + p * 70, 0, 2 * Math.PI); x.stroke(); x.globalAlpha = 1;
+      continue;
+    }
+    const p = (t - m.t) / fen; if (p > 1) continue;
+    const vers = im[m.a], [ex, ey] = P(vers.x, vers.y);
+    x.strokeStyle = coul; x.globalAlpha = .25; x.lineWidth = 1; x.beginPath(); x.moveTo(sx, sy); x.lineTo(ex, ey); x.stroke(); x.globalAlpha = 1;
+    const px = sx + (ex - sx) * p, py = sy + (ey - sy) * p;
+    x.fillStyle = coul; x.shadowColor = coul; x.shadowBlur = 10; x.beginPath(); x.arc(px, py, m.phase === 'coordination' ? 6 : 4.5, 0, 2 * Math.PI); x.fill(); x.shadowBlur = 0;
+    if (W > 520 && (m.phase === 'coordination' || p < .5)) { x.font = '700 10.5px "IBM Plex Mono",monospace'; x.fillText(m.code.split(' ')[0], px + 8, py - 6); }
+  }
+  // avions et étiquettes
+  for (const k of ['A', 'B']) {
+    const a = im[k], [px, py] = P(a.x, a.y), c = K['av' + k];
+    if (a.etat !== 'clair') { x.strokeStyle = a.etat === 'ra' ? K.ra : K.ta; x.lineWidth = 3; x.globalAlpha = .5 + .4 * Math.sin(t * 6); x.beginPath(); x.arc(px, py, 17, 0, 2 * Math.PI); x.stroke(); x.globalAlpha = 1; }
+    avion(x, px, py, a.cap, c, 1.15);
+    const fl = Math.abs(a.vs) > 400 ? (a.vs > 0 ? ' ↑' : ' ↓') : '';
+    x.font = '700 12px "IBM Plex Sans",sans-serif'; x.fillStyle = c;
+    const lab = `${k} · ${nf(Math.round(a.alt / 10) * 10)} ft${fl}`, dy = k === 'A' ? -22 : 30;
+    x.fillText(lab, px - x.measureText(lab).width / 2, py + dy);
+  }
+  // distance entre les deux
+  const [ax, ay] = P(im.A.x, im.A.y), [bx, by] = P(im.B.x, im.B.y);
+  x.fillStyle = K.muted; x.font = '500 11.5px "IBM Plex Mono",monospace';
+  x.fillText(`distance ${nf(im.r, 2)} NM · écart ${nf(Math.abs(im.h))} ft`, 10, 18);
+}
+
+/* ---------- écran de trafic (ND) d'un avion ---------- */
+function dessinerND(k, im) {
+  const o = im[k], ik = k === 'A' ? 'B' : 'A', i = im[ik], c = cfg[k];
+  const [x, W, H] = prep($('#nd' + k));
+  const cx = W / 2, cy = H * .64, Rr = Math.max(40, Math.min(W * .44, cy - 42));
+  x.fillStyle = '#05080b'; x.fillRect(0, 0, W, H);
+  const equipe = k === 'A' || cfg.equipB === 'tcas', tcasOn = equipe && (c.mode === 'ta' || c.mode === 'tara');
+  // annonce EFIS du mode : blanc, ambre en TA, rouge en RA
+  const lib = !tcasOn ? 'TCAS OFF' : (c.mode === 'ta' || o.alt < 500) ? 'TA ONLY' : 'TCAS';
+  x.font = '700 13px "IBM Plex Mono",monospace'; x.textAlign = 'right';
+  x.fillStyle = !tcasOn ? '#e5e7eb' : o.etat === 'ra' ? '#ef4444' : o.etat === 'ta' ? '#f59e0b' : '#e5e7eb'; x.fillText(lib, W - 10, 18);
+  x.fillStyle = '#7f8f9a'; x.font = '600 10.5px "IBM Plex Mono",monospace'; x.fillText(`${{ nml: 'NML', abv: 'ABV', blw: 'BLW' }[c.couv]} · ${c.alt.toUpperCase()}`, W - 10, 32); x.textAlign = 'left';
+  // anneaux : plage choisie et anneau de 2 NM en pointillés
+  x.strokeStyle = '#4b5b66'; x.lineWidth = 1.2; x.beginPath(); x.arc(cx, cy, Rr, Math.PI * 1.08, Math.PI * 1.92); x.stroke();
+  x.fillStyle = '#9aa7b2'; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(String(c.range).replace('.', ','), cx + Rr * Math.cos(-0.35) - 4, cy + Rr * Math.sin(-0.35) - 4);
+  const r2 = 2 / c.range * Rr;
+  if (r2 < Rr) { x.fillStyle = '#9aa7b2'; for (let a = 0; a < 12; a++) { x.beginPath(); x.arc(cx + r2 * Math.cos(a * Math.PI / 6), cy + r2 * Math.sin(a * Math.PI / 6), 1.4, 0, 2 * Math.PI); x.fill(); } }
+  // notre avion
+  x.strokeStyle = '#f8fafc'; x.lineWidth = 2; x.beginPath(); x.moveTo(cx, cy - 10); x.lineTo(cx, cy + 10); x.moveTo(cx - 9, cy - 1); x.lineTo(cx + 9, cy - 1); x.moveTo(cx - 4, cy + 8); x.lineTo(cx + 4, cy + 8); x.stroke();
+  if (!tcasOn) { x.fillStyle = '#7f8f9a'; x.font = '600 12px "IBM Plex Sans",sans-serif'; x.textAlign = 'center'; x.fillText(equipe ? 'TCAS hors fonction' : 'Pas de TCAS à bord', cx, cy + Rr * .45); x.textAlign = 'left'; return; }
+  if (!o.suivi) { x.fillStyle = '#7f8f9a'; x.font = '600 12px "IBM Plex Sans",sans-serif'; x.textAlign = 'center'; x.fillText('Intrus pas encore détecté', cx, cy + Rr * .45); x.textAlign = 'left'; return; }
+  // l'intrus : position relative, nez en haut
+  const dx = i.x - o.x, dy = i.y - o.y, d = Math.hypot(dx, dy), rel = (Math.atan2(dx, dy) * 180 / Math.PI - o.cap) * Math.PI / 180;
+  const h = i.alt - o.alt;
+  const lim = { nml: [2700, 2700], abv: [9000, 2700], blw: [2700, 9000] }[c.couv];
+  const dansCouv = h <= lim[0] && h >= -lim[1];
+  const etat = o.etat === 'ra' ? 'ra' : o.etat === 'ta' ? 'ta' : (d <= 6 && Math.abs(h) <= 1200 ? 'prox' : 'autre');
+  if (!dansCouv && (etat === 'autre' || etat === 'prox')) {
+    x.fillStyle = '#7f8f9a'; x.font = '600 11.5px "IBM Plex Sans",sans-serif'; x.textAlign = 'center'; x.fillText(`Intrus hors couverture (${h > 0 ? '+' : '−'}${nf(Math.abs(h))} ft)`, cx, cy + Rr * .45); x.textAlign = 'left'; return;
+  }
+  let rr = d / c.range * Rr, horsEchelle = false;
+  if (rr > Rr) { if (etat === 'ta' || etat === 'ra') { rr = Rr; horsEchelle = true; } else return; }
+  const px = cx + rr * Math.sin(rel), py = cy - rr * Math.cos(rel);
+  if (py > H - 4) return;
+  const z = 7.5;
+  x.lineWidth = 2;
+  if (etat === 'ra') { x.fillStyle = '#ef4444'; x.fillRect(px - z, py - z, 2 * z, 2 * z); }
+  else if (etat === 'ta') { x.fillStyle = '#f59e0b'; x.beginPath(); x.arc(px, py, z, 0, 2 * Math.PI); x.fill(); }
+  else { x.beginPath(); x.moveTo(px, py - z - 1); x.lineTo(px + z, py); x.lineTo(px, py + z + 1); x.lineTo(px - z, py); x.closePath();
+    if (etat === 'prox') { x.fillStyle = '#e5f2fb'; x.fill(); } else { x.strokeStyle = '#7dd3fc'; x.stroke(); } }
+  if (horsEchelle) { x.strokeStyle = etat === 'ra' ? '#ef4444' : '#f59e0b'; x.setLineDash([2, 3]); x.beginPath(); x.arc(px, py, z + 5, 0, 2 * Math.PI); x.stroke(); x.setLineDash([]); }
+  const coul = etat === 'ra' ? '#ef4444' : etat === 'ta' ? '#f59e0b' : etat === 'prox' ? '#e5f2fb' : '#7dd3fc';
+  x.fillStyle = coul; x.font = '700 13px "IBM Plex Mono",monospace'; x.textAlign = 'center';
+  const tag = relAlt(h, c.alt === 'abs', i.alt), ty = h >= 0 ? py - z - 6 : py + z + 15;
+  x.fillText(tag, px, ty);
+  if (Math.abs(i.vs) > 500) { const fx = px + x.measureText(tag).width / 2 + 7; x.font = '700 14px "IBM Plex Sans",sans-serif'; x.fillText(i.vs > 0 ? '↑' : '↓', fx, ty); }
+  x.textAlign = 'left';
+}
+
+/* ---------- VSI avec arcs du RA ---------- */
+const angVS = v => { const a = Math.abs(v), f = a <= 1000 ? a / 1000 * .36 : a <= 2000 ? .36 + (a - 1000) / 1000 * .22 : .58 + Math.min(1, (a - 2000) / 4000) * .4; return Math.PI - Math.sign(v) * f * Math.PI * .92; };
+function dessinerVSI(k, im) {
+  const o = im[k], [x, W, H] = prep($('#vsi' + k));
+  const cx = W / 2, cy = H / 2 + 6, Rr = Math.min(W, H) * .4;
+  x.fillStyle = '#05080b'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#0d1317'; x.beginPath(); x.arc(cx, cy, Rr + 10, 0, 2 * Math.PI); x.fill();
+  const arc = (v0, v1, coul, ep) => { const a0 = angVS(v0), a1 = angVS(v1); x.strokeStyle = coul; x.lineWidth = ep; x.beginPath(); x.arc(cx, cy, Rr + 3, Math.min(a0, a1) * -1 + 0, Math.max(a0, a1) * -1, true); x.stroke(); };
+  // arcs du RA : l'angle canvas est inversé (y vers le bas) : on trace avec -angle
+  const ra = o.ra;
+  const arcRA = (v0, v1, coul) => { let a0 = -angVS(v0), a1 = -angVS(v1); if (a0 > a1) [a0, a1] = [a1, a0]; x.strokeStyle = coul; x.lineWidth = 9; x.beginPath(); x.arc(cx, cy, Rr - 2, a0, a1); x.stroke(); };
+  if (ra && o.etat === 'ra') {
+    const s = ra.sens, cible = Math.abs(ra.cible || 0);
+    if (ra.preventif) arcRA(s > 0 ? -6000 : 0, s > 0 ? 0 : 6000, '#ef4444');
+    else { arcRA(s > 0 ? -6000 : -cible, s > 0 ? cible : 6000, '#ef4444'); arcRA(s > 0 ? cible : -cible - 500, s > 0 ? cible + 500 : -cible, '#22c55e'); }
+  }
+  // graduations
+  x.strokeStyle = '#cbd5e1'; x.fillStyle = '#cbd5e1'; x.font = '600 11px "IBM Plex Mono",monospace'; x.textAlign = 'center'; x.lineWidth = 1.5;
+  for (const v of [-6000, -4000, -2000, -1000, -500, 0, 500, 1000, 2000, 4000, 6000]) {
+    const a = -angVS(v), l = [0, 1000, 2000, 4000, 6000].includes(Math.abs(v)) ? 10 : 6;
+    x.beginPath(); x.moveTo(cx + Math.cos(a) * (Rr - 8), cy + Math.sin(a) * (Rr - 8)); x.lineTo(cx + Math.cos(a) * (Rr - 8 - l), cy + Math.sin(a) * (Rr - 8 - l)); x.stroke();
+    if ([0, 1000, 2000, 4000, 6000].includes(Math.abs(v)) && v !== -6000) x.fillText(String(Math.abs(v) / 1000), cx + Math.cos(a) * (Rr - 14 - Rr * .16), cy + Math.sin(a) * (Rr - 14 - Rr * .16) + 4);
+  }
+  x.fillStyle = '#7f8f9a'; x.font = '600 9.5px "IBM Plex Mono",monospace'; x.fillText('UP', cx + Rr * .12, cy - Rr * .28); x.fillText('DN', cx + Rr * .12, cy + Rr * .34);
+  if (Rr > 90) x.fillText('×1000 FT/MIN', cx + Rr * .38, cy + 4);
+  // aiguille
+  const a = -angVS(o.vs);
+  x.strokeStyle = '#f8fafc'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - Math.cos(a) * 10, cy - Math.sin(a) * 10); x.lineTo(cx + Math.cos(a) * (Rr - 12), cy + Math.sin(a) * (Rr - 12)); x.stroke();
+  x.fillStyle = '#f8fafc'; x.beginPath(); x.arc(cx, cy, 5, 0, 2 * Math.PI); x.fill();
+  x.font = '700 12px "IBM Plex Mono",monospace'; x.fillStyle = '#e5e7eb'; x.textAlign = 'right'; x.fillText(`${o.vs >= 0 ? '+' : '−'}${nf(Math.abs(Math.round(o.vs / 10) * 10))}`, W - 8, H - 8); x.textAlign = 'left';
+}
+
+/* ---------- annonce, consigne ---------- */
+let dernierAuralLu = { A: null, B: null };
+function cockpitTexte(k, im) {
+  const o = im[k], el = $('#ann' + k), cons = $('#cons' + k);
+  const aural = o.aural && t - o.aural.t < 7 && t >= o.aural.t ? o.aural : null;
+  el.className = 'annonce' + (o.etat === 'ra' ? ' ra' : o.etat === 'ta' ? ' ta' : aural && /CLEAR/.test(aural.texte) ? ' coc' : '');
+  el.innerHTML = aural ? `🔊 « ${esc(aural.texte)} »<small>${o.etat === 'ra' ? 'avis de résolution' : o.etat === 'ta' ? 'avis de trafic' : 'fin du conflit'}</small>`
+    : `<span style="color:var(--muted);font-weight:500">${o.etat === 'ra' ? '🔴 RA en cours : ' + esc(o.ra.texte) : o.etat === 'ta' ? '🟠 TA en cours' : 'Aucune alerte'}</span>`;
+  // consigne au pilote
+  let c = '';
+  if (o.etat === 'ra' && o.ra) {
+    const nonSuivi = k === 'B' && cfg.piloteB === 'inverse' && o.pilote === 'contraire';
+    c = o.ra.preventif ? 'Garder la vitesse verticale hors du rouge : aucune manœuvre requise.'
+      : `Amener l'aiguille dans le vert : ${o.ra.sens > 0 ? 'monter' : 'descendre'} à ${nf(Math.abs(o.ra.cible))} ft/min${o.ra.inverse ? ' (inversion : réagir en 2,5 s)' : ' (réagir en 5 s)'}.`;
+    if (nonSuivi) c = `<b style="color:var(--ra)">⚠ Le pilote ne suit pas le RA</b> : il ${o.vs > 0 ? 'monte' : 'descend'}, contre la consigne. Le RA a priorité sur toute instruction du contrôle.`;
+  } else if (o.etat === 'ta') c = 'Avis de trafic : chercher l’intrus visuellement, se préparer à un RA. Aucune manœuvre.';
+  else if (o.pilote === 'retour') c = 'Retour à l’altitude autorisée, puis avis au contrôle.';
+  cons.innerHTML = c;
+  // lecture à voix haute (une fois par annonce, seulement en lecture)
+  if (son && joue && aural && dernierAuralLu[k] !== aural.t && window.speechSynthesis && k === 'A') {
+    dernierAuralLu[k] = aural.t; const u = new SpeechSynthesisUtterance(aural.texte.toLowerCase().replace(/, /g, '... ')); u.lang = 'en-US'; u.rate = 1.05; speechSynthesis.speak(u);
+  }
+  const pill = $('#pill' + k);
+  pill.className = 'pill' + (o.etat === 'ra' ? ' ra' : o.etat === 'ta' ? ' ta' : '');
+  pill.textContent = `${k} : ${o.etat === 'ra' ? 'RA ' + (o.ra.sens > 0 ? '↑' : '↓') : o.etat === 'ta' ? 'TA' : k === 'B' && cfg.equipB !== 'tcas' ? (cfg.B.mode === 'stby' ? 'STBY' : 'sans TCAS') : cfg[k].mode === 'tara' || cfg[k].mode === 'ta' ? 'surveille' : cfg[k].mode === 'atc' ? 'TCAS OFF' : 'STBY'}`;
+}
+
+/* ---------- journal des messages ---------- */
+let dernierJournal = '';
+const COUL_EVT = { finta: 'var(--line2)', ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)', coord: 'var(--f1030)', vhf: 'var(--vhf)', detection: 'var(--f1090)', nonsuivi: 'var(--ra)', aural: 'var(--ta)' };
+function journal() {
+  const lignes = [], parCle = new Map();
+  let i = 0, j = 0;
+  const msgs = R.msgs, evts = R.evts.filter(e => e.type !== 'aural');
+  // fusion des deux listes dans l'ordre du temps
+  while ((i < msgs.length && msgs[i].t <= t) || (j < evts.length && evts[j].t <= t)) {
+    const m = i < msgs.length && msgs[i].t <= t ? msgs[i] : null, e = j < evts.length && evts[j].t <= t ? evts[j] : null;
+    if (m && (!e || m.t <= e.t)) {
+      i++;
+      if (!filtres.has(m.phase)) continue;
+      if (m.cle && parCle.has(m.cle)) { const l = parCle.get(m.cle); l.n++; l.der = m; continue; }
+      const l = { type: 'msg', m, der: m, n: 1 }; lignes.push(l); if (m.cle) parCle.set(m.cle, l);
+    } else { j++; if (filtres.has('evt')) lignes.push({ type: 'evt', e }); }
+  }
+  const signature = lignes.length + ':' + lignes.map(l => l.n || 0).join(',').slice(-200);
+  if (signature === dernierJournal) return;
+  dernierJournal = signature;
+  const z = $('#journal');
+  z.innerHTML = lignes.slice(-80).reverse().map(l => {
+    if (l.type === 'evt') { const e = l.e;
+      return `<div class="msg evt${t - e.t < 1.5 ? ' frais' : ''}" style="--k:${COUL_EVT[e.type] || 'var(--line2)'}"><span class="t">${nf(e.t, 1)} s</span><div><div class="d">${esc(e.texte)}</div></div></div>`; }
+    const m = l.der, dir = m.a === '*' ? `${m.de} → tous` : `${m.de} → ${m.a}`;
+    return `<div class="msg${t - m.t < 1.2 ? ' frais' : ''}"><span class="t">${nf(l.m.t, 1)} s</span><div>
+      <div class="q"><span class="fq" style="--k:${m.freq === 1030 ? 'var(--f1030)' : 'var(--f1090)'}">${m.freq}</span><span class="code">${esc(m.code)}</span><span class="dir">${dir}</span>${l.n > 1 ? `<span class="n">×${l.n} · dernier ${nf(m.t, 1)} s</span>` : ''}</div>
+      <div><b>${esc(m.titre)}</b></div><div class="d">${esc(m.detail)}</div></div></div>`;
+  }).join('') || '<p class="sous" style="padding:8px">Rien encore : lance la lecture.</p>';
+}
+
+/* ---------- calculs (point de vue de A ou de B) ---------- */
+function tableSL() {
+  $('#tableSL').innerHTML = `<tr><th>SL</th><th>Altitude</th><th>TAU TA</th><th>TAU RA</th><th>DMOD RA</th><th>ZTHR RA</th><th>ALIM</th></tr>`
+    + SL.map((s, k) => `<tr data-k="${k}"><td>${s.sl}</td><td style="text-align:left">${s.plage}</td><td>${s.tauTA} s</td><td>${s.tauRA ? s.tauRA + ' s' : '—'}</td><td>${s.dmodRA ? nf(s.dmodRA, 2) + ' NM' : '—'}</td><td>${s.zthrRA ? s.zthrRA + ' ft' : '—'}</td><td>${s.alim ? s.alim + ' ft' : '—'}</td></tr>`).join('');
+}
+function calculs(im) {
+  const o = im[vuCalc], c = o.calc;
+  const equipe = vuCalc === 'A' || cfg.equipB === 'tcas', on = equipe && (cfg[vuCalc].mode === 'ta' || cfg[vuCalc].mode === 'tara');
+  if (!on || !c || !c.g) {
+    $('#valeurs').innerHTML = ''; $('#barreTau').innerHTML = ''; $('#barreH').innerHTML = ''; $('#tauVal').textContent = ''; $('#hVal').textContent = '';
+    $('#verdict').textContent = !equipe ? 'B n’a pas de TCAS : il ne fait aucun calcul (son transpondeur répond seulement).' : !on ? 'Le TCAS est hors fonction (mode STBY ou ATC ON).' : 'L’intrus n’est pas encore détecté.';
+    document.querySelectorAll('#tableSL tr').forEach(tr => tr.classList.remove('ici')); return;
+  }
+  const S = c.S, g = c.g, v = -g.rdot * 3600;
+  document.querySelectorAll('#tableSL tr[data-k]').forEach(tr => tr.classList.toggle('ici', SL[+tr.dataset.k] === S));
+  const val = (lib, txt, cls) => `<div class="val ${cls || ''}"><span>${lib}</span><b>${txt}</b></div>`;
+  const tauTxt = x => Number.isFinite(x) ? `${nf(x, 1)} s` : '∞ (s’éloigne)';
+  $('#valeurs').innerHTML = val('Niveau de sensibilité', `SL ${S.sl}`) + val('Distance', `${nf(g.r, 2)} NM`) + val('Rapprochement', v > 0 ? `${nf(v)} kt` : 'non (s’éloigne)')
+    + val('Écart vertical', `${g.h >= 0 ? '+' : '−'}${nf(Math.abs(g.h))} ft`) + val('TAU (TA)', tauTxt(c.tauTA), c.tauTA < S.tauTA ? 'alerte' : '')
+    + val('TAU (RA)', S.tauRA ? tauTxt(c.tauRA) : '—', S.tauRA && c.tauRA < S.tauRA ? 'alerte' : '') + val('Écart prévu au croisement', `${nf(Math.abs(c.hcpa))} ft`, S.alim && Math.abs(c.hcpa) < S.alim ? 'alerte' : 'ok')
+    + val('TAU vertical', Number.isFinite(c.vtau) ? `${nf(c.vtau, 0)} s` : '—');
+  // jauge TAU : 0 à 60 s, de droite à gauche
+  const X = s => `${Math.max(0, Math.min(100, 100 - s / 60 * 100))}%`;
+  $('#barreTau').innerHTML = `<div class="zone" style="left:${X(S.tauTA)};right:0;background:color-mix(in srgb,var(--ta) 22%,transparent)"></div>`
+    + (S.tauRA ? `<div class="zone" style="left:${X(S.tauRA)};right:0;background:color-mix(in srgb,var(--ra) 26%,transparent)"></div><div class="seuil" style="left:${X(S.tauRA)};border-color:var(--ra)"></div><span class="lib" style="left:calc(${X(S.tauRA)} + 3px);color:var(--ra)">RA ${S.tauRA} s</span>` : '')
+    + `<div class="seuil" style="left:${X(S.tauTA)};border-color:var(--ta)"></div><span class="lib" style="left:calc(${X(S.tauTA)} + 3px);color:var(--ta)">TA ${S.tauTA} s</span>`
+    + `<span class="lib" style="left:3px;color:var(--faint)">60 s</span><span class="lib" style="right:3px;color:var(--faint)">0</span>`
+    + (Number.isFinite(c.tauTA) ? `<div class="curseur" style="left:${X(c.tauTA)}"></div>` : '');
+  $('#tauVal').textContent = Number.isFinite(c.tauTA) ? `${nf(c.tauTA, 1)} s` : '∞';
+  // jauge verticale : 0 à 2 000 ft
+  const Y = f => `${Math.min(100, Math.abs(f) / 2000 * 100)}%`;
+  $('#barreH').innerHTML = (S.alim ? `<div class="zone" style="left:0;width:${Y(S.alim)};background:color-mix(in srgb,var(--ra) 22%,transparent)"></div><div class="seuil" style="left:${Y(S.alim)};border-color:var(--ra)"></div><span class="lib" style="left:calc(${Y(S.alim)} + 3px);color:var(--ra)">ALIM ${S.alim}</span>` : '')
+    + `<div class="seuil" style="left:${Y(S.zthrTA)};border-color:var(--ta)"></div><span class="lib" style="left:calc(${Y(S.zthrTA)} + 3px);top:14px;color:var(--ta)">ZTHR TA ${S.zthrTA}</span>`
+    + `<div class="curseur" style="left:${Y(g.h)};background:var(--muted)"></div><div class="curseur" style="left:${Y(c.hcpa)}"></div>`
+    + `<span class="lib" style="right:3px;color:var(--faint)">2 000 ft</span>`;
+  $('#hVal').textContent = `${nf(Math.abs(g.h))} ft → ${nf(Math.abs(c.hcpa))} ft`;
+  // verdict
+  let v2;
+  if (o.etat === 'ra') {
+    const imD = R.images[Math.round(o.ra.t0 / R.DT)], debut = imD && imD[vuCalc].calc;
+    v2 = `<b style="color:var(--ra)">RA</b> depuis ${nf(o.ra.t0, 0)} s : TAU était passé sous ${S.tauRA} s, l’intrus était dans la plage verticale et l’écart prévu au croisement (${nf(Math.abs(debut && debut.hcpa || 0))} ft) était sous ALIM (${S.alim} ft). `
+      + `Manœuvre : <b>${esc(o.ra.texte)}</b>. ${Math.abs(c.hcpa) >= S.alim ? `Avec la manœuvre, l’écart prévu est maintenant de ${nf(Math.abs(c.hcpa))} ft : la séparation est assurée.` : `L’écart prévu (${nf(Math.abs(c.hcpa))} ft) est encore sous ALIM : la manœuvre doit se poursuivre.`}`;
+  }
+  else if (o.etat === 'ta') v2 = !c.raPermis ? `<b style="color:var(--ta)">TA</b> seulement : ${cfg[vuCalc].mode === 'ta' ? 'le contrôleur est en TA ONLY' : 'sous 1 000 ft sol, le RA est inhibé (SL 2)'}.`
+    : (S.alim && Math.abs(c.hcpa) >= S.alim ? `<b style="color:var(--ta)">TA</b> : l’intrus est proche (TAU ${tauTxt(c.tauTA)} < ${S.tauTA} s), mais l’écart prévu au croisement (${nf(Math.abs(c.hcpa))} ft) dépasse ALIM (${S.alim} ft) : pas de RA.`
+      : `<b style="color:var(--ta)">TA</b> : TAU ${tauTxt(c.tauTA)} < ${S.tauTA} s. Le RA viendra si TAU passe sous ${S.tauRA} s.`);
+  else v2 = Number.isFinite(c.tauTA) ? `Surveillance : TAU ${tauTxt(c.tauTA)}, encore au-dessus du seuil TA (${S.tauTA} s).` : 'Surveillance : les avions s’éloignent, pas de menace.';
+  $('#verdict').innerHTML = v2;
+}
+
+/* ---------- vue de côté ---------- */
+function dessinerProfil() {
+  const [x, W, H] = prep($('#profil'));
+  const g = 52, d = 10, top = 14, bas = H - 26;
+  let a0 = Infinity, a1 = -Infinity;
+  for (const im of R.images) for (const k of ['A', 'B']) { a0 = Math.min(a0, im[k].alt); a1 = Math.max(a1, im[k].alt); }
+  const m = Math.max(300, (a1 - a0) * .15); a0 -= m; a1 += m;
+  const X = s => g + (W - g - d) * s / R.sc.duree, Y = a => bas - (bas - top) * (a - a0) / (a1 - a0);
+  // bandes TA / RA de A
+  let deb = null, typ = null;
+  const bande = (t0, t1, ty) => { x.fillStyle = ty === 'ra' ? 'rgba(239,68,68,.16)' : 'rgba(245,158,11,.13)'; x.fillRect(X(t0), top, X(t1) - X(t0), bas - top); };
+  for (const im of R.images) { const e = im.A.etat === 'clair' ? null : im.A.etat; if (e !== typ) { if (typ) bande(deb, im.t, typ); deb = im.t; typ = e; } }
+  if (typ) bande(deb, R.sc.duree, typ);
+  // graduations
+  x.strokeStyle = K.line; x.fillStyle = K.faint; x.font = '500 10.5px "IBM Plex Mono",monospace'; x.lineWidth = 1;
+  const pas = (a1 - a0) > 3000 ? 1000 : 500;
+  for (let a = Math.ceil(a0 / pas) * pas; a < a1; a += pas) { x.beginPath(); x.moveTo(g, Y(a)); x.lineTo(W - d, Y(a)); x.stroke(); x.textAlign = 'right'; x.fillText(nf(a), g - 4, Y(a) + 4); }
+  x.textAlign = 'center'; for (let s = 0; s <= R.sc.duree; s += 20) x.fillText(`${s} s`, X(s), bas + 15); x.textAlign = 'left';
+  for (const k of ['A', 'B']) {
+    x.strokeStyle = K['av' + k]; x.lineWidth = 2.5; x.beginPath();
+    R.images.forEach((im, i) => { if (i % 2) return; const px = X(im.t), py = Y(im[k].alt); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.globalAlpha = .9; x.stroke(); x.globalAlpha = 1;
+  }
+  // croisement : écart vertical
+  const c = R.cpa; x.strokeStyle = K.muted; x.setLineDash([3, 3]); x.beginPath(); x.moveTo(X(c.t), Y(c.A.alt)); x.lineTo(X(c.t), Y(c.B.alt)); x.stroke(); x.setLineDash([]);
+  x.fillStyle = K.text; x.font = '600 11.5px "IBM Plex Sans",sans-serif'; x.fillText(`croisement : ${nf(Math.abs(c.h))} ft d’écart à ${nf(c.r, 2)} NM`, X(c.t) + 6, top + 12);
+  // instant
+  x.strokeStyle = K.text; x.lineWidth = 1.5; x.beginPath(); x.moveTo(X(t), top); x.lineTo(X(t), bas); x.stroke();
+  const im = img(); for (const k of ['A', 'B']) { x.fillStyle = K['av' + k]; x.beginPath(); x.arc(X(t), Y(im[k].alt), 5, 0, 2 * Math.PI); x.fill(); x.fillText(k, X(t) + 7, Y(im[k].alt) + (k === 'A' ? -6 : 14)); }
+}
+
+/* repères de la ligne de temps : TA, RA, fin de conflit de A et de B */
+function reperes() {
+  const z = $('#reperes'), coul = { ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)' };
+  z.innerHTML = R.evts.filter(e => ['ta', 'ra', 'coc'].includes(e.type)).map(e => `<b style="left:${e.t / R.sc.duree * 100}%;background:${coul[e.type]};${e.qui === 'B' ? 'top:auto;bottom:0;opacity:.8' : ''}" title="${esc(e.texte)}">${e.qui}·${e.type === 'coc' ? 'CoC' : e.type.toUpperCase()}</b>`).join('');
+}
+
+/* ---------- dessin d'une image ---------- */
+function dessiner(force) {
+  const im = img();
+  $('#temps').value = t;
+  const avant = R.cpa.t - t;
+  $('#horloge').innerHTML = `${nf(t, 1)} s<small>${avant > 0 ? `croisement dans ${nf(avant, 0)} s` : `croisement il y a ${nf(-avant, 0)} s`}</small>`;
+  // phase en cours (celle de A)
+  const ph = im.A.etat === 'ra' || im.B.etat === 'ra' ? 'coordination' : im.A.suivi || im.B.suivi ? 'surveillance' : 'detection';
+  document.querySelectorAll('#phases .phase').forEach(p => p.classList.toggle('on', p.dataset.p === ph));
+  dessinerCarte(im); dessinerND('A', im); dessinerND('B', im); dessinerVSI('A', im); dessinerVSI('B', im);
+  cockpitTexte('A', im); cockpitTexte('B', im); calculs(im); journal(); dessinerProfil();
+}
+
+/* ---------- boucle ---------- */
+let tPrec = performance.now();
+function boucle(now) {
+  const dt = Math.min(.1, (now - tPrec) / 1000); tPrec = now;
+  if (joue) { t += dt * vitesse; if (t >= R.sc.duree) { t = R.sc.duree; joue = false; majPP(); } dessiner(); }
+  requestAnimationFrame(boucle);
+}
+addEventListener('resize', () => dessiner(true));
+addEventListener('themechange', () => { couleurs(); dessiner(true); });
+new MutationObserver(() => { couleurs(); dessiner(true); }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+$('#idA').textContent = `${ID.A.imm} · ${hex(ID.A.adr)}`; $('#idB').textContent = `${ID.B.imm} · ${hex(ID.B.adr)}`;
+couleurs(); majDesc(); relancer(false);
+if (!reduit) { joue = true; majPP(); }
+requestAnimationFrame(boucle);
+})();
+</script>
+<script src="version.js"></script>
+</body>
+</html>
