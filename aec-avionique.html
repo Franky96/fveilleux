@@ -64,7 +64,11 @@ a.etape-carte:hover{transform:translateY(-2px);border-color:color-mix(in srgb,va
 .b-etapes a:hover{color:var(--text);border-color:color-mix(in srgb,var(--c-info) 55%,var(--line2))}
 .b-etapes a.actif{color:var(--text);background:color-mix(in srgb,var(--c-info) 26%,var(--panel2));border-color:color-mix(in srgb,var(--c-info) 70%,var(--line2))}
 .b-etapes .avenir{opacity:.4;border-style:dashed}
-.b-titre{display:block;padding:4px 6px 8px;font:800 24px/1.1 var(--f-display);border-bottom:1px solid var(--line);margin-bottom:8px}
+.b-tete{display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.b-titre{flex:1;display:block;padding:4px 6px 8px;font:800 24px/1.1 var(--f-display)}
+.b-tout{display:flex;gap:2px}
+.b-tout button{width:28px;height:28px;padding:0;border:0;border-radius:7px;background:none;color:var(--faint);cursor:pointer;font-size:16px}
+.b-tout button:hover{background:var(--panel2);color:var(--text)}
 .b-titre.ici,.b-titre:hover{color:color-mix(in srgb,var(--c-info) 50%,var(--text))}
 .b-bloc{margin-bottom:6px}
 .b-cours{display:flex;align-items:center;gap:10px;padding:8px;border-radius:11px;color:var(--muted)}
@@ -78,13 +82,23 @@ a.b-cours:hover{background:var(--panel2);color:var(--text)}
 .b-cours.ici{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--c) 80%,var(--text))}
 .b-cours.avenir{opacity:.45;cursor:default}
 .b-modules,.b-lecons{list-style:none;margin:0;padding:0}
-.b-modules{margin:4px 0 8px 14px;padding-left:8px;border-left:1px solid color-mix(in srgb,var(--c) 40%,var(--line))}
+/* plis : chevron à gauche de chaque cours et de chaque module (déplié par défaut) */
+.b-ligne{display:flex;align-items:center;gap:2px}
+.b-ligne>a{flex:1;min-width:0}
+.pli{flex:none;width:26px;height:26px;display:grid;place-items:center;padding:0;border:0;border-radius:7px;background:none;color:var(--faint);cursor:pointer;font-size:13px}
+.pli:hover{background:var(--panel2);color:var(--text)}
+.pli span{display:inline-block;transition:transform .18s ease}
+.pli-vide{cursor:default}   /* pas « .vide » : categorie.css lui donne une marge */
+.plie>.b-ligne>.pli span{transform:rotate(-90deg)}
+.b-bloc.plie>.b-modules,li.plie>.b-lecons{display:none}
+@media (prefers-reduced-motion: reduce){.pli span{transition:none}}
+.b-modules{margin:4px 0 8px 26px;padding-left:8px;border-left:1px solid color-mix(in srgb,var(--c) 40%,var(--line))}
 .b-mod{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:8px;font-size:13.5px;line-height:1.3;color:var(--muted)}
 .b-mod .n,.b-lecons .n{flex:none;min-width:26px;font:600 12px var(--f-mono);color:var(--faint)}
 .b-mod:hover,.b-lecons a:hover{background:var(--panel2);color:var(--text)}
 .b-mod.dedans{color:var(--text);font-weight:600}
 .b-mod.ici{background:color-mix(in srgb,var(--c) 20%,var(--panel2))}
-.b-lecons{margin:2px 0 6px 18px}
+.b-lecons{margin:2px 0 6px 46px}
 .b-lecons a{display:flex;gap:6px;padding:5px 8px;border-radius:7px;font-size:13px;line-height:1.3;color:var(--muted)}
 .b-lecons a.ici{background:color-mix(in srgb,var(--c) 20%,var(--panel2));color:var(--text);font-weight:600}
 .principal{min-width:0}

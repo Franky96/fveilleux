@@ -105,26 +105,45 @@
   }
 
   /* ---------- étape : barre latérale (cours, modules, leçons du module ouvert) + zone principale ---------- */
+  /* ---------- plis de la barre : tout est déplié par défaut ; ce qu'on replie reste replié (localStorage) ---------- */
+  const CLE_PLIS = 'aec.plies';
+  const plies = new Set((() => { try { return JSON.parse(localStorage.getItem(CLE_PLIS) || '[]'); } catch (e) { return []; } })());
+  const garderPlis = () => { try { localStorage.setItem(CLE_PLIS, JSON.stringify([...plies])); } catch (e) {} };
+  const plie = cle => plies.has(cle);
+  const pli = (cle, quoi) => `<button class="pli" type="button" data-pli="${esc(cle)}" aria-expanded="${!plie(cle)}" aria-label="Replier ou déplier ${quoi}"><span aria-hidden="true">▾</span></button>`;
+  function basculerPli(b) {
+    const cle = b.dataset.pli, el = b.closest('.b-bloc, li'), ferme = !el.classList.contains('plie');
+    el.classList.toggle('plie', ferme); b.setAttribute('aria-expanded', !ferme);
+    ferme ? plies.add(cle) : plies.delete(cle); garderPlis();
+  }
+
   function cadre(et, c, m, l) {
     document.body.classList.add('avec-barre');
+    // la page ouverte reste visible : son cours et son module sont dépliés
+    let change = false;
+    for (const cle of [c && `${et.id}/${c}`, c && m && `${et.id}/${c}/${m}`]) if (cle && plies.delete(cle)) change = true;
+    if (change) garderPlis();
     const etapes = Array.from({ length: Math.max(NB_ETAPES, S.etapes.length) }, (_, k) => S.etapes[k] || null);
     const barre = `
       <a class="b-toutes" href="#">← Toutes les étapes</a>
       <nav class="b-etapes" aria-label="Changer d'étape">${etapes.map((x, k) => x
         ? `<a href="#${x.id}" class="${x === et ? 'actif' : ''}" title="${esc(x.titre)}"${x === et ? ' aria-current="page"' : ''}>${k + 1}</a>`
         : `<span class="avenir" title="Pas encore archivée">${k + 1}</span>`).join('')}</nav>
-      <a class="b-titre${!c ? ' ici' : ''}" href="#${et.id}">${esc(et.titre)}</a>
+      <div class="b-tete"><a class="b-titre${!c ? ' ici' : ''}" href="#${et.id}">${esc(et.titre)}</a>
+        <span class="b-tout"><button type="button" data-tout="replier" title="Tout replier">⊟</button><button type="button" data-tout="deplier" title="Tout déplier">⊞</button></span></div>
       ${et.cours.map((co, i) => co.non_archive
         ? `<div class="b-cours avenir" title="Ce cours n'était plus accessible sur Brio : il n'est pas dans l'archive"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span><span><small>Cours ${i + 1} · non archivé</small><b>${esc(co.titre)}</b></span></div>`
-        : `<div class="b-bloc${co.id === c ? ' ouvert' : ''}" style="${couleur(i)}">
-            <a class="b-cours${co.id === c && !m ? ' ici' : ''}" href="#${et.id}/${co.id}"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span><span><small>Cours ${i + 1}</small><b>${esc(co.titre)}</b></span></a>
-            ${co.id === c ? `<ul class="b-modules">${co.modules.map(mo => {
-              const dedans = mo.id === m, lec = mo.lecons || [], docs = mo.docs || [];
-              return `<li><a class="b-mod${dedans && !l ? ' ici' : ''}${dedans ? ' dedans' : ''}" href="#${et.id}/${co.id}/${mo.id}">
-                  <span class="n" aria-hidden="true">${esc(String(mo.num || '').replace(/\s*à\s*/, '–') || symbole(mo))}</span><span>${mo.num ? esc(mo.titre) || 'Module ' + esc(mo.num) : esc(mo.titre)}</span></a>
-                ${dedans && (lec.length || docs.length) ? `<ol class="b-lecons">${lec.map((x, j) =>
-                  `<li><a class="${x.id === l ? 'ici' : ''}" href="#${et.id}/${co.id}/${mo.id}/${encodeURIComponent(x.id)}"><span class="n">${j + 1}</span><span>${esc(x.titre)}</span></a></li>`).join('')}
-                  ${docs.map(dd => `<li><a ${lienDoc(dd)}><span class="n">${typeDoc(dd.f)[1]}</span><span>${esc(dd.titre)}</span></a></li>`).join('')}</ol>` : ''}</li>`; }).join('')}</ul>` : ''}
+        : `<div class="b-bloc${co.id === c ? ' ouvert' : ''}${plie(`${et.id}/${co.id}`) ? ' plie' : ''}" style="${couleur(i)}">
+            <div class="b-ligne">${pli(`${et.id}/${co.id}`, 'les modules de ce cours')}
+              <a class="b-cours${co.id === c && !m ? ' ici' : ''}" href="#${et.id}/${co.id}"><span class="em" aria-hidden="true">${esc(co.em || '📘')}</span><span><small>Cours ${i + 1}</small><b>${esc(co.titre)}</b></span></a></div>
+            <ul class="b-modules">${co.modules.map(mo => {
+              const dedans = co.id === c && mo.id === m, lec = mo.lecons || [], docs = mo.docs || [], cle = `${et.id}/${co.id}/${mo.id}`, enfants = lec.length + docs.length;
+              return `<li class="${enfants && plie(cle) ? 'plie' : ''}"><div class="b-ligne">${enfants ? pli(cle, 'les leçons de ce module') : '<span class="pli pli-vide"></span>'}
+                  <a class="b-mod${dedans && !l ? ' ici' : ''}${dedans ? ' dedans' : ''}" href="#${cle}">
+                  <span class="n" aria-hidden="true">${esc(String(mo.num || '').replace(/\s*à\s*/, '–') || symbole(mo))}</span><span>${mo.num ? esc(mo.titre) || 'Module ' + esc(mo.num) : esc(mo.titre)}</span></a></div>
+                ${enfants ? `<ol class="b-lecons">${lec.map((x, j) =>
+                  `<li><a class="${dedans && x.id === l ? 'ici' : ''}" href="#${cle}/${encodeURIComponent(x.id)}"><span class="n">${j + 1}</span><span>${esc(x.titre)}</span></a></li>`).join('')}
+                  ${docs.map(dd => `<li><a ${lienDoc(dd)}><span class="n">${typeDoc(dd.f)[1]}</span><span>${esc(dd.titre)}</span></a></li>`).join('')}</ol>` : ''}</li>`; }).join('')}</ul>
           </div>`).join('')}`;
     const ici = trouver(et.id, c, m);
     const resume = [et.titre, ici.co && `Cours ${et.cours.indexOf(ici.co) + 1}`, ici.mo && nomModule(ici.mo)].filter(Boolean).join(' · ');
@@ -141,6 +160,12 @@
         </div>
       </div>`;
     $('#tiroir').onclick = () => ouvrirTiroir(!document.body.classList.contains('tiroir-ouvert'));
+    $('#barre').addEventListener('click', ev => {
+      const b = ev.target.closest('.pli[data-pli]'); if (b) return basculerPli(b);
+      const t = ev.target.closest('[data-tout]'); if (!t) return;
+      const fermer = t.dataset.tout === 'replier';
+      $('#barre').querySelectorAll('.pli[data-pli]').forEach(p => { const el = p.closest('.b-bloc, li'); if (el.classList.contains('plie') !== fermer) basculerPli(p); });
+    });
     $('#voile').onclick = () => ouvrirTiroir(false);
     // l'élément ouvert reste en vue dans la barre
     const sel = vue.querySelector('.b-lecons a.ici, .b-mod.ici, .b-cours.ici');
