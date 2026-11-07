@@ -105,24 +105,25 @@
   }
 
   /* ---------- étape : barre latérale (cours, modules, leçons du module ouvert) + zone principale ---------- */
-  /* ---------- plis de la barre : tout est déplié par défaut ; ce qu'on replie reste replié (localStorage) ---------- */
-  const CLE_PLIS = 'aec.plies';
-  const plies = new Set((() => { try { return JSON.parse(localStorage.getItem(CLE_PLIS) || '[]'); } catch (e) { return []; } })());
-  const garderPlis = () => { try { localStorage.setItem(CLE_PLIS, JSON.stringify([...plies])); } catch (e) {} };
-  const plie = cle => plies.has(cle);
+  /* ---------- plis de la barre : tout est replié par défaut (demande de Frank) ; ce qu'on déplie reste déplié (localStorage),
+     et le cours et le module de la page ouverte sont toujours dépliés ---------- */
+  const CLE_PLIS = 'aec.deplies';
+  try { localStorage.removeItem('aec.plies'); } catch (e) {}   // ancienne liste (quand tout était déplié par défaut)
+  const ouverts = new Set((() => { try { return JSON.parse(localStorage.getItem(CLE_PLIS) || '[]'); } catch (e) { return []; } })());
+  const garderPlis = () => { try { localStorage.setItem(CLE_PLIS, JSON.stringify([...ouverts])); } catch (e) {} };
+  let chemin = new Set();   // cours et module de la page ouverte
+  const plie = cle => !ouverts.has(cle) && !chemin.has(cle);
   const pli = (cle, quoi) => `<button class="pli" type="button" data-pli="${esc(cle)}" aria-expanded="${!plie(cle)}" aria-label="Replier ou déplier ${quoi}"><span aria-hidden="true">▾</span></button>`;
   function basculerPli(b) {
     const cle = b.dataset.pli, el = b.closest('.b-bloc, li'), ferme = !el.classList.contains('plie');
     el.classList.toggle('plie', ferme); b.setAttribute('aria-expanded', !ferme);
-    ferme ? plies.add(cle) : plies.delete(cle); garderPlis();
+    ferme ? ouverts.delete(cle) : ouverts.add(cle); chemin.delete(cle); garderPlis();
   }
 
   function cadre(et, c, m, l) {
     document.body.classList.add('avec-barre');
     // la page ouverte reste visible : son cours et son module sont dépliés
-    let change = false;
-    for (const cle of [c && `${et.id}/${c}`, c && m && `${et.id}/${c}/${m}`]) if (cle && plies.delete(cle)) change = true;
-    if (change) garderPlis();
+    chemin = new Set([c && `${et.id}/${c}`, c && m && `${et.id}/${c}/${m}`].filter(Boolean));
     const etapes = Array.from({ length: Math.max(NB_ETAPES, S.etapes.length) }, (_, k) => S.etapes[k] || null);
     const barre = `
       <a class="b-toutes" href="#">← Toutes les étapes</a>
