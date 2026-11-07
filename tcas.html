@@ -657,11 +657,11 @@ function cockpitTexte(k, im) {
 let dernierJournal = '';
 const PILOTES = new Set(['aural', 'vhf', 'nonsuivi']);
 const ouverts = new Set();
-// le tableau est séparé en trois groupes : squitters (spontanés), diffusions à tous (broadcasts), et les autres UF/DF (interrogation → réponse)
+// le tableau est séparé en trois groupes : les UF/DF (interrogation → réponse), les diffusions à tous (broadcasts), puis les squitters (spontanés)
 const GROUPES_MSG = [
-  { id: 'sq', nom: 'Squitters', sous: 'spontanés, sans interrogation (1090 MHz)' },
+  { id: 'ir', nom: 'Interrogations et réponses', sous: 'UF du TCAS (1030 MHz) → DF du transpondeur (1090 MHz)' },
   { id: 'bc', nom: 'Broadcasts', sous: 'diffusés à tous par le TCAS, sans réponse (1030 MHz)' },
-  { id: 'ir', nom: 'Interrogations et réponses', sous: 'UF du TCAS (1030 MHz) → DF du transpondeur (1090 MHz)' }];
+  { id: 'sq', nom: 'Squitters', sous: 'spontanés, sans interrogation (1090 MHz)' }];
 const groupeMsg = m => /^df1[17]/.test(m.cle) ? 'sq' : /^(bc|rabc)/.test(m.cle) ? 'bc' : 'ir';
 const rendu = { A: { ordre: null, lignes: new Map(), evts: null }, B: { ordre: null, lignes: new Map(), evts: null } };
 const COUL_EVT = { finta: 'var(--line2)', ta: 'var(--ta)', ra: 'var(--ra)', coc: 'var(--vert)', coord: 'var(--f1030)', vhf: 'var(--vhf)', detection: 'var(--f1090)', nonsuivi: 'var(--ra)', aural: 'var(--ta)' };
