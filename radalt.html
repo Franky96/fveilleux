@@ -97,6 +97,13 @@ html.light #scene{background:#dbe9f3}
 .sig{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:14px;align-items:start}
 #graphF{height:300px;border-radius:12px;background:var(--panel2)}
 #graphB{height:200px;border-radius:12px;background:var(--panel2);margin-top:10px}
+.freqs{display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;gap:4px 12px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
+.freqs .n{font:700 12px var(--f-mono);letter-spacing:.05em}
+.freqs .v{font:700 19px var(--f-mono);white-space:nowrap;text-align:right}
+.freqs .v mark{background:color-mix(in srgb,var(--k) 22%,transparent);color:var(--k);border-radius:4px;padding:0 1px}
+.freqs .c{font-size:12.5px;color:var(--muted)}
+.freqs .ecart{border-top:1px dashed var(--line2);padding-top:4px}
+@media (max-width:620px){.freqs{grid-template-columns:auto 1fr}.freqs .c{grid-column:1/-1;margin:-4px 0 4px}.freqs .c.ecart{border-top:0}.freqs .v{font-size:16px}}
 .chiffres{display:grid;gap:6px}
 .chiffre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .chiffre span{display:block;font:600 11px var(--f-mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
@@ -184,7 +191,7 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
 
 <section class="panel" aria-labelledby="t-sig">
   <h2 id="t-sig">Le signal</h2>
-  <p class="sous">Fréquence dans le temps (et non l'amplitude). En rouge, la fréquence émise (F<sub>TX</sub>) ; en bleu, la fréquence reçue (F<sub>RX</sub>) : la même, décalée du temps de l'aller-retour. Le décalage est agrandi pour être visible ; il suit l'altitude de la scène du haut.</p>
+  <p class="sous">Fréquence dans le temps (et non l'amplitude). En rouge, la fréquence émise (F<sub>TX</sub>) ; en bleu, la fréquence reçue (F<sub>RX</sub>) : la même, décalée du temps de l'aller-retour. Le décalage est agrandi pour être visible ; il suit l'altitude de la scène du haut. Le curseur pointillé lit les deux fréquences au même instant (en vrai, le balayage se fait 50 à 160 fois par seconde).</p>
   <div class="reg">
     <div><p class="lab">Type de signal</p><div class="choix" id="types">
       <button class="btn" type="button" data-v="fmcw" aria-pressed="true">FMCW<small>balayage constant</small></button>
@@ -198,7 +205,7 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
       <div class="curseur"><span>Largeur</span><input type="range" id="larg" min="25" max="75" step="1" value="50" aria-label="Largeur d'impulsion"><output id="largV">50 ns</output></div></div>
   </div>
   <div class="sig">
-    <div><canvas id="graphF" aria-label="Fréquence émise et reçue dans le temps"></canvas><canvas id="graphB" aria-label="Fréquence de battement ou taux de balayage selon l'altitude"></canvas></div>
+    <div><canvas id="graphF" aria-label="Fréquence émise et reçue dans le temps"></canvas><div class="freqs" id="freqs" aria-live="off"></div><canvas id="graphB" aria-label="Fréquence de battement ou taux de balayage selon l'altitude"></canvas></div>
     <div><div class="chiffres" id="chiffres"></div><p class="explic" id="explic"></p></div>
   </div>
 </section>
@@ -362,6 +369,15 @@ function fmtT(s) { return s >= 1e-3 ? `${nf(s * 1e3, 2)} ms` : s >= 1e-6 ? `${nf
 const LMAX = Math.log(1 + 3200 / 40);
 const lg = h => Math.sign(h) * Math.log(1 + Math.abs(h) / 40) / LMAX;
 let ondes = 0;
+// instant lu sur le graphique du signal : un curseur qui parcourt lentement la fenêtre (2,5 balayages en 8 s)
+let curseur = 0.13;
+const tri = u => { const v = ((u % 1) + 1) % 1; return v < .5 ? v * 2 : 2 - v * 2; };   // 0 → 1 → 0
+function lecture(m) {
+  if (st.signal === 'pulse') return { fTx: F0, fRx: F0, pulse: true };
+  const { fm } = signalCourant(m), T = 1 / fm, fen = 2.5 * T, ti = fen * curseur;
+  const fA = tt => F0 - DEV + B * tri(tt * fm);
+  return { ti, T, fen, fm, fTx: fA(ti), fRx: fA(ti - m.tau), monte: ((ti * fm) % 1) < .5 };
+}
 function avionProfil(x, cx, cy, coul) {   // cy = bas des roues ; nez vers la droite
   x.save(); x.translate(cx, cy);
   x.fillStyle = coul; x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 1;
@@ -446,6 +462,13 @@ function dessinerScene(s, m) {
   if (st.mode === 'approche') { x.font = '500 11px "IBM Plex Mono",monospace'; x.fillStyle = K.muted; x.fillText(etroit ? `/ piste ${fmtFt(s.hp)}` : `hauteur / piste ${fmtFt(s.hp)}`, fx + 8, ly + 15); }
   if (!m.portee) { x.font = '700 12px "IBM Plex Sans",sans-serif'; x.fillStyle = K.mauvais; x.fillText('Au-delà de 2 500 ft : écho trop faible, pas de mesure', 10, H - 12); }
   x.font = '600 11px "IBM Plex Mono",monospace'; x.fillStyle = K.tx; x.fillText('TX', txX - 18, yAnt + 14); x.fillStyle = K.rx; x.fillText('RX', rxX + 4, yAnt + 14);
+  // fréquences à l'instant : émise (TX) et reçue (RX), au kHz près
+  const L = lecture(m), mhz = f => `${nf(f / 1e6, 3)} MHz`;
+  x.font = `700 ${etroit ? 10.5 : 12}px "IBM Plex Mono",monospace`; x.textAlign = 'right';
+  const lx = xa - 68, ly0 = yRoues - 30;
+  x.fillStyle = K.tx; x.fillText(`TX ${mhz(L.fTx)}`, lx, ly0);
+  x.fillStyle = m.portee ? K.rx : K.faint; x.fillText(m.portee ? `RX ${mhz(L.fRx)}` : 'RX — pas d’écho', lx, ly0 + 15);
+  x.textAlign = 'left';
 }
 
 /* ---------- indicateur à aiguille ---------- */
@@ -495,7 +518,6 @@ function dessinerSignal(m, s) {
   x.font = '500 10.5px "IBM Plex Mono",monospace';
   if (st.signal === 'pulse') return dessinerImpulsions(x, W, H, m, s);
   const { fm } = signalCourant(m), T = 1 / fm, fen = 2.5 * T;                 // fenêtre : 2,5 balayages
-  const tri = u => { const v = ((u % 1) + 1) % 1; return v < .5 ? v * 2 : 2 - v * 2; };   // 0 → 1 → 0
   const fAt = tt => F0 - DEV + B * tri(tt * fm);
   const X = tt => g + (W - g - d) * tt / fen, Yf = f => basG - (basG - hautG) * (f - (F0 - DEV)) / B;
   // axes
@@ -516,9 +538,12 @@ function dessinerSignal(m, s) {
     for (let i = 0; i <= 500; i++) { const tt = fen * i / 500, f = fAt(tt - dt); i ? x.lineTo(X(tt), Yf(f)) : x.moveTo(X(tt), Yf(f)); } x.stroke();
   }
   // le battement à un instant
-  const ti = T * 0.32, f1 = fAt(ti), f2 = fAt(ti - dec);
+  const ti = lecture(m).ti, f1 = fAt(ti), f2 = fAt(ti - dec);
+  x.strokeStyle = K.faint; x.setLineDash([3, 4]); x.lineWidth = 1; x.beginPath(); x.moveTo(X(ti), hautG); x.lineTo(X(ti), basG); x.stroke(); x.setLineDash([]);
   x.strokeStyle = K.text; x.lineWidth = 1.5; x.beginPath(); x.moveTo(X(ti), Yf(f1)); x.lineTo(X(ti), Yf(f2)); x.stroke();
-  x.fillStyle = K.text; x.font = '700 11.5px "IBM Plex Sans",sans-serif'; x.fillText('Δf = battement', X(ti) + 6, (Yf(f1) + Yf(f2)) / 2 + 4);
+  for (const [f, c] of [[f1, K.tx], [f2, K.rx]]) { x.fillStyle = c; x.beginPath(); x.arc(X(ti), Yf(f), 4.5, 0, 2 * Math.PI); x.fill(); }
+  x.fillStyle = K.text; x.font = '700 11.5px "IBM Plex Sans",sans-serif'; const gauche = X(ti) > W - 130;
+  x.textAlign = gauche ? 'right' : 'left'; x.fillText('Δf = battement', X(ti) + (gauche ? -8 : 8), (Yf(f1) + Yf(f2)) / 2 + 4); x.textAlign = 'left';
   // décalage dans le temps
   const ti2 = T * 1.2; x.strokeStyle = K.muted; x.lineWidth = 1; const yy = Yf(fAt(ti2));
   x.beginPath(); x.moveTo(X(ti2), yy); x.lineTo(X(ti2 + dec), yy); x.stroke();
@@ -594,6 +619,19 @@ function majChiffres(m, s) {
     ex = `<b>Impulsions</b> : comme un DME, mais c'est le sol qui renvoie le signal. Une seule fréquence (4 300 MHz, pas de modulation), PRF de 8 à 18 kHz, largeur de 25 à 75 ns ; on mesure directement le temps aller-retour. Rare en aviation commerciale.`;
   }
   html('#explic', ex);
+}
+
+// fréquences émise et reçue à l'instant du curseur, au hertz près ; les chiffres qui diffèrent sont surlignés
+function majFreqs(m) {
+  const L = lecture(m), hz = v => Math.round(v).toLocaleString('fr-CA');
+  if (L.pulse) { html('#freqs', `<span class="n" style="color:var(--tx)">F TX</span><span class="v">${hz(F0)} Hz</span><span class="c">une seule fréquence, sans modulation</span><span class="n" style="color:var(--rx)">F RX</span><span class="v">${hz(F0)} Hz</span><span class="c">l'écho revient à la même fréquence : on mesure le temps, pas un écart</span>`); return; }
+  const a = hz(L.fTx), b = m.portee ? hz(L.fRx) : null;
+  let k = 0; if (b) while (k < a.length && a[k] === b[k]) k++;
+  const marque = (t, c) => b ? `${t.slice(0, k)}<mark style="--k:var(--${c})">${t.slice(k)}</mark>` : t;
+  const ecart = b ? Math.abs(L.fTx - L.fRx) : 0;
+  html('#freqs', `<span class="n" style="color:var(--tx)">F TX</span><span class="v">${marque(a, 'tx')} Hz</span><span class="c">émise maintenant</span>`
+    + `<span class="n" style="color:var(--rx)">F RX</span><span class="v">${b ? marque(b, 'rx') + ' Hz' : '—'}</span><span class="c">${b ? `émise il y a ${fmtT(m.tau)}, revenue maintenant` : 'hors portée : pas d’écho'}</span>`
+    + (b ? `<span class="n ecart">ÉCART</span><span class="v ecart">${hz(ecart)} Hz</span><span class="c ecart">= fréquence de battement ; RX ${L.monte ? 'plus basse (la fréquence monte)' : 'plus haute (la fréquence redescend)'}</span>` : ''));
 }
 
 /* ---------- AID ---------- */
@@ -689,6 +727,7 @@ function majTextes(s, m) {
     + `<div><span>Tension (${N.nom})</span><b>${m.portee ? nf(N.f(Math.max(0, ind)), 2) + ' V' : '—'}</b></div>`
     + `<div><span>Fréquence de battement</span><b>${st.signal === 'pulse' ? '—' : fmtF(signalCourant(m).fb)}</b></div>`);
   $('#formuleV').textContent = N.txt;
+  majFreqs(m);
   html('#horloge', st.mode === 'approche' ? `${nf(st.t, 0)} s<small>toucher dans ${nf(Math.max(0, TTD - st.t), 0)} s</small>` : `—<small>altitude au choix</small>`);
   $('#temps').value = st.t;
 }
@@ -698,7 +737,7 @@ function tout() {
 }
 function boucle(now) {
   const dt = Math.min(0.1, (now - (dernier || now)) / 1000); dernier = now;
-  if (!reduit) ondes = (ondes + dt * 0.9) % 1;
+  if (!reduit) { ondes = (ondes + dt * 0.9) % 1; curseur = (curseur + dt / 8) % 1; }
   if (st.joue && st.mode === 'approche') { st.t += dt * st.vitesse; if (st.t >= DUREE) { st.t = DUREE; st.joue = false; majPP(); } }
   tout();
   requestAnimationFrame(boucle);
