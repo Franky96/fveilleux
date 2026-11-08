@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radio-altimètre — Outils de Frank</title>
+<script>
+  const _pR = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pR.includes('radalt') && !_pR.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Radio-altimètre : jetons du visuel 2.0 */
+:root{
+  color-scheme:dark;
+  --bg:#0a0e11; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79; --c:#23753f;
+  --tx:#f87171; --rx:#38bdf8; --dh:#f59e0b; --ok:#22c55e; --mauvais:#ef4444; --deux:#a78bfa;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html.light{
+  color-scheme:light;
+  --bg:#f2f4f6; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0;
+  --tx:#dc2626; --rx:#0284c7; --dh:#d97706; --ok:#16a34a; --mauvais:#dc2626; --deux:#7c3aed;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.5 var(--f-body);padding:0 max(14px,env(safe-area-inset-right)) 48px max(14px,env(safe-area-inset-left));overflow-x:hidden}
+.wrap{max-width:1320px;margin:0 auto}
+h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.02em;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.intro{margin:18px 0 4px;color:var(--muted);max-width:92ch}
+.intro b{color:var(--text)}
+.panel{margin-top:14px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.panel>h2{font-size:21px;margin-bottom:2px}
+.sous{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+.lab{font:600 12px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
+.choix{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:600 13px/1.2 var(--f-body);padding:7px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);cursor:pointer;color:var(--text);transition:border-color .15s,background .15s}
+.btn:hover{border-color:color-mix(in srgb,var(--c) 60%,var(--line2))}
+.btn[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 26%,var(--panel2));border-color:color-mix(in srgb,var(--c) 70%,var(--line2))}
+.btn small{display:block;font:500 10.5px var(--f-mono);color:var(--muted)}
+.rond{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:15px}
+select.sel{padding:6px 8px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2)}
+canvas{display:block;width:100%}
+.f{font:500 12.5px var(--f-mono);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;white-space:nowrap}
+.curseur{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin:6px 0}
+.curseur span{font:600 12px var(--f-mono);color:var(--muted)}
+.curseur output{font:600 13px var(--f-mono);min-width:76px;text-align:right}
+.curseur input{accent-color:var(--c);width:100%}
+
+/* scène et instruments */
+.lecteur{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
+.horloge{font:600 14px var(--f-mono);min-width:96px}
+.horloge small{display:block;font:500 11px var(--f-mono);color:var(--muted)}
+.ligne-temps{flex:1 1 260px;position:relative;padding-top:18px}
+.ligne-temps input{width:100%;accent-color:var(--c);margin:0}
+.reperes{position:absolute;top:0;left:0;right:0;height:16px}
+.reperes b{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px var(--f-mono);padding:0 3px;border-radius:4px;color:#fff;white-space:nowrap;cursor:pointer}
+.vol{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+#scene{height:420px;border-radius:12px;background:#0b1a24}
+html.light #scene{background:#dbe9f3}
+.instr{display:flex;flex-direction:column;gap:10px}
+.cadran{background:#05080b;border-radius:14px;border:1px solid var(--line2);padding:8px}
+#cadran{height:250px}
+.dh-reg{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dh-reg .f{font-weight:700}
+.pfd{background:#05080b;border-radius:12px;border:1px solid var(--line2);padding:10px 12px;color:#e5e7eb;font-family:var(--f-mono);display:flex;align-items:center;gap:12px}
+.pfd .ra{font:700 30px var(--f-mono);color:#f8fafc;min-width:110px}
+.pfd .ra small{font:600 12px var(--f-mono);color:#94a3b8;margin-right:6px}
+.pfd .dh{font:700 13px var(--f-mono);color:#22d3ee}
+.pfd .dh.atteint{color:#fbbf24;animation:clign 1s steps(2) infinite}
+@keyframes clign{50%{opacity:.25}}
+.sorties{font-size:13px;display:grid;gap:4px}
+.sorties div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+.sorties b{font-family:var(--f-mono)}
+.etat-sol{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:var(--muted)}
+.etat-sol b{color:var(--text);font-family:var(--f-mono)}
+.barre{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--line2);vertical-align:middle;overflow:hidden}
+.barre i{display:block;height:100%;background:var(--rx)}
+.reg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px 22px;margin-bottom:10px}
+
+/* signal */
+.sig{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:14px;align-items:start}
+#graphF{height:300px;border-radius:12px;background:var(--panel2)}
+#graphB{height:200px;border-radius:12px;background:var(--panel2);margin-top:10px}
+.chiffres{display:grid;gap:6px}
+.chiffre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.chiffre span{display:block;font:600 11px var(--f-mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.chiffre b{font:700 20px var(--f-mono)}
+.chiffre small{display:block;color:var(--muted);font-size:12.5px}
+.explic{font-size:13.5px;color:var(--muted);margin:10px 0 0}
+.explic b{color:var(--text)}
+
+/* AID */
+.aid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:14px;align-items:start}
+#schemaAid{height:300px;border-radius:12px;background:var(--panel2)}
+.bornes{display:flex;gap:6px;flex-wrap:wrap}
+.borne{font:700 13px var(--f-mono);padding:8px 10px;border-radius:8px;border:1px solid var(--line2);background:#0d1216;color:#c9d4db;cursor:pointer;min-width:58px}
+html.light .borne{background:#e9eef2;color:#22303b}
+.borne[aria-pressed="true"]{background:#0b2b1a;border-color:#2f9e5e;color:#9ff0c0}
+html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
+.borne small{display:block;font:500 9.5px var(--f-mono);opacity:.75}
+.verdict{margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line2);font-size:13.5px}
+.verdict.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--panel2))}
+.verdict.mauvais{border-color:var(--mauvais);background:color-mix(in srgb,var(--mauvais) 10%,var(--panel2))}
+.formule{font:600 13.5px var(--f-mono);padding:8px 10px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);margin:8px 0;overflow-wrap:anywhere}
+
+/* sorties analogiques */
+#graphV{height:260px;border-radius:12px;background:var(--panel2)}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px;margin-top:14px}
+.note{background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:14px;padding:12px 15px}
+.note h3{font-size:18px;margin-bottom:4px}
+.note p,.note li{margin:0 0 5px;font-size:13.5px}
+.note ul{margin:0;padding-left:18px}
+.note a{color:var(--rx)}
+@media (max-width:980px){.vol,.sig,.aid{grid-template-columns:1fr}.instr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#scene{height:340px}}
+@media (max-width:620px){.instr{grid-template-columns:1fr}#scene{height:300px}.pfd .ra{font-size:26px}}
+</style>
+<link rel="stylesheet" href="fond.css">
+<script src="topbar.js" defer></script>
+</head>
+<body data-retour="informatique.html" data-retour-nom="Informatique">
+<div data-topbar><h1>Radio-altimètre</h1></div>
+<div class="wrap">
+<p class="intro">Le <b>radio-altimètre</b> (RADALT) mesure l'<b>altitude-sol (AGL)</b> : il envoie vers le sol une onde de <b>4 300 MHz</b> et mesure le temps qu'elle met à revenir. L'onde est continue et <b>modulée en fréquence (FMCW)</b> : comme la fréquence émise change sans arrêt, l'écho revient avec une fréquence un peu « en retard » ; cet écart, la <b>fréquence de battement</b>, donne la hauteur. Portée : <b>2 500 ft</b>. Suis l'approche, puis regarde le signal, le délai d'installation (AID) et les sorties vers les instruments.</p>
+
+<section class="panel" aria-labelledby="t-vol">
+  <h2 id="t-vol">En approche</h2>
+  <p class="sous">Vue de côté. L'avion descend sur le plan de 3° vers la piste ; le sol sous lui change (forêt, lac, crête, champs, piste). L'échelle verticale est dilatée près du sol. Les ondes sont ralenties pour être visibles : en vrai, l'aller-retour dure de 60 ns à 5 µs.</p>
+  <div class="reg">
+    <div><p class="lab">Mode</p><div class="choix" id="modes">
+      <button class="btn" type="button" data-v="approche" aria-pressed="true">Approche et atterrissage</button>
+      <button class="btn" type="button" data-v="manuel" aria-pressed="false">Altitude au choix</button></div></div>
+    <div id="regApproche"><p class="lab">Saison</p><div class="choix" id="saisons">
+      <button class="btn" type="button" data-v="ete" aria-pressed="true">Été<small>herbe, lac</small></button>
+      <button class="btn" type="button" data-v="hiver" aria-pressed="false">Hiver<small>neige, lac gelé</small></button></div></div>
+    <div id="regManuel" hidden><p class="lab">Altitude-sol et surface</p>
+      <div class="curseur"><span>AGL</span><input type="range" id="aglMan" min="0" max="3000" step="1" value="800" aria-label="Altitude-sol"><output id="aglManV">800 ft</output></div>
+      <select class="sel" id="solMan" aria-label="Surface sous l'avion"></select></div>
+  </div>
+  <div class="lecteur" id="lecteur">
+    <button class="btn rond" id="pp" type="button" aria-label="Lecture">▶</button>
+    <button class="btn rond" id="debut" type="button" aria-label="Recommencer">⏮</button>
+    <div class="horloge" id="horloge">0 s<small></small></div>
+    <div class="choix" id="vitesses">
+      <button class="btn" type="button" data-v="1" aria-pressed="false">×1</button>
+      <button class="btn" type="button" data-v="2" aria-pressed="false">×2</button>
+      <button class="btn" type="button" data-v="4" aria-pressed="true">×4</button>
+      <button class="btn" type="button" data-v="8" aria-pressed="false">×8</button></div>
+    <div class="ligne-temps"><div class="reperes" id="reperes"></div><input type="range" id="temps" min="0" max="250" step="0.1" value="0" aria-label="Temps"></div>
+  </div>
+  <div class="vol">
+    <div>
+      <canvas id="scene" aria-label="Vue de côté de l'avion, des ondes et du sol"></canvas>
+      <div class="etat-sol" id="etatSol"></div>
+    </div>
+    <div class="instr">
+      <div class="cadran"><canvas id="cadran" aria-label="Indicateur d'altitude-sol"></canvas>
+        <div class="dh-reg"><span class="lab" style="margin:0;color:#93a3ae">DH</span>
+          <button class="btn" type="button" id="dhMoins" aria-label="Baisser la DH">−</button><span class="f" id="dhVal">200 ft</span><button class="btn" type="button" id="dhPlus" aria-label="Monter la DH">+</button>
+          <button class="btn" type="button" data-dh="200">CAT I</button><button class="btn" type="button" data-dh="100">CAT II</button><button class="btn" type="button" data-dh="50">CAT III</button></div></div>
+      <div>
+        <div class="pfd"><div class="ra" id="pfdRa"><small>RA</small>—</div><div><div class="dh" id="pfdDh">DH 200</div><div style="font-size:11px;color:#94a3b8" id="pfdEtat"></div></div></div>
+        <div class="sorties" style="margin-top:10px" id="sorties"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-sig">
+  <h2 id="t-sig">Le signal</h2>
+  <p class="sous">Fréquence dans le temps (et non l'amplitude). En rouge, la fréquence émise (F<sub>TX</sub>) ; en bleu, la fréquence reçue (F<sub>RX</sub>) : la même, décalée du temps de l'aller-retour. Le décalage est agrandi pour être visible ; il suit l'altitude de la scène du haut.</p>
+  <div class="reg">
+    <div><p class="lab">Type de signal</p><div class="choix" id="types">
+      <button class="btn" type="button" data-v="fmcw" aria-pressed="true">FMCW<small>balayage constant</small></button>
+      <button class="btn" type="button" data-v="cdf" aria-pressed="false">CDF FMCW<small>battement constant</small></button>
+      <button class="btn" type="button" data-v="pulse" aria-pressed="false">Impulsions<small>surtout militaire</small></button></div></div>
+    <div id="regFmcw"><p class="lab">Taux de balayage (sweep rate)</p>
+      <div class="curseur"><span>f<sub>m</sub></span><input type="range" id="fm" min="50" max="160" step="1" value="100" aria-label="Taux de balayage"><output id="fmV">100 Hz</output></div>
+      <label style="font-size:13px"><input type="checkbox" id="deux"> Deuxième RADALT à bord (balayage différent)</label></div>
+    <div id="regPulse" hidden><p class="lab">Impulsions</p>
+      <div class="curseur"><span>PRF</span><input type="range" id="prf" min="8" max="18" step="0.5" value="12" aria-label="Fréquence de répétition"><output id="prfV">12 kHz</output></div>
+      <div class="curseur"><span>Largeur</span><input type="range" id="larg" min="25" max="75" step="1" value="50" aria-label="Largeur d'impulsion"><output id="largV">50 ns</output></div></div>
+  </div>
+  <div class="sig">
+    <div><canvas id="graphF" aria-label="Fréquence émise et reçue dans le temps"></canvas><canvas id="graphB" aria-label="Fréquence de battement ou taux de balayage selon l'altitude"></canvas></div>
+    <div><div class="chiffres" id="chiffres"></div><p class="explic" id="explic"></p></div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-aid">
+  <h2 id="t-aid">AID : le délai d'installation</h2>
+  <p class="sous">Même au sol, l'onde parcourt le câble jusqu'à l'antenne TX, descend au sol, remonte à l'antenne RX, puis parcourt le câble jusqu'à l'unité. L'unité doit retrancher ce trajet fixe pour afficher <b>0 ft quand les roues principales touchent</b> (amortisseurs non comprimés). On lui donne la valeur en mettant à la masse une borne de configuration (<i>strapping</i>) ; l'installation doit ensuite y correspondre, par la longueur des câbles.</p>
+  <div class="aid">
+    <canvas id="schemaAid" aria-label="Schéma de l'installation : unité, câbles, antennes et sol"></canvas>
+    <div>
+      <p class="lab">AID choisi (borne mise à la masse)</p>
+      <div class="bornes" id="bornes"></div>
+      <div class="curseur" style="margin-top:10px"><span>H antennes</span><input type="range" id="hAnt" min="3" max="25" step="0.5" value="8" aria-label="Hauteur des antennes au sol"><output id="hAntV">8 ft</output></div>
+      <div class="curseur"><span>Câble TX</span><input type="range" id="lTx" min="1" max="22" step="0.1" value="8.3" aria-label="Longueur du câble TX"><output id="lTxV"></output></div>
+      <div class="curseur"><span>Câble RX</span><input type="range" id="lRx" min="1" max="22" step="0.1" value="8.3" aria-label="Longueur du câble RX"><output id="lRxV"></output></div>
+      <div class="curseur"><span>Câble</span><select class="sel" id="vCable" aria-label="Type de câble (facteur de propagation)">
+        <option value="0.66">diélectrique plein (V ≈ 0,66)</option>
+        <option value="0.69" selected>PTFE, ex. RG-393 (V ≈ 0,69)</option>
+        <option value="0.80">mousse, faible perte (V ≈ 0,80)</option></select><span></span></div>
+      <div class="formule" id="formule"></div>
+      <button class="btn" type="button" id="couper">✂ Couper les deux câbles à la longueur requise</button>
+      <div class="verdict" id="verdict"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="t-sortie">
+  <h2 id="t-sortie">Sortie vers les instruments</h2>
+  <p class="sous">L'unité envoie l'altitude-sol aux afficheurs et aux systèmes qui en ont besoin (TCAS, TAWS, pilote automatique) : en numérique par <a href="arinc429.html" style="color:var(--rx)">ARINC 429</a> (étiquette 164), ou, sur les systèmes plus anciens, par une <b>tension analogique</b> qui fait bouger l'aiguille. Trois codages existent (formules à ne pas retenir) :</p>
+  <div class="reg">
+    <div><p class="lab">Codage analogique</p><div class="choix" id="normes">
+      <button class="btn" type="button" data-v="mil" aria-pressed="false">Militaire<small>une droite</small></button>
+      <button class="btn" type="button" data-v="gen" aria-pressed="false">Générale<small>deux droites</small></button>
+      <button class="btn" type="button" data-v="arinc" aria-pressed="true">ARINC<small>droite puis courbe</small></button></div></div>
+    <div class="formule" id="formuleV" style="align-self:end"></div>
+  </div>
+  <canvas id="graphV" aria-label="Tension selon l'altitude-sol pour les trois codages"></canvas>
+</section>
+
+<div class="notes">
+  <div class="note"><h3>En bref</h3><ul>
+    <li>Bande UHF, <b>4 300 MHz</b>, un seul canal ; onde d'espace, courte portée : <b>moins de 2 500 ft</b> AGL.</li>
+    <li>FMCW : amplitude fixe, fréquence qui balaie 4 300 MHz <b>± 70 MHz</b> à un taux de balayage de <b>50 à 160 Hz</b>.</li>
+    <li>Fréquence de battement = F<sub>TX</sub> − F<sub>RX</sub> : d'environ 100 Hz près du sol jusqu'à environ 150 kHz vers 2 500 ft, selon le système.</li>
+    <li>À ne pas confondre : l'altitude <b>AGL</b> (par rapport au sol, radio-altimètre) et l'altitude <b>MSL</b> (par rapport au niveau de la mer, prise statique).</li></ul></div>
+  <div class="note"><h3>Composants</h3><ul>
+    <li><b>Unité RADALT</b> (LRU) : le cœur du système, émetteur-récepteur et calcul.</li>
+    <li><b>Antennes</b> (1 ou 2, souvent une TX et une RX) sous le fuselage, câbles limités à environ <b>17 ft</b> : l'unité reste près de ses antennes.</li>
+    <li><b>Afficheur</b> : AGL et hauteur de décision (DH). Pas de contrôleur ; un simple disjoncteur.</li>
+    <li>À 2 RADALT, chacun reconnaît son propre signal par son taux de balayage.</li></ul></div>
+  <div class="note"><h3>Obligations et DH</h3><ul>
+    <li>Pas obligatoire en soi, mais le <a href="tcas.html">TCAS</a> (inhibition des RA près du sol), le <b>TAWS/EGPWS</b> et les atterrissages <b>CAT II / CAT III</b> en ont besoin : presque tous les avions commerciaux, jets d'affaires et bien des hélicoptères en ont un, deux ou trois.</li>
+    <li><b>DH</b> (hauteur de décision) : réglée par le pilote ; quand l'AGL l'atteint, le voyant DH s'allume (ou clignote). Sans les références visuelles, approche interrompue.</li></ul></div>
+  <div class="note"><h3>Points d'entretien</h3><ul>
+    <li>Remplacer un câble coaxial : <b>même numéro de pièce, même longueur</b>, sinon l'AID n'est plus respecté et l'AGL est faux au toucher.</li>
+    <li>Au sol, amortisseurs comprimés, une lecture légèrement <b>négative</b> est normale.</li>
+    <li>Le type de sol change la force de l'écho (neige, glace…) et peut influencer légèrement la mesure.</li></ul></div>
+</div>
+</div>
+
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const nf = (v, d = 0) => (Number.isFinite(v) ? v : 0).toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- constantes physiques et du système ---------- */
+const C_FT = 983571056;          // vitesse de la lumière, ft/s
+const F0 = 4300e6, DEV = 70e6;   // 4 300 MHz ± 70 MHz
+const B = 2 * DEV;               // excursion totale : 140 MHz
+const PORTEE = 2500;             // ft
+const FB_CDF = 100e3;            // CDF FMCW : battement maintenu (exemple)
+const TAU_MAX = 5100 / C_FT;     // trajet le plus long dessiné (2 500 ft + AID)
+const EXAG = 0.18 / (100 * TAU_MAX); // agrandissement du décalage dans le graphique
+
+/* ---------- état ---------- */
+const st = { mode: 'approche', saison: 'ete', t: 0, joue: true, vitesse: 4, aglMan: 800, solMan: 'herbe', dh: 200,
+  signal: 'fmcw', fm: 100, deux: false, prf: 12e3, larg: 50e-9, norme: 'arinc',
+  inst: { aid: 40, H: 8, V: 0.69, lTx: 8.3, lRx: 8.3 } };
+const SURF = {
+  beton: { nom: 'Béton (piste)', refl: 1.0, coul: '#4b5563', coulC: '#9ca3af' },
+  herbe: { nom: 'Herbe', refl: 0.7, coul: '#2f6b33', coulC: '#7fb77e' },
+  foret: { nom: 'Forêt', refl: 0.5, coul: '#1d4a2a', coulC: '#4b7f5a' },
+  eau:   { nom: 'Eau calme', refl: 0.9, coul: '#1e4f7a', coulC: '#7fb2dd' },
+  neige: { nom: 'Neige', refl: 0.45, coul: '#d9e3ea', coulC: '#ffffff' },
+  glace: { nom: 'Glace', refl: 0.6, coul: '#a9cbe0', coulC: '#e3f2fb' },
+};
+
+/* ---------- l'approche : plan de 3°, arrondi, toucher, roulage ---------- */
+const GS = 236;                       // vitesse sol, ft/s (≈ 140 kt)
+const VZ = GS * Math.tan(3 * Math.PI / 180);   // ≈ 12,4 ft/s (≈ 740 ft/min)
+const H0 = 2800, HF = 40, DFL = 9;    // départ, début de l'arrondi, durée de l'arrondi
+const TF = (H0 - HF) / VZ, TTD = TF + DFL, DUREE = TTD + 14;
+// relief : distance avant le seuil de piste (ft) → élévation par rapport à la piste (ft)
+const RELIEF = [[-14000, 0], [0, 0], [1500, 0], [4000, -8], [8000, 6], [11000, -5], [12500, 20], [14000, 140], [15500, 30], [16500, -40],
+  [29000, -40], [31000, 60], [36000, 150], [42000, 110], [48000, 170], [54000, 130], [62000, 160], [80000, 150]];
+function elev(x) {
+  for (let i = 1; i < RELIEF.length; i++) if (x <= RELIEF[i][0]) {
+    const [x0, e0] = RELIEF[i - 1], [x1, e1] = RELIEF[i], u = (x - x0) / (x1 - x0);
+    return e0 + (e1 - e0) * (1 - Math.cos(Math.PI * Math.max(0, Math.min(1, u)))) / 2;
+  }
+  return RELIEF[RELIEF.length - 1][1];
+}
+function surface(x) {
+  let s = x < 0 && x > -9000 ? 'beton' : (x > 16300 && x < 29300) ? 'eau' : ((x > 12800 && x < 15200) || x > 30500) ? 'foret' : 'herbe';
+  if (st.saison === 'hiver') s = s === 'herbe' ? 'neige' : s === 'eau' ? 'glace' : s;
+  return s;
+}
+function distSeuil(t) {   // distance avant le seuil (négatif : sur la piste ; toucher à 1 000 ft du seuil)
+  if (t <= TTD) return -1000 + GS * (TTD - t);
+  const u = Math.min(t - TTD, GS / 6);
+  return -1000 - (GS * u - 3 * u * u);
+}
+function hauteur(t) {     // hauteur des roues au-dessus de la piste
+  if (t <= TF) return HF + VZ * (TF - t);
+  if (t <= TTD) { const s = (t - TF) / DFL; return HF * (1 - s) * (1 - s); }
+  return 0;
+}
+// situation à l'instant t : AGL des roues, surface, compression des amortisseurs, phase
+function situation(t) {
+  if (st.mode === 'manuel') {
+    const agl = st.aglMan; return { agl, x: 0, e: 0, surf: st.solMan, comp: 0, phase: agl === 0 ? 'Roues au sol (sans compression)' : 'Altitude au choix', hp: agl };
+  }
+  const x = distSeuil(t), e = elev(x), hp = hauteur(t), agl = Math.max(0, hp - e);
+  const comp = t > TTD ? Math.min(1.5, (t - TTD) * 1.5) : 0;
+  const phase = t < TF ? 'Approche (plan de 3°)' : t < TTD ? 'Arrondi' : 'Roulage, amortisseurs comprimés';
+  return { agl, x, e, surf: surface(x), comp, phase, hp };
+}
+
+/* ---------- l'installation (AID) ---------- */
+// AID = trajet électrique aller-retour, avion au sol : 2·H (antenne TX → sol → antenne RX) + câbles / V
+const trajetInstalle = () => 2 * st.inst.H + (st.inst.lTx + st.inst.lRx) / st.inst.V;
+const erreurAid = () => (trajetInstalle() - st.inst.aid) / 2;   // ft d'erreur sur l'AGL affiché
+// mesure : trajet total = installation + 2·(hauteur des antennes au-dessus de leur hauteur au sol)
+function mesure(s) {
+  const dh = s.agl - s.comp;                          // déplacement vertical des antennes par rapport au « 0 ft »
+  const trajet = trajetInstalle() + 2 * dh;           // ft
+  const tau = trajet / C_FT;                          // s
+  const portee = s.agl <= PORTEE;
+  const ind = dh + erreurAid();                       // ce que l'unité calcule : (trajet − AID) / 2
+  return { tau, trajet, ind, portee };
+}
+
+/* ---------- utilitaires de dessin ---------- */
+const K = {};
+function couleurs() { const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  for (const n of ['tx', 'rx', 'dh', 'ok', 'mauvais', 'deux', 'text', 'muted', 'faint', 'line', 'line2', 'panel', 'panel2', 'bg']) K[n] = g('--' + n);
+  K.clair = document.documentElement.classList.contains('light'); }
+function prep(cv) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) { cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); }
+  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height); return [x, r.width, r.height];
+}
+const fmtFt = v => `${nf(Math.round(v))} ft`;
+function fmtF(hz) { return hz >= 1e6 ? `${nf(hz / 1e6, 2)} MHz` : hz >= 1e3 ? `${nf(hz / 1e3, hz >= 1e5 ? 0 : 1)} kHz` : `${nf(hz, hz < 10 ? 2 : 0)} Hz`; }
+function fmtT(s) { return s >= 1e-3 ? `${nf(s * 1e3, 2)} ms` : s >= 1e-6 ? `${nf(s * 1e6, 2)} µs` : `${nf(s * 1e9, 0)} ns`; }
+
+/* ---------- scène de côté ---------- */
+// échelle verticale dilatée près du sol (log), la même pour l'avion et le relief, par rapport au sol sous l'avion
+const LMAX = Math.log(1 + 3200 / 40);
+const lg = h => Math.sign(h) * Math.log(1 + Math.abs(h) / 40) / LMAX;
+let ondes = 0;
+function avionProfil(x, cx, cy, coul) {   // cy = bas des roues ; nez vers la droite
+  x.save(); x.translate(cx, cy);
+  x.fillStyle = coul; x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 1;
+  // fuselage
+  x.beginPath(); x.moveTo(-58, -26); x.lineTo(40, -26); x.quadraticCurveTo(62, -24, 66, -17); x.quadraticCurveTo(60, -10, 40, -9); x.lineTo(-48, -9); x.lineTo(-62, -18); x.closePath(); x.fill(); x.stroke();
+  // dérive et empennage
+  x.beginPath(); x.moveTo(-50, -26); x.lineTo(-64, -50); x.lineTo(-54, -50); x.lineTo(-34, -26); x.closePath(); x.fill(); x.stroke();
+  // aile (vue de côté) et moteur
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(-10, -14, 34, 4);
+  x.fillStyle = coul; x.beginPath(); x.ellipse(10, -6, 11, 4.5, 0, 0, 2 * Math.PI); x.fill(); x.stroke();
+  // hublots
+  x.fillStyle = 'rgba(255,255,255,.55)'; for (let i = -38; i < 34; i += 7) x.fillRect(i, -22, 3, 3);
+  // trains
+  x.strokeStyle = '#6b7280'; x.lineWidth = 2.2; x.beginPath(); x.moveTo(4, -9); x.lineTo(4, -3); x.moveTo(48, -9); x.lineTo(48, -3); x.stroke();
+  x.fillStyle = '#111827'; for (const gx of [4, 48]) { x.beginPath(); x.arc(gx, -2.5, 2.6, 0, 2 * Math.PI); x.fill(); }
+  // antennes TX et RX sous le fuselage
+  x.fillStyle = K.tx; x.fillRect(-26, -9, 6, 3); x.fillStyle = K.rx; x.fillRect(-14, -9, 6, 3);
+  x.restore();
+}
+function dessinerScene(s, m) {
+  const [x, W, H] = prep($('#scene'));
+  const etroit = W < 560, base = H - 40, haut = 40, Hs = base - haut, xa = etroit ? W * 0.3 : Math.min(W * 0.38, W - 120);
+  const Y = h => base - Hs * lg(h);
+  // ciel
+  const ciel = x.createLinearGradient(0, 0, 0, H);
+  ciel.addColorStop(0, K.clair ? '#bcd7ea' : '#0c1c2a'); ciel.addColorStop(1, K.clair ? '#eef5fa' : '#132634');
+  x.fillStyle = ciel; x.fillRect(0, 0, W, H);
+  // repères d'altitude (par rapport au sol sous l'avion)
+  x.font = '500 10.5px "IBM Plex Mono",monospace';
+  for (const h of [50, 100, 200, 500, 1000, 2500]) {
+    const y = Y(h); x.strokeStyle = h === PORTEE ? K.mauvais : K.line2; x.globalAlpha = h === PORTEE ? .6 : .5; x.setLineDash([3, 5]);
+    x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+    x.fillStyle = h === PORTEE ? K.mauvais : K.muted; x.fillText(h === PORTEE ? '2 500 ft · portée' : `${nf(h)} ft`, 6, y - 3);
+  }
+  // DH
+  const yDh = Y(st.dh); x.strokeStyle = K.dh; x.globalAlpha = .7; x.setLineDash([8, 4]); x.beginPath(); x.moveTo(0, yDh); x.lineTo(W, yDh); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+  x.fillStyle = K.dh; x.fillText(`DH ${nf(st.dh)} ft`, W - 78, yDh - 3);
+  // relief
+  const kx = W / 9000, e0 = s.e;
+  const colonnes = [];
+  for (let X = 0; X <= W; X += 3) {
+    const xd = st.mode === 'manuel' ? 0 : s.x - (X - xa) / kx;
+    const e = st.mode === 'manuel' ? 0 : elev(xd);
+    colonnes.push([X, Y(e - e0), st.mode === 'manuel' ? st.solMan : surface(xd)]);
+  }
+  for (let i = 0; i < colonnes.length - 1; i++) {
+    const [X, y, su] = colonnes[i], [X2, y2] = colonnes[i + 1], S = SURF[su];
+    x.fillStyle = S.coul; x.beginPath(); x.moveTo(X, y); x.lineTo(X2, y2); x.lineTo(X2, H); x.lineTo(X, H); x.closePath(); x.fill();
+    x.strokeStyle = S.coulC; x.lineWidth = 2; x.beginPath(); x.moveTo(X, y); x.lineTo(X2 + .5, y2); x.stroke();
+    if (su === 'foret' && i % 3 === 0) { x.fillStyle = st.saison === 'hiver' && st.mode !== 'manuel' ? '#cfe0e8' : '#2f6b40'; x.beginPath(); x.moveTo(X - 4, y + 1); x.lineTo(X + 1.5, y - 9); x.lineTo(X + 7, y + 1); x.fill(); }
+    if (su === 'beton' && i % 8 === 0) { x.fillStyle = '#e5e7eb'; x.fillRect(X, y + 3, 8, 2); }
+  }
+  // l'avion : bas des roues à Y(AGL)
+  const yRoues = Y(s.agl) + (s.comp ? s.comp * 1.2 : 0);
+  // ondes : de l'antenne TX vers le sol (rouge), réfléchies vers l'antenne RX (bleu)
+  const txX = xa - 23, rxX = xa - 11, yAnt = yRoues - 9, ySol = base;
+  const S = SURF[s.surf], echo = m.portee ? S.refl : 0.15;
+  x.save();
+  x.globalAlpha = .12; x.fillStyle = K.tx; x.beginPath(); x.moveTo(txX, yAnt); x.lineTo(txX - (ySol - yAnt) * .3, ySol); x.lineTo(txX + (ySol - yAnt) * .3, ySol); x.closePath(); x.fill();
+  x.globalAlpha = 1;
+  const dist = Math.max(4, ySol - yAnt);
+  for (let k = 0; k < 4; k++) {
+    const p = (ondes + k / 4) % 1;
+    // aller (de 0 à 0,5) puis retour (de 0,5 à 1)
+    if (p < .5) {
+      const r = (p / .5) * dist; x.strokeStyle = K.tx; x.lineWidth = 2; x.globalAlpha = .9 - p;
+      x.beginPath(); x.arc(txX, yAnt, Math.max(1, r), Math.PI / 2 - .32, Math.PI / 2 + .32); x.stroke();
+    } else {
+      const q = (p - .5) / .5, r = q * dist; x.strokeStyle = K.rx; x.lineWidth = 2; x.globalAlpha = Math.max(0, (1 - q * .5) * echo);
+      x.beginPath(); x.arc(rxX, ySol, Math.max(1, r), -Math.PI / 2 - .32, -Math.PI / 2 + .32); x.stroke();
+    }
+  }
+  x.restore();
+  avionProfil(x, xa, yRoues, K.clair ? '#e5e7eb' : '#cbd5e1');
+  // flèche AGL
+  const fx = xa + (etroit ? 70 : 78); x.strokeStyle = K.text; x.fillStyle = K.text; x.lineWidth = 1.2;
+  if (s.agl > 2) { x.beginPath(); x.moveTo(fx, yRoues); x.lineTo(fx, ySol); x.stroke();
+    for (const [yy, d] of [[yRoues, 1], [ySol, -1]]) { x.beginPath(); x.moveTo(fx, yy); x.lineTo(fx - 4, yy + 6 * d); x.lineTo(fx + 4, yy + 6 * d); x.closePath(); x.fill(); } }
+  x.font = `700 ${etroit ? 12 : 13}px "IBM Plex Mono",monospace`;
+  const lib = `AGL ${fmtFt(s.agl)}`; const ly = Math.min(ySol - 8, Math.max(yRoues + 16, (yRoues + ySol) / 2));
+  x.fillText(lib, fx + 8, ly);
+  if (st.mode === 'approche') { x.font = '500 11px "IBM Plex Mono",monospace'; x.fillStyle = K.muted; x.fillText(etroit ? `/ piste ${fmtFt(s.hp)}` : `hauteur / piste ${fmtFt(s.hp)}`, fx + 8, ly + 15); }
+  if (!m.portee) { x.font = '700 12px "IBM Plex Sans",sans-serif'; x.fillStyle = K.mauvais; x.fillText('Au-delà de 2 500 ft : écho trop faible, pas de mesure', 10, H - 12); }
+  x.font = '600 11px "IBM Plex Mono",monospace'; x.fillStyle = K.tx; x.fillText('TX', txX - 18, yAnt + 14); x.fillStyle = K.rx; x.fillText('RX', rxX + 4, yAnt + 14);
+}
+
+/* ---------- indicateur à aiguille ---------- */
+// échelle : −20 à 500 ft sur 62 % du tour, 500 à 2 500 ft en logarithmique sur le reste ; 300° en tout
+function fracCadran(h) { if (h <= 500) return Math.max(0, (h + 20) / 520) * .62; return .62 + .38 * Math.log(Math.min(h, PORTEE) / 500) / Math.log(5); }
+function dessinerCadran(m) {
+  const [x, W, H] = prep($('#cadran'));
+  const cx = W / 2, cy = H / 2 + 4, R = Math.min(W, H) / 2 - 10, a0 = 120 * Math.PI / 180, A = 300 * Math.PI / 180;
+  const ang = h => a0 + A * fracCadran(h);
+  x.fillStyle = '#05080b'; x.fillRect(0, 0, W, H);
+  x.strokeStyle = '#475569'; x.lineWidth = 2; x.beginPath(); x.arc(cx, cy, R, a0, a0 + A); x.stroke();
+  x.fillStyle = '#e5e7eb'; x.strokeStyle = '#e5e7eb'; x.font = '600 11px "IBM Plex Mono",monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  const grad = [];
+  for (let h = 0; h <= 500; h += 10) grad.push([h, h % 100 === 0 ? 2 : h % 50 === 0 ? 1 : 0]);
+  for (const h of [600, 700, 800, 900, 1000, 1500, 2000, 2500]) grad.push([h, [1000, 2000, 2500].includes(h) ? 2 : 1]);
+  for (const [h, n] of grad) {
+    const a = ang(h), l = n === 2 ? 12 : n === 1 ? 8 : 4;
+    x.lineWidth = n === 2 ? 2 : 1; x.beginPath(); x.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); x.lineTo(cx + Math.cos(a) * (R - l), cy + Math.sin(a) * (R - l)); x.stroke();
+    if (n === 2) x.fillText(String(h / 100), cx + Math.cos(a) * (R - 24), cy + Math.sin(a) * (R - 24));
+  }
+  x.fillStyle = '#94a3b8'; x.font = '600 9px "IBM Plex Mono",monospace'; x.fillText('× 100 FT', cx, cy - R * .25);
+  x.fillText('RAD ALT', cx, cy - R * .38);
+  // masque au-delà de 2 500 ft
+  x.fillStyle = '#1f2937'; x.beginPath(); x.arc(cx, cy, R - 2, a0 + A + .03, a0 + A + .48); x.arc(cx, cy, R - 34, a0 + A + .48, a0 + A + .03, true); x.closePath(); x.fill();
+  // repère de DH
+  const ad = ang(st.dh); x.fillStyle = '#f59e0b'; x.beginPath();
+  x.moveTo(cx + Math.cos(ad) * (R + 2), cy + Math.sin(ad) * (R + 2)); x.lineTo(cx + Math.cos(ad - .07) * (R + 10), cy + Math.sin(ad - .07) * (R + 10)); x.lineTo(cx + Math.cos(ad + .07) * (R + 10), cy + Math.sin(ad + .07) * (R + 10)); x.closePath(); x.fill();
+  // voyant DH
+  const atteint = m.portee && m.ind <= st.dh;
+  x.beginPath(); x.arc(cx, cy + R * .6, 11, 0, 2 * Math.PI); x.fillStyle = atteint ? '#fbbf24' : '#3f3a2a'; x.fill();
+  x.fillStyle = atteint ? '#111' : '#7c6f4a'; x.font = '700 9.5px "IBM Plex Mono",monospace'; x.fillText('DH', cx, cy + R * .6);
+  // aiguille (derrière le masque au-delà de la portée)
+  const a = m.portee ? ang(Math.max(-20, m.ind)) : a0 + A + .3;
+  x.strokeStyle = '#f8fafc'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); x.moveTo(cx - Math.cos(a) * 12, cy - Math.sin(a) * 12); x.lineTo(cx + Math.cos(a) * (R - 16), cy + Math.sin(a) * (R - 16)); x.stroke();
+  x.fillStyle = '#334155'; x.beginPath(); x.arc(cx, cy, 6, 0, 2 * Math.PI); x.fill();
+  x.lineCap = 'butt'; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+}
+
+/* ---------- graphique du signal ---------- */
+function signalCourant(m) {
+  if (st.signal === 'cdf') { const fm = FB_CDF / (2 * B * m.tau); return { fm, fb: FB_CDF }; }
+  const fm = st.fm; return { fm, fb: 2 * B * fm * m.tau };
+}
+function dessinerSignal(m, s) {
+  const [x, W, H] = prep($('#graphF'));
+  const g = 46, d = 14, hautG = 16, basG = H - 30;
+  x.font = '500 10.5px "IBM Plex Mono",monospace';
+  if (st.signal === 'pulse') return dessinerImpulsions(x, W, H, m, s);
+  const { fm } = signalCourant(m), T = 1 / fm, fen = 2.5 * T;                 // fenêtre : 2,5 balayages
+  const tri = u => { const v = ((u % 1) + 1) % 1; return v < .5 ? v * 2 : 2 - v * 2; };   // 0 → 1 → 0
+  const fAt = tt => F0 - DEV + B * tri(tt * fm);
+  const X = tt => g + (W - g - d) * tt / fen, Yf = f => basG - (basG - hautG) * (f - (F0 - DEV)) / B;
+  // axes
+  x.strokeStyle = K.line2; x.lineWidth = 1; x.beginPath(); x.moveTo(g, hautG); x.lineTo(g, basG); x.lineTo(W - d, basG); x.stroke();
+  x.fillStyle = K.muted;
+  for (const f of [F0 - DEV, F0, F0 + DEV]) { const y = Yf(f); x.fillText(nf(f / 1e6), 4, y + 4); x.strokeStyle = K.line; x.setLineDash([2, 4]); x.beginPath(); x.moveTo(g, y); x.lineTo(W - d, y); x.stroke(); x.setLineDash([]); }
+  x.fillText('MHz', 4, hautG - 4);
+  x.textAlign = 'center'; for (let k = 0; k <= 5; k++) { const tt = fen * k / 5, ms = tt * 1e3; x.fillText(`${nf(ms, ms < 10 && k ? 1 : 0)} ms`, Math.min(W - d - 18, X(tt)), basG + 16); } x.textAlign = 'left';
+  // deuxième RADALT : autre taux de balayage
+  if (st.deux && st.signal === 'fmcw') {
+    const fm2 = fm * 1.37; x.strokeStyle = K.deux; x.lineWidth = 1.5; x.globalAlpha = .65; x.beginPath();
+    for (let i = 0; i <= 400; i++) { const tt = fen * i / 400, f = F0 - DEV + B * tri(tt * fm2 + .3); i ? x.lineTo(X(tt), Yf(f)) : x.moveTo(X(tt), Yf(f)); } x.stroke(); x.globalAlpha = 1;
+  }
+  // TX et RX (RX décalé du temps de l'aller-retour, agrandi)
+  const dec = m.tau * EXAG;
+  for (const [coul, dt, lw] of [[K.tx, 0, 2.4], [K.rx, dec, 2.4]]) {
+    x.strokeStyle = coul; x.lineWidth = lw; x.beginPath();
+    for (let i = 0; i <= 500; i++) { const tt = fen * i / 500, f = fAt(tt - dt); i ? x.lineTo(X(tt), Yf(f)) : x.moveTo(X(tt), Yf(f)); } x.stroke();
+  }
+  // le battement à un instant
+  const ti = T * 0.32, f1 = fAt(ti), f2 = fAt(ti - dec);
+  x.strokeStyle = K.text; x.lineWidth = 1.5; x.beginPath(); x.moveTo(X(ti), Yf(f1)); x.lineTo(X(ti), Yf(f2)); x.stroke();
+  x.fillStyle = K.text; x.font = '700 11.5px "IBM Plex Sans",sans-serif'; x.fillText('Δf = battement', X(ti) + 6, (Yf(f1) + Yf(f2)) / 2 + 4);
+  // décalage dans le temps
+  const ti2 = T * 1.2; x.strokeStyle = K.muted; x.lineWidth = 1; const yy = Yf(fAt(ti2));
+  x.beginPath(); x.moveTo(X(ti2), yy); x.lineTo(X(ti2 + dec), yy); x.stroke();
+  x.fillStyle = K.muted; x.font = '500 10.5px "IBM Plex Mono",monospace'; x.fillText(`retard ${fmtT(m.tau)}`, X(ti2) + 8, yy + 4);
+  x.fillStyle = K.tx; x.fillText('F TX', W - d - 70, hautG + 10); x.fillStyle = K.rx; x.fillText('F RX', W - d - 34, hautG + 10);
+  x.fillStyle = K.faint; x.fillText(`décalage dessiné ×${nf(EXAG, 0)}`, g + 6, hautG + 10);
+  if (st.deux && st.signal === 'fmcw') { x.fillStyle = K.deux; x.fillText('2e RADALT', W - d - 150, hautG + 10); }
+  dessinerCourbe(m, s);
+}
+function dessinerImpulsions(x, W, H, m, s) {
+  const g = 46, d = 14, hautG = 26, basG = H - 30, fen = Math.max(1.2e-6, m.tau * 1.5 + 2 * st.larg);
+  const X = tt => g + (W - g - d) * tt / fen;
+  x.strokeStyle = K.line2; x.lineWidth = 1; x.beginPath(); x.moveTo(g, hautG); x.lineTo(g, basG); x.lineTo(W - d, basG); x.stroke();
+  x.fillStyle = K.muted; x.textAlign = 'center'; for (let k = 0; k <= 5; k++) { const tt = fen * k / 5; x.fillText(fmtT(tt), Math.max(g + 10, Math.min(W - d - 22, X(tt))), basG + 16); } x.textAlign = 'left';
+  x.fillText('amplitude', 4, hautG - 10);
+  const amp = SURF[s.surf].refl * (m.portee ? Math.max(.25, 1 - s.agl / 3500) : .08);
+  const imp = (t0, a, coul) => { x.fillStyle = coul; x.globalAlpha = .85; const w = Math.max(2, X(t0 + st.larg) - X(t0)); x.fillRect(X(t0), basG - (basG - hautG) * a, w, (basG - hautG) * a); x.globalAlpha = 1; };
+  imp(0, 1, K.tx); imp(m.tau, amp, K.rx);
+  x.fillStyle = K.tx; x.font = '700 11.5px "IBM Plex Sans",sans-serif'; x.fillText('impulsion émise', X(0) + 10, hautG + 12);
+  x.fillStyle = K.rx; x.fillText('écho', X(m.tau) + 4, basG - (basG - hautG) * amp - 6);
+  x.strokeStyle = K.text; x.beginPath(); const yA = basG - 12; x.moveTo(X(0), yA); x.lineTo(X(m.tau), yA); x.stroke();
+  x.fillStyle = K.text; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(`aller-retour ${fmtT(m.tau)}`, (X(0) + X(m.tau)) / 2 - 50, yA - 5);
+  if (m.tau < st.larg * 1.6) { x.fillStyle = K.mauvais; x.fillText('près du sol, l’écho chevauche l’impulsion émise', g + 6, H - 6); }
+  dessinerCourbe(m, s);
+}
+// courbe du bas : battement (FMCW) ou taux de balayage (CDF) selon l'altitude
+function dessinerCourbe(m, s) {
+  const [x, W, H] = prep($('#graphB'));
+  const g = 52, d = 14, hautG = 16, basG = H - 28, hmax = 2500;
+  const aid = st.inst.aid;
+  const val = h => { const tau = (trajetInstalle() + 2 * h) / C_FT; return st.signal === 'cdf' ? FB_CDF / (2 * B * tau) : st.signal === 'pulse' ? tau : 2 * B * st.fm * tau; };
+  const vmax = Math.max(val(0), val(hmax));
+  const X = h => g + (W - g - d) * h / hmax, Y = v => basG - (basG - hautG) * v / vmax;
+  x.strokeStyle = K.line2; x.lineWidth = 1; x.beginPath(); x.moveTo(g, hautG); x.lineTo(g, basG); x.lineTo(W - d, basG); x.stroke();
+  x.font = '500 10.5px "IBM Plex Mono",monospace'; x.fillStyle = K.muted;
+  x.textAlign = 'center'; for (const h of [0, 500, 1000, 1500, 2000, 2500]) x.fillText(nf(h), Math.min(W - d - 16, X(h)), basG + 15); x.textAlign = 'left';
+  x.fillText('ft', W - d - 10, basG + 26);
+  const lib = st.signal === 'cdf' ? 'taux de balayage' : st.signal === 'pulse' ? 'aller-retour' : 'battement';
+  const fmt = v => st.signal === 'pulse' ? fmtT(v) : fmtF(v);
+  x.fillText(`${lib} : ${fmt(vmax)}`, g + 4, hautG + 2);
+  x.strokeStyle = st.signal === 'cdf' ? K.deux : K.rx; x.lineWidth = 2; x.beginPath();
+  for (let i = 0; i <= 300; i++) { const h = hmax * i / 300, v = val(h); i ? x.lineTo(X(h), Y(v)) : x.moveTo(X(h), Y(v)); } x.stroke();
+  const hc = Math.min(hmax, Math.max(0, s.agl - s.comp)), vc = val(hc);
+  x.fillStyle = K.text; x.beginPath(); x.arc(X(hc), Y(vc), 5, 0, 2 * Math.PI); x.fill();
+  x.fillText(fmt(vc), Math.min(W - 90, X(hc) + 8), Math.max(hautG + 14, Y(vc) - 6));
+  void aid;
+}
+function majChiffres(m, s) {
+  const cs = [];
+  if (st.signal === 'pulse') {
+    cs.push(['Aller-retour', fmtT(m.tau), `trajet électrique ${fmtFt(m.trajet)} (AID compris)`]);
+    cs.push(['Répétition', `${nf(st.prf / 1e3, 1)} kHz`, `une impulsion toutes les ${fmtT(1 / st.prf)} : bien plus long que 5 µs, aucune ambiguïté`]);
+    cs.push(['Largeur', fmtT(st.larg), 'impulsions très courtes : la précision dépend de leur largeur']);
+  } else {
+    const { fm, fb } = signalCourant(m);
+    cs.push(['Retard de l’écho', fmtT(m.tau), `trajet électrique ${fmtFt(m.trajet)} (AID compris)`]);
+    cs.push(['Taux de balayage', fmtF(fm), st.signal === 'cdf' ? 'recalculé sans arrêt pour garder le battement constant' : `pente ${nf(2 * B * fm / 1e9, 1)} MHz par ms`]);
+    cs.push(['Fréquence de battement', fmtF(fb), st.signal === 'cdf' ? 'maintenue constante (exemple : 100 kHz)' : `F TX ${nf(F0 / 1e6, 0)} MHz → F RX décalée de ${fmtF(fb)}`]);
+  }
+  cs.push(['Altitude-sol calculée', m.portee ? fmtFt(m.ind) : '— (hors portée)', st.signal === 'cdf' ? 'calculée à partir du taux de balayage' : st.signal === 'pulse' ? 'calculée à partir du temps aller-retour' : 'calculée à partir de la fréquence de battement']);
+  html('#chiffres', cs.map(([a, b, c]) => `<div class="chiffre"><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join(''));
+  // précision près du sol : variation pour 10 ft, près du sol et à 2 000 ft
+  const tauDe = h => (trajetInstalle() + 2 * h) / C_FT;
+  let ex = '';
+  if (st.signal === 'fmcw') {
+    const d1 = 2 * B * st.fm * (tauDe(50) - tauDe(40)), d2 = 2 * B * st.fm * (tauDe(2010) - tauDe(2000));
+    ex = `<b>FMCW</b> : le battement suit l'altitude en ligne droite. De 40 à 50 ft, il ne change que de <b>${fmtF(d1)}</b>, exactement comme de 2 000 à 2 010 ft (${fmtF(d2)}) : près du sol, là où on voudrait le plus de précision, la mesure n'est pas plus fine.`
+      + (st.deux ? ` <b>Deux RADALT</b> : chacun balaie à son propre taux ; l'écho de l'autre ne donne pas un battement stable et il est rejeté.` : '');
+  } else if (st.signal === 'cdf') {
+    const fmDe = h => FB_CDF / (2 * B * tauDe(h));
+    ex = `<b>CDF FMCW</b> : on fait l'inverse, le battement reste fixe et c'est le taux de balayage qui sert au calcul. Plus l'avion est haut, plus l'écho tarde, plus il faut balayer lentement. De 40 à 50 ft, le taux passe de ${fmtF(fmDe(40))} à ${fmtF(fmDe(50))} (<b>${fmtF(fmDe(40) - fmDe(50))}</b> d'écart) ; de 2 000 à 2 010 ft, de seulement ${fmtF(fmDe(2000) - fmDe(2010))} : la sensibilité est concentrée près du sol.`;
+  } else {
+    ex = `<b>Impulsions</b> : comme un DME, mais c'est le sol qui renvoie le signal. Une seule fréquence (4 300 MHz, pas de modulation), PRF de 8 à 18 kHz, largeur de 25 à 75 ns ; on mesure directement le temps aller-retour. Rare en aviation commerciale.`;
+  }
+  html('#explic', ex);
+}
+
+/* ---------- AID ---------- */
+const AIDS = [20, 40, 57, 80];
+function majAid() {
+  const I = st.inst, requis = I.V * (I.aid - 2 * I.H), inst = trajetInstalle(), err = erreurAid();
+  $('#hAntV').textContent = `${nf(I.H, 1)} ft`; $('#lTxV').textContent = `${nf(I.lTx, 1)} ft`; $('#lRxV').textContent = `${nf(I.lRx, 1)} ft`;
+  $('#formule').innerHTML = `AID = 2·H + (L<sub>TX</sub> + L<sub>RX</sub>) / V<br>${nf(I.aid)} ft voulu · installé : 2 × ${nf(I.H, 1)} + (${nf(I.lTx, 1)} + ${nf(I.lRx, 1)}) / ${nf(I.V, 2)} = <b>${nf(inst, 1)} ft</b><br>Câbles requis : L<sub>TX</sub> + L<sub>RX</sub> = (AID − 2·H) × V = <b>${nf(requis, 1)} ft</b>`;
+  const v = $('#verdict'), trop = Math.max(I.lTx, I.lRx) > 17;
+  let html, cls;
+  if (requis <= 2) { cls = 'mauvais'; html = `<b>Installation impossible</b> avec un AID de ${I.aid} ft : les antennes sont trop hautes, il faudrait ${nf(requis, 1)} ft de câble en tout. Choisir un AID plus grand.`; }
+  else if (requis / 2 > 17) { cls = 'mauvais'; html = `<b>Câbles trop longs</b> : ${nf(requis / 2, 1)} ft chacun, au-delà d'environ 17 ft. Choisir un AID plus petit.`; }
+  else if (Math.abs(err) < 0.5 && !trop) { cls = 'ok'; html = `<b>✓ Conforme</b> : au toucher des roues, l'indicateur affiche <b>0 ft</b> (écart ${nf(err, 1)} ft). Amortisseurs comprimés, il descend un peu sous 0.`; }
+  else { cls = 'mauvais'; html = `<b>Non conforme</b> : le trajet installé fait ${nf(inst, 1)} ft au lieu de ${I.aid} ft. Au toucher des roues, l'indicateur affichera <b>${err > 0 ? '+' : ''}${nf(err, 1)} ft</b> au lieu de 0${trop ? ' ; et un câble dépasse 17 ft' : ''}. Voir l'approche, en haut : toute la mesure est décalée d'autant.`; }
+  v.className = 'verdict ' + cls; v.innerHTML = html;
+  document.querySelectorAll('#bornes .borne').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === I.aid));
+}
+function dessinerAid() {
+  const [x, W, H] = prep($('#schemaAid')), I = st.inst;
+  const sol = H - 34, fus = 70, hpx = Math.min(sol - fus - 30, I.H * 7.5), yAnt = sol - hpx;
+  // fuselage
+  x.fillStyle = K.clair ? '#d8dee4' : '#26323c'; x.fillRect(16, fus - 46, W - 32, 46 + (yAnt - fus));
+  x.fillStyle = K.muted; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText('fuselage', 24, fus - 30);
+  // unité
+  const ux = W / 2 - 46, uy = fus - 40; x.fillStyle = K.panel; x.strokeStyle = K.line2; x.lineWidth = 1.5; x.fillRect(ux, uy, 92, 30); x.strokeRect(ux, uy, 92, 30);
+  x.fillStyle = K.text; x.font = '700 12px "IBM Plex Sans",sans-serif'; x.fillText('Unité RADALT', ux + 6, uy + 19);
+  // bornes de configuration
+  AIDS.forEach((a, k) => { x.fillStyle = a === I.aid ? K.ok : K.faint; x.fillRect(ux + 8 + k * 20, uy + 30, 8, 6); });
+  // antennes
+  const txX = W * .3, rxX = W * .7;
+  x.fillStyle = K.tx; x.fillRect(txX - 14, yAnt, 28, 6); x.fillStyle = K.rx; x.fillRect(rxX - 14, yAnt, 28, 6);
+  x.font = '700 11px "IBM Plex Mono",monospace'; x.fillStyle = K.tx; x.fillText('TX', txX - 8, yAnt + 18); x.fillStyle = K.rx; x.fillText('RX', rxX - 8, yAnt + 18);
+  // câbles (longueur dessinée ∝ longueur réelle, en boucle si besoin)
+  const cable = (x0, coul, L) => {
+    const lpx = L * 9, dx = x0 - (ux + (x0 < W / 2 ? 0 : 92)), droit = Math.hypot(dx, yAnt - uy - 15);
+    x.strokeStyle = coul; x.lineWidth = 3; x.beginPath(); x.moveTo(x0 < W / 2 ? ux : ux + 92, uy + 15);
+    const mx = (x0 + (x0 < W / 2 ? ux : ux + 92)) / 2, my = (yAnt + uy + 15) / 2 + Math.max(0, (lpx - droit) * .45);
+    x.quadraticCurveTo(mx, my, x0, yAnt); x.stroke();
+    x.fillStyle = coul; x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(`L ${nf(L, 1)} ft`, mx - 26, Math.min(yAnt - 6, my / 2 + yAnt / 2 - 10));
+  };
+  cable(txX, K.tx, I.lTx); cable(rxX, K.rx, I.lRx);
+  // sol
+  x.fillStyle = K.clair ? '#9ca3af' : '#3f4a54'; x.fillRect(0, sol, W, H - sol);
+  x.fillStyle = K.muted; x.fillText('sol (roues touchent, sans compression)', 10, H - 10);
+  // trajet au sol : H aller, H retour
+  x.strokeStyle = K.tx; x.setLineDash([5, 4]); x.lineWidth = 1.6; x.beginPath(); x.moveTo(txX, yAnt + 6); x.lineTo((txX + rxX) / 2, sol); x.stroke();
+  x.strokeStyle = K.rx; x.beginPath(); x.moveTo((txX + rxX) / 2, sol); x.lineTo(rxX, yAnt + 6); x.stroke(); x.setLineDash([]);
+  x.strokeStyle = K.text; x.lineWidth = 1; x.beginPath(); x.moveTo(W - 30, yAnt); x.lineTo(W - 30, sol); x.stroke();
+  x.fillStyle = K.text; x.fillText(`H ${nf(I.H, 1)} ft`, W - 92, (yAnt + sol) / 2);
+  x.fillStyle = K.muted; x.fillText('aller : H, retour : H', (txX + rxX) / 2 - 64, sol - 8);
+}
+
+/* ---------- tension analogique ---------- */
+const NORMES = {
+  mil: { nom: 'Militaire', f: h => 0.2 + 0.01 * h, txt: 'V = 0,2 + 0,01·h' },
+  gen: { nom: 'Générale', f: h => h <= 500 ? 0.4 + 0.02 * h : 10.4 + 0.003 * (h - 500), txt: 'V = 0,4 + 0,02·h (0–500 ft) ; V = 10,4 + 0,003·(h − 500) au-delà' },
+  arinc: { nom: 'ARINC', f: h => h <= 480 ? 0.4 + 0.02 * h : 10 * Math.log((h + 20) * Math.E / 500), txt: 'V = 0,4 + 0,02·h (0–480 ft) ; V = 10·ln((h + 20)·e / 500) au-delà' },
+};
+function dessinerTension(m, s) {
+  const [x, W, H] = prep($('#graphV'));
+  const g = 46, d = 16, hautG = 14, basG = H - 30, vmax = 30, hmax = 2500;
+  const X = h => g + (W - g - d) * h / hmax, Y = v => basG - (basG - hautG) * v / vmax;
+  x.strokeStyle = K.line2; x.lineWidth = 1; x.beginPath(); x.moveTo(g, hautG); x.lineTo(g, basG); x.lineTo(W - d, basG); x.stroke();
+  x.font = '500 10.5px "IBM Plex Mono",monospace'; x.fillStyle = K.muted;
+  for (const v of [0, 10, 20, 30]) { x.fillText(`${v} V`, 6, Y(v) + 4); x.strokeStyle = K.line; x.setLineDash([2, 4]); x.beginPath(); x.moveTo(g, Y(v)); x.lineTo(W - d, Y(v)); x.stroke(); x.setLineDash([]); }
+  x.textAlign = 'center'; for (const h of [0, 500, 1000, 1500, 2000, 2500]) x.fillText(nf(h), Math.min(W - d - 16, X(h)), basG + 15); x.textAlign = 'left';
+  x.fillText('altitude-sol (ft)', W - d - 120, basG + 26);
+  const coul = { mil: K.muted, gen: K.deux, arinc: K.rx };
+  for (const [k, N] of Object.entries(NORMES)) {
+    x.strokeStyle = coul[k]; x.lineWidth = k === st.norme ? 3 : 1.4; x.globalAlpha = k === st.norme ? 1 : .55; x.beginPath();
+    for (let i = 0; i <= 300; i++) { const h = hmax * i / 300; i ? x.lineTo(X(h), Y(N.f(h))) : x.moveTo(X(h), Y(N.f(h))); } x.stroke(); x.globalAlpha = 1;
+    const hl = { mil: 2200, gen: 1900, arinc: 1300 }[k]; x.fillStyle = coul[k]; x.font = `${k === st.norme ? 700 : 500} 11px "IBM Plex Mono",monospace`; x.fillText(N.nom, X(hl), Y(N.f(hl)) + (k === 'arinc' ? -8 : 15)); x.font = '500 10.5px "IBM Plex Mono",monospace';
+  }
+  if (m.portee) { const h = Math.max(0, Math.min(hmax, m.ind)), v = NORMES[st.norme].f(h); x.fillStyle = K.text; x.beginPath(); x.arc(X(h), Y(v), 5, 0, 2 * Math.PI); x.fill(); x.fillText(`${nf(v, 2)} V`, X(h) + 8, Y(v) - 8); }
+}
+
+/* ---------- affichage d'ensemble ---------- */
+let dernier = 0;
+const cache = new Map();
+function html(sel, h) { if (cache.get(sel) !== h) { cache.set(sel, h); $(sel).innerHTML = h; } }   // n'écrit que si ça change
+function majTextes(s, m) {
+  const ind = m.ind, atteint = m.portee && ind <= st.dh;
+  html('#pfdRa', `<small>RA</small>${m.portee ? nf(Math.round(ind)) : '———'}`);
+  const dh = $('#pfdDh'); dh.textContent = atteint ? 'DH' : `DH ${nf(st.dh)}`; dh.className = 'dh' + (atteint ? ' atteint' : '');
+  $('#pfdEtat').textContent = m.portee ? s.phase : 'hors portée : pas de donnée';
+  $('#dhVal').textContent = `${nf(st.dh)} ft`;
+  const S = SURF[s.surf];
+  html('#etatSol', `<span>Phase : <b>${s.phase}</b></span><span>Surface : <b>${S.nom}</b></span><span>Écho : <span class="barre"><i style="width:${Math.round((m.portee ? S.refl : .1) * 100)}%"></i></span></span>`
+    + (st.mode === 'approche' ? `<span>Relief sous l'avion : <b>${s.e >= 0 ? '+' : '−'}${nf(Math.abs(Math.round(s.e)))} ft</b> / piste</span>` : '')
+    + (Math.abs(erreurAid()) >= 0.5 ? `<span style="color:var(--mauvais)">Erreur d'AID : <b>${erreurAid() > 0 ? '+' : ''}${nf(erreurAid(), 1)} ft</b></span>` : ''));
+  const N = NORMES[st.norme];
+  html('#sorties', `<div><span>ARINC 429 · étiquette 164</span><b>${m.portee ? nf(ind, 1) + ' ft' : 'NCD'}</b></div>`
+    + `<div><span>Tension (${N.nom})</span><b>${m.portee ? nf(N.f(Math.max(0, ind)), 2) + ' V' : '—'}</b></div>`
+    + `<div><span>Fréquence de battement</span><b>${st.signal === 'pulse' ? '—' : fmtF(signalCourant(m).fb)}</b></div>`);
+  $('#formuleV').textContent = N.txt;
+  html('#horloge', st.mode === 'approche' ? `${nf(st.t, 0)} s<small>toucher dans ${nf(Math.max(0, TTD - st.t), 0)} s</small>` : `—<small>altitude au choix</small>`);
+  $('#temps').value = st.t;
+}
+function tout() {
+  const s = situation(st.t), m = mesure(s);
+  dessinerScene(s, m); dessinerCadran(m); dessinerSignal(m, s); majChiffres(m, s); dessinerTension(m, s); majTextes(s, m);
+}
+function boucle(now) {
+  const dt = Math.min(0.1, (now - (dernier || now)) / 1000); dernier = now;
+  if (!reduit) ondes = (ondes + dt * 0.9) % 1;
+  if (st.joue && st.mode === 'approche') { st.t += dt * st.vitesse; if (st.t >= DUREE) { st.t = DUREE; st.joue = false; majPP(); } }
+  tout();
+  requestAnimationFrame(boucle);
+}
+
+/* ---------- repères de la ligne de temps ---------- */
+function reperes() {
+  const r = [];
+  let t25 = null, tdh = null;
+  for (let t = 0; t <= DUREE; t += 0.2) { const s = situation(t); if (t25 === null && s.agl <= PORTEE) t25 = t; if (tdh === null && s.agl <= st.dh) tdh = t; }
+  if (t25 !== null) r.push(['2 500 ft', t25, '#64748b']);
+  if (tdh !== null) r.push(['DH', tdh, '#d97706']);
+  r.push(['Toucher', TTD, '#15803d']);
+  $('#reperes').innerHTML = r.map(([l, t, c]) => `<b style="left:${(t / DUREE * 100).toFixed(2)}%;background:${c}" data-t="${t}" tabindex="0" role="button">${l}</b>`).join('');
+  $('#reperes').querySelectorAll('b').forEach(b => b.onclick = () => { st.t = Math.max(0, +b.dataset.t - 3); tout(); });
+}
+
+/* ---------- commandes ---------- */
+function groupe(sel, f) {
+  document.querySelectorAll(sel + ' .btn').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(sel + ' .btn').forEach(o => o.setAttribute('aria-pressed', o === b)); f(b.dataset.v);
+  }));
+}
+function majPP() { $('#pp').textContent = st.joue ? '⏸' : '▶'; $('#pp').setAttribute('aria-label', st.joue ? 'Pause' : 'Lecture'); }
+groupe('#modes', v => { st.mode = v; $('#regApproche').hidden = v !== 'approche'; $('#regManuel').hidden = v !== 'manuel'; $('#lecteur').style.display = v === 'approche' ? '' : 'none'; tout(); });
+groupe('#saisons', v => { st.saison = v; tout(); });
+groupe('#vitesses', v => { st.vitesse = +v; });
+groupe('#types', v => { st.signal = v; $('#regFmcw').hidden = v !== 'fmcw'; $('#regPulse').hidden = v !== 'pulse'; tout(); });
+groupe('#normes', v => { st.norme = v; tout(); });
+$('#pp').onclick = () => { if (!st.joue && st.t >= DUREE - .05) st.t = 0; st.joue = !st.joue; majPP(); };
+$('#debut').onclick = () => { st.t = 0; tout(); };
+$('#temps').max = DUREE;
+$('#temps').addEventListener('input', e => { st.t = +e.target.value; st.joue = false; majPP(); tout(); });
+$('#solMan').innerHTML = Object.entries(SURF).map(([k, S]) => `<option value="${k}"${k === 'herbe' ? ' selected' : ''}>${S.nom}</option>`).join('');
+$('#solMan').onchange = e => { st.solMan = e.target.value; };
+$('#aglMan').oninput = e => { st.aglMan = +e.target.value; $('#aglManV').textContent = `${nf(st.aglMan)} ft`; };
+$('#fm').oninput = e => { st.fm = +e.target.value; $('#fmV').textContent = `${st.fm} Hz`; };
+$('#deux').onchange = e => { st.deux = e.target.checked; };
+$('#prf').oninput = e => { st.prf = +e.target.value * 1e3; $('#prfV').textContent = `${nf(+e.target.value, 1)} kHz`; };
+$('#larg').oninput = e => { st.larg = +e.target.value * 1e-9; $('#largV').textContent = `${e.target.value} ns`; };
+const regDh = v => { st.dh = Math.max(0, Math.min(1000, v)); reperes(); };
+$('#dhMoins').onclick = () => regDh(st.dh - (st.dh > 200 ? 50 : 10));
+$('#dhPlus').onclick = () => regDh(st.dh + (st.dh >= 200 ? 50 : 10));
+document.querySelectorAll('[data-dh]').forEach(b => b.onclick = () => regDh(+b.dataset.dh));
+$('#bornes').innerHTML = AIDS.map(a => `<button class="borne" type="button" data-v="${a}">${a} ft<small>borne ${AIDS.indexOf(a) + 1}</small></button>`).join('');
+$('#bornes').querySelectorAll('.borne').forEach(b => b.onclick = () => { st.inst.aid = +b.dataset.v; aidChange(); });
+const curseurAid = (id, cle) => { $(id).oninput = e => { st.inst[cle] = +e.target.value; aidChange(); }; };
+curseurAid('#hAnt', 'H'); curseurAid('#lTx', 'lTx'); curseurAid('#lRx', 'lRx');
+$('#vCable').onchange = e => { st.inst.V = +e.target.value; aidChange(); };
+$('#couper').onclick = () => { const r = st.inst.V * (st.inst.aid - 2 * st.inst.H) / 2; if (r <= 0) return; st.inst.lTx = st.inst.lRx = Math.round(r * 10) / 10; $('#lTx').value = $('#lRx').value = st.inst.lTx; aidChange(); };
+function aidChange() { majAid(); dessinerAid(); }
+
+couleurs(); majPP(); reperes(); aidChange(); tout();
+requestAnimationFrame(boucle);
+addEventListener('resize', () => { dessinerAid(); tout(); });
+addEventListener('themechange', () => { couleurs(); dessinerAid(); tout(); });
+new MutationObserver(() => { couleurs(); dessinerAid(); tout(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
+<script src="version.js"></script>
+</body>
+</html>
