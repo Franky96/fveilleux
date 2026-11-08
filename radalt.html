@@ -64,14 +64,28 @@ canvas{display:block;width:100%}
 
 /* scène et instruments */
 .lecteur{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
+.lecteur[hidden]{display:none}
 .horloge{font:600 14px var(--f-mono);min-width:96px}
 .horloge small{display:block;font:500 11px var(--f-mono);color:var(--muted)}
 .ligne-temps{flex:1 1 260px;position:relative;padding-top:18px}
 .ligne-temps input{width:100%;accent-color:var(--c);margin:0}
 .reperes{position:absolute;top:0;left:0;right:0;height:16px}
 .reperes b{position:absolute;top:0;transform:translateX(-50%);font:700 9.5px var(--f-mono);padding:0 3px;border-radius:4px;color:#fff;white-space:nowrap;cursor:pointer}
-.vol{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
-#scene{height:420px;border-radius:12px;background:#0b1a24}
+#scene{height:540px;border-radius:12px;background:#0b1a24}
+.mesures{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:8px;margin-top:10px}
+.mesure{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.mesure span{display:block;font:600 11px var(--f-mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.mesure b{font:700 19px var(--f-mono);display:flex;align-items:center;gap:8px}
+.mesure b i{width:16px;height:16px;border-radius:50%;display:inline-block;flex:none}
+.mesure small{display:block;color:var(--muted);font-size:12.5px}
+details.repli>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px}
+details.repli>summary::-webkit-details-marker{display:none}
+details.repli>summary h2{font-size:21px;display:inline}
+details.repli>summary h2::before{content:'▸ ';color:var(--muted)}
+details.repli[open]>summary h2::before{content:'▾ '}
+details.repli>summary span{color:var(--muted);font-size:13.5px}
+details.repli[open]>summary{margin-bottom:8px}
+.instr-zone .instr{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px;align-items:start}
 html.light #scene{background:#dbe9f3}
 .instr{display:flex;flex-direction:column;gap:10px}
 .cadran{background:#05080b;border-radius:14px;border:1px solid var(--line2);padding:8px}
@@ -136,8 +150,8 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
 .note p,.note li{margin:0 0 5px;font-size:13.5px}
 .note ul{margin:0;padding-left:18px}
 .note a{color:var(--rx)}
-@media (max-width:980px){.vol,.sig,.aid{grid-template-columns:1fr}.instr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#scene{height:340px}}
-@media (max-width:620px){.instr{grid-template-columns:1fr}#scene{height:300px}.pfd .ra{font-size:26px}}
+@media (max-width:980px){.sig,.aid{grid-template-columns:1fr}#scene{height:440px}}
+@media (max-width:620px){.instr-zone .instr{grid-template-columns:1fr}#scene{height:400px}.pfd .ra{font-size:26px}}
 </style>
 <link rel="stylesheet" href="fond.css">
 <script src="topbar.js" defer></script>
@@ -145,23 +159,27 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
 <body data-retour="informatique.html" data-retour-nom="Informatique">
 <div data-topbar><h1>Radio-altimètre</h1></div>
 <div class="wrap">
-<p class="intro">Le <b>radio-altimètre</b> (RADALT) mesure l'<b>altitude-sol (AGL)</b> : il envoie vers le sol une onde de <b>4 300 MHz</b> et mesure le temps qu'elle met à revenir. L'onde est continue et <b>modulée en fréquence (FMCW)</b> : comme la fréquence émise change sans arrêt, l'écho revient avec une fréquence un peu « en retard » ; cet écart, la <b>fréquence de battement</b>, donne la hauteur. Portée : <b>2 500 ft</b>. Suis l'approche, puis regarde le signal, le délai d'installation (AID) et les sorties vers les instruments.</p>
+<p class="intro">Le <b>radio-altimètre</b> (RADALT) mesure l'<b>altitude-sol (AGL)</b> : il envoie vers le sol une onde de <b>4 300 MHz</b> et mesure le temps qu'elle met à revenir. L'onde est continue et <b>modulée en fréquence (FMCW)</b> : comme la fréquence émise change sans arrêt, l'écho revient avec une fréquence un peu « en retard » ; cet écart, la <b>fréquence de battement</b>, donne la hauteur. Portée : <b>2 500 ft</b>. Regarde les ondes rebondir sur le sol ; les instruments, les graphiques, l'AID et les sorties sont dans les sections repliées, plus bas.</p>
 
 <section class="panel" aria-labelledby="t-vol">
-  <h2 id="t-vol">En approche</h2>
-  <p class="sous">Vue de côté. L'avion descend sur le plan de 3° vers la piste ; le sol sous lui change (forêt, lac, crête, champs, piste). L'échelle verticale est dilatée près du sol. Les ondes sont ralenties pour être visibles : en vrai, l'aller-retour dure de 60 ns à 5 µs.</p>
+  <h2 id="t-vol">Les ondes</h2>
+  <p class="sous">L'antenne <b style="color:var(--tx)">TX</b> émet sans arrêt vers le sol ; l'onde rebondit et revient à l'antenne <b style="color:var(--rx)">RX</b>. Chaque front d'onde garde la <b>couleur de la fréquence</b> à laquelle il est parti (rouge 4 230 MHz → violet 4 370 MHz, et retour) et des fronts plus serrés quand la fréquence est plus haute. Comme la fréquence émise change pendant l'aller-retour, l'écho qui revient n'a plus la couleur de ce que TX émet au même moment : ce <b>décalage</b> donne la hauteur. Tout est très ralenti (en vrai, l'aller-retour dure de 60 ns à 5 µs).</p>
   <div class="reg">
     <div><p class="lab">Mode</p><div class="choix" id="modes">
-      <button class="btn" type="button" data-v="approche" aria-pressed="true">Approche et atterrissage</button>
-      <button class="btn" type="button" data-v="manuel" aria-pressed="false">Altitude au choix</button></div></div>
-    <div id="regApproche"><p class="lab">Saison</p><div class="choix" id="saisons">
-      <button class="btn" type="button" data-v="ete" aria-pressed="true">Été<small>herbe, lac</small></button>
-      <button class="btn" type="button" data-v="hiver" aria-pressed="false">Hiver<small>neige, lac gelé</small></button></div></div>
-    <div id="regManuel" hidden><p class="lab">Altitude-sol et surface</p>
+      <button class="btn" type="button" data-v="manuel" aria-pressed="true">Altitude au choix</button>
+      <button class="btn" type="button" data-v="approche" aria-pressed="false">Approche et atterrissage</button></div></div>
+    <div id="regManuel"><p class="lab">Altitude-sol et surface</p>
       <div class="curseur"><span>AGL</span><input type="range" id="aglMan" min="0" max="3000" step="1" value="800" aria-label="Altitude-sol"><output id="aglManV">800 ft</output></div>
       <select class="sel" id="solMan" aria-label="Surface sous l'avion"></select></div>
+    <div id="regApproche" hidden><p class="lab">Saison</p><div class="choix" id="saisons">
+      <button class="btn" type="button" data-v="ete" aria-pressed="true">Été<small>herbe, lac</small></button>
+      <button class="btn" type="button" data-v="hiver" aria-pressed="false">Hiver<small>neige, lac gelé</small></button></div></div>
+    <div><p class="lab">Ondes</p><div class="choix" id="vOndes">
+      <button class="btn" type="button" data-v="0" aria-pressed="false">⏸ Figer</button>
+      <button class="btn" type="button" data-v="0.4" aria-pressed="false">Lent</button>
+      <button class="btn" type="button" data-v="1" aria-pressed="true">Normal</button></div></div>
   </div>
-  <div class="lecteur" id="lecteur">
+  <div class="lecteur" id="lecteur" hidden>
     <button class="btn rond" id="pp" type="button" aria-label="Lecture">▶</button>
     <button class="btn rond" id="debut" type="button" aria-label="Recommencer">⏮</button>
     <div class="horloge" id="horloge">0 s<small></small></div>
@@ -172,11 +190,14 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
       <button class="btn" type="button" data-v="8" aria-pressed="false">×8</button></div>
     <div class="ligne-temps"><div class="reperes" id="reperes"></div><input type="range" id="temps" min="0" max="250" step="0.1" value="0" aria-label="Temps"></div>
   </div>
-  <div class="vol">
-    <div>
-      <canvas id="scene" aria-label="Vue de côté de l'avion, des ondes et du sol"></canvas>
-      <div class="etat-sol" id="etatSol"></div>
-    </div>
+  <canvas id="scene" aria-label="Vue de côté : l'avion, les ondes émises et réfléchies par le sol"></canvas>
+  <div class="mesures" id="mesures"></div>
+  <div class="etat-sol" id="etatSol"></div>
+</section>
+
+<details class="panel repli" id="dInstr">
+  <summary><h2>Instruments</h2><span>indicateur à aiguille, hauteur de décision (DH), écran, sorties</span></summary>
+  <div class="instr-zone">
     <div class="instr">
       <div class="cadran"><canvas id="cadran" aria-label="Indicateur d'altitude-sol"></canvas>
         <div class="dh-reg"><span class="lab" style="margin:0;color:#93a3ae">DH</span>
@@ -188,10 +209,10 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
       </div>
     </div>
   </div>
-</section>
+</details>
 
-<section class="panel" aria-labelledby="t-sig">
-  <h2 id="t-sig">Le signal</h2>
+<details class="panel repli" id="d-t-sig">
+  <summary><h2 id="t-sig">Le signal</h2><span>graphiques FMCW, CDF FMCW, impulsions</span></summary>
   <p class="sous">Fréquence dans le temps (et non l'amplitude). En rouge, la fréquence émise (F<sub>TX</sub>) ; en bleu, la fréquence reçue (F<sub>RX</sub>) : la même, décalée du temps de l'aller-retour. Le décalage est agrandi pour être visible ; il suit l'altitude de la scène du haut. Le curseur pointillé lit les deux fréquences au même instant (en vrai, le balayage se fait 50 à 160 fois par seconde).</p>
   <div class="reg">
     <div><p class="lab">Type de signal</p><div class="choix" id="types">
@@ -209,10 +230,10 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
     <div><canvas id="graphF" aria-label="Fréquence émise et reçue dans le temps"></canvas><div class="choix curs" id="vCurseur"><span class="lab" style="margin:0 4px 0 0">Curseur</span><button class="btn" type="button" data-v="0" aria-pressed="false">⏸ Arrêté</button><button class="btn" type="button" data-v="120" aria-pressed="false">Très lent</button><button class="btn" type="button" data-v="40" aria-pressed="true">Lent</button><button class="btn" type="button" data-v="15" aria-pressed="false">Rapide</button></div><div class="freqs" id="freqs" aria-live="off"></div><canvas id="graphB" aria-label="Fréquence de battement ou taux de balayage selon l'altitude"></canvas></div>
     <div><div class="chiffres" id="chiffres"></div><p class="explic" id="explic"></p></div>
   </div>
-</section>
+</details>
 
-<section class="panel" aria-labelledby="t-aid">
-  <h2 id="t-aid">AID : le délai d'installation</h2>
+<details class="panel repli" id="d-t-aid">
+  <summary><h2 id="t-aid">AID : le délai d'installation</h2><span>câbles, antennes et bornes de configuration</span></summary>
   <p class="sous">Même au sol, l'onde parcourt le câble jusqu'à l'antenne TX, descend au sol, remonte à l'antenne RX, puis parcourt le câble jusqu'à l'unité. L'unité doit retrancher ce trajet fixe pour afficher <b>0 ft quand les roues principales touchent</b> (amortisseurs non comprimés). On lui donne la valeur en mettant à la masse une borne de configuration (<i>strapping</i>) ; l'installation doit ensuite y correspondre, par la longueur des câbles.</p>
   <div class="aid">
     <canvas id="schemaAid" aria-label="Schéma de l'installation : unité, câbles, antennes et sol"></canvas>
@@ -231,10 +252,10 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
       <div class="verdict" id="verdict"></div>
     </div>
   </div>
-</section>
+</details>
 
-<section class="panel" aria-labelledby="t-sortie">
-  <h2 id="t-sortie">Sortie vers les instruments</h2>
+<details class="panel repli" id="d-t-sortie">
+  <summary><h2 id="t-sortie">Sortie vers les instruments</h2><span>ARINC 429 et tension analogique</span></summary>
   <p class="sous">L'unité envoie l'altitude-sol aux afficheurs et aux systèmes qui en ont besoin (TCAS, TAWS, pilote automatique) : en numérique par <a href="arinc429.html" style="color:var(--rx)">ARINC 429</a> (étiquette 164), ou, sur les systèmes plus anciens, par une <b>tension analogique</b> qui fait bouger l'aiguille. Trois codages existent (formules à ne pas retenir) :</p>
   <div class="reg">
     <div><p class="lab">Codage analogique</p><div class="choix" id="normes">
@@ -244,7 +265,7 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
     <div class="formule" id="formuleV" style="align-self:end"></div>
   </div>
   <canvas id="graphV" aria-label="Tension selon l'altitude-sol pour les trois codages"></canvas>
-</section>
+</details>
 
 <div class="notes">
   <div class="note"><h3>En bref</h3><ul>
@@ -284,7 +305,7 @@ const TAU_MAX = 5100 / C_FT;     // trajet le plus long dessiné (2 500 ft + AID
 const EXAG = 0.18 / (100 * TAU_MAX); // agrandissement du décalage dans le graphique
 
 /* ---------- état ---------- */
-const st = { mode: 'approche', saison: 'ete', t: 0, joue: true, vitesse: 4, aglMan: 800, solMan: 'herbe', dh: 200,
+const st = { mode: 'manuel', saison: 'ete', t: 0, joue: false, vitesse: 4, aglMan: 800, solMan: 'herbe', dh: 200,
   signal: 'fmcw', fm: 100, deux: false, prf: 12e3, larg: 50e-9, norme: 'arinc',
   inst: { aid: 40, H: 8, V: 0.69, lTx: 8.3, lRx: 8.3 } };
 const SURF = {
@@ -369,7 +390,6 @@ function fmtT(s) { return s >= 1e-3 ? `${nf(s * 1e3, 2)} ms` : s >= 1e-6 ? `${nf
 // échelle verticale dilatée près du sol (log), la même pour l'avion et le relief, par rapport au sol sous l'avion
 const LMAX = Math.log(1 + 3200 / 40);
 const lg = h => Math.sign(h) * Math.log(1 + Math.abs(h) / 40) / LMAX;
-let ondes = 0;
 // instant lu sur le graphique du signal : un curseur qui parcourt la fenêtre (2,5 balayages) en `dureeCurseur` secondes
 // (boutons Arrêté / Très lent / Lent / Rapide ; « Lent », 40 s, par défaut, demande de l'utilisateur)
 let curseur = 0.13, dureeCurseur = 40;
@@ -380,50 +400,92 @@ function lecture(m) {
   const fA = tt => F0 - DEV + B * tri(tt * fm);
   return { ti, T, fen, fm, fTx: fA(ti), fRx: fA(ti - m.tau), monte: ((ti * fm) % 1) < .5 };
 }
-function avionProfil(x, cx, cy, coul) {   // cy = bas des roues ; nez vers la droite
-  x.save(); x.translate(cx, cy);
+/* ---------- les ondes ----------
+   Fronts d'onde émis sans arrêt par TX, à chaque période de l'onde (ralentie) : chacun garde la fréquence à laquelle il
+   est parti (couleur, et fronts plus serrés quand la fréquence est haute). Il descend en arc depuis TX ; au sol, il se
+   réfléchit : le front réfléchi est un arc centré sur l'image de TX sous le sol (miroir), qui remonte vers RX. */
+const V_ONDE = 200;                 // px/s à l'écran
+const P_SW = 24;                    // s : un balayage complet (montée + descente) dans l'animation
+let tA = 0, phaseOnde = 0, fronts = [], vOndes = reduit ? 0.4 : 1, dernierRecu = null;
+const fAnim = t => F0 - DEV + B * tri(t / P_SW);
+const lambdaPx = f => 34 - 18 * (f - (F0 - DEV)) / B;     // 34 px à 4 230 MHz, 16 px à 4 370 MHz
+const couleurF = (f, a = 1) => `hsla(${(280 * (f - (F0 - DEV)) / B).toFixed(0)},90%,${K.clair ? 44 : 62}%,${a})`;
+const mhz = f => `${nf(f / 1e6, 1)} MHz`;
+function avancerOndes(dt) {
+  if (!vOndes) return;
+  dt *= vOndes; tA += dt;
+  phaseOnde += dt * V_ONDE / lambdaPx(fAnim(tA));
+  while (phaseOnde >= 1) { phaseOnde -= 1; fronts.push({ t: tA, f: fAnim(tA) }); }
+  if (fronts.length > 300) fronts.splice(0, fronts.length - 300);
+}
+function dessinerOndes(x, W, txX, rxX, yAnt, ySol, s, m) {
+  const D = Math.max(6, ySol - yAnt), S = SURF[s.surf];
+  const lisse = ['eau', 'glace', 'beton'].includes(s.surf);
+  const att = m.portee ? Math.max(0.3, 1 - s.agl / 3200) : 0.07;        // l'écho s'affaiblit avec la distance
+  const echo = Math.min(1, S.refl * att * 1.05);
+  const imgY = ySol + D, dRx = Math.hypot(rxX - txX, 2 * D), dir = Math.atan2(yAnt - imgY, rxX - txX);
+  // faisceau très pâle
+  x.save(); x.globalAlpha = K.clair ? .07 : .06; x.fillStyle = K.text;
+  x.beginPath(); x.moveTo(txX, yAnt); x.lineTo(txX - D * Math.tan(.42), ySol); x.lineTo(txX + D * Math.tan(.42), ySol); x.closePath(); x.fill(); x.restore();
+  x.save(); x.beginPath(); x.rect(0, 0, W, ySol); x.clip();
+  for (const c of fronts) {
+    const d = V_ONDE * (tA - c.t); if (d <= 0) continue;
+    if (d < D / Math.cos(.42)) {                                   // aller : arc centré sur TX
+      x.strokeStyle = couleurF(c.f, .95); x.lineWidth = 2.4; x.beginPath(); x.arc(txX, yAnt, d, Math.PI / 2 - .42, Math.PI / 2 + .42); x.stroke();
+    }
+    if (d > D - 2 && d < D + 10) {                                 // impact au sol
+      x.fillStyle = couleurF(c.f, .45 * (1 - Math.abs(d - D) / 12)); x.beginPath(); x.ellipse(txX + (rxX - txX) / 2, ySol, 26, 4, 0, 0, 2 * Math.PI); x.fill();
+    }
+    if (d > D && d < dRx + 4) {                                    // retour : arc centré sur l'image de TX
+      const ouv = lisse ? .3 : .38, a = lisse ? echo : echo * .8;
+      x.strokeStyle = couleurF(c.f, a); x.lineWidth = 2.4; x.beginPath(); x.arc(txX, imgY, d, dir - ouv, dir + ouv); x.stroke();
+      const r = d - D;                                             // sol rugueux : une partie repart dans toutes les directions,
+      if (!lisse && r < 70) {                                      // en petits arcs pâles autour du point d'impact
+        x.strokeStyle = couleurF(c.f, echo * .35 * (1 - r / 70)); x.lineWidth = 1.3; x.beginPath(); x.arc(txX + (rxX - txX) / 2, ySol, r, -Math.PI + .15, -.15); x.stroke();
+      }
+    }
+    if (!c.recu && d >= dRx) { c.recu = true; if (m.portee) dernierRecu = { f: c.f, t: tA }; }
+  }
+  x.restore();
+  fronts = fronts.filter(c => V_ONDE * (tA - c.t) < dRx + 40);
+  if (!m.portee && dernierRecu && tA - dernierRecu.t > 1) dernierRecu = null;
+}
+function avionProfil(x, cx, cy, coul, e = 1) {   // cy = bas des roues ; nez vers la droite
+  x.save(); x.translate(cx, cy); x.scale(e, e);
   x.fillStyle = coul; x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 1;
-  // fuselage
   x.beginPath(); x.moveTo(-58, -26); x.lineTo(40, -26); x.quadraticCurveTo(62, -24, 66, -17); x.quadraticCurveTo(60, -10, 40, -9); x.lineTo(-48, -9); x.lineTo(-62, -18); x.closePath(); x.fill(); x.stroke();
-  // dérive et empennage
   x.beginPath(); x.moveTo(-50, -26); x.lineTo(-64, -50); x.lineTo(-54, -50); x.lineTo(-34, -26); x.closePath(); x.fill(); x.stroke();
-  // aile (vue de côté) et moteur
   x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(-10, -14, 34, 4);
   x.fillStyle = coul; x.beginPath(); x.ellipse(10, -6, 11, 4.5, 0, 0, 2 * Math.PI); x.fill(); x.stroke();
-  // hublots
   x.fillStyle = 'rgba(255,255,255,.55)'; for (let i = -38; i < 34; i += 7) x.fillRect(i, -22, 3, 3);
-  // trains
   x.strokeStyle = '#6b7280'; x.lineWidth = 2.2; x.beginPath(); x.moveTo(4, -9); x.lineTo(4, -3); x.moveTo(48, -9); x.lineTo(48, -3); x.stroke();
   x.fillStyle = '#111827'; for (const gx of [4, 48]) { x.beginPath(); x.arc(gx, -2.5, 2.6, 0, 2 * Math.PI); x.fill(); }
-  // antennes TX et RX sous le fuselage
-  x.fillStyle = K.tx; x.fillRect(-26, -9, 6, 3); x.fillStyle = K.rx; x.fillRect(-14, -9, 6, 3);
   x.restore();
+}
+function etiquette(x, txt, px, py, coul, align) {
+  x.font = '700 12px "IBM Plex Mono",monospace'; const w = x.measureText(txt).width, x0 = align === 'right' ? px - w : px;
+  x.fillStyle = K.clair ? 'rgba(255,255,255,.85)' : 'rgba(5,10,15,.78)'; x.beginPath(); x.roundRect(x0 - 6, py - 13, w + 12, 19, 6); x.fill();
+  x.fillStyle = coul; x.fillText(txt, x0, py);
 }
 function dessinerScene(s, m) {
   const [x, W, H] = prep($('#scene'));
-  const etroit = W < 560, base = H - 40, haut = 40, Hs = base - haut, xa = etroit ? W * 0.3 : Math.min(W * 0.38, W - 120);
+  const etroit = W < 560, e = etroit ? 1 : 1.3, base = H - 44, haut = 56, Hs = base - haut, xa = W * (etroit ? .5 : .45);
   const Y = h => base - Hs * lg(h);
-  // ciel
   const ciel = x.createLinearGradient(0, 0, 0, H);
-  ciel.addColorStop(0, K.clair ? '#bcd7ea' : '#0c1c2a'); ciel.addColorStop(1, K.clair ? '#eef5fa' : '#132634');
+  ciel.addColorStop(0, K.clair ? '#bcd7ea' : '#0a1823'); ciel.addColorStop(1, K.clair ? '#eef5fa' : '#11222e');
   x.fillStyle = ciel; x.fillRect(0, 0, W, H);
   // repères d'altitude (par rapport au sol sous l'avion)
   x.font = '500 10.5px "IBM Plex Mono",monospace';
   for (const h of [50, 100, 200, 500, 1000, 2500]) {
-    const y = Y(h); x.strokeStyle = h === PORTEE ? K.mauvais : K.line2; x.globalAlpha = h === PORTEE ? .6 : .5; x.setLineDash([3, 5]);
+    const y = Y(h); x.strokeStyle = h === PORTEE ? K.mauvais : K.line2; x.globalAlpha = h === PORTEE ? .55 : .35; x.setLineDash([3, 6]);
     x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
-    x.fillStyle = h === PORTEE ? K.mauvais : K.muted; x.fillText(h === PORTEE ? '2 500 ft · portée' : `${nf(h)} ft`, 6, y - 3);
+    x.fillStyle = h === PORTEE ? K.mauvais : K.faint; x.fillText(h === PORTEE ? '2 500 ft · portée' : `${nf(h)} ft`, 6, y - 3);
   }
-  // DH
-  const yDh = Y(st.dh); x.strokeStyle = K.dh; x.globalAlpha = .7; x.setLineDash([8, 4]); x.beginPath(); x.moveTo(0, yDh); x.lineTo(W, yDh); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
-  x.fillStyle = K.dh; x.fillText(`DH ${nf(st.dh)} ft`, W - 78, yDh - 3);
   // relief
-  const kx = W / 9000, e0 = s.e;
-  const colonnes = [];
-  for (let X = 0; X <= W; X += 3) {
+  const kx = W / 9000, e0 = s.e, colonnes = [];
+  for (let X = 0; X <= W + 3; X += 3) {
     const xd = st.mode === 'manuel' ? 0 : s.x - (X - xa) / kx;
-    const e = st.mode === 'manuel' ? 0 : elev(xd);
-    colonnes.push([X, Y(e - e0), st.mode === 'manuel' ? st.solMan : surface(xd)]);
+    colonnes.push([X, Y((st.mode === 'manuel' ? 0 : elev(xd)) - e0), st.mode === 'manuel' ? st.solMan : surface(xd)]);
   }
   for (let i = 0; i < colonnes.length - 1; i++) {
     const [X, y, su] = colonnes[i], [X2, y2] = colonnes[i + 1], S = SURF[su];
@@ -431,46 +493,44 @@ function dessinerScene(s, m) {
     x.strokeStyle = S.coulC; x.lineWidth = 2; x.beginPath(); x.moveTo(X, y); x.lineTo(X2 + .5, y2); x.stroke();
     if (su === 'foret' && i % 3 === 0) { x.fillStyle = st.saison === 'hiver' && st.mode !== 'manuel' ? '#cfe0e8' : '#2f6b40'; x.beginPath(); x.moveTo(X - 4, y + 1); x.lineTo(X + 1.5, y - 9); x.lineTo(X + 7, y + 1); x.fill(); }
     if (su === 'beton' && i % 8 === 0) { x.fillStyle = '#e5e7eb'; x.fillRect(X, y + 3, 8, 2); }
+    if (su === 'eau' && i % 6 === 0) { x.strokeStyle = 'rgba(255,255,255,.18)'; x.lineWidth = 1; x.beginPath(); x.moveTo(X, y + 6 + (i % 12)); x.lineTo(X + 8, y + 6 + (i % 12)); x.stroke(); }
   }
-  // l'avion : bas des roues à Y(AGL)
+  // avion, antennes et ondes
   const yRoues = Y(s.agl) + (s.comp ? s.comp * 1.2 : 0);
-  // ondes : de l'antenne TX vers le sol (rouge), réfléchies vers l'antenne RX (bleu)
-  const txX = xa - 23, rxX = xa - 11, yAnt = yRoues - 9, ySol = base;
-  const S = SURF[s.surf], echo = m.portee ? S.refl : 0.15;
-  x.save();
-  x.globalAlpha = .12; x.fillStyle = K.tx; x.beginPath(); x.moveTo(txX, yAnt); x.lineTo(txX - (ySol - yAnt) * .3, ySol); x.lineTo(txX + (ySol - yAnt) * .3, ySol); x.closePath(); x.fill();
-  x.globalAlpha = 1;
-  const dist = Math.max(4, ySol - yAnt);
-  for (let k = 0; k < 4; k++) {
-    const p = (ondes + k / 4) % 1;
-    // aller (de 0 à 0,5) puis retour (de 0,5 à 1)
-    if (p < .5) {
-      const r = (p / .5) * dist; x.strokeStyle = K.tx; x.lineWidth = 2; x.globalAlpha = .9 - p;
-      x.beginPath(); x.arc(txX, yAnt, Math.max(1, r), Math.PI / 2 - .32, Math.PI / 2 + .32); x.stroke();
-    } else {
-      const q = (p - .5) / .5, r = q * dist; x.strokeStyle = K.rx; x.lineWidth = 2; x.globalAlpha = Math.max(0, (1 - q * .5) * echo);
-      x.beginPath(); x.arc(rxX, ySol, Math.max(1, r), -Math.PI / 2 - .32, -Math.PI / 2 + .32); x.stroke();
-    }
-  }
+  const txX = xa - 34 * e, rxX = xa + 24 * e, yAnt = yRoues - 8 * e, ySol = base;
+  dessinerOndes(x, W, txX, rxX, yAnt, ySol, s, m);
+  avionProfil(x, xa, yRoues, K.clair ? '#e5e7eb' : '#cbd5e1', e);
+  // antennes : TX a la couleur de ce qu'elle émet ; RX celle de l'écho qui arrive
+  const fNow = fAnim(tA), recu = dernierRecu && tA - dernierRecu.t < .7 ? dernierRecu : null;
+  x.save(); x.shadowBlur = 14;
+  x.shadowColor = couleurF(fNow); x.fillStyle = couleurF(fNow); x.beginPath(); x.arc(txX, yAnt + 2, 6.5, 0, 2 * Math.PI); x.fill();
+  if (recu) { x.shadowColor = couleurF(recu.f); x.fillStyle = couleurF(recu.f); x.beginPath(); x.arc(rxX, yAnt + 2, 6.5, 0, 2 * Math.PI); x.fill(); }
   x.restore();
-  avionProfil(x, xa, yRoues, K.clair ? '#e5e7eb' : '#cbd5e1');
-  // flèche AGL
-  const fx = xa + (etroit ? 70 : 78); x.strokeStyle = K.text; x.fillStyle = K.text; x.lineWidth = 1.2;
+  x.strokeStyle = K.tx; x.lineWidth = 2; x.beginPath(); x.arc(txX, yAnt + 2, 8, 0, 2 * Math.PI); x.stroke();
+  x.strokeStyle = K.rx; x.beginPath(); x.arc(rxX, yAnt + 2, 8, 0, 2 * Math.PI); x.stroke();
+  const ly = Math.max(yAnt - 36 * e - 8, 20);
+  etiquette(x, `TX ${mhz(fNow)}`, txX - 14, ly, couleurF(fNow, 1), 'right');
+  etiquette(x, recu || dernierRecu ? `RX ${mhz((recu || dernierRecu).f)}` : 'RX — pas d’écho', rxX + 14, ly, dernierRecu ? couleurF(dernierRecu.f, 1) : K.faint, 'left');
+  // hauteur, à droite
+  const fx = W - 24; x.strokeStyle = K.text; x.fillStyle = K.text; x.lineWidth = 1.2;
+  x.setLineDash([3, 4]); x.globalAlpha = .5; x.beginPath(); x.moveTo(xa + 66 * e, yRoues); x.lineTo(fx, yRoues); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
   if (s.agl > 2) { x.beginPath(); x.moveTo(fx, yRoues); x.lineTo(fx, ySol); x.stroke();
     for (const [yy, d] of [[yRoues, 1], [ySol, -1]]) { x.beginPath(); x.moveTo(fx, yy); x.lineTo(fx - 4, yy + 6 * d); x.lineTo(fx + 4, yy + 6 * d); x.closePath(); x.fill(); } }
-  x.font = `700 ${etroit ? 12 : 13}px "IBM Plex Mono",monospace`;
-  const lib = `AGL ${fmtFt(s.agl)}`; const ly = Math.min(ySol - 8, Math.max(yRoues + 16, (yRoues + ySol) / 2));
-  x.fillText(lib, fx + 8, ly);
-  if (st.mode === 'approche') { x.font = '500 11px "IBM Plex Mono",monospace'; x.fillStyle = K.muted; x.fillText(etroit ? `/ piste ${fmtFt(s.hp)}` : `hauteur / piste ${fmtFt(s.hp)}`, fx + 8, ly + 15); }
-  if (!m.portee) { x.font = '700 12px "IBM Plex Sans",sans-serif'; x.fillStyle = K.mauvais; x.fillText('Au-delà de 2 500 ft : écho trop faible, pas de mesure', 10, H - 12); }
-  x.font = '600 11px "IBM Plex Mono",monospace'; x.fillStyle = K.tx; x.fillText('TX', txX - 18, yAnt + 14); x.fillStyle = K.rx; x.fillText('RX', rxX + 4, yAnt + 14);
-  // fréquences à l'instant : émise (TX) et reçue (RX), au kHz près
-  const L = lecture(m), mhz = f => `${nf(f / 1e6, 3)} MHz`;
-  x.font = `700 ${etroit ? 10.5 : 12}px "IBM Plex Mono",monospace`; x.textAlign = 'right';
-  const lx = xa - 68, ly0 = yRoues - 30;
-  x.fillStyle = K.tx; x.fillText(`TX ${mhz(L.fTx)}`, lx, ly0);
-  x.fillStyle = m.portee ? K.rx : K.faint; x.fillText(m.portee ? `RX ${mhz(L.fRx)}` : 'RX — pas d’écho', lx, ly0 + 15);
+  x.textAlign = 'right'; x.font = `700 ${etroit ? 12 : 14}px "IBM Plex Mono",monospace`;
+  const lyA = Math.min(ySol - 10, Math.max(yRoues + 18, (yRoues + ySol) / 2));
+  x.fillText(`AGL ${fmtFt(s.agl)}`, fx - 8, lyA);
+  if (st.mode === 'approche') { x.font = '500 11px "IBM Plex Mono",monospace'; x.fillStyle = K.muted; x.fillText(`/ piste ${fmtFt(s.hp)}`, fx - 8, lyA + 15); }
   x.textAlign = 'left';
+  if (!m.portee) { x.font = '700 12.5px "IBM Plex Sans",sans-serif'; x.fillStyle = K.mauvais; x.fillText('Au-delà de 2 500 ft : l’écho est trop faible pour être mesuré', 10, H - 12); }
+}
+// les cartes sous la scène : ce que TX émet, ce que RX reçoit, l'écart, et les vraies valeurs
+function majMesures(s, m) {
+  const fNow = fAnim(tA), r = dernierRecu, sw = f => `<i style="background:${couleurF(f)};box-shadow:0 0 10px ${couleurF(f)}"></i>`;
+  const fb = 2 * B * st.fm * m.tau;
+  html('#mesures', `<div class="mesure"><span>TX émet maintenant</span><b>${sw(fNow)}${mhz(fNow)}</b><small>la fréquence balaie 4 230 → 4 370 MHz, puis redescend</small></div>`
+    + `<div class="mesure"><span>RX reçoit maintenant</span><b>${r ? sw(r.f) + mhz(r.f) : '—'}</b><small>${r ? 'émise plus tôt : c’est un « vieux » front d’onde' : 'pas d’écho'}</small></div>`
+    + `<div class="mesure"><span>Écart (animation)</span><b>${r ? nf(Math.abs(fNow - r.f) / 1e6, 1) + ' MHz' : '—'}</b><small>plus l'avion est haut, plus l'écho est vieux, plus l'écart est grand</small></div>`
+    + `<div class="mesure"><span>En vrai</span><b>${m.portee ? fmtF(fb) : '—'}</b><small>${m.portee ? `aller-retour ${fmtT(m.tau)}, balayage ${st.fm} Hz → AGL ${fmtFt(m.ind)}` : 'hors portée'}</small></div>`);
 }
 
 /* ---------- indicateur à aiguille ---------- */
@@ -735,11 +795,16 @@ function majTextes(s, m) {
 }
 function tout() {
   const s = situation(st.t), m = mesure(s);
-  dessinerScene(s, m); dessinerCadran(m); dessinerSignal(m, s); majChiffres(m, s); dessinerTension(m, s); majTextes(s, m);
+  dessinerScene(s, m); majMesures(s, m); majTextes(s, m);
+  // les sections repliées ne sont dessinées que si elles sont ouvertes
+  if ($('#dInstr').open) dessinerCadran(m);
+  if ($('#d-t-sig').open) { dessinerSignal(m, s); majChiffres(m, s); }
+  if ($('#d-t-sortie').open) dessinerTension(m, s);
 }
 function boucle(now) {
   const dt = Math.min(0.1, (now - (dernier || now)) / 1000); dernier = now;
-  if (!reduit) { ondes = (ondes + dt * 0.9) % 1; if (dureeCurseur) curseur = (curseur + dt / dureeCurseur) % 1; }
+  avancerOndes(dt);
+  if (!reduit && dureeCurseur) curseur = (curseur + dt / dureeCurseur) % 1;
   if (st.joue && st.mode === 'approche') { st.t += dt * st.vitesse; if (st.t >= DUREE) { st.t = DUREE; st.joue = false; majPP(); } }
   tout();
   requestAnimationFrame(boucle);
@@ -764,7 +829,10 @@ function groupe(sel, f) {
   }));
 }
 function majPP() { $('#pp').textContent = st.joue ? '⏸' : '▶'; $('#pp').setAttribute('aria-label', st.joue ? 'Pause' : 'Lecture'); }
-groupe('#modes', v => { st.mode = v; $('#regApproche').hidden = v !== 'approche'; $('#regManuel').hidden = v !== 'manuel'; $('#lecteur').style.display = v === 'approche' ? '' : 'none'; tout(); });
+groupe('#modes', v => { st.mode = v; $('#regApproche').hidden = v !== 'approche'; $('#regManuel').hidden = v !== 'manuel'; $('#lecteur').hidden = v !== 'approche';
+  if (v === 'approche' && st.t === 0) { st.joue = true; majPP(); } fronts = []; tout(); });
+groupe('#vOndes', v => { vOndes = +v; });
+document.querySelectorAll('details.repli').forEach(d => d.addEventListener('toggle', () => { if (d.open) { dessinerAid(); tout(); } }));
 groupe('#saisons', v => { st.saison = v; tout(); });
 groupe('#vitesses', v => { st.vitesse = +v; });
 groupe('#types', v => { st.signal = v; $('#regFmcw').hidden = v !== 'fmcw'; $('#regPulse').hidden = v !== 'pulse'; tout(); });
