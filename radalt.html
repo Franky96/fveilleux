@@ -97,6 +97,7 @@ html.light #scene{background:#dbe9f3}
 .sig{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:14px;align-items:start}
 #graphF{height:300px;border-radius:12px;background:var(--panel2)}
 #graphB{height:200px;border-radius:12px;background:var(--panel2);margin-top:10px}
+.curs{align-items:center;margin-top:10px}
 .freqs{display:grid;grid-template-columns:auto auto 1fr;align-items:baseline;gap:4px 12px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}
 .freqs .n{font:700 12px var(--f-mono);letter-spacing:.05em}
 .freqs .v{font:700 19px var(--f-mono);white-space:nowrap;text-align:right}
@@ -205,7 +206,7 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
       <div class="curseur"><span>Largeur</span><input type="range" id="larg" min="25" max="75" step="1" value="50" aria-label="Largeur d'impulsion"><output id="largV">50 ns</output></div></div>
   </div>
   <div class="sig">
-    <div><canvas id="graphF" aria-label="Fréquence émise et reçue dans le temps"></canvas><div class="freqs" id="freqs" aria-live="off"></div><canvas id="graphB" aria-label="Fréquence de battement ou taux de balayage selon l'altitude"></canvas></div>
+    <div><canvas id="graphF" aria-label="Fréquence émise et reçue dans le temps"></canvas><div class="choix curs" id="vCurseur"><span class="lab" style="margin:0 4px 0 0">Curseur</span><button class="btn" type="button" data-v="0" aria-pressed="false">⏸ Arrêté</button><button class="btn" type="button" data-v="120" aria-pressed="false">Très lent</button><button class="btn" type="button" data-v="40" aria-pressed="true">Lent</button><button class="btn" type="button" data-v="15" aria-pressed="false">Rapide</button></div><div class="freqs" id="freqs" aria-live="off"></div><canvas id="graphB" aria-label="Fréquence de battement ou taux de balayage selon l'altitude"></canvas></div>
     <div><div class="chiffres" id="chiffres"></div><p class="explic" id="explic"></p></div>
   </div>
 </section>
@@ -369,8 +370,9 @@ function fmtT(s) { return s >= 1e-3 ? `${nf(s * 1e3, 2)} ms` : s >= 1e-6 ? `${nf
 const LMAX = Math.log(1 + 3200 / 40);
 const lg = h => Math.sign(h) * Math.log(1 + Math.abs(h) / 40) / LMAX;
 let ondes = 0;
-// instant lu sur le graphique du signal : un curseur qui parcourt lentement la fenêtre (2,5 balayages en 8 s)
-let curseur = 0.13;
+// instant lu sur le graphique du signal : un curseur qui parcourt la fenêtre (2,5 balayages) en `dureeCurseur` secondes
+// (boutons Arrêté / Très lent / Lent / Rapide ; « Lent », 40 s, par défaut, demande de l'utilisateur)
+let curseur = 0.13, dureeCurseur = 40;
 const tri = u => { const v = ((u % 1) + 1) % 1; return v < .5 ? v * 2 : 2 - v * 2; };   // 0 → 1 → 0
 function lecture(m) {
   if (st.signal === 'pulse') return { fTx: F0, fRx: F0, pulse: true };
@@ -737,7 +739,7 @@ function tout() {
 }
 function boucle(now) {
   const dt = Math.min(0.1, (now - (dernier || now)) / 1000); dernier = now;
-  if (!reduit) { ondes = (ondes + dt * 0.9) % 1; curseur = (curseur + dt / 8) % 1; }
+  if (!reduit) { ondes = (ondes + dt * 0.9) % 1; if (dureeCurseur) curseur = (curseur + dt / dureeCurseur) % 1; }
   if (st.joue && st.mode === 'approche') { st.t += dt * st.vitesse; if (st.t >= DUREE) { st.t = DUREE; st.joue = false; majPP(); } }
   tout();
   requestAnimationFrame(boucle);
@@ -767,6 +769,7 @@ groupe('#saisons', v => { st.saison = v; tout(); });
 groupe('#vitesses', v => { st.vitesse = +v; });
 groupe('#types', v => { st.signal = v; $('#regFmcw').hidden = v !== 'fmcw'; $('#regPulse').hidden = v !== 'pulse'; tout(); });
 groupe('#normes', v => { st.norme = v; tout(); });
+groupe('#vCurseur', v => { dureeCurseur = +v; });
 $('#pp').onclick = () => { if (!st.joue && st.t >= DUREE - .05) st.t = 0; st.joue = !st.joue; majPP(); };
 $('#debut').onclick = () => { st.t = 0; tout(); };
 $('#temps').max = DUREE;
