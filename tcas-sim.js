@@ -106,7 +106,7 @@
       if (!T.suivi && visible) {
         if (modeS(i) && g.r <= 30) { T.suivi = true; evt(t, o.k, 'detection', `Détection : ${i.k} entre à 30 NM. Le TCAS de ${o.k} décode son squitter DF11 (adresse ${hex(i.adr)}) et l'ajoute à sa table d'intrus ; la surveillance commence.`); }
         else if (!modeS(i)) {
-          msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode « ATCRBS seulement »', titre: 'Appel général ATCRBS (whisper-shout)', cle: `ws${o.k}`,
+          msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode : ATCRBS seulement', titre: 'Appel général ATCRBS (whisper-shout)', cle: `ws${o.k}`,
             detail: 'Puissance augmentée par paliers : seuls les transpondeurs ATCRBS répondent, par ordre de distance. Les Mode S l’ignorent.' });
           if (g.r <= 14) { T.suivi = true; msg(t + 0.05, { phase: 'surveillance', de: i.k, a: o.k, freq: 1090, code: 'Réponse Mode C', titre: 'Réponse ATCRBS (Mode C)', cle: `mcd${i.k}`, detail: `Altitude ${Math.round(i.alt / 100) * 100} ft (pas de 100 ft). Pas d’adresse : l’intrus est suivi par sa distance.` });
             evt(t, o.k, 'detection', `Le TCAS de ${o.k} obtient une réponse Mode C de ${i.k} (ATCRBS, à moins de 14 NM).`); }
@@ -121,7 +121,7 @@
         msg(t + 0.05, { phase: 'surveillance', de: i.k, a: o.k, freq: 1090, code: 'DF0', titre: 'Réponse air-air courte', cle: `df0${i.k}`,
           detail: `Altitude ${Math.round(i.alt / 25) * 25} ft, niveau de sensibilité SL ${niveau(altSol(i), i.alt).sl}${i.equip === 'tcas' && tcasOn(i) ? ', RI : TCAS en fonction' : ', RI : pas de TCAS'}. Distance mesurée ${g.r.toFixed(1)} NM.` });
       } else {
-        msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode « ATCRBS seulement »', titre: 'Interrogation ATCRBS', cle: `ic${o.k}`,
+        msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode : ATCRBS seulement', titre: 'Interrogation ATCRBS', cle: `ic${o.k}`,
           detail: 'Pas d’interrogation sélective possible avec un ATCRBS : appel général, en whisper-shout.' });
         msg(t + 0.05, { phase: 'surveillance', de: i.k, a: o.k, freq: 1090, code: 'Mode C', titre: 'Réponse ATCRBS', cle: `mc${i.k}`, detail: `Altitude ${Math.round(i.alt / 100) * 100} ft. Distance ${g.r.toFixed(1)} NM.` });
       }

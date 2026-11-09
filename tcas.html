@@ -347,7 +347,7 @@ table.sl td:first-child{white-space:nowrap}
 </section>
 
 <div class="notes">
-  <div class="note"><h3>1 · Détection</h3><p>Les transpondeurs Mode S diffusent d'eux-mêmes des <b>squitters</b> sur 1090 MHz : <span class="f">DF11</span> (adresse 24 bits) et <span class="f">DF17</span> (squitter long, ADS-B). Le TCAS les écoute pour remplir sa table : intrus, adresse, position.</p><p>Un transpondeur <b>ATCRBS</b> ne diffuse rien : le TCAS l'interroge par un appel général Intermode « ATCRBS seulement », en <b>whisper-shout</b> (14 NM au plus).</p></div>
+  <div class="note"><h3>1 · Détection</h3><p>Les transpondeurs Mode S diffusent d'eux-mêmes des <b>squitters</b> sur 1090 MHz : <span class="f">DF11</span> (adresse 24 bits) et <span class="f">DF17</span> (squitter long, ADS-B). Le TCAS les écoute pour remplir sa table : intrus, adresse, position.</p><p>Un transpondeur <b>ATCRBS</b> ne diffuse rien : le TCAS l'interroge par un appel général Intermode : ATCRBS seulement, en <b>whisper-shout</b> (14 NM au plus).</p></div>
   <div class="note"><h3>2 · Surveillance</h3><p>Chaque seconde, le TCAS envoie une interrogation sélective <span class="f">UF0</span> (1030 MHz) ; le transpondeur répond <span class="f">DF0</span> (1090 MHz) avec son altitude et son niveau de sensibilité. Le temps aller-retour donne la <b>distance</b>, l'antenne directionnelle le <b>relèvement</b>.</p><p>Aux 10 s, <span class="f">UF16 · UDS 3.2</span> à tous (FFF FFF) : « mon TCAS existe » (densité du trafic).</p></div>
   <div class="note"><h3>3 · Coordination</h3><p>Pendant un RA : chaque seconde, <span class="f">UF16 · UDS 3.0</span> à l'intrus, avec la restriction (VRC : « ne monte pas »), réponse <span class="f">DF16</span>. Aux 8 s environ, <span class="f">UF16 · UDS 3.1</span> RA Broadcast à tous (ARA, RAC, AID, CAC ; RAT = 1 à la fin).</p><p>Le premier TCAS en RA impose sa restriction ; en cas d'envoi simultané, l'adresse 24 bits la plus basse a priorité. Pas de coordination avec un Mode S sans TCAS ni avec un ATCRBS : le TCAS reste prêt à <b>inverser</b> son RA.</p></div>
   <div class="note"><h3>Les calculs</h3><ul><li><b>TAU</b> : temps avant le croisement = distance ÷ vitesse de rapprochement.</li><li><b>DMOD</b> : distance qui déclenche l'alerte même si TAU est encore grand (avions lents).</li><li><b>ZTHR</b> : écart vertical en deçà duquel l'intrus compte ; sinon, on regarde le TAU vertical.</li><li><b>ALIM</b> : séparation verticale visée au croisement ; si elle est déjà assurée, pas de RA.</li></ul></div>
@@ -873,7 +873,7 @@ function dessiner(force) {
 let modeSeq = false, etapes = [], ie = 0, seqAuto = null, seqAnimT0 = 0;
 const FORMAT = { DF11: '56 bits (message court)', DF17: '112 bits (message long)', UF0: '56 bits (message court)', DF0: '56 bits (message court)',
   UF16: '112 bits (message long ; MU de 56 bits)', DF16: '112 bits (message long ; MV de 56 bits)', 'Mode C': '12 impulsions de code d’altitude entre F1 et F2', 'Réponse Mode C': '12 impulsions de code d’altitude entre F1 et F2',
-  'Intermode « ATCRBS seulement »': 'impulsions P1, P3 et P4 longue (Intermode)' };
+  'Intermode : ATCRBS seulement': 'impulsions P1, P3 et P4 longue (Intermode)' };
 const NOM_PHASE = { detection: '1 · Détection', surveillance: '2 · Surveillance', coordination: '3 · Coordination et RA' };
 const NOM_EVT = { detection: 'Détection', ta: 'Avis de trafic (TA)', ra: 'Avis de résolution (RA)', coc: 'Fin du conflit', vhf: 'Radio VHF (pilote ↔ contrôle)', nonsuivi: 'Pilote', finta: 'Fin du TA' };
 function construireEtapes() {
