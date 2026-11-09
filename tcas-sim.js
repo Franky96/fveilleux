@@ -106,9 +106,9 @@
       if (!T.suivi && visible) {
         if (modeS(i) && g.r <= 30) { T.suivi = true; evt(t, o.k, 'detection', `Détection : ${i.k} entre à 30 NM. Le TCAS de ${o.k} décode son squitter DF11 (adresse ${hex(i.adr)}) et l'ajoute à sa table d'intrus ; la surveillance commence.`); }
         else if (!modeS(i)) {
-          msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode « ATCRBS seulement »', titre: 'Appel général ATCRBS (whisper-shout)',
+          msg(t, { phase: 'surveillance', de: o.k, a: '*', freq: 1030, code: 'Intermode « ATCRBS seulement »', titre: 'Appel général ATCRBS (whisper-shout)', cle: `ws${o.k}`,
             detail: 'Puissance augmentée par paliers : seuls les transpondeurs ATCRBS répondent, par ordre de distance. Les Mode S l’ignorent.' });
-          if (g.r <= 14) { T.suivi = true; msg(t + 0.05, { phase: 'surveillance', de: i.k, a: o.k, freq: 1090, code: 'Réponse Mode C', titre: 'Réponse ATCRBS (Mode C)', detail: `Altitude ${Math.round(i.alt / 100) * 100} ft (pas de 100 ft). Pas d’adresse : l’intrus est suivi par sa distance.` });
+          if (g.r <= 14) { T.suivi = true; msg(t + 0.05, { phase: 'surveillance', de: i.k, a: o.k, freq: 1090, code: 'Réponse Mode C', titre: 'Réponse ATCRBS (Mode C)', cle: `mcd${i.k}`, detail: `Altitude ${Math.round(i.alt / 100) * 100} ft (pas de 100 ft). Pas d’adresse : l’intrus est suivi par sa distance.` });
             evt(t, o.k, 'detection', `Le TCAS de ${o.k} obtient une réponse Mode C de ${i.k} (ATCRBS, à moins de 14 NM).`); }
         }
       }
@@ -178,8 +178,8 @@
         if (g.rdot > 0 && g.r > S.dmodRA + 0.2 && t - ra.t0 > 6) {
           T.etat = 'clair'; T.ra = null; T.interdit = null;
           evt(t, o.k, 'coc', `${o.k} : CLEAR OF CONFLICT, retour à l'altitude autorisée`); annoncer('CLEAR OF CONFLICT');
-          msg(t + 0.1, { phase: 'coordination', de: o.k, a: '*', freq: 1030, code: 'UF16 · UDS 3.1', titre: 'TCAS RA Broadcast (fin)', detail: 'RAT = 1 : le RA est terminé.' });
-          if (coordonne) msg(t + 0.15, { phase: 'coordination', de: o.k, a: i.k, freq: 1030, code: 'UF16 · UDS 3.0', titre: 'Coordination : annulation', detail: 'Le TCAS lève la restriction imposée à l’intrus.' });
+          msg(t + 0.1, { phase: 'coordination', de: o.k, a: '*', freq: 1030, code: 'UF16 · UDS 3.1', titre: 'TCAS RA Broadcast (fin)', cle: `rabcfin${o.k}`, detail: 'RAT = 1 : le RA est terminé.' });
+          if (coordonne) msg(t + 0.15, { phase: 'coordination', de: o.k, a: i.k, freq: 1030, code: 'UF16 · UDS 3.0', titre: 'Coordination : annulation', cle: `coann${o.k}`, detail: 'Le TCAS lève la restriction imposée à l’intrus.' });
           o.pilote = { mode: 'retour', cible: Math.sign(o.autorisee - o.alt) * 1000, debut: t + 3, accel: 0.1 };
           if (o.k === 'A' || cfg.piloteB === 'suit') evt(t + 4, o.k, 'vhf', `${o.k} au contrôle : « Clear of conflict, returning to ${o.autorisee >= 18000 ? 'FL' + Math.round(o.autorisee / 100) : o.autorisee + ' ft'} »`);
         } else {

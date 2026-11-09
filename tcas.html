@@ -149,7 +149,7 @@ html.light #carte{background:#e8eef3}
 .tmsg tr.ligne{cursor:pointer;background:color-mix(in srgb,var(--k) calc(var(--vif,0) * 24%),transparent)}
 .tmsg tr.ligne:hover{background:color-mix(in srgb,var(--k) calc(8% + var(--vif,0) * 24%),transparent)}
 .tmsg tr.ligne:focus-visible{outline:2px solid var(--c);outline-offset:-2px}
-.tmsg td.code{font:700 12px var(--f-mono)}
+.tmsg td.code{font:700 12px var(--f-mono);white-space:normal;overflow-wrap:anywhere}
 .tmsg td.vers{font:600 11.5px var(--f-mono);color:var(--muted)}
 .tmsg td.nom{white-space:normal;color:var(--text)}
 .tmsg td.nom::after{content:" ▸";color:var(--faint);font-size:10px}
@@ -708,6 +708,7 @@ function journal() {
   for (const m of R.msgs) {
     if (m.t > t) break;
     if (!filtres.has(m.phase)) continue;
+    if (!m.cle) m.cle = `${m.de}|${m.code}|${m.titre}`;   // garde-fou : un message sans clé a quand même sa propre ligne
     const l = parCle.get(m.cle);
     if (l) { l.n++; l.der = m; continue; }
     const n = { m, der: m, n: 1 }; parCle.set(m.cle, n); col[m.de].push(n);
