@@ -113,6 +113,8 @@ const SSM_TABLES = {
   bnr:   ['Failure Warning (FW)',  'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal (NML)'],
   dis:   ['Normal (NML)',          'No Computed Data (NCD)', 'Functional Test (FT)', 'Failure Warning (FW)'],
   maint: ['Failure Warning (FW)', 'No Computed Data (NCD)', 'Functional Test (FT)', 'Normal (NML)'],
+  iso:   ['Mot intermédiaire', 'Mot initial (STX)', 'Mot final', 'Undefined'],                 // messages ISO n° 5 (tableaux 6-3, 6-33)
+  avm:   ['Bits de commande (31-25)', 'Bits de commande (31-25)', 'Bits de commande (31-25)', 'Bits de commande (31-25)'],   // 227 03D (6-28)
 };
 
 // SDI descriptions by label type (bits 10-9 → index 0-3)
@@ -383,6 +385,8 @@ const eqTexte = eq => (eq || []).map(c => nomEq(c) ? `${nomEq(c)} (${c})` : c).j
 // Les formats particuliers de l'attachement 6 (dates, n° de vol, UTC, TCAS, TACAN, discrets dans les bits de remplissage…)
 // sont ajoutés ici, par-dessus les formats génériques BNR/BCD de l'attachement 2.
 const sauf = (liste, ...bits) => (liste || []).filter(b => !bits.includes(b));
+const SDI_DONNEES = Array(4).fill('— (bits 9-10 = données)');
+const SDI_FQIS = ['—', 'Réservoir principal gauche', 'Réservoir principal droit', 'Réservoir central'];   // 241 04D (6-35)
 const FORMATS_SPECIAUX = [
   { oct: '106', si: /Selected Mach \(12 bits\)/i, unit: 'mMach', note: 'en millièmes de Mach (exemple du tableau 6-27 : 800 = Mach 0.800)' },
   { oct: '124', si: /Horizontal Alarm Limit/i, att6: '6-49', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11, 12, 13), discBits: [11, 12, 13], catBits: [11, 12, 13],
@@ -413,31 +417,55 @@ const FORMATS_SPECIAUX = [
   { oct: '260', eq: '031', att6: '6-18', meta: { fmt: 'date' }, enc: 'BCD', unit: '', enlever: 'hors' },
   { oct: '260', si: /Date/i, att6: '6-8', meta: { fmt: 'dateleg' }, enc: 'BCD', unit: '', enlever: 'hors' },
   { oct: '261', si: /^Flight Number/i, att6: '6-9', meta: { fmt: 'vol' }, enc: 'BCD', unit: '', enlever: 'hors' },
-  { oct: '356', si: /ISO/i, att6: '6-3', meta: { iso5: ['Car. 1', 'Car. 2', 'Car. 3'] }, note: 'mot intermédiaire : 3 caractères ISO n° 5 ; le mot initial (STX, nombre de mots) n’est pas décodé' },
-  { oct: '357', si: /ISO/i, att6: '6-3', meta: { iso5: ['Car. 1', 'Car. 2', 'Car. 3'] }, note: 'mot intermédiaire : 3 caractères ISO n° 5 ; le mot initial (STX, nombre de mots) n’est pas décodé' },
+  { oct: '356', si: /ISO/i, att6: '6-3', meta: { fmt: 'iso5msg', sdiDesc: SDI_DONNEES }, ssm: 'iso', enlever: 'hors', note: 'le SSM indique le mot : 01 initial (STX, nombre de mots), 00 intermédiaire, 10 final' },
+  { oct: '357', si: /ISO/i, att6: '6-3', meta: { fmt: 'iso5msg', adresse: true, sdiDesc: SDI_DONNEES }, ssm: 'iso', enlever: 'hors', note: 'le SSM indique le mot : 01 initial (STX, adresse, nombre de mots), 00 intermédiaire, 10 final' },
+  { oct: '360', si: /^Flight Information/i, att6: '6-33', meta: { fmt: 'iso5msg', sdiDesc: SDI_DONNEES }, ssm: 'iso', enlever: 'hors',
+    note: 'message de 7 mots : n° de vol (8 car.), origine (4 car.), destination (4 car.) ; le SSM indique le mot (01 initial, 00 suivants)' },
   { oct: '377', si: /Equipment Ident/i, att6: '6-17', meta: { fmt: 'eqid' }, enlever: 'hors' },
-  // formats décrits dans l'attachement 6 mais pas décodés ici : une note renvoie au tableau
-  { oct: '206', eq: '018', att6: '6-20', note: 'résolution variable selon les bits 13-11 (tableau 6-20)' },
-  { oct: '227', eq: '03D', att6: '6-28', note: 'mot de commande AVM (tableau 6-28)' },
-  { oct: '241', eq: '04D', att6: '6-35', note: 'séquence de 63 mots (tableau 6-35)' },
-  { oct: '241', eq: '160', att6: '6-38', note: 'séquence de mots (tableau 6-38)' },
-  { oct: '251', si: /Flight Leg/i, att6: '6-19', note: 'compteur de vols (tableau 6-19)' },
+  { oct: '206', eq: '018', att6: '6-20', meta: { fmt: 'altvar', catBits: [11, 12, 13],
+      bitDescs: { 11: 'Format (bits 13-11) : 000 15 bits/4 ft, 001 14/8 ft, 010 13/16 ft', 12: 'Format : 011 12 bits/25 ft, 100 14 bits/10 ft', 13: 'Format : 101 10 bits/100 ft' } },
+    unit: '', enlever: 'hors' },
+  { oct: '227', eq: '03D', att6: '6-28', meta: { fmt: 'avm', ssmSeg: 'CMD',
+      sdiDesc: ['Moteur 4 (ou tous)', 'Moteur 1 (ou 1 et 2)', 'Moteur 2', 'Moteur 3 (ou 3 et 4)'] }, ssm: 'avm', enlever: 'hors' },
+  { oct: '233', si: /^ACMS Information/i, att6: '6-31', meta: { fmt: 'acmsVol', car: 1 }, ssm: 'bnr', enlever: 'hors' },
+  { oct: '234', si: /^ACMS Information/i, att6: '6-31', meta: { fmt: 'acmsVol', car: 3 }, ssm: 'bnr', enlever: 'hors' },
+  { oct: '235', si: /^ACMS Information/i, att6: '6-31', meta: { fmt: 'acmsVol', car: 5 }, ssm: 'bnr', enlever: 'hors' },
+  { oct: '236', si: /^ACMS Information/i, att6: '6-31', meta: { fmt: 'acmsVol', car: 7 }, ssm: 'bnr', enlever: 'hors' },
+  // 241 04D : 63 mots qui se suivent ; un mot seul ne dit pas sa place dans la séquence, d'où un choix par type de mot
+  { oct: '241', eq: '04D', att6: '6-35', enlever: 'hors', variantes: [
+    { param: 'FQIS — capacité d’une sonde', unit: 'pF', enc: 'BNR', meta: { msb: 160, spareBits: [11, 12, 13, 14, 15, 16], sdiDesc: SDI_FQIS },
+      note: 'mots 1-16, 22-37 et 43-53 de la séquence (sondes, compensateur, condensateur de test)' },
+    { param: 'FQIS — densité du carburant', unit: 'lb/gal', enc: 'BNR', meta: { fmt: 'fqisDens', sdiDesc: SDI_FQIS },
+      note: 'mots 21, 42 et 63 ; 4 lb/gal sont ajoutés à la valeur (000 = 4.0, FFF = 8.0)' },
+    { param: 'FQIS — sélection de charge (1 chiffre)', unit: '', enc: 'BCD', meta: { fmt: 'fqisCharge', sdiDesc: SDI_FQIS },
+      note: 'mots 17-19, 38-40 et 59-61 : chiffre des 10 000, 1 000 puis 100 lb ; caractère de tête artificiel à zéro (chiffre dans les bits 26-23)' },
+  ] },
+  { oct: '241', eq: '160', att6: '6-38', note: 'mots bruts de 12 bits « centrés » (tableau 6-38-1) ; position et échelle non précisées : non décodé' },
+  { oct: '251', si: /Flight Leg/i, att6: '6-19', meta: { fmt: 'jambes', catBits: [29], bitDescs: { 29: 'Bit « D » (sens non précisé dans le tableau 6-19)' } }, unit: 'vols', enlever: 'hors' },
+  { oct: '262', si: /^Documentary Data/i, att6: '6-14', meta: { fmt: 'docu' }, enlever: 'hors' },
   { oct: '355', si: /Acknowledg/i, att6: '6-5', note: 'format de l’accusé de réception non défini' },
 ];
 function leviers(m) {
   return { ...m, spareBits: sauf(m.spareBits, 11, 12, 13, 14, 15), discBits: [11, 12, 13, 14, 15], catBits: [11, 12, 13, 14, 15],
     bitDescs: { 11: 'Levier position 1 (croisière)', 12: 'Levier position 2', 13: 'Levier position 3', 14: 'Levier position 4', 15: 'Levier position 5 (atterrissage)' } };
 }
+// Un format qui se décline en plusieurs types de mots (variantes) donne un choix par type, avec les équipements de l'original
+function developper(oct, c) {
+  const f = FORMATS_SPECIAUX.find(f => f.oct === oct && f.variantes && (!f.si || f.si.test(c.param)) && (!f.eq || c.eq.includes(f.eq)));
+  if (!f) return [appliquerSpeciaux(oct, c)];
+  return f.variantes.map(v => ({ ...c, ...v, eq: [...c.eq], att6: c.att6 || f.att6, hors: undefined }));
+}
 function appliquerSpeciaux(oct, c) {
   const r = { ...c, eq: [...c.eq] };
   for (const f of FORMATS_SPECIAUX) {
-    if (f.oct !== oct) continue;
+    if (f.oct !== oct || f.variantes) continue;
     if (f.si && !f.si.test(c.param)) continue;
     if (f.eq && !c.eq.includes(f.eq)) continue;
     if (f.patch && r.meta) r.meta = f.patch(r.meta);
     if (f.meta !== undefined) r.meta = f.meta && { ...(r.meta || {}), ...f.meta };
     if (f.partNum) r.meta = DECODE_META['060'];
     if (f.enc) r.enc = f.enc;
+    if (f.ssm) r.ssm = f.ssm;
     if (f.unit !== undefined) r.unit = f.unit;
     if (f.enlever) delete r[f.enlever];
     if (f.note) r.note = r.note ? r.note + ' ; ' + f.note : f.note;
@@ -451,10 +479,10 @@ function appliquerSpeciaux(oct, c) {
   const G = window.ARINC_GEN || {};
   for (let n = 0o065; n <= 0o377; n++) {
     const oct = n.toString(8).padStart(3, '0');
-    const liste = (G[oct] || []).map(c => appliquerSpeciaux(oct, c));
+    const liste = (G[oct] || []).flatMap(c => developper(oct, c));
     if (!liste.length) { LABELS.push({ oct, enc: 'DIS', param: 'Spare', unit: '' }); continue; }
     const [d, ...autres] = liste;
-    LABELS.push({ oct, enc: d.enc, param: d.param, unit: d.unit, eq: d.eq, hors: d.hors, note: d.note, att6: d.att6 });
+    LABELS.push({ oct, enc: d.enc, param: d.param, unit: d.unit, eq: d.eq, ssm: d.ssm, hors: d.hors, note: d.note, att6: d.att6 });
     if (d.meta) DECODE_META[oct] = d.meta;
     if (autres.length) ALT_CONFIGS[oct] = autres;
   }
@@ -617,6 +645,49 @@ function decodeData(word, labelInfo, metaOverride) {
     if (unites > 9) return null;
     const mode = ['REC', 'A/A REC', 'T/R', 'A/A T/R'][b(27) * 2 + b(28)];
     return `canal ${dizaines * 10 + unites}${b(26) ? 'X' : 'Y'} · ${mode}`;
+  }
+  const iso = v => v >= 0x20 && v <= 0x7E ? String.fromCharCode(v) : `[${v.toString(16).toUpperCase().padStart(2, '0')}]`;
+  if (fmt === 'iso5msg') {         // 356/357 (6-3), 360 (6-33) : SSM 01 = mot initial, 00 = intermédiaire, 10 = final
+    const ssm = champ(30, 2);
+    if (ssm === 1) {
+      const stx = champ(23, 7), n = champ(9, 8);
+      return `mot initial · ${stx === 2 ? 'STX' : 'STX attendu (02), lu ' + stx.toString(16).toUpperCase().padStart(2, '0')}`
+        + (meta.adresse ? ` · adresse ${champ(17, 6)}` : '') + ` · ${n} mot${n > 1 ? 's' : ''} à suivre`;
+    }
+    if (ssm === 3) return null;
+    let car = [champ(9, 7), champ(16, 7), champ(23, 7)];
+    if (ssm === 2) while (car.length && car[car.length - 1] === 0) car.pop();   // mot final : les caractères inutilisés sont à zéro
+    return `"${car.map(iso).join('')}" (mot ${ssm === 2 ? 'final' : 'intermédiaire'})`;
+  }
+  if (fmt === 'acmsVol') {         // 233-236 (6-31, 6-32) : n° de vol, car. impair bits 17-11, car. pair bits 26-20
+    const n = meta.car;
+    return `car. ${n}-${n + 1} : "${iso(champ(11, 7))}${iso(champ(20, 7))}"`;
+  }
+  if (fmt === 'altvar') {          // 206 018 (6-20) : altitude en complément à 2 depuis le bit 29 ; bits 13-11 = nombre de bits et résolution
+    const F = [[15, 4], [14, 8], [13, 16], [12, 25], [14, 10], [10, 100]][champ(11, 3)];
+    if (!F) return null;
+    const [n, res] = F;
+    let v = champ(30 - n, n); if (v >= 1 << (n - 1)) v -= 1 << n;
+    return `${v < 0 ? '−' : ''}${Math.abs(v * res).toLocaleString('fr-CA')} ft (${n} bits, résolution ${res} ft)`;
+  }
+  if (fmt === 'avm') {             // 227 03D (6-28) : commande bits 31-25, code d'équipement AVM bits 24-13
+    const cmd = champ(25, 7), id = champ(13, 12).toString(16).toUpperCase().padStart(3, '0');
+    const C = { 0: 'non utilisé', 1: 'auto-test', 2: 'utiliser l’accéléromètre A (757)', 3: 'utiliser l’accéléromètre B (757)', 4: 'PAD',
+      5: 'effacer l’historique des pannes', 6: 'effacer l’historique des vols (737)', 7: 'lire l’historique des pannes', 8: 'lire l’historique des vols (737)', 18: 'réservé (737)' };
+    return `${C[cmd] || 'commande ' + cmd.toString(2).padStart(7, '0') + ' non définie'} · AVM ${id}${id === '03D' ? '' : ' (attendu 03D)'}`;
+  }
+  if (fmt === 'jambes') {          // 251 01A (6-19) : compteur principal bits 28-17 (0-4095), puis tranches de 4096 bits 16-13
+    return String(champ(13, 4) * 4096 + champ(17, 12));
+  }
+  if (fmt === 'docu') {            // 262 (6-14) : six codes octaux de 3 bits, bits 29-12
+    return [27, 24, 21, 18, 15, 12].map(d => champ(d, 3)).join(' ');
+  }
+  if (fmt === 'fqisDens') {        // 241 04D (6-35) : 12 bits 28-17, 4/4096 lb/gal par pas, + 4 lb/gal
+    return (4 + champ(17, 12) * 4 / 4096).toFixed(3);
+  }
+  if (fmt === 'fqisCharge') {      // 241 04D (6-35) : un chiffre BCD ; caractère de tête (29-27) à zéro, chiffre en 26-23
+    const d = champ(23, 4);
+    return d > 9 ? null : `${d} — × 10 000, × 1 000 ou × 100 lb selon la place dans la séquence`;
   }
 
   // ── HF COM (tables 6-42 et 6-42-1) ──
@@ -913,6 +984,22 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     seg(1, 'PAD', 'fmap-pad'), seg(1, 'TAC', 'fmap-cat'), seg(1, 'V/T', 'fmap-cat'), seg(3, oct === '146' ? 'mém./PAD' : 'PAD', 'fmap-pad')];
   if (f === 'tacan147') return [seg(1, 'INT', 'fmap-cat'), seg(2, 'mode', 'fmap-cat'), seg(1, 'X/Y', 'fmap-cat'), seg(1, 'TST', 'fmap-cat'), seg(4, 'dizaines'), seg(4, 'unités'),
     seg(2, 'TAC/MLS', 'fmap-cat'), seg(1, 'PAD', 'fmap-pad'), seg(3, 'options', 'fmap-cat')];
+  if (f === 'iso5msg') {
+    const ssm = word ? (word >>> 29) & 3 : 0;
+    if (ssm === 1) return [seg(7, 'STX (02)', 'fmap-cat'), seg(6, meta.adresse ? 'adresse' : 'zéros', meta.adresse ? 'fmap-cat' : 'fmap-pad'), seg(8, 'nombre de mots', 'fmap-bnr')];
+    return [seg(7, 'car. 3', 'fmap-bnr'), seg(7, 'car. 2', 'fmap-bnr'), seg(7, 'car. 1', 'fmap-bnr')];
+  }
+  if (f === 'acmsVol') return [seg(3, 'PAD', 'fmap-pad'), seg(7, `car. ${meta.car + 1}`, 'fmap-bnr'), seg(2, 'PAD', 'fmap-pad'), seg(7, `car. ${meta.car}`, 'fmap-bnr')];
+  if (f === 'altvar') {
+    const F = word ? [[15, 4], [14, 8], [13, 16], [12, 25], [14, 10], [10, 100]][(word >>> 10) & 7] : null;
+    const n = F ? F[0] : 15;
+    return [seg(1, 'sgn', 'fmap-sign'), seg(n - 1, F ? `altitude (${F[1]} ft)` : 'altitude', 'fmap-bnr'), ...(n < 16 ? [seg(16 - n, 'PAD', 'fmap-pad')] : []), seg(3, 'format', 'fmap-cat')];
+  }
+  if (f === 'avm') return [seg(5, 'commande', 'fmap-cat'), seg(12, 'ID AVM (hexa)'), seg(2, 'PAD', 'fmap-pad')];
+  if (f === 'jambes') return [seg(1, 'D', 'fmap-cat'), seg(12, 'compteur 0-4095', 'fmap-bnr'), seg(4, '× 4096', 'fmap-bnr'), seg(2, 'PAD', 'fmap-pad')];
+  if (f === 'docu') return [1, 2, 3, 4, 5, 6].map(n => seg(3, `code ${n}`)).concat(seg(1, 'PAD', 'fmap-pad'));
+  if (f === 'fqisDens') return [seg(1, 'sgn', 'fmap-sign'), seg(12, 'densité − 4 (28→17)', 'fmap-bnr'), seg(6, 'PAD', 'fmap-pad')];
+  if (f === 'fqisCharge') return [seg(3, '0 (artificiel)', 'fmap-pad'), seg(4, 'chiffre'), seg(12, 'PAD', 'fmap-pad')];
   if (f === 'hfcom') {
     if (word && getBit(word, 9)) return [                 // mot 2 : 0.1 kHz, bit 10 = CW, bit 9 = 1
       { span:4,  label:'0.1kHz',      cls:'fmap-freq' },
@@ -1085,7 +1172,7 @@ function renderFieldMap(labelInfo, meta, word) {
   const dataSpan = datasegs.reduce((s, x) => s + x.span, 0);
   const segs = [
     { span:1, label:'P',     cls:'fmap-parity' },
-    { span:2, label:'SSM',   cls:'fmap-ssm'    },
+    { span:2, label: (meta && meta.ssmSeg) || 'SSM', cls:'fmap-ssm' },
     ...datasegs,
     ...(dataSpan <= 19 ? [{ span:2, label:'SDI', cls:'fmap-sdi' }] : []),
     { span:8, label:'LABEL', cls:'fmap-label'  },
@@ -1130,7 +1217,7 @@ function renderBits(word) {
   if (fb === 'latlon') { dataBits.add(9); dataBits.add(10); }            // 0.1' de minute dans les bits 9-10
   if (fb === 'dme') dataBits.add(18);                                    // 0.05 MHz (halfBit), donnée
   if (metaBits && metaBits.partNum) [11, 12, 13].forEach(b => dataBits.add(b));
-  if (metaBits && (metaBits.iso5 || metaBits.extendSdi)) { dataBits.add(9); dataBits.add(10); }
+  if (metaBits && (metaBits.iso5 || metaBits.extendSdi || fb === 'iso5msg')) { dataBits.add(9); dataBits.add(10); }
 
   // Discrete bits (teal) and bit descriptions from DECODE_META
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
@@ -1203,7 +1290,7 @@ function renderFields(word) {
   // ── SDI (bits 9-10) ──
   const sdi = (word >> 8) & 0x3;
   const ssmType = getLabelSsmType(labelInfo);
-  const sdiTable = ['radio', 'dis', 'bnr'].includes(ssmType) ? SDI_TABLES.tous : SDI_TABLES.other;
+  const sdiTable = (meta && meta.sdiDesc) || (['radio', 'dis', 'bnr'].includes(ssmType) ? SDI_TABLES.tous : SDI_TABLES.other);
   document.getElementById('d-sdi').textContent = sdi.toString(2).padStart(2, '0');
   document.getElementById('d-sdi-desc').textContent = sdiTable[sdi];
 
