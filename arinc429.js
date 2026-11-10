@@ -72,187 +72,7 @@ const LABELS = [
   { oct: '062', enc: 'BNR', param: 'ACMS Information',                  unit: '',        eq: ['002','056','060'] },
   { oct: '063', enc: 'BNR', param: 'ACMS Information',                  unit: '',        eq: ['002','056','060'] },
   { oct: '064', enc: 'BNR', param: 'Tire Pressure (Nose)',              unit: 'PSIA',    eq: ['03C'] },
-  { oct: '065', enc: 'BCD', param: 'Gross Weight',                      unit: 'lb' },
-  { oct: '066', enc: 'BCD', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
-  { oct: '067', enc: 'BCD', param: 'Lateral Center of Gravity',         unit: '% MAC' },
-  { oct: '070', enc: 'BNR', param: 'Reference Airspeed (Vref)',         unit: 'kt' },
-  { oct: '071', enc: 'BNR', param: 'Take-Off Climb Airspeed (V2)',      unit: 'kt' },
-  { oct: '072', enc: 'BNR', param: 'Rotation Speed (VR)',               unit: 'kt' },
-  { oct: '073', enc: 'BNR', param: 'V1',                                unit: 'kt' },
-  { oct: '074', enc: 'BNR', param: 'Zero Fuel Weight',                  unit: 'lb' },
-  { oct: '075', enc: 'BNR', param: 'Gross Weight',                      unit: 'lb' },
-  { oct: '076', enc: 'BNR', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
-  { oct: '077', enc: 'BNR', param: 'Target Airspeed',                   unit: 'kt' },
-  { oct: '100', enc: 'BNR', param: 'Selected Course #1',                unit: 'deg' },
-  { oct: '101', enc: 'BNR', param: 'Selected Heading',                  unit: 'deg' },
-  { oct: '102', enc: 'BNR', param: 'Selected Altitude',                 unit: 'ft' },
-  { oct: '103', enc: 'BNR', param: 'Selected Airspeed',                 unit: 'kt' },
-  { oct: '104', enc: 'BNR', param: 'Selected Vertical Speed',           unit: 'ft/min' },
-  { oct: '105', enc: 'BNR', param: 'Selected Runway Heading',           unit: 'deg' },
-  { oct: '106', enc: 'BNR', param: 'Selected Mach',                     unit: 'Mach' },
-  { oct: '107', enc: 'BNR', param: 'Selected Cruise Altitude',          unit: 'ft' },
-  { oct: '110', enc: 'BNR', param: 'Selected Course #2',                unit: 'deg' },
-  { oct: '111', enc: 'BNR', param: 'GNSS Longitude',                    unit: 'deg' },
-  { oct: '112', enc: 'BNR', param: 'Runway Length',                     unit: 'ft' },
-  { oct: '113', enc: 'BNR', param: 'Spare',                             unit: '' },
-  { oct: '114', enc: 'BNR', param: 'Desired Track',                     unit: 'deg' },
-  { oct: '115', enc: 'BNR', param: 'Waypoint Bearing',                  unit: 'deg' },
-  { oct: '116', enc: 'BNR', param: 'Cross Track Distance',              unit: 'nm' },
-  { oct: '117', enc: 'BNR', param: 'Vertical Deviation',                unit: 'ft' },
-  { oct: '120', enc: 'BNR', param: 'Range to Altitude',                 unit: 'nm' },
-  { oct: '121', enc: 'BNR', param: 'Horizontal Command Signal',         unit: 'deg' },
-  { oct: '122', enc: 'BNR', param: 'Vertical Command Signal',           unit: 'deg' },
-  { oct: '123', enc: 'BNR', param: 'Throttle Command',                  unit: 'deg/s' },
-  { oct: '124', enc: 'BNR', param: 'Client Device for GNSS Receiver',   unit: 'm' },
-  { oct: '125', enc: 'BCD', param: 'Universal Time Coordinated (UTC)',  unit: 'hr:min' },
-  { oct: '126', enc: 'BNR', param: 'Vertical Deviation (wide)',         unit: 'ft' },
-  { oct: '127', enc: 'BNR', param: 'Selected Landing Altitude',         unit: 'ft' },
-  { oct: '130', enc: 'BNR', param: 'Intruder Range',                    unit: 'nm' },
-  { oct: '131', enc: 'BNR', param: 'Intruder Altitude',                 unit: 'ft' },
-  { oct: '132', enc: 'BNR', param: 'Intruder Bearing',                  unit: 'deg' },
-  { oct: '133', enc: 'BNR', param: 'Thrust Lever Angle',                unit: 'deg' },
-  { oct: '134', enc: 'BNR', param: 'Throttle Lever Angle',              unit: 'deg' },
-  { oct: '135', enc: 'BNR', param: 'Engine Vibration',                  unit: 'in/s' },
-  { oct: '140', enc: 'BNR', param: 'Flight Director - Roll',            unit: 'deg' },
-  { oct: '141', enc: 'BNR', param: 'Flight Director - Pitch',           unit: 'deg' },
-  { oct: '142', enc: 'BNR', param: 'Flight Director - Fast/Slow',       unit: 'kt' },
-  { oct: '143', enc: 'BNR', param: 'Flight Director - Yaw',             unit: 'deg' },
-  { oct: '144', enc: 'BNR', param: 'Altitude Error',                    unit: 'ft' },
-  { oct: '145', enc: 'BCD', param: 'TACAN Control',                     unit: 'ch' },
-  { oct: '150', enc: 'BNR', param: 'Universal Time Coordinate (UTC)',   unit: 's' },
-  { oct: '151', enc: 'BNR', param: 'Localizer Bearing (True)',          unit: 'deg' },
-  { oct: '152', enc: 'BNR', param: 'Cabin Pressure',                    unit: 'mb' },
-  { oct: '153', enc: 'BNR', param: 'Maximum Altitude',                  unit: 'ft' },
-  { oct: '154', enc: 'BNR', param: 'Runway Heading (True)',             unit: 'deg' },
-  { oct: '162', enc: 'BNR', param: 'ADF Bearing',                       unit: 'deg' },
-  { oct: '164', enc: 'BNR', param: 'Radio Height',                      unit: 'ft' },
-  { oct: '165', enc: 'BNR', param: 'Vertical Velocity',                 unit: 'ft/min' },
-  { oct: '166', enc: 'BNR', param: 'North/South Velocity',              unit: 'kt' },
-  { oct: '167', enc: 'BNR', param: 'EPU/ANP',                           unit: 'nm' },
-  { oct: '170', enc: 'BCD', param: 'Decision Height Selected',          unit: 'ft' },
-  { oct: '171', enc: 'BNR', param: 'RNP',                               unit: 'nm' },
-  { oct: '173', enc: 'BNR', param: 'Localizer Deviation',               unit: 'DDM' },
-  { oct: '174', enc: 'BNR', param: 'Glideslope Deviation',              unit: 'DDM' },
-  { oct: '175', enc: 'BNR', param: 'Economical Speed',                  unit: 'kt' },
-  { oct: '176', enc: 'BNR', param: 'Economical Mach',                   unit: 'Mach' },
-  { oct: '177', enc: 'BNR', param: 'Economical Flight Level',           unit: 'ft' },
-  { oct: '200', enc: 'BCD', param: 'Drift Angle',                       unit: 'deg' },
-  { oct: '201', enc: 'BCD', param: 'DME Distance',                      unit: 'nm' },
-  { oct: '202', enc: 'BNR', param: 'DME Distance',                      unit: 'nm' },
-  { oct: '203', enc: 'BNR', param: 'Altitude (1013.25 mb)',             unit: 'ft' },
-  { oct: '204', enc: 'BNR', param: 'Baro Corrected Altitude #1',        unit: 'ft' },
-  { oct: '205', enc: 'BNR', param: 'Mach',                              unit: 'Mach' },
-  { oct: '206', enc: 'BNR', param: 'Computed Airspeed',                 unit: 'kt' },
-  { oct: '207', enc: 'BNR', param: 'Maximum Allowable Airspeed',        unit: 'kt' },
-  { oct: '210', enc: 'BNR', param: 'True Airspeed',                     unit: 'kt' },
-  { oct: '211', enc: 'BNR', param: 'Total Air Temperature',             unit: '°C' },
-  { oct: '212', enc: 'BNR', param: 'Altitude Rate',                     unit: 'ft/min' },
-  { oct: '213', enc: 'BNR', param: 'Static Air Temperature',            unit: '°C' },
-  { oct: '215', enc: 'BNR', param: 'Impact Pressure',                   unit: 'mb' },
-  { oct: '217', enc: 'BNR', param: 'Geometric Vertical Rate',           unit: 'ft/min' },
-  { oct: '220', enc: 'BNR', param: 'Baro Corrected Altitude #2',        unit: 'ft' },
-  { oct: '221', enc: 'BNR', param: 'Indicated Angle of Attack',         unit: 'deg' },
-  { oct: '222', enc: 'BNR', param: 'VOR Omnibearing / AoA',            unit: 'deg' },
-  { oct: '225', enc: 'BNR', param: 'Minimum Maneuvering Airspeed',      unit: 'kt' },
-  { oct: '230', enc: 'BCD', param: 'True Airspeed',                     unit: 'kt' },
-  { oct: '231', enc: 'BCD', param: 'Total Air Temperature',             unit: '°C' },
-  { oct: '232', enc: 'BCD', param: 'Altitude Rate',                     unit: 'ft/min' },
-  { oct: '233', enc: 'BCD', param: 'Static Air Temperature',            unit: '°C' },
-  { oct: '234', enc: 'BCD', param: 'Baro Correction',                   unit: 'mb' },
-  { oct: '235', enc: 'BCD', param: 'Baro Correction',                   unit: 'inHg' },
-  { oct: '241', enc: 'BNR', param: 'Min Airspeed for Flap Extension',   unit: 'kt' },
-  { oct: '242', enc: 'BNR', param: 'Total Pressure',                    unit: 'mb' },
-  { oct: '244', enc: 'BNR', param: 'Fuel Flow',                         unit: 'lb/hr' },
-  { oct: '245', enc: 'BNR', param: 'Minimum Airspeed',                  unit: 'kt' },
-  { oct: '246', enc: 'BNR', param: 'N1 (Engine Direct)',                unit: '% RPM' },
-  { oct: '247', enc: 'BNR', param: 'Total Fuel',                        unit: 'lb' },
-  { oct: '250', enc: 'BNR', param: 'Continuous N1 Limit',               unit: '% RPM' },
-  { oct: '251', enc: 'BNR', param: 'Distance to Go',                    unit: 'nm' },
-  { oct: '252', enc: 'BNR', param: 'Time to Go',                        unit: 'min' },
-  { oct: '253', enc: 'BNR', param: 'Go-Around N1 Limit',                unit: '% RPM' },
-  { oct: '254', enc: 'BNR', param: 'Cruise N1 Limit',                   unit: '% RPM' },
-  { oct: '255', enc: 'BNR', param: 'Climb N1 Limit',                    unit: '% RPM' },
-  { oct: '256', enc: 'BNR', param: 'Time for Climb',                    unit: 'min' },
-  { oct: '257', enc: 'BNR', param: 'Time for Descent',                  unit: 'min' },
-  { oct: '260', enc: 'BCD', param: 'Date/Flight Leg',                   unit: '' },
-  { oct: '261', enc: 'BCD', param: 'Flight Number',                     unit: '' },
-  { oct: '262', enc: 'BNR', param: 'Documentary Data',                  unit: '' },
-  { oct: '263', enc: 'BNR', param: 'Min Airspeed for Flap Retraction',  unit: 'kt' },
-  { oct: '264', enc: 'BNR', param: 'Time to Touchdown',                 unit: 'min' },
-  { oct: '265', enc: 'BNR', param: 'Min Buffet Airspeed',               unit: 'kt' },
-  { oct: '267', enc: 'BNR', param: 'Maximum Maneuver Airspeed',         unit: 'kt' },
-  { oct: '270', enc: 'DIS', param: 'Discrete Data #1',                  unit: '' },
-  { oct: '271', enc: 'DIS', param: 'Discrete Data #2',                  unit: '' },
-  { oct: '272', enc: 'DIS', param: 'Discrete Data #3',                  unit: '' },
-  { oct: '273', enc: 'DIS', param: 'Discrete Data #4',                  unit: '' },
-  { oct: '274', enc: 'DIS', param: 'Discrete Data #5',                  unit: '' },
-  { oct: '275', enc: 'DIS', param: 'Discrete Data #6',                  unit: '' },
-  { oct: '276', enc: 'DIS', param: 'Discrete Data #7',                  unit: '' },
-  { oct: '277', enc: 'DIS', param: 'Discrete Data #8',                  unit: '' },
-  { oct: '300', enc: 'DIS', param: 'Application Dependent #1',          unit: '' },
-  { oct: '301', enc: 'DIS', param: 'Application Dependent #2',          unit: '' },
-  { oct: '302', enc: 'DIS', param: 'Application Dependent #3',          unit: '' },
-  { oct: '303', enc: 'DIS', param: 'Application Dependent #4',          unit: '' },
-  { oct: '304', enc: 'DIS', param: 'Application Dependent #5',          unit: '' },
-  { oct: '305', enc: 'DIS', param: 'Application Dependent #6',          unit: '' },
-  { oct: '306', enc: 'DIS', param: 'Application Dependent #7',          unit: '' },
-  { oct: '307', enc: 'DIS', param: 'Application Dependent #8',          unit: '' },
-  { oct: '310', enc: 'BNR', param: 'Present Position - Latitude',       unit: 'deg' },
-  { oct: '311', enc: 'BNR', param: 'Present Position - Longitude',      unit: 'deg' },
-  { oct: '312', enc: 'BNR', param: 'Ground Speed',                      unit: 'kt' },
-  { oct: '313', enc: 'BNR', param: 'Track Angle - True',                unit: 'deg' },
-  { oct: '314', enc: 'BNR', param: 'True Heading',                      unit: 'deg' },
-  { oct: '315', enc: 'BNR', param: 'Wind Speed',                        unit: 'kt' },
-  { oct: '316', enc: 'BNR', param: 'Wind Direction - True',             unit: 'deg' },
-  { oct: '317', enc: 'BNR', param: 'Track Angle - Magnetic',            unit: 'deg' },
-  { oct: '320', enc: 'BNR', param: 'Magnetic Heading',                  unit: 'deg' },
-  { oct: '321', enc: 'BNR', param: 'Drift Angle',                       unit: 'deg' },
-  { oct: '322', enc: 'BNR', param: 'Flight Path Angle',                 unit: 'deg' },
-  { oct: '323', enc: 'BNR', param: 'Flight Path Acceleration',          unit: 'g' },
-  { oct: '324', enc: 'BNR', param: 'Pitch Angle',                       unit: 'deg' },
-  { oct: '325', enc: 'BNR', param: 'Roll Angle',                        unit: 'deg' },
-  { oct: '326', enc: 'BNR', param: 'Body Pitch Rate',                   unit: 'deg/s' },
-  { oct: '327', enc: 'BNR', param: 'Body Roll Rate',                    unit: 'deg/s' },
-  { oct: '330', enc: 'BNR', param: 'Body Yaw Rate',                     unit: 'deg/s' },
-  { oct: '331', enc: 'BNR', param: 'Body Longitudinal Acceleration',    unit: 'g' },
-  { oct: '332', enc: 'BNR', param: 'Body Lateral Acceleration',         unit: 'g' },
-  { oct: '333', enc: 'BNR', param: 'Body Normal Acceleration',          unit: 'g' },
-  { oct: '334', enc: 'BNR', param: 'Platform Heading',                  unit: 'deg' },
-  { oct: '335', enc: 'BNR', param: 'Track Angle Rate',                  unit: 'deg/s' },
-  { oct: '336', enc: 'BNR', param: 'Inertial Pitch Rate',               unit: 'deg/s' },
-  { oct: '337', enc: 'BNR', param: 'Inertial Roll Rate',                unit: 'deg/s' },
-  { oct: '340', enc: 'BNR', param: 'EPR Actual',                        unit: 'ratio' },
-  { oct: '341', enc: 'BNR', param: 'N1 Command',                        unit: '% RPM' },
-  { oct: '342', enc: 'BNR', param: 'N1 Limit',                          unit: '% RPM' },
-  { oct: '343', enc: 'BNR', param: 'N1 Derate',                         unit: '% RPM' },
-  { oct: '344', enc: 'BNR', param: 'N2',                                unit: '% RPM' },
-  { oct: '345', enc: 'BNR', param: 'Exhaust Gas Temperature',           unit: '°C' },
-  { oct: '346', enc: 'BNR', param: 'N1 Actual',                         unit: '% RPM' },
-  { oct: '347', enc: 'BNR', param: 'Fuel Flow',                         unit: 'lb/hr' },
-  { oct: '350', enc: 'DIS', param: 'Maintenance Data #1',               unit: '' },
-  { oct: '351', enc: 'DIS', param: 'Maintenance Data #2',               unit: '' },
-  { oct: '352', enc: 'DIS', param: 'Maintenance Data #3',               unit: '' },
-  { oct: '353', enc: 'DIS', param: 'Maintenance Data #4',               unit: '' },
-  { oct: '354', enc: 'DIS', param: 'Maintenance Data #5',               unit: '' },
-  { oct: '355', enc: 'DIS', param: 'Acknowledgement',                   unit: '' },
-  { oct: '356', enc: 'DIS', param: 'ISO Alphabet #5 Message',           unit: '' },
-  { oct: '357', enc: 'DIS', param: 'ISO Alphabet #5 Message',           unit: '' },
-  { oct: '360', enc: 'BNR', param: 'Potential Vertical Speed',          unit: 'ft/min' },
-  { oct: '361', enc: 'BNR', param: 'Altitude (Inertial)',               unit: 'ft' },
-  { oct: '362', enc: 'BNR', param: 'Along Track Horizontal Acceleration', unit: 'g' },
-  { oct: '363', enc: 'BNR', param: 'Cross Track Acceleration',          unit: 'g' },
-  { oct: '364', enc: 'BNR', param: 'Vertical Acceleration',             unit: 'g' },
-  { oct: '365', enc: 'BNR', param: 'Inertial Vertical Velocity',        unit: 'ft/min' },
-  { oct: '366', enc: 'BNR', param: 'North-South Velocity',              unit: 'kt' },
-  { oct: '367', enc: 'BNR', param: 'East-West Velocity',                unit: 'kt' },
-  { oct: '370', enc: 'BNR', param: 'Geometric Altitude / g',            unit: 'ft' },
-  { oct: '371', enc: 'DIS', param: 'General Aviation Equipment Identifier', unit: '' },
-  { oct: '372', enc: 'BNR', param: 'Wind Direction - Magnetic',         unit: 'deg' },
-  { oct: '373', enc: 'BNR', param: 'North-South Velocity - Magnetic',   unit: 'kt' },
-  { oct: '374', enc: 'BNR', param: 'East-West Velocity - Magnetic',     unit: 'kt' },
-  { oct: '375', enc: 'BNR', param: 'Along Heading Acceleration',        unit: 'g' },
-  { oct: '376', enc: 'BNR', param: 'Cross Heading Acceleration',        unit: 'g' },
-  { oct: '377', enc: 'DIS', param: 'Equipment Identification',          unit: '' },
+  // 065 à 377 : générés depuis le manuel (arinc429-etiquettes.js), ajoutés par fusionnerGen() plus bas
 ];
 
 // Pre-compute hex for each label
@@ -413,22 +233,14 @@ const DECODE_META = {
   '052': { msb: 32, spareBits: [11, 12, 13], bnrDecimals: 3 },
   '053': { msb: 32, spareBits: [11, 12, 13], bnrDecimals: 3 },
   '056': { decimals: 1, fmt: 'eta' },  // ETA – HH:MM.m, custom decoder
-  '065': { decimals: 0, bcdScale: 100 },  // Gross Weight — BCD × 100 = lb
-  '066': { decimals: 2 },  // Longitudinal CG (% MAC) — res 0.01%
-  '067': { decimals: 2 },  // Lateral CG (% MAC) — res 0.01%
-  '125': { decimals: 1, utcFmt: true, fmt: 'utc' },  // UTC HH:MM.m — d4d3=heures, d2d1.d0=min
-  '145': { decimals: 0 },  // TACAN Control (channel)
-  '170': { decimals: 0 },  // Decision Height Selected (ft)
-  '200': { decimals: 1 },  // Drift Angle (deg)
-  '201': { decimals: 2 },  // DME Distance (nm)
-  '230': { decimals: 2 },  // True Airspeed (kt)        – 3 digits + 2 PAD, 1 kt res
-  '231': { decimals: 1 },  // Total Air Temperature (°C)
-  '232': { decimals: 0 },  // Altitude Rate (ft/min)
-  '233': { decimals: 1 },  // Static Air Temperature (°C)
-  '234': { decimals: 2 },  // Baro Correction (mb)
-  '235': { decimals: 2 },  // Baro Correction (inHg)    – 4 digits, 0.01 inHg res
-  '260': { decimals: 0 },  // Date/Flight Leg
-  '261': { decimals: 0 },  // Flight Number
+  
+  
+  
+  
+  
+  
+  
+  
 
   // S/G Hardware Part Number — BCD, 4 digits (bits 29-14), RESERVED bits 11-13
   // SDI = Sequence ID: 01=First 3 digits, 10=Next 4 digits, 11=Last 3 digits
@@ -460,105 +272,33 @@ const DECODE_META = {
   '063': { iso5: ['Dest 2',       'Dest 3',        'Dest 4'      ] },
   '054': { msb: 32, spareBits: [11, 12, 13], bnrDecimals: 3 },  // Body Yaw Acceleration ±64 deg/s², 15 sig bits (28-14), PAD 11-13
   '064': { msb: 512,    spareBits: [11, 12, 13, 14, 15, 16, 17, 18], bnrDecimals: 0 },  // Tire Press — 10 sig bits (28-19), bits 11-18 = PAD, res 1 PSIA
-  // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
-  '070': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  '071': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  '072': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  '073': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  // Scale=1310720, 15 sig bits (28→14), res=40 lb, PAD bits 11-13
-  '074': { msb: 655360, spareBits:[11,12,13], bnrDecimals:0 },
-  '075': { msb: 655360, spareBits:[11,12,13], bnrDecimals:0 },
-  // Scale=163.84, 14 sig bits (28→15), res=0.01% MAC, PAD bits 11-14
-  '076': { msb: 81.92, spareBits:[11,12,13,14], bnrDecimals:2 },
-  // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
-  '077': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
-  // Scale=±180°, 12 sig bits (28→17), step≈0.044°, display res=0.05°
-  '100': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
-  '101': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
-  // Scale=65536, 16 sig bits (28→13), res=1 feet
-  '102': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
-  // Scale=512, 11 sig bits (28→18), res=0.25 knots
-  '103': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2},  
-  // Scale=16384, 10 sig bits (28→19), res=16 ft/min
-  '104': { msb: 8192, spareBits:[11,12,13,14,15,16,17,18], bnrDecimals:0},  
-  // Scale=±180, 11 sig bits (28→18), res=0.1 Degree
-  '105': { msb: 90, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1},
-  // Scale=±4096 Mach, 12 sig bits (28→17), res=1 Mach, PAD bits 11-16
-  '106': { msb: 2048, spareBits:[11,12,13,14,15,16], bnrDecimals:0},
-  // Scale=65536, 16 sig bits (28→13), res=1 Mach
-  '107': { msb: 32768, spareBits:[11,12], bnrDecimals:0},
-  // Scale=±180°, 12 sig bits (28→17), step≈0.044°, display res=0.05°
-  '110': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
-  // Scale=±180, 20 sig bits (28→9), res=0.000172 degree
-  '111': { msb: 90, extendSdi: true, bnrDecimals:6},  
-  // Scale=20480, 11 sig bits (28→18), res=10 feet
-  '112': { msb: 10240, spareBits:[11,12,13,14,15,16,17], bnrDecimals:0},
-  // Scale=20480, 12 sig bits (28→17), res=0.05 Degree
-  '114': { msb: 90, spareBits:[11,12,13,14,15,16], bnrDecimals:2},
+  
+  
+  
+  
 
-  // Scale=±180°, 12 sig bits (28→17), res≈0.044°, PAD 11-16
-  '115': { msb: 90,   spareBits:[11,12,13,14,15,16],    bnrDecimals:2 },
-  // Scale=±128 NM, 15 sig bits (28→14), res≈0.004 NM, PAD 11-13
-  '116': { msb: 64,   spareBits:[11,12,13], bnrDecimals:3 },
-  // Scale=±2048 ft, 11 sig bits (28→18), res=1.0 ft, PAD 11-17
-  '117': { msb: 1024, spareBits:[11,12,13,14,15,16,17], bnrDecimals:1 },
-  // Scale=±512 NM,  15 sig bits (28→14), res≈0.016 NM,  PAD 11-13
-  '120': { msb: 256,   spareBits:[11,12,13],             bnrDecimals:3 },
-  // Scale=±180°,   14 sig bits (28→15), res≈0.011°,    PAD 11-14
-  '121': { msb: 90,    spareBits:[11,12,13,14],           bnrDecimals:2 },
-  // Scale=±180°,   12 sig bits (28→17), res≈0.044°,    PAD 11-16
-  '122': { msb: 90,    spareBits:[11,12,13,14,15,16],     bnrDecimals:2 },
-  // Scale=±256°,   18 sig bits (28→11), res≈0.001°
-  '123': { msb: 128,                                      bnrDecimals:3 },
-  // Scale=±8192 m, 13 sig bits (28→16), res=1 m,       PAD 11-15
-  '124': { msb: 4096,  spareBits:[11,12,13,14,15],        bnrDecimals:1 },
-  // Scale=±32768 ft,15 sig bits (28→14), res=1 ft,     PAD 11-13
-  '126': { msb: 16384, spareBits:[11,12,13],              bnrDecimals:1 },
-  // Scale=±65536 ft,16 sig bits (28→13), res=1 ft,     PAD 11-12
-  '127': { msb: 32768, spareBits:[11,12],                 bnrDecimals:1 },
-  '130': { msb: 512    },  '131': { msb: 131072  },  '132': { msb: 180    },
-  '133': { msb: 180    },  '134': { msb: 180     },  '135': { msb: 16     },
-  '140': { msb: 90     },  '141': { msb: 90      },  '142': { msb: 256    },
-  '143': { msb: 90     },  '144': { msb: 2048    },
-  '150': { msb: 43200  },  '151': { msb: 180     },  '152': { msb: 1024   },
-  '153': { msb: 131072  },  '154': { msb: 180    },
-  '162': { msb: 180    },  '164': { msb: 2500    },  '165': { msb: 16384  },
-  '166': { msb: 1024   },  '167': { msb: 128     },  '171': { msb: 32     },
-  '173': { msb: 0.2, spareBits: [12,13,14,15,16], bnrDecimals: 4, discBits: [11], catBits: [11], bitDescs: { 11: 'Tune Inhibit' } },  // scale=0.4 DDM, bit29=-0.4, bit28=+0.2
-  '174': { msb: 0.4, spareBits: [12,13,14,15,16], bnrDecimals: 4, discBits: [11], catBits: [11], bitDescs: { 11: 'Tune Inhibit' } },  // scale=0.8 DDM, bit29=-0.8, bit28=+0.4
-  '175': { msb: 512    },
-  '176': { msb: 1.024, bnrDecimals: 4 },  '177': { msb: 131072  },
-  '202': { msb: 2048   },  '203': { msb: 131072  },  '204': { msb: 131072  },
-  '205': { msb: 1.024, bnrDecimals: 4 },  '206': { msb: 1024    },  '207': { msb: 1024   },
-  '210': { msb: 1024   },  '211': { msb: 256, bnrDecimals: 2 },  '212': { msb: 16384  },
-  '213': { msb: 256, bnrDecimals: 2 },  '215': { msb: 1024    },  '217': { msb: 16384  },
-  '220': { msb: 131072  },  '221': { msb: 90     },  '222': { msb: 180    },
-  '225': { msb: 1024   },
-  '241': { msb: 512    },  '242': { msb: 2048    },  '244': { msb: 131072  },
-  '245': { msb: 512    },  '246': { msb: 128     },  '247': { msb: 262144  },
-  '250': { msb: 128    },  '251': { msb: 2048    },  '252': { msb: 1024   },
-  '253': { msb: 128    },  '254': { msb: 128     },  '255': { msb: 128    },
-  '256': { msb: 1024   },  '257': { msb: 1024    },
-  '262': { msb: 65536  },  '263': { msb: 512     },  '264': { msb: 128    },
-  '265': { msb: 512    },  '267': { msb: 512     },
-  '310': { msb: 90,    ssmSign: true },  // Latitude  (SSM 01=N, 10=S)
-  '311': { msb: 180,   ssmSign: true },  // Longitude (SSM 01=E, 10=W)
-  '312': { msb: 2048   },  '313': { msb: 180    },  '314': { msb: 180    },
-  '315': { msb: 1024   },  '316': { msb: 180    },  '317': { msb: 180    },
-  '320': { msb: 180    },  '321': { msb: 90     },  '322': { msb: 90     },
-  '323': { msb: 4      },  '324': { msb: 90     },  '325': { msb: 180    },
-  '326': { msb: 128    },  '327': { msb: 128    },
-  '330': { msb: 128    },  '331': { msb: 4      },  '332': { msb: 4      },
-  '333': { msb: 4      },  '334': { msb: 180    },  '335': { msb: 8      },
-  '336': { msb: 128    },  '337': { msb: 128    },
-  '340': { msb: 8      },  '341': { msb: 128    },  '342': { msb: 128    },
-  '343': { msb: 128    },  '344': { msb: 128    },  '345': { msb: 1024   },
-  '346': { msb: 128    },  '347': { msb: 131072  },
-  '360': { msb: 16384  },  '361': { msb: 131072  },  '362': { msb: 4      },
-  '363': { msb: 4      },  '364': { msb: 4      },  '365': { msb: 16384  },
-  '366': { msb: 1024   },  '367': { msb: 1024   },  '370': { msb: 131072  },
-  '372': { msb: 180    },  '373': { msb: 1024   },  '374': { msb: 1024   },
-  '375': { msb: 4      },  '376': { msb: 4      },
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 };
 
 // ── Alternate label configurations ──────────────────────────────────────────
@@ -636,10 +376,96 @@ const EQPT = {
   '0B9': 'HF/SSB Controller', '0C7': 'MLS Controller', '0D0': 'Engine Instrument System (B737)',
   '10A': 'FADEC A (GE)', '10B': 'FADEC B (GE)', '115': 'TACAN',
 };
-const eqTexte = eq => (eq || []).map(c => EQPT[c] ? `${EQPT[c]} (${c})` : c).join(', ');
+const nomEq = c => EQPT[c] || (window.ARINC_EQPT || {})[c];
+const eqTexte = eq => (eq || []).map(c => nomEq(c) ? `${nomEq(c)} (${c})` : c).join(', ');
+
+// ── Étiquettes 065 à 377 : générées depuis le manuel (arinc429-etiquettes.js, outils/arinc429_generer.py) ──
+// Les formats particuliers de l'attachement 6 (dates, n° de vol, UTC, TCAS, TACAN, discrets dans les bits de remplissage…)
+// sont ajoutés ici, par-dessus les formats génériques BNR/BCD de l'attachement 2.
+const sauf = (liste, ...bits) => (liste || []).filter(b => !bits.includes(b));
+const FORMATS_SPECIAUX = [
+  { oct: '106', si: /Selected Mach \(12 bits\)/i, unit: 'mMach', note: 'en millièmes de Mach (exemple du tableau 6-27 : 800 = Mach 0.800)' },
+  { oct: '124', si: /Horizontal Alarm Limit/i, att6: '6-49', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11, 12, 13), discBits: [11, 12, 13], catBits: [11, 12, 13],
+      bitDescs: { 11: 'Phase de vol (bits 13-11, tableau 6-49)', 12: 'Phase de vol', 13: 'Phase de vol — 000 non spécifiée, 001 océanique, 010 en route…' } }) },
+  { oct: '127', si: /Slat Angle/i, att6: '6-11', patch: m => leviers(m) },
+  { oct: '137', si: /Flap Angle/i, att6: '6-11', patch: m => leviers(m) },
+  { oct: '130', si: /Intruder Range/i, att6: '6-21', meta: { fmt: 'tcasRange' }, unit: 'nm' },
+  { oct: '131', si: /Intruder Altitude/i, att6: '6-22', meta: { fmt: 'tcasAlt' }, unit: 'ft' },
+  { oct: '132', si: /Intruder Bearing/i, att6: '6-23', meta: { fmt: 'tcasBrg' }, unit: 'deg' },
+  { oct: '145', si: /TACAN Control/i, att6: '6-30', meta: { fmt: 'tacan', catBits: [14, 15, 26, 27, 28],
+      bitDescs: { 14: 'VOR/TAC — 1=TAC  0=VOR', 15: 'TACAN — 1=TAC 1  0=TAC 2', 26: 'Mode X/Y — 1=X  0=Y', 27: 'Mode (bits 27-28) : 00 REC, 01 A/A REC, 10 T/R, 11 A/A T/R', 28: 'Mode' } } },
+  { oct: '146', si: /TACAN Control/i, att6: '6-47', meta: { fmt: 'tacan', catBits: [11, 12, 14, 15, 26, 27, 28],
+      bitDescs: { 11: 'Distance Memory — 1=DIST MEM', 12: 'Bearing Memory — 1=BRG MEM', 14: 'VOR/TAC — 1=TAC  0=VOR', 15: 'TACAN — 1=TAC 1  0=TAC 2', 26: 'Mode X/Y — 1=X  0=Y', 27: 'Mode (bits 27-28) : 00 REC, 01 A/A REC, 10 T/R, 11 A/A T/R', 28: 'Mode' } } },
+  { oct: '147', si: /TACAN Control/i, att6: '6-48', meta: { fmt: 'tacan147', catBits: [9, 10, 11, 12, 13, 15, 16, 25, 26, 27, 28, 29],
+      bitDescs: { 9: 'SEL — 1=TACAN 1  0=TACAN 2', 10: 'SEL — 1=antenne 2  0=antenne 1', 11: 'Lobe d’antenne', 12: '1=autotune  0=manuel', 13: 'A/A AGC — 1=activé  0=désactivé',
+        15: 'TACAN/MLS (bits 15-16)', 16: 'TACAN/MLS', 25: 'TST — 1=test', 26: 'X/Y — 1=X  0=Y', 27: 'Mode (bits 27-28)', 28: 'Mode', 29: 'INT — 1=normal  0=inverse' } } },
+  { oct: '150', si: /Universal Time|UTC/i, att6: '6-12', meta: { fmt: 'utcbnr', catBits: [11], bitDescs: { 11: 'Source — 1=horloge GNSS' } } },
+  { oct: '164', si: /^Radio Height \(16 bits\)/i, att6: '6-13', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11), discBits: [11], catBits: [11], bitDescs: { 11: 'FTI — 1=ne pas faire de test fonctionnel' } }) },
+  { oct: '173', si: /Localizer Deviation/i, att6: '6-6', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11), discBits: [11], catBits: [11], bitDescs: { 11: 'Tune Inhibit — 1=récepteur ILS en « tune inhibit »' } }) },
+  { oct: '174', si: /Glide ?slope Deviation/i, att6: '6-6', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11), discBits: [11], catBits: [11], bitDescs: { 11: 'Tune Inhibit — 1=récepteur ILS en « tune inhibit »' } }) },
+  { oct: '202', si: /^DME Distance/i, att6: '6-7', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11, 12), discBits: [11, 12], catBits: [11, 12],
+      bitDescs: { 11: 'Mémoire — 1=memory on (ARINC 709)', 12: '1=station de premier plan (balayage de fréquences)' } }) },
+  { oct: '203', eq: '018', att6: '6-24', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11), discBits: [11], catBits: [11], bitDescs: { 11: 'Résolution — 0=1 ft  1=100 ft' } }) },
+  { oct: '205', si: /HF COM/i, att6: '6-43', meta: { fmt: 'hfcom205', catBits: [11], bitDescs: { 11: 'Word Ident — 0=mot 1 (MHz)  1=mot 2 (0.1 kHz)' } }, unit: 'MHz', enlever: 'hors' },
+  { oct: '207', eq: '025', att6: '6-37', meta: null, partNum: true },
+  { oct: '222', si: /VOR Omnibearing/i, att6: '6-10', patch: m => ({ ...m, spareBits: sauf(m.spareBits, 11, 12, 13), discBits: [11, 12, 13], catBits: [11, 12, 13],
+      bitDescs: { 11: 'Marker 400 Hz — 1=discret à la masse', 12: 'Marker 1300 Hz — 1=discret à la masse', 13: 'Marker 3000 Hz — 1=discret à la masse' } }) },
+  { oct: '260', eq: '031', att6: '6-18', meta: { fmt: 'date' }, enc: 'BCD', unit: '', enlever: 'hors' },
+  { oct: '260', si: /Date/i, att6: '6-8', meta: { fmt: 'dateleg' }, enc: 'BCD', unit: '', enlever: 'hors' },
+  { oct: '261', si: /^Flight Number/i, att6: '6-9', meta: { fmt: 'vol' }, enc: 'BCD', unit: '', enlever: 'hors' },
+  { oct: '356', si: /ISO/i, att6: '6-3', meta: { iso5: ['Car. 1', 'Car. 2', 'Car. 3'] }, note: 'mot intermédiaire : 3 caractères ISO n° 5 ; le mot initial (STX, nombre de mots) n’est pas décodé' },
+  { oct: '357', si: /ISO/i, att6: '6-3', meta: { iso5: ['Car. 1', 'Car. 2', 'Car. 3'] }, note: 'mot intermédiaire : 3 caractères ISO n° 5 ; le mot initial (STX, nombre de mots) n’est pas décodé' },
+  { oct: '377', si: /Equipment Ident/i, att6: '6-17', meta: { fmt: 'eqid' }, enlever: 'hors' },
+  // formats décrits dans l'attachement 6 mais pas décodés ici : une note renvoie au tableau
+  { oct: '206', eq: '018', att6: '6-20', note: 'résolution variable selon les bits 13-11 (tableau 6-20)' },
+  { oct: '227', eq: '03D', att6: '6-28', note: 'mot de commande AVM (tableau 6-28)' },
+  { oct: '241', eq: '04D', att6: '6-35', note: 'séquence de 63 mots (tableau 6-35)' },
+  { oct: '241', eq: '160', att6: '6-38', note: 'séquence de mots (tableau 6-38)' },
+  { oct: '251', si: /Flight Leg/i, att6: '6-19', note: 'compteur de vols (tableau 6-19)' },
+  { oct: '355', si: /Acknowledg/i, att6: '6-5', note: 'format de l’accusé de réception non défini' },
+];
+function leviers(m) {
+  return { ...m, spareBits: sauf(m.spareBits, 11, 12, 13, 14, 15), discBits: [11, 12, 13, 14, 15], catBits: [11, 12, 13, 14, 15],
+    bitDescs: { 11: 'Levier position 1 (croisière)', 12: 'Levier position 2', 13: 'Levier position 3', 14: 'Levier position 4', 15: 'Levier position 5 (atterrissage)' } };
+}
+function appliquerSpeciaux(oct, c) {
+  const r = { ...c, eq: [...c.eq] };
+  for (const f of FORMATS_SPECIAUX) {
+    if (f.oct !== oct) continue;
+    if (f.si && !f.si.test(c.param)) continue;
+    if (f.eq && !c.eq.includes(f.eq)) continue;
+    if (f.patch && r.meta) r.meta = f.patch(r.meta);
+    if (f.meta !== undefined) r.meta = f.meta && { ...(r.meta || {}), ...f.meta };
+    if (f.partNum) r.meta = DECODE_META['060'];
+    if (f.enc) r.enc = f.enc;
+    if (f.unit !== undefined) r.unit = f.unit;
+    if (f.enlever) delete r[f.enlever];
+    if (f.note) r.note = r.note ? r.note + ' ; ' + f.note : f.note;
+    if (f.att6 && !(r.att6 || '').includes(f.att6)) r.att6 = r.att6 ? r.att6 + ', ' + f.att6 : f.att6;
+    if (r.meta && r.hors && (f.meta || f.partNum)) delete r.hors;
+    break;
+  }
+  return r;
+}
+(function fusionnerGen() {
+  const G = window.ARINC_GEN || {};
+  for (let n = 0o065; n <= 0o377; n++) {
+    const oct = n.toString(8).padStart(3, '0');
+    const liste = (G[oct] || []).map(c => appliquerSpeciaux(oct, c));
+    if (!liste.length) { LABELS.push({ oct, enc: 'DIS', param: 'Spare', unit: '' }); continue; }
+    const [d, ...autres] = liste;
+    LABELS.push({ oct, enc: d.enc, param: d.param, unit: d.unit, eq: d.eq, hors: d.hors, note: d.note, att6: d.att6 });
+    if (d.meta) DECODE_META[oct] = d.meta;
+    if (autres.length) ALT_CONFIGS[oct] = autres;
+  }
+  LABELS.forEach(l => { const dec = parseInt(l.oct, 8); l.dec = dec; l.hex = dec.toString(16).toUpperCase().padStart(2, '0'); });
+})();
 
 // Currently selected config slot per label (0 = default)
 const labelConfigIdx = {};
+
+// « hors » : soit un autre document ARINC (on le nomme), soit une absence dans ce manuel (le texte le dit déjà)
+const texteHors = h => /manuel|chapitre|précis/i.test(h) ? h : `format défini dans ${h}, pas dans ARINC 429 Part 1`;
 
 function getActiveLabelConfig(oct) {
   const base = LABELS.find(l => l.oct === oct);
@@ -652,7 +478,7 @@ function getActiveLabelConfig(oct) {
   const meta = alt.meta === null && oct === '061' ? DECODE_META['060'] : alt.meta;
   return {
     labelInfo: { ...base, enc: alt.enc || (base && base.enc), param: alt.param, unit: alt.unit,
-                 eq: alt.eq, ssm: alt.ssm, hors: alt.hors, note: alt.note },
+                 eq: alt.eq, ssm: alt.ssm, hors: alt.hors, note: alt.note, att6: alt.att6 },
     meta: alt.hors ? undefined : meta,
   };
 }
@@ -739,6 +565,58 @@ function decodeData(word, labelInfo, metaOverride) {
     const dC = (word >> 20) & 0x7;  // bits 23-21
     const dD = (word >> 17) & 0x7;  // bits 20-18
     return `${dA}${dB}${dC}${dD}`;
+  }
+
+  // ── Formats de l'attachement 6 pour les étiquettes 065 à 377 ──
+  const b = n => getBit(word, n), champ = (de, nb) => (word >>> (de - 1)) & ((1 << nb) - 1);   // champ de nb bits dont le bit de poids faible est « de »
+  const deux = v => String(v).padStart(2, '0');
+  if (fmt === 'utcbnr') {          // 150, tableau 6-12 : heures 28-24, minutes 23-18, secondes 17-12, bit 11 = horloge GNSS
+    const h = champ(24, 5), mi = champ(18, 6), se = champ(12, 6);
+    if (h > 24 || mi > 59 || se > 59) return null;
+    return `${deux(h)}:${deux(mi)}:${deux(se)}${b(11) ? ' (GNSS)' : ''}`;
+  }
+  if (fmt === 'dateleg' || fmt === 'date') {   // 260, tableaux 6-8 et 6-18
+    const j = champ(28, 2) * 10 + champ(24, 4), m = champ(23, 1) * 10 + champ(19, 4);
+    if (champ(24, 4) > 9 || champ(19, 4) > 9 || j > 31 || m > 12) return null;
+    if (fmt === 'date') { const a10 = champ(15, 4), a1 = champ(11, 4); if (a10 > 9 || a1 > 9) return null; return `${deux(j)}/${deux(m)}/${a10}${a1}`; }
+    const vol = champ(15, 4); if (vol > 9) return null;
+    return `${deux(j)}/${deux(m)} · vol (leg) ${vol}`;
+  }
+  if (fmt === 'vol') {             // 261, tableau 6-9 : 4 chiffres BCD, bits 29-14
+    const d = [champ(26, 4), champ(22, 4), champ(18, 4), champ(14, 4)];
+    if (d.some(x => x > 9)) return null;
+    return d.join('');
+  }
+  if (fmt === 'eqid') {            // 377, tableau 6-17 : code d'équipement en 3 chiffres hexadécimaux, bits 22-11
+    const code = [champ(19, 4), champ(15, 4), champ(11, 4)].map(x => x.toString(16).toUpperCase()).join('');
+    const nom = (window.ARINC_EQPT || {})[code];
+    return nom ? `${code} — ${nom}` : code;
+  }
+  if (fmt === 'tcasRange') {       // 130, tableau 6-21 : distance 29-19 (1/16 NM), niveau de sensibilité 18-16, n° d'intrus 15-11
+    const sl = champ(16, 3);
+    return `${(champ(19, 11) / 16).toFixed(2)} · ${sl ? 'SL ' + sl : 'SL non rapporté'} · intrus n° ${champ(11, 5)}`;
+  }
+  if (fmt === 'tcasAlt') {         // 131, tableau 6-22 : altitude relative 29-22 (complément à 2, 100 ft), sens vertical 21-20
+    let v = champ(22, 8); if (v & 0x80) v -= 0x100;
+    return `${v > 0 ? '+' : ''}${v * 100} · ${['en palier', 'monte', 'descend', 'pas de donnée'][champ(20, 2)]} · intrus n° ${champ(11, 5)}`;
+  }
+  if (fmt === 'tcasBrg') {         // 132, tableau 6-23 : relèvement 29-19 (complément à 2, ±180°), affichage 18-16
+    let v = champ(19, 11); if (v & 0x400) v -= 0x800;
+    const aff = ['pas de menace', 'TA', 'RA', 'trafic proche'][champ(16, 3)] || 'non utilisé';
+    return `${(v * 180 / 1024).toFixed(1)} · ${aff} · intrus n° ${champ(11, 5)}`;
+  }
+  if (fmt === 'hfcom205') {        // 205, tableaux 6-43 et 6-43-1 : bit 11 = mot ; mot 1 comme 037, mot 2 = 0.1 kHz (bits 29-26)
+    if (b(11)) { const d = champ(26, 4); return d > 9 ? null : `+ 0.${d} kHz (mot 2)`; }
+    const d = [champ(28, 2), champ(24, 4), champ(20, 4), champ(16, 4), champ(12, 4)];
+    if (d.slice(1).some(x => x > 9)) return null;
+    return (d[0] * 10 + d[1] + d[2] * 0.1 + d[3] * 0.01 + d[4] * 0.001).toFixed(3);
+  }
+  if (fmt === 'tacan' || fmt === 'tacan147') {   // 145/146 (6-30, 6-47) : dizaines en hexa (bit 24 = poids faible) ; 147 (6-48) : bit 21 = poids faible
+    const dizaines = fmt === 'tacan' ? b(24) + 2 * b(23) + 4 * b(22) + 8 * b(21) : champ(21, 4);
+    const unites = champ(17, 4);
+    if (unites > 9) return null;
+    const mode = ['REC', 'A/A REC', 'T/R', 'A/A T/R'][b(27) * 2 + b(28)];
+    return `canal ${dizaines * 10 + unites}${b(26) ? 'X' : 'Y'} · ${mode}`;
   }
 
   // ── HF COM (tables 6-42 et 6-42-1) ──
@@ -1019,6 +897,22 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:3, label: dmeStr,   cls:'fmap-cat'  },
     ];
   }
+  const seg = (span, label, cls = 'fmap-bcd') => ({ span, label, cls });
+  if (f === 'utcbnr') return [seg(1, '—', 'fmap-pad'), seg(5, 'heures'), seg(6, 'minutes'), seg(6, 'secondes'), seg(1, 'GNSS', 'fmap-cat')];
+  if (f === 'dateleg') return [seg(2, 'j×10'), seg(4, 'jour'), seg(1, 'm×10'), seg(4, 'mois'), seg(4, 'vol'), seg(4, 'PAD', 'fmap-pad')];
+  if (f === 'date') return [seg(2, 'j×10'), seg(4, 'jour'), seg(1, 'm×10'), seg(4, 'mois'), seg(4, 'an×10'), seg(4, 'an')];
+  if (f === 'vol') return [seg(4, '×1000'), seg(4, '×100'), seg(4, '×10'), seg(4, '×1'), seg(3, 'PAD', 'fmap-pad')];
+  if (f === 'eqid') return [seg(7, 'spare', 'fmap-pad'), seg(4, 'MSD'), seg(4, 'hexa'), seg(4, 'LSD')];
+  if (f === 'tcasRange') return [seg(11, 'distance (1/16 NM)', 'fmap-bnr'), seg(3, 'SL', 'fmap-cat'), seg(5, 'n° intrus', 'fmap-cat')];
+  if (f === 'tcasAlt') return [seg(8, 'altitude relative', 'fmap-bnr'), seg(2, 'V/S', 'fmap-cat'), seg(4, 'futur', 'fmap-pad'), seg(5, 'n° intrus', 'fmap-cat')];
+  if (f === 'tcasBrg') return [seg(11, 'relèvement', 'fmap-bnr'), seg(3, 'affichage', 'fmap-cat'), seg(5, 'n° intrus', 'fmap-cat')];
+  if (f === 'hfcom205') return word && getBit(word, 11)
+    ? [seg(4, '0.1kHz', 'fmap-freq'), seg(14, 'non utilisés', 'fmap-pad'), seg(1, 'mot 2', 'fmap-cat')]
+    : [seg(2, '10MHz', 'fmap-freq'), seg(4, '1MHz', 'fmap-freq'), seg(4, '0.1MHz', 'fmap-freq'), seg(4, '0.01MHz', 'fmap-freq'), seg(4, '0.001MHz', 'fmap-freq'), seg(1, 'mot 1', 'fmap-cat')];
+  if (f === 'tacan') return [seg(1, 'PAD', 'fmap-pad'), seg(2, 'mode', 'fmap-cat'), seg(1, 'X/Y', 'fmap-cat'), seg(1, 'PAD', 'fmap-pad'), seg(4, 'dizaines'), seg(4, 'unités'),
+    seg(1, 'PAD', 'fmap-pad'), seg(1, 'TAC', 'fmap-cat'), seg(1, 'V/T', 'fmap-cat'), seg(3, oct === '146' ? 'mém./PAD' : 'PAD', 'fmap-pad')];
+  if (f === 'tacan147') return [seg(1, 'INT', 'fmap-cat'), seg(2, 'mode', 'fmap-cat'), seg(1, 'X/Y', 'fmap-cat'), seg(1, 'TST', 'fmap-cat'), seg(4, 'dizaines'), seg(4, 'unités'),
+    seg(2, 'TAC/MLS', 'fmap-cat'), seg(1, 'PAD', 'fmap-pad'), seg(3, 'options', 'fmap-cat')];
   if (f === 'hfcom') {
     if (word && getBit(word, 9)) return [                 // mot 2 : 0.1 kHz, bit 10 = CW, bit 9 = 1
       { span:4,  label:'0.1kHz',      cls:'fmap-freq' },
@@ -1342,7 +1236,7 @@ function renderFields(word) {
     }
   }
   document.getElementById('d-data-decoded').innerHTML = labelInfo && labelInfo.hors
-    ? `<span style="color:#fbbf24">format défini dans ${labelInfo.hors}, pas dans ARINC 429 Part 1</span>`
+    ? `<span style="color:#fbbf24">${texteHors(labelInfo.hors)}</span>`
     : decodedExact !== null
       ? decodedExact + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
       : '—';
@@ -1398,7 +1292,8 @@ function renderFields(word) {
   const sousTitre = labelInfo
     ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}${labelInfo.eq ? ' | ' + eqTexte(labelInfo.eq) : ''}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
-  const notes = [labelInfo && labelInfo.hors ? `format : ${labelInfo.hors}` : '', labelInfo && labelInfo.note ? labelInfo.note : ''].filter(Boolean);
+  const notes = [labelInfo && labelInfo.hors ? texteHors(labelInfo.hors) : '', labelInfo && labelInfo.note ? labelInfo.note : '',
+                 labelInfo && labelInfo.att6 ? `voir le tableau ${labelInfo.att6} du manuel` : ''].filter(Boolean);
   document.getElementById('banner-sub').innerHTML = sousTitre.replace(/&/g, '&amp;').replace(/</g, '&lt;')
     + notes.map(n => `<br><span style="color:#fbbf24">⚠ ${n.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>`).join('');
   // Config selector — show dropdown only when label has alternate configs
@@ -1408,7 +1303,7 @@ function renderFields(word) {
     const baseLabel = LABELS.find(l => l.oct === labelOct);
     const curIdx = labelConfigIdx[labelOct] || 0;
     // chaque choix : le paramètre et les équipements qui l'émettent (Eqpt. ID)
-    const texte = c => `${c.param}${c.eq ? ' — ' + c.eq.map(e => EQPT[e] ? `${EQPT[e]} ${e}` : e).join(', ') : ''}`.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const texte = c => `${c.param}${c.eq ? ' — ' + c.eq.map(e => nomEq(e) ? `${nomEq(e)} ${e}` : e).join(', ') : ''}`.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     const opts = [
       `<option value="0"${curIdx === 0 ? ' selected' : ''}>${baseLabel ? texte(baseLabel) : 'Config 1'}</option>`,
       ...alts.map((a, i) => `<option value="${i + 1}"${curIdx === i + 1 ? ' selected' : ''}>${texte(a)}</option>`),
