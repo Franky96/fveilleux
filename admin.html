@@ -37,6 +37,13 @@
       font-size: 0.9rem;
     }
     html.light .perm-item { color: #1a1a1a; }
+    /* Sections archivées : même lisibilité que les permissions actives, teinte rouge pâle pour les distinguer */
+    .perms-archivees { background: #1c1414; border-color: #4a2a2a; }
+    .perms-archivees .perm-item { color: #e0c8c8; }
+    .perms-archivees .perm-group { border-top-color: #4a2a2a; }
+    html.light .perms-archivees { background: #fbf1ef; border-color: #e3c5c0; }
+    html.light .perms-archivees .perm-item { color: #1a1a1a; }
+    html.light .perms-archivees .perm-group { border-top-color: #e3c5c0; }
     .perm-item input {
       width: auto;
       margin: 0;
@@ -331,7 +338,7 @@
           <div class="perms-overlay hidden" id="archived-perms-overlay">
             <span>Accès complet — l'admin accède à tout par défaut</span>
           </div>
-          <div class="perms-grid" id="archived-perms-grid" style="background:#1a0f0f; border-color:#3a1a1a;">
+          <div class="perms-grid perms-archivees" id="archived-perms-grid">
             <!-- Généré dynamiquement par admin.js -->
           </div>
         </div>
