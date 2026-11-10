@@ -33,6 +33,7 @@ const SECTIONS_ARCHIVABLES = [
     { key: 'triphase',       icon: '🔺', label: 'Courant triphasé'     },
     { key: 'tcas',           icon: '🛩️', label: 'Rencontre TCAS'       },
     { key: 'radalt',         icon: '📡', label: 'Radio-altimètre'      },
+    { key: 'radar-meteo',    icon: '🌩️', label: 'Radar météo'          },
   ]},
   { key: 'moteurs',      icon: '🌀', label: 'Moteurs', children: [
     { key: 'turboreacteur', icon: '🌀', label: 'CFM56-7B' },
@@ -390,6 +391,7 @@ const PERMS_STRUCTURE = [
     { key: 'triphase',       label: 'Courant triphasé' },
     { key: 'tcas',           label: 'Rencontre TCAS' },
     { key: 'radalt',         label: 'Radio-altimètre' },
+    { key: 'radar-meteo',    label: 'Radar météo' },
   ]},
   { key: 'moteurs', label: 'Moteurs', children: [
     { key: 'turboreacteur', label: 'CFM56-7B' },

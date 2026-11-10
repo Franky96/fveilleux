@@ -7,7 +7,7 @@
 <script>
   const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn')) location.href = 'index.html';
-  else if (sessionStorage.getItem('userRole') !== 'admin' && !["informatique", "arinc429", "csdb", "converter", "crypteur", "tcpip", "qr-transfer", "shape-transfer", "chips", "circuit", "triphase", "tcas", "radalt", "qrlink", "shapelink"].some(k => _p.includes(k))) location.href = 'dashboard.html';
+  else if (sessionStorage.getItem('userRole') !== 'admin' && !["informatique", "arinc429", "csdb", "converter", "crypteur", "tcpip", "qr-transfer", "shape-transfer", "chips", "circuit", "triphase", "tcas", "radalt", "radar-meteo", "qrlink", "shapelink"].some(k => _p.includes(k))) location.href = 'dashboard.html';
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Outils de Frank — Informatique</title>
@@ -51,6 +51,7 @@
         <a class="carte" href="csdb.html" data-section="csdb" hidden><span class="em" aria-hidden="true">📶</span><span><b>CSDB</b><small>Commercial Standard Digital Bus — décodeur de blocs</small></span><span class="fl" aria-hidden="true">›</span></a>
         <a class="carte" href="tcas.html" data-section="tcas" hidden><span class="em" aria-hidden="true">🛩️</span><span><b>Rencontre TCAS</b><small>Deux avions, leurs TCAS et transpondeurs : messages échangés, TA, RA et coordination, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
         <a class="carte" href="radalt.html" data-section="radalt" hidden><span class="em" aria-hidden="true">📡</span><span><b>Radio-altimètre</b><small>Altitude-sol par onde FMCW : fréquence de battement, CDF, AID et hauteur de décision, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="radar-meteo.html" data-section="radar-meteo" hidden><span class="em" aria-hidden="true">🌩️</span><span><b>Radar météo</b><small>Faisceau qui balaie, échos des précipitations, TILT, GAIN, STC, PAC, ombre radar et modes WX, TURB, MAP, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
         <a class="carte" href="crypteur.html" data-section="crypteur" hidden><span class="em" aria-hidden="true">⚙️</span><span><b>Encodeur BNR</b><small>Signe-magnitude · Bit de signe · Valeur par bit</small></span><span class="fl" aria-hidden="true">›</span></a>
         <a class="carte" href="converter.html" data-section="converter" hidden><span class="em" aria-hidden="true">🔢</span><span><b>Convertisseur</b><small>Décimal · Binaire · Hex · Octal</small></span><span class="fl" aria-hidden="true">›</span></a>
       </div>

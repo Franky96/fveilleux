@@ -60,6 +60,7 @@ const jeu = noms => ({
 });
 const REGLAGES = {
   'tcas.html': { avant: async pg => { await pg.click('#pp').catch(() => {}); await pg.evaluate(() => { const r = document.getElementById('temps'); const ta = [...document.querySelectorAll('#reperes b')].find(b => b.textContent === 'A·TA'); r.value = ta ? +ta.dataset.t - 4 : 24; r.dispatchEvent(new Event('input')); document.getElementById('pp').click(); document.getElementById('carte').scrollIntoView({ block: 'center' }); }); }, attente: 300, cadre: ['#carte'], defile: 0 },
+  'radar-meteo.html': { avant: async pg => { await pg.click('#vitesses [data-v="2"]').catch(() => {}); await pg.evaluate(() => document.getElementById('plan').scrollIntoView({ block: 'center' })); }, attente: 5000, cadre: ['#plan', '#nd'], defile: 0 },
   'radalt.html': { avant: async pg => pg.evaluate(() => document.getElementById('scene').scrollIntoView({ block: 'center' })), attente: 4000, cadre: ['#scene'], defile: 0 },
   'triphase.html': { avant: async pg => pg.evaluate(() => document.getElementById('cv').scrollIntoView({ block: 'center' })), attente: 1200, cadre: ['#cv'], defile: 0 },
   'aec-avionique.html': { ...categorie, cadre: ['.tete', '.etape'] },

@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar météo — Outils de Frank</title>
+<script>
+  const _pW = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn') ||
+      (!_pW.includes('radar-meteo') && !_pW.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Radar météo : jetons du visuel 2.0 */
+:root{
+  color-scheme:dark;
+  --bg:#0a0e11; --panel:#121a20; --panel2:#17212a; --line:#212d36; --line2:#2d3c47;
+  --text:#e3eaef; --muted:#8a99a5; --faint:#5f6e79; --c:#23753f; --lien:#38bdf8; --ambre:#f59e0b;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+html.light{
+  color-scheme:light;
+  --bg:#f2f4f6; --panel:#ffffff; --panel2:#f6f8fa; --line:#e0e6eb; --line2:#c9d3db;
+  --text:#16212b; --muted:#566571; --faint:#8794a0; --lien:#0369a1; --ambre:#b45309;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font:15px/1.5 var(--f-body);padding:0 max(14px,env(safe-area-inset-right)) 48px max(14px,env(safe-area-inset-left));overflow-x:hidden}
+.wrap{max-width:1320px;margin:0 auto}
+h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.02em;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+a{color:var(--lien)}
+.intro{margin:18px 0 4px;color:var(--muted);max-width:92ch}
+.intro b{color:var(--text)}
+.panel{margin-top:14px;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.panel>h2{font-size:21px;margin-bottom:2px}
+.sous{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+canvas{display:block;width:100%}
+
+/* contrôleur : allure d'un boîtier */
+.ctrls{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px}
+.boitier{border-radius:14px;border:1px solid var(--line2);background:linear-gradient(180deg,#1a2229,#11171c);padding:12px 14px;color:#dfe7ec}
+html.light .boitier{background:linear-gradient(180deg,#2a333b,#1b2228)}
+.boitier h3{display:flex;align-items:center;gap:8px;font-size:17px;margin-bottom:8px;color:#fff}
+.boitier h3 small{font:500 11px var(--f-mono);color:#93a3ae;margin-left:auto}
+.rang{display:grid;grid-template-columns:86px 1fr;align-items:center;gap:8px;margin:6px 0}
+.rang>span{font:600 11px var(--f-mono);letter-spacing:.06em;color:#93a3ae;text-transform:uppercase}
+.touches{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.touche{font:600 11.5px var(--f-mono);padding:6px 8px;border-radius:6px;border:1px solid #3a4852;background:#0d1216;color:#c9d4db;cursor:pointer;min-width:44px}
+.touche[aria-pressed="true"]{background:#0b2b1a;border-color:#2f9e5e;color:#9ff0c0;box-shadow:inset 0 0 8px rgba(47,158,94,.4)}
+.touche:disabled{opacity:.3;cursor:default}
+.molette{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;flex:1 1 180px}
+.molette input{accent-color:#2f9e5e;width:100%}
+.molette output{font:700 12.5px var(--f-mono);color:#9ff0c0;min-width:64px;text-align:right}
+
+/* vues */
+.vues{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.vue h3{font-size:17px;margin-bottom:2px}
+.vue p{margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+#plan{height:440px;border-radius:12px;background:#0b141b;cursor:crosshair}
+#nd{height:440px;border-radius:12px;background:#000}
+#coupe{height:300px;border-radius:12px;background:#0b141b}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.legende i{display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--k);margin-right:5px;vertical-align:-1px}
+.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin-top:12px}
+.carte{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.carte span{display:block;font:600 11px var(--f-mono);letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.carte b{font:700 18px var(--f-mono)}
+.carte small{display:block;color:var(--muted);font-size:12.5px}
+
+/* sections repliées */
+details.repli>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px}
+details.repli>summary::-webkit-details-marker{display:none}
+details.repli>summary h2{font-size:21px;display:inline}
+details.repli>summary h2::before{content:'▸ ';color:var(--muted)}
+details.repli[open]>summary h2::before{content:'▾ '}
+details.repli>summary span{color:var(--muted);font-size:13.5px}
+details.repli[open]>summary{margin-bottom:8px}
+.images{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px;margin-top:12px}
+.images[hidden]{display:none}
+.images figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.images img{display:block;width:100%;max-width:100%;height:auto;cursor:zoom-in}
+.images figcaption{font-size:12.5px;color:#334155;padding:6px 9px;background:#f1f5f9}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}
+.note{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.note h3{font-size:17px;margin-bottom:4px}
+.note p,.note li{margin:0 0 5px;font-size:13.5px}
+.note ul{margin:0;padding-left:18px}
+table.t{border-collapse:collapse;font-size:13px;width:100%}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left}
+table.t th{font:600 11px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+table.t td.n{font-family:var(--f-mono);text-align:right}
+@media (max-width:980px){.ctrls,.vues{grid-template-columns:1fr}#plan,#nd{height:400px}}
+@media (max-width:560px){#plan,#nd{height:340px}#coupe{height:260px}.rang{grid-template-columns:70px 1fr}}
+</style>
+<link rel="stylesheet" href="fond.css">
+<script src="topbar.js" defer></script>
+</head>
+<body data-retour="informatique.html" data-retour-nom="Informatique">
+<div data-topbar><h1>Radar météo</h1></div>
+<div class="wrap">
+<p class="intro">Le <b>radar météo</b> (Wx), dans le nez de l'avion, envoie des <b>impulsions</b> très puissantes (bande X, <b>9 375 MHz</b>) dans un faisceau étroit qui <b>balaie 120°</b> devant l'avion. Les <b>gouttes d'eau</b> renvoient une partie de l'onde (l'écho) : le radar en tire la <b>distance</b> (temps aller-retour), le <b>relèvement</b> (angle de l'antenne) et l'<b>intensité</b> (puissance de l'écho), qu'il peint en couleurs sur l'écran. Règle le contrôleur et regarde l'image se construire à chaque balayage.</p>
+
+<section class="panel" aria-labelledby="t-sim">
+  <h2 id="t-sim">Simulation</h2>
+  <div class="ctrls">
+    <div class="boitier" aria-label="Contrôleur du radar météo">
+      <h3>Contrôleur WX <small>dans le poste de pilotage</small></h3>
+      <div class="rang"><span>Mode</span><div class="touches" id="modes">
+        <button class="touche" type="button" data-v="off">OFF</button><button class="touche" type="button" data-v="stby">STBY</button><button class="touche" type="button" data-v="test">TEST</button>
+        <button class="touche" type="button" data-v="wx" aria-pressed="true">WX</button><button class="touche" type="button" data-v="turb">TURB</button><button class="touche" type="button" data-v="map">MAP</button></div></div>
+      <div class="rang"><span>Tilt</span><div class="touches">
+        <div class="molette"><input type="range" id="tilt" min="-15" max="15" step="0.25" value="-1.5" aria-label="TILT"><output id="tiltV"></output></div>
+        <span id="tiltModes" style="display:flex;gap:4px"><button class="touche" type="button" data-v="man" aria-pressed="true">MAN</button><button class="touche" type="button" data-v="auto">AUTO</button><button class="touche" type="button" data-v="multi">MULTISCAN</button></span></div></div>
+      <div class="rang"><span>Gain</span><div class="touches">
+        <button class="touche" type="button" id="cal" aria-pressed="true">CAL</button>
+        <div class="molette"><input type="range" id="gain" min="-12" max="12" step="1" value="0" aria-label="GAIN"><output id="gainV"></output></div></div></div>
+      <div class="rang"><span>Range</span><div class="touches" id="ranges">
+        <button class="touche" type="button" data-v="10">10</button><button class="touche" type="button" data-v="20">20</button><button class="touche" type="button" data-v="40">40</button>
+        <button class="touche" type="button" data-v="80" aria-pressed="true">80</button><button class="touche" type="button" data-v="160">160</button></div></div>
+      <div class="rang"><span>Fonctions</span><div class="touches">
+        <button class="touche" type="button" id="stab" aria-pressed="true">STAB</button><button class="touche" type="button" id="gcs" aria-pressed="true">GCS</button></div></div>
+    </div>
+    <div class="boitier" aria-label="L'avion et l'unité radar">
+      <h3>Avion et unité <small>pour l'exercice</small></h3>
+      <div class="rang"><span>Altitude</span><div class="molette"><input type="range" id="alt" min="1000" max="41000" step="500" value="18000" aria-label="Altitude de l'avion"><output id="altV"></output></div></div>
+      <div class="rang"><span>Roulis</span><div class="molette"><input type="range" id="roulis" min="-30" max="30" step="1" value="0" aria-label="Roulis"><output id="roulisV"></output></div></div>
+      <div class="rang"><span>Antenne</span><div class="touches" id="diams">
+        <button class="touche" type="button" data-v="12">12″</button><button class="touche" type="button" data-v="18" aria-pressed="true">18″</button><button class="touche" type="button" data-v="24">24″</button><button class="touche" type="button" data-v="30">30″</button></div></div>
+      <div class="rang"><span>Unité</span><div class="touches">
+        <button class="touche" type="button" id="stc" aria-pressed="true">STC</button><button class="touche" type="button" id="pac" aria-pressed="true">PAC</button></div></div>
+      <div class="rang"><span>Balayage</span><div class="touches" id="vitesses">
+        <button class="touche" type="button" data-v="0.5">×0,5</button><button class="touche" type="button" data-v="1" aria-pressed="true">25°/s</button><button class="touche" type="button" data-v="2">×2</button><button class="touche" type="button" data-v="4">×4</button></div></div>
+    </div>
+  </div>
+
+  <div class="vues">
+    <div class="vue"><h3>Vue de dessus : la réalité</h3><p>Nuages (plus foncés = plus de gouttes), relief, faisceau à −3 dB et impulsions (ralenties). Points : les gouttes, roses si elles sont turbulentes. Clique pour choisir la coupe verticale.</p>
+      <canvas id="plan" aria-label="Vue de dessus : cellules orageuses, relief, faisceau et impulsions"></canvas></div>
+    <div class="vue"><h3>Écran ND : ce que le radar affiche</h3><p>L'image se peint au passage du faisceau. Vert faible, jaune moyen, rouge fort ; magenta : turbulence (TURB).</p>
+      <canvas id="nd" aria-label="Écran de navigation avec l'image radar"></canvas></div>
+  </div>
+  <div class="vue" style="margin-top:14px"><h3>Coupe verticale <span id="coupeLib" style="font:500 12px var(--f-mono);color:var(--muted)"></span></h3>
+    <p>Le faisceau, son <b>TILT</b> et sa largeur, vus de côté le long de la coupe ; il monte avec la distance à cause de la courbure de la Terre. Au-dessus de l'isotherme 0 °C, la glace renvoie moins bien l'onde que l'eau.</p>
+    <canvas id="coupe" aria-label="Coupe verticale : avion, faisceau, cellules et relief"></canvas>
+    <div class="legende"><span><i style="--k:#00c83c"></i>faible</span><span><i style="--k:#f0dc00"></i>moyen</span><span><i style="--k:#e61e1e"></i>fort</span><span><i style="--k:#e600e6"></i>turbulence</span><span><i style="--k:#7dd3fc"></i>faisceau (−3 dB)</span></div>
+  </div>
+  <div class="cartes" id="cartes"></div>
+</section>
+
+<details class="panel repli">
+  <summary><h2>Ce que le radar calcule</h2><span>distance, relèvement, intensité, corrections STC et PAC</span></summary>
+  <div class="notes">
+    <div class="note"><h3>Distance, relèvement, intensité</h3><ul>
+      <li><b>Distance</b> : temps aller-retour de l'impulsion, <b>12,359 µs par NM</b>. Un écho à 40 NM revient après 494 µs.</li>
+      <li><b>Relèvement</b> : l'angle de l'antenne au moment où l'écho revient.</li>
+      <li><b>Intensité</b> : la puissance de l'écho, selon la densité (et le type) des gouttes. Le radar ne voit ni le nuage ni le vent, seulement l'eau ; il ne sait pas si c'est de la pluie, de la grêle ou de la neige.</li></ul></div>
+    <div class="note"><h3>Puissances</h3><ul>
+      <li><b>Transmise</b> : ce que l'antenne envoie, la plus élevée.</li>
+      <li><b>Réfléchie</b> : ce que les gouttes renvoient vers l'antenne.</li>
+      <li><b>Absorbée</b> : perdue dans les gouttes.</li>
+      <li><b>Réfractée</b> : ce qui continue son chemin. Dans la vue de dessus, le faisceau pâlit derrière une cellule intense.</li></ul></div>
+    <div class="note"><h3>STC : la distance</h3><p>Une cellule lointaine renvoie moins de puissance qu'une cellule proche de même intensité (pertes dans l'air). Le <b>STC</b> (<i>Sensitivity Time Control</i>) augmente la sensibilité avec le temps écoulé depuis l'impulsion, donc avec la distance : deux cellules pareilles ont la même couleur, proches ou loin. Désactive STC dans « Unité » : la cellule C, à 62 NM, pâlit.</p></div>
+    <div class="note"><h3>PAC et ombre radar</h3><p>Derrière une première cellule, il reste moins de puissance pour la suivante. Le <b>PAC</b> (<i>Path Attenuation Compensation</i>) compense cette perte, jusqu'à une limite. Derrière une cellule très intense ou très profonde (ou une montagne), il ne reste plus rien : <b>ombre radar</b>, un cône d'invisibilité. Le trait jaune au bord de l'écran signale l'ombre (selon le fabricant). Regarde la cellule B, derrière A.</p></div>
+  </div>
+  <div class="images" data-images="[[&quot;6_1_p1_1.jpg&quot;, &quot;L'onde vers le nuage, l'écho, et l'écran ND&quot;], [&quot;6_1_p6_1.jpg&quot;, &quot;Angle de l'antenne, temps et puissance de l'écho : position et intensité&quot;], [&quot;6_1_p23_1.jpg&quot;, &quot;Puissances transmise, réfléchie, absorbée et réfractée&quot;], [&quot;6_1_p24_1.jpg&quot;, &quot;Peu de gouttes : écho faible (vert) ; beaucoup : écho fort (rouge)&quot;], [&quot;6_1_p25_1.jpg&quot;, &quot;Réflectivité selon le type de précipitation&quot;], [&quot;6_1_p27_1.jpg&quot;, &quot;Correction STC : sans et avec&quot;], [&quot;6_1_p28_1.jpg&quot;, &quot;Correction PAC : affiché et réalité&quot;], [&quot;6_1_p29_1.jpg&quot;, &quot;Ombre radar (radar shadow)&quot;]]" hidden></div>
+</details>
+
+<details class="panel repli">
+  <summary><h2>Faisceau et résolution</h2><span>largeur selon l'antenne et la distance</span></summary>
+  <div class="notes">
+    <div class="note"><h3>Le faisceau</h3><p>Comme une lampe de poche : l'énergie est au centre et diminue vers les bords. On limite le faisceau là où la puissance a baissé de <b>3 dB</b> (la moitié). Plus l'antenne est grande, plus le faisceau est étroit et plus l'image est précise : un gros avion (B787) voit plus finement qu'un petit (Learjet).</p>
+      <table class="t" id="tFaisceau"></table></div>
+    <div class="note"><h3>Les deux résolutions</h3><ul>
+      <li><b>En azimut</b> : séparer deux cellules à la même distance, mais à des angles différents. Le faisceau s'élargit avec la distance : les cellules F1 et F2 (30 NM) se confondent avec une antenne de 12″ et se séparent avec 30″.</li>
+      <li><b>En distance</b> : séparer deux cellules alignées, l'une derrière l'autre. Elle dépend de la largeur de l'impulsion : 4 µs ≈ 600 m ≈ 0,32 NM.</li></ul></div>
+  </div>
+  <div class="images" data-images="[[&quot;6_1_p17_1.jpg&quot;, &quot;Centre et limites du faisceau (−3 dB)&quot;], [&quot;6_1_p18_1.jpg&quot;, &quot;Résolution d'azimut&quot;], [&quot;6_1_p19_1.jpg&quot;, &quot;Résolution de distance&quot;], [&quot;6_1_p20_1.jpg&quot;, &quot;Largeur du faisceau selon le diamètre de l'antenne&quot;], [&quot;6_1_p21_1.jpg&quot;, &quot;Largeur du faisceau selon la distance&quot;]]" hidden></div>
+</details>
+
+<details class="panel repli">
+  <summary><h2>Contrôles et modes</h2><span>TILT, AUTO-TILT, MULTISCAN, STAB, GAIN, GCS, modes</span></summary>
+  <div class="notes">
+    <div class="note"><h3>TILT</h3><p>Angle vertical du balayage, ±15° (selon l'avion). Trop bas, le faisceau passe sous les cellules et touche le sol ; trop haut, il passe au-dessus. Une cellule proche, souvent sous l'avion, demande un TILT plus bas qu'une cellule lointaine. Le haut d'une cellule (glace) est moins intense que le bas : le TILT change l'image.</p>
+      <p><b>AUTO</b> : le TILT suit l'altitude, l'assiette et le RANGE. <b>MULTISCAN</b> : le radar alterne lui-même deux angles et fusionne les deux coupes en une seule image (GCS compris).</p></div>
+    <div class="note"><h3>STAB</h3><p>En virage, le roulis incline le plan de balayage : un côté plonge vers le sol, l'autre monte au-dessus des cellules. La stabilisation (gyros, AHRS ou IRS) corrige l'antenne pour garder un plan horizontal. Mets du roulis et coupe STAB.</p></div>
+    <div class="note"><h3>GAIN et GCS</h3><p><b>GAIN</b> : comme le silencieux d'une radio, il règle le seuil d'affichage, <b>pas la puissance émise</b>. Trop de gain fait apparaître l'humidité normale de l'air. <b>CAL</b> : gain calibré.</p>
+      <p><b>GCS</b> (<i>Ground Clutter Suppression</i>) : en mode météo, retire les échos du sol, bien plus forts que ceux des gouttes.</p></div>
+    <div class="note"><h3>Modes</h3><ul>
+      <li><b>OFF</b> ; <b>STBY</b> : actif, sans émettre, antenne immobile.</li>
+      <li><b>TEST</b> : auto-test sans émission ; l'antenne balaie et un patron de bandes de couleurs s'affiche (WX TST).</li>
+      <li><b>WX</b> : précipitations. <b>TURB</b> : turbulence par effet Doppler, en magenta (portée limitée, ici 40 NM).</li>
+      <li><b>MAP</b> : le relief ; TILT abaissé, vert pour le sol, rouge pour montagnes et villes, l'eau ne renvoie rien.</li></ul></div>
+  </div>
+  <div class="images" data-images="[[&quot;6_2_p1_1.jpg&quot;, &quot;TILT : ±15°&quot;], [&quot;6_2_p2_1.jpg&quot;, &quot;Faisceau neutre, vers le bas, vers le haut&quot;], [&quot;6_2_p3_1.jpg&quot;, &quot;Faisceau trop haut ou bien placé dans la cellule&quot;], [&quot;6_2_p4_1.jpg&quot;, &quot;TILT selon la distance de la cellule&quot;], [&quot;6_2_p6_1.jpg&quot;, &quot;Mode vertical (coupe verticale)&quot;], [&quot;6_2_p7_1.jpg&quot;, &quot;STAB ON et STAB OFF en virage&quot;], [&quot;6_2_p8_1.jpg&quot;, &quot;GAIN élevé et GAIN faible&quot;], [&quot;6_2_p19_1.jpg&quot;, &quot;Activation du GCS&quot;], [&quot;6_2_p14_1.jpg&quot;, &quot;Les modes sur les contrôleurs&quot;], [&quot;6_2_p15_1.jpg&quot;, &quot;Modes : avec ou sans transmission&quot;], [&quot;6_2_p18_1.jpg&quot;, &quot;Mode MAP : Toronto, Buffalo, lac Ontario&quot;], [&quot;6_1_p5_1.jpg&quot;, &quot;Contrôleur A220 : sélection du MODE&quot;], [&quot;6_2_p9_1_1.jpg&quot;, &quot;Contrôleur annoté&quot;], [&quot;6_2_p9_2.jpg&quot;, &quot;Contrôleur annoté&quot;], [&quot;6_2_p10_1.jpg&quot;, &quot;Contrôleur annoté&quot;], [&quot;6_2_p11_1.jpg&quot;, &quot;Contrôleur annoté&quot;], [&quot;6_2_p11_2.jpg&quot;, &quot;Contrôleur annoté&quot;]]" hidden></div>
+</details>
+
+<details class="panel repli">
+  <summary><h2>Doppler, turbulence et cisaillement</h2><span>TURB et PWS</span></summary>
+  <div class="notes">
+    <div class="note"><h3>Effet Doppler</h3><p>Comme le radar des policiers : la fréquence de l'écho change avec la vitesse des gouttes. Dans une cellule calme, les gouttes vont toutes à peu près à la même vitesse ; dans une cellule turbulente, leurs vitesses et directions varient beaucoup. Le radar affiche ces zones en <b>magenta</b>, par-dessus les autres couleurs. Dans la vue de dessus, regarde les points des cellules A et F1.</p></div>
+    <div class="note"><h3>PWS : cisaillement du vent</h3><p>Le <b>Predictive Windshear</b> cherche, par Doppler, des variations brutales de vitesse devant l'avion, seulement au <b>décollage et à l'atterrissage</b> (sous une certaine altitude-sol). L'avertissement est surtout sonore. Le <b>TAWS</b> détecte aussi le cisaillement : il a généralement la priorité.</p></div>
+  </div>
+  <div class="images" data-images="[[&quot;6_1_p31_1.jpg&quot;, &quot;Gouttes sans turbulence, avec turbulence, avec cisaillement&quot;], [&quot;6_1_p32_1.jpg&quot;, &quot;Turbulence en magenta et alerte de cisaillement&quot;], [&quot;6_1_p33_1.jpg&quot;, &quot;A220 : phases de vol où le PWS est actif&quot;]]" hidden></div>
+</details>
+
+<details class="panel repli">
+  <summary><h2>Antenne, radôme et guide d'onde</h2><span>composants</span></summary>
+  <div class="notes">
+    <div class="note"><h3>Composants</h3><ul>
+      <li><b>Unité radar</b> (LRU, émetteur-récepteur), près de l'antenne, dans le nez.</li>
+      <li><b>Antenne</b> : plateau plat vertical de 12, 18, 24 ou 30″ ; un moteur pour le balayage latéral (120°), un autre pour le vertical (TILT, STAB).</li>
+      <li><b>Afficheur</b> : instrument dédié (très vieux), écran radar (vieux), ou ND/MFD (le plus courant), avec RANGE et la mention WX.</li>
+      <li><b>Contrôleur</b> : dédié, sur l'écran, ou intégré à la suite avionique.</li></ul></div>
+    <div class="note"><h3>Radôme et guide d'onde</h3><ul>
+      <li><b>Radôme</b> : nez en matériau qui laisse passer les ondes et protège l'antenne ; non conducteur, il porte de fines <b>bandes métalliques</b> contre l'électricité statique et la foudre.</li>
+      <li><b>Guide d'onde</b> : à ces fréquences et puissances, un câble coaxial perdrait trop ; le signal circule dans un tube métallique creux, souvent rectangulaire, par réflexion sur ses parois. Lourd et encombrant : l'émetteur est placé près de l'antenne.</li></ul></div>
+  </div>
+  <div class="images" data-images="[[&quot;6_1_p7_1.jpg&quot;, &quot;Les composants : LRU, afficheur, contrôleur, antenne&quot;], [&quot;6_1_p8_1.jpg&quot;, &quot;Affichage : instrument, écran radar, ND&quot;], [&quot;6_1_p9_1.jpg&quot;, &quot;Écran WX : vert, jaune, rouge&quot;], [&quot;6_1_p10_1.jpg&quot;, &quot;Sélection WX et RANGE&quot;], [&quot;6_1_p11_1.jpg&quot;, &quot;Contrôle : dédié, sur écran, intégré&quot;], [&quot;6_1_p13_1.jpg&quot;, &quot;Antenne plate dans le nez&quot;], [&quot;6_1_p14_1.jpg&quot;, &quot;Moteurs : latéral et vertical&quot;], [&quot;6_1_p15_1.jpg&quot;, &quot;Radôme et bandes métalliques&quot;], [&quot;6_1_p16_1.jpg&quot;, &quot;Guides d'onde&quot;]]" hidden></div>
+</details>
+
+<details class="panel repli">
+  <summary><h2>Tests et sécurité</h2><span>auto-test, test fonctionnel, précautions</span></summary>
+  <div class="notes">
+    <div class="note"><h3>Auto-test (BITE)</h3><p>Depuis le poste de pilotage, sans émission : vérifier le patron de couleurs, le balayage de l'antenne (l'image se rafraîchit) et la mention de test (ex. WX TST). Essaie le mode TEST.</p></div>
+    <div class="note"><h3>Sécurité en émission</h3><ul>
+      <li>Périmètre de sécurité d'au moins <b>15 ft</b> autour de la zone balayée.</li>
+      <li>Ne pas pointer vers un réservoir ou un camion de carburant, ni vers des objets métalliques proches.</li>
+      <li>Jamais en émission dans un hangar : endroits désignés. Toujours suivre les consignes du fabricant.</li></ul></div>
+    <div class="note"><h3>Test fonctionnel</h3><ul>
+      <li><b>Dans le hangar</b> : auto-test, balayage et TILT, RANGE ; STAB en simulant l'AHRS ou l'IRS ; émission dans une <b>charge fictive</b> (dummy load).</li>
+      <li><b>En émission</b> (zone désignée) : WX comparé à une vraie carte météo ; MAP comparé au relief du TAWS ; RANGE sur plusieurs distances ; GCS activé et désactivé ; GAIN manuel.</li></ul></div>
+  </div>
+  <div class="images" data-images="[[&quot;6_2_p16_1.jpg&quot;, &quot;Patron de test&quot;], [&quot;6_2_p23_1.jpg&quot;, &quot;Auto-test sur A220&quot;], [&quot;6_2_p26_1.jpg&quot;, &quot;Avertissements de sécurité (AMM A220)&quot;], [&quot;6_2_p27_1.jpg&quot;, &quot;Charges fictives et guides d'onde&quot;]]" hidden></div>
+</details>
+
+<details class="panel repli">
+  <summary><h2>Caractéristiques</h2><span>RDR2100, comparé au transpondeur</span></summary>
+  <table class="t" style="max-width:720px">
+    <tr><th></th><th>Radar météo (RDR2100)</th><th>Transpondeur</th></tr>
+    <tr><td>Fréquence</td><td>9 345 à 9 405 MHz (bande X, SHF)</td><td>1 030 / 1 090 MHz</td></tr>
+    <tr><td>Puissance</td><td>ERP 5 000 à 7 500 W</td><td>environ 250 W</td></tr>
+    <tr><td>Sensibilité</td><td>−110 dBm</td><td>−74 dBm (MTL)</td></tr>
+    <tr><td>Répétition (PRF)</td><td>101,5 à 111,5 Hz</td><td>—</td></tr>
+    <tr><td>Largeur d'impulsion</td><td>4 µs</td><td>—</td></tr>
+    <tr><td>Balayage</td><td>25°/s, sur 120°</td><td>—</td></tr>
+  </table>
+</details>
+</div>
+
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const nf = (v, d = 0) => (Number.isFinite(v) ? v : 0).toLocaleString('fr-CA', { minimumFractionDigits: d, maximumFractionDigits: d });
+const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const deg = Math.PI / 180, NM_FT = 6076.12, RE43 = 20.9e6 * 4 / 3, US_NM = 12.359;
+const drop = r => (r * NM_FT) ** 2 / (2 * RE43);      // ft : la Terre « s'éloigne » du faisceau (rayon 4/3)
+const ISO0 = 14000;                                   // isotherme 0 °C (ft)
+const PACMAX = 12;                                    // dB : limite de la compensation PAC
+
+/* ---------- réglages ---------- */
+const st = { mode: 'wx', tilt: -1.5, tiltMode: 'man', cal: true, gain: 0, range: 80, stab: true, gcs: true,
+  alt: 18000, roulis: 0, diam: 18, stc: true, pac: true, vitesse: 1, coupe: -15 };
+const largeur = () => 96 / st.diam;                  // degrés (12″ ≈ 8°, 18″ ≈ 5,3°, 24″ = 4°, 30″ ≈ 3,2°)
+
+/* ---------- le monde : cellules, relief ---------- */
+const CELLS = [
+  { nom: 'A', az: -15, r: 22, R: 4.5, base: 2500, sommet: 36000, zmax: 56, turb: true },
+  { nom: 'B', az: -15, r: 40, R: 5.5, base: 3000, sommet: 30000, zmax: 47, turb: false },
+  { nom: 'C', az: 22, r: 62, R: 7, base: 3000, sommet: 28000, zmax: 45, turb: false },
+  { nom: 'G', az: 21, r: 46, R: 3.2, base: 2500, sommet: 24000, zmax: 46, turb: false },
+  { nom: 'D', az: 6, r: 13, R: 3, base: 2000, sommet: 11000, zmax: 40, turb: false },
+  { nom: 'E', az: -42, r: 68, R: 11, base: 2000, sommet: 16000, zmax: 34, turb: false },
+  { nom: 'F1', az: 35, r: 30, R: 1.8, base: 3000, sommet: 26000, zmax: 46, turb: true },
+  { nom: 'F2', az: 42, r: 30, R: 1.8, base: 3000, sommet: 26000, zmax: 46, turb: false },
+].map(c => ({ ...c, x: c.r * Math.sin(c.az * deg), y: c.r * Math.cos(c.az * deg) }));
+const MONTS = [{ az: 60, r: 55, h: 9600, R: 6 }, { az: 68, r: 38, h: 4500, R: 3.5 }, { az: 52, r: 70, h: 7000, R: 5 }]
+  .map(m => ({ ...m, x: m.r * Math.sin(m.az * deg), y: m.r * Math.cos(m.az * deg) }));
+const LAC = { x: 40 * Math.sin(-30 * deg), y: 40 * Math.cos(-30 * deg), rx: 6, ry: 8 };
+const VILLE = { x: 30 * Math.sin(-4 * deg), y: 30 * Math.cos(-4 * deg), R: 2.2 };
+function terrain(x, y) {
+  if (((x - LAC.x) / LAC.rx) ** 2 + ((y - LAC.y) / LAC.ry) ** 2 < 1) return { e: 400, type: 'eau' };
+  let e = 600 + 250 * Math.sin(x * 0.21 + 1) * Math.sin(y * 0.17);
+  for (const m of MONTS) e += m.h * Math.exp(-((x - m.x) ** 2 + (y - m.y) ** 2) / (m.R * m.R));
+  if ((x - VILLE.x) ** 2 + (y - VILLE.y) ** 2 < VILLE.R ** 2) return { e: e + 150, type: 'ville' };
+  return { e, type: e > 2500 ? 'mont' : 'sol' };
+}
+const ZSOL = { sol: 10 ** 5.0, mont: 10 ** 5.7, ville: 10 ** 6.3, eau: 0 };   // écho du sol (équivalent dBZ 50, 57, 63 ; l'eau renvoie ailleurs)
+// une cellule : réflectivité (linéaire) à un point ; plus forte vers le tiers inférieur, plus faible dans la glace
+function zCell(c, x, y, alt) {
+  const d2 = ((x - c.x) ** 2 + (y - c.y) ** 2) / (c.R * c.R);
+  if (d2 > 2.3 || alt < c.base - 4000 || alt > c.sommet + 4000) return 0;
+  const ap = c.base + 0.3 * (c.sommet - c.base);
+  let v = alt >= ap ? 16 * ((alt - ap) / (c.sommet - ap)) ** 2 : 10 * ((ap - alt) / (ap - c.base)) ** 2;
+  if (alt > c.sommet) v += 40 * ((alt - c.sommet) / 2000) ** 2;     // sommet et base adoucis
+  if (alt < c.base) v += 40 * ((c.base - alt) / 1500) ** 2;
+  if (alt > ISO0) v += 10 * Math.min(1, (alt - ISO0) / 9000);
+  const dbz = c.zmax - 26 * d2 - v;
+  return dbz > 0 ? 10 ** (dbz / 10) : 0;
+}
+// l'humidité normale de l'air : de très faibles échos, sous 12 000 ft (cachés avec le gain calibré)
+const hache = (i, j) => { const h = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return h - Math.floor(h); };
+function bruit(x, y) {           // bruit lissé (valeurs au hasard sur une grille de 1,5 NM, interpolées)
+  const X = x / 1.5, Y = y / 1.5, i = Math.floor(X), j = Math.floor(Y), u = X - i, v = Y - j, l = t => t * t * (3 - 2 * t);
+  const a = hache(i, j), b = hache(i + 1, j), c = hache(i, j + 1), d = hache(i + 1, j + 1);
+  return a + (b - a) * l(u) + (c - a) * l(v) + (a - b - c + d) * l(u) * l(v);
+}
+const humid = (x, y, alt) => alt > 12000 ? 0 : 10 ** ((4 + 11 * bruit(x, y)) / 10);
+function zMeteo(x, y, alt) { let z = humid(x, y, alt), t = 0; for (const c of CELLS) { const zc = zCell(c, x, y, alt); if (zc) { z += zc; if (c.turb && zc > 10 ** 4.3) t = 1; } } return [z, t]; }
+
+/* ---------- l'antenne : TILT effectif, roulis ---------- */
+function tiltAuto(bas = 0) {     // bord inférieur du faisceau au sol à la portée affichée (MAP : centre au sol aux 2/3)
+  const R = st.range * (st.mode === 'map' ? 0.6 : 1), b = largeur();
+  const tc = Math.atan2(-(st.alt - 600 + drop(R)), R * NM_FT) / deg;
+  return st.mode === 'map' ? tc : tc + b / 2 + bas;
+}
+function tiltDe(passe) {
+  if (st.tiltMode === 'auto' || st.mode === 'map') return Math.max(-15, Math.min(15, tiltAuto()));
+  if (st.tiltMode === 'multi') return Math.max(-15, Math.min(15, tiltAuto() + (passe ? Math.max(3, largeur()) : 0)));
+  return st.tilt;
+}
+const elevation = (az, passe) => tiltDe(passe) - (st.stab ? 0 : st.roulis * Math.sin(az * deg));
+
+/* ---------- un rayon du faisceau : ce que l'écho donne à chaque distance ---------- */
+const NB = 160, DAZ = 0.5, NAZ = 241;
+const SV = [-1, -0.5, 0, 0.5, 1], SH = [-0.6, 0, 0.6];
+function rayon(az, el) {
+  const b = largeur(), R = st.range, dr = R / NB;
+  const o = { dbw: new Float32Array(NB), dbg: new Float32Array(NB), att: new Float32Array(NB), turb: new Uint8Array(NB), bloque: -1 };
+  let A = 0;
+  for (let k = 0; k < NB; k++) {
+    const r = (k + 0.5) * dr;
+    let sw = 0, zw = 0, zg = 0, fs = 0, tu = 0;
+    for (const ha of SH) for (const va of SV) {
+      const w = 2 ** (-(ha * ha + va * va)); sw += w;
+      const a = (az + ha * b / 2) * deg, e = (el + va * b / 2) * deg;
+      const x = r * Math.sin(a), y = r * Math.cos(a), alt = st.alt + r * NM_FT * Math.tan(e) + drop(r);
+      const T = terrain(x, y);
+      if (alt <= T.e) { zg += w * ZSOL[T.type]; fs += w; continue; }
+      const [z, t] = zMeteo(x, y, alt); zw += w * z; if (t && ha === 0) tu = 1;
+    }
+    zw /= sw; zg /= sw; fs /= sw;
+    o.att[k] = o.bloque >= 0 ? 200 : A;
+    o.dbw[k] = zw > 0 ? 10 * Math.log10(zw) : -99; o.dbg[k] = zg > 0 ? 10 * Math.log10(zg) : -99; o.turb[k] = tu;
+    A += 4 * 10 ** ((o.dbw[k] - 50) / 12.5) * dr;            // atténuation aller-retour dans la pluie (dB)
+    if (fs > 0.85 && o.bloque < 0) o.bloque = k;            // le relief bloque tout le faisceau : rien derrière
+  }
+  return o;
+}
+// niveaux affichés (0 rien, 1 vert, 2 jaune, 3 rouge, 4 magenta) selon le mode et les corrections
+function niveaux(o) {
+  const L = new Uint8Array(NB), dr = st.range / NB, gain = st.cal ? 0 : st.gain; let pacAlerte = false;
+  for (let k = 0; k < NB; k++) {
+    const r = (k + 0.5) * dr, att = o.att[k];
+    const zmin = 4 + 20 * Math.log10(Math.max(r, 5) / 40);     // sensibilité du récepteur
+    const zw = o.dbw[k], zg = o.dbg[k];
+    const zt = 10 * Math.log10(10 ** (zw / 10) + 10 ** (zg / 10));
+    const z = st.mode === 'map' ? zt : (st.gcs || st.tiltMode === 'multi') ? zw : zt;
+    if (z - att < zmin) { if (st.pac && att > PACMAX && zw > 20) pacAlerte = true; continue; }
+    let d = z - att + (st.pac ? Math.min(att, PACMAX) : 0) + gain;
+    if (!st.stc) d -= 20 * Math.log10(Math.max(r, 10) / 10);   // sans STC : l'écho baisse avec la distance
+    if (st.mode === 'map') L[k] = d >= 56 ? 3 : d >= 51 ? 2 : d >= 40 ? 1 : 0;
+    else L[k] = d >= 40 ? 3 : d >= 30 ? 2 : d >= 20 ? 1 : 0;
+    if (st.mode === 'turb' && L[k] && o.turb[k] && r <= 40) L[k] = 4;
+    if (st.pac && att > PACMAX + 3 && zw > 25) pacAlerte = true;
+  }
+  return { L, pacAlerte };
+}
+
+/* ---------- l'image de l'écran : grille polaire peinte au passage du faisceau ---------- */
+let img = [new Uint8Array(NAZ * NB), new Uint8Array(NAZ * NB)], pac = [new Uint8Array(NAZ), new Uint8Array(NAZ)];
+let azAnt = -60, sens = 1, passe = 0, dernierRayon = null, dernierAz = null;
+function effacer() { img = [new Uint8Array(NAZ * NB), new Uint8Array(NAZ * NB)]; pac = [new Uint8Array(NAZ), new Uint8Array(NAZ)]; }
+function peindre(az) {
+  const i = Math.round((az + 60) / DAZ); if (i < 0 || i >= NAZ) return;
+  const p = st.tiltMode === 'multi' && st.mode !== 'map' && st.mode !== 'test' ? passe % 2 : 0;
+  const cible = img[p];
+  if (st.mode === 'test') { for (let k = 0; k < NB; k++) cible[i * NB + k] = 1 + Math.min(3, Math.floor(k / (NB / 4))); return; }
+  const o = rayon(az, elevation(az, p)), { L, pacAlerte } = niveaux(o);
+  cible.set(L, i * NB); pac[p][i] = pacAlerte ? 1 : 0;
+}
+const emet = () => ['wx', 'turb', 'map'].includes(st.mode);
+
+/* ---------- impulsions et échos (vue de dessus, très ralentis) ---------- */
+let impulsions = [], tImp = 0, horloge = 0;
+const VP = () => st.range / 1.6;                     // NM par seconde d'animation
+function emettre() {
+  const o = rayon(azAnt, elevation(azAnt, passe % 2)), { L } = niveaux(o), dr = st.range / NB, echos = [];
+  for (let k = 0; k < NB; k++) if (L[k] && (k === 0 || !L[k - 1])) { let m = 0; for (let j = k; j < NB && L[j]; j++) m = Math.max(m, L[j]); echos.push({ r: (k + .5) * dr, n: m }); }
+  impulsions.push({ t0: horloge, az: azAnt, o, echos });
+  dernierRayon = o; dernierAz = azAnt;
+}
+
+/* ---------- gouttelettes (effet Doppler) ---------- */
+const gouttes = CELLS.flatMap(c => Array.from({ length: c.R > 5 ? 34 : 18 }, (_, i) => {
+  const a = Math.random() * 2 * Math.PI, d = Math.sqrt(Math.random()) * c.R * .8;
+  return { c, dx: Math.cos(a) * d, dy: Math.sin(a) * d, vx: 0, vy: 0 };
+}));
+function bougerGouttes(dt) {
+  for (const g of gouttes) {
+    if (g.c.turb) { g.vx += (Math.random() - .5) * 6 * dt; g.vy += (Math.random() - .5) * 6 * dt; g.vx *= .96; g.vy *= .96; }
+    else { g.vx = 0.35; g.vy = 0.12; }
+    g.dx += g.vx * dt; g.dy += g.vy * dt;
+    if (g.dx * g.dx + g.dy * g.dy > (g.c.R * .85) ** 2) { if (g.c.turb) { g.dx *= .7; g.dy *= .7; g.vx = -g.vx; g.vy = -g.vy; } else { g.dx = -g.dx * .9; g.dy = -g.dy * .9; } }
+  }
+}
+
+/* ---------- dessin ---------- */
+const K = {};
+function couleurs() { const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  for (const n of ['text', 'muted', 'faint', 'line', 'line2', 'panel', 'panel2', 'ambre']) K[n] = g('--' + n); K.clair = document.documentElement.classList.contains('light'); }
+function prep(cv) {
+  const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1;
+  if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) { cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); }
+  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, r.width, r.height); return [x, r.width, r.height];
+}
+const PAL = [null, [0, 200, 60], [240, 220, 0], [230, 30, 30], [230, 0, 230]];
+const rgb = (n, a = 1) => `rgba(${PAL[n].join(',')},${a})`;
+// géométrie commune aux vues de dessus et ND : avion en bas au centre, ±60°, RANGE en haut
+function geo(W, H) { const cx = W / 2, cy = H - 24, s = Math.min((H - 44) / st.range, (W / 2 - 12) / (st.range * Math.sin(60 * deg))); return { cx, cy, s }; }
+
+// vue de dessus : fond (relief et nuages) calculé une fois par RANGE et taille
+let fondPlan = null, cleFond = '';
+function calcFondPlan(W, H) {
+  const { cx, cy, s } = geo(W, H), q = 2, w = Math.ceil(W / q), h = Math.ceil(H / q);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const x = cv.getContext('2d'), id = x.createImageData(w, h), D = id.data;
+  const alts = [2500, 6000, 10000, 15000, 21000, 28000];
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const X = (i * q - cx) / s, Y = (cy - j * q) / s, T = terrain(X, Y);
+    let c;
+    if (T.type === 'eau') c = [28, 72, 112];
+    else if (T.type === 'ville') c = [120, 120, 128];
+    else { const u = Math.min(1, (T.e - 300) / 9000); c = [46 + 120 * u, 70 + 50 * u, 42 + 40 * u]; }
+    let zm = -99; for (const c2 of CELLS) for (const a of alts) { const z = zCell(c2, X, Y, a); if (z) zm = Math.max(zm, 10 * Math.log10(z)); }
+    if (zm > 12) { const u = Math.min(1, (zm - 12) / 40), g = 235 - 150 * u, al = Math.min(.95, .35 + u * .7); c = c.map((v, n) => v * (1 - al) + (n === 2 ? g + 10 : g) * al); }
+    const p = (j * w + i) * 4; D[p] = c[0]; D[p + 1] = c[1]; D[p + 2] = c[2]; D[p + 3] = 255;
+  }
+  x.putImageData(id, 0, 0); return cv;
+}
+function dessinerPlan() {
+  const cv = $('#plan'), [x, W, H] = prep(cv), { cx, cy, s } = geo(W, H), R = st.range, b = largeur();
+  const cle = `${W}x${H}:${R}`; if (cle !== cleFond) { fondPlan = calcFondPlan(W, H); cleFond = cle; }
+  x.imageSmoothingEnabled = true; x.drawImage(fondPlan, 0, 0, W, H);
+  // zone couverte : ±60°, et anneaux
+  x.save(); x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.rect(0, 0, W, H);
+  x.moveTo(cx, cy); x.arc(cx, cy, R * s, -Math.PI / 2 - 60 * deg, -Math.PI / 2 + 60 * deg); x.closePath(); x.fill('evenodd'); x.restore();
+  x.strokeStyle = 'rgba(255,255,255,.25)'; x.lineWidth = 1; x.setLineDash([3, 5]);
+  for (let k = 1; k <= 4; k++) { x.beginPath(); x.arc(cx, cy, R * s * k / 4, -Math.PI / 2 - 60 * deg, -Math.PI / 2 + 60 * deg); x.stroke(); }
+  x.setLineDash([]);
+  x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '600 10.5px "IBM Plex Mono",monospace';
+  for (let k = 1; k <= 4; k++) x.fillText(`${nf(R * k / 4)} NM`, cx + 4, cy - R * s * k / 4 + 12);
+  // noms des cellules et du relief
+  x.font = '700 12px "IBM Plex Sans",sans-serif';
+  for (const c of CELLS) { const px = cx + c.x * s, py = cy - c.y * s; if (c.r <= R * 1.05) { x.fillStyle = '#0b141b'; x.fillText(c.nom, px - 4, py + 4); } }
+  // gouttelettes : calmes (toutes dans le même sens) ou turbulentes (en tous sens)
+  if (s > 2.5) { for (const g of gouttes) { const px = cx + (g.c.x + g.dx) * s, py = cy - (g.c.y + g.dy) * s; x.fillStyle = g.c.turb ? 'rgba(236,72,153,.9)' : 'rgba(30,64,175,.75)'; x.fillRect(px - 1.2, py - 1.2, 2.4, 2.4); } }
+  // coupe verticale
+  x.strokeStyle = 'rgba(255,255,255,.65)'; x.setLineDash([6, 4]); x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.sin(st.coupe * deg) * R * s, cy - Math.cos(st.coupe * deg) * R * s); x.stroke(); x.setLineDash([]);
+  // faisceau : cône à −3 dB, qui pâlit derrière les cellules (puissance réfractée)
+  if (emet() || st.mode === 'test') {
+    const o = dernierRayon && dernierAz !== null && Math.abs(dernierAz - azAnt) < 3 ? dernierRayon : null, dr = R / NB;
+    for (let k = 0; k < NB; k += 2) {
+      const a0 = -Math.PI / 2 + (azAnt - b / 2) * deg, a1 = -Math.PI / 2 + (azAnt + b / 2) * deg;
+      const reste = st.mode === 'test' ? 0 : o ? Math.max(0, 10 ** (-Math.min(o.att[k], 60) / 20) * (o.bloque >= 0 && k > o.bloque ? 0 : 1)) : 1;
+      x.fillStyle = `rgba(125,211,252,${(st.mode === 'test' ? .05 : .28 * reste).toFixed(3)})`;
+      x.beginPath(); x.arc(cx, cy, (k + 2) * dr * s, a0, a1); x.arc(cx, cy, k * dr * s, a1, a0, true); x.closePath(); x.fill();
+    }
+  }
+  // impulsions qui partent (bleu clair) et échos qui reviennent (couleur de l'écho)
+  for (const p of impulsions) {
+    const r = VP() * (horloge - p.t0), a0 = -Math.PI / 2 + (p.az - b / 2) * deg, a1 = -Math.PI / 2 + (p.az + b / 2) * deg;
+    if (r < R) { const k = Math.min(NB - 1, Math.floor(r / R * NB)); const reste = Math.max(.06, 10 ** (-Math.min(p.o.att[k], 60) / 20)) * (p.o.bloque >= 0 && k > p.o.bloque ? 0 : 1);
+      x.strokeStyle = `rgba(186,230,253,${reste.toFixed(2)})`; x.lineWidth = 2.2; x.beginPath(); x.arc(cx, cy, r * s, a0, a1); x.stroke(); }
+    for (const e of p.echos) { const re = 2 * e.r - r; if (re > 0 && re < e.r) { x.strokeStyle = rgb(e.n, .95); x.lineWidth = 2.6; x.beginPath(); x.arc(cx, cy, re * s, a0 + .02, a1 - .02); x.stroke(); } }
+  }
+  // l'avion
+  avionHaut(x, cx, cy, '#e2e8f0');
+}
+function avionHaut(x, cx, cy, c) {
+  x.save(); x.translate(cx, cy); x.fillStyle = c;
+  x.beginPath(); x.moveTo(0, -11); x.lineTo(2, -4); x.lineTo(10, 1); x.lineTo(10, 3); x.lineTo(2, 1); x.lineTo(1.5, 7); x.lineTo(4, 9); x.lineTo(-4, 9); x.lineTo(-1.5, 7); x.lineTo(-2, 1); x.lineTo(-10, 3); x.lineTo(-10, 1); x.lineTo(-2, -4); x.closePath(); x.fill(); x.restore();
+}
+
+// écran ND : la grille polaire rendue par une table pixel → case
+let tablePix = null, cleTable = '', ecran = null;
+function calcTable(W, H) {
+  const { cx, cy, s } = geo(W, H), Rp = st.range * s, t = new Int32Array(W * H).fill(-1);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const dx = i + .5 - cx, dy = cy - (j + .5), rp = Math.hypot(dx, dy); if (rp > Rp || dy < -2) continue;
+    const az = Math.atan2(dx, dy) / deg; if (Math.abs(az) > 60) continue;
+    t[j * W + i] = Math.round((az + 60) / DAZ) * NB + Math.min(NB - 1, Math.floor(rp / Rp * NB));
+  }
+  ecran = document.createElement('canvas'); ecran.width = W; ecran.height = H; return t;
+}
+function dessinerND() {
+  const cv = $('#nd'), [x, W0, H0] = prep(cv), W = Math.round(W0), H = Math.round(H0), { cx, cy, s } = geo(W, H), R = st.range;
+  const cle = `${W}x${H}:${R}`; if (cle !== cleTable) { tablePix = calcTable(W, H); cleTable = cle; }
+  x.fillStyle = '#000'; x.fillRect(0, 0, W0, H0);
+  if (st.mode !== 'off') {
+    const ex = ecran.getContext('2d'), id = ex.createImageData(W, H), D = id.data, multi = st.tiltMode === 'multi' && st.mode !== 'map';
+    const i0 = img[0], i1 = img[1];
+    for (let p = 0; p < tablePix.length; p++) {
+      const k = tablePix[p]; if (k < 0) continue;
+      const n = multi ? Math.max(i0[k], i1[k]) : i0[k]; if (!n) continue;
+      const c = PAL[n], q = p * 4; D[q] = c[0]; D[q + 1] = c[1]; D[q + 2] = c[2]; D[q + 3] = 255;
+    }
+    ex.putImageData(id, 0, 0); x.drawImage(ecran, 0, 0);
+  }
+  // anneaux, repères, balayage
+  x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1; x.fillStyle = '#e5e7eb'; x.font = '600 11px "IBM Plex Mono",monospace';
+  for (let k = 1; k <= 4; k++) { x.setLineDash(k === 4 ? [] : [4, 6]); x.beginPath(); x.arc(cx, cy, R * s * k / 4, -Math.PI / 2 - 60 * deg, -Math.PI / 2 + 60 * deg); x.stroke();
+    x.fillText(nf(R * k / 4), cx - R * s * k / 4 * Math.sin(55 * deg) - 8, cy - R * s * k / 4 * Math.cos(55 * deg) - 4); }
+  x.setLineDash([]);
+  for (const a of [-60, -30, 0, 30, 60]) { const ar = a * deg; x.beginPath(); x.moveTo(cx + Math.sin(ar) * (R * s - 8), cy - Math.cos(ar) * (R * s - 8)); x.lineTo(cx + Math.sin(ar) * R * s, cy - Math.cos(ar) * R * s); x.stroke(); }
+  // PAC : trait jaune au bord, là où l'ombre radar commence
+  if (emet() && st.pac) { x.strokeStyle = '#facc15'; x.lineWidth = 4;
+    for (let i = 0; i < NAZ; i++) if (pac[0][i] || (st.tiltMode === 'multi' && pac[1][i])) { const a = -Math.PI / 2 + (i * DAZ - 60) * deg; x.beginPath(); x.arc(cx, cy, R * s + 5, a - .5 * DAZ * deg, a + .5 * DAZ * deg); x.stroke(); } }
+  if (st.mode !== 'off' && st.mode !== 'stby') { x.strokeStyle = 'rgba(255,255,255,.75)'; x.lineWidth = 1.2; const a = azAnt * deg; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.sin(a) * R * s, cy - Math.cos(a) * R * s); x.stroke(); }
+  avionHaut(x, cx, cy, '#fbbf24');
+  // inscriptions
+  x.font = '700 13px "IBM Plex Mono",monospace'; x.textAlign = 'left';
+  const lib = { off: '', stby: 'WX STBY', test: 'WX TST', wx: 'WX', turb: 'WX+T', map: 'MAP' }[st.mode];
+  x.fillStyle = st.mode === 'test' ? '#fbbf24' : '#22d3ee'; x.fillText(lib, 10, 20);
+  if (emet()) {
+    x.font = '600 11.5px "IBM Plex Mono",monospace'; x.fillStyle = '#22d3ee';
+    x.fillText(st.tiltMode === 'multi' && st.mode !== 'map' ? 'MULTISCAN' : `${st.tiltMode === 'auto' || st.mode === 'map' ? 'A ' : ''}${tiltDe(0) >= 0 ? '+' : ''}${nf(tiltDe(0), 1)}°`, 10, 36);
+    x.fillText(st.cal ? 'CAL' : `G ${st.gain >= 0 ? '+' : ''}${st.gain}`, 10, 52);
+    if (!st.stab) { x.fillStyle = '#fbbf24'; x.fillText('STAB OFF', 10, 68); }
+    if (!st.gcs && st.mode !== 'map' && st.tiltMode !== 'multi') { x.fillStyle = '#94a3b8'; x.fillText('GCS OFF', 10, st.stab ? 68 : 84); }
+  }
+  x.textAlign = 'right'; x.fillStyle = '#e5e7eb'; x.font = '600 11.5px "IBM Plex Mono",monospace'; x.fillText(`RANGE ${R}`, W0 - 10, 20); x.textAlign = 'left';
+  if (st.mode === 'off') { x.fillStyle = '#334155'; x.font = '700 14px "IBM Plex Mono",monospace'; x.textAlign = 'center'; x.fillText('RADAR OFF', W0 / 2, H0 / 2); x.textAlign = 'left'; }
+}
+
+// coupe verticale : fond calculé par coupe, RANGE et taille
+let fondCoupe = null, cleCoupe = '';
+const ALTMAX = 45000;
+function geoCoupe(W, H) { const g = 46, d = 12, h = 14, bas = H - 26; return { g, d, h, bas, X: r => g + (W - g - d) * r / st.range, Y: a => bas - (bas - h) * a / ALTMAX }; }
+function calcFondCoupe(W, H) {
+  const G = geoCoupe(W, H), q = 2, w = Math.ceil(W / q), h = Math.ceil(H / q), cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const x = cv.getContext('2d'), id = x.createImageData(w, h), D = id.data, a = st.coupe * deg;
+  for (let i = 0; i < w; i++) {
+    const r = ((i * q) - G.g) / (W - G.g - G.d) * st.range; if (r < 0 || r > st.range) continue;
+    const X = r * Math.sin(a), Y = r * Math.cos(a), T = terrain(X, Y);
+    for (let j = 0; j < h; j++) {
+      const alt = (G.bas - j * q) / (G.bas - G.h) * ALTMAX; let c;
+      if (alt <= T.e) c = T.type === 'eau' ? [28, 72, 112] : T.type === 'ville' ? [110, 110, 118] : [86, 74, 52];
+      else {
+        const sky = K.clair ? [210, 228, 240] : [12, 24, 34];
+        let z = 0; for (const c2 of CELLS) z += zCell(c2, X, Y, alt); const zd = z > 0 ? 10 * Math.log10(z) : -99;
+        if (zd > 12) { const u = Math.min(1, (zd - 12) / 42), g = 235 - 160 * u, al = Math.min(.95, .35 + u * .7); c = sky.map((v, n) => v * (1 - al) + (n === 2 ? g + 12 : g) * al); } else c = sky;
+      }
+      const p = (j * w + i) * 4; D[p] = c[0]; D[p + 1] = c[1]; D[p + 2] = c[2]; D[p + 3] = 255;
+    }
+  }
+  x.putImageData(id, 0, 0); return cv;
+}
+function dessinerCoupe() {
+  const [x, W, H] = prep($('#coupe')), G = geoCoupe(W, H), R = st.range, b = largeur();
+  const cle = `${W}x${H}:${R}:${st.coupe}:${K.clair}`; if (cle !== cleCoupe) { fondCoupe = calcFondCoupe(W, H); cleCoupe = cle; }
+  x.fillStyle = K.clair ? '#d2e4f0' : '#0c1822'; x.fillRect(0, 0, W, H);
+  x.drawImage(fondCoupe, 0, 0, W, H);
+  // axes
+  x.fillStyle = K.muted; x.font = '500 10.5px "IBM Plex Mono",monospace'; x.strokeStyle = K.line2; x.lineWidth = 1;
+  for (const a of [0, 10000, 20000, 30000, 40000]) { x.fillText(a ? `${a / 1000}k` : '0', 6, G.Y(a) + 4); x.globalAlpha = .4; x.setLineDash([2, 5]); x.beginPath(); x.moveTo(G.g, G.Y(a)); x.lineTo(W - G.d, G.Y(a)); x.stroke(); x.setLineDash([]); x.globalAlpha = 1; }
+  x.textAlign = 'center'; for (let k = 0; k <= 4; k++) x.fillText(`${nf(R * k / 4)} NM`, Math.min(W - 30, Math.max(G.g + 10, G.X(R * k / 4))), H - 8); x.textAlign = 'left';
+  x.fillText('ft', 6, G.h + 2);
+  // isotherme 0 °C
+  x.strokeStyle = '#7dd3fc'; x.globalAlpha = .6; x.setLineDash([8, 5]); x.beginPath(); x.moveTo(G.g, G.Y(ISO0)); x.lineTo(W - G.d, G.Y(ISO0)); x.stroke(); x.setLineDash([]); x.globalAlpha = 1;
+  x.fillStyle = '#7dd3fc'; x.fillText('isotherme 0 °C', W - G.d - 100, G.Y(ISO0) - 4);
+  // noms des cellules sur la coupe
+  x.font = '700 12px "IBM Plex Sans",sans-serif'; x.fillStyle = K.clair ? '#0f172a' : '#e2e8f0';
+  for (const c of CELLS) { const da = Math.abs(((c.az - st.coupe + 540) % 360) - 180); const perp = c.r * Math.sin(da * deg); if (perp < c.R * 1.1 && c.r < R) x.fillText(c.nom, G.X(c.r * Math.cos(da * deg)) - 5, G.Y(c.sommet) - 5); }
+  // faisceau : centre et bords à −3 dB, courbes (Terre ronde) ; plus vif quand l'antenne passe par la coupe
+  if (emet() || st.mode === 'test' || st.mode === 'stby') {
+    const p = st.tiltMode === 'multi' && st.mode !== 'map' ? [0, 1] : [0], actif = Math.abs(azAnt - st.coupe) < b / 2 + 1 && emet();
+    for (const pp of p) {
+      const el = elevation(st.coupe, pp), ligne = (e, k) => { const r = R * k / 60; return [G.X(r), G.Y(st.alt + r * NM_FT * Math.tan(e * deg) + drop(r))]; };
+      x.beginPath(); for (let k = 0; k <= 60; k++) { const [px, py] = ligne(el + b / 2, k); k ? x.lineTo(px, py) : x.moveTo(px, py); }
+      for (let k = 60; k >= 0; k--) { const [px, py] = ligne(el - b / 2, k); x.lineTo(px, py); } x.closePath();
+      x.fillStyle = `rgba(125,211,252,${actif ? .32 : .14})`; x.fill();
+      x.strokeStyle = '#7dd3fc'; x.lineWidth = 1.2; x.setLineDash([5, 4]); x.beginPath(); for (let k = 0; k <= 60; k++) { const [px, py] = ligne(el, k); k ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); x.setLineDash([]);
+    }
+  }
+  // l'avion (de côté)
+  const ay = G.Y(st.alt); x.fillStyle = K.clair ? '#0f172a' : '#e2e8f0';
+  x.beginPath(); x.moveTo(G.g - 30, ay - 2); x.lineTo(G.g + 4, ay - 2); x.quadraticCurveTo(G.g + 12, ay, G.g + 4, ay + 2); x.lineTo(G.g - 30, ay + 2); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(G.g - 28, ay - 2); x.lineTo(G.g - 34, ay - 10); x.lineTo(G.g - 24, ay - 2); x.fill();
+  x.font = '600 11px "IBM Plex Mono",monospace'; x.fillText(`${nf(st.alt)} ft`, G.g + 10, ay - 8);
+  $('#coupeLib').textContent = `à ${st.coupe >= 0 ? '+' : ''}${nf(st.coupe)}° (clique sur la vue de dessus pour la changer)`;
+}
+
+/* ---------- cartes ---------- */
+const cache = new Map();
+function html(sel, h) { if (cache.get(sel) !== h) { cache.set(sel, h); $(sel).innerHTML = h; } }
+function majCartes() {
+  const b = largeur(), l = R => 2 * R * NM_FT * Math.tan(b / 2 * deg);
+  let echo = '—', echoD = 'aucun écho dans la coupe';
+  if (emet()) {
+    const o = rayon(st.coupe, elevation(st.coupe, 0)), { L } = niveaux(o), k = L.findIndex(n => n > 0);
+    if (k >= 0) { const r = (k + .5) * st.range / NB; echo = `${nf(r, 1)} NM`; echoD = `aller-retour ${nf(r * US_NM, 0)} µs (12,359 µs par NM)`; }
+  }
+  html('#cartes', `<div class="carte"><span>Faisceau</span><b>${nf(b, 1)}°</b><small>antenne ${st.diam}″ ; à 25 NM : ${nf(l(25), 0)} ft de large, à 50 NM : ${nf(l(50), 0)} ft</small></div>`
+    + `<div class="carte"><span>TILT</span><b>${tiltDe(0) >= 0 ? '+' : ''}${nf(tiltDe(0), 2)}°</b><small>${st.tiltMode === 'multi' && st.mode !== 'map' ? `MULTISCAN : alterne avec ${nf(tiltDe(1), 2)}°` : st.tiltMode === 'auto' || st.mode === 'map' ? 'calculé (altitude, RANGE)' : 'réglé par le pilote'}${!st.stab && st.roulis ? ` ; sans STAB, ${st.roulis > 0 ? 'la droite plonge' : 'la gauche plonge'}` : ''}</small></div>`
+    + `<div class="carte"><span>Premier écho dans la coupe</span><b>${echo}</b><small>${echoD}</small></div>`
+    + `<div class="carte"><span>Antenne</span><b>${st.mode === 'stby' || st.mode === 'off' ? 'immobile' : (azAnt >= 0 ? '+' : '') + nf(azAnt, 0) + '°'}</b><small>${st.mode === 'test' ? 'balaie sans émettre (auto-test)' : st.mode === 'stby' ? 'en attente, sans émettre' : st.mode === 'off' ? 'radar éteint' : `balaie ±60° à ${nf(25 * st.vitesse)}°/s ; une impulsion tous les ~9,5 ms`}</small></div>`);
+}
+
+/* ---------- boucle ---------- */
+let dernier = 0;
+function boucle(now) {
+  const dt = Math.min(0.1, (now - (dernier || now)) / 1000); dernier = now; horloge += dt;
+  if (st.mode !== 'off' && st.mode !== 'stby') {
+    const avant = azAnt; azAnt += sens * 25 * st.vitesse * dt;
+    if (azAnt > 60) { azAnt = 120 - azAnt; sens = -1; passe++; } else if (azAnt < -60) { azAnt = -120 - azAnt; sens = 1; passe++; }
+    // peindre chaque demi-degré franchi
+    const a0 = Math.min(avant, azAnt), a1 = Math.max(avant, azAnt);
+    for (let a = Math.ceil((a0 + 60) / DAZ) * DAZ - 60; a <= a1 + 1e-9; a += DAZ) peindre(a);
+    if (emet()) { tImp += dt; if (tImp > .14) { tImp = 0; emettre(); } }
+  }
+  impulsions = impulsions.filter(p => VP() * (horloge - p.t0) < 2 * st.range + 1);
+  if (!reduit) bougerGouttes(dt);
+  dessinerPlan(); dessinerND(); dessinerCoupe(); majCartes();
+  requestAnimationFrame(boucle);
+}
+
+/* ---------- images du cours (protégées : api/cours.php, permission « aec-avionique ») ---------- */
+// Les images des sous-modules 6.1 et 6.2 sont sur le serveur, hors du dépôt public ; elles ne s'affichent qu'aux comptes
+// qui ont la Documentation AEC Avionique, et ne se chargent qu'à l'ouverture de leur section.
+const DOSSIER = 'etape6/cours2/m6/fichiers/images/';
+const permsCours = (() => { try { return sessionStorage.getItem('userRole') === 'admin' || JSON.parse(sessionStorage.getItem('userPermissions') || '[]').includes('aec-avionique'); } catch (e) { return false; } })();
+const urlCours = n => 'api/cours.php?f=' + encodeURIComponent(DOSSIER + n).replace(/%2F/g, '/');
+document.querySelectorAll('details.repli').forEach(d => d.addEventListener('toggle', () => {
+  const z = d.querySelector('.images'); if (!d.open || !z || !permsCours || z.dataset.fait) return;
+  z.dataset.fait = '1'; z.hidden = false;
+  z.innerHTML = JSON.parse(z.dataset.images).map(([n, l]) => `<figure><a href="${urlCours(n)}" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="${urlCours(n)}" alt="${l}"></a><figcaption>${l} <span style="color:#64748b">· cours 6.${n[2]}</span></figcaption></figure>`).join('');
+  z.querySelectorAll('img').forEach(im => im.addEventListener('error', () => { im.closest('figure').remove(); if (!z.querySelector('figure')) z.hidden = true; }));
+}));
+
+/* ---------- commandes ---------- */
+function groupe(sel, f) {
+  document.querySelectorAll(sel + ' .touche').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(sel + ' .touche').forEach(o => o.setAttribute('aria-pressed', o === b)); f(b.dataset.v);
+  }));
+}
+const bascule = (sel, cle, apres) => $(sel).addEventListener('click', () => { st[cle] = !st[cle]; $(sel).setAttribute('aria-pressed', st[cle]); if (apres) apres(); majTextes(); });
+function majTextes() {
+  $('#tiltV').textContent = `${st.tilt >= 0 ? '+' : ''}${nf(st.tilt, 2)}°`;
+  $('#gainV').textContent = st.cal ? 'CAL' : `${st.gain >= 0 ? '+' : ''}${st.gain} dB`;
+  $('#altV').textContent = `${nf(st.alt)} ft`; $('#roulisV').textContent = `${st.roulis > 0 ? 'droite ' : st.roulis < 0 ? 'gauche ' : ''}${Math.abs(st.roulis)}°`;
+  $('#tilt').disabled = st.tiltMode !== 'man' || st.mode === 'map'; $('#gain').disabled = st.cal;
+}
+groupe('#modes', v => { st.mode = v; effacer(); impulsions = []; if (v === 'stby' || v === 'off') azAnt = 0; majTextes(); });
+groupe('#tiltModes', v => { st.tiltMode = v; effacer(); majTextes(); });
+groupe('#ranges', v => { st.range = +v; effacer(); impulsions = []; });
+groupe('#diams', v => { st.diam = +v; });
+groupe('#vitesses', v => { st.vitesse = +v; });
+bascule('#stab', 'stab'); bascule('#gcs', 'gcs'); bascule('#stc', 'stc'); bascule('#pac', 'pac');
+bascule('#cal', 'cal');
+$('#tilt').oninput = e => { st.tilt = +e.target.value; majTextes(); };
+$('#gain').oninput = e => { st.gain = +e.target.value; majTextes(); };
+$('#alt').oninput = e => { st.alt = +e.target.value; majTextes(); };
+$('#roulis').oninput = e => { st.roulis = +e.target.value; majTextes(); };
+$('#plan').addEventListener('click', e => {
+  const r = $('#plan').getBoundingClientRect(), { cx, cy } = geo(r.width, r.height);
+  const az = Math.atan2(e.clientX - r.left - cx, cy - (e.clientY - r.top)) / deg;
+  st.coupe = Math.round(Math.max(-60, Math.min(60, az)));
+});
+// tableau : largeur du faisceau selon l'antenne et la distance
+$('#tFaisceau').innerHTML = '<tr><th>Antenne</th><th>Faisceau</th><th>à 25 NM</th><th>à 50 NM</th></tr>'
+  + [12, 18, 24, 30].map(d => { const b = 96 / d, l = R => 2 * R * NM_FT * Math.tan(b / 2 * deg); return `<tr><td>${d}″</td><td class="n">${nf(b, 1)}°</td><td class="n">${nf(l(25), 0)} ft</td><td class="n">${nf(l(50), 0)} ft</td></tr>`; }).join('');
+
+couleurs(); majTextes();
+requestAnimationFrame(boucle);
+addEventListener('themechange', () => { couleurs(); cleCoupe = ''; });
+new MutationObserver(() => { couleurs(); cleCoupe = ''; }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
+<script src="version.js"></script>
+</body>
+</html>

@@ -35,7 +35,7 @@ const PAGES = [
   'aeronefs.html'         => ['aeronefs', 'aviation'],
   'ena.html'              => ['ena'],
   // Informatique
-  'informatique.html'     => ['informatique', 'arinc429', 'csdb', 'converter', 'crypteur', 'tcpip', 'qr-transfer', 'shape-transfer', 'chips', 'circuit', 'triphase', 'tcas', 'radalt'],
+  'informatique.html'     => ['informatique', 'arinc429', 'csdb', 'converter', 'crypteur', 'tcpip', 'qr-transfer', 'shape-transfer', 'chips', 'circuit', 'triphase', 'tcas', 'radalt', 'radar-meteo'],
   'arinc429.html'         => ['arinc429', 'informatique'],
   'csdb.html'             => ['csdb', 'informatique'],
   'converter.html'        => ['converter', 'informatique'],
@@ -48,6 +48,7 @@ const PAGES = [
   'triphase.html'         => ['triphase', 'informatique'],
   'tcas.html'             => ['tcas', 'informatique'],
   'radalt.html'           => ['radalt', 'informatique'],
+  'radar-meteo.html'      => ['radar-meteo', 'informatique'],
   'distant.html'          => ['distant'],
   'aec-avionique.html'    => ['aec-avionique'],
   // Politique et monde

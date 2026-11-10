@@ -180,6 +180,12 @@
    "tableau/radalt.webm"
   ]
  },
+ "radar-meteo.html": {
+  "img": "tableau/radar-meteo.jpg",
+  "video": [
+   "tableau/radar-meteo.webm"
+  ]
+ },
  "rona.html": {
   "img": "tableau/rona.jpg",
   "video": [
