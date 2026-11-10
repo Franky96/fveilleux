@@ -456,7 +456,12 @@
       padding: 0.2rem 0.5rem;
       cursor: pointer;
       outline: none;
+      max-width: 100%;   /* les choix nomment leurs équipements : le menu ne doit pas élargir la page */
     }
+    #banner-config { min-width: 0; max-width: 100%; }
+    .label-banner-left { min-width: 0; flex: 1 1 auto; }
+    .label-banner-left > div:not(.label-oct-box) { min-width: 0; flex: 1 1 auto; }
+    #banner-config .config-select { width: 100%; text-overflow: ellipsis; }
     .config-select:hover, .config-select:focus { border-color: #80cc80; }
     .ssm-ref-code {
       font-family: 'Courier New', monospace;

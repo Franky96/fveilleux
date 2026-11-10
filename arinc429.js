@@ -18,58 +18,60 @@ let currentWord = null;
 // Rules: most common parameter per label; skip Spare/Not Used/proprietary;
 // BNR=X→BNR, BCD=X→BCD, DISC=X→DIS.
 const LABELS = [
-  { oct: '001', enc: 'BCD', param: 'Distance to Go',                    unit: 'nm' },
-  { oct: '002', enc: 'BCD', param: 'Time to Go',                        unit: 'min' },
-  { oct: '003', enc: 'BCD', param: 'Cross Track Distance',              unit: 'nm' },
-  { oct: '004', enc: 'BCD', param: 'Runway Distance to Go',             unit: 'ft' },
-  { oct: '005', enc: 'DIS', param: 'Engine Discrete',                   unit: '' },
-  { oct: '006', enc: 'DIS', param: 'Engine Discrete',                   unit: '' },
+  // eq = équipements (Eqpt. ID, hexa, Attachment 1-2) qui émettent ce paramètre sur cette étiquette.
+  // Par défaut : le paramètre émis par le plus d'équipements ; les autres sont dans ALT_CONFIGS (menu du bandeau).
+  { oct: '001', enc: 'BCD', param: 'Distance to Go',                    unit: 'nm',      eq: ['002','056','060'] },
+  { oct: '002', enc: 'BCD', param: 'Time to Go',                        unit: 'min',     eq: ['002','056','060'] },
+  { oct: '003', enc: 'BCD', param: 'Cross Track Distance',              unit: 'nm',      eq: ['002'] },
+  { oct: '004', enc: 'BCD', param: 'Runway Distance to Go',             unit: 'ft',      eq: ['001'] },
+  { oct: '005', enc: 'DIS', param: 'Engine Discrete',                   unit: '',        eq: ['0D0'] },
+  { oct: '006', enc: 'DIS', param: 'Engine Discrete',                   unit: '',        eq: ['0D0'] },
   { oct: '007', enc: 'DIS', param: 'Spare',                             unit: '' },
-  { oct: '010', enc: 'BCD', param: 'Present Position - Latitude',       unit: 'deg:min' },
-  { oct: '011', enc: 'BCD', param: 'Present Position - Longitude',      unit: 'deg:min' },
-  { oct: '012', enc: 'BCD', param: 'Ground Speed',                      unit: 'kt' },
-  { oct: '013', enc: 'BCD', param: 'Track Angle - True',                unit: 'deg' },
-  { oct: '014', enc: 'BCD', param: 'Magnetic Heading',                  unit: 'deg' },
-  { oct: '015', enc: 'BCD', param: 'Wind Speed',                        unit: 'kt' },
-  { oct: '016', enc: 'BCD', param: 'Wind Direction - True',             unit: 'deg' },
-  { oct: '017', enc: 'BCD', param: 'Selected Runway Heading',           unit: 'deg' },
-  { oct: '020', enc: 'BCD', param: 'Selected Vertical Speed',           unit: 'ft/min' },
-  { oct: '021', enc: 'BCD', param: 'Selected EPR',                      unit: 'EPR' },
-  { oct: '022', enc: 'BCD', param: 'Selected Mach',                     unit: 'Mach' },
-  { oct: '023', enc: 'BCD', param: 'Selected Heading',                  unit: 'deg' },
-  { oct: '024', enc: 'BCD', param: 'Selected Course #1',                unit: 'deg' },
-  { oct: '025', enc: 'BCD', param: 'Selected Altitude',                 unit: 'ft' },
-  { oct: '026', enc: 'BCD', param: 'Selected Airspeed',                 unit: 'kt' },
-  { oct: '027', enc: 'BCD', param: 'Selected Course #2',                unit: 'deg' },
-  { oct: '030', enc: 'BCD', param: 'VHF COM Frequency',                 unit: 'MHz' },
-  { oct: '031', enc: 'DIS', param: 'Beacon Transponder Code',           unit: 'code' },
-  { oct: '032', enc: 'BCD', param: 'ADF Frequency',                     unit: 'kHz' },
-  { oct: '033', enc: 'BCD', param: 'ILS Frequency',                     unit: 'MHz' },
-  { oct: '034', enc: 'BCD', param: 'VOR/ILS Frequency',                 unit: 'MHz' },
-  { oct: '035', enc: 'BCD', param: 'DME Frequency',                     unit: 'MHz' },
-  { oct: '036', enc: 'BCD', param: 'MLS Frequency',                     unit: 'MHz' },
-  { oct: '037', enc: 'BCD', param: 'HF COM Frequency',                  unit: 'MHz' },
+  { oct: '010', enc: 'BCD', param: 'Present Position - Latitude',       unit: '',        eq: ['002','004','038'] },
+  { oct: '011', enc: 'BCD', param: 'Present Position - Longitude',      unit: '',        eq: ['002','004','038'] },
+  { oct: '012', enc: 'BCD', param: 'Ground Speed',                      unit: 'kt',      eq: ['002','004','005','025','038','056','060'] },
+  { oct: '013', enc: 'BCD', param: 'Track Angle - True',                unit: 'deg',     eq: ['002','004','038'] },
+  { oct: '014', enc: 'BCD', param: 'Magnetic Heading',                  unit: 'deg',     eq: ['004','005','038'] },
+  { oct: '015', enc: 'BCD', param: 'Wind Speed',                        unit: 'kt',      eq: ['002','004','005','038'] },
+  { oct: '016', enc: 'BCD', param: 'Wind Direction - True',             unit: 'deg',     eq: ['004','038'] },
+  { oct: '017', enc: 'BCD', param: 'Selected Runway Heading',           unit: 'deg',     eq: ['010','055','0A0','0B0'] },
+  { oct: '020', enc: 'BCD', param: 'Selected Vertical Speed',           unit: 'ft/min',  eq: ['020','0A1'] },
+  { oct: '021', enc: 'BCD', param: 'Selected EPR',                      unit: 'EPR',     eq: ['002','020'] },
+  { oct: '022', enc: 'BCD', param: 'Selected Mach',                     unit: 'Mach',    eq: ['020','0A1'] },
+  { oct: '023', enc: 'BCD', param: 'Selected Heading',                  unit: 'deg',     eq: ['020','0A1'] },
+  { oct: '024', enc: 'BCD', param: 'Selected Course #1',                unit: 'deg',     eq: ['011','020','0A1','0B1'] },
+  { oct: '025', enc: 'BCD', param: 'Selected Altitude',                 unit: 'ft',      eq: ['020','0A1'] },
+  { oct: '026', enc: 'BCD', param: 'Selected Airspeed',                 unit: 'kt',      eq: ['003','020','0A1'] },
+  { oct: '027', enc: 'BCD', param: 'Selected Course #2',                unit: 'deg',     eq: ['011','020','0A1','0B1'] },
+  { oct: '030', enc: 'BCD', param: 'VHF COM Frequency',                 unit: 'MHz',     eq: ['020','024','0B6'] },
+  { oct: '031', enc: 'DIS', param: 'Beacon Transponder Code',           unit: '',        eq: ['020','0B8'] },
+  { oct: '032', enc: 'BCD', param: 'ADF Frequency',                     unit: 'kHz',     eq: ['012','020','0B2'] },
+  { oct: '033', enc: 'BCD', param: 'ILS Frequency',                     unit: 'MHz',     eq: ['002','010','020','056','060','0B0'] },
+  { oct: '034', enc: 'BCD', param: 'VOR/ILS Frequency',                 unit: 'MHz',     eq: ['002','011','020','025','056','060','0B0'] },
+  { oct: '035', enc: 'BCD', param: 'DME Frequency',                     unit: 'MHz',     eq: ['002','009','020','056','060','0A9'] },
+  { oct: '036', enc: 'BCD', param: 'MLS Frequency',                     unit: 'MHz',     eq: ['002','020','0C7'], hors: 'ARINC 727 (MLS)' },
+  { oct: '037', enc: 'BCD', param: 'HF COM Frequency',                  unit: 'MHz',     eq: ['020','0B9'] },
   { oct: '040', enc: 'DIS', param: 'Spare',                             unit: '' },
-  { oct: '041', enc: 'BCD', param: 'Set Latitude',                      unit: 'deg/min' },
-  { oct: '042', enc: 'BCD', param: 'Set Longitude',                     unit: 'deg/min' },
-  { oct: '043', enc: 'BCD', param: 'Set Magnetic Heading',              unit: 'deg' },
-  { oct: '044', enc: 'BCD', param: 'True Heading',                      unit: 'deg' },
-  { oct: '045', enc: 'BCD', param: 'Minimum Airspeed',                  unit: 'kt' },
-  { oct: '046', enc: 'BCD', param: 'BCD Data Word LSW',                 unit: '' },
-  { oct: '047', enc: 'BCD', param: 'BCD Data Word MSW',                 unit: '' },
+  { oct: '041', enc: 'BCD', param: 'Set Latitude',                      unit: '',        eq: ['002','004','020','056','060','0A4'] },
+  { oct: '042', enc: 'BCD', param: 'Set Longitude',                     unit: '',        eq: ['002','004','020','056','060','0A4'] },
+  { oct: '043', enc: 'BCD', param: 'Set Magnetic Heading',              unit: 'deg',     eq: ['002','004','020','056','060','0A4'] },
+  { oct: '044', enc: 'BCD', param: 'True Heading',                      unit: 'deg',     eq: ['004','038'] },
+  { oct: '045', enc: 'BCD', param: 'Minimum Airspeed',                  unit: 'kt',      eq: ['003'] },
+  { oct: '046', enc: 'BCD', param: 'Engine Serial No. (LSDs)',          unit: '',        eq: ['033','10A','10B'] },
+  { oct: '047', enc: 'BCD', param: 'Engine Serial No. (MSDs)',          unit: '',        eq: ['033','10A','10B'] },
   { oct: '050', enc: 'DIS', param: 'Spare',                             unit: '' },
   { oct: '051', enc: 'DIS', param: 'Spare',                             unit: '' },
-  { oct: '052', enc: 'BCD', param: 'Long. Zero Fuel CG',               unit: '%' },
-  { oct: '053', enc: 'BCD', param: 'Track Angle - Magnetic',           unit: 'deg' },
-  { oct: '054', enc: 'BNR', param: 'Zero Fuel Weight',                 unit: 'kg' },
+  { oct: '052', enc: 'BNR', param: 'Body Pitch Acceleration',           unit: 'deg/s²',  eq: ['004','038'] },
+  { oct: '053', enc: 'BNR', param: 'Body Roll Acceleration',            unit: 'deg/s²',  eq: ['004','038'] },
+  { oct: '054', enc: 'BNR', param: 'Body Yaw Acceleration',             unit: 'deg/s²',  eq: ['004','038'] },
   { oct: '055', enc: 'DIS', param: 'Spare',                             unit: '' },
-  { oct: '056', enc: 'BCD', param: 'Estimated Time of Arrival',         unit: 'hr:min' },
+  { oct: '056', enc: 'BCD', param: 'ETA (Active Waypoint)',             unit: '',        eq: ['056','060'] },
   { oct: '057', enc: 'DIS', param: 'Spare',                             unit: '' },
-  { oct: '060', enc: 'BCD', param: 'S/G Hardware Part Number',          unit: '' },
-  { oct: '061', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
-  { oct: '062', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
-  { oct: '063', enc: 'BNR', param: 'ACMS Information',                  unit: '' },
-  { oct: '064', enc: 'BNR', param: 'Tire Pressure (Nose)',              unit: 'PSIA' },
+  { oct: '060', enc: 'BCD', param: 'S/G Hardware Part Number',          unit: '',        eq: ['025'] },
+  { oct: '061', enc: 'BNR', param: 'ACMS Information',                  unit: '',        eq: ['002','056','060'] },
+  { oct: '062', enc: 'BNR', param: 'ACMS Information',                  unit: '',        eq: ['002','056','060'] },
+  { oct: '063', enc: 'BNR', param: 'ACMS Information',                  unit: '',        eq: ['002','056','060'] },
+  { oct: '064', enc: 'BNR', param: 'Tire Pressure (Nose)',              unit: 'PSIA',    eq: ['03C'] },
   { oct: '065', enc: 'BCD', param: 'Gross Weight',                      unit: 'lb' },
   { oct: '066', enc: 'BCD', param: 'Longitudinal Center of Gravity',    unit: '% MAC' },
   { oct: '067', enc: 'BCD', param: 'Lateral Center of Gravity',         unit: '% MAC' },
@@ -301,6 +303,7 @@ const SDI_TABLES = {
 
 function getLabelSsmType(labelInfo) {
   if (!labelInfo) return 'bcd';
+  if (labelInfo.ssm) return labelInfo.ssm;   // choix actif dont le SSM diffère de la règle par numéro
   const oct = parseInt(labelInfo.oct, 8);
   if (oct >= 0o030 && oct <= 0o037) return 'radio';
   if ((oct >= 0o155 && oct <= 0o161) || (oct >= 0o350 && oct <= 0o354)) return 'maint';
@@ -314,20 +317,22 @@ const DECODE_META = {
   // ── BCD labels ────────────────────────────────────
   // decimals = PAD_nibbles + physical_decimal_places
   // e.g. 4 sig digits + 1 PAD nibble + 0.1 resolution → 1+1 = decimals:2
-  '001': { decimals: 1 },              // Distance to Go (NM)      – 5 digits, 0.1 NM res
+  // fmt : format particulier (décodeur et carte des bits) ; il suit le choix actif, pas le numéro d'étiquette
+  '001': { decimals: 1, signe: true },  // Distance to Go (NM)      – 5 digits, 0.1 NM res, ±3999.9 (signe dans le SSM)
   '002': { decimals: 2, padLow: 1 },  // Time to Go (min)          – 4 digits + PAD, 0.1 min res
   '003': { decimals: 2, padLow: 1 },  // Cross Track Distance (NM) – 4 digits + PAD, 0.1 NM res
   '004': { decimals: 0, padLow: 2 },  // Runway Distance to Go (ft)– 3 digits + 2 PAD, 100 ft res
-  '010': { decimals: 4 },             // Present Position - Latitude  (deg DDMM.mmmm)
-  '011': { decimals: 4 },             // Present Position - Longitude (deg DDDMM.mmmm)
+  '005': { discBits: [11, 12], bitDescs: { 11: 'Canal A', 12: 'Canal B' } },   // Engine Discrete (Att. 2, table 2 : bit 11 canal A, bit 12 canal B)
+  '010': { decimals: 4, fmt: 'latlon', lat: true },   // Present Position - Latitude  (deg DDMM.m, table 6-25-1)
+  '011': { decimals: 4, fmt: 'latlon' },              // Present Position - Longitude (deg DDDMM.m)
   '012': { decimals: 1, padLow: 1 },  // Ground Speed (kt)          – 4 digits + PAD, 1 kt res (d4=1000s)
   '013': { decimals: 2, padLow: 1 },  // Track Angle - True (deg)   – 4 digits + PAD, 0.1° res
   '014': { decimals: 2, padLow: 1 },  // Magnetic Heading (deg)     – 4 digits + PAD, 0.1° res
   '015': { decimals: 2, padLow: 2 },  // Wind Speed (kt)            – 3 digits + 2 PAD, 1 kt res
   '016': { decimals: 2, padLow: 2 },  // Wind Direction - True (deg)– 3 digits + 2 PAD, 1° res
   '017': { decimals: 2, padLow: 1 },  // Selected Runway Heading    – 4 digits + PAD, 0.1° res
-  '020': { decimals: 1, padLow: 1 },  // Selected Vertical Speed (ft/min) – d4=1000s,d3=100s,d2=10s,d1=1s,d0=PAD
-  '021': { decimals: 4, padLow: 2 },  // N1 Selected / EPR – d4=unités, d3=10ths, d2=100ths, 2 PAD
+  '020': { decimals: 1, padLow: 1, signe: true },  // Selected Vertical Speed (ft/min) ±6000 – d4=1000s,d3=100s,d2=10s,d1=1s,d0=PAD
+  '021': { decimals: 4, padLow: 1 },  // Selected EPR – 4 chiffres, 0.001 (Att. 2) : d4=unités, d3, d2, d1=millièmes, d0=PAD
   '022': { decimals: 4, padLow: 1 },  // Selected Mach     – d4=unités, d3=10ths, d2=100ths, d1=1000ths, PAD
   '023': { decimals: 2, padLow: 2 },  // Selected Heading (deg)   – 3 digits + 2 PAD, 1° res
   '024': { decimals: 2, padLow: 2 },  // Selected Course #1 (deg) – 3 digits + 2 PAD, 1° res
@@ -335,8 +340,8 @@ const DECODE_META = {
   '026': { decimals: 2, padLow: 2 },  // Selected Airspeed (kt)   – 3 digits + 2 PAD, 1 kt res
   '027': { decimals: 2, padLow: 2 },  // Selected Course #2 (deg) – 3 digits + 2 PAD, 1° res
   // ── Radio frequency labels (SSM: 00=NML, 01=NCD, 10=FT, 11=Undef) ──
-  '030': { decimals: 3, implicit: 100 },  // VHF COM (MHz) – 118-137, centaine implicite
-  '031': { transponder: true,
+  '030': { decimals: 3, implicit: 100, fmt: 'vhf' },  // VHF COM (MHz) – 118-137, centaine implicite (table 6-45)
+  '031': { transponder: true, fmt: 'squawk', catBits: [11,12,13,14,15,16,17],
     discBits: [11,12,13,14,15,16,17],
     bitDescs: {
       11: 'Altitude Report — 0=ON  1=OFF',
@@ -348,7 +353,7 @@ const DECODE_META = {
       17: 'Hijack Mode — 0=OFF  1=ON',
     },
   },
-  '032': { decimals: 1, maskD0: true, halfBit: 14, halfStep: 0.5,
+  '032': { decimals: 1, maskD0: true, halfBit: 14, halfStep: 0.5, fmt: 'adf', catBits: [11, 12],
     discBits: [11, 12],
     spareBits: [13],
     bitDescs: {
@@ -358,7 +363,7 @@ const DECODE_META = {
       14: '+0.5 kHz — 0=non  1=oui',
     },
   },  // ADF (kHz) – bits 29-27=1000kHz, 26-23=100kHz, 22-19=10kHz, 18-15=1kHz, 14=0.5kHz
-  '033': { decimals: 3, implicit: 100, maskD0: true,
+  '033': { decimals: 3, implicit: 100, maskD0: true, fmt: 'ils', catBits: [11, 12],
     discBits: [11, 12], spareBits: [13, 14],
     bitDescs: {
       11: 'ILS CAT bit 0',
@@ -366,14 +371,14 @@ const DECODE_META = {
       13: 'Spare', 14: 'Spare',
     },
   },
-  '034': { decimals: 3, implicit: 100, maskD0: true,
+  '034': { decimals: 3, implicit: 100, maskD0: true, fmt: 'vorils', catBits: [14],
     discBits: [14], spareBits: [11, 12, 13],
     bitDescs: {
       11: 'Spare', 12: 'Spare', 13: 'Spare',
       14: 'Mode — 0=VOR  1=ILS',
     },
   },
-  '035': { decimals: 3, implicit: 100, bcdDigits: 3, halfBit: 18, halfStep: 0.05,
+  '035': { decimals: 3, implicit: 100, bcdDigits: 3, halfBit: 18, halfStep: 0.05, fmt: 'dme', catBits: [11,12,13,14,15,16,17],
     discBits: [11, 12, 13, 14, 15, 16, 17, 18],
     bitDescs: {
       11: 'DME Mode bit 0',
@@ -381,36 +386,37 @@ const DECODE_META = {
       13: 'DME Mode bit 2 — 000=STBY  001=NORM  010=TEST  011=SCAN  100=HELD',
       14: 'Fréq Mode bit 0 — (15,14): 00=VOR  01=ILS  10=MLS  11=spare',
       15: 'Fréq Mode bit 1 — (15,14): 00=VOR  01=ILS  10=MLS  11=spare',
-      16: 'Ident Display — 1=sortie BCD',
-      17: 'Ident Output — 1=générer',
+      16: 'Display — 1=fournir une sortie BCD affichable',
+      17: 'Ident — 1=générer la sortie ident',
       18: '+0.05 MHz (VOR & ILS seulement)',
     },
   },
-  '036': { decimals: 3, implicit: 100 },  // MLS Frequency (MHz)
-  '037': { hfCom: true,               // HF COM Frequency (MHz) – custom decode
+  // 036 MLS Frequency : format hors de ce manuel (voir LABELS, « hors ») ; pas de décodage
+  // HF COM (tables 6-42 et 6-42-1) : mot 1 (bit 9 = 0) : 10 MHz (bits 29-28), 1, 0.1, 0.01, 0.001 MHz (bits 27-12),
+  // bit 11 = 1 USB / 0 LSB, bit 10 = 1 SSB / 0 AM ; mot 2 (bit 9 = 1) : 0.1 kHz (bits 29-26), bit 10 = CW
+  '037': { hfCom: true, fmt: 'hfcom', catBits: [9, 10, 11],
     discBits: [9, 10, 11],
-    spareBits: [12, 13, 14, 15],
     bitDescs: {
-      9:  'Word Ident',
-      10: 'Mode — 0=SSB  1=AM',
-      11: 'Mode — 0=USB  1=LSB',
-      12: 'Spare', 13: 'Spare', 14: 'Spare', 15: 'Spare',
+      9:  'Word Ident — 0=mot 1 (MHz)  1=mot 2 (0.1 kHz)',
+      10: 'Mot 1 : 1=SSB  0=AM — Mot 2 : 1=CW',
+      11: 'Mot 1 : 1=USB  0=LSB',
     },
   },
-  '041': { decimals: 4 },  // Set Latitude  (deg/min, same decode as 010)
-  '042': { decimals: 4 },  // Set Longitude (deg/min, same decode as 011)
+  '041': { decimals: 4, fmt: 'latlon', lat: true },  // Set Latitude  (deg/min, same decode as 010)
+  '042': { decimals: 4, fmt: 'latlon' },             // Set Longitude (deg/min, same decode as 011)
   '043': { decimals: 2, padLow: 2 },  // Set Magnetic Heading (deg) – 3 digits, 1° res
   '044': { decimals: 2, padLow: 1 },  // True Heading (deg) – 4 digits, 0.1° res
   '045': { decimals: 2, padLow: 1 },  // Minimum Airspeed (kt) – 4 digits, 0.1 kt res
-  '046': { decimals: 1, padLow: 1, padHigh: 1 },  // BCD LSW – d3=3rd, d2=2nd, d1=LSD
-  '047': { decimals: 1, padLow: 1, padHigh: 1 },  // BCD MSW – d3=MSD, d2=5th, d1=4th
-  '052': { decimals: 2 },              // Long. Zero Fuel CG (%) – 5 digits, 0.01% res
-  '053': { decimals: 2, padLow: 2 },  // Track Angle - Magnetic (deg) – same as 016
-  '056': { decimals: 1 },             // ETA – HH:MM.m, custom decoder
+  '046': { decimals: 1, padLow: 1, padHigh: 1, fmt: 'serieLSD' },  // Engine Serial No. (LSDs), table 6-15 – d3=3rd, d2=2nd, d1=LSD
+  '047': { decimals: 1, padLow: 1, padHigh: 1, fmt: 'serieMSD' },  // Engine Serial No. (MSDs), table 6-16 – d3=MSD, d2=5th, d1=4th
+  // 052-054 : accélérations angulaires IRS/ADIRS (BNR ±64 deg/s², 15 bits, 0.002) ; les anciens défauts sont dans ALT_CONFIGS
+  '052': { msb: 32, spareBits: [11, 12, 13], bnrDecimals: 3 },
+  '053': { msb: 32, spareBits: [11, 12, 13], bnrDecimals: 3 },
+  '056': { decimals: 1, fmt: 'eta' },  // ETA – HH:MM.m, custom decoder
   '065': { decimals: 0, bcdScale: 100 },  // Gross Weight — BCD × 100 = lb
   '066': { decimals: 2 },  // Longitudinal CG (% MAC) — res 0.01%
   '067': { decimals: 2 },  // Lateral CG (% MAC) — res 0.01%
-  '125': { decimals: 1, utcFmt: true },  // UTC HH:MM.m — d4d3=heures, d2d1.d0=min
+  '125': { decimals: 1, utcFmt: true, fmt: 'utc' },  // UTC HH:MM.m — d4d3=heures, d2d1.d0=min
   '145': { decimals: 0 },  // TACAN Control (channel)
   '170': { decimals: 0 },  // Decision Height Selected (ft)
   '200': { decimals: 1 },  // Drift Angle (deg)
@@ -428,7 +434,7 @@ const DECODE_META = {
   // SDI = Sequence ID: 01=First 3 digits, 10=Next 4 digits, 11=Last 3 digits
   // Bits 13-12 = Position ID (Table 2): 00=Left, 10=CtrL, 11=CtrR, 01=Right
   '060': {
-    partNum: true,
+    partNum: true, fmt: 'pn',
     discBits: [11, 12, 13],
     bitDescs: {
       9:  'SDI bit 0 — Sequence ID (Table 1): 01=First 3 digits  10=Next 4  11=Last 3',
@@ -452,7 +458,7 @@ const DECODE_META = {
   '061': { iso5: ['Char 1 (src)', 'Char 2 (src)', 'Char 3 (src)'] },
   '062': { iso5: ['Char 4 (src)', '(space)',       'Dest 1'      ] },
   '063': { iso5: ['Dest 2',       'Dest 3',        'Dest 4'      ] },
-  '054': { msb: 327680, spareBits: [11, 12, 13], bnrDecimals: 0 },  // ZFW — 15 sig bits (28-14), bits 11-13 = PAD, res 20 kg
+  '054': { msb: 32, spareBits: [11, 12, 13], bnrDecimals: 3 },  // Body Yaw Acceleration ±64 deg/s², 15 sig bits (28-14), PAD 11-13
   '064': { msb: 512,    spareBits: [11, 12, 13, 14, 15, 16, 17, 18], bnrDecimals: 0 },  // Tire Press — 10 sig bits (28-19), bits 11-18 = PAD, res 1 PSIA
   // Scale=512, 11 sig bits (28→18), res=0.25 kt, PAD bits 11-17
   '070': { msb: 256, spareBits:[11,12,13,14,15,16,17], bnrDecimals:2 },
@@ -518,8 +524,8 @@ const DECODE_META = {
   '153': { msb: 131072  },  '154': { msb: 180    },
   '162': { msb: 180    },  '164': { msb: 2500    },  '165': { msb: 16384  },
   '166': { msb: 1024   },  '167': { msb: 128     },  '171': { msb: 32     },
-  '173': { msb: 0.2, spareBits: [12,13,14,15,16], bnrDecimals: 4, discBits: [11], bitDescs: { 11: 'Tune Inhibit' } },  // scale=0.4 DDM, bit29=-0.4, bit28=+0.2
-  '174': { msb: 0.4, spareBits: [12,13,14,15,16], bnrDecimals: 4, discBits: [11], bitDescs: { 11: 'Tune Inhibit' } },  // scale=0.8 DDM, bit29=-0.8, bit28=+0.4
+  '173': { msb: 0.2, spareBits: [12,13,14,15,16], bnrDecimals: 4, discBits: [11], catBits: [11], bitDescs: { 11: 'Tune Inhibit' } },  // scale=0.4 DDM, bit29=-0.4, bit28=+0.2
+  '174': { msb: 0.4, spareBits: [12,13,14,15,16], bnrDecimals: 4, discBits: [11], catBits: [11], bitDescs: { 11: 'Tune Inhibit' } },  // scale=0.8 DDM, bit29=-0.8, bit28=+0.4
   '175': { msb: 512    },
   '176': { msb: 1.024, bnrDecimals: 4 },  '177': { msb: 131072  },
   '202': { msb: 2048   },  '203': { msb: 131072  },  '204': { msb: 131072  },
@@ -558,11 +564,79 @@ const DECODE_META = {
 // ── Alternate label configurations ──────────────────────────────────────────
 // Each entry: array of extra configs. Index 0 in array = config slot 1 (slot 0
 // is always the default from LABELS / DECODE_META).
+// Les paramètres que d'autres équipements émettent sur la même étiquette (Attachment 1-1 et Attachment 2), ou une
+// variante de format du même paramètre. Chaque entrée : { param, unit, enc, eq, meta, ssm?, hors?, note? }
+//   ssm  : type de SSM s'il diffère de la règle par numéro (ex. un mot BCD numérique sur une étiquette radio)
+//   hors : le format est défini dans un autre document que ce manuel → pas de décodage, une note l'indique
+const PAD = (de, a) => Array.from({ length: a - de + 1 }, (_, i) => de + i);
+const TIRE_PRESS = { msb: 512, spareBits: PAD(11, 18), bnrDecimals: 0 };          // 1024 PSIA, 10 bits, 1 PSIA
+const TIRE_LOAD  = { decimals: 2, padLow: 1 };                                    // 0-299.9 %, 4 chiffres, 0.1
+const LBS_5      = { decimals: 0 };                                                // 0-79999, 5 chiffres, 1.0
+const GEAR = { param: 'Landing Gear Position Infor & System Status', unit: '', enc: 'DIS', eq: ['06D'], hors: 'LGCIU (A320), hors ARINC 429' };
 const ALT_CONFIGS = {
-  '021': [
-    { param: 'N1 Sélectionné', unit: 'N1', enc: 'BCD', meta: { decimals: 1, padLow: 1 } },
-  ],
+  '002': [ { param: 'Time to Station', unit: 'min', enc: 'BCD', eq: ['115'], meta: { decimals: 2, padLow: 1 } } ],
+  '012': [ { param: 'QTY-LD SEL (LB)', unit: 'lb', enc: 'BCD', eq: ['04D'], meta: LBS_5 } ],
+  '013': [ { param: 'QTY-FLT Deck (LB)', unit: 'lb', enc: 'BCD', eq: ['04D'], meta: LBS_5 },
+           { param: 'Control Word for TCAS/Mode S', unit: '', enc: 'DIS', eq: ['0B8'], hors: 'ARINC 718A / 735A' } ],
+  '016': [ { param: 'Control Word for TCAS/Mode S', unit: '', enc: 'DIS', eq: ['0B8'], hors: 'ARINC 718A / 735A' } ],
+  '017': [ { param: 'Total-FLT Deck (LB)', unit: 'lb', enc: 'BCD', eq: ['04D'], meta: LBS_5 } ],
+  '020': [ { param: 'TNK-LD SEL (LB)', unit: 'lb', enc: 'BCD', eq: ['04D'], meta: LBS_5 }, GEAR ],
+  '021': [ { param: 'Selected N1', unit: 'RPM', enc: 'BCD', eq: ['002','020','0A1'], meta: { decimals: 1, padLow: 1 } },
+           { param: 'Selected EPR (3 chiffres)', unit: 'EPR', enc: 'BCD', eq: ['0A1'], meta: { decimals: 4, padLow: 2 },
+             note: 'Att. 2 : 3 chiffres pour le 0A1, mais une résolution de 0.001 ; 3 chiffres sur 0-3 donnent 0.01' },
+           GEAR ],
+  '022': [ { param: 'QTY-LD SEL (KG)', unit: 'kg', enc: 'BCD', eq: ['04D'], meta: LBS_5 }, GEAR ],
+  '023': [ { param: 'QTY-FLT Deck (KG)', unit: 'kg', enc: 'BCD', eq: ['04D'], meta: LBS_5 }, GEAR ],
+  '024': [ GEAR ],
+  '025': [ { param: 'Load SEL Control', unit: '', enc: 'BNR', eq: ['04D'], meta: { msb: 102400, spareBits: PAD(11, 17), bnrDecimals: 0 } } ],
+  '027': [ { param: 'TACAN Selected Course', unit: 'deg', enc: 'BCD', eq: ['002','056','060'], meta: { decimals: 2, padLow: 2 } },
+           { param: 'Total-FLT Deck (KG)', unit: 'kg', enc: 'BCD', eq: ['04D'], meta: LBS_5 } ],
+  '030': [ { param: 'TNK-LD SEL (KG)', unit: 'kg', enc: 'BCD', eq: ['04D'], meta: LBS_5, ssm: 'bcd' } ],
+  '033': [ { param: 'Landing System Mode/Frequency', unit: '', enc: 'BCD', eq: ['055'], hors: 'ARINC 755 (MMR)' } ],
+  '034': [ { param: 'Baro Correction (mb) #3', unit: 'mb', enc: 'BCD', eq: ['006'], meta: { decimals: 1 }, ssm: 'bcd' },
+           { param: 'VOR/ILS Frequency (BNR)', unit: '', enc: 'BNR', eq: ['025'], hors: 'ARINC 725 (EFIS)', ssm: 'bnr' } ],
+  '035': [ { param: 'Baro Correction (in Hg) #3', unit: 'inHg', enc: 'BCD', eq: ['006'], meta: { decimals: 3 }, ssm: 'bcd' },
+           { param: 'Paired DME Frequency', unit: 'MHz', enc: 'BCD', eq: ['055'], hors: 'ARINC 755 (MMR)' },
+           { param: 'DME Frequency (BNR)', unit: '', enc: 'BNR', eq: ['025'], hors: 'ARINC 725 (EFIS)', ssm: 'bnr' } ],
+  '036': [ { param: 'MLS Channel Selection', unit: '', enc: 'BCD', eq: ['055'], meta: { decimals: 2, padLow: 2 }, ssm: 'bcd' },
+           { param: 'MLS Frequency Channel', unit: '', enc: 'BCD', eq: ['056','060'], hors: 'ARINC 756 / 760' } ],
+  '047': [ { param: 'VHF COM Frequency', unit: '', enc: 'BCD', eq: ['020','024','0B6'], hors: 'ARINC 716 / 750 (VHF)', ssm: 'radio' } ],
+  '052': [ { param: 'Long. Zero Fuel CG', unit: '% MAC', enc: 'BCD', eq: ['037'], meta: { decimals: 2 } } ],
+  '053': [ { param: 'Track Angle - Magnetic', unit: 'deg', enc: 'BCD', eq: ['005'], meta: { decimals: 2, padLow: 2 } } ],
+  '054': [ { param: 'Zero Fuel Weight (KG)', unit: 'kg', enc: 'BNR', eq: ['037'], meta: { msb: 327680, spareBits: [11, 12, 13], bnrDecimals: 0 } } ],
+  '056': [ { param: 'Estimated Time of Arrival', unit: '', enc: 'BCD', eq: ['002'], meta: { decimals: 1, fmt: 'eta' } },
+           { param: 'Wind Direction - Magnetic', unit: 'deg', enc: 'BCD', eq: ['005'], meta: { decimals: 2, padLow: 2 } },
+           { param: 'Gross Weight (KG)', unit: 'kg', enc: 'BCD', eq: ['037'], meta: { decimals: 0, bcdScale: 100 } } ],
+  '060': [ { param: 'Tire Loading (Left Body Main)', unit: '%', enc: 'BCD', eq: ['037'], meta: TIRE_LOAD },
+           { param: 'Tire Pressure (Left Inner)', unit: 'PSIA', enc: 'BNR', eq: ['03C'], meta: TIRE_PRESS,
+             note: 'Att. 1-1 : Left Inner ; Att. 2 : Left Outer' } ],
+  '061': [ { param: 'S/G Software Config. Part No.', unit: '', enc: 'BCD', eq: ['025'], meta: null /* même format que 060, voir plus bas */ },
+           { param: 'Pseudo Range', unit: 'm', enc: 'BNR', eq: ['00B'], meta: { msb: 134217728, extendSdi: true, bnrDecimals: 0 } },
+           { param: 'Tire Loading (Right Body Main)', unit: '%', enc: 'BCD', eq: ['037'], meta: TIRE_LOAD },
+           { param: 'Tire Pressure (Left Outer)', unit: 'PSIA', enc: 'BNR', eq: ['03C'], meta: TIRE_PRESS,
+             note: 'Att. 1-1 : Left Outer ; Att. 2 : Left Inner' } ],
+  '062': [ { param: 'Pseudo Range Fine', unit: 'm', enc: 'BNR', eq: ['00B'], meta: { msb: 128, spareBits: PAD(11, 17), bnrDecimals: 3 } },
+           { param: 'Tire Loading (Left Wing Main)', unit: '%', enc: 'BCD', eq: ['037'], meta: TIRE_LOAD },
+           { param: 'Tire Pressure (Right Inner)', unit: 'PSIA', enc: 'BNR', eq: ['03C'], meta: TIRE_PRESS } ],
+  '063': [ { param: 'Range Rate', unit: 'm/s', enc: 'BNR', eq: ['00B'], meta: { msb: 2048, extendSdi: true, bnrDecimals: 4 } },
+           { param: 'Tire Loading (Right Wing Main)', unit: '%', enc: 'BCD', eq: ['037'], meta: TIRE_LOAD },
+           { param: 'Tire Pressure (Right Outer)', unit: 'PSIA', enc: 'BNR', eq: ['03C'], meta: TIRE_PRESS } ],
+  '064': [ { param: 'Delta Range', unit: 'm', enc: 'BNR', eq: ['00B'], meta: { msb: 2048, extendSdi: true, bnrDecimals: 4 } },
+           { param: 'Tire Loading (Nose)', unit: '%', enc: 'BCD', eq: ['037'], meta: TIRE_LOAD } ],
 };
+
+// Équipements (Eqpt. ID, Attachment 1-2) : nom court pour le menu et le bandeau
+const EQPT = {
+  '001': 'FCC', '002': 'FMC', '003': 'Thrust Control Computer', '004': 'IRS', '005': 'AHRS', '006': 'Air Data',
+  '007': 'Radio Altimeter', '009': 'DME', '00B': 'GPS', '010': 'ILS', '011': 'VOR', '012': 'ADF', '020': 'DFS',
+  '024': 'ACARS', '025': 'EFIS', '033': 'PMUX', '037': 'Weight & Balance', '038': 'ADIRS', '03C': 'TPMS',
+  '04D': 'Fuel Qty (757/767)', '055': 'MMR', '056': 'GNLU', '060': 'GNU', '06D': 'Landing Gear (A320)',
+  '0A1': 'FCC Controller', '0A4': 'IRS Controller', '0A9': 'DME Controller', '0B0': 'ILS Controller',
+  '0B1': 'VOR Controller', '0B2': 'ADF Controller', '0B6': 'VHF COM Controller', '0B8': 'ATC Transponder Controller',
+  '0B9': 'HF/SSB Controller', '0C7': 'MLS Controller', '0D0': 'Engine Instrument System (B737)',
+  '10A': 'FADEC A (GE)', '10B': 'FADEC B (GE)', '115': 'TACAN',
+};
+const eqTexte = eq => (eq || []).map(c => EQPT[c] ? `${EQPT[c]} (${c})` : c).join(', ');
 
 // Currently selected config slot per label (0 = default)
 const labelConfigIdx = {};
@@ -572,12 +646,14 @@ function getActiveLabelConfig(oct) {
   const alts = ALT_CONFIGS[oct] || [];
   const idx  = labelConfigIdx[oct] || 0;
   if (idx === 0 || !alts[idx - 1]) {
-    return { labelInfo: base, meta: DECODE_META[oct] };
+    return { labelInfo: base, meta: base && base.hors ? undefined : DECODE_META[oct] };
   }
   const alt = alts[idx - 1];
+  const meta = alt.meta === null && oct === '061' ? DECODE_META['060'] : alt.meta;
   return {
-    labelInfo: { ...base, enc: alt.enc || (base && base.enc), param: alt.param, unit: alt.unit },
-    meta: alt.meta,
+    labelInfo: { ...base, enc: alt.enc || (base && base.enc), param: alt.param, unit: alt.unit,
+                 eq: alt.eq, ssm: alt.ssm, hors: alt.hors, note: alt.note },
+    meta: alt.hors ? undefined : meta,
   };
 }
 
@@ -656,7 +732,8 @@ function decodeData(word, labelInfo, metaOverride) {
 
   // ── Labels 010/011 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
   // ── Label 031 : Transponder — squawk ABCD (3 bits/digit) + discrets ──
-  if (labelInfo.oct === '031') {
+  const fmt = meta.fmt;
+  if (fmt === 'squawk') {
     const dA = (word >> 26) & 0x7;  // bits 29-27
     const dB = (word >> 23) & 0x7;  // bits 26-24
     const dC = (word >> 20) & 0x7;  // bits 23-21
@@ -664,19 +741,41 @@ function decodeData(word, labelInfo, metaOverride) {
     return `${dA}${dB}${dC}${dD}`;
   }
 
-  // ── Label 037 : HF COM — 2-bit 10 MHz + 3 × 4-bit BCD groups ──
-  if (labelInfo.oct === '037') {
-    const d10 = (word >> 27) & 0x3;   // bits 29-28: 10 MHz (0-3 → 0,10,20,30 MHz)
-    const d1  = (word >> 23) & 0xF;   // bits 27-24: 1 MHz digit
-    const d01 = (word >> 19) & 0xF;   // bits 23-20: 0.1 MHz digit
-    const d001= (word >> 15) & 0xF;   // bits 19-16: 0.001 MHz digit
-    if (d1 > 9 || d01 > 9 || d001 > 9) return null;
-    const value = d10 * 10 + d1 + d01 * 0.1 + d001 * 0.001;
+  // ── HF COM (tables 6-42 et 6-42-1) ──
+  //   Mot 1 (bit 9 = 0) : 10 MHz (bits 29-28), 1 MHz (27-24), 0.1 MHz (23-20), 0.01 MHz (19-16), 0.001 MHz (15-12)
+  //   Mot 2 (bit 9 = 1) : 0.1 kHz (bits 29-26), à ajouter à la fréquence du mot 1 qu'il suit immédiatement
+  if (fmt === 'hfcom') {
+    if (getBit(word, 9)) {
+      const d = (word >> 25) & 0xF;   // bits 29-26
+      if (d > 9) return null;
+      return `+ 0.${d} kHz (mot 2)`;
+    }
+    const d10  = (word >> 27) & 0x3;   // bits 29-28
+    const d1   = (word >> 23) & 0xF;   // bits 27-24
+    const d01  = (word >> 19) & 0xF;   // bits 23-20
+    const d001 = (word >> 15) & 0xF;   // bits 19-16
+    const d0001= (word >> 11) & 0xF;   // bits 15-12
+    if (d1 > 9 || d01 > 9 || d001 > 9 || d0001 > 9) return null;
+    const value = d10 * 10 + d1 + d01 * 0.1 + d001 * 0.01 + d0001 * 0.001;
     return value.toFixed(3);
   }
 
+  // ── Engine Serial No. (tables 6-15, 6-16) : 3 chiffres à afficher tels quels (zéros de tête compris) ──
+  if (fmt === 'serieLSD' || fmt === 'serieMSD') {
+    const d3 = (data19 >> 12) & 0xF, d2 = (data19 >> 8) & 0xF, d1 = (data19 >> 4) & 0xF;
+    if (d3 > 9 || d2 > 9 || d1 > 9) return null;
+    return `${d3}${d2}${d1}` + (fmt === 'serieLSD' ? ' (3 derniers chiffres)' : ' (3 premiers chiffres)');
+  }
+
+  // ── DME en mode MLS (bits 15-14 = 10) : coder 10/1/0.1 MHz, puis + 5031 MHz (table 6-41, note 5) ──
+  if (fmt === 'dme' && ((word >> 13) & 0x3) === 0b10) {
+    const d4 = (data19 >> 16) & 0x7, d3 = (data19 >> 12) & 0xF, d2 = (data19 >> 8) & 0xF;
+    if (d3 > 9 || d2 > 9) return null;
+    return (5031 + d4 * 10 + d3 + d2 * 0.1).toFixed(1);
+  }
+
   // ── Label 056 : ETA — HH:MM.m (d4=10h, d3=1h, d2=10mn, d1=1mn, d0=0.1mn) ──
-  if (labelInfo.oct === '056') {
+  if (fmt === 'eta') {
     const d4 = (data19 >> 16) & 0x7;
     const d3 = (data19 >> 12) & 0xF;
     const d2 = (data19 >> 8)  & 0xF;
@@ -690,8 +789,7 @@ function decodeData(word, labelInfo, metaOverride) {
   }
 
   // ── Labels 010/011/041/042 : lat/lon BCD (bit29=100°, 5 groupes×4 bits, SDI inclus) ──
-  if (labelInfo.oct === '010' || labelInfo.oct === '011' ||
-      labelInfo.oct === '041' || labelInfo.oct === '042') {
+  if (fmt === 'latlon') {
     const bit29  = (word >> 28) & 1;
     const data20 = (word >> 8)  & 0xFFFFF;   // bits 28-9 du mot (20 bits)
     const tDeg = (data20 >> 16) & 0xF;
@@ -846,15 +944,17 @@ function popCount(n) {
 // ── Field map ────────────────────────────────────────
 
 function getDataFieldSegments(oct, enc, meta, unit, word) {
-  // Label-specific
-  if (oct === '030') return [
+  // Formats particuliers : ils suivent le choix actif (meta.fmt), pas le numéro d'étiquette
+  const f = meta && meta.fmt;
+  if (meta === undefined && enc) return [{ span:19, label:'format hors de ce manuel', cls:'fmap-pad' }];
+  if (f === 'vhf') return [
     { span:3, label:'10MHz',    cls:'fmap-freq' },
     { span:4, label:'1MHz',     cls:'fmap-freq' },
     { span:4, label:'0.1MHz',  cls:'fmap-freq' },
     { span:4, label:'0.01MHz', cls:'fmap-freq' },
     { span:4, label:'0.001MHz',cls:'fmap-freq' },
   ];
-  if (oct === '031') return [
+  if (f === 'squawk') return [
     { span:3, label:'A',   cls:'fmap-bcd' },  // bits 29-27 squawk digit A
     { span:3, label:'B',   cls:'fmap-bcd' },  // bits 26-24 squawk digit B
     { span:3, label:'C',   cls:'fmap-bcd' },  // bits 23-21 squawk digit C
@@ -867,7 +967,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:1, label:'CP',  cls:'fmap-cat' },  // bit 12 control panel
     { span:1, label:'ALT', cls:'fmap-cat' },  // bit 11 altitude report
   ];
-  if (oct === '032') {
+  if (f === 'adf') {
     const antMode = word ? getBit(word, 12) : 0;  // bit 12: 0=ADF, 1=ANT
     return [
       { span:3, label:'1000kHz', cls:'fmap-freq' },
@@ -880,7 +980,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:1, label:'BFO',     cls:'fmap-cat'  },
     ];
   }
-  if (oct === '033') {
+  if (f === 'ils') {
     const cat = word ? ((word >> 10) & 0x3) : 0;  // bits 12-11
     const catStr = ['Non', 'CAT I', 'CAT II', 'CAT III'][cat];
     return [
@@ -892,7 +992,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:2, label: catStr,   cls:'fmap-cat'  },
     ];
   }
-  if (oct === '034') {
+  if (f === 'vorils') {
     const ilsMode = word ? getBit(word, 14) : 0;  // bit 14: 0=VOR, 1=ILS
     return [
       { span:3, label:'10MHz',                   cls:'fmap-freq' },
@@ -903,7 +1003,7 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:3, label:'SP',                      cls:'fmap-pad'  },
     ];
   }
-  if (oct === '035') {
+  if (f === 'dme') {
     const freqMode = word ? ((word >> 13) & 0x3) : 0;  // bits 15-14
     const dmeMode  = word ? ((word >> 10) & 0x7) : 0;  // bits 13-11
     const freqStr  = ['VOR', 'ILS', 'MLS', 'SP'][freqMode];
@@ -919,49 +1019,47 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
       { span:3, label: dmeStr,   cls:'fmap-cat'  },
     ];
   }
-  if (oct === '036') return [
-    { span:3, label:'10MHz',    cls:'fmap-freq' },
-    { span:4, label:'1MHz',     cls:'fmap-freq' },
-    { span:4, label:'0.1MHz',   cls:'fmap-freq' },
-    { span:4, label:'0.01MHz',  cls:'fmap-freq' },
-    { span:4, label:'0.001MHz', cls:'fmap-freq' },
-  ];
-  if (oct === '037') {
-    const ssbMode = word ? getBit(word, 11) : 0;  // bit 11: 0=USB, 1=LSB
-    const amMode  = word ? getBit(word, 10) : 0;  // bit 10: 0=SSB, 1=AM
+  if (f === 'hfcom') {
+    if (word && getBit(word, 9)) return [                 // mot 2 : 0.1 kHz, bit 10 = CW, bit 9 = 1
+      { span:4,  label:'0.1kHz',      cls:'fmap-freq' },
+      { span:15, label:'non utilisés', cls:'fmap-pad'  },
+      { span:1,  label: getBit(word, 10) ? 'CW' : '—', cls:'fmap-cat' },
+      { span:1,  label:'mot 2',        cls:'fmap-cat'  },
+    ];
+    const usb = word ? getBit(word, 11) : 0, ssb = word ? getBit(word, 10) : 0;
     return [
-      { span:2, label:'10MHz',                cls:'fmap-freq' },
-      { span:4, label:'1MHz',                 cls:'fmap-freq' },
-      { span:4, label:'0.1MHz',               cls:'fmap-freq' },
-      { span:4, label:'0.001MHz',             cls:'fmap-freq' },
-      { span:4, label:'SP',                   cls:'fmap-pad'  },
-      { span:1, label: ssbMode ? 'LSB' : 'USB', cls:'fmap-cat' },
-      { span:1, label: amMode  ? 'AM'  : 'SSB', cls:'fmap-cat' },
-      { span:1, label:'WID',                  cls:'fmap-cat'  },
+      { span:2, label:'10MHz',    cls:'fmap-freq' },
+      { span:4, label:'1MHz',     cls:'fmap-freq' },
+      { span:4, label:'0.1MHz',   cls:'fmap-freq' },
+      { span:4, label:'0.01MHz',  cls:'fmap-freq' },
+      { span:4, label:'0.001MHz', cls:'fmap-freq' },
+      { span:1, label: usb ? 'USB' : 'LSB', cls:'fmap-cat' },
+      { span:1, label: ssb ? 'SSB' : 'AM',  cls:'fmap-cat' },
+      { span:1, label:'mot 1',    cls:'fmap-cat' },
     ];
   }
-  if (oct === '056' || oct === '125') return [
+  if (f === 'eta' || f === 'utc') return [
     { span:3, label:"10h",    cls:'fmap-bcd' },
     { span:4, label:"1h",     cls:'fmap-bcd' },
     { span:4, label:"10mn",   cls:'fmap-bcd' },
     { span:4, label:"1mn",    cls:'fmap-bcd' },
     { span:4, label:"0.1mn",  cls:'fmap-bcd' },
   ];
-  if (oct === '046') return [
+  if (f === 'serieLSD') return [
     { span:3, label:'padding',   cls:'fmap-pad' },  // bits 29-27
     { span:4, label:'3rd digit', cls:'fmap-bcd' },  // bits 26-23
     { span:4, label:'2nd digit', cls:'fmap-bcd' },  // bits 22-19
     { span:4, label:'LSD',       cls:'fmap-bcd' },  // bits 18-15
     { span:4, label:'padding',   cls:'fmap-pad' },  // bits 14-11
   ];
-  if (oct === '047') return [
+  if (f === 'serieMSD') return [
     { span:3, label:'padding',   cls:'fmap-pad' },  // bits 29-27
     { span:4, label:'MSD',       cls:'fmap-bcd' },  // bits 26-23
     { span:4, label:'5th digit', cls:'fmap-bcd' },  // bits 22-19
     { span:4, label:'4th digit', cls:'fmap-bcd' },  // bits 18-15
     { span:4, label:'padding',   cls:'fmap-pad' },  // bits 14-11
   ];
-  if (oct === '010' || oct === '011' || oct === '041' || oct === '042') return [
+  if (f === 'latlon') return [
     { span:1, label:'100°', cls:'fmap-bcd' },
     { span:4, label:"10°",  cls:'fmap-bcd'  },
     { span:4, label:"1°",   cls:'fmap-bcd'  },
@@ -969,6 +1067,16 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:4, label:"1'",   cls:'fmap-bcd'  },
     { span:4, label:"0.1'", cls:'fmap-bcd'  },
   ];
+  // S/G Hardware Part Number: 4 BCD digits (bits 29-14) + RESERVED (13-11)
+  if (meta && meta.partNum) return [
+    { span:4, label:'d4',    cls:'fmap-bcd' },  // bits 29-26
+    { span:4, label:'d3',    cls:'fmap-bcd' },  // bits 25-22
+    { span:4, label:'d2',    cls:'fmap-bcd' },  // bits 21-18
+    { span:4, label:'d1',    cls:'fmap-bcd' },  // bits 17-14
+    { span:2, label:'PosID', cls:'fmap-dis' },  // bits 13-12
+    { span:1, label:'Own',   cls:'fmap-dis' },  // bit 11
+  ];
+
   // Generic by encoding
   if (enc === 'BCD' && meta && meta.decimals !== undefined) {
     const dec = meta.decimals;
@@ -1021,96 +1129,42 @@ function getDataFieldSegments(oct, enc, meta, unit, word) {
     { span:4, label:'100 lb',       cls:'fmap-bcd' },
   ];
 
-  // S/G Hardware Part Number: 4 BCD digits (bits 29-14) + RESERVED (13-11)
-  if (oct === '060') return [
-    { span:4, label:'d4',    cls:'fmap-bcd' },  // bits 29-26
-    { span:4, label:'d3',    cls:'fmap-bcd' },  // bits 25-22
-    { span:4, label:'d2',    cls:'fmap-bcd' },  // bits 21-18
-    { span:4, label:'d1',    cls:'fmap-bcd' },  // bits 17-14
-    { span:2, label:'PosID', cls:'fmap-dis' },  // bits 13-12
-    { span:1, label:'Own',   cls:'fmap-dis' },  // bit 11
-  ];
 
-  // BNR with sub-resolution padding bits at the low end
-  // 10 sig bits (28→19), PAD 11-18  — Tire Pressure (064)
-  if (['064','104'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:10, label:'data (28→19)', cls:'fmap-bnr'  },
-    { span:8,  label:'PAD',          cls:'fmap-pad'  },
-  ];  
-  // 11 sig bits (28→18), PAD 11-17  — Vref/V2/VR/V1/TargetAS + Vertical Deviation
-  if (['070','071','072','073','077','103','105','112','117'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:11, label:'data (28→18)', cls:'fmap-bnr'  },
-    { span:7,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 12 sig bits (28→17), PAD 12-16, DIS bit 11 — ILS Localizer/Glideslope Deviation
-  if (['173','174'].includes(oct)) return [
+  // ILS Localizer/Glideslope Deviation : bit 11 discret (Tune Inhibit)
+  if (['173','174'].includes(oct) && !f) return [
     { span:1,  label:'sgn',          cls:'fmap-sign' },
     { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
     { span:5,  label:'PAD',          cls:'fmap-pad'  },
-    { span:1,  label:'T.in',          cls:'fmap-cat'  },
+    { span:1,  label:'T.in',         cls:'fmap-cat'  },
   ];
-  // 12 sig bits (28→17), PAD 11-16
-  if (['100','101','106','110','114','115','122'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:12, label:'data (28→17)', cls:'fmap-bnr'  },
-    { span:6,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 14 sig bits (28→15), PAD 11-14  — Long. CG (076)
-  if (oct === '076') return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
-    { span:4,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 15 sig bits (28→14), PAD 11-13
-  if (['054','074','075','116','120','126'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:15, label:'data (28→14)', cls:'fmap-bnr'  },
-    { span:3,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 13 sig bits (28→16), PAD 11-15
-  if (['124'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:13, label:'data (28→16)', cls:'fmap-bnr'  },
-    { span:5,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 14 sig bits (28→15), PAD 11-14
-  if (['121'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:14, label:'data (28→15)', cls:'fmap-bnr'  },
-    { span:4,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 16 sig bits (28→13), PAD 11-12
-  if (['102','107','127'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:16, label:'data (28→13)', cls:'fmap-bnr'  },
-    { span:2,  label:'PAD',          cls:'fmap-pad'  },
-  ];
-  // 18 sig bits (28→11), no PAD
-  if (['123'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:18, label:'data (28→11)', cls:'fmap-bnr'  },
-  ];
-  // 20 sig bits (28→9)
-  if (['111'].includes(oct)) return [
-    { span:1,  label:'sgn',          cls:'fmap-sign' },
-    { span:20, label:'data (28→9)', cls:'fmap-bnr'  },
-  ];
+  // BNR : signe, bits significatifs, puis PAD (spareBits contigus depuis le bit 11) ; extendSdi = 20 bits (28→9)
+  if (enc === 'BNR' && meta && meta.msb !== undefined && !meta.iso5) {
+    if (meta.extendSdi) return [
+      { span:1,  label:'sgn',         cls:'fmap-sign' },
+      { span:20, label:'data (28→9)', cls:'fmap-bnr'  },
+    ];
+    const pad = (meta.spareBits || []).filter(b => b >= 11 && b <= 28).length;
+    const sig = 18 - pad;
+    return [
+      { span:1,   label:'sgn', cls:'fmap-sign' },
+      { span:sig, label:`data (28→${29 - sig})`, cls:'fmap-bnr' },
+      ...(pad ? [{ span:pad, label:'PAD', cls:'fmap-pad' }] : []),
+    ];
+  }
 
   // ACMS: 3 × 7-bit ISO #5 chars, no SDI (bits 9-10 are part of char 1)
   // dataSpan = 21 → SDI segment suppressed automatically
-  if (oct === '061') return [
+  if (oct === '061' && meta && meta.iso5) return [
     { span:7, label:'Char 3 (src)', cls:'fmap-bnr' },
     { span:7, label:'Char 2 (src)', cls:'fmap-bnr' },
     { span:7, label:'Char 1 (src)', cls:'fmap-bnr' },
   ];
-  if (oct === '062') return [
+  if (oct === '062' && meta && meta.iso5) return [
     { span:7, label:'Dest 1',       cls:'fmap-bnr' },
     { span:7, label:'(space)',       cls:'fmap-pad' },
     { span:7, label:'Char 4 (src)', cls:'fmap-bnr' },
   ];
-  if (oct === '063') return [
+  if (oct === '063' && meta && meta.iso5) return [
     { span:7, label:'Dest 4', cls:'fmap-bnr' },
     { span:7, label:'Dest 3', cls:'fmap-bnr' },
     { span:7, label:'Dest 2', cls:'fmap-bnr' },
@@ -1176,38 +1230,18 @@ function renderBits(word) {
   if (padLowBits  >= 2) { [15, 16, 17, 18].forEach(b => padBits.add(b)); }
   if (padHighBits >= 1) { [27, 28, 29].forEach(b => padBits.add(b)); }
 
-  // For labels 010/011/041/042, bits 9-10 carry data (dMin), not SDI
-  // For label 037, bits 9-11 carry mode/ident data — show as green data bits
-  // For label 035, bits 11-18 are freq/mode control — show as green data bits
+  // Bits 9-10 (et 11) qui portent des données plutôt que le SDI, et bits discrets en orange : selon le choix actif
   const dataBits = new Set();
-  if (labelOct === '010' || labelOct === '011' ||
-      labelOct === '041' || labelOct === '042') { dataBits.add(9); dataBits.add(10); }
-  if (labelOct === '037') { dataBits.add(9); dataBits.add(10); dataBits.add(11); }
-  if (labelOct === '035') { dataBits.add(18); }  // bit 18 = 0.05 MHz halfBit (data, not discrete)
-  if (labelOct === '060') { [11,12,13].forEach(b => dataBits.add(b)); }  // bits 11-13 = P/N reserved fields
-  // ACMS labels — no SDI, bits 9-10 are part of char #1
-  // For label 111, bits 9-10 are part of the 20-bit BNR data field, not SDI
-  if (labelOct === '061' || labelOct === '062' || labelOct === '063' || labelOct === '111') {
-    dataBits.add(9); dataBits.add(10);
-  }
+  const fb = metaBits && metaBits.fmt;
+  if (fb === 'latlon') { dataBits.add(9); dataBits.add(10); }            // 0.1' de minute dans les bits 9-10
+  if (fb === 'dme') dataBits.add(18);                                    // 0.05 MHz (halfBit), donnée
+  if (metaBits && metaBits.partNum) [11, 12, 13].forEach(b => dataBits.add(b));
+  if (metaBits && (metaBits.iso5 || metaBits.extendSdi)) { dataBits.add(9); dataBits.add(10); }
 
   // Discrete bits (teal) and bit descriptions from DECODE_META
   const disBits  = new Set(metaBits && metaBits.discBits  ? metaBits.discBits  : []);
   const bitDescs = (metaBits && metaBits.bitDescs) || {};
-
-  // Label-specific orange discrete bits
-  const catBits = new Set();
-  const orangeDiscLabels = {
-    '031': [11,12,13,14,15,16,17],
-    '032': [11,12],
-    '033': [11,12],
-    '034': [14],
-    '035': [11,12,13,14,15,16,17],
-    '037': [9,10,11],
-    '173': [11],
-    '174': [11],
-  };
-  if (orangeDiscLabels[labelOct]) orangeDiscLabels[labelOct].forEach(b => catBits.add(b));
+  const catBits = new Set(metaBits && metaBits.catBits ? metaBits.catBits : []);
   if (metaBits && metaBits.spareBits) metaBits.spareBits.forEach(b => padBits.add(b));
 
   // Bit 29 = sign bit for standard BNR labels (not ssmSign, not iso5)
@@ -1294,21 +1328,24 @@ function renderFields(word) {
   const decodedBanner = isBnrObj ? decoded.banner : decoded;
   let decodedExtra = '';
   if (decoded !== null && labelInfo) {
-    if (labelInfo.oct === '033') {
+    const fx = meta && meta.fmt;
+    if (fx === 'ils') {
       const cat = (word >> 10) & 0x3;
       decodedExtra = ' — <span style="color:#fb923c;font-weight:bold;">' + ['Non', 'CAT I', 'CAT II', 'CAT III'][cat] + '</span>';
-    } else if (labelInfo.oct === '034') {
+    } else if (fx === 'vorils') {
       decodedExtra = ' (' + (getBit(word, 14) ? 'ILS' : 'VOR') + ')';
-    } else if (labelInfo.oct === '035') {
+    } else if (fx === 'dme') {
       const dme  = (word >> 10) & 0x7;
       const freq = (word >> 13) & 0x3;
       decodedExtra = ' — ' + ['STBY','NORM','TEST','SCAN','HELD','N/A','N/A','N/A'][dme]
                    + ' / ' + ['VOR','ILS','MLS','spare'][freq];
     }
   }
-  document.getElementById('d-data-decoded').innerHTML = decodedExact !== null
-    ? decodedExact + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
-    : '—';
+  document.getElementById('d-data-decoded').innerHTML = labelInfo && labelInfo.hors
+    ? `<span style="color:#fbbf24">format défini dans ${labelInfo.hors}, pas dans ARINC 429 Part 1</span>`
+    : decodedExact !== null
+      ? decodedExact + (labelInfo && labelInfo.unit ? ' ' + labelInfo.unit : '') + decodedExtra
+      : '—';
   document.getElementById('d-data-format').textContent = labelInfo ? labelInfo.enc : '—';
 
   // ── SSM (bits 30-31) ──
@@ -1357,18 +1394,24 @@ function renderFields(word) {
   // ── Banner ──
   document.getElementById('banner-oct').textContent = labelOct;
   document.getElementById('banner-name').textContent = labelInfo ? labelInfo.param : 'Label inconnu';
-  document.getElementById('banner-sub').textContent = labelInfo
-    ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}`
+  // Sous-titre : format, équipements qui émettent ce paramètre, et les notes (format hors manuel, écart du manuel)
+  const sousTitre = labelInfo
+    ? `Label ${labelOct} (octal) | ${labelHex} | ${labelInfo.enc}${labelInfo.eq ? ' | ' + eqTexte(labelInfo.eq) : ''}`
     : `Label ${labelOct} (octal) | ${labelHex}`;
+  const notes = [labelInfo && labelInfo.hors ? `format : ${labelInfo.hors}` : '', labelInfo && labelInfo.note ? labelInfo.note : ''].filter(Boolean);
+  document.getElementById('banner-sub').innerHTML = sousTitre.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    + notes.map(n => `<br><span style="color:#fbbf24">⚠ ${n.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</span>`).join('');
   // Config selector — show dropdown only when label has alternate configs
   const bannerConfig = document.getElementById('banner-config');
   const alts = ALT_CONFIGS[labelOct] || [];
   if (alts.length > 0 && labelInfo) {
     const baseLabel = LABELS.find(l => l.oct === labelOct);
     const curIdx = labelConfigIdx[labelOct] || 0;
+    // chaque choix : le paramètre et les équipements qui l'émettent (Eqpt. ID)
+    const texte = c => `${c.param}${c.eq ? ' — ' + c.eq.map(e => EQPT[e] ? `${EQPT[e]} ${e}` : e).join(', ') : ''}`.replace(/&/g, '&amp;').replace(/</g, '&lt;');
     const opts = [
-      `<option value="0"${curIdx === 0 ? ' selected' : ''}>${baseLabel ? baseLabel.param : 'Config 1'}</option>`,
-      ...alts.map((a, i) => `<option value="${i + 1}"${curIdx === i + 1 ? ' selected' : ''}>${a.param}</option>`),
+      `<option value="0"${curIdx === 0 ? ' selected' : ''}>${baseLabel ? texte(baseLabel) : 'Config 1'}</option>`,
+      ...alts.map((a, i) => `<option value="${i + 1}"${curIdx === i + 1 ? ' selected' : ''}>${texte(a)}</option>`),
     ].join('');
     bannerConfig.innerHTML =
       `<select class="config-select" onchange="switchLabelConfig('${labelOct}', this.value)">${opts}</select>`;
@@ -1376,16 +1419,15 @@ function renderFields(word) {
     bannerConfig.innerHTML = '';
   }
   const bannerEl = document.getElementById('banner-value');
-  if (labelInfo && (labelInfo.oct === '010' || labelInfo.oct === '011' ||
-                    labelInfo.oct === '041' || labelInfo.oct === '042') && decodedBanner !== null) {
-    const isLat = labelInfo.oct === '010' || labelInfo.oct === '041';
+  if (labelInfo && meta && meta.fmt === 'latlon' && decodedBanner !== null) {
+    const isLat = !!meta.lat;
     const dir = isLat
       ? (ssm === 0b00 ? 'N' : ssm === 0b11 ? 'S' : null)
       : (ssm === 0b00 ? 'E' : ssm === 0b11 ? 'W' : null);
     bannerEl.innerHTML = dir
       ? `<span style="color:#4fc3f7;font-weight:bold">${dir}</span> ${decodedBanner}`
       : decodedBanner;
-  } else if (labelInfo && ['001', '020'].includes(labelInfo.oct) && decodedBanner !== null) {
+  } else if (labelInfo && meta && meta.signe && decodedBanner !== null) {
     const sign = ssm === 0b00 ? '+' : ssm === 0b11 ? '−' : null;
     const signColor = ssm === 0b00 ? '#80cc80' : '#ff6b6b';
     const unit = labelInfo.unit ? ' ' + labelInfo.unit : '';
