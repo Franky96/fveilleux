@@ -9,7 +9,7 @@
 <script>
   const _pR = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_pR.includes('radalt') && !_pR.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_pR.includes('radalt') && !_pR.includes('avionique') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>
@@ -156,7 +156,7 @@ html.light .borne[aria-pressed="true"]{background:#d6f5e2;color:#14532d}
 <link rel="stylesheet" href="fond.css">
 <script src="topbar.js" defer></script>
 </head>
-<body data-retour="informatique.html" data-retour-nom="Informatique">
+<body data-retour="avionique.html" data-retour-nom="Avionique">
 <div data-topbar><h1>Radio-altimètre</h1></div>
 <div class="wrap">
 <p class="intro">Le <b>radio-altimètre</b> (RADALT) mesure l'<b>altitude-sol (AGL)</b> : il envoie vers le sol une onde de <b>4 300 MHz</b> et mesure le temps qu'elle met à revenir. L'onde est continue et <b>modulée en fréquence (FMCW)</b> : comme la fréquence émise change sans arrêt, l'écho revient avec une fréquence un peu « en retard » ; cet écart, la <b>fréquence de battement</b>, donne la hauteur. Portée : <b>2 500 ft</b>. Regarde les ondes rebondir sur le sol ; les instruments, les graphiques, l'AID et les sorties sont dans les sections repliées, plus bas.</p>

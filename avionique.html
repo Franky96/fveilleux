@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>@view-transition{navigation:auto}@media (prefers-reduced-motion: reduce){@view-transition{navigation:none}}</style>
+<script>try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}</script>
+<script>
+  const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
+  if (!sessionStorage.getItem('loggedIn')) location.href = 'index.html';
+  else if (sessionStorage.getItem('userRole') !== 'admin' && !["avionique", "arinc429", "csdb", "tcas", "radalt", "radar-meteo", "crypteur", "converter"].some(k => _p.includes(k))) location.href = 'dashboard.html';
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outils de Frank — Avionique</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=40bed6c7">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=239eda2e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="categorie.css">
+</head>
+<body data-parent="avionique" style="--c:var(--c-info)">
+<div class="fond" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="haut">
+    <a class="retour" href="dashboard.html" title="Retour : Accueil" aria-label="Retour : Accueil">←<span class="rnom"> Accueil</span></a>
+    <a class="marque" href="dashboard.html" title="Retour à l'accueil"><span class="logo" aria-hidden="true"><span>O<i>d</i>F</span></span><span class="nom">Outils de Frank</span><span class="badge-v" data-version-badge data-version-place="marque" title="Version du site"></span></a>
+    <div class="outils">
+      <button class="rond" id="b-theme" type="button" title="Thème clair ou sombre">☀︎</button>
+      <div class="moi-zone">
+        <button class="rond moi" id="b-moi" type="button" aria-haspopup="menu" aria-expanded="false">F</button>
+        <div class="menu" id="menu" role="menu" hidden>
+          <a href="admin.html" id="m-admin" role="menuitem" hidden>⚙️ Administration</a>
+          <a href="dashboard.html" id="m-accueil" role="menuitem">🏠 Accueil</a>
+          <a href="archive.html" id="m-archives" role="menuitem" hidden>📁 Archives</a>
+          <a href="https://mail.hostinger.com/" id="m-webmail" target="_blank" rel="noopener" role="menuitem" hidden>✉️ Webmail</a>
+          <hr>
+          <button type="button" id="logoutBtn" role="menuitem">↩ Déconnexion</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="tete"><span class="em" aria-hidden="true">🛰️</span><div><h1>Avionique</h1><p>Bus de données, formats et systèmes de bord</p></div></section>
+
+  <main class="cartes-zone">
+    <section class="groupe">
+      <header><h2>Bus et formats</h2><span class="nb"></span></header>
+      <p class="g-desc">Bus et formats de données des aéronefs.</p>
+      <div class="cartes">
+        <a class="carte" href="arinc429.html" data-section="arinc429" hidden><span class="em" aria-hidden="true">📡</span><span><b>ARINC 429</b><small>Décodeur de mots avioniques</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="csdb.html" data-section="csdb" hidden><span class="em" aria-hidden="true">📶</span><span><b>CSDB</b><small>Commercial Standard Digital Bus — décodeur de blocs</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="crypteur.html" data-section="crypteur" hidden><span class="em" aria-hidden="true">⚙️</span><span><b>Encodeur BNR</b><small>Signe-magnitude · Bit de signe · Valeur par bit</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="converter.html" data-section="converter" hidden><span class="em" aria-hidden="true">🔢</span><span><b>Convertisseur</b><small>Décimal · Binaire · Hex · Octal</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <section class="groupe">
+      <header><h2>Systèmes de bord</h2><span class="nb"></span></header>
+      <p class="g-desc">Radars et anticollision, simulés et animés.</p>
+      <div class="cartes">
+        <a class="carte" href="tcas.html" data-section="tcas" hidden><span class="em" aria-hidden="true">🛩️</span><span><b>Rencontre TCAS</b><small>Deux avions, leurs TCAS et transpondeurs : messages échangés, TA, RA et coordination, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="radalt.html" data-section="radalt" hidden><span class="em" aria-hidden="true">📡</span><span><b>Radio-altimètre</b><small>Altitude-sol par onde FMCW : fréquence de battement, CDF, AID et hauteur de décision, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
+        <a class="carte" href="radar-meteo.html" data-section="radar-meteo" hidden><span class="em" aria-hidden="true">🌩️</span><span><b>Radar météo</b><small>Faisceau qui balaie, échos des précipitations, TILT, GAIN, STC, PAC, ombre radar et modes WX, TURB, MAP, animés</small></span><span class="fl" aria-hidden="true">›</span></a>
+      </div>
+    </section>
+    <p class="vide">Aucune page de cette catégorie ne t&#x27;est ouverte pour le moment.</p>
+  </main>
+</div>
+
+<script type="module" src="categorie.js"></script>
+<script src="version.js"></script>
+</body>
+</html>

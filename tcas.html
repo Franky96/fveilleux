@@ -9,7 +9,7 @@
 <script>
   const _pT = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_pT.includes('tcas') && !_pT.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_pT.includes('tcas') && !_pT.includes('avionique') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>
@@ -228,7 +228,7 @@ table.sl td:first-child{white-space:nowrap}
 <link rel="stylesheet" href="fond.css">
 <script src="topbar.js" defer></script>
 </head>
-<body data-retour="informatique.html" data-retour-nom="Informatique">
+<body data-retour="avionique.html" data-retour-nom="Avionique">
 <div data-topbar><h1>Rencontre TCAS</h1></div>
 <div class="wrap">
 <p class="intro">Deux avions se rapprochent. Leurs <b>transpondeurs</b> et leurs <b>TCAS II</b> (v7.1) échangent des messages sur <b>1030 MHz</b> (interrogations du TCAS) et <b>1090 MHz</b> (réponses et squitters des transpondeurs) : <b>détection</b>, <b>surveillance</b>, puis <b>coordination</b> pendant un avis de résolution. Choisis la situation et les réglages des contrôleurs, puis regarde la rencontre se dérouler, image par image si tu veux.</p>

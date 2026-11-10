@@ -1,4 +1,4 @@
-// Pages de catégorie, visuel 2.0 (Moteurs, Informatique, Jeux de société, Archives).
+// Pages de catégorie, visuel 2.0 (Moteurs, Avionique, Informatique, Jeux de société, Archives).
 // <body data-parent="moteurs"> : la permission du groupe ; <body data-mode="archives"> : la page Archives.
 // Chaque <a class="carte" data-section="…"> est caché si la personne n'y a pas droit ou si la section est archivée.
 import { db, doc, getDoc } from "./firebase-config.js";

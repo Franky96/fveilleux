@@ -5,7 +5,7 @@
 
 const _permsCSDB = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
 if (!sessionStorage.getItem('loggedIn') ||
-    (!_permsCSDB.includes('csdb') && !_permsCSDB.includes('informatique') &&
+    (!_permsCSDB.includes('csdb') && !_permsCSDB.includes('avionique') &&
      sessionStorage.getItem('userRole') !== 'admin')) {
   alert('Accès refusé.');
   window.location.href = 'dashboard.html';

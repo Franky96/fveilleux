@@ -23,8 +23,10 @@ const GROUPES = [
     ['ena.html', '🛠️', 'ÉNA', "École nationale d'aérotechnique", 'ena'],
   ]},
   { nom: 'Avionique et informatique', ic: '💻', c: '--c-info', pages: [
-    ['informatique.html', '💻', 'Informatique', 'Outils techniques et avioniques', 'informatique', [
-      ['Avionique', [['arinc429.html', 'ARINC 429', 'arinc429'], ['csdb.html', 'CSDB', 'csdb'], ['tcas.html', 'Rencontre TCAS', 'tcas'], ['radalt.html', 'Radio-altimètre', 'radalt'], ['radar-meteo.html', 'Radar météo', 'radar-meteo'], ['crypteur.html', 'Encodeur BNR', 'crypteur'], ['converter.html', 'Convertisseur', 'converter']]],
+    ['avionique.html', '🛰️', 'Avionique', 'Bus de données, formats et systèmes de bord', 'avionique', [
+      ['Bus', [['arinc429.html', 'ARINC 429', 'arinc429'], ['csdb.html', 'CSDB', 'csdb'], ['crypteur.html', 'Encodeur BNR', 'crypteur'], ['converter.html', 'Convertisseur', 'converter']]],
+      ['Systèmes', [['tcas.html', 'Rencontre TCAS', 'tcas'], ['radalt.html', 'Radio-altimètre', 'radalt'], ['radar-meteo.html', 'Radar météo', 'radar-meteo']]]]],
+    ['informatique.html', '💻', 'Informatique', 'Réseau, transfert et circuits', 'informatique', [
       ['Réseau', [['tcpip.html', 'TCP/IP', 'tcpip'], ['qr-transfer.html', 'QR Transfert', 'qr-transfer'], ['shape-transfer.html', 'Shape Transfert', 'shape-transfer']]],
       ['Circuits', [['chips.html', 'Simulateurs de puces', 'chips'], ['circuit.html', 'Circuit logique', 'circuit'], ['triphase.html', 'Courant triphasé', 'triphase']]]]],
     ['aec-avionique.html', '📚', 'Documentation AEC Avionique', "Mes cours de l'AEC en avionique (ÉNA)", 'aec-avionique'],

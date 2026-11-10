@@ -18,6 +18,12 @@
    "connexion/arinc.mp4"
   ]
  },
+ "avionique.html": {
+  "img": "tableau/avionique.jpg",
+  "video": [
+   "tableau/avionique.webm"
+  ]
+ },
  "cadeaux.html": {
   "img": "tableau/cadeaux.jpg",
   "video": [

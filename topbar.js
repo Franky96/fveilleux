@@ -21,7 +21,7 @@
     if (lienPage) {
       let n = lienPage.textContent.replace(/^\s*\u2190\s*/, '').trim();
       const h = lienPage.getAttribute('href');
-      const NOMS = { 'dashboard.html': 'Accueil', 'moteurs.html': 'Moteurs', 'informatique.html': 'Informatique', 'jeuxdesociete.html': 'Jeux de soci\u00e9t\u00e9', 'aviation.html': 'Aviation', 'archive.html': 'Archives', 'intentions-simulations.html': 'Intentions de vote' };
+      const NOMS = { 'dashboard.html': 'Accueil', 'moteurs.html': 'Moteurs', 'avionique.html': 'Avionique', 'informatique.html': 'Informatique', 'jeuxdesociete.html': 'Jeux de soci\u00e9t\u00e9', 'aviation.html': 'Aviation', 'archive.html': 'Archives', 'intentions-simulations.html': 'Intentions de vote' };
       if (NOMS[h.split(/[?#]/)[0]]) n = NOMS[h.split(/[?#]/)[0]];   // libellé uniforme : le nom de la page où l'on retourne
       if (!n) n = 'Retour';
       retour = { h, n };

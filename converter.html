@@ -9,7 +9,7 @@
   <script>
     const _permsConv = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_permsConv.includes('converter') && !_permsConv.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!_permsConv.includes('converter') && !_permsConv.includes('avionique') && sessionStorage.getItem('userRole') !== 'admin')) {
       document.location.href = 'index.html';
     }
   </script>
@@ -284,7 +284,7 @@
 <body>
 
   <div class="top-bar" data-topbar>
-    <a href="informatique.html" class="back-btn-dash">&#8592; Informatique</a>
+    <a href="avionique.html" class="back-btn-dash">&#8592; Avionique</a>
     <h1>Convertisseur — Bases numériques</h1>
   </div>
 

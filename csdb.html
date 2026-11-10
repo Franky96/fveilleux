@@ -9,7 +9,7 @@
   <script>
     const _p = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
     if (!sessionStorage.getItem('loggedIn') ||
-        (!_p.includes('csdb') && !_p.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+        (!_p.includes('csdb') && !_p.includes('avionique') && sessionStorage.getItem('userRole') !== 'admin')) {
       window.location.href = 'dashboard.html';
     }
   </script>
@@ -237,7 +237,7 @@
   <!-- ── Top bar ── -->
   <div class="top-bar" data-topbar>
     <span class="top-bar-title"><span>CSDB</span> Décodeur</span>
-    <a href="informatique.html" class="top-bar-back">&#8592; Informatique</a>
+    <a href="avionique.html" class="top-bar-back">&#8592; Avionique</a>
     <div class="top-bar-divider"></div>
     <span class="hex-label">OCTETS HEX</span>
     <input type="text" id="hex-input" placeholder="10 80 08 41 00 00"

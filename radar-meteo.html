@@ -9,7 +9,7 @@
 <script>
   const _pW = JSON.parse(sessionStorage.getItem('userPermissions') || '[]');
   if (!sessionStorage.getItem('loggedIn') ||
-      (!_pW.includes('radar-meteo') && !_pW.includes('informatique') && sessionStorage.getItem('userRole') !== 'admin')) {
+      (!_pW.includes('radar-meteo') && !_pW.includes('avionique') && sessionStorage.getItem('userRole') !== 'admin')) {
     window.location.href = 'dashboard.html';
   }
 </script>
@@ -109,7 +109,7 @@ table.t td.n{font-family:var(--f-mono);text-align:right}
 <link rel="stylesheet" href="fond.css">
 <script src="topbar.js" defer></script>
 </head>
-<body data-retour="informatique.html" data-retour-nom="Informatique">
+<body data-retour="avionique.html" data-retour-nom="Avionique">
 <div data-topbar><h1>Radar météo</h1></div>
 <div class="wrap">
 <p class="intro">Le <b>radar météo</b> (Wx), dans le nez de l'avion, envoie des <b>impulsions</b> très puissantes (bande X, <b>9 375 MHz</b>) dans un faisceau étroit qui <b>balaie 120°</b> devant l'avion. Les <b>gouttes d'eau</b> renvoient une partie de l'onde (l'écho) : le radar en tire la <b>distance</b> (temps aller-retour), le <b>relèvement</b> (angle de l'antenne) et l'<b>intensité</b> (puissance de l'écho), qu'il peint en couleurs sur l'écran. Règle le contrôleur et regarde l'image se construire à chaque balayage.</p>
