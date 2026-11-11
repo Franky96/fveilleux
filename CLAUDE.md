@@ -2,9 +2,9 @@
 
 ## CSDB — Bande de valeurs (banner)
 
-Quand une adresse CSDB contient **plusieurs valeurs décodables** (ex : code ATC + altitude, fréquence active + standby, etc.), toutes les valeurs doivent apparaître dans la bande du haut (`banner-values`), en les ajoutant comme objets `{ label, value }` dans le tableau retourné par `getBannerValues()`.
+Quand une adresse CSDB contient **plusieurs valeurs décodables** (ex : code ATC + altitude, fréquence + distance, etc.), toutes les valeurs doivent apparaître dans la bande du haut (`banner-values`). Depuis le 11 novembre 2026, chaque champ est décrit dans `csdb-adresses.js` : un champ qui porte `ban` va dans la bande (`getBannerValues()` de `csdb.js` les lit), avec `banLabel` comme libellé au besoin.
 
-Ordre d'affichage : valeur la plus "principale" à droite, valeurs secondaires à gauche (utiliser `unshift` pour insérer à gauche).
+Ordre d'affichage : valeur la plus "principale" à droite, valeurs secondaires à gauche (le `ban` le plus grand est le plus à droite).
 
 Exemple appliqué : adresse 0x1E affiche **CODE ALT** (gauche) et **CODE ATC** (droite).
 

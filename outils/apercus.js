@@ -101,7 +101,7 @@ const REGLAGES = {
     pendant: async pg => tape(pg, '#input-dec', '3735928559', 380),
   },
   'tcpip.html': { attente: 500, defile: 0, cadre: ['.tcp-container'], pendant: async pg => { await tape(pg, '#ip-input', '192.168.1.42', 200); await clic(pg, 'button:has-text("Calculer")'); } },
-  'csdb.html': { attente: 500, defile: 0, cadre: ['.tb2-rangee', '.csdb-container'], pendant: async pg => { await pg.fill('#hex-input', '').catch(() => {}); await tape(pg, '#hex-input', '10 80 08 41 00 00', 140); await clic(pg, '#decode-btn'); } },
+  'csdb.html': { attente: 500, defile: 0, cadre: ['.tb2-rangee', '.csdb-container'], pendant: async pg => { await pg.fill('#hex-input', '').catch(() => {}); await tape(pg, '#hex-input', '10 81 50 92 18 00', 140); await clic(pg, '#decode-btn'); } },
   'qr-transfer.html': { attente: 800, defile: 0, cadre: ['.hero', '.mode-btn'] },
   'shape-transfer.html': { attente: 800, defile: 0, cadre: ['.hero', '.mode-btn'] },
   'intentions-simulations.html': { attente: 0, defile: 0 }, 'loi39.html': { attente: 200, defile: 0 }, 'en-direct.html': { attente: 800, defile: 0 },
