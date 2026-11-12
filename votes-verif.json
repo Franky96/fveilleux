@@ -1,42 +1,42 @@
 {
  "alberta": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  },
  "allemagne": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  },
  "canada": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  },
  "france": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  },
  "quebec": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  },
  "royaume-uni": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:01",
+  "texte": "12 novembre 2026 à 15 h 01"
  },
  "suisse": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  },
  "usa": {
   "date": "2026-11-12",
-  "heure": "06:23",
-  "texte": "12 novembre 2026 à 6 h 23"
+  "heure": "15:00",
+  "texte": "12 novembre 2026 à 15 h 00"
  }
 }
