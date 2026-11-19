@@ -6,6 +6,9 @@ de 2022), seulement sur les hôtes de la CEC, et les écrit allégées dans en-d
 se fait dans en-direct/taiwan/direct.js. Le workflow .github/workflows/tw-election.yml lance ce script toutes les 5 minutes le soir du
 vote et pousse le fichier quand il change.
 
+Source essayée d'abord : la base de données de la CEC (db.cec.gov.tw, JSON : listes ELC_C1 et ELC_C2, puis voix et totaux par
+course pour les thèmes du 28 novembre 2026), même lecture que en-direct/taiwan/direct.js ; le fichier porte alors « db » au lieu de « pages ».
+
 Usage : python3 en-direct/taiwan/outils/tw.py [--force]   (--force : hors de la fenêtre des résultats)
 """
 import concurrent.futures as cf, datetime as dt, json, os, re, sys, urllib.parse, urllib.request
@@ -55,9 +58,43 @@ def plusieurs(urls):
         return {k: v for k, v in zip(urls, ex.map(lire, urls.values())) if v}
 
 
+DB = "https://db.cec.gov.tw/static/elections/"
+DATE = "2026-11-28"
+
+
+def lire_json(url):
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "fveilleux.com (resultats en direct)"}), timeout=20) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
+def base_cec(date=DATE):
+    themes = []
+    for s in ("C1", "C2"):
+        for g in lire_json(f"{DB}list/ELC_{s}.json") or []:
+            for t in g.get("theme_items", []):
+                if t.get("vote_date") == date and (s, t["theme_id"]) not in themes: themes.append((s, t["theme_id"]))
+    db = {"tickets": [], "profiles": []}
+    for s, t in themes:
+        for dt_ in ("tickets", "profiles"):
+            for L in (lire_json(f"{DB}data/{dt_}/ELC/{s}/00/{t}/C/00_000_00_000_0000.json") or {}).values(): db[dt_].extend(L)
+    return db if any(x.get("ticket_num") for x in db["tickets"]) else None
+
+
 def main():
     if "--force" not in sys.argv and not (FENETRE[0] <= dt.datetime.now(dt.timezone.utc) <= FENETRE[1]):
         print("Hors de la période des résultats : rien à lire."); return
+    db = base_cec("2022-11-26" if "--essai2022" in sys.argv else DATE)
+    if db:
+        try: avant = json.load(open(SORTIE, encoding="utf-8"))
+        except (OSError, ValueError): avant = {}
+        if avant.get("db") == db: print("Base de la CEC : aucun changement."); return
+        if "--essai2022" in sys.argv: print(f"Essai 2022 : {len(db['tickets'])} candidats lus (fichier inchangé)."); return
+        d = {"disponible": True, "maj": dt.datetime.now(dt.timezone.utc).isoformat(), "source": "https://db.cec.gov.tw/ElecTable/Election?type=Mayor", "copie": "pipeline", "db": db}
+        with open(SORTIE, "w", encoding="utf-8") as f: json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
+        print(f"Base de la CEC : {len(db['tickets'])} candidats : {SORTIE} mis à jour."); return
     rep = plusieurs({(h, t): adresse(h, t, "0") for h in HOTES for t in TYPES})
     pages = []
     for hote in HOTES:

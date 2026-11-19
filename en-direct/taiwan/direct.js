@@ -144,11 +144,47 @@ function lirePage(p, out) {
 function normaliser(d) {
   if (!INDEX) indexer();
   const out = { maj: d.maj ? new Date(d.maj) : null, circ: {}, resume: {}, pages: 0, demo: d.demo || null };
+  if (d.db) normaliserDb(d, out);
   const pages = (d.pages || []).slice().sort((a, b) => (String(a.code).startsWith("0000") ? -1 : 0) - (String(b.code).startsWith("0000") ? -1 : 0));
   for (const p of pages) { out.pages++; try { lirePage(p, out); } catch { /* page illisible */ } }
   for (const c of Object.values(out.circ)) finir(c);
   out.lus = Object.values(out.circ).filter(c => c.total > 0).length;
   return out;
+}
+/* ---------- base de données de la CEC (db.cec.gov.tw) ----------
+   JSON public, lisible directement par le navigateur (Access-Control-Allow-Origin: *, vérifié le 19 novembre 2026) : listes des élections
+   static/elections/list/ELC_C1.json (maires des 6 municipalités spéciales) et ELC_C2.json (maires et chefs des 16 villes et comtés),
+   chacune avec ses thèmes (theme_id, vote_date) ; puis par thème static/elections/data/{tickets|profiles}/ELC/{C1|C2}/00/{theme}/C/
+   00_000_00_000_0000.json : voix par candidat (cand_name, party_name, ticket_num, is_victor « * » = élu) et totaux (valid_ticket,
+   vote_ticket, votable_population, vote_to_elect = participation) par course, code de la course = prv_code + city_code (63000, 10002…).
+   La base garde les élections passées (2022 : démo ?demo=db2022) ; un guide de vote la donne aussi pour le direct de 2026. */
+const DB = "https://db.cec.gov.tw/static/elections/";
+async function lireDb(date) {
+  const json = u => fetch(u, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const themes = [];
+  for (const s of ["C1", "C2"]) for (const g of (await json(`${DB}list/ELC_${s}.json`)) || [])
+    for (const t of g.theme_items || []) if (t.vote_date === date && !themes.some(x => x.t === t.theme_id)) themes.push({ s, t: t.theme_id });
+  if (!themes.length) return null;
+  const db = { tickets: [], profiles: [] };
+  await Promise.all(themes.flatMap(({ s, t }) => ["tickets", "profiles"].map(async dt => {
+    const j = await json(`${DB}data/${dt}/ELC/${s}/00/${t}/C/00_000_00_000_0000.json`);
+    if (j) for (const L of Object.values(j)) db[dt].push(...L);
+  })));
+  if (!db.tickets.length) return null;
+  return { disponible: db.tickets.some(x => x.ticket_num > 0), maj: new Date().toISOString(), source: "https://db.cec.gov.tw/ElecTable/Election?type=Mayor", db };
+}
+function normaliserDb(d, out) {
+  for (const x of d.db.tickets) {
+    const code = String(x.prv_code) + String(x.city_code); if (!COURSES[code]) continue;
+    const aff = String(x.party_name || "").trim() || "無黨籍", trouve = trouverCand(x.cand_name, code);
+    const cand = trouve?.cand ? { ...trouve.cand, p: partiDe(aff), aff } : { zh: x.cand_name, fr: "", p: partiDe(aff), aff, bio: "" };
+    ajouter(out, code, cand, x.ticket_num || 0, String(x.is_victor || "").trim() === "*");
+  }
+  for (const x of d.db.profiles) {
+    const code = String(x.prv_code) + String(x.city_code); if (!COURSES[code]) continue;
+    const c = out.circ[code] ||= { cands: {}, sec: null };
+    c.valides = x.valid_ticket ?? null; c.votants = x.vote_ticket ?? null; c.inscrits = x.votable_population ?? null; c.part = x.vote_to_elect ?? null;
+  }
 }
 function finir(c) {
   c.cands = (Array.isArray(c.cands) ? c.cands : Object.values(c.cands)).sort((a, b) => b.voix - a.voix);
@@ -181,7 +217,11 @@ async function lireCopie() {
   return r.ok ? { ...(await r.json()), publie: r.headers.get("last-modified") } : null;
 }
 async function lire() {
+  if (DEMO === "db2022") { const d = await lireDb("2022-11-26"); if (!d) throw new Error("Base de la CEC injoignable."); return { ...d, demo: "2022 (base de la CEC)", via: "db" }; }
   if (DEMO) { const r = await fetch(`en-direct/taiwan/demo-${encodeURIComponent(DEMO)}.json`, { cache: "no-cache" }); if (!r.ok) throw new Error(`Démo « ${DEMO} » introuvable.`); return { ...(await r.json()), via: "demo" }; }
+  // 1. base de données de la CEC, lue directement ; 2. relais du site (pages du site des résultats) ; 3. copie du pipeline
+  const db = await lireDb("2026-11-28").catch(() => null);
+  if (db?.disponible) return { ...db, via: "db" };
   let relais = null, copie = null;
   try { relais = await lireRelais(); } catch (e) { if (/Session/.test(e.message)) throw e; }
   if (!relais?.disponible) copie = await lireCopie().catch(() => null);
@@ -237,7 +277,7 @@ function dessinerEtat() {
   $("edAvant").hidden = ferme();
   const lien = `<a href="${esc(brut?.source || SITE_CEC)}" target="_blank" rel="noopener">site de la Commission électorale centrale</a>`;
   b.hidden = false;
-  if (DEMO) b.innerHTML = `<b>DÉMO · résultats de ${esc(RES?.demo || DEMO)}</b> : élection du 26 novembre 2022 (Chiayi : 18 décembre), pages refaites au format du site de la CEC pour tester la lecture${AVANCE ? `, ramenées à environ ${AVANCE} % des bureaux dépouillés (chiffres partiels fictifs)` : ""}. Les candidats de 2022 ne sont pas ceux de 2026. Retire « ?demo » de l'adresse pour revenir au direct.`;
+  if (DEMO) b.innerHTML = `<b>DÉMO · résultats de ${esc(RES?.demo || DEMO)}</b> : élection du 26 novembre 2022 (Chiayi : 18 décembre), ${brut?.via === "db" ? "lus dans la base de données de la CEC (db.cec.gov.tw), par le même chemin que le soir du vote" : "pages refaites au format du site de la CEC pour tester la lecture"}${AVANCE ? `, ramenées à environ ${AVANCE} % des bureaux dépouillés (chiffres partiels fictifs)` : ""}. Les candidats de 2022 ne sont pas ceux de 2026. Retire « ?demo » de l'adresse pour revenir au direct.`;
   else if (RES?.pages && !auMoinsUn() && ferme() && brut?.disponible && !Object.keys(RES.circ).length) b.innerHTML = `La CEC publie des pages, mais leur présentation n'a pas pu être lue ici. En attendant une correction, voir le ${lien}.`;
   else if (!auMoinsUn()) b.innerHTML = ferme()
     ? `<b>Bureaux fermés</b> : dépouillement à la main dans chacun des quelque 18 000 bureaux, en attente des premiers chiffres de la CEC (vérification chaque minute).`
@@ -261,7 +301,8 @@ function dessinerVerifs() {
   const el = $("lvHeures"); el.hidden = !brut || !!DEMO || !ferme(); if (el.hidden) return;
   const m = Date.now(), verif = brut.via === "relais" && brut.ageCache != null ? new Date(lu - brut.ageCache * 1000) : null;
   const publie = brut.via === "copie" && brut.publie ? new Date(brut.publie) : null;
-  el.innerHTML = `<span><b>Vérifiées</b> sur le <a href="${esc(brut.source || SITE_CEC)}" target="_blank" rel="noopener">site de la CEC</a> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
+  el.innerHTML = brut.via === "db" ? `<span><b>Lues directement</b> par cette page dans la <a href="${esc(brut.source)}" target="_blank" rel="noopener">base de données de la CEC</a>`
+    + (lu ? ` à ${secQc(lu)}` : "") + ` · heures du Québec</span>` : `<span><b>Vérifiées</b> sur le <a href="${esc(brut.source || SITE_CEC)}" target="_blank" rel="noopener">site de la CEC</a> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
     : `par la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
     + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heures du Québec</span>`;
 }
