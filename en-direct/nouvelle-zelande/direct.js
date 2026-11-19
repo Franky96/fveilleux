@@ -28,7 +28,7 @@ const heureQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2
 const secQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Toronto" });
 const heureNz = d => d.toLocaleString("fr-CA", { weekday: "long", hour: "2-digit", minute: "2-digit", timeZone: "Pacific/Auckland" });
 const deux = n => String(n).padStart(2, "0");
-const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}`; };
+const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 172800 ? `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}` : `${Math.floor(s / 86400)} jours`; };
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
 const pl = (n, s, p = s + "s") => `${nf(n)} ${n > 1 ? p : s}`;
@@ -169,6 +169,13 @@ function normaliser(d) {
   return out;
 }
 
+/* « final="true" » du flux = dépouillement du soir terminé dans la circonscription, pas le résultat officiel : les votes spéciaux
+   (environ un sur cinq) sont comptés ensuite ; résultats officiels le vendredi 27 novembre (corrigé le 19 novembre 2026 : la page
+   affichait « Résultats officiels » dès la fin du dépouillement du soir) */
+const OFFICIELS_NZ = new Date("2026-11-27T00:00:00+13:00");
+const officiel = () => DEMO === "2023" || !!(RES?.maj && !isNaN(RES.maj) && RES.maj >= OFFICIELS_NZ);
+const motFin = (o, p) => officiel() ? o : p;
+
 /* ---------- lecture : relais du site, sinon copie du pipeline ---------- */
 async function lireRelais() {
   const q = new URLSearchParams({ type: "resultats" });
@@ -281,13 +288,14 @@ function dessinerEtat() {
   else if (!auMoinsUn()) b.innerHTML = ferme
     ? `<b>Bureaux fermés</b> : en attente des premiers résultats de la Commission électorale (vérification chaque minute). Les votes par anticipation, comptés pendant la journée, sont publiés en premier.`
     : `Les résultats préliminaires s'afficheront ici après la fermeture des bureaux, le <b>samedi 7 novembre à 19 h, heure de la Nouvelle-Zélande (1 h du matin le samedi, heure du Québec)</b>. En attendant, la barre des sièges montre la projection de la moyenne des sondages.`;
+  else if (officiel()) b.innerHTML = `<b>Résultats officiels</b> de la Commission électorale, votes spéciaux compris.`;
   else b.innerHTML = `<b>Résultats préliminaires et non officiels</b> : les votes spéciaux (inscription tardive, vote à l'étranger, hors circonscription…), environ un vote sur cinq, ne sont comptés qu'après le soir du vote. Résultats officiels : vendredi 27 novembre.`;
   if (!RES) { $("lvEtat").textContent = "Résultats indisponibles pour le moment · nouvel essai chaque minute"; return; }
   if (!auMoinsUn()) { $("lvEtat").textContent = (DEMO ? DEMO_TXT[DEMO] + " · " : "") + "En attente des premiers résultats · vérification chaque minute"; dessinerVerifs(); return; }
   const S = RES.stats, fin = Object.values(RES.circ).filter(c => c.final).length;
-  $("lvEtat").innerHTML = [DEMO ? `<b>${DEMO_TXT[DEMO]}</b>` : fin === nbCirc() ? "<b>Résultats officiels</b>" : "<b>Résultats préliminaires</b>",
+  $("lvEtat").innerHTML = [DEMO ? `<b>${DEMO_TXT[DEMO]}</b>` : officiel() ? "<b>Résultats officiels</b>" : fin === nbCirc() ? "<b>Résultats préliminaires</b> · dépouillement du soir terminé" : "<b>Résultats préliminaires</b>",
     S.pctPlaces != null ? `${nf(S.pctPlaces, 1)} % des bureaux de vote dépouillés` : `${RES.lus} circonscriptions sur ${nbCirc()} avec des résultats`,
-    S.votes ? `${nf(S.votes)} votes comptés` : "", fin ? `${fin} circonscription${fin > 1 ? "s" : ""} au résultat officiel` : ""].filter(Boolean).join(" · ");
+    S.votes ? `${nf(S.votes)} votes comptés` : "", fin ? `${fin} circonscription${fin > 1 ? "s" : ""} ${motFin("au résultat officiel", fin > 1 ? "entièrement dépouillées (préliminaire)" : "entièrement dépouillée (préliminaire)")}` : ""].filter(Boolean).join(" · ");
   dessinerVerifs();
 }
 function dessinerVerifs() {
@@ -398,7 +406,7 @@ function dessinerSiegesCirc() {
   const ordre = Object.keys(s).filter(p => tot(p) > 0).sort((a, b) => rangP(a) - rangP(b) || tot(b) - tot(a));
   const pct = k => (100 * k / n) + "%";
   $("edProvSur").textContent = `Les ${n} circonscriptions (${n === 71 ? "64 générales, 7 maories" : "limites de 2020"}) · vote de circonscription (député élu au scrutin majoritaire)`;
-  $("lvBarre").innerHTML = ordre.map(p => `<span class="lv-seg" style="width:${pct(tot(p))};--c:${coulP(p)}" title="${esc(infoP(p).nom)} : ${pl(tot(p), "circonscription")} (${s[p].elus} au résultat officiel, ${s[p].avance} en tête)">`
+  $("lvBarre").innerHTML = ordre.map(p => `<span class="lv-seg" style="width:${pct(tot(p))};--c:${coulP(p)}" title="${esc(infoP(p).nom)} : ${pl(tot(p), "circonscription")} (${s[p].elus} ${motFin("au résultat officiel", "dépouillées")}, ${s[p].avance} en tête)">`
     + `<i class="lv-elus" style="width:${100 * s[p].elus / tot(p)}%"></i><b>${esc(infoP(p).court)} ${tot(p)}</b></span>`).join("");
   etiquettes();
   $("edMajMarque").hidden = true;
@@ -413,12 +421,12 @@ function dessinerSiegesCirc() {
   $("lvPartis").innerHTML = montres.sort((a, b) => tot(b) - tot(a) || (s[b]?.voix || 0) - (s[a]?.voix || 0) || rangP(a) - rangP(b)).map(p => {
     const P = infoP(p), v = voixT ? 100 * (s[p]?.voix || 0) / voixT : null, n23 = R23.national?.[p];
     return `<div class="lv-parti" style="--c:${P.c}" title="${esc(P.nom)}${P.chef ? " · " + esc(P.chef) : ""}"><i></i><span class="lv-pnom">${esc(P.court)}</span>`
-      + `<b>${auMoinsUn() ? tot(p) : "—"}</b><small>${auMoinsUn() && tot(p) ? `${s[p].elus ? `${s[p].elus} officielles · ` : ""}${s[p].avance} en tête · ` : ""}2023 : ${n23 ? pl(n23.circ, "circ.", "circ.") : "—"}</small>`
+      + `<b>${auMoinsUn() ? tot(p) : "—"}</b><small>${auMoinsUn() && tot(p) ? `${s[p].elus ? `${s[p].elus} ${motFin("officielles", "dépouillées")} · ` : ""}${s[p].avance} en tête · ` : ""}2023 : ${n23 ? pl(n23.circ, "circ.", "circ.") : "—"}</small>`
       + `<span class="lv-pvote">${v ? nf(v, 1) + " %" : ""}</span></div>`;
   }).join("");
   const fin = Object.values(RES?.circ || {}).filter(c => c.final).length, S = RES?.stats || {};
   const serres = Object.values(RES?.circ || {}).filter(c => c.totC > 0 && c.cands.length > 1 && 100 * (c.cands[0].v - c.cands[1].v) / c.totC < SERRE).length;
-  $("edKv").innerHTML = [[`${RES?.lus || 0} / ${n}`, "circonscriptions avec des résultats"], [nf(fin), "au résultat officiel"], [S.pctPlaces != null && auMoinsUn() ? nf(S.pctPlaces, 1) + " %" : "—", "des bureaux de vote dépouillés"],
+  $("edKv").innerHTML = [[`${RES?.lus || 0} / ${n}`, "circonscriptions avec des résultats"], [nf(fin), motFin("au résultat officiel", "entièrement dépouillées (préliminaire)")], [S.pctPlaces != null && auMoinsUn() ? nf(S.pctPlaces, 1) + " %" : "—", "des bureaux de vote dépouillés"],
     [nf(serres), `luttes serrées (moins de ${SERRE} points)`], [voixT ? nf(voixT) : "—", "votes de circonscription comptés"]]
     .map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
   barrePlein(ordre.map(p => [p, tot(p), s[p].elus]), n, null, "Circonscriptions", `${RES?.lus || 0}/${n} avec résultats`);
@@ -475,7 +483,7 @@ function infobulle(e, f) {
   const titre = `<b>${suivies.has(nom) ? "★ " : ""}${esc(nom)}${f.properties.t === "m" ? " (maorie)" : ""}</b>`;
   const ref = g23 ? ` · 2023 : ${esc(infoP(g23).court)}` : REFONTES[nom] ? " · nouvelle en 2026" : "";
   tip.innerHTML = titre + (c ? lignes(c).slice(0, 3).map(k => `<span class="ed-tip-l" style="--c:${coulP(k.p)}"><span><i></i>${esc(k.nom ? `${k.nom} (${infoP(k.p).court})` : infoP(k.p).nom)}</span><b>${nf(pctL(c, k), 1)} %</b></span>`).join("")
-    + `<small>${vote === "parti" ? "vote de parti · " : ""}${c.final ? "résultat officiel" : c.frac != null ? nf(100 * c.frac, 0) + " % des bureaux" : "dépouillement en cours"}${ref}</small>`
+    + `<small>${vote === "parti" ? "vote de parti · " : ""}${c.final ? motFin("résultat officiel", "dépouillement terminé") : c.frac != null ? nf(100 * c.frac, 0) + " % des bureaux" : "dépouillement en cours"}${ref}</small>`
     : `<br><small>Aucun résultat${ref}</small>`);
 }
 // îles Chatham : morceaux rapprochés (encart) ; sans eux pour cadrer les zooms
@@ -608,7 +616,7 @@ function dessinerPanneau() {
     + `<div class="lv-suivre-pour"><button type="button" class="lv-suivre" data-suivre="${esc(sel)}" aria-pressed="${suivies.has(sel)}" style="--c:#B7860B">${suivies.has(sel) ? "★ Suivie" : "☆ Suivre"}</button></div>`;
   if (c && c.totC > 0) {
     const [a, b] = c.cands, ecart = b ? a.v - b.v : a.v;
-    html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? "Résultat officiel" : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} bureaux (${nf(100 * c.frac, 0)} %)` : c.frac != null ? `${nf(100 * c.frac, 0)} % des bureaux` : "Dépouillement en cours"}</span>`
+    html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? motFin("Résultat officiel", "Dépouillement du soir terminé") : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} bureaux (${nf(100 * c.frac, 0)} %)` : c.frac != null ? `${nf(100 * c.frac, 0)} % des bureaux` : "Dépouillement en cours"}</span>`
       + (g23 && g23 !== a.p ? `<span class="lv-chip" style="--c:${coulP(a.p)}">Gain ${esc(infoP(a.p).court)} (2023 : ${esc(infoP(g23).court)})</span>` : "") + `</div>`
       + `<p class="lv-tete" style="--c:${coulP(a.p)}"><b>${esc(a.nom)}</b> (${esc(infoP(a.p).court)}) ${c.final ? "élu·e" : "en tête"}${b ? ` par ${nf(ecart)} voix (${nf(100 * ecart / c.totC, 1)} pt)` : ""}</p>`;
     const blocC = `<span class="lv-eyebrow">Vote de circonscription</span>${tableCands(c)}`, blocP = c.totP ? `<span class="lv-eyebrow">Vote de parti dans la circonscription</span>${tablePartis(c)}` : "";
@@ -643,7 +651,7 @@ function ligne(nom) {
   const c = enCirc(nom), a = c && tete(c);
   return `<li class="lv-ligne" data-rid="${esc(nom)}" tabindex="0"><button type="button" class="lv-etoile" data-suivre="${esc(nom)}" aria-pressed="${suivies.has(nom)}" aria-label="Suivre ${esc(nom)}">${suivies.has(nom) ? "★" : "☆"}</button>`
     + `<span class="lv-nom" style="--c:${a ? coulP(a.p) : "var(--soft)"}"><i></i>${esc(nom)}${TYPE[nom] === "m" ? " <small>(maorie)</small>" : ""}</span>`
-    + `<span class="lv-ecart">${a ? `${esc(infoP(a.p).court)} +${nf(ecartPts(c), 1)} pt` : "—"}<small>${c ? (c.final ? "officiel" : c.frac != null ? nf(100 * c.frac, 0) + " % bureaux" : "") : ""}</small></span></li>`;
+    + `<span class="lv-ecart">${a ? `${esc(infoP(a.p).court)} +${nf(ecartPts(c), 1)} pt` : "—"}<small>${c ? (c.final ? motFin("officiel", "terminé") : c.frac != null ? nf(100 * c.frac, 0) + " % bureaux" : "") : ""}</small></span></li>`;
 }
 function dessinerSuivi() {
   $("lvSuivies").innerHTML = suivies.size ? `<ul class="lv-lignes">${[...suivies].filter(k => PAR_NOM[k]).sort((a, b) => a.localeCompare(b, "fr")).map(ligne).join("")}</ul>`

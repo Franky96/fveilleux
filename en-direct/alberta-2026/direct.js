@@ -23,7 +23,7 @@ const norm = s => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "
 const heureQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "America/Toronto" });
 const secQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Toronto" });
 const dateAb = d => d.toLocaleString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Edmonton" });
-const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}`; };
+const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 172800 ? `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}` : `${Math.floor(s / 86400)} jours`; };
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
 const region = n => n <= 26 ? "Calgary" : n <= 46 ? "Edmonton" : "Reste de l'Alberta";
@@ -135,10 +135,10 @@ function lireTable(t) {
     const iNum = col(/^(ed|no\.?|#|ed\s*(no\.?|number|#)|electoral division (no\.?|number)|n[o°]\.?)$/);
     const iNom = col(/name|nom|jurisdiction|division|circonscription/);
     const iSecR = col(/reported|complete|counted|d[eé]pouill|rempli/);
-    const iSecT = H.findIndex((c, i) => i !== iSecR && /location|poll|station|section|bureau/.test(c) && !/reported|complete|counted|d[eé]pouill/.test(c));
+    const iSecT = H.findIndex((c, i) => i !== iSecR && /location|poll|station|section|bureau|voting (place|area)/.test(c) && !/reported|complete|counted|d[eé]pouill/.test(c));
     const iPart = col(/turnout|participation/);
     const iVot = H.findIndex(c => /electors who voted|ballots cast|total ballots|votants|ont vot/.test(c) && !/turnout/.test(c));
-    const iIns = col(/names on list|registered|inscrit|electors on list|list of electors/);
+    const iIns = col(/names on list|registered|inscrit|electors on list|list of electors|number of electors/);
     const iRej = H.map((c, i) => /reject|declin|spoil|blank|rejet/.test(c) ? i : -1).filter((i, k, a) => i >= 0 && a.indexOf(i) === k)
       .filter((i, k, a) => k === 0 || H[i] !== H[a[k - 1]]);           // colspan répété : une seule fois
     const lire = row => {
@@ -223,6 +223,15 @@ function normaliser(d) {
     if (!r || out.questions[r.q]) continue;
     out.questions[r.q] = r; out.publiees++; if (r.inconnu) out.inconnues++;
   }
+  // résultats officiels (29 octobre 2026, officialresults.elections.ab.ca) : chaque circonscription est complète
+  if (d.officiel) {
+    out.officiel = true;
+    for (const R of Object.values(out.questions)) {
+      if (R.inconnu) continue;
+      for (const c of Object.values(R.circ)) { if (c.sec[1] != null) c.sec = [c.sec[1], c.sec[1]]; c.frac = 1; c.final = true; }
+      if (R.tot.sec[1] != null) R.tot.sec = [R.tot.sec[1], R.tot.sec[1]];
+    }
+  }
   return out;
 }
 
@@ -261,8 +270,9 @@ async function lireCopie() {
 async function lire() {
   if (DEMO !== null) { const r = await fetch("en-direct/alberta-2026/demo.json", { cache: "no-cache" }); return { ...(await r.json()), via: "demo" }; }
   let relais = null, copie = null;
+  copie = await lireCopie().catch(() => null);
+  if (copie?.officiel) return { ...copie, via: "copie" };   // résultats officiels : plus besoin du relais (tableau de bord non officiel)
   try { relais = await lireRelais(); } catch (e) { if (/Session/.test(e.message)) throw e; }
-  if (!relais?.disponible) copie = await lireCopie().catch(() => null);
   // la source qui a des résultats ; à défaut, celle qui a répondu (« pas encore publié »)
   if (relais?.disponible) return { ...relais, via: "relais" };
   if (copie?.disponible) return { ...copie, via: "copie" };
@@ -276,10 +286,16 @@ async function actualiser() {
     brut = await lire(); lu = new Date();
     RES = brut ? normaliser(brut) : null;
     if (RES && DEMO !== null) demoPartielle(RES, DEMO);
+    if (RES?.officiel && DEMO === null) prochaine = Infinity;   // résultats officiels : plus de lecture automatique
     surveiller(); dessiner();
   } catch (e) { $("lvEtat").textContent = e.message; }
 }
 function afficherDecompte() {
+  if (!isFinite(prochaine)) {
+    $("lvDecompte").textContent = "officiel"; $("lvMaj").style.setProperty("--fait", "1");
+    $("lvMaj").title = "Résultats officiels : plus de lecture automatique ; clic pour relire";
+    if (lu) dessinerVerifs(); return;
+  }
   const reste = Math.max(0, Math.ceil((prochaine - Date.now()) / 1000));
   $("lvDecompte").textContent = document.hidden ? "en pause" : reste + " s";
   $("lvMaj").style.setProperty("--fait", (1 - reste / RAFRAICHIR).toFixed(3));
@@ -318,9 +334,9 @@ function dessinerEtat() {
   if (!RES) { $("lvEtat").textContent = "Résultats indisponibles pour le moment · nouvel essai chaque minute"; return; }
   if (!auMoinsUn()) { $("lvEtat").innerHTML = `En attente des premiers résultats · vérification chaque minute${maj ? ` · Élections Alberta consulté à ${heureQc(maj)} (heure du Québec)` : ""}`; return; }
   $("lvEtat").innerHTML = [
-    DEMO !== null ? "<b>Démo · chiffres fictifs</b>" : "<b>Résultats non officiels</b>",
-    `${RES.publiees - RES.inconnues} question${RES.publiees - RES.inconnues > 1 ? "s" : ""} sur 10 en dépouillement`,
-    fracT(st) != null ? `question ${q} : sections ${nf(st.sec[0])} / ${nf(st.sec[1])} (${nf(100 * fracT(st), 1)} %)` : "",
+    DEMO !== null ? "<b>Démo · chiffres fictifs</b>" : RES.officiel ? "<b>Résultats officiels</b> d'Élections Alberta (29 octobre 2026)" : "<b>Résultats non officiels</b>",
+    `${RES.publiees - RES.inconnues} question${RES.publiees - RES.inconnues > 1 ? "s" : ""} sur 10 ${RES.officiel ? "" : "en dépouillement"}`.trim(),
+    !RES.officiel && fracT(st) != null ? `question ${q} : sections ${nf(st.sec[0])} / ${nf(st.sec[1])} (${nf(100 * fracT(st), 1)} %)` : "",
   ].filter(Boolean).join(" · ");
   dessinerVerifs();
 }
@@ -335,7 +351,7 @@ function dessinerVerifs() {
   el.innerHTML = [
     `<span><b>Données</b> d'<a href="${SITE_RES}" target="_blank" rel="noopener">Élections Alberta</a> : ${maj ? `${dateAb(maj)}, heure de l'Alberta (${heureQc(maj)} au Québec)` : "pas encore d'heure publiée"}</span>`,
     `<span><b>Vérifiées</b> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
-      : `sur la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
+      : `sur la copie ${RES?.officiel ? "des résultats officiels" : "de secours"} du pipeline${publie && !isNaN(publie) ? `, mise en ligne ${m - publie > 864e5 ? `le ${publie.toLocaleDateString("fr-CA", { day: "numeric", month: "long", timeZone: "America/Toronto" })} ` : ""}à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
       + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heures du Québec</span>`,
   ].join("");
 }
@@ -421,7 +437,7 @@ function dessinerParticip() {
   if (!t || t.part == null) { el.hidden = true; return; }
   el.hidden = false;
   el.querySelector("b").textContent = nf(t.part, 1) + " %";
-  el.querySelector("small").textContent = fracT(t) === 1 ? "Participation (non officielle)" : `Participation · ${fracT(t) != null ? nf(100 * fracT(t), 0) + " % des sections" : "non officielle"}`;
+  el.querySelector("small").textContent = RES?.officiel ? "Participation officielle (votes valides)" : fracT(t) === 1 ? "Participation (non officielle)" : `Participation · ${fracT(t) != null ? nf(100 * fracT(t), 0) + " % des sections" : "non officielle"}`;
 }
 
 /* ---------- carte ---------- */
@@ -626,7 +642,7 @@ function dessinerPanneau() {
     const t = (D(q) || D(10))?.tot, liste = GEO.features.map(f => [f.properties.n, tauxParticip(f.properties.n)]).filter(([, x]) => x).sort((a, b) => b[1].v - a[1].v);
     const ligne = ([n, x]) => `<li><span class="lv-pk" style="background:${couleurParticip(x.v)}"></span>${esc(PAR_NUM[n])}<b>${nf(x.v, 1)} %</b></li>`;
     p.innerHTML = `<span class="lv-eyebrow">Taux de participation</span><h3>${t?.part != null ? `${nf(t.part, 1)} % dans l'ensemble de l'Alberta` : "Pas encore de taux publié"}</h3>
-      <p class="lv-muted">Taux publié avec les résultats non officiels ; il ne compte que les sections déjà dépouillées et deviendra final avec les résultats officiels (29 octobre).</p>
+      <p class="lv-muted">${RES?.officiel ? "Taux des résultats officiels du 29 octobre : votes valides à la question, sur les électeurs inscrits." : "Taux publié avec les résultats non officiels ; il ne compte que les sections déjà dépouillées et deviendra final avec les résultats officiels (29 octobre)."}</p>
       <div class="lv-pgrad" role="img" aria-label="Dégradé : noir jusqu'à 10 %, blanc à partir de 90 %">${t?.part != null ? `<i style="left:${t.part}%"></i>` : ""}</div>
       <div class="lv-pechelle">${[10, 30, 50, 70, 90].map(v => `<span style="left:${v}%">${v} %</span>`).join("")}</div>`
       + (liste.length ? `<div class="lv-pcols"><div><span class="lv-eyebrow">Plus fortes</span><ol class="lv-plist">${liste.slice(0, 5).map(ligne).join("")}</ol></div>
@@ -644,7 +660,7 @@ function dessinerPanneau() {
   const c = enCirc(q, sel), suiv = suivies.has(sel);
   p.innerHTML = `<span class="lv-eyebrow">${esc(region(sel))} · circonscription n<sup>o</sup> ${sel}</span><h3>${esc(PAR_NUM[sel])}</h3>`
     + `<div class="lv-suivre-pour"><button type="button" class="lv-suivre" data-suivre="${sel}" style="--c:#C99A1E" aria-pressed="${suiv}">${suiv ? "★ Suivie" : "☆ Suivre"}</button></div>`
-    + `<div class="lv-chips"><span class="lv-chip ${c?.final ? "fin" : ""}">${!c ? "Aucun résultat pour l'instant" : c.final ? "Dépouillement terminé (non officiel)" : c.frac != null ? `${nf(c.sec[0])} / ${nf(c.sec[1])} sections (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
+    + `<div class="lv-chips"><span class="lv-chip ${c?.final ? "fin" : ""}">${!c ? "Aucun résultat pour l'instant" : c.final ? (RES?.officiel ? "Résultat officiel" : "Dépouillement terminé (non officiel)") : c.frac != null ? `${nf(c.sec[0])} / ${nf(c.sec[1])} sections (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
     + `${c?.part != null ? `<span class="lv-chip">Participation : ${nf(c.part, 1)} %</span>` : ""}</div>`
     + (aRes(c) ? `<p class="lv-tete" style="--c:${coul(q, tete(c))}"><b>${esc(nomRep(q, tete(c)))}</b> ${c.final ? "l'emporte" : "en tête"} à la question ${q}, par ${nf(Math.abs(c.a - c.b))} voix (${nf(Math.abs(marge(c)), 1)} pt)</p>`
       + `<table class="lv-cands"><tbody>${[0, 1].map(i => `<tr style="--c:${coul(q, i)}"><td><span class="lv-pt"></span></td><td><b>${esc(nomRep(q, i))}</b>${Q[q].rep[i].long ? `<small>${esc(Q[q].rep[i].long)}</small>` : ""}`
@@ -844,7 +860,7 @@ function dessinerTextes() {
       <div><h4>Congé pour voter</h4><p>La loi électorale garantit trois heures consécutives hors du travail pendant les heures de vote, un jour d'anticipation ou le jour du vote ; sinon l'employeur doit accorder (et payer) le temps qui manque.</p></div>
       <div><h4>En français</h4><p>Élections Alberta publie un <a href="https://www.elections.ab.ca/uploads/Language-Guide-French.pdf" target="_blank" rel="noopener">guide du vote en français</a> (PDF). Renseignements : 1-877-422-VOTE (8683) · <a href="https://www.elections.ab.ca/elections/referendum/" target="_blank" rel="noopener">page du référendum</a>.</p></div>
     </div>`;
-  $("edSource").innerHTML = `Résultats : <a href="${SITE_RES}" target="_blank" rel="noopener">Élections Alberta</a>, résultats non officiels (les officiels seront annoncés le 29 octobre), lus par le site toutes les 45 secondes, ou toutes les 5 minutes par une copie de secours. Questions : décrets 109/2026, 110/2026 et 160/2026 (<a href="https://www.elections.ab.ca/elections/referendum/" target="_blank" rel="noopener">elections.ab.ca</a>), traduction non officielle. Carte : circonscriptions électorales de 2017 d'Elections Alberta, contours simplifiés ; contient de l'information visée par la <a href="https://open.alberta.ca/licence" target="_blank" rel="noopener">Licence du gouvernement ouvert – Alberta</a>. Cette page est temporaire.`;
+  $("edSource").innerHTML = `Résultats : <a href="${SITE_RES}" target="_blank" rel="noopener">Élections Alberta</a>, résultats officiels du 29 octobre 2026 (<a href="https://officialresults.elections.ab.ca/orEDResultsReferendum2026.cfm?EventId=202610" target="_blank" rel="noopener">officialresults.elections.ab.ca</a>), copiés par le pipeline ; le soir du vote, les résultats non officiels étaient lus toutes les 45 secondes. Questions : décrets 109/2026, 110/2026 et 160/2026 (<a href="https://www.elections.ab.ca/elections/referendum/" target="_blank" rel="noopener">elections.ab.ca</a>), traduction non officielle. Carte : circonscriptions électorales de 2017 d'Elections Alberta, contours simplifiés ; contient de l'information visée par la <a href="https://open.alberta.ca/licence" target="_blank" rel="noopener">Licence du gouvernement ouvert – Alberta</a>.`;
 }
 
 /* ---------- ensemble ---------- */

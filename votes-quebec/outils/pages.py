@@ -26,11 +26,11 @@ FICHIER = {"direct": "en-direct.html", "bg": "en-direct-bulgarie.html", "nz": "e
            "allemagne": "votes-allemagne.html", "suisse": "votes-suisse.html", "alberta": "votes-alberta.html", "royaumeuni": "votes-royaume-uni.html"}
 # soirées « En direct » (sous-menu de l'onglet) : même cadre, le bloc « gen » du gabarit, avec ces textes
 DIRECTS = {
-    "direct": {"H2": "Élections de mi-mandat aux États-Unis · 3 novembre 2026", "SUR": "Chambre des représentants · 435 sièges · majorité 218",
+    "direct": {"FINIE": "Soirée terminée · dépouillement en cours", "H2": "Élections de mi-mandat aux États-Unis · 3 novembre 2026", "SUR": "Chambre des représentants · 435 sièges · majorité 218",
                "CHOIX": "Élection affichée", "CARTE": "Carte des résultats, colorée selon le parti en tête", "CLASSEMENT": "Toutes les courses"},
-    "bg": {"H2": "Présidentielle en Bulgarie · 2e tour · 1er novembre 2026", "SUR": "Ensemble de la Bulgarie",
+    "bg": {"FINIE": "Soirée terminée · résultats définitifs", "H2": "Présidentielle en Bulgarie · 2e tour · 1er novembre 2026", "SUR": "Ensemble de la Bulgarie",
            "CHOIX": "Tour affiché", "CARTE": "Carte des circonscriptions électorales de la Bulgarie, colorées selon le candidat en tête", "CLASSEMENT": "Les circonscriptions"},
-    "nz": {"H2": "Élections générales en Nouvelle-Zélande · 7 novembre 2026", "SUR": "Chambre des représentants · 120 sièges environ · majorité 61",
+    "nz": {"FINIE": "Soirée terminée · officiels le 27 novembre", "H2": "Élections générales en Nouvelle-Zélande · 7 novembre 2026", "SUR": "Chambre des représentants · 120 sièges environ · majorité 61",
            "CHOIX": "Vote affiché", "CARTE": "Carte des circonscriptions de la Nouvelle-Zélande, colorées selon le parti en tête", "CLASSEMENT": "Les circonscriptions"},
     "tw": {"H2": "Élections locales à Taïwan · 28 novembre 2026", "SUR": "22 maires et chefs de comté",
            "CHOIX": "Élection affichée", "CARTE": "Carte des municipalités et comtés de Taïwan, colorés selon le parti en tête", "CLASSEMENT": "Les 22 municipalités et comtés"},
@@ -40,8 +40,8 @@ DIRECTS = {
 # soirées déjà prêtes (module écrit et vérifié) : les autres ne sont ni générées ni dans le sous-menu
 PRETES = {"direct", "bg", "nz", "tw", "es"}
 # soirée « en cours » : celle qu'ouvre l'onglet principal « En direct » (le sous-menu garde toutes les soirées) ;
-# à changer avant chaque vote (6 novembre 2026 : Nouvelle-Zélande, après les États-Unis), avec ARRIVEE de dashboard.js
-COURANTE = "nz"
+# à changer avant chaque vote (6 novembre 2026 : Nouvelle-Zélande, après les États-Unis ; 19 novembre 2026 : Taïwan), avec ARRIVEE de dashboard.js
+COURANTE = "tw"
 BLOCS = ["cb2026", "ab2026", "live", "votes", "loi39"]          # vues qui ont leur propre bloc dans le gabarit (les soirées de DIRECTS prennent « gen »)
 PAGES = list(DIRECTS) + BLOCS          # tirées du gabarit ; « france » et « canada » sont faites à partir de la page Votes Québec (même cadre)
 TITRE = {"direct": "En direct · mi-mandat aux États-Unis", "bg": "En direct · présidentielle en Bulgarie", "nz": "En direct · élections en Nouvelle-Zélande",
@@ -62,6 +62,11 @@ def page(vue):
         s = bloc.sub((lambda m: m.group(1)) if v == vue or (v == "gen" and vue in DIRECTS) else "", s)
     if vue in DIRECTS:
         for k, t in DIRECTS[vue].items(): s = s.replace("{{" + k + "}}", t.replace("&", "&amp;").replace('"', "&quot;"))
+        # soirée passée (« FINIE ») : badge gris au lieu du « En direct » rouge (demande de l'utilisateur, 19 novembre 2026)
+        if DIRECTS[vue].get("FINIE"):
+            badge = '<span class="live-badge"><i class="sc-dot" aria-hidden="true"></i>En direct</span>'
+            assert badge in s, "badge « En direct » introuvable dans " + vue
+            s = s.replace(badge, f'<span class="live-badge archive">{DIRECTS[vue]["FINIE"]}</span>', 1)
         assert "{{" not in s, "texte {{…}} non remplacé dans " + vue
     s = s.replace(' role="tabpanel" aria-labelledby="tab-live" hidden>', ">").replace(' role="tabpanel" aria-labelledby="tab-votes" aria-busy="true" hidden>', ' aria-busy="true">')
     s = s.replace(' role="tabpanel" aria-labelledby="tab-loi39"', "")

@@ -29,7 +29,7 @@ const secQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-d
 const heureBg = d => d.toLocaleTimeString("fr-CA", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Sofia" }).replace(":", " h ").replace(/ h 00$/, " h");
 const jourBg = d => d.toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Sofia" });
 const deux = n => String(n).padStart(2, "0");
-const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}`; };
+const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 172800 ? `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}` : `${Math.floor(s / 86400)} jours`; };
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
 
