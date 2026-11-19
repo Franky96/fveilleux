@@ -14,7 +14,11 @@ const RAFRAICHIR = 60;                                         // secondes entre
 const NB = 93, MAJ = 47;
 const OUVERTURE = new Date("2026-10-24T08:00:00-07:00"), FERMETURE = new Date("2026-10-24T20:00:00-07:00");   // heure avancée du Pacifique
 const SITE_RES = "https://elections.bc.ca/resources/results/provincial-election-results/";
-const SERRE = 5;                                               // lutte serrée : moins de 5 points d'écart
+const SERRE = 5;
+// recomptages judiciaires automatiques après le dépouillement final (Elections BC : écart sous le seuil ; demandes à la Cour suprême jusqu'au 16 novembre)
+const RECOMPTAGES = { KEC: "Kelowna Centre (écart de 43 voix)", LAO: "Ladysmith-Oceanside (écart de 50 voix)" };
+const MOIS_EN = { january: "janvier", february: "février", march: "mars", april: "avril", may: "mai", june: "juin", july: "juillet", august: "août", september: "septembre", october: "octobre", november: "novembre", december: "décembre" };
+const dateFinale = q => q ? `le ${+q[2] === 1 ? "1er" : +q[2]} ${MOIS_EN[q[1].toLowerCase()] || q[1]} ${q[3]} à ${+q[4]} h ${q[5]} (heure du Pacifique)` : "";                                               // lutte serrée : moins de 5 points d'écart
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -24,7 +28,7 @@ const heureQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2
 const secQc = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Toronto" });
 const heureCb = d => d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", timeZone: "America/Vancouver" });
 const deux = n => String(n).padStart(2, "0");
-const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}`; };
+const ilYa = ms => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s` : s < 3600 ? `${Math.floor(s / 60)} min` : s < 172800 ? `${Math.floor(s / 3600)} h ${deux(Math.floor(s / 60) % 60)}` : `${Math.floor(s / 86400)} jours`; };
 const lireLS = (st, k, d) => { try { return JSON.parse(st.getItem(k)) ?? d; } catch { return d; } };
 const ecrireLS = (st, k, v) => { try { st.setItem(k, JSON.stringify(v)); } catch { /* stockage bloqué */ } };
 
@@ -104,6 +108,7 @@ function lireRapportEbc(doc, out) {
       continue;
     }
     if (/^Rejected/i.test(tds[1] || "")) { c.rej = entier(tds[3]) ?? 0; continue; }
+    if (/Status\s*\|\s*Complete/i.test(tds.join(" "))) { c.complet = true; continue; }   // rapport du dépouillement final : « Status | Complete »
     const m = /ballot boxes\s*\|\s*([\d,]+)\s+of\s+([\d,]+)/i.exec(tds.join(" "));
     if (m) { const b = boites[code] ||= [0, 0]; b[0] += +m[1].replace(/,/g, ""); b[1] += +m[2].replace(/,/g, ""); c.sec = b.slice(); }
   }
@@ -112,6 +117,8 @@ function lireRapportEbc(doc, out) {
   const num = re => { const m = re.exec(t); return m ? +m[1].replace(/,/g, "") : null; };
   out.resume = { urnes: num(/([\d.]+)\s*%\s*Of ballot boxes reporting/i), part: num(/([\d.]+)\s*%\s*Preliminary Voter Turnout/i),
     consid: num(/([\d,]+)\s*Total Votes Considered/i), inscrits: num(/([\d,]+)\s*Registered voters/i) };
+  // en-tête du rapport : « FINAL COUNT Complete · As of November 09, 2026 14:37 PCT » une fois le dépouillement final terminé
+  if (/FINAL COUNT\s*Complete/i.test(t)) { const q = /As of\s+([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})\s+(\d{1,2}):(\d{2})/i.exec(t); out.final = { quand: q } ; }
   return true;
 }
 function lireHtml(corps, out) {
@@ -158,10 +165,11 @@ function normaliser(d) {
   for (const c of Object.values(out.circ)) {
     c.cands = Object.values(c.cands).sort((a, b) => b.voix - a.voix);
     c.total = c.cands.reduce((s, k) => s + k.voix, 0);
-    c.final = c.cands.some(k => k.elu) || (c.sec && c.sec[1] && c.sec[0] >= c.sec[1]);
+    c.final = c.cands.some(k => k.elu) || !!c.complet || (c.sec && c.sec[1] && c.sec[0] >= c.sec[1]);
     c.frac = c.sec && c.sec[1] ? Math.min(1, c.sec[0] / c.sec[1]) : null;
   }
   out.lus = Object.values(out.circ).filter(c => c.total > 0).length;
+  if (out.final) for (const code of Object.keys(RECOMPTAGES)) if (out.circ[code]) out.circ[code].recompte = true;
   return out;
 }
 
@@ -189,10 +197,16 @@ async function actualiser() {
   try {
     brut = await lire(); lu = new Date();
     RES = brut ? normaliser(brut) : null;
+    if (RES?.final) prochaine = Infinity;   // résultats finals : plus de lecture automatique (le bouton relit quand même)
     surveiller(); dessiner();
   } catch (e) { $("lvEtat").textContent = e.message; }
 }
 function afficherDecompte() {
+  if (!isFinite(prochaine)) {
+    $("lvDecompte").textContent = "final"; $("lvMaj").style.setProperty("--fait", "1");
+    $("lvMaj").title = "Résultats du dépouillement final : plus de lecture automatique ; clic pour relire le site d'Elections BC";
+    if (lu) dessinerVerifs(); dessinerCompte(); return;
+  }
   const reste = Math.max(0, Math.ceil((prochaine - Date.now()) / 1000));
   $("lvDecompte").textContent = document.hidden ? "en pause" : reste + " s";
   $("lvMaj").style.setProperty("--fait", (1 - reste / RAFRAICHIR).toFixed(3));
@@ -231,6 +245,11 @@ function dessinerEtat() {
   if (!RES) { $("lvEtat").textContent = "Résultats indisponibles pour le moment · nouvel essai chaque minute"; return; }
   if (!auMoinsUn()) { $("lvEtat").textContent = "En attente des premiers résultats · vérification chaque minute"; dessinerVerifs(); return; }
   const fin = Object.values(RES.circ).filter(c => c.final).length;
+  if (RES.final) {
+    $("lvEtat").innerHTML = [`<b>Résultats du dépouillement final</b>, terminé ${dateFinale(RES.final.quand)}`, `${fin} circonscription${fin > 1 ? "s" : ""} sur ${NB} déclarée${fin > 1 ? "s" : ""}`,
+      `recomptages judiciaires : ${Object.values(RECOMPTAGES).join(" et ")}`].join(" · ");
+    dessinerVerifs(); return;
+  }
   $("lvEtat").innerHTML = ["<b>Résultats préliminaires</b>", `${RES.lus} circonscription${RES.lus > 1 ? "s" : ""} sur ${NB} avec des résultats`, fin ? `${fin} entièrement dépouillée${fin > 1 ? "s" : ""}` : "",
     RES.resume?.urnes != null ? `${nf(RES.resume.urnes, RES.resume.urnes < 1 ? 2 : 1)} % des urnes` : ""].filter(Boolean).join(" · ");
   dessinerVerifs();
@@ -240,7 +259,7 @@ function dessinerVerifs() {
   const m = Date.now(), verif = brut.via === "relais" && brut.ageCache != null ? new Date(lu - brut.ageCache * 1000) : null;
   const publie = brut.via === "copie" && brut.publie ? new Date(brut.publie) : null;
   el.innerHTML = `<span><b>Vérifiées</b> sur le <a href="${SITE_RES}" target="_blank" rel="noopener">site d'Elections BC</a> ${verif ? `par le site à ${secQc(verif)} (il y a ${ilYa(m - verif)})`
-    : `par la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
+    : `par la copie de secours du pipeline${publie && !isNaN(publie) ? `, mise en ligne ${m - publie > 864e5 ? `le ${publie.toLocaleDateString("fr-CA", { day: "numeric", month: "long", timeZone: "America/Toronto" })} ` : ""}à ${heureQc(publie)} (il y a ${ilYa(m - publie)})` : ""}`}`
     + (lu ? ` · relues par cette page à ${secQc(lu)}` : "") + ` · heures du Québec</span>`;
 }
 function dessinerCompte() {
@@ -258,8 +277,9 @@ function dessinerHeures() {
     ["Vote par anticipation", "Du vendredi 16 au mercredi 21 octobre", "Dans n'importe quel bureau d'anticipation de la province", new Date("2026-10-21T20:00:00-07:00")],
     ["Jour du vote", "Samedi 24 octobre, de 8 h à 20 h (heure du Pacifique)", "De 11 h à 23 h, heure du Québec", FERMETURE],
     ["Dépouillement préliminaire", "Dès 20 h (23 h au Québec)", "Comptage à la main pour cette élection anticipée : les résultats arrivent au fil de la soirée", FERMETURE],
-    ["Dépouillement final", "Du 6 au 10 novembre (prévu)", "Votes par correspondance et bulletins non comptés le soir du vote ; recomptages judiciaires possibles dans les luttes très serrées", new Date("2026-11-10T20:00:00-08:00")],
-    ["Jour du rapport des brefs", "Mercredi 18 novembre", "Résultats officiels", new Date("2026-11-18T20:00:00-08:00")],
+    ["Dépouillement final", "Du 6 au 9 novembre", "Votes par correspondance et bulletins non comptés le soir du vote ; terminé le 9 novembre à 14 h 37, heure du Pacifique", new Date("2026-11-09T14:37:00-08:00")],
+    ["Recomptages judiciaires", "Kelowna Centre et Ladysmith-Oceanside", "Écarts de 43 et 50 voix ; demandes à la Cour suprême de la C.-B. jusqu'au 16 novembre, qui fixe les dates", new Date("2026-11-16T23:59:00-08:00")],
+    ["Jour du rapport des brefs", "Mercredi 18 novembre", "Résultats officiels, sauf dans les circonscriptions en recomptage", new Date("2026-11-18T20:00:00-08:00")],
   ];
   $("edHeures").innerHTML = L.map(([t, a, b, fin]) => `<li class="${m > fin ? "ed-passe" : ""}"><b>${t}</b><span>${a}<small>${b}</small></span></li>`).join("");
 }
@@ -289,7 +309,7 @@ function dessinerSieges() {
   const fin = Object.values(RES?.circ || {}).filter(c => c.final).length;
   const R = RES?.resume || {};
   $("edKv").innerHTML = [[`${RES?.lus || 0} / ${NB}`, "circonscriptions avec des résultats"], [nf(fin), "circonscriptions entièrement dépouillées"],
-    [R.urnes != null ? nf(R.urnes, R.urnes < 1 ? 2 : 1) + " %" : "—", "des urnes dépouillées"], [R.part != null ? nf(R.part, 1) + " %" : "—", "participation préliminaire"],
+    [R.urnes != null ? nf(R.urnes, R.urnes < 1 ? 2 : 1) + " %" : "—", "des urnes dépouillées"], [R.part != null ? nf(R.part, 1) + " %" : "—", RES?.final ? "participation (estimation d'Elections BC)" : "participation préliminaire"],
     [voixT ? nf(voixT) : "—", `voix valides comptées${R.inscrits ? ` · ${nf(R.inscrits)} inscrits` : ""}`]]
     .map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
   $("lvBarrePlein").innerHTML = `<div class="lv-bp-tete"><b>${lead ? (tot(lead) >= MAJ ? `${PARTIS[lead].court} majoritaire` : `${PARTIS[lead].court} en tête`) : "Sièges"}</b><span>majorité ${MAJ} · ${RES?.lus || 0}/${NB} circ.</span></div>`
@@ -431,6 +451,7 @@ function dessinerPanneau() {
   if (c) {
     const [a, b] = c.cands, ecart = b ? a.voix - b.voix : a.voix;
     html += `<div class="lv-chips"><span class="lv-chip ${c.final ? "fin" : ""}">${c.final ? "Dépouillement terminé" : c.sec ? `${nf(c.sec[0])} / ${nf(c.sec[1])} urnes (${nf(100 * c.frac, 0)} %)` : "Dépouillement en cours"}</span>`
+      + (c.recompte ? `<span class="lv-chip">Recomptage judiciaire</span>` : "")
       + (g24 && g24 !== a.parti ? `<span class="lv-chip" style="--c:${coulP(a.parti)}">Gain ${esc(PARTIS[a.parti].court)} (2024 : ${esc(PARTIS[g24].court)})</span>` : "") + `</div>`
       + `<p class="lv-tete" style="--c:${coulP(a.parti)}"><b>${esc(a.nom)}</b> (${esc(PARTIS[a.parti]?.court || a.aff)}) ${a.elu || c.final ? "élu·e" : "en tête"}${b ? ` par ${nf(ecart)} voix (${nf(pctC(c, a) - pctC(c, b), 1)} pt)` : ""}</p>`
       + `<table class="lv-cands"><tbody>${c.cands.map(k => `<tr style="--c:${coulP(k.parti)}"><td>${avatar(k.parti, sel, k.nom)}</td>`
@@ -519,7 +540,7 @@ function dessinerTextes() {
     <p class="lv-muted">Élection anticipée déclenchée par le premier ministre David Eby le 22 septembre 2026 (la prochaine élection à date fixe aurait eu lieu en octobre 2028). 353 candidatures dans les 93 circonscriptions ; BC United, deuxième parti en 2020, a été radié de la liste des partis enregistrés.</p>
     <div class="lv-partis">${ORDRE_P.filter(p => PARTIS[p].chef).map(p => { const n = Object.values(CANDS).flat().filter(k => k.parti === p).length;
       return `<div class="lv-parti" style="--c:${PARTIS[p].c}"><i></i><span class="lv-pnom">${esc(PARTIS[p].nom)}</span><b>${n}</b><small>candidat·e·s · chef : ${esc(PARTIS[p].chef)}${PARTIS[p].s24 ? ` · ${PARTIS[p].s24} sièges en 2024` : ""}</small></div>`; }).join("")}</div>`;
-  $("edSource").innerHTML = `Sources : résultats préliminaires d'<a href="${SITE_RES}" target="_blank" rel="noopener">Elections BC</a> (non officiels jusqu'au dépouillement final du 6 au 10 novembre) ;
+  $("edSource").innerHTML = `Sources : résultats d'<a href="${SITE_RES}" target="_blank" rel="noopener">Elections BC</a> (dépouillement final terminé le 9 novembre 2026 ; recomptages judiciaires à Kelowna Centre et Ladysmith-Oceanside) ;
     liste des candidats d'Elections BC (3 octobre 2026) ; circonscriptions de 2023, BC Data Catalogue (Open Government Licence – British Columbia), découpées au littoral d'OpenStreetMap (© contributeurs d'OpenStreetMap, ODbL) ; élection de 2024 : Elections BC ; photos des candidats : sites des partis (affichées depuis ces sites).`;
 }
 

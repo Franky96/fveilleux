@@ -211,14 +211,17 @@ let EVTS = [], VERIFS = [], onglet = 'evt';
 const ETATS = { ok: ['#3fae6a', 'OK'], alerte: ['#e3a72f', 'À surveiller'], erreur: ['#e0503f', 'Erreur'] };
 const rel = d => { const m = Math.round((d - Date.now()) / 60000), x = Math.abs(m);
   const t = x < 60 ? `${x} min` : x < 1440 ? `${Math.round(x / 60)} h` : `${Math.round(x / 1440)} j`; return m >= 0 ? `dans ${t}` : `il y a ${t}`; };
-const etatEvt = e => { const n = Date.now(); return n >= e.debut && n <= e.fin ? 'cours' : n < e.debut ? 'venir' : 'fini'; };
+// « cours » (pastille « En direct ») seulement pour une soirée en direct ; un autre événement du jour (type « resultats » : résultats
+// officiels, publication…) reste « jour » (signalé à l'utilisateur le 19 novembre 2026 : les résultats officiels de la C.-B. passaient pour un direct)
+const enDirect = e => (e.type || 'direct') === 'direct';
+const etatEvt = e => { const n = Date.now(); return n >= e.debut && n <= e.fin ? (enDirect(e) ? 'cours' : 'jour') : n < e.debut ? 'venir' : 'fini'; };
 const icsDate = d => d.toISOString().replace(/[-:]|\.\d+/g, '');
 const ics = e => 'data:text/calendar;charset=utf-8,' + encodeURIComponent(['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//fveilleux//FR', 'BEGIN:VEVENT',
   `UID:${e.id}@fveilleux.com`, `DTSTART:${icsDate(e.debut)}`, `DTEND:${icsDate(e.fin)}`, `SUMMARY:${e.titre}`, `URL:https://fveilleux.com/${e.page}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n'));
 const jour = d => d.toLocaleString('fr-CA', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).replace(' h 00', ' h');
 function itemEvt(e) {
-  const st = etatEvt(e), c = st === 'cours' ? '#ef4444' : st === 'venir' ? 'var(--c-pol)' : 'var(--faint)';
-  const lib = { cours: 'En cours', venir: 'À venir', fini: 'Terminé' }[st], quand = st === 'cours' ? `fin ${rel(e.fin)}` : rel(st === 'venir' ? e.debut : e.fin);
+  const st = etatEvt(e), c = st === 'cours' ? '#ef4444' : st === 'venir' || st === 'jour' ? 'var(--c-pol)' : 'var(--faint)';
+  const lib = { cours: 'En cours', jour: "Aujourd'hui", venir: 'À venir', fini: 'Terminé' }[st], quand = st === 'cours' || st === 'jour' ? `fin ${rel(e.fin)}` : rel(st === 'venir' ? e.debut : e.fin);
   return `<details class="n-item" style="--c:${c}"><summary><span class="n-ic${st === 'cours' ? ' vif' : ''}"></span><span class="n-titre">${esc(e.titre)}</span><span class="n-quand">${quand}</span>
     <span class="n-sous"><span class="etat">${lib}</span> ${esc(e.quand || jour(e.debut))}</span></summary>
     <div class="n-det">${e.desc ? `<p>${esc(e.desc)}</p>` : ''}<dl>${(e.infos || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
@@ -233,16 +236,16 @@ function itemVerif(v) {
 }
 const panneau = $('notifs');
 function rendreNotifs() {
-  const ord = { cours: 0, venir: 1, fini: 2 }, evts = EVTS.slice().sort((x, y) => ord[etatEvt(x)] - ord[etatEvt(y)] || x.debut - y.debut);
+  const ord = { cours: 0, jour: 1, venir: 2, fini: 3 }, evts = EVTS.slice().sort((x, y) => ord[etatEvt(x)] - ord[etatEvt(y)] || x.debut - y.debut);
   const voitVerifs = ADMIN && VERIFS.length > 0;
   if (!voitVerifs && onglet === 'verif') onglet = 'evt';
   $('n-tab-verif').hidden = !voitVerifs;
   document.querySelectorAll('[data-onglet]').forEach(b => b.setAttribute('aria-selected', b.dataset.onglet === onglet));
-  const actifs = evts.filter(e => etatEvt(e) === 'venir'), alertes = VERIFS.filter(v => v.etat !== 'ok').length;
+  const actifs = evts.filter(e => ['jour', 'venir'].includes(etatEvt(e))), alertes = VERIFS.filter(v => v.etat !== 'ok').length;
   $('n-nb-evt').textContent = actifs.length;
   $('n-nb-verif').textContent = alertes ? `${alertes} ⚠` : VERIFS.length;
   if (onglet === 'evt') {
-    const titres = { cours: 'En ce moment', venir: 'À venir', fini: 'Récemment terminés' }; let h = '', der = '';
+    const titres = { cours: 'En ce moment', jour: "Aujourd'hui", venir: 'À venir', fini: 'Récemment terminés' }; let h = '', der = '';
     for (const e of evts) { const st = etatEvt(e); if (st === 'cours') continue;   // en cours : déjà dans la pastille « En direct »
       if (st !== der) { h += `<div class="n-groupe">${titres[st]}</div>`; der = st; } h += itemEvt(e); }
     $('n-liste').innerHTML = h || '<p style="color:var(--muted);padding:12px">Aucun événement à venir.</p>';
@@ -254,12 +257,12 @@ function rendreNotifs() {
   }
   // pastilles : « En direct » (une par soirée en cours) mène droit à sa page ; « À venir » ouvre le panneau des événements
   // (séparées à la demande de l'utilisateur, 4 novembre 2026)
-  const enCours = evts.filter(e => etatEvt(e) === 'cours'), aVenir = evts.filter(e => etatEvt(e) === 'venir');
+  const enCours = evts.filter(e => etatEvt(e) === 'cours'), aVenir = evts.filter(e => ['jour', 'venir'].includes(etatEvt(e)));
   let pills = enCours.map(e => `<a class="signal signal-direct" href="${esc(arrivee(e.page))}" style="--c:#ef4444" title="${esc(e.titre)} : ouvrir la page"><span class="pt vif"></span><b>En direct</b> ${esc(e.titre.split(' · ')[0])}</a>`).join('');
   const p = aVenir[0];
   if (p) {
-    const auj = p.debut.toDateString() === new Date().toDateString(), proche = p.debut - Date.now() < 12 * 3600e3;
-    pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:var(--c-pol)"><span class="pt${proche ? ' vif' : ''}"></span><b>${auj ? "Aujourd'hui" : 'À venir'}</b> ${esc(p.titre.split(' · ')[0])} · ${rel(p.debut)}${aVenir.length > 1 ? ` <span class="nb">+${aVenir.length - 1}</span>` : ''}</button>`;
+    const auj = etatEvt(p) === 'jour' || p.debut.toDateString() === new Date().toDateString(), proche = p.debut - Date.now() < 12 * 3600e3;
+    pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:var(--c-pol)"><span class="pt${proche ? ' vif' : ''}"></span><b>${auj ? "Aujourd'hui" : 'À venir'}</b> ${esc(p.titre.split(' · ')[0])}${etatEvt(p) === 'jour' ? '' : ` · ${rel(p.debut)}`}${aVenir.length > 1 ? ` <span class="nb">+${aVenir.length - 1}</span>` : ''}</button>`;
   } else if (evts.length && !enCours.length) pills += `<button class="signal" type="button" data-ouvre="evt" style="--c:var(--faint)"><span class="pt"></span>Événements</button>`;
   if (voitVerifs) pills += `<button class="signal" type="button" data-ouvre="verif" style="--c:${VERIFS.some(v => v.etat === 'erreur') ? '#e0503f' : alertes ? '#e3a72f' : '#3fae6a'}"><span class="pt"></span>${alertes ? `<b>${alertes} à surveiller</b> · ` : ''}${VERIFS.length - alertes} vérification${VERIFS.length - alertes > 1 ? 's' : ''} OK</button>`;
   $('signaux').innerHTML = pills;

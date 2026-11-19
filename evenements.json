@@ -1,5 +1,5 @@
 {
-  "note": "Événements du tableau de bord (notifications « événement »). Heures du Québec. perm : permission requise pour voir l'événement. Ajouter chaque nouvelle soirée En direct ici (voir docs/en-direct.md).",
+  "note": "Événements du tableau de bord (notifications « événement »). Heures du Québec. perm : permission requise pour voir l'événement. Ajouter chaque nouvelle soirée En direct ici (voir docs/en-direct.md). type : « direct » (défaut, soirée en direct : pastille « En direct » pendant l'événement) ou « resultats » (résultats officiels ou autre publication : « Aujourd'hui », jamais « En direct »).",
   "evenements": [
     {"id": "usa-2026", "titre": "États-Unis · élections de mi-mandat", "page": "en-direct.html", "perm": "votes-quebec",
      "debut": "2026-11-03T18:00:00-05:00", "fin": "2026-11-04T01:00:00-05:00", "quand": "mardi 3 nov., 18 h à 1 h",
@@ -9,9 +9,9 @@
      "debut": "2026-11-07T01:00:00-05:00", "fin": "2026-11-07T09:00:00-05:00", "quand": "samedi 7 nov., 1 h",
      "desc": "Chambre des représentants : 120 sièges environ, majorité à 61. Résultats la nuit, heure du Québec.",
      "infos": [["Début", "samedi 7 nov., 1 h"], ["Page", "En direct · Nouvelle-Zélande"]]},
-    {"id": "cb-2026-officiel", "titre": "Colombie-Britannique · résultats officiels", "page": "election-cb-2026.html", "perm": "votes-quebec",
+    {"id": "cb-2026-officiel", "type": "resultats", "titre": "Colombie-Britannique · résultats officiels", "page": "election-cb-2026.html", "perm": "votes-quebec",
      "debut": "2026-11-18T09:00:00-05:00", "fin": "2026-11-18T23:00:00-05:00", "quand": "mercredi 18 nov.",
-     "desc": "Résultats officiels de l'élection du 24 octobre ; l'archive de la soirée se met à jour.",
+     "desc": "Jour du rapport des brefs de l'élection du 24 octobre : résultats officiels (dépouillement final terminé le 9 novembre : 64 PCCB, 27 NPD, 2 Verts). Recomptages judiciaires à Kelowna Centre et Ladysmith-Oceanside. L'archive montre les résultats du dépouillement final.",
      "infos": [["Date", "mercredi 18 nov."], ["Page", "Anciennes élections · Colombie-Britannique"]]},
     {"id": "tw-2026", "titre": "Taïwan · élections locales", "page": "en-direct-taiwan.html", "perm": "votes-quebec",
      "debut": "2026-11-28T03:00:00-05:00", "fin": "2026-11-28T12:00:00-05:00", "quand": "samedi 28 nov., 3 h",
