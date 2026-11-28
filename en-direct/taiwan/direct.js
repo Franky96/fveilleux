@@ -106,7 +106,7 @@ function lirePage(p, out) {
   const doc = new DOMParser().parseFromString(p.corps, "text/html");
   const texte = doc.body.textContent.replace(/\s+/g, " ");
   const m = /已送投票所數\s*\/\s*總投票所數\s*[:：]?\s*([\d,]+)\s*\/\s*([\d,]+)/.exec(texte);
-  const t = /資料時間\s*[:：]?\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/.exec(texte);
+  const t = /資料(?:更新)?時間\s*[:：]?\s*(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})/.exec(texte);
   if (t) out.heureCec = `${+t[3]} h ${t[4]}`;
   if (m) { const sec = [+m[1].replace(/,/g, ""), +m[2].replace(/,/g, "")]; if (page) (out.circ[page] ||= { cands: {}, sec: null }).sec = sec; else out.resume.sec = sec; }
   for (const table of doc.querySelectorAll("table")) {

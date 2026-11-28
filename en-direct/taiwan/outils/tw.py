@@ -15,7 +15,9 @@ import concurrent.futures as cf, datetime as dt, json, os, re, sys, urllib.parse
 
 ICI = os.path.dirname(os.path.abspath(__file__))
 SORTIE = os.path.normpath(os.path.join(ICI, "..", "resultats.json"))
-HOTES = ["vote.cec.gov.tw", "vote2026.cec.gov.tw", "www.cec.gov.tw"]
+# soir du vote (28 novembre 2026) : vote.cec.gov.tw/2026-local/zh-TW/TC/<code>.html ; pas de page de tout Taïwan (404)
+HOTES = ["vote.cec.gov.tw/2026-local", "vote.cec.gov.tw", "vote2026.cec.gov.tw", "www.cec.gov.tw"]
+NOMS = {h.split("/")[0] for h in HOTES}
 TYPES = ["TC", "C1", "T1"]
 MUN = ["63000", "64000", "65000", "66000", "67000", "68000"]
 COMTES = ["10002", "10004", "10005", "10007", "10008", "10009", "10010", "10013", "10014", "10015", "10016", "10017", "10018", "10020", "09007", "09020"]
@@ -25,7 +27,7 @@ FENETRE = (dt.datetime(2026, 11, 28, 7, 45, tzinfo=dt.timezone.utc), dt.datetime
 
 class SansRenvoi(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None if urllib.parse.urlparse(newurl).hostname not in HOTES else super().redirect_request(req, fp, code, msg, headers, newurl)
+        return None if urllib.parse.urlparse(newurl).hostname not in NOMS else super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 OUVRIR = urllib.request.build_opener(SansRenvoi)
@@ -46,7 +48,7 @@ def alleger(h):
 def lire(url):
     try:
         with OUVRIR.open(urllib.request.Request(url, headers={"User-Agent": "fveilleux.com (resultats en direct)", "Accept": "text/html"}), timeout=20) as r:
-            if urllib.parse.urlparse(r.geturl()).hostname not in HOTES: return None
+            if urllib.parse.urlparse(r.geturl()).hostname not in NOMS: return None
             corps = r.read().decode("utf-8", "replace")
             return alleger(corps) if re.search("<table|投票所", corps) else None
     except Exception as e:
@@ -95,7 +97,7 @@ def main():
         d = {"disponible": True, "maj": dt.datetime.now(dt.timezone.utc).isoformat(), "source": "https://db.cec.gov.tw/ElecTable/Election?type=Mayor", "copie": "pipeline", "db": db}
         with open(SORTIE, "w", encoding="utf-8") as f: json.dump(d, f, ensure_ascii=False, separators=(",", ":"))
         print(f"Base de la CEC : {len(db['tickets'])} candidats : {SORTIE} mis à jour."); return
-    rep = plusieurs({(h, t): adresse(h, t, "0") for h in HOTES for t in TYPES})
+    rep = plusieurs({(h, t): adresse(h, t, "63000") for h in HOTES for t in TYPES})   # page de Taipei (pas de page de tout Taïwan en 2026)
     pages = []
     for hote in HOTES:
         types = [t for t in TYPES if (hote, t) in rep]
@@ -106,9 +108,8 @@ def main():
             t = "TC" if types == ["TC"] else ("T1" if "T1" in types else types[0]) if code in MUN else ("C1" if "C1" in types else types[0])
             urls[(t, code)] = adresse(hote, t, code)
         lu = plusieurs(urls)
-        for t in types: lu[(t, "00000")] = rep[(hote, t)]
         pages = [{"url": adresse(hote, t, code), "code": code, "type": "html", "corps": corps} for (t, code), corps in lu.items()]
-        source = adresse(hote, types[0], "0")
+        source = adresse(hote, types[0], "63000")
         break
     if not pages: print("La CEC ne répond pas : fichier inchangé."); return
     d = {"disponible": True, "maj": dt.datetime.now(dt.timezone.utc).isoformat(), "source": source, "copie": "pipeline", "pages": pages}

@@ -33,7 +33,8 @@ $perms = normaliserPermissions($s['permissions'] ?? []);
 if ($role !== 'admin' && !in_array('votes-quebec', $perms, true)) errOut('Accès refusé', 403);
 if (($_GET['type'] ?? 'resultats') !== 'resultats') errOut('Type inconnu', 400);
 
-const HOTES = ['vote.cec.gov.tw', 'vote2026.cec.gov.tw', 'www.cec.gov.tw'];
+// soir du vote (28 novembre 2026, 16 h 30 à Taïwan) : vote.cec.gov.tw/2026-local/zh-TW/TC/<code>.html ; pas de page de tout Taïwan (404)
+const HOTES = ['vote.cec.gov.tw/2026-local', 'vote.cec.gov.tw', 'vote2026.cec.gov.tw', 'www.cec.gov.tw'];
 const TYPES = ['TC', 'C1', 'T1'];
 const MUN = ['63000', '64000', '65000', '66000', '67000', '68000'];
 const COMTES = ['10002', '10004', '10005', '10007', '10008', '10009', '10010', '10013', '10014', '10015', '10016', '10017', '10018', '10020', '09007', '09020'];
@@ -42,8 +43,8 @@ const TTL = 45;
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
-$cache = sys_get_temp_dir() . '/fv_tw_resultats_v1.json';
-$base  = sys_get_temp_dir() . '/fv_tw_base_v1.json';
+$cache = sys_get_temp_dir() . '/fv_tw_resultats_v2.json';
+$base  = sys_get_temp_dir() . '/fv_tw_base_v2.json';
 $age   = is_file($cache) ? time() - filemtime($cache) : PHP_INT_MAX;
 
 function poignee(string $url) {
@@ -77,19 +78,18 @@ $url = fn(string $hote, string $type, string $code) => "https://$hote/zh-TW/$typ
 if ($age > TTL) {
   $verrou = fopen($cache . '.lock', 'c');
   if ($verrou && flock($verrou, LOCK_EX | LOCK_NB)) {          // un seul téléchargement à la fois
-    // 1. hôte et type(s) : retenus 10 minutes, sinon essai de toutes les combinaisons connues (page de tout Taïwan)
+    // 1. hôte et type(s) : retenus 10 minutes, sinon essai de toutes les combinaisons connues (page de Taipei : en 2026, pas de page de tout Taïwan)
     $b = is_file($base) && time() - filemtime($base) < 600 ? json_decode((string)file_get_contents($base), true) : null;
     $nat = [];
     if (!$b) {
       $essais = [];
-      foreach (HOTES as $ho) foreach (TYPES as $ty) $essais["$ho|$ty"] = $url($ho, $ty, '0');
+      foreach (HOTES as $ho) foreach (TYPES as $ty) $essais["$ho|$ty"] = $url($ho, $ty, '63000');
       $rep = lirePlusieurs($essais);
       foreach (HOTES as $ho) {
         $types = array_values(array_filter(TYPES, fn($ty) => isset($rep["$ho|$ty"])));
         if (!$types) continue;
         $types = in_array('TC', $types, true) ? ['TC'] : $types;
         $b = ['hote' => $ho, 'types' => $types];
-        foreach ($types as $ty) $nat[$ty] = $rep["$ho|$ty"];
         file_put_contents($base, json_encode($b), LOCK_EX);
         break;
       }
@@ -111,7 +111,7 @@ if ($age > TTL) {
       }
       if (!$pages) @unlink($base);                                // l'hôte retenu ne répond plus : nouvel essai au prochain passage
     }
-    $d = ['disponible' => count($pages) > 0, 'maj' => date('c'), 'source' => $b ? "https://{$b['hote']}/zh-TW/" . $b['types'][0] . '/' . str_repeat('0', 17) . '.html' : null, 'pages' => $pages];
+    $d = ['disponible' => count($pages) > 0, 'maj' => date('c'), 'source' => $b ? "https://{$b['hote']}/zh-TW/" . $b['types'][0] . '/63000000000000000.html' : null, 'pages' => $pages];
     if ($pages || !is_file($cache)) { file_put_contents($cache, json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX); $age = 0; }
     else $age = time() - filemtime($cache);                      // CEC muette : on garde la dernière lecture, avec son âge
     flock($verrou, LOCK_UN);
